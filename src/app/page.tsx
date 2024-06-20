@@ -1,7 +1,10 @@
-import Image from "next/image";
+import UsersList from "./components/UsersList";
 
 export default function Home() {
   return (
-    <div>Hacker Portal</div>
+    <>
+      <div>Hacker Portal</div>
+      <UsersList />
+    </>
   );
 }
