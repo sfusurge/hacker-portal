@@ -1,7 +1,10 @@
 import { mysqlTable, int, text, varchar } from "drizzle-orm/mysql-core";
 import { createId } from "@paralleldrive/cuid2";
 
-export const users = mysqlTable("users", {
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
+
+const users = mysqlTable("users", {
   id: varchar("id", { length: 128 })
     .primaryKey()
     .$defaultFn(() => createId()),
@@ -10,5 +13,10 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 255 }).unique().notNull(),
 });
 
-export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
+const insertUserSchema = createInsertSchema(users, {
+  email: (schema) => schema.email.email(),
+  id: (schema) => schema.email.optional(),
+});
+const selectUserSchema = createSelectSchema(users);
+
+export { users, insertUserSchema, selectUserSchema };
