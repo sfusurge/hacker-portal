@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+The source code repository for hacker portal, SFU Surge's all-in-one hackathon application management system
 
-## Getting Started
+## Installation and Setup
 
-First, run the development server:
+1. First, ensure that you are using a stable and/or lts version of node > `v20` (highly recommend using [nvm](https://github.com/nvm-sh/nvm) and utilizing the `.nvmrc` file in the repository)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+2. Have a running instance of MySQL, with a database and user credentials prepared ahead of time
+
+3. Have `pnpm` installed:
+
+```
+npm install -g pnpm@latest
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+and then run `pnpm install` within the project directory to install the packages
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Settings
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+Copy and paste the following settings into your local `.env` file, and fill out all the fields with the correct credentials
 
-## Learn More
+```YAML
+DATABASE_HOST=
+DATABASE_PORT=
+DATABASE_NAME=
+DATABASE_USER=
+DATABASE_PASSWORD=
+CLIENT_URL=
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Running the application
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+#### Development
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+```bash
+pnpm run dev
+```
 
-## Deploy on Vercel
+or
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+npm run dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+#### Local Production
+
+```bash
+pnpm run build
+pnpm run start
+```
+
+or
+
+```bash
+npm run build
+npm run start
+```
