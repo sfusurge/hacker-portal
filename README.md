@@ -29,6 +29,11 @@ CLIENT_URL=
 
 ## Running the application
 
+#### Generating and Pushing `Drizzle` Migrations to your database
+
+1. If you have made additions/modifications to the drizzle schema, please first run `pnpm drizzle-kit generate`
+2. Then to persist your changes to your database, run `pnpm drizzle-kit push`
+
 #### Development
 
 ```bash
