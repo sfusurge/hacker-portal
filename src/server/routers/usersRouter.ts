@@ -1,8 +1,7 @@
-import { publicProcedure, router } from "./trpc";
+import { publicProcedure, router } from "../trpc";
 import { databaseClient } from "@/db/client";
 
 import { insertUserSchema, users } from "@/db/schema/users";
-import { z } from "zod";
 
 export const usersRouter = router({
   getUsers: publicProcedure.query(async () => {

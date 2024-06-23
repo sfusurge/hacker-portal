@@ -1,5 +1,4 @@
-import UsersList from "./components/UsersList";
-
+"use client";
 import { trpc } from "../trpc/client";
 
 const hardcodeUser = {
@@ -9,15 +8,13 @@ const hardcodeUser = {
 };
 
 export default function Home() {
-  const addUser = trpc.addUser.useMutation();
+  const appHealthCheck = trpc.health_check.useQuery();
 
   return (
     <>
       <div>Hacker Portal</div>
-      <button onClick={async () => addUser.mutate(hardcodeUser)}>
-        Add another user!
-      </button>
-      <UsersList />
+      <br></br>
+      <div>App Health Check: {appHealthCheck.data}</div>
     </>
   );
 }
