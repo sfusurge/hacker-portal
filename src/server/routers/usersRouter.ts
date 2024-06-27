@@ -1,7 +1,8 @@
 import { publicProcedure, router } from "../trpc";
 import { databaseClient } from "@/db/client";
 
-import { insertUserSchema, users } from "@/db/schema/users";
+import { insertUserSchema, deleteUserSchema, users } from "@/db/schema/users";
+import { eq } from "drizzle-orm";
 
 export const usersRouter = router({
   getUsers: publicProcedure.query(async () => {
@@ -11,6 +12,9 @@ export const usersRouter = router({
     await databaseClient.insert(users).values({
       ...opts.input,
     });
+  }),
+  deleteUser: publicProcedure.input(deleteUserSchema).mutation(async (opts) => {
+    await databaseClient.delete(users).where(eq(users.id, opts.input.id));
   }),
 });
 

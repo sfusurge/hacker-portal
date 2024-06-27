@@ -2,6 +2,7 @@ import { mysqlTable, int, text, varchar } from "drizzle-orm/mysql-core";
 import { createId } from "@paralleldrive/cuid2";
 
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
 
 const users = mysqlTable("users", {
   id: varchar("id", { length: 128 })
@@ -17,6 +18,10 @@ const insertUserSchema = createInsertSchema(users, {
   id: (schema) => schema.email.optional(),
 }).omit({ id: true });
 
+const deleteUserSchema = z.object({
+  id: z.string().min(1),
+})
+
 const selectUserSchema = createSelectSchema(users);
 
-export { users, insertUserSchema, selectUserSchema };
+export { users, insertUserSchema, selectUserSchema, deleteUserSchema };
