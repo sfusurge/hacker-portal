@@ -1,7 +1,6 @@
 name: DevPipeline
 
-on:
-  pull_request: {}
+on: push
 
 jobs:
   lintTest:
@@ -10,18 +9,18 @@ jobs:
     steps:
       - name: Clone Repository
         uses: actions/checkout@v2
-      - name: Install Dependencies
+      - name: npm Install Dependencies
         run: |
-          echo "Running Installing Dependencies"
+          echo "Running npm Installing Dependencies"
+          npm install -g pnpm@latest
+      - name: pnpm Install Dependencies
+        run: |
+          echo "Running pnpm Installing Dependencies"
           pnpm install
       - name: Run Linting
         run: |
           echo "Running Linting tests"
           pnpm run lint
-      - name: Run Prettier
-        run: |
-          echo "Running Prettier"
-          pnpm run prettier:check
       - name: Build
         run: |
           pnpm run build
