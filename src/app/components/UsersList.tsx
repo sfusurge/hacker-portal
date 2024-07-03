@@ -12,6 +12,7 @@ export default function UsersList() {
 
   const handleUpdateUser = async (user: any) => {
     try {
+      console.log(user.id)
       await updateUser.mutate({
         id: user.id,
         email: email || user.email, 
