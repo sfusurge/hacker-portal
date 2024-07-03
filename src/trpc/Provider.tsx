@@ -14,7 +14,7 @@ function Provider({ children }: { children: React.ReactNode }) {
           url: process.env.CLIENT_URL || "http://localhost:3000/api",
         }),
       ],
-    })
+    }),
   );
 
   return (

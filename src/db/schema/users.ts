@@ -20,7 +20,7 @@ const insertUserSchema = createInsertSchema(users, {
 const updateUserSchema = z.object({
   // always 128 chars -- add constraint
   // id is not 128 characters for some reason, i get 400 when i try to set length to 128
-  // id: z.string().length(128), 
+  // id: z.string().length(128),
   id: z.string(),
   first_name: z.string().optional(),
   last_name: z.string().optional(),

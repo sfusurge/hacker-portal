@@ -1,6 +1,6 @@
 import { publicProcedure, router } from "../trpc";
 import { databaseClient } from "@/db/client";
-import { eq } from 'drizzle-orm';
+import { eq } from "drizzle-orm";
 import { insertUserSchema, updateUserSchema, users } from "@/db/schema/users";
 
 export const usersRouter = router({
@@ -13,9 +13,12 @@ export const usersRouter = router({
     });
   }),
   updateUser: publicProcedure.input(updateUserSchema).mutation(async (opts) => {
-    const {id, ...updateValues} = opts.input;
-    await databaseClient.update(users).set(updateValues).where(eq(users.id, id));
-  })
+    const { id, ...updateValues } = opts.input;
+    await databaseClient
+      .update(users)
+      .set(updateValues)
+      .where(eq(users.id, id));
+  }),
 });
 
 export type usersRouter = typeof usersRouter;

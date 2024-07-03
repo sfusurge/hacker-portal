@@ -21,6 +21,10 @@ jobs:
         run: |
           echo "Running Linting tests"
           pnpm run lint
+      - name: Run Prettier
+        run: |
+          echo "Running Prettier"
+          pnpm prettier . --check
       - name: Build
         run: |
           pnpm run build
