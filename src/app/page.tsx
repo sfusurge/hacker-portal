@@ -12,6 +12,7 @@ export default function Home() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
 
     const [hackathonName, setHackathonName] = useState("");
     const [startDate, setStartDate] = useState("");
@@ -51,6 +52,11 @@ export default function Home() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="email"
             />
+            <input
+                type="text"
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="password"
+            />
 
             <button
                 onClick={async () => {
@@ -58,6 +64,7 @@ export default function Home() {
                         email: email,
                         first_name: firstName,
                         last_name: lastName,
+                        password: password,
                     });
                 }}
             >

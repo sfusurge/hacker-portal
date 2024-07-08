@@ -24,9 +24,11 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/argon2": "^0.15.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "argon2": "^0.40.3",
     "drizzle-kit": "^0.22.7",
     "eslint": "^8",
     "eslint-config-next": "14.2.4",

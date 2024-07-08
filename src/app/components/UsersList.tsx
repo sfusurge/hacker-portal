@@ -9,15 +9,18 @@ export default function UsersList() {
       <div>
         {users?.map((user, key) => {
           return (
-            <div>
-              <strong>
-                {user.last_name}, {user.first_name}
-              </strong>
-              <ul>
-                <li>{user.email}</li>
-              </ul>
-              <br></br>
-            </div>
+              <div>
+                  <strong>
+                      {user.last_name}, {user.first_name}
+                  </strong>
+                  <ul>
+                      <li>{user.email}</li>
+                  </ul>
+                  <ul>
+                      <li>{user.password}</li>
+                  </ul>
+                  <br></br>
+              </div>
           );
         })}
       </div>
