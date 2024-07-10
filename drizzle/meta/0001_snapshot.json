@@ -1,11 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-<<<<<<< HEAD
-  "id": "a1dfbadb-a021-44d4-b5d9-d9388b14fe9f",
-=======
   "id": "bbdbc2c9-3c33-40d4-aa97-4d6903510eaa",
->>>>>>> origin/8-hackathon-endpoints
   "prevId": "37ce1c4c-c698-4d87-addd-91cdc515a5ee",
   "tables": {
     "hackathons": {

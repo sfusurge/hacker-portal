@@ -17,8 +17,8 @@ export const hackathonsRouter = router({
 
         const formatUpdateValues = {
             ...updateValues,
-            start_date: start_date.toISOString(),
-            end_date: end_date.toISOString(),
+            start_date: start_date,
+            end_date: end_date,
         }
         
         await databaseClient.update(hackathons).set(formatUpdateValues).where(eq(hackathons.hackathon_id, hackathon_id));

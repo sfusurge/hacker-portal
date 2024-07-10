@@ -12,13 +12,8 @@
     {
       "idx": 1,
       "version": "5",
-<<<<<<< HEAD
-      "when": 1720640559880,
-      "tag": "0001_orange_swordsman",
-=======
       "when": 1720640597739,
       "tag": "0001_glorious_power_pack",
->>>>>>> origin/8-hackathon-endpoints
       "breakpoints": true
     }
   ]

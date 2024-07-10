@@ -25,8 +25,8 @@ const deleteHackathonSchema = z.object({
 
 const updateHackathonSchema = z.object({
     hackathon_id: z.string(),
-    start_date: z.date(),
-    end_date: z.date(),
+    start_date: z.string(),
+    end_date: z.string(),
 })
 
 const selectHackathonSchema = createSelectSchema(hackathons);
