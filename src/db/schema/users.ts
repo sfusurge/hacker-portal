@@ -26,7 +26,7 @@ const insertUserSchema = createInsertSchema(users, {
   email: (schema) => schema.email.email(),
   id: (schema) => schema.id.optional(),
 }).omit({ id: true }).transform(async (input) => {
-  input.password = await argon2.hash(input.password);
+  input.password = await hashPassword(input.password);
   return input;
 });
 
@@ -38,7 +38,11 @@ const updateUserSchema = z.object({
   first_name: z.string().optional(),
   last_name: z.string().optional(),
   email: z.string().email().optional(),
-});
+  password: z.string().optional(),
+}).transform(async (input) => {
+  input.password = await hashPassword(<string>input.password);
+  return input;
+})
 
 const deleteUserSchema = z.object({
   id: z.string().min(1),
