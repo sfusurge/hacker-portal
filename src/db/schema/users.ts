@@ -1,6 +1,6 @@
 import { mysqlTable, int, text, varchar } from "drizzle-orm/mysql-core";
 import { createId } from "@paralleldrive/cuid2";
-
+import { z } from "zod";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 const users = mysqlTable("users", {
@@ -17,6 +17,16 @@ const insertUserSchema = createInsertSchema(users, {
   id: (schema) => schema.email.optional(),
 }).omit({ id: true });
 
+const updateUserSchema = z.object({
+  // always 128 chars -- add constraint
+  // id is not 128 characters for some reason, i get 400 when i try to set length to 128
+  // id: z.string().length(128), 
+  id: z.string(),
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  email: z.string().email().optional(),
+});
+
 const selectUserSchema = createSelectSchema(users);
 
-export { users, insertUserSchema, selectUserSchema };
+export { users, insertUserSchema, selectUserSchema, updateUserSchema };
