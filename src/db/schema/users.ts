@@ -27,6 +27,10 @@ const updateUserSchema = z.object({
   email: z.string().email().optional(),
 });
 
+const deleteUserSchema = z.object({
+  id: z.string().min(1),
+})
+
 const selectUserSchema = createSelectSchema(users);
 
-export { users, insertUserSchema, selectUserSchema, updateUserSchema };
+export { users, insertUserSchema, selectUserSchema, deleteUserSchema, updateUserSchema };
