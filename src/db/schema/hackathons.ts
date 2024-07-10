@@ -1,6 +1,7 @@
 import { mysqlTable, varchar, date } from "drizzle-orm/mysql-core";
 import { createId } from "@paralleldrive/cuid2";
 import { z } from "zod";
+
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 const hackathons = mysqlTable("hackathons", {
@@ -18,6 +19,10 @@ const insertHackathonSchema = createInsertSchema(hackathons, {
     end_date: (schema) => schema.end_date.date(),
 }).omit({ hackathon_id: true });
 
+const deleteHackathonSchema = z.object({
+    hackathon_id: z.string().min(1),
+});
+
 const updateHackathonSchema = z.object({
     hackathon_id: z.string(),
     start_date: z.date(),
@@ -26,4 +31,4 @@ const updateHackathonSchema = z.object({
 
 const selectHackathonSchema = createSelectSchema(hackathons);
 
-export { hackathons, insertHackathonSchema, selectHackathonSchema, updateHackathonSchema };
+export { hackathons, insertHackathonSchema, selectHackathonSchema, deleteHackathonSchema, updateHackathonSchema };
