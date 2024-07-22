@@ -13,7 +13,7 @@ export const hackathonsRouter = router({
         });
     }),
     updateHackathon: publicProcedure.input(updateHackathonSchema).mutation(async (opts) => {
-        const { hackathon_id, start_date, end_date, ...updateValues } = opts.input;
+        const { id, start_date, end_date, ...updateValues } = opts.input;
 
         const formatUpdateValues = {
             ...updateValues,
@@ -21,10 +21,10 @@ export const hackathonsRouter = router({
             end_date: end_date,
         }
         
-        await databaseClient.update(hackathons).set(formatUpdateValues).where(eq(hackathons.hackathon_id, hackathon_id));
+        await databaseClient.update(hackathons).set(formatUpdateValues).where(eq(hackathons.id, id));
     }),    
     deleteHackathon: publicProcedure.input(deleteHackathonSchema).mutation(async (opts) => {
-        await databaseClient.delete(hackathons).where(eq(hackathons.hackathon_id, opts.input.hackathon_id));
+        await databaseClient.delete(hackathons).where(eq(hackathons.id, opts.input.id));
     }),
 });
 
