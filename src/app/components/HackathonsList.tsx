@@ -16,6 +16,7 @@ export default function HackathonsList() {
         try {
             await updateHackathon.mutate({
                 hackathon_id: hackathon.hackathon_id,
+                name: name || hackathon.name,
                 start_date: startDate || hackathon.start_date,
                 end_date: endDate || hackathon.end_date,
             });
