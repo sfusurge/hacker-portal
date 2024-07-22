@@ -15,7 +15,7 @@ export default function HackathonsList() {
     const handleUpdateHackathon = async (hackathon: any) => {
         try {
             await updateHackathon.mutate({
-                hackathon_id: hackathon.hackathon_id,
+                id: hackathon.id,
                 start_date: startDate || hackathon.start_date,
                 end_date: endDate || hackathon.end_date,
             });
@@ -46,12 +46,13 @@ export default function HackathonsList() {
                             <button
                                 onClick={async () => {
                                     deleteHackathon.mutate({
-                                    hackathon_id: hackathon.hackathon_id
+                                    id: hackathon.id
                                     });
                                 }}
                                 >
                                 Delete Hackathon
                             </button>
+                            <hr></hr>
                             <input
                                 type="text"
                                 placeholder="Name"

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 const hackathons = mysqlTable("hackathons", {
-    hackathon_id: varchar("hackathon_id", { length: 128 })
+    id: varchar("hackathon_id", { length: 128 })
         .primaryKey()
         .$defaultFn(() => createId()),
     name: varchar("name", { length: 255 }).notNull(),
@@ -14,17 +14,17 @@ const hackathons = mysqlTable("hackathons", {
 });
 
 const insertHackathonSchema = createInsertSchema(hackathons, {
-    hackathon_id: (schema) => schema.hackathon_id.optional(),
+    id: (schema) => schema.id.optional(),
     start_date: (schema) => schema.start_date.date(),
     end_date: (schema) => schema.end_date.date(),
-}).omit({ hackathon_id: true });
+}).omit({ id: true });
 
 const deleteHackathonSchema = z.object({
-    hackathon_id: z.string().min(1),
+    id: z.string().min(1),
 });
 
 const updateHackathonSchema = z.object({
-    hackathon_id: z.string(),
+    id: z.string(),
     start_date: z.string(),
     end_date: z.string(),
 })
