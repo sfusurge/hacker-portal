@@ -16,8 +16,6 @@ const hackathons = mysqlTable("hackathons", {
 const insertHackathonSchema = createInsertSchema(hackathons, {
     id: (schema) => schema.id.optional(),
     name: (schema) => schema.name,
-    start_date: (schema) => schema.start_date.date(),
-    end_date: (schema) => schema.end_date.date(),
 }).omit({ id: true });
 
 const deleteHackathonSchema = z.object({
@@ -27,8 +25,8 @@ const deleteHackathonSchema = z.object({
 const updateHackathonSchema = z.object({
     id: z.string().optional(),
     name: z.string().optional(),
-    start_date: z.string().optional(),
-    end_date: z.string().optional(),
+    start_date: z.date().optional(),
+    end_date: z.date().optional(),
 })
 
 const selectHackathonSchema = createSelectSchema(hackathons);
