@@ -86,8 +86,8 @@ export default function Home() {
                 onClick={async () => {
                     addHackathon.mutate({
                         name: hackathonName,
-                        start_date: startDate,
-                        end_date: endDate,
+                        start_date: new Date(startDate),
+                        end_date: new Date(endDate),
                     });
                 }}
             >

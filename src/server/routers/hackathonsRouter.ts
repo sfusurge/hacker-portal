@@ -1,6 +1,7 @@
 import { publicProcedure, router } from "../trpc";
 import { databaseClient } from "@/db/client";
-import { insertHackathonSchema, hackathons } from "@/db/schema/hackathons";
+import { insertHackathonSchema, deleteHackathonSchema, updateHackathonSchema, hackathons } from "@/db/schema/hackathons";
+import { eq } from "drizzle-orm";
 
 export const hackathonsRouter = router({
     getHackathons: publicProcedure.query(async () => {
@@ -10,6 +11,16 @@ export const hackathonsRouter = router({
         await databaseClient.insert(hackathons).values({
             ...opts.input,
         });
+    }),
+    updateHackathon: publicProcedure.input(updateHackathonSchema).mutation(async (opts) => {
+        const {id, ...updateValues} = opts.input;
+        if (!id) {
+            throw new Error('ID is required to update a hackathon');
+        }
+        await databaseClient.update(hackathons).set(updateValues).where(eq(hackathons.id, id));
+    }),
+    deleteHackathon: publicProcedure.input(deleteHackathonSchema).mutation(async (opts) => {
+        await databaseClient.delete(hackathons).where(eq(hackathons.id, opts.input.id));
     }),
 });
 

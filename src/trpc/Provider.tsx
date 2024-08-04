@@ -2,6 +2,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/react-query";
 import React, { useState } from "react";
+import superjson from 'superjson';
 
 import { trpc } from "./client";
 
@@ -11,7 +12,8 @@ function Provider({ children }: { children: React.ReactNode }) {
     trpc.createClient({
       links: [
         httpBatchLink({
-          url: process.env.CLIENT_URL || "http://localhost:3000/api",
+            url: process.env.CLIENT_URL || "http://localhost:3000/api",
+            transformer: superjson,
         }),
       ],
     })
