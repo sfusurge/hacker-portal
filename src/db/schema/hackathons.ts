@@ -9,14 +9,12 @@ const hackathons = mysqlTable("hackathons", {
         .primaryKey()
         .$defaultFn(() => createId()),
     name: varchar("name", { length: 255 }).notNull(),
-    start_date: varchar("start_date", { length: 255 }).notNull(),
-    end_date: varchar("end_date", { length: 255 }).notNull(),
+    start_date: date("start_date").notNull(),
+    end_date: date("end_date").notNull(),
 });
 
 const insertHackathonSchema = createInsertSchema(hackathons, {
     hackathon_id: (schema) => schema.hackathon_id.optional(),
-    start_date: (schema) => schema.start_date.date(),
-    end_date: (schema) => schema.end_date.date(),
 }).omit({ hackathon_id: true });
 
 const deleteHackathonSchema = z.object({
@@ -25,8 +23,9 @@ const deleteHackathonSchema = z.object({
 
 const updateHackathonSchema = z.object({
     hackathon_id: z.string(),
-    start_date: z.string(),
-    end_date: z.string(),
+    name: z.string(),
+    start_date: z.date().optional(),
+    end_date: z.date().optional(),
 })
 
 const selectHackathonSchema = createSelectSchema(hackathons);

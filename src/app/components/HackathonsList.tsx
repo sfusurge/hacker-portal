@@ -16,8 +16,9 @@ export default function HackathonsList() {
         try {
             await updateHackathon.mutate({
                 hackathon_id: hackathon.hackathon_id,
-                start_date: startDate || hackathon.start_date,
-                end_date: endDate || hackathon.end_date,
+                name: name || hackathon.name,
+                start_date: new Date(startDate) || new Date(hackathon.start_date),
+                end_date: new Date(endDate) || new Date(hackathon.end_date),
             });
         } catch (error) {
             console.error("Failed to update hackathon:", error);
@@ -36,11 +37,11 @@ export default function HackathonsList() {
                             <ul>
                                 <li>
                                     <h3>Start Date:</h3>
-                                    {hackathon.start_date}
+                                    {(hackathon.start_date).toString()}
                                 </li>
                                 <li>
                                     <h3>End Date:</h3>
-                                    {hackathon.end_date}
+                                    {(hackathon.end_date).toString()}
                                 </li>
                             </ul>
                             <button
