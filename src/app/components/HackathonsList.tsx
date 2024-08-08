@@ -3,6 +3,7 @@ import { trpc } from "@/trpc/client";
 
 export default function HackathonsList() {
     const hackathons = trpc.hackathons.getHackathons.useQuery().data;
+    const deleteHackathon = trpc.hackathons.deleteHackathon.useMutation();
 
     return (
         <div>
@@ -23,6 +24,15 @@ export default function HackathonsList() {
                                     {hackathon.end_date}
                                 </li>
                             </ul>
+                            <button
+                                onClick={async () => {
+                                    deleteHackathon.mutate({
+                                        id: hackathon.hackathon_id
+                                    });
+                                }}
+                            >
+                                Delete Hackathon
+                            </button>
                             <br></br>
                         </div>
                     );
