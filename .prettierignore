@@ -1,0 +1,8 @@
+# Ignore auto-generated drizzle files
+drizzle/
+
+pnpm-lock.yaml
+
+.github
+
+README
