@@ -28,7 +28,6 @@ export default function UsersList({ selectedUsers, setSelectedUsers }:UsersListP
 
   const handleUpdateUser = async (user: any) => {
     try {
-      console.log(user.id);
       updateUser.mutate({
         id: user.id,
         email: email || user.email,
@@ -40,9 +39,9 @@ export default function UsersList({ selectedUsers, setSelectedUsers }:UsersListP
     }
   };
 
-return (
-  <div>
-    {users?.map((user) => (
+  return (
+    <div>
+      {users?.map((user) => (
         <div key={user.id}>
           <strong>
             {user.lastName}, {user.firstName}
