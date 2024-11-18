@@ -5,6 +5,13 @@ CREATE TABLE IF NOT EXISTS "comments" (
 	"create_time" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "simpleComments" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"userName" varchar NOT NULL,
+	"message" text NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "users" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"first_name" varchar(64) NOT NULL,

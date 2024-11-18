@@ -70,6 +70,17 @@ const deleteComment = z.object({
   id: z.number().min(0),
 });
 
+export const simpleCommentTable = pgTable('simpleComments', {
+  id: serial('id').primaryKey(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  userName: varchar('userName').notNull().default(''),
+  message: text('message').notNull().default(''),
+});
+
+const insertSimpleComment = createInsertSchema(simpleCommentTable).omit({
+  id: true,
+});
+
 export {
   getComments,
   insertComment,
@@ -79,4 +90,5 @@ export {
   insertUser,
   updateUser,
   deleteUser,
+  insertSimpleComment,
 };

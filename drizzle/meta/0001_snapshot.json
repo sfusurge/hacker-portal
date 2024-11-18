@@ -1,6 +1,6 @@
 {
-  "id": "7cb8723c-c678-4f53-bd92-2b59602f555c",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "d5476fb1-eee1-4727-a346-6eef61d1a1ba",
+  "prevId": "7cb8723c-c678-4f53-bd92-2b59602f555c",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -74,13 +74,15 @@
           "name": "userName",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "''"
         },
         "message": {
           "name": "message",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "''"
         }
       },
       "indexes": {},

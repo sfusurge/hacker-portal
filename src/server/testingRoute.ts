@@ -6,6 +6,8 @@ import {
   deleteUser,
   updateUser,
   insertComment,
+  insertSimpleComment,
+  simpleCommentTable,
 } from '@/db/schema/user';
 import { db } from '@/db/client';
 import { eq } from 'drizzle-orm';
@@ -34,4 +36,10 @@ export const testingRouter = router({
   insertComment: publicProcedure.input(insertComment).mutation(async (opts) => {
     await db.insert(commentTable).values(opts.input);
   }),
+
+  insertSimpleComment: publicProcedure
+    .input(insertSimpleComment)
+    .mutation(async (opts) => {
+      await db.insert(simpleCommentTable).values(opts.input);
+    }),
 });

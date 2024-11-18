@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { trpc } from '../trpc/client';
+import { trpc } from '@/trpc/client';
 import { useMemo } from 'react';
 import { useCallback } from 'react';
 import { useRef } from 'react';
@@ -28,6 +28,8 @@ export default function Home() {
   const [usersList, setUserList] = useState<{ [name: string]: UserStatusType }>(
     {}
   );
+
+  const addtRPCSimpleComment = trpc.demo.insertSimpleComment.useMutation();
 
   function addMessage(newMsg: string) {
     messagesRef.current.push(newMsg);
@@ -80,21 +82,21 @@ export default function Home() {
           type="text"
           id="userName"
         />
-      </div>
 
-      <select
-        name="currentStatus"
-        id="currentStatus"
-        onInput={(e) => {
-          presenseFuncs.current?.updateStatus(
-            e.currentTarget.value as UserStatusType
-          );
-        }}
-      >
-        <option value={UserStatus.Online}>Online</option>
-        <option value={UserStatus.Offline}>Offline</option>
-        <option value={UserStatus.DND}>DND</option>
-      </select>
+        <select
+          name="currentStatus"
+          id="currentStatus"
+          onInput={(e) => {
+            presenseFuncs.current?.updateStatus(
+              e.currentTarget.value as UserStatusType
+            );
+          }}
+        >
+          <option value={UserStatus.Online}>Online</option>
+          <option value={UserStatus.Offline}>Offline</option>
+          <option value={UserStatus.DND}>DND</option>
+        </select>
+      </div>
 
       <div>
         <label htmlFor="message">Message</label>
@@ -108,7 +110,18 @@ export default function Home() {
             commentFuncs.current?.addComment(userName, messageBuffer);
           }}
         >
-          Send!
+          Send with Supabase
+        </button>
+
+        <button
+          onClick={() => {
+            addtRPCSimpleComment.mutate({
+              message: messageBuffer,
+              userName,
+            });
+          }}
+        >
+          Send with tRPC
         </button>
       </div>
 
@@ -119,14 +132,6 @@ export default function Home() {
         }}
       >
         Poke
-      </button>
-
-      <button
-        onClick={() => {
-          setMessages([...messages, '???']);
-        }}
-      >
-        Sanity check
       </button>
 
       <div
