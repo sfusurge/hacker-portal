@@ -5,7 +5,6 @@ import {
   insertUser,
   deleteUser,
   updateUser,
-  getComments,
   insertComment,
 } from '@/db/schema/user';
 import { db } from '@/db/client';
