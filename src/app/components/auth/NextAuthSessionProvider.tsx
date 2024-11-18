@@ -1,9 +1,16 @@
 import { getServerSession } from 'next-auth';
 import SessionProvider from './SessionProvider';
 
-export default async function NextAuthSessionProvider({
+interface NextAuthSessionProviderProps {
+  readonly children: React.ReactNode;
+}
+
+async function NextAuthSessionProvider({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+}: NextAuthSessionProviderProps) {
   const session = await getServerSession();
   return <SessionProvider session={session}>{children}</SessionProvider>;
 }
+
+export { NextAuthSessionProvider };
+export type { NextAuthSessionProviderProps };
