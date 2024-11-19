@@ -29,6 +29,8 @@ export default function Home() {
     {}
   );
 
+  const [recentComment, setRecentComment] = useState('');
+
   const addtRPCSimpleComment = trpc.demo.insertSimpleComment.useMutation();
 
   function addMessage(newMsg: string) {
@@ -58,9 +60,14 @@ export default function Home() {
       }
     );
 
-    commentFuncs.current = watchComment((username, comment) => {
-      addMessage(`${username} said: ${comment}`);
-    });
+    commentFuncs.current = watchComment(
+      (username, comment) => {
+        addMessage(`${username} said: ${comment}`);
+      },
+      (name, comment) => {
+        setRecentComment(`${name}: ${comment}`);
+      }
+    );
   }
 
   useEffect(() => {
@@ -131,8 +138,10 @@ export default function Home() {
           presenseFuncs.current?.poke?.();
         }}
       >
-        Poke
+        Poke (broadcast)
       </button>
+
+      <span>Most recent (via db update) {recentComment}</span>
 
       <div
         style={{

@@ -81,6 +81,12 @@ const insertSimpleComment = createInsertSchema(simpleCommentTable).omit({
   id: true,
 });
 
+export const mostRecentCommentTable = pgTable('mostRecentComment', {
+  id: serial('id').primaryKey(),
+  userName: varchar('userName').notNull().default(''),
+  message: text('message').notNull().default(''),
+});
+
 export {
   getComments,
   insertComment,

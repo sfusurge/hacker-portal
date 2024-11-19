@@ -93,7 +93,8 @@ interface CommentType {
 }
 
 export function watchComment(
-  onComment: (username: string, comment: string) => void
+  onComment: (username: string, comment: string) => void,
+  onMostRecent: (username: string, comment: string) => void
 ) {
   const channel = supabase.channel('comment_channel'); // NOTE, each client can only listen to once channel of the same name at a time
 
@@ -111,6 +112,23 @@ export function watchComment(
         onComment(newRow.userName, newRow.message);
       }
     )
+    .on<CommentType>(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'mostRecentComment',
+      },
+      (payload) => {
+        if (payload.eventType === 'DELETE') {
+          return;
+        }
+
+        const newComment = payload.new;
+
+        onMostRecent(newComment.userName, newComment.message);
+      }
+    )
     .subscribe();
 
   return {
@@ -119,6 +137,15 @@ export function watchComment(
         userName,
         message,
       });
+
+      await supabase
+        .from('mostRecentComment')
+        .update({
+          id: 0,
+          userName,
+          message,
+        })
+        .eq('id', 0);
     },
     cleanup: () => {
       supabase.removeChannel(channel);
