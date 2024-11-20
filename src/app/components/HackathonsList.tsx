@@ -10,7 +10,7 @@ export default function HackathonsList() {
       <div>
         {hackathons?.map((hackathon, key) => {
           return (
-            <div>
+            <div key={hackathon.hackathon_id}>
               <strong>{hackathon.name},</strong>
               <ul>
                 <li>
