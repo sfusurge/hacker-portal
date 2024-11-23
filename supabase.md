@@ -40,3 +40,13 @@ Supabase provides 3 methods of real time connection types
   - table being watched needs to be marked "realtime enabled" in cloud console
     - using `.on()` on a non-realtime table seems to break the entire channel, watch out!
   - When triggering change via tRPC, supabase realtime db change event still fires!
+
+## Security
+
+Done via Supabase/postgres RLS, or in drizzle/trpc do end point role validations?
+Which one?
+RLS is ideal imo
+
+## Auth
+
+Can we do third party auth only?
