@@ -1,6 +1,6 @@
 'use client';
 
-import { CSSProperties, useMemo } from 'react';
+import { CSSProperties, useMemo, useState } from 'react';
 import { CalendarEventType, MonthInfoType } from './types';
 import moment from 'moment';
 import style from './MonthCalendar.module.css';
@@ -41,6 +41,35 @@ export function MonthCalendar({ events }: { events: CalendarEventType[] }) {
     return getMonthInfo(year, month);
   }, [year, month]);
 
+  // filter to only include events of the current month, grouped by day, each day's event sorted by title alphabetically.
+  const eventsOfMonth = useMemo<{
+    [dayOfMonth: number]: CalendarEventType[];
+  }>(() => {
+    // have a view of only this month
+    const filtered = events.filter((item) => {
+      const start = moment(item.startTime);
+      const end = moment(item.startTime).minutes(item.duration);
+
+      return start.month() == month && start.year() == year;
+    });
+
+    const grouped = {
+      ...Object.groupBy(filtered, (item) => {
+        return moment(item.startTime).date();
+      }),
+    } as { [dayOfMonth: number]: CalendarEventType[] };
+
+    for (const [key, val] of Object.entries(grouped)) {
+      grouped[parseInt(key)] = val.sort((a, b) => {
+        return a.title.localeCompare(b.title);
+      });
+    }
+
+    console.log(grouped);
+
+    return grouped;
+  }, [year, month]);
+
   return (
     <div className="monthcalendar_parent">
       <h1>{monthInfo.displayName}</h1>
@@ -68,12 +97,20 @@ export function MonthCalendar({ events }: { events: CalendarEventType[] }) {
 
         {range(monthInfo.weeksInMonth).map((weekIdx) => (
           <div key={weekIdx} className={style.monthDayRow}>
-            {range(7).map((dayIdx) => (
-              <MonthDay
-                key={dayIdx}
-                day={weekIdx * 7 + dayIdx + 1 - monthInfo.firstDayOffset}
-              />
-            ))}
+            {range(7).map((dayIdx) => {
+              // use current row, col and firstday offset to find each day is it currently
+              const d = weekIdx * 7 + dayIdx + 1 - monthInfo.firstDayOffset;
+              return (
+                <MonthDay
+                  // pass events of particular day to the matching day
+                  events={
+                    eventsOfMonth[d] !== undefined ? eventsOfMonth[d] : []
+                  }
+                  key={dayIdx}
+                  day={d}
+                />
+              );
+            })}
           </div>
         ))}
       </div>
@@ -81,26 +118,50 @@ export function MonthCalendar({ events }: { events: CalendarEventType[] }) {
   );
 }
 
-function MonthDay({ day }: { day: number }) {
+function MonthDay({
+  day,
+  events,
+}: {
+  day: number;
+  events: CalendarEventType[];
+}) {
   if (day <= 0) {
     return <div className={style.monthDayItem}></div>;
   }
 
-  return (
-    <div className={style.monthDayItem}>
-      <p style={{ textAlign: 'end', padding: '0.5rem' }}>{day}</p>
+  const [selected, setSelected] = useState(false);
 
-      {/* just testing */}
-      <div
-        className={style.monthEventItem}
-        style={
-          {
-            '--eventBackground': 'red',
-          } as CSSProperties
-        }
+  return (
+    <div
+      className={style.monthDayItem}
+      onClick={() => {
+        setSelected(!selected);
+        console.log(selected);
+      }}
+    >
+      <span
+        className={`${style.monthDayLabel} ${selected ? style.selected : ''}`}
       >
-        Stuff
-      </div>
+        {day}
+      </span>
+      {events.map((item) => (
+        <MonthDayEvent key={item.id} event={item}></MonthDayEvent>
+      ))}
+    </div>
+  );
+}
+
+function MonthDayEvent({ event }: { event: CalendarEventType }) {
+  return (
+    <div
+      className={style.monthEventItem}
+      style={
+        {
+          '--eventBackground': event.color,
+        } as CSSProperties
+      }
+    >
+      {event.title}
     </div>
   );
 }

@@ -54,6 +54,11 @@
 .monthDayItem {
   flex: 1;
 
+  /* min-width:0 makes the flex item not expand beyond space allocated by flex, somehow
+  https://stackoverflow.com/a/66689926
+  */
+  min-width: 0;
+
   box-sizing: border-box;
   border-right: var(--borderSpec);
 
@@ -68,8 +73,13 @@
   background-color: #deeff9;
 }
 
+.monthDayItem.presentDay {
+  background-color: #ffcccb;
+}
+
 /* Stuff inside month item */
 
+/* Event item */
 .monthEventItem {
   /* to make ::before work */
   position: relative;
@@ -80,6 +90,7 @@
   line-height: 20px;
   font-size: 12px;
   font-weight: bold;
+  text-overflow: ellipsis;
 
   padding-left: 0.4rem;
 
@@ -88,6 +99,7 @@
   overflow: hidden;
 
   cursor: pointer;
+  user-select: none;
 
   transition:
     scale 250ms ease-out,
@@ -126,4 +138,34 @@
 .monthEventItem:hover {
   scale: 1.1;
   filter: brightness(1.05);
+}
+
+/* month day label */
+
+.monthDayLabel {
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  width: 20px;
+  height: 20px;
+
+  margin: 0.25rem;
+  padding: 0.1rem;
+  margin-left: auto;
+
+  font-size: 14px;
+
+  border-radius: 50%;
+
+  user-select: none;
+  transition:
+    background-color 200ms ease-out,
+    color 200ms ease-out;
+}
+
+.monthDayLabel.selected {
+  color: white;
+  background-color: dodgerblue;
 }
