@@ -13,3 +13,8 @@ input {
   padding: 0.25rem;
   margin: 0.25rem;
 }
+@layer base {
+  :root {
+    --radius: 0.5rem;
+  }
+}
