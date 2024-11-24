@@ -86,5 +86,21 @@ function MonthDay({ day }: { day: number }) {
     return <div className={style.monthDayItem}></div>;
   }
 
-  return <div className={style.monthDayItem}>{day}</div>;
+  return (
+    <div className={style.monthDayItem}>
+      <p style={{ textAlign: 'end', padding: '0.5rem' }}>{day}</p>
+
+      {/* just testing */}
+      <div
+        className={style.monthEventItem}
+        style={
+          {
+            '--eventBackground': 'red',
+          } as CSSProperties
+        }
+      >
+        Stuff
+      </div>
+    </div>
+  );
 }

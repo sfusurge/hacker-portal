@@ -13,6 +13,7 @@
   overflow: hidden;
 }
 
+/* Week title row */
 .weekdayNameRow {
   display: flex;
   flex-direction: row;
@@ -35,6 +36,7 @@
   border-color: transparent;
 }
 
+/* Month day rows/items */
 .monthDayRow {
   display: flex;
   flex-direction: row;
@@ -63,5 +65,65 @@
 }
 
 .monthDayItem:hover {
-  background-color: lightblue;
+  background-color: #deeff9;
+}
+
+/* Stuff inside month item */
+
+.monthEventItem {
+  /* to make ::before work */
+  position: relative;
+
+  margin: 0.25rem;
+
+  height: 20px;
+  line-height: 20px;
+  font-size: 12px;
+  font-weight: bold;
+
+  padding-left: 0.4rem;
+
+  border-radius: 4px;
+  background-color: white;
+  overflow: hidden;
+
+  cursor: pointer;
+
+  transition:
+    scale 250ms ease-out,
+    filter 250ms ease-out;
+}
+
+.monthEventItem::before {
+  content: '';
+
+  position: absolute;
+  left: 0;
+  top: 0;
+
+  width: 100%;
+  height: 100%;
+
+  /* Lighten chosen background color, since background is white */
+  opacity: 0.5;
+  background-color: var(--eventBackground);
+}
+
+.monthEventItem::after {
+  content: '';
+
+  position: absolute;
+  left: 0;
+  top: 0;
+
+  /* put a line at the left, which will get cropped by round corner, and not effected by background transparency */
+  width: 100%;
+  height: 100%;
+
+  border-left: 3px solid var(--eventBackground);
+}
+
+.monthEventItem:hover {
+  scale: 1.1;
+  filter: brightness(1.05);
 }
