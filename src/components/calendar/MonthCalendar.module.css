@@ -1,0 +1,67 @@
+.calendarContainer {
+  width: 600px;
+  height: 600px;
+
+  display: flex;
+  flex-direction: column;
+
+  --borderSpec: 1px solid grey;
+  border: var(--borderSpec);
+  border-radius: 10px;
+  box-sizing: border-box;
+
+  overflow: hidden;
+}
+
+.weekdayNameRow {
+  display: flex;
+  flex-direction: row;
+  height: 24px;
+
+  box-sizing: border-box;
+  border-bottom: var(--borderSpec);
+}
+
+.weekdayName {
+  text-align: center;
+  line-height: 24px;
+
+  flex: 1;
+
+  box-sizing: border-box;
+  border-right: var(--borderSpec);
+}
+.weekdayName:last-child {
+  border-color: transparent;
+}
+
+.monthDayRow {
+  display: flex;
+  flex-direction: row;
+
+  flex: 1;
+
+  box-sizing: border-box;
+  border-bottom: var(--borderSpec);
+}
+
+.monthDayRow:last-child {
+  border: none;
+}
+
+.monthDayItem {
+  flex: 1;
+
+  box-sizing: border-box;
+  border-right: var(--borderSpec);
+
+  transition: background-color 400ms ease-out;
+}
+
+.monthDayItem:last-child {
+  border-color: transparent;
+}
+
+.monthDayItem:hover {
+  background-color: lightblue;
+}
