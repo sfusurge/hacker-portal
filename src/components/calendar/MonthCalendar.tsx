@@ -1,9 +1,11 @@
 'use client';
 
-import { CSSProperties, useMemo, useState } from 'react';
+import { CSSProperties, useMemo, useRef, useState } from 'react';
 import { CalendarEventType, MonthInfoType } from './types';
 import moment from 'moment';
 import style from './MonthCalendar.module.css';
+import { atom, useAtom, useSetAtom, useAtomValue, Provider } from 'jotai';
+import { selectedEventAtom } from './MonthCalendarState';
 moment.locale('en-CA'); // lock local to canada, no need to support calendar format aroudn the world
 
 function getMonthInfo(year: number, month: number): MonthInfoType {
@@ -34,7 +36,20 @@ function range(count: number) {
   return out;
 }
 
-export function MonthCalendar({ events }: { events: CalendarEventType[] }) {
+export function MonthCalendar(props: { events: CalendarEventType[] }) {
+  // just a wrapper to provide Provider for context.
+  return (
+    <Provider>
+      <MonthCalendarContent {...props}></MonthCalendarContent>
+    </Provider>
+  );
+}
+
+export function MonthCalendarContent({
+  events,
+}: {
+  events: CalendarEventType[];
+}) {
   const [year, month] = [2024, 10]; // for testing, month is 0 indexed
 
   const monthInfo = useMemo(() => {
@@ -65,14 +80,16 @@ export function MonthCalendar({ events }: { events: CalendarEventType[] }) {
       });
     }
 
-    console.log(grouped);
-
     return grouped;
   }, [year, month]);
+
+  const selectedEvent = useAtomValue(selectedEventAtom);
 
   return (
     <div className="monthcalendar_parent">
       <h1>{monthInfo.displayName}</h1>
+
+      <h1>Currently seleced event: {selectedEvent?.title}</h1>
 
       <div
         className={style.calendarContainer}
@@ -136,7 +153,6 @@ function MonthDay({
       className={style.monthDayItem}
       onClick={() => {
         setSelected(!selected);
-        console.log(selected);
       }}
     >
       <span
@@ -152,6 +168,7 @@ function MonthDay({
 }
 
 function MonthDayEvent({ event }: { event: CalendarEventType }) {
+  const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
   return (
     <div
       className={style.monthEventItem}
@@ -160,6 +177,9 @@ function MonthDayEvent({ event }: { event: CalendarEventType }) {
           '--eventBackground': event.color,
         } as CSSProperties
       }
+      onClick={() => {
+        setSelectedEvent(event);
+      }}
     >
       {event.title}
     </div>

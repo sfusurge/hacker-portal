@@ -2,7 +2,6 @@
 
 import { CalendarEventType } from '@/components/calendar/types';
 import { MonthCalendar } from '@/components/calendar/MonthCalendar';
-import { useState } from 'react';
 
 export default function Calendar() {
   const events: CalendarEventType[] = [
