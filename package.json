@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "format:all": "prettier --write .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:unit": "vitest run --project unit",
+    "test:e2e": "vitest run --project e2e"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -38,10 +40,12 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.48.2",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "argon2": "^0.40.3",
+    "dotenv": "^16.4.5",
     "drizzle-kit": "^0.22.7",
     "eslint": "^8",
     "eslint-config-next": "15.0.3",
@@ -50,7 +54,8 @@
     "prettier": "^3.3.3",
     "superjson": "^2.2.1",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.5"
   },
   "packageManager": "pnpm@9.4.0+sha1.9217c800d4ab947a7aee520242a7b70d64fc7638"
 }
