@@ -6,6 +6,8 @@ import moment from 'moment';
 import style from './MonthCalendar.module.css';
 import { atom, useAtom, useSetAtom, useAtomValue, Provider } from 'jotai';
 import { selectedEventAtom } from './MonthCalendarState';
+import { DynamicMessage } from './DynamicMessage';
+import { Card, CardContent, CardHeader } from '../ui/card';
 moment.locale('en-CA'); // lock local to canada, no need to support calendar format aroudn the world
 
 function getMonthInfo(year: number, month: number): MonthInfoType {
@@ -83,53 +85,81 @@ export function MonthCalendarContent({
     return grouped;
   }, [year, month]);
 
-  const selectedEvent = useAtomValue(selectedEventAtom);
+  const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
+  const renderRootRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="monthcalendar_parent">
+    <div>
       <h1>{monthInfo.displayName}</h1>
 
-      <h1>Currently seleced event: {selectedEvent?.title}</h1>
+      <h1>Currently seleced event: {selectedEvent?.event?.title}</h1>
 
-      <div
-        className={style.calendarContainer}
-        style={
-          {
-            '--rowCount': monthInfo.weeksInMonth,
-          } as CSSProperties
+      <div ref={renderRootRef} className={style.calendarRenderRoot}>
+        {
+          // selected event prompt
+          selectedEvent && (
+            <DynamicMessage
+              rootRef={renderRootRef.current!}
+              parentRef={selectedEvent.element}
+              closeLabel={() => {
+                // disable prompt
+                setSelectedEvent(undefined);
+              }}
+            >
+              <Card
+                style={{
+                  border: `2px solid ${selectedEvent.event.color}`,
+                  minWidth: '200px',
+                }}
+              >
+                <CardHeader>{selectedEvent.event.title}</CardHeader>
+
+                <CardContent>{selectedEvent.event.description}</CardContent>
+              </Card>
+            </DynamicMessage>
+          )
         }
-      >
-        {/* Week day name row, such as Sun, Mon, Tues, ... */}
-        <div className={style.weekdayNameRow}>
-          {monthInfo.weekdayNames.map((item, index) => (
-            <span key={index} className={style.weekdayName}>
-              {item}
-            </span>
-          ))}
-        </div>
 
-        {/* Day in month, each row is a week as a flex row
+        <div
+          className={style.calendarContainer}
+          style={
+            {
+              '--rowCount': monthInfo.weeksInMonth,
+            } as CSSProperties
+          }
+        >
+          {/* Week day name row, such as Sun, Mon, Tues, ... */}
+          <div className={style.weekdayNameRow}>
+            {monthInfo.weekdayNames.map((item, index) => (
+              <span key={index} className={style.weekdayName}>
+                {item}
+              </span>
+            ))}
+          </div>
+
+          {/* Day in month, each row is a week as a flex row
                 then each row contains items for each day.
             */}
 
-        {range(monthInfo.weeksInMonth).map((weekIdx) => (
-          <div key={weekIdx} className={style.monthDayRow}>
-            {range(7).map((dayIdx) => {
-              // use current row, col and firstday offset to find each day is it currently
-              const d = weekIdx * 7 + dayIdx + 1 - monthInfo.firstDayOffset;
-              return (
-                <MonthDay
-                  // pass events of particular day to the matching day
-                  events={
-                    eventsOfMonth[d] !== undefined ? eventsOfMonth[d] : []
-                  }
-                  key={dayIdx}
-                  day={d}
-                />
-              );
-            })}
-          </div>
-        ))}
+          {range(monthInfo.weeksInMonth).map((weekIdx) => (
+            <div key={weekIdx} className={style.monthDayRow}>
+              {range(7).map((dayIdx) => {
+                // use current row, col and firstday offset to find each day is it currently
+                const d = weekIdx * 7 + dayIdx + 1 - monthInfo.firstDayOffset;
+                return (
+                  <MonthDay
+                    // pass events of particular day to the matching day
+                    events={
+                      eventsOfMonth[d] !== undefined ? eventsOfMonth[d] : []
+                    }
+                    key={dayIdx}
+                    day={d}
+                  />
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -168,9 +198,11 @@ function MonthDay({
 }
 
 function MonthDayEvent({ event }: { event: CalendarEventType }) {
-  const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
+  const setSelectedEvent = useSetAtom(selectedEventAtom);
+  const ref = useRef<HTMLDivElement>(null);
   return (
     <div
+      ref={ref}
       className={style.monthEventItem}
       style={
         {
@@ -178,7 +210,7 @@ function MonthDayEvent({ event }: { event: CalendarEventType }) {
         } as CSSProperties
       }
       onClick={() => {
-        setSelectedEvent(event);
+        setSelectedEvent({ event, element: ref.current! });
       }}
     >
       {event.title}

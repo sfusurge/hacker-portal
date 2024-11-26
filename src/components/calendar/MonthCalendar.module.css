@@ -1,6 +1,15 @@
-.calendarContainer {
+.calendarRenderRoot {
+  /* to provide positioning reference for all children */
+  position: relative;
+
   width: 600px;
   height: 600px;
+  display: flex;
+}
+
+.calendarContainer {
+  width: 100%;
+  height: 100%;
 
   display: flex;
   flex-direction: column;

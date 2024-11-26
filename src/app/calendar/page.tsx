@@ -91,6 +91,27 @@ export default function Calendar() {
     <div>
       <h1>Calendar Test page</h1>
       <MonthCalendar events={events}></MonthCalendar>
+
+      <h2>Make page longer</h2>
+      <h2>Make page longer</h2>
+
+      <h2>Make page longer</h2>
+
+      <h2>Make page longer</h2>
+
+      <h2>Make page longer</h2>
+
+      <h2>Make page longer</h2>
+
+      <h2>Make page longer</h2>
+
+      <h2>Make page longer</h2>
+
+      <h2>Make page longer</h2>
+
+      <h2>Make page longer</h2>
+
+      <h2>Make page longer</h2>
     </div>
   );
 }
