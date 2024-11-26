@@ -2,7 +2,6 @@ import { mysqlTable, int, text, varchar } from 'drizzle-orm/mysql-core';
 import { createId } from '@paralleldrive/cuid2';
 import { z } from 'zod';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { hashPassword } from '../utils';
 
 const users = mysqlTable('users', {
   id: varchar('id', { length: 128 })
@@ -17,18 +16,12 @@ const users = mysqlTable('users', {
   //
   // We also need to account for the metadata which includes the hashing algorithm, its versions, parameters
   // and the base64 encoded salt used in the hashing process, which is in total 54 characters
-  password: varchar('password', { length: 54 + 43 }).notNull(),
 });
 
 const insertUserSchema = createInsertSchema(users, {
   email: (schema) => schema.email.email(),
   id: (schema) => schema.id.optional(),
-})
-  .omit({ id: true })
-  .transform(async (input) => {
-    input.password = await hashPassword(input.password);
-    return input;
-  });
+});
 
 const updateUserSchema = z
   .object({
