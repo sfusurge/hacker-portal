@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss';
+import defaultTheme from 'tailwindcss/defaultTheme';
 
 const opacities = {
   '18': '0.18',
@@ -130,6 +131,49 @@ const config: Config = {
           secondary: danger['600'],
           disabled: rgba(danger['400'], '18'),
         },
+      },
+      fontSize: {
+        xs: '0.75rem',
+        sm: '0.875rem',
+        base: '1rem',
+        lg: '1.125rem',
+        xl: '1.25rem',
+        '2xl': '1.5rem',
+        '3xl': '1.813rem',
+        '4xl': '2.188rem',
+      },
+      fontWeight: {
+        thin: '100',
+        extralight: '200',
+        light: '300',
+        normal: '400',
+        medium: '500',
+        semibold: '600',
+        bold: '700',
+        extrabold: '800',
+        black: '900',
+      },
+      fontFamily: {
+        sans: ['Inter', ...defaultTheme.fontFamily.sans],
+        mono: ['DM Mono', ...defaultTheme.fontFamily.mono],
+      },
+      lineHeight: {
+        none: '1',
+        tighter: '1.125',
+        tight: '1.25',
+        snug: '1.375',
+        normal: '1.5',
+        relaxed: '1.625',
+        loose: '2',
+      },
+      letterSpacing: {
+        tightest: '-0.015em',
+        tighter: '-0.01em',
+        tight: '-0.0075em',
+        normal: '0em',
+        wide: '0.0075em',
+        wider: '0.01em',
+        widest: '0.015em',
       },
     },
   },

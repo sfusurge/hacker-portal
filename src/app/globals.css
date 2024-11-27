@@ -6,3 +6,70 @@
     --radius: 0.5rem;
   }
 }
+
+/* https://tailwindcss.com/docs/reusing-styles#extracting-classes-with-apply */
+@layer components {
+  .display {
+    @apply font-sans text-4xl font-semibold leading-tighter tracking-tightest;
+  }
+
+  .title-lg {
+    @apply font-sans text-3xl font-semibold leading-tighter tracking-tightest;
+  }
+
+  .title-md {
+    @apply font-sans text-2xl font-semibold leading-tighter tracking-tightest;
+  }
+
+  .title-sm {
+    @apply font-sans text-xl font-semibold leading-tighter tracking-tighter;
+  }
+
+  .label {
+    @apply font-sans text-base font-semibold leading-tight tracking-tighter;
+  }
+
+  .label-sm {
+    @apply font-sans text-sm font-semibold leading-tight tracking-tighter;
+  }
+
+  .emphasized {
+    @apply font-semibold;
+  }
+
+  .body-lg {
+    @apply font-sans text-lg leading-none tracking-tight;
+  }
+
+  .body-base {
+    @apply font-sans text-base leading-none tracking-tight;
+  }
+
+  .body-sm {
+    @apply font-sans text-sm leading-none tracking-tight;
+  }
+
+  .paragraph-lg {
+    @apply font-sans text-lg leading-normal tracking-tight;
+  }
+
+  .paragraph-base {
+    @apply font-sans text-base leading-normal tracking-tight;
+  }
+
+  .paragraph-sm {
+    @apply font-sans text-sm leading-normal tracking-tight;
+  }
+
+  .code-lg {
+    @apply font-mono text-lg leading-none tracking-normal;
+  }
+
+  .code-base {
+    @apply font-mono text-base leading-none tracking-normal;
+  }
+
+  .code-sm {
+    @apply font-mono text-base leading-none tracking-normal;
+  }
+}
