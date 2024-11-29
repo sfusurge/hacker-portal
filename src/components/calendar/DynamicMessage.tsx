@@ -1,13 +1,15 @@
 import {
     CSSProperties,
     ReactNode,
+    useCallback,
+    useEffect,
     useLayoutEffect,
     useMemo,
     useRef,
     useState,
 } from 'react';
 import style from './DynamicMessage.module.css';
-
+import { motion, AnimatePresence } from 'motion/react';
 // lower is always 0
 function limitDimention(
     max: number,
@@ -120,22 +122,54 @@ export function DynamicMessage({
         return [calcTop, calcLeft];
     }, [width, height, childRef.current]);
 
+    const clickedOutsideCallback = useCallback(
+        (e: MouseEvent) => {
+            if (
+                !childRef.current?.contains(e.target as Node) &&
+                !e.defaultPrevented
+            ) {
+                // clicked outside
+                closeLabel();
+            }
+        },
+        [closeLabel]
+    );
+    useEffect(() => {
+        document.addEventListener('click', clickedOutsideCallback);
+        return () => {
+            document.removeEventListener('click', clickedOutsideCallback);
+        };
+    }, []);
+
     return (
-        <>
-            <div
-                ref={childRef}
-                style={
-                    {
-                        '--top': `${top}px`,
-                        '--left': `${left}px`,
-                    } as CSSProperties
-                }
-                className={style.labelChildrenContainer}
-            >
-                {children}
-            </div>
-            {/* <div className={style.background} onClick={closeLabel} /> */}
-        </>
+        <motion.div
+            ref={childRef}
+            style={
+                {
+                    '--top': `${top}px`,
+                    '--left': `${left}px`,
+                } as CSSProperties
+            }
+            className={style.labelChildrenContainer}
+            initial={{
+                x: -25,
+                opacity: 0,
+            }}
+            animate={{
+                x: 0,
+                opacity: 1,
+                transition: {
+                    duration: 0.2,
+                    ease: 'circOut',
+                },
+            }}
+            exit={{
+                x: 25,
+                opacity: 0,
+            }}
+        >
+            {children}
+        </motion.div>
     );
 }
 

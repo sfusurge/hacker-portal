@@ -12,6 +12,7 @@ import {
 } from './MonthCalendarShared';
 import { DynamicMessage } from './DynamicMessage';
 import { Card, CardContent, CardHeader } from '../ui/card';
+import { AnimatePresence } from 'motion/react';
 moment.locale('en-CA'); // lock local to canada, no need to support calendar format aroudn the world
 
 function getMonthInfo(year: number, month: number): MonthInfoType {
@@ -82,9 +83,12 @@ export function MonthCalendarContent({
             <h1>Currently seleced event: {selectedEvent?.event?.title}</h1>
 
             <div ref={renderRootRef} className={style.calendarRenderRoot}>
-                {
-                    // selected event prompt
-                    selectedEvent && (
+                {/* AnimatePresence needed for framer motion, needs to always exist and wrap content. 
+      (As in, content is toggling within AnimatePresence. TODO: Refactor into it's own component)
+      */}
+
+                <AnimatePresence>
+                    {selectedEvent && (
                         <DynamicMessage
                             rootRef={renderRootRef.current!}
                             parentRef={selectedEvent.element}
@@ -108,8 +112,8 @@ export function MonthCalendarContent({
                                 </CardContent>
                             </Card>
                         </DynamicMessage>
-                    )
-                }
+                    )}
+                </AnimatePresence>
 
                 <div
                     className={style.calendarContainer}
