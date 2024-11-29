@@ -1,13 +1,14 @@
 .timelineContainer {
     margin: 0.5rem;
-    max-width: 250px;
+    max-width: 300px;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
 
     height: 400px;
     position: relative;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 .timelineHeader {
     display: flex;
@@ -41,7 +42,7 @@
 
     height: fit-content;
 
-    margin: 0.25rem;
+    margin: 0.25rem 0.3rem;
 }
 
 .timelineItemWrapper::before {
@@ -66,7 +67,8 @@
     width: 100%;
     height: 100%;
 
-    border-left: 3px solid var(--color);
+    border-left: 4px solid var(--color);
+    z-index: -1;
 }
 
 .timelineItemMainContent {
@@ -77,11 +79,10 @@
     justify-content: space-between;
 
     font-size: 13px;
+    cursor: pointer;
 }
 
 .timelineItemMoreContent {
-    max-height: var(--max-height);
-    transition: max-height ease-out 250ms ease-out;
-
+    transition: max-height ease-out 250ms;
     width: 100%;
 }
