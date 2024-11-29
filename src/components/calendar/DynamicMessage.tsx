@@ -120,7 +120,7 @@ export function DynamicMessage({
         }
 
         return [calcTop, calcLeft];
-    }, [width, height, childRef.current]);
+    }, [width, height, childRef.current, parentRef]);
 
     const clickedOutsideCallback = useCallback(
         (e: MouseEvent) => {
@@ -129,13 +129,17 @@ export function DynamicMessage({
                 !e.defaultPrevented
             ) {
                 // clicked outside
+                // e.preventDefault();
+                // e.stopImmediatePropagation();
                 closeLabel();
             }
         },
         [closeLabel]
     );
     useEffect(() => {
-        document.addEventListener('click', clickedOutsideCallback);
+        document.addEventListener('click', clickedOutsideCallback, {
+            capture: true,
+        });
         return () => {
             document.removeEventListener('click', clickedOutsideCallback);
         };

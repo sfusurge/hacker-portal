@@ -84,7 +84,7 @@ export default function Calendar() {
             id: 10,
             title: 'Thanksgiving Team Lunch',
             description: 'Celebrate Thanksgiving with the team.',
-            startTime: new Date('2024-11-28T12:00:00'),
+            startTime: new Date('2024-11-28T18:00:00'),
             duration: 90,
             color: '#FFB833',
         },

@@ -1,9 +1,29 @@
 import { CalendarEventType } from './types';
-import moment from 'moment';
+import moment, { Moment } from 'moment';
 import style from './LinearTimeline.module.css';
-import { CSSProperties, Fragment, useRef, useState } from 'react';
-import { groupEventsByDay } from './MonthCalendarShared';
+import { CSSProperties, Fragment, useEffect, useRef, useState } from 'react';
+import { groupEventsByDay, timeBetween } from './MonthCalendarShared';
+import { atom, Provider, useAtom, useAtomValue, useSetAtom } from 'jotai';
+
+const DATE_FORMAT = 'MMM DD, dddd';
+const currentTimeAtom = atom(moment());
+const selectedDay = atom<string | undefined>(undefined);
+
 export function LinearTimeline({
+    events,
+    styles,
+}: {
+    events: CalendarEventType[];
+    styles: CSSProperties;
+}) {
+    return (
+        <Provider>
+            <_LinearTimeline events={events} styles={styles}></_LinearTimeline>
+        </Provider>
+    );
+}
+
+function _LinearTimeline({
     events,
     styles,
 }: {
@@ -12,8 +32,20 @@ export function LinearTimeline({
 }) {
     const eventsGroupedByDay = groupEventsByDay(events);
 
+    const [currentTime, setCurrentTime] = useAtom(currentTimeAtom);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentTime(moment());
+        }, 1000);
+        return () => {
+            clearInterval(interval);
+        };
+    }, []);
+
     return (
         <div className={style.timelineContainer}>
+            <span>Current time is: {currentTime.format('LTS')}</span>
             {Object.entries(eventsGroupedByDay).map((e) => {
                 const [key, eventsOfDay] = e;
                 return (
@@ -36,9 +68,7 @@ export function LinearTimeline({
 
 function TimelineDateHeader({ date }: { date: moment.Moment }) {
     return (
-        <div className={style.timelineHeader}>
-            {date.format('MMM DD, dddd')}
-        </div>
+        <div className={style.timelineHeader}>{date.format(DATE_FORMAT)}</div>
     );
 }
 
@@ -70,7 +100,7 @@ function TimelineItem({ event }: { event: CalendarEventType }) {
                 }}
             >
                 <span>{event.title}</span>
-                <span>{moment(event.startTime).format('LT')}</span>
+                <TimeLabel event={event}></TimeLabel>
             </div>
 
             <div
@@ -89,5 +119,18 @@ function TimelineItem({ event }: { event: CalendarEventType }) {
                 </div>
             </div>
         </div>
+    );
+}
+
+function TimeLabel({ event }: { event: CalendarEventType }) {
+    const currentTime = useAtomValue(currentTimeAtom);
+
+    return (
+        <span>
+            {timeBetween(currentTime, event.startTime, event.duration)
+                ? '> '
+                : ''}
+            {moment(event.startTime).format('LT')}
+        </span>
     );
 }

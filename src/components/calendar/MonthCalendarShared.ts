@@ -1,6 +1,7 @@
+'use client';
 import { atom, useAtom } from 'jotai';
 import { CalendarEventType } from './types';
-import moment from 'moment';
+import moment, { Moment } from 'moment';
 
 // states to be used by MonthCalendar Component and its children
 export const selectedDay = atom(1);
@@ -40,4 +41,15 @@ export function getEventsOfMonth(
     });
 
     return filtered;
+}
+
+export function timeBetween(
+    target: Date | Moment,
+    start: Date | Moment,
+    duration: number
+) {
+    target = moment(target);
+    start = moment(start);
+
+    return target.isAfter(start) && target.isBefore(start.minutes(duration));
 }
