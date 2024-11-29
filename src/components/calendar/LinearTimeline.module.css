@@ -1,0 +1,87 @@
+.timelineContainer {
+    margin: 0.5rem;
+    max-width: 250px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    height: 400px;
+    position: relative;
+    overflow: auto;
+}
+.timelineHeader {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    padding: 0.25rem;
+    padding-left: 1rem;
+
+    background-color: lightgrey;
+    border-top: 2px solid grey;
+    border-bottom: 2px solid grey;
+
+    /* sticky and have later item push up this item */
+    position: sticky;
+    top: 0;
+    z-index: 1;
+
+    font-size: 14px;
+}
+
+.dayWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.timelineItemWrapper {
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+
+    height: fit-content;
+
+    margin: 0.25rem;
+}
+
+.timelineItemWrapper::before {
+    content: '';
+
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+
+    background-color: var(--color);
+    opacity: 0.5;
+}
+
+.timelineItemWrapper::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+
+    border-left: 3px solid var(--color);
+}
+
+.timelineItemMainContent {
+    padding: 0.5rem;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    font-size: 13px;
+}
+
+.timelineItemMoreContent {
+    max-height: var(--max-height);
+    transition: max-height ease-out 250ms ease-out;
+
+    width: 100%;
+}

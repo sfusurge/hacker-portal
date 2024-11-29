@@ -1,33 +1,33 @@
 import {
-  CSSProperties,
-  ReactNode,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
+    CSSProperties,
+    ReactNode,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
 } from 'react';
 import style from './DynamicMessage.module.css';
 
 // lower is always 0
 function limitDimention(
-  max: number,
-  margin: number,
-  childLength: number,
-  parentReference: number,
-  parentLength: number
+    max: number,
+    margin: number,
+    childLength: number,
+    parentReference: number,
+    parentLength: number
 ) {
-  const center = parentReference + parentLength / 2;
-  if (center - childLength / 2 - margin < 0) {
-    // low limit
-    return margin - parentReference;
-  }
+    const center = parentReference + parentLength / 2;
+    if (center - childLength / 2 - margin < 0) {
+        // low limit
+        return margin - parentReference;
+    }
 
-  if (center + childLength / 2 + margin > max) {
-    // upper limit
-    return max - margin - childLength - parentReference;
-  }
+    if (center + childLength / 2 + margin > max) {
+        // upper limit
+        return max - margin - childLength - parentReference;
+    }
 
-  return center - childLength / 2 - parentReference;
+    return center - childLength / 2 - parentReference;
 }
 
 /**
@@ -43,120 +43,120 @@ function limitDimention(
  * * **closeLabel**: a function that will be called when user clicks outside of this message box, this callback should close this messagebox.
  */
 export function DynamicMessage({
-  children,
-  rootRef,
-  parentRef,
-  closeLabel,
+    children,
+    rootRef,
+    parentRef,
+    closeLabel,
 }: Readonly<{
-  children?: ReactNode;
-  rootRef: HTMLDivElement;
-  parentRef: HTMLDivElement;
-  closeLabel: () => void;
+    children?: ReactNode;
+    rootRef: HTMLDivElement;
+    parentRef: HTMLDivElement;
+    closeLabel: () => void;
 }>) {
-  const margin = 12; // 12px margin between parent and message box
+    const margin = 12; // 12px margin between parent and message box
 
-  const childRef = useRef<HTMLDivElement>(null);
+    const childRef = useRef<HTMLDivElement>(null);
 
-  const [width, height] = useDocumentSize();
+    const [width, height] = useDocumentSize();
 
-  const [top, left] = useMemo(() => {
-    let calcTop = 0;
-    let calcLeft = 0;
-    if (childRef.current && parentRef) {
-      const root = rootRef.getBoundingClientRect();
-      const child = childRef.current.getBoundingClientRect();
-      const parent = parentRef.getBoundingClientRect();
+    const [top, left] = useMemo(() => {
+        let calcTop = 0;
+        let calcLeft = 0;
+        if (childRef.current && parentRef) {
+            const root = rootRef.getBoundingClientRect();
+            const child = childRef.current.getBoundingClientRect();
+            const parent = parentRef.getBoundingClientRect();
 
-      // try right side
-      if (parent.right + margin + child.width < width) {
-        // will fit in right side
+            // try right side
+            if (parent.right + margin + child.width < width) {
+                // will fit in right side
 
-        calcTop = limitDimention(
-          height,
-          margin,
-          child.height,
-          parent.top,
-          parent.height
-        );
-        calcLeft = parent.width + margin;
-      } else if (parent.top - margin - child.height > 0) {
-        // try fitting top side
+                calcTop = limitDimention(
+                    height,
+                    margin,
+                    child.height,
+                    parent.top,
+                    parent.height
+                );
+                calcLeft = parent.width + margin;
+            } else if (parent.top - margin - child.height > 0) {
+                // try fitting top side
 
-        calcLeft = limitDimention(
-          width,
-          margin,
-          child.width,
-          parent.left,
-          parent.width
-        );
-        calcTop = -(child.height + margin);
-      } else if (parent.bottom + margin + child.height > height) {
-        // fitting bottom side
-        calcLeft = limitDimention(
-          width,
-          margin,
-          child.width,
-          parent.left,
-          parent.width
-        );
-        calcTop = parent.height + margin;
-      } else {
-        // all the other sides dont work, just place it on the left.
-        calcTop = limitDimention(
-          height,
-          margin,
-          child.height,
-          parent.top,
-          parent.height
-        );
-        calcLeft = -(child.width + margin);
-      }
+                calcLeft = limitDimention(
+                    width,
+                    margin,
+                    child.width,
+                    parent.left,
+                    parent.width
+                );
+                calcTop = -(child.height + margin);
+            } else if (parent.bottom + margin + child.height > height) {
+                // fitting bottom side
+                calcLeft = limitDimention(
+                    width,
+                    margin,
+                    child.width,
+                    parent.left,
+                    parent.width
+                );
+                calcTop = parent.height + margin;
+            } else {
+                // all the other sides dont work, just place it on the left.
+                calcTop = limitDimention(
+                    height,
+                    margin,
+                    child.height,
+                    parent.top,
+                    parent.height
+                );
+                calcLeft = -(child.width + margin);
+            }
 
-      // sicne this element isn't a direct child of "parent", calc and apply offset for position relative to root.
-      calcTop += parent.top - root.top;
-      calcLeft += parent.left - root.left;
-    }
-
-    return [calcTop, calcLeft];
-  }, [width, height, childRef.current]);
-
-  return (
-    <>
-      <div
-        ref={childRef}
-        style={
-          {
-            '--top': `${top}px`,
-            '--left': `${left}px`,
-          } as CSSProperties
+            // sicne this element isn't a direct child of "parent", calc and apply offset for position relative to root.
+            calcTop += parent.top - root.top;
+            calcLeft += parent.left - root.left;
         }
-        className={style.labelChildrenContainer}
-      >
-        {children}
-      </div>
-      <div className={style.background} onClick={closeLabel} />
-    </>
-  );
+
+        return [calcTop, calcLeft];
+    }, [width, height, childRef.current]);
+
+    return (
+        <>
+            <div
+                ref={childRef}
+                style={
+                    {
+                        '--top': `${top}px`,
+                        '--left': `${left}px`,
+                    } as CSSProperties
+                }
+                className={style.labelChildrenContainer}
+            >
+                {children}
+            </div>
+            {/* <div className={style.background} onClick={closeLabel} /> */}
+        </>
+    );
 }
 
 /*
 https://stackoverflow.com/a/19014495/12471420
 */
 function useDocumentSize() {
-  const [size, setSize] = useState([
-    document.documentElement.scrollWidth,
-    document.documentElement.scrollHeight,
-  ]);
-  useLayoutEffect(() => {
-    function updateSize() {
-      setSize([
+    const [size, setSize] = useState([
         document.documentElement.scrollWidth,
         document.documentElement.scrollHeight,
-      ]);
-    }
-    window.addEventListener('resize', updateSize);
-    updateSize(); // update immediately for initial render
-    return () => window.removeEventListener('resize', updateSize);
-  }, []);
-  return size;
+    ]);
+    useLayoutEffect(() => {
+        function updateSize() {
+            setSize([
+                document.documentElement.scrollWidth,
+                document.documentElement.scrollHeight,
+            ]);
+        }
+        window.addEventListener('resize', updateSize);
+        updateSize(); // update immediately for initial render
+        return () => window.removeEventListener('resize', updateSize);
+    }, []);
+    return size;
 }
