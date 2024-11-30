@@ -1,180 +1,180 @@
 .calendarRenderRoot {
-  /* to provide positioning reference for all children */
-  position: relative;
+    /* to provide positioning reference for all children */
+    position: relative;
 
-  width: 600px;
-  height: 600px;
-  display: flex;
+    width: 600px;
+    height: 600px;
+    display: flex;
 }
 
 .calendarContainer {
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
 
-  --borderSpec: 1px solid grey;
-  border: var(--borderSpec);
-  border-radius: 10px;
-  box-sizing: border-box;
+    --borderSpec: 1px solid grey;
+    border: var(--borderSpec);
+    border-radius: 10px;
+    box-sizing: border-box;
 
-  overflow: hidden;
+    overflow: hidden;
 }
 
 /* Week title row */
 .weekdayNameRow {
-  display: flex;
-  flex-direction: row;
-  height: 24px;
+    display: flex;
+    flex-direction: row;
+    height: 24px;
 
-  box-sizing: border-box;
-  border-bottom: var(--borderSpec);
+    box-sizing: border-box;
+    border-bottom: var(--borderSpec);
 }
 
 .weekdayName {
-  text-align: center;
-  line-height: 24px;
+    text-align: center;
+    line-height: 24px;
 
-  flex: 1;
+    flex: 1;
 
-  box-sizing: border-box;
-  border-right: var(--borderSpec);
+    box-sizing: border-box;
+    border-right: var(--borderSpec);
 }
 .weekdayName:last-child {
-  border-color: transparent;
+    border-color: transparent;
 }
 
 /* Month day rows/items */
 .monthDayRow {
-  display: flex;
-  flex-direction: row;
+    display: flex;
+    flex-direction: row;
 
-  flex: 1;
+    flex: 1;
 
-  box-sizing: border-box;
-  border-bottom: var(--borderSpec);
+    box-sizing: border-box;
+    border-bottom: var(--borderSpec);
 }
 
 .monthDayRow:last-child {
-  border: none;
+    border: none;
 }
 
 .monthDayItem {
-  flex: 1;
-
-  /* min-width:0 makes the flex item not expand beyond space allocated by flex, somehow
+    flex: 1;
+    position: relative;
+    /* min-width:0 makes the flex item not expand beyond space allocated by flex, somehow
   https://stackoverflow.com/a/66689926
   */
-  min-width: 0;
+    min-width: 0;
 
-  box-sizing: border-box;
-  border-right: var(--borderSpec);
+    box-sizing: border-box;
+    border-right: var(--borderSpec);
 
-  transition: background-color 400ms ease-out;
+    transition: background-color 400ms ease-out;
 }
 
 .monthDayItem:last-child {
-  border-color: transparent;
+    border-color: transparent;
 }
 
 .monthDayItem:hover {
-  background-color: #deeff9;
+    background-color: #deeff9;
 }
 
 .monthDayItem.presentDay {
-  background-color: #ffcccb;
+    background-color: #ffcccb;
 }
 
 /* Stuff inside month item */
 
 /* Event item */
 .monthEventItem {
-  /* to make ::before work */
-  position: relative;
+    /* to make ::before work */
+    position: relative;
 
-  margin: 0.25rem;
+    margin: 0.25rem;
 
-  height: 20px;
-  line-height: 20px;
-  font-size: 12px;
-  font-weight: bold;
-  text-overflow: ellipsis;
+    height: 20px;
+    line-height: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    text-overflow: ellipsis;
 
-  padding-left: 0.4rem;
+    padding-left: 0.4rem;
 
-  border-radius: 4px;
-  background-color: white;
-  overflow: hidden;
+    border-radius: 4px;
+    background-color: white;
+    overflow: hidden;
 
-  cursor: pointer;
-  user-select: none;
+    cursor: pointer;
+    user-select: none;
 
-  transition:
-    scale 250ms ease-out,
-    filter 250ms ease-out;
+    transition:
+        scale 250ms ease-out,
+        filter 250ms ease-out;
 }
 
 .monthEventItem::before {
-  content: '';
+    content: '';
 
-  position: absolute;
-  left: 0;
-  top: 0;
+    position: absolute;
+    left: 0;
+    top: 0;
 
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 
-  /* Lighten chosen background color, since background is white */
-  opacity: 0.5;
-  background-color: var(--eventBackground);
+    /* Lighten chosen background color, since background is white */
+    opacity: 0.5;
+    background-color: var(--eventBackground);
 }
 
 .monthEventItem::after {
-  content: '';
+    content: '';
 
-  position: absolute;
-  left: 0;
-  top: 0;
+    position: absolute;
+    left: 0;
+    top: 0;
 
-  /* put a line at the left, which will get cropped by round corner, and not effected by background transparency */
-  width: 100%;
-  height: 100%;
+    /* put a line at the left, which will get cropped by round corner, and not effected by background transparency */
+    width: 100%;
+    height: 100%;
 
-  border-left: 3px solid var(--eventBackground);
+    border-left: 3px solid var(--eventBackground);
 }
 
 .monthEventItem:hover {
-  scale: 1.1;
-  filter: brightness(1.05);
+    scale: 1.1;
+    filter: brightness(1.05);
 }
 
 /* month day label */
 
 .monthDayLabel {
-  display: flex;
+    display: flex;
 
-  justify-content: center;
-  align-items: center;
+    justify-content: center;
+    align-items: center;
 
-  width: 20px;
-  height: 20px;
+    width: 20px;
+    height: 20px;
 
-  margin: 0.25rem;
-  padding: 0.1rem;
-  margin-left: auto;
+    margin: 0.25rem;
+    padding: 0.1rem;
+    margin-left: auto;
 
-  font-size: 14px;
+    font-size: 14px;
 
-  border-radius: 50%;
+    border-radius: 50%;
 
-  user-select: none;
-  transition:
-    background-color 200ms ease-out,
-    color 200ms ease-out;
+    user-select: none;
+    transition:
+        background-color 200ms ease-out,
+        color 200ms ease-out;
 }
 
 .monthDayLabel.selected {
-  color: white;
-  background-color: dodgerblue;
+    color: white;
+    background-color: dodgerblue;
 }

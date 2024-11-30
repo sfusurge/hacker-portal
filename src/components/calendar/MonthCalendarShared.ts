@@ -3,8 +3,7 @@ import { atom, useAtom } from 'jotai';
 import { CalendarEventType } from './types';
 import moment, { Moment } from 'moment';
 
-// states to be used by MonthCalendar Component and its children
-export const selectedDay = atom(1);
+export const selectedDayAtom = atom('');
 
 export interface SelectedEventInfo {
     event: CalendarEventType;

@@ -5,10 +5,15 @@
     flex-direction: column;
     gap: 0.25rem;
 
-    height: 400px;
     position: relative;
     overflow-y: auto;
     overflow-x: hidden;
+
+    /* Note that on Chrome smooth scroll is disabled by default */
+    scroll-behavior: smooth !important;
+
+    border: 2px solid grey;
+    border-radius: 5px;
 }
 .timelineHeader {
     display: flex;

@@ -2,13 +2,14 @@
 
 import { CSSProperties, useMemo, useRef, useState } from 'react';
 import { CalendarEventType, MonthInfoType } from './types';
-import moment from 'moment';
+import moment, { Moment } from 'moment';
 import style from './MonthCalendar.module.css';
 import { atom, useAtom, useSetAtom, useAtomValue, Provider } from 'jotai';
 import {
     getEventsOfMonth,
     groupEventsByDay,
     selectedEventAtom,
+    selectedDayAtom,
 } from './MonthCalendarShared';
 import { DynamicMessage } from './DynamicMessage';
 import { Card, CardContent, CardHeader } from '../ui/card';
@@ -45,11 +46,7 @@ function range(count: number) {
 
 export function MonthCalendar(props: { events: CalendarEventType[] }) {
     // just a wrapper to provide Provider for context.
-    return (
-        <Provider>
-            <MonthCalendarContent {...props}></MonthCalendarContent>
-        </Provider>
-    );
+    return <MonthCalendarContent {...props}></MonthCalendarContent>;
 }
 
 export function MonthCalendarContent({
@@ -73,15 +70,20 @@ export function MonthCalendarContent({
         [year, month]
     );
 
+    const [prevMonth, currMonth, nextMonth] = useMemo(
+        () => [
+            moment({ year, month }).month(-1),
+            moment({ year, month }),
+            moment({ year, month }).month(1),
+        ],
+        [year, month]
+    );
+
     const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
     const renderRootRef = useRef<HTMLDivElement>(null);
 
     return (
         <div>
-            <h1>{monthInfo.displayName}</h1>
-
-            <h1>Currently seleced event: {selectedEvent?.event?.title}</h1>
-
             <div ref={renderRootRef} className={style.calendarRenderRoot}>
                 {/* AnimatePresence needed for framer motion, needs to always exist and wrap content. 
       (As in, content is toggling within AnimatePresence. TODO: Refactor into it's own component)
@@ -145,6 +147,18 @@ export function MonthCalendarContent({
                                     dayIdx +
                                     1 -
                                     monthInfo.firstDayOffset;
+
+                                // invalid days
+                                if (d < 1 || d > currMonth.daysInMonth()) {
+                                    return (
+                                        <OutOfBoundMonthDay
+                                            day={d}
+                                            currMonth={currMonth}
+                                            prevMonth={prevMonth}
+                                        ></OutOfBoundMonthDay>
+                                    );
+                                }
+
                                 return (
                                     <MonthDay
                                         // pass events of particular day to the matching day
@@ -154,7 +168,11 @@ export function MonthCalendarContent({
                                                 : []
                                         }
                                         key={dayIdx}
-                                        day={d}
+                                        date={moment({
+                                            year,
+                                            month,
+                                            day: d,
+                                        })}
                                     />
                                 );
                             })}
@@ -166,30 +184,67 @@ export function MonthCalendarContent({
     );
 }
 
-function MonthDay({
+function OutOfBoundMonthDay({
     day,
-    events,
+    prevMonth,
+    currMonth,
 }: {
     day: number;
-    events: CalendarEventType[];
+    prevMonth: Moment;
+    currMonth: Moment;
 }) {
-    if (day <= 0) {
-        return <div className={style.monthDayItem}></div>;
+    let label = -1;
+
+    if (day < 1) {
+        label = prevMonth.daysInMonth() + day;
     }
 
-    const [selected, setSelected] = useState(false);
+    if (day > currMonth.daysInMonth()) {
+        label = currMonth.daysInMonth() - day;
+    }
 
+    return (
+        <div className={style.monthDayItem}>
+            <div
+                style={{
+                    background: 'grey',
+                    opacity: '0.3',
+                    position: 'absolute',
+                    left: '0',
+                    top: '0',
+                    zIndex: '1',
+                    width: '100%',
+                    height: '100%',
+                }}
+            ></div>
+            <span className={style.monthDayLabel}>{label}</span>
+        </div>
+    );
+}
+function MonthDay({
+    date,
+    events,
+}: {
+    date: Moment;
+    events: CalendarEventType[];
+}) {
+    const dayName = useMemo(() => date.format('LL'), []);
+    const [selected, setSelected] = useAtom(selectedDayAtom);
     return (
         <div
             className={style.monthDayItem}
             onClick={() => {
-                setSelected(!selected);
+                if (dayName !== selected) {
+                    setSelected(date.format('LL'));
+                } else {
+                    setSelected('');
+                }
             }}
         >
             <span
-                className={`${style.monthDayLabel} ${selected ? style.selected : ''}`}
+                className={`${style.monthDayLabel} ${selected === dayName ? style.selected : ''}`}
             >
-                {day}
+                {date.date()}
             </span>
             {events.map((item) => (
                 <MonthDayEvent key={item.id} event={item}></MonthDayEvent>

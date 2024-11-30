@@ -2,25 +2,24 @@ import { CalendarEventType } from './types';
 import moment, { Moment } from 'moment';
 import style from './LinearTimeline.module.css';
 import { CSSProperties, Fragment, useEffect, useRef, useState } from 'react';
-import { groupEventsByDay, timeBetween } from './MonthCalendarShared';
+import {
+    groupEventsByDay,
+    timeBetween,
+    selectedDayAtom,
+} from './MonthCalendarShared';
 import { atom, Provider, useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 const DATE_FORMAT = 'MMM DD, dddd';
 const currentTimeAtom = atom(moment());
-const selectedDay = atom<string | undefined>(undefined);
 
 export function LinearTimeline({
     events,
     styles,
-}: {
+}: Readonly<{
     events: CalendarEventType[];
     styles: CSSProperties;
-}) {
-    return (
-        <Provider>
-            <_LinearTimeline events={events} styles={styles}></_LinearTimeline>
-        </Provider>
-    );
+}>) {
+    return <_LinearTimeline events={events} styles={styles}></_LinearTimeline>;
 }
 
 function _LinearTimeline({
@@ -44,37 +43,73 @@ function _LinearTimeline({
     }, []);
 
     return (
-        <div className={style.timelineContainer}>
+        <div className={style.timelineContainer} style={styles}>
             <span>Current time is: {currentTime.format('LTS')}</span>
             {Object.entries(eventsGroupedByDay).map((e) => {
                 const [key, eventsOfDay] = e;
+
                 return (
-                    <div key={key} className={style.dayWrapper}>
-                        <TimelineDateHeader
-                            date={moment(eventsOfDay[0].startTime)}
-                        ></TimelineDateHeader>
-                        {eventsOfDay.map((item) => (
-                            <TimelineItem
-                                key={item.id}
-                                event={item}
-                            ></TimelineItem>
-                        ))}
-                    </div>
+                    <TimeLineDayWrapper
+                        key={key}
+                        eventsOfDay={eventsOfDay}
+                    ></TimeLineDayWrapper>
                 );
             })}
         </div>
     );
 }
 
-function TimelineDateHeader({ date }: { date: moment.Moment }) {
+function TimeLineDayWrapper({
+    eventsOfDay,
+}: {
+    eventsOfDay: CalendarEventType[];
+}) {
+    const [_selectedDay, set_SelectedDay] = useAtom(selectedDayAtom);
+    const dayId = moment(eventsOfDay[0].startTime).format('LL');
+
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        console.log(_selectedDay);
+
+        if (_selectedDay === dayId) {
+            ref.current!.parentElement!.scrollTo({
+                behavior: 'smooth',
+                top: ref.current!.offsetTop,
+            });
+        }
+    }, [_selectedDay]);
+
     return (
-        <div className={style.timelineHeader}>{date.format(DATE_FORMAT)}</div>
+        <div className={style.dayWrapper} ref={ref}>
+            <div
+                className={style.timelineHeader}
+                onClick={() => {
+                    set_SelectedDay(dayId);
+                }}
+            >
+                {moment(eventsOfDay[0].startTime).format(DATE_FORMAT)}
+            </div>
+
+            {eventsOfDay.map((item) => (
+                <TimelineItem key={item.id} event={item}></TimelineItem>
+            ))}
+        </div>
     );
 }
 
 function TimelineItem({ event }: { event: CalendarEventType }) {
     const [contentHeight, setContentHeight] = useState(0);
     const innerContentRef = useRef<HTMLDivElement | null>(null);
+
+    function expandContent() {
+        if (contentHeight === 0) {
+            setContentHeight(innerContentRef.current?.scrollHeight!);
+        } else {
+            setContentHeight(0);
+        }
+    }
+
     return (
         <div
             className={style.timelineItemWrapper}
@@ -83,21 +118,16 @@ function TimelineItem({ event }: { event: CalendarEventType }) {
                     '--color': event.color,
                 } as CSSProperties
             }
-            onClick={() => {
-                console.log('bleh');
-            }}
         >
             <div
                 className={style.timelineItemMainContent}
-                onClick={() => {
-                    if (contentHeight === 0) {
-                        setContentHeight(
-                            innerContentRef.current?.scrollHeight!
-                        );
-                    } else {
-                        setContentHeight(0);
+                onClick={expandContent}
+                onKeyDown={(e) => {
+                    if (e.key == 'enter') {
+                        expandContent();
                     }
                 }}
+                aria-expanded={contentHeight > 0}
             >
                 <span>{event.title}</span>
                 <TimeLabel event={event}></TimeLabel>
