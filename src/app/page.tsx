@@ -62,8 +62,8 @@ export default function Home() {
         onClick={async () => {
           addUser.mutate({
             email: email,
-            first_name: firstName,
-            last_name: lastName,
+            firstName: firstName,
+            lastName: lastName,
             password: password,
           });
         }}
@@ -93,8 +93,8 @@ export default function Home() {
         onClick={async () => {
           addHackathon.mutate({
             name: hackathonName,
-            start_date: startDate,
-            end_date: endDate,
+            startDate: startDate,
+            endDate: endDate,
           });
         }}
       >
