@@ -7,7 +7,7 @@ const workspace = defineWorkspace([
       name: 'unit',
       dir: 'test/unit',
       // https://vitest.dev/config/#globalsetup
-      globalSetup: ['./test/setup/localMysql.ts'],
+      globalSetup: ['./test/setup/localDB.ts'],
       // https://vitest.dev/config/#setupfiles
       setupFiles: ['./test/setup/truncateDatabase.ts'],
     },
@@ -18,7 +18,7 @@ const workspace = defineWorkspace([
       name: 'e2e',
       dir: 'test/e2e',
       // https://vitest.dev/config/#globalsetup
-      globalSetup: ['./test/setup/localMysql.ts'],
+      globalSetup: ['./test/setup/localDB.ts'],
       // https://vitest.dev/config/#setupfiles
       setupFiles: ['./test/setup/truncateDatabase.ts'],
     },

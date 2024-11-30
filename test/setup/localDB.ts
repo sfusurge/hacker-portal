@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import mysql from 'mysql2/promise';
+import { Client } from 'pg';
 
 import { resolve } from 'path';
 import { exec } from 'child_process';
@@ -16,16 +16,16 @@ export default async function setup() {
 
   const config = loadEnvAndValidate();
 
-  const connection = await createDatabase(config);
+  const client = await createDatabase(config);
 
   await populateTables();
 
   return async () => {
     const { database } = config;
 
-    await dropDatabase(connection, database);
+    await dropDatabase(client, database);
 
-    await connection.end();
+    await client.end();
   };
 }
 
@@ -82,31 +82,27 @@ function loadEnvAndValidate(): DatabaseConfig {
   return config;
 }
 
-async function createDatabase(
-  config: DatabaseConfig
-): Promise<mysql.Connection> {
-  const connection = await mysql.createConnection({
+async function createDatabase(config: DatabaseConfig): Promise<Client> {
+  const client = new Client({
+    // connectionString: `postgres://${config.user}:${config.password}@${config.host}:${config.port}`,
     host: config.host,
     user: config.user,
     password: config.password,
+    database: 'postgres',
   });
 
-  await connection.connect();
+  await client.connect();
 
-  await connection.execute(
-    mysql.format(`CREATE DATABASE IF NOT EXISTS ??`, [config.database])
-  );
+  // Fine to use raw string because config.database has been appended _text
+  // so no sql injection
+  await client.query(`DROP DATABASE IF EXISTS ${config.database}`);
+  await client.query(`CREATE DATABASE ${config.database}`);
 
-  return connection;
+  return client;
 }
 
-async function dropDatabase(
-  connection: mysql.Connection,
-  databaseName: string
-) {
-  await connection.execute(
-    mysql.format(`DROP DATABASE IF EXISTS ??`, [databaseName])
-  );
+async function dropDatabase(client: Client, databaseName: string) {
+  await client.query(`DROP DATABASE IF EXISTS ${databaseName}`);
 
   console.debug(`Dropped database ${databaseName}`);
 }

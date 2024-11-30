@@ -10,22 +10,22 @@ export default function HackathonsList() {
       <div>
         {hackathons?.map((hackathon, key) => {
           return (
-            <div>
+            <div key={key}>
               <strong>{hackathon.name},</strong>
               <ul>
                 <li>
                   <h3>Start Date:</h3>
-                  {hackathon.start_date}
+                  {hackathon.startDate}
                 </li>
                 <li>
                   <h3>End Date:</h3>
-                  {hackathon.end_date}
+                  {hackathon.endDate}
                 </li>
               </ul>
               <button
                 onClick={async () => {
                   deleteHackathon.mutate({
-                    id: hackathon.hackathon_id,
+                    id: hackathon.id,
                   });
                 }}
               >

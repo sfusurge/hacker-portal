@@ -1,23 +1,23 @@
-import { mysqlTable, varchar, date } from 'drizzle-orm/mysql-core';
 import { createId } from '@paralleldrive/cuid2';
+import { pgTable, varchar } from 'drizzle-orm/pg-core';
 
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
-const hackathons = mysqlTable('hackathons', {
-  hackathon_id: varchar('hackathon_id', { length: 128 })
+const hackathons = pgTable('hackathons', {
+  id: varchar('hackathon_id', { length: 128 })
     .primaryKey()
     .$defaultFn(() => createId()),
   name: varchar('name', { length: 255 }).notNull(),
-  start_date: varchar('start_date', { length: 255 }).notNull(),
-  end_date: varchar('end_date', { length: 255 }).notNull(),
+  startDate: varchar('start_date', { length: 255 }).notNull(),
+  endDate: varchar('end_date', { length: 255 }).notNull(),
 });
 
 const insertHackathonSchema = createInsertSchema(hackathons, {
-  hackathon_id: (schema) => schema.hackathon_id.optional(),
-  start_date: (schema) => schema.start_date.date(),
-  end_date: (schema) => schema.end_date.date(),
-}).omit({ hackathon_id: true });
+  id: (schema) => schema.id.optional(),
+  startDate: (schema) => schema.startDate.date(),
+  endDate: (schema) => schema.endDate.date(),
+}).omit({ id: true });
 
 const deleteHackathonSchema = z.object({
   id: z.string().min(1),
@@ -26,8 +26,8 @@ const deleteHackathonSchema = z.object({
 const selectHackathonSchema = createSelectSchema(hackathons);
 
 export {
+  deleteHackathonSchema,
   hackathons,
   insertHackathonSchema,
-  deleteHackathonSchema,
   selectHackathonSchema,
 };
