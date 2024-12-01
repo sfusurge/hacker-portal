@@ -16,16 +16,16 @@ export default async function setup() {
 
   const config = loadEnvAndValidate();
 
-  const client = await createDatabase(config);
+  const sql = await createDatabase(config);
 
   await populateTables();
 
   return async () => {
     const { database } = config;
 
-    await dropDatabase(client, database);
+    await dropDatabase(sql, database);
 
-    await client.end();
+    await sql.end();
   };
 }
 
@@ -84,7 +84,6 @@ function loadEnvAndValidate(): DatabaseConfig {
 
 async function createDatabase(config: DatabaseConfig): Promise<postgres.Sql> {
   const sql = postgres({
-    // connectionString: `postgres://${config.user}:${config.password}@${config.host}:${config.port}`,
     host: config.host,
     user: config.user,
     password: config.password,
