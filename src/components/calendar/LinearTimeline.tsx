@@ -1,168 +1,166 @@
 import { CalendarEventType } from './types';
-import moment, { Moment } from 'moment';
+
 import style from './LinearTimeline.module.css';
-import { CSSProperties, Fragment, useEffect, useRef, useState } from 'react';
+import { CSSProperties, useEffect, useRef, useState } from 'react';
 import {
-  groupEventsByDay,
-  timeBetween,
-  selectedDayAtom,
+    groupEventsByDay,
+    timeBetween,
+    selectedDayAtom,
+    yearMonthDay,
 } from './MonthCalendarShared';
-import { atom, Provider, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import dayjs from 'dayjs';
 
 const DATE_FORMAT = 'MMM DD, dddd';
-const currentTimeAtom = atom(moment());
+const currentTimeAtom = atom(dayjs());
 
 export function LinearTimeline({
-  events,
-  styles,
+    events,
+    styles,
 }: Readonly<{
-  events: CalendarEventType[];
-  styles?: CSSProperties | undefined;
+    events: CalendarEventType[];
+    styles?: CSSProperties | undefined;
 }>) {
-  return <_LinearTimeline events={events} styles={styles}></_LinearTimeline>;
+    return <_LinearTimeline events={events} styles={styles}></_LinearTimeline>;
 }
 
 function _LinearTimeline({
-  events,
-  styles,
+    events,
+    styles,
 }: {
-  events: CalendarEventType[];
-  styles: CSSProperties | undefined;
+    events: CalendarEventType[];
+    styles: CSSProperties | undefined;
 }) {
-  const eventsGroupedByDay = groupEventsByDay(events);
+    const eventsGroupedByDay = groupEventsByDay(events);
 
-  const [currentTime, setCurrentTime] = useAtom(currentTimeAtom);
+    const setCurrentTime = useSetAtom(currentTimeAtom);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(moment());
-    }, 1000);
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentTime(dayjs());
+        }, 1000);
+        return () => {
+            clearInterval(interval);
+        };
+    }, []);
 
-  return (
-    <div className={style.timelineContainer} style={styles}>
-      <span>Current time is: {currentTime.format('LTS')}</span>
-      {Object.entries(eventsGroupedByDay).map((e) => {
-        const [key, eventsOfDay] = e;
+    return (
+        <div className={style.timelineContainer} style={styles}>
+            {Object.entries(eventsGroupedByDay).map((e) => {
+                const [key, eventsOfDay] = e;
 
-        return (
-          <TimeLineDayWrapper
-            key={key}
-            eventsOfDay={eventsOfDay}
-          ></TimeLineDayWrapper>
-        );
-      })}
-    </div>
-  );
+                return (
+                    <TimeLineDayWrapper
+                        key={key}
+                        eventsOfDay={eventsOfDay}
+                    ></TimeLineDayWrapper>
+                );
+            })}
+        </div>
+    );
 }
 
 function TimeLineDayWrapper({
-  eventsOfDay,
+    eventsOfDay,
 }: {
-  eventsOfDay: CalendarEventType[];
+    eventsOfDay: CalendarEventType[];
 }) {
-  const [_selectedDay, set_SelectedDay] = useAtom(selectedDayAtom);
+    const [_selectedDay, set_SelectedDay] = useAtom(selectedDayAtom);
 
-  const tempDay = moment(eventsOfDay[0].startTime);
-  const dayId = moment({
-    year: tempDay.year(),
-    month: tempDay.month(),
-    day: tempDay.date(),
-  });
+    const dayId = yearMonthDay(dayjs(eventsOfDay[0].startTime));
 
-  const ref = useRef<HTMLDivElement>(null);
+    const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (_selectedDay?.isSame(dayId, 'date')) {
-      ref.current!.parentElement!.scrollTo({
-        behavior: 'smooth',
-        top: ref.current!.offsetTop,
-      });
-    }
-  }, [_selectedDay]);
+    useEffect(() => {
+        if (_selectedDay?.isSame(dayId, 'date')) {
+            ref.current!.parentElement!.scrollTo({
+                behavior: 'smooth',
+                top: ref.current!.offsetTop,
+            });
+        }
+    }, [_selectedDay]);
 
-  return (
-    <div className={style.dayWrapper} ref={ref}>
-      <div
-        className={style.timelineHeader}
-        onClick={() => {
-          set_SelectedDay(dayId);
-        }}
-      >
-        {moment(eventsOfDay[0].startTime).format(DATE_FORMAT)}
-      </div>
+    return (
+        <div className={style.dayWrapper} ref={ref}>
+            <div
+                className={style.timelineHeader}
+                onClick={() => {
+                    set_SelectedDay(dayId);
+                }}
+            >
+                {dayjs(eventsOfDay[0].startTime).format(DATE_FORMAT)}
+            </div>
 
-      {eventsOfDay.map((item) => (
-        <TimelineItem key={item.id} event={item}></TimelineItem>
-      ))}
-    </div>
-  );
+            {eventsOfDay.map((item) => (
+                <TimelineItem key={item.id} event={item}></TimelineItem>
+            ))}
+        </div>
+    );
 }
 
 function TimelineItem({ event }: { event: CalendarEventType }) {
-  const [contentHeight, setContentHeight] = useState(0);
-  const innerContentRef = useRef<HTMLDivElement | null>(null);
+    const [contentHeight, setContentHeight] = useState(0);
+    const innerContentRef = useRef<HTMLDivElement | null>(null);
 
-  function expandContent() {
-    if (contentHeight === 0) {
-      setContentHeight(innerContentRef.current?.scrollHeight!);
-    } else {
-      setContentHeight(0);
+    function expandContent() {
+        if (contentHeight === 0) {
+            setContentHeight(innerContentRef.current?.scrollHeight!);
+        } else {
+            setContentHeight(0);
+        }
     }
-  }
 
-  return (
-    <div
-      className={style.timelineItemWrapper}
-      style={
-        {
-          '--color': event.color,
-        } as CSSProperties
-      }
-    >
-      <div
-        className={style.timelineItemMainContent}
-        onClick={expandContent}
-        onKeyDown={(e) => {
-          if (e.key == 'enter') {
-            expandContent();
-          }
-        }}
-        aria-expanded={contentHeight > 0}
-      >
-        <span>{event.title}</span>
-        <TimeLabel event={event}></TimeLabel>
-      </div>
-
-      <div
-        className={style.timelineItemMoreContent}
-        style={{
-          maxHeight: `${contentHeight}px`,
-        }}
-      >
+    return (
         <div
-          ref={innerContentRef}
-          style={{
-            padding: '0.5rem',
-          }}
+            className={style.timelineItemWrapper}
+            style={
+                {
+                    '--color': event.color,
+                } as CSSProperties
+            }
         >
-          {event.description}
+            <div
+                className={style.timelineItemMainContent}
+                onClick={expandContent}
+                onKeyDown={(e) => {
+                    if (e.key == 'enter') {
+                        expandContent();
+                    }
+                }}
+                aria-expanded={contentHeight > 0}
+            >
+                <span>{event.title}</span>
+                <TimeLabel event={event}></TimeLabel>
+            </div>
+
+            <div
+                className={style.timelineItemMoreContent}
+                style={{
+                    maxHeight: `${contentHeight}px`,
+                }}
+            >
+                <div
+                    ref={innerContentRef}
+                    style={{
+                        padding: '0.5rem',
+                    }}
+                >
+                    {event.description}
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }
 
 function TimeLabel({ event }: { event: CalendarEventType }) {
-  const currentTime = useAtomValue(currentTimeAtom);
+    const currentTime = useAtomValue(currentTimeAtom);
 
-  return (
-    <span>
-      {timeBetween(currentTime, event.startTime, event.duration) ? '> ' : ''}
-      {moment(event.startTime).format('LT')}
-    </span>
-  );
+    return (
+        <span>
+            {timeBetween(currentTime, event.startTime, event.duration)
+                ? '> '
+                : ''}
+            {dayjs(event.startTime).format('h:mm A')}
+        </span>
+    );
 }
