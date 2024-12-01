@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
-import { Client } from 'pg';
+import postgres from 'postgres';
 
-import { resolve } from 'path';
 import { exec } from 'child_process';
+import { resolve } from 'path';
 import { promisify } from 'util';
 
 const execPromise = promisify(exec);
@@ -82,8 +82,8 @@ function loadEnvAndValidate(): DatabaseConfig {
   return config;
 }
 
-async function createDatabase(config: DatabaseConfig): Promise<Client> {
-  const client = new Client({
+async function createDatabase(config: DatabaseConfig): Promise<postgres.Sql> {
+  const sql = postgres({
     // connectionString: `postgres://${config.user}:${config.password}@${config.host}:${config.port}`,
     host: config.host,
     user: config.user,
@@ -91,20 +91,16 @@ async function createDatabase(config: DatabaseConfig): Promise<Client> {
     database: 'postgres',
   });
 
-  await client.connect();
+  await sql`DROP DATABASE IF EXISTS ${sql(config.database)}`;
+  await sql`CREATE DATABASE ${sql(config.database)}`;
 
-  // Fine to use raw string because config.database has been appended _text
-  // so no sql injection
-  await client.query(`DROP DATABASE IF EXISTS ${config.database}`);
-  await client.query(`CREATE DATABASE ${config.database}`);
-
-  return client;
+  return sql;
 }
 
-async function dropDatabase(client: Client, databaseName: string) {
-  await client.query(`DROP DATABASE IF EXISTS ${databaseName}`);
+async function dropDatabase(sql: postgres.Sql, databaseName: string) {
+  await sql`DROP DATABASE IF EXISTS ${sql(databaseName)}`;
 
-  console.debug(`Dropped database ${databaseName}`);
+  console.debug(`Dropped database ${sql(databaseName)}`);
 }
 
 async function populateTables(): Promise<void> {

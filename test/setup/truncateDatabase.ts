@@ -13,7 +13,7 @@ beforeEach<SkipDbCleanUp & E2ETestFixture>(
 
     // Clean up database before each test
     await databaseClient.transaction(async (tx) => {
-      const { rows } = await tx.execute(
+      const rows = await tx.execute(
         sql`SELECT * FROM information_schema.tables WHERE table_schema = 'public'`
       );
 
