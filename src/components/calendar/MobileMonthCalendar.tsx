@@ -5,8 +5,11 @@ import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import moment from 'moment';
 import style from './MobileMonthCalendar.module.css';
 import { useAtom } from 'jotai';
-import { selectedDayAtom, yearMonthDay } from './MonthCalendarShared';
-import { Drawer } from 'vaul';
+import {
+  getEventsOfMonth,
+  selectedDayAtom,
+  yearMonthDay,
+} from './MonthCalendarShared';
 
 import './MobileMonthCalendar.css';
 import { LinearTimeline } from './LinearTimeline';
@@ -16,7 +19,10 @@ export function MobileMonthCalendar({
 }: {
   events: CalendarEventType[];
 }) {
-  const [year, month] = [2024, 10];
+  const [[year, month], setYearMonth] = useState([
+    moment().year(),
+    moment().month(),
+  ]);
   const [currMonth] = useMemo(() => [moment({ year, month })], [year, month]);
 
   const [selectedDay, setSelectedDay] = useAtom(selectedDayAtom);
@@ -24,6 +30,12 @@ export function MobileMonthCalendar({
   const timelineRef = useRef<HTMLDivElement>(null);
 
   const [maxHeight, setMaxHeight] = useState(0);
+
+  const filteredEvents = useMemo(
+    () => getEventsOfMonth(events, month, year),
+    [year, month]
+  );
+
   useEffect(() => {
     console.log('bleh', timelineRef.current);
 
@@ -49,7 +61,7 @@ export function MobileMonthCalendar({
         }}
         defaultMonth={currMonth.toDate()}
         modifiers={{
-          hasEvent: events.map((e) => e.startTime),
+          hasEvent: filteredEvents.map((e) => e.startTime),
         }}
         modifiersClassNames={{
           hasEvent: 'hasEvent',
@@ -62,9 +74,12 @@ export function MobileMonthCalendar({
             setSelectedDay(undefined);
           }
         }}
+        onMonthChange={(m) => {
+          setYearMonth([m.getFullYear(), m.getMonth()]);
+        }}
       />
 
-      <LinearTimeline events={events} />
+      <LinearTimeline events={filteredEvents} />
     </div>
   );
 }

@@ -1,0 +1,79 @@
+.scheduleRootWrapper {
+  --border: 1px solid grey;
+  --rowHeight: 60px;
+  --headerHeight: 24px;
+
+  border: var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 2rem;
+
+  width: 100%;
+  max-width: 600px;
+  height: 700px;
+}
+.scheduleRoot {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: auto;
+}
+
+.scheduleContainer {
+  height: fit-content;
+
+  display: flex;
+  flex-direction: row;
+}
+
+.timeColumn {
+  display: flex;
+  flex-direction: column;
+
+  border-right: var(--border);
+  box-sizing: border-box;
+
+  min-width: 50px;
+  height: fit-content;
+}
+
+.timeLabel {
+  min-height: var(--rowHeight);
+  border-bottom: var(--border);
+  box-sizing: border-box;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.timeLabel:last-child {
+  border: none;
+}
+
+.header {
+  height: var(--headerHeight);
+  text-justify: center;
+  border-bottom: var(--border);
+  box-sizing: border-box;
+}
+
+.dayColumn {
+  flex: 1;
+  border-right: var(--border);
+
+  height: auto;
+}
+
+.dayColumnContent {
+  /* background to draw lines */
+  background-size: 100% var(--rowHeight);
+  background-repeat: repeat;
+  background-image: linear-gradient(to top, lightgrey 1px, transparent 1px);
+
+  height: calc(100% - var(--headerHeight));
+}
+
+.dayColumn:last-child {
+  border: none;
+}

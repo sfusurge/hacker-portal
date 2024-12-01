@@ -1,5 +1,6 @@
 import { MobileMonthCalendar } from '@/components/calendar/MobileMonthCalendar';
 import { CalendarEventType } from '@/components/calendar/types';
+import { Provider } from 'jotai';
 
 export default function MobileTestingPage() {
   const events: CalendarEventType[] = [
@@ -173,5 +174,10 @@ export default function MobileTestingPage() {
     },
   ];
 
-  return <MobileMonthCalendar events={events}></MobileMonthCalendar>;
+  return (
+    <Provider>
+      {' '}
+      <MobileMonthCalendar events={events}></MobileMonthCalendar>
+    </Provider>
+  );
 }
