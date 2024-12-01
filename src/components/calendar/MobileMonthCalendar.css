@@ -1,0 +1,19 @@
+/* global stuff */
+
+.hasEvent {
+  position: relative;
+  overflow: hidden;
+}
+
+.hasEvent::after {
+  content: '';
+  position: absolute;
+  left: auto;
+  right: auto;
+  bottom: 4px;
+  width: 5px;
+  height: 5px;
+  background-color: red;
+  border-radius: 50%;
+  z-index: 1;
+}

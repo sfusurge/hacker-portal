@@ -3,9 +3,9 @@ import moment, { Moment } from 'moment';
 import style from './LinearTimeline.module.css';
 import { CSSProperties, Fragment, useEffect, useRef, useState } from 'react';
 import {
-    groupEventsByDay,
-    timeBetween,
-    selectedDayAtom,
+  groupEventsByDay,
+  timeBetween,
+  selectedDayAtom,
 } from './MonthCalendarShared';
 import { atom, Provider, useAtom, useAtomValue, useSetAtom } from 'jotai';
 
@@ -13,154 +13,156 @@ const DATE_FORMAT = 'MMM DD, dddd';
 const currentTimeAtom = atom(moment());
 
 export function LinearTimeline({
-    events,
-    styles,
+  events,
+  styles,
 }: Readonly<{
-    events: CalendarEventType[];
-    styles: CSSProperties;
+  events: CalendarEventType[];
+  styles?: CSSProperties | undefined;
 }>) {
-    return <_LinearTimeline events={events} styles={styles}></_LinearTimeline>;
+  return <_LinearTimeline events={events} styles={styles}></_LinearTimeline>;
 }
 
 function _LinearTimeline({
-    events,
-    styles,
+  events,
+  styles,
 }: {
-    events: CalendarEventType[];
-    styles: CSSProperties;
+  events: CalendarEventType[];
+  styles: CSSProperties | undefined;
 }) {
-    const eventsGroupedByDay = groupEventsByDay(events);
+  const eventsGroupedByDay = groupEventsByDay(events);
 
-    const [currentTime, setCurrentTime] = useAtom(currentTimeAtom);
+  const [currentTime, setCurrentTime] = useAtom(currentTimeAtom);
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentTime(moment());
-        }, 1000);
-        return () => {
-            clearInterval(interval);
-        };
-    }, []);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(moment());
+    }, 1000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
 
-    return (
-        <div className={style.timelineContainer} style={styles}>
-            <span>Current time is: {currentTime.format('LTS')}</span>
-            {Object.entries(eventsGroupedByDay).map((e) => {
-                const [key, eventsOfDay] = e;
+  return (
+    <div className={style.timelineContainer} style={styles}>
+      <span>Current time is: {currentTime.format('LTS')}</span>
+      {Object.entries(eventsGroupedByDay).map((e) => {
+        const [key, eventsOfDay] = e;
 
-                return (
-                    <TimeLineDayWrapper
-                        key={key}
-                        eventsOfDay={eventsOfDay}
-                    ></TimeLineDayWrapper>
-                );
-            })}
-        </div>
-    );
+        return (
+          <TimeLineDayWrapper
+            key={key}
+            eventsOfDay={eventsOfDay}
+          ></TimeLineDayWrapper>
+        );
+      })}
+    </div>
+  );
 }
 
 function TimeLineDayWrapper({
-    eventsOfDay,
+  eventsOfDay,
 }: {
-    eventsOfDay: CalendarEventType[];
+  eventsOfDay: CalendarEventType[];
 }) {
-    const [_selectedDay, set_SelectedDay] = useAtom(selectedDayAtom);
-    const dayId = moment(eventsOfDay[0].startTime).format('LL');
+  const [_selectedDay, set_SelectedDay] = useAtom(selectedDayAtom);
 
-    const ref = useRef<HTMLDivElement>(null);
+  const tempDay = moment(eventsOfDay[0].startTime);
+  const dayId = moment({
+    year: tempDay.year(),
+    month: tempDay.month(),
+    day: tempDay.date(),
+  });
 
-    useEffect(() => {
-        console.log(_selectedDay);
+  const ref = useRef<HTMLDivElement>(null);
 
-        if (_selectedDay === dayId) {
-            ref.current!.parentElement!.scrollTo({
-                behavior: 'smooth',
-                top: ref.current!.offsetTop,
-            });
-        }
-    }, [_selectedDay]);
+  useEffect(() => {
+    if (_selectedDay?.isSame(dayId, 'date')) {
+      ref.current!.parentElement!.scrollTo({
+        behavior: 'smooth',
+        top: ref.current!.offsetTop,
+      });
+    }
+  }, [_selectedDay]);
 
-    return (
-        <div className={style.dayWrapper} ref={ref}>
-            <div
-                className={style.timelineHeader}
-                onClick={() => {
-                    set_SelectedDay(dayId);
-                }}
-            >
-                {moment(eventsOfDay[0].startTime).format(DATE_FORMAT)}
-            </div>
+  return (
+    <div className={style.dayWrapper} ref={ref}>
+      <div
+        className={style.timelineHeader}
+        onClick={() => {
+          set_SelectedDay(dayId);
+        }}
+      >
+        {moment(eventsOfDay[0].startTime).format(DATE_FORMAT)}
+      </div>
 
-            {eventsOfDay.map((item) => (
-                <TimelineItem key={item.id} event={item}></TimelineItem>
-            ))}
-        </div>
-    );
+      {eventsOfDay.map((item) => (
+        <TimelineItem key={item.id} event={item}></TimelineItem>
+      ))}
+    </div>
+  );
 }
 
 function TimelineItem({ event }: { event: CalendarEventType }) {
-    const [contentHeight, setContentHeight] = useState(0);
-    const innerContentRef = useRef<HTMLDivElement | null>(null);
+  const [contentHeight, setContentHeight] = useState(0);
+  const innerContentRef = useRef<HTMLDivElement | null>(null);
 
-    function expandContent() {
-        if (contentHeight === 0) {
-            setContentHeight(innerContentRef.current?.scrollHeight!);
-        } else {
-            setContentHeight(0);
-        }
+  function expandContent() {
+    if (contentHeight === 0) {
+      setContentHeight(innerContentRef.current?.scrollHeight!);
+    } else {
+      setContentHeight(0);
     }
+  }
 
-    return (
+  return (
+    <div
+      className={style.timelineItemWrapper}
+      style={
+        {
+          '--color': event.color,
+        } as CSSProperties
+      }
+    >
+      <div
+        className={style.timelineItemMainContent}
+        onClick={expandContent}
+        onKeyDown={(e) => {
+          if (e.key == 'enter') {
+            expandContent();
+          }
+        }}
+        aria-expanded={contentHeight > 0}
+      >
+        <span>{event.title}</span>
+        <TimeLabel event={event}></TimeLabel>
+      </div>
+
+      <div
+        className={style.timelineItemMoreContent}
+        style={{
+          maxHeight: `${contentHeight}px`,
+        }}
+      >
         <div
-            className={style.timelineItemWrapper}
-            style={
-                {
-                    '--color': event.color,
-                } as CSSProperties
-            }
+          ref={innerContentRef}
+          style={{
+            padding: '0.5rem',
+          }}
         >
-            <div
-                className={style.timelineItemMainContent}
-                onClick={expandContent}
-                onKeyDown={(e) => {
-                    if (e.key == 'enter') {
-                        expandContent();
-                    }
-                }}
-                aria-expanded={contentHeight > 0}
-            >
-                <span>{event.title}</span>
-                <TimeLabel event={event}></TimeLabel>
-            </div>
-
-            <div
-                className={style.timelineItemMoreContent}
-                style={{
-                    maxHeight: `${contentHeight}px`,
-                }}
-            >
-                <div
-                    ref={innerContentRef}
-                    style={{
-                        padding: '0.5rem',
-                    }}
-                >
-                    {event.description}
-                </div>
-            </div>
+          {event.description}
         </div>
-    );
+      </div>
+    </div>
+  );
 }
 
 function TimeLabel({ event }: { event: CalendarEventType }) {
-    const currentTime = useAtomValue(currentTimeAtom);
+  const currentTime = useAtomValue(currentTimeAtom);
 
-    return (
-        <span>
-            {timeBetween(currentTime, event.startTime, event.duration)
-                ? '> '
-                : ''}
-            {moment(event.startTime).format('LT')}
-        </span>
-    );
+  return (
+    <span>
+      {timeBetween(currentTime, event.startTime, event.duration) ? '> ' : ''}
+      {moment(event.startTime).format('LT')}
+    </span>
+  );
 }
