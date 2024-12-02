@@ -9,23 +9,37 @@ export const selectedDayAtom = atom<Dayjs | undefined>(undefined);
 
 export interface SelectedEventInfo {
     event: CalendarEventType;
-    element: HTMLDivElement;
+    element: HTMLDivElement | undefined;
 }
 export const selectedEventAtom = atom<SelectedEventInfo | undefined>(undefined);
 
-export function groupEventsByDay(events: CalendarEventType[]) {
+// FIXME: just testing with Dec 8th for now
+export const currentTimeAtom = atom<Dayjs>(
+    dayjs(new Date(2024, 11, 8, 14, 33))
+);
+
+export function groupEventsByDay(
+    events: CalendarEventType[],
+    idxType: 'timestamp' | 'date' = 'date'
+) {
     const grouped = {
         ...Object.groupBy(events, (item) => {
-            return dayjs(item.startTime).date();
+            if (idxType === 'date') {
+                return dayjs(item.startTime).date();
+            } else {
+                return dayjs(item.startTime).startOf('day').toDate().getTime();
+            }
         }),
     } as { [dayOfMonth: number]: CalendarEventType[] };
 
     for (const [key, val] of Object.entries(grouped)) {
         val.sort((a, b) => {
-            return a.title.localeCompare(b.title);
+            return a.startTime.getTime() - b.startTime.getTime();
         });
         grouped[parseInt(key)] = val;
     }
+    console.log({ ...grouped });
+
     return grouped;
 }
 

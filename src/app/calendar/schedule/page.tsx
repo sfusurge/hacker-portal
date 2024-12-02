@@ -27,7 +27,7 @@ export default function SchedulePage() {
             title: 'Workshop: Intro to AI/ML',
             description:
                 'Learn the basics of AI and machine learning for your project.',
-            startTime: new Date('2024-12-07T12:00:00'),
+            startTime: new Date('2024-12-07T10:30:00'), // Overlaps with team brainstorming
             duration: 90,
             color: '#A833FF',
         },
@@ -36,7 +36,7 @@ export default function SchedulePage() {
             title: 'Lunch Break',
             description:
                 'Refuel with a catered lunch and network with other participants.',
-            startTime: new Date('2024-12-07T13:30:00'),
+            startTime: new Date('2024-12-07T13:00:00'),
             duration: 60,
             color: '#33FF57',
         },
@@ -44,7 +44,7 @@ export default function SchedulePage() {
             id: 5,
             title: 'Coding Sprint #1',
             description: 'Begin working on your project with your team.',
-            startTime: new Date('2024-12-07T14:30:00'),
+            startTime: new Date('2024-12-07T14:00:00'),
             duration: 180,
             color: '#FFB833',
         },
@@ -53,21 +53,30 @@ export default function SchedulePage() {
             title: 'Mentor Office Hours',
             description:
                 'Ask mentors for advice and get feedback on your project.',
-            startTime: new Date('2024-12-07T15:00:00'),
+            startTime: new Date('2024-12-07T15:00:00'), // Overlaps with Coding Sprint #1
             duration: 120,
             color: '#F2A233',
         },
         {
             id: 7,
-            title: 'Dinner Break',
+            title: 'Workshop: UI/UX Design Tips',
             description:
-                'Enjoy a catered dinner and relax before the evening activities.',
-            startTime: new Date('2024-12-07T18:00:00'),
-            duration: 60,
+                'Learn essential design principles to make your project stand out.',
+            startTime: new Date('2024-12-07T16:00:00'), // Overlaps with Coding Sprint #1 and Mentor Hours
+            duration: 90,
             color: '#33A8FF',
         },
         {
             id: 8,
+            title: 'Dinner Break',
+            description:
+                'Enjoy a catered dinner and relax before the evening activities.',
+            startTime: new Date('2024-12-07T18:30:00'),
+            duration: 60,
+            color: '#33FF57',
+        },
+        {
+            id: 9,
             title: 'Lightning Talks',
             description:
                 'Short presentations from experts on emerging tech topics.',
@@ -76,20 +85,11 @@ export default function SchedulePage() {
             color: '#A833FF',
         },
         {
-            id: 9,
-            title: 'Midnight Snacks & Stretch',
-            description:
-                'Grab some snacks and join a quick stretch session to stay energized.',
-            startTime: new Date('2024-12-07T23:00:00'),
-            duration: 30,
-            color: '#33FF57',
-        },
-        {
             id: 10,
             title: 'Coding Sprint #2',
             description:
                 'Continue coding and refining your project into the night.',
-            startTime: new Date('2024-12-08T00:00:00'),
+            startTime: new Date('2024-12-07T20:00:00'),
             duration: 240,
             color: '#FF5733',
         },
@@ -113,11 +113,11 @@ export default function SchedulePage() {
         },
         {
             id: 13,
-            title: 'Submission Deadline',
-            description: 'Submit your project to the hackathon portal.',
-            startTime: new Date('2024-12-08T12:00:00'),
-            duration: 30,
-            color: '#33A8FF',
+            title: 'Pitch Practice',
+            description: 'Rehearse your pitch and get feedback from mentors.',
+            startTime: new Date('2024-12-08T10:00:00'), // Overlaps with Final Coding Sprint
+            duration: 90,
+            color: '#F2A233',
         },
         {
             id: 14,
@@ -144,7 +144,7 @@ export default function SchedulePage() {
             events={events}
             days={2}
             startDate={dayjs(new Date(2024, 11, 7))}
-            minColumnWidth={200}
+            minColumnWidth={300}
         ></DaySchedule>
     );
 }
