@@ -90,7 +90,7 @@ async function createDatabase(config: DatabaseConfig): Promise<postgres.Sql> {
     database: 'postgres',
   });
 
-  await sql`DROP DATABASE IF EXISTS ${sql(config.database)}`;
+  await dropDatabase(sql, config.database);
   await sql`CREATE DATABASE ${sql(config.database)}`;
 
   return sql;
@@ -99,7 +99,7 @@ async function createDatabase(config: DatabaseConfig): Promise<postgres.Sql> {
 async function dropDatabase(sql: postgres.Sql, databaseName: string) {
   await sql`DROP DATABASE IF EXISTS ${sql(databaseName)}`;
 
-  console.debug(`Dropped database ${sql(databaseName)}`);
+  console.debug(`Dropped database ${databaseName}`);
 }
 
 async function populateTables(): Promise<void> {
