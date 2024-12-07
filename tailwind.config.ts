@@ -154,7 +154,13 @@ const config: Config = {
         black: '900',
       },
       fontFamily: {
-        sans: ['Inter', ...defaultTheme.fontFamily.sans],
+        sans: [
+          ['Inter', ...defaultTheme.fontFamily.sans],
+          {
+            fontFeatureSettings:
+              "'cv01' on, 'cv03' on, 'cv04' on, 'cv05' on, 'cv08' on, 'cv10' on, 'cv11' on",
+          },
+        ],
         mono: ['DM Mono', ...defaultTheme.fontFamily.mono],
       },
       lineHeight: {
