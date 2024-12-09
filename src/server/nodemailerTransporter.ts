@@ -7,8 +7,7 @@ const env = process.env;
 // and https://medium.com/@y.mehnati_49486/how-to-send-an-email-from-your-gmail-account-with-nodemailer-837bf09a7628
 
 export const transporter = nodemailer.createTransport({
-  service: 'Gmail',
-  host: 'smtp.gmail.com',
+  host: 'blizzard.mxrouting.net',
   port: 465,
   secure: true,
   auth: {
