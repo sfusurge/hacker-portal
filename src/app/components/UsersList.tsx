@@ -15,12 +15,12 @@ export default function UsersList() {
   const handleUpdateUser = async (user: any) => {
     try {
       console.log(user.id);
-      await updateUser.mutate({
+      updateUser.mutate({
         id: user.id,
         email: email || user.email,
         password: password || user.password,
-        first_name: firstName || user.first_name,
-        last_name: lastName || user.last_name,
+        firstName: firstName || user.first_name,
+        lastName: lastName || user.last_name,
       });
     } catch (error) {
       console.error('Error updating user:', error);
@@ -32,7 +32,7 @@ export default function UsersList() {
       {users?.map((user) => (
         <div key={user.id}>
           <strong>
-            {user.last_name}, {user.first_name}
+            {user.lastName}, {user.firstName}
           </strong>
           <ul>
             <li>{user.email}</li>

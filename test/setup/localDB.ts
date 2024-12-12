@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
-import mysql from 'mysql2/promise';
+import postgres from 'postgres';
 
-import { resolve } from 'path';
 import { exec } from 'child_process';
+import { resolve } from 'path';
 import { promisify } from 'util';
 
 const execPromise = promisify(exec);
@@ -16,16 +16,16 @@ export default async function setup() {
 
   const config = loadEnvAndValidate();
 
-  const connection = await createDatabase(config);
+  const sql = await createDatabase(config);
 
   await populateTables();
 
   return async () => {
     const { database } = config;
 
-    await dropDatabase(connection, database);
+    await dropDatabase(sql, database);
 
-    await connection.end();
+    await sql.end();
   };
 }
 
@@ -82,31 +82,22 @@ function loadEnvAndValidate(): DatabaseConfig {
   return config;
 }
 
-async function createDatabase(
-  config: DatabaseConfig
-): Promise<mysql.Connection> {
-  const connection = await mysql.createConnection({
+async function createDatabase(config: DatabaseConfig): Promise<postgres.Sql> {
+  const sql = postgres({
     host: config.host,
     user: config.user,
     password: config.password,
+    database: 'postgres',
   });
 
-  await connection.connect();
+  await dropDatabase(sql, config.database);
+  await sql`CREATE DATABASE ${sql(config.database)}`;
 
-  await connection.execute(
-    mysql.format(`CREATE DATABASE IF NOT EXISTS ??`, [config.database])
-  );
-
-  return connection;
+  return sql;
 }
 
-async function dropDatabase(
-  connection: mysql.Connection,
-  databaseName: string
-) {
-  await connection.execute(
-    mysql.format(`DROP DATABASE IF EXISTS ??`, [databaseName])
-  );
+async function dropDatabase(sql: postgres.Sql, databaseName: string) {
+  await sql`DROP DATABASE IF EXISTS ${sql(databaseName)}`;
 
   console.debug(`Dropped database ${databaseName}`);
 }

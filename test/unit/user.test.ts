@@ -13,8 +13,8 @@ describe('User CRUDL tests', () => {
 
   it('when user is created, getUsers returns it with correct fields', async () => {
     await trpcClient.users.addUser({
-      first_name: TEST_FIRST_NAME,
-      last_name: TEST_LAST_NAME,
+      firstName: TEST_FIRST_NAME,
+      lastName: TEST_LAST_NAME,
       email: TEST_EMAIL,
       password: TEST_PASSWORD_PLAIN_TEXT,
     });
@@ -26,8 +26,8 @@ describe('User CRUDL tests', () => {
     const [user] = users;
 
     assert.isNotNull(user.id);
-    assert.equal(user.first_name, TEST_FIRST_NAME);
-    assert.equal(user.last_name, TEST_LAST_NAME);
+    assert.equal(user.firstName, TEST_FIRST_NAME);
+    assert.equal(user.lastName, TEST_LAST_NAME);
     assert.equal(user.email, TEST_EMAIL);
     // Assert password is hashed
     assert.notEqual(user.password, TEST_PASSWORD_PLAIN_TEXT);
@@ -35,8 +35,8 @@ describe('User CRUDL tests', () => {
 
   it("when user is deleted, getUsers doesn't return it", async () => {
     await trpcClient.users.addUser({
-      first_name: TEST_FIRST_NAME,
-      last_name: TEST_LAST_NAME,
+      firstName: TEST_FIRST_NAME,
+      lastName: TEST_LAST_NAME,
       email: TEST_EMAIL,
       password: TEST_PASSWORD_PLAIN_TEXT,
     });
@@ -69,8 +69,8 @@ describe('User CRUDL tests', () => {
     {
       scenario: 'invalid email',
       input: {
-        first_name: TEST_FIRST_NAME,
-        last_name: TEST_LAST_NAME,
+        firstName: TEST_FIRST_NAME,
+        lastName: TEST_LAST_NAME,
         email: 'invalid_email',
         password: TEST_PASSWORD_PLAIN_TEXT,
       },

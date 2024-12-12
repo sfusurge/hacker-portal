@@ -31,8 +31,21 @@ CLIENT_URL=
 
 #### Generating and Pushing `Drizzle` Migrations to your database
 
+1. You can use `docker` to create the local postgresql database
+
+```sh
+docker pull postgres:15
+
+# Whatever value you use here should be the same as .env
+docker run --name hacker-portal-postgres \
+    -e POSTGRES_PASSWORD="<password>" \
+    -e POSTGRES_DB="<name>" \
+    -e POSTGRES_USER="<username>" \
+    -d -p "<port>:<port>" postgres:15
+```
+
 1. If you have made additions/modifications to the drizzle schema, please first run `pnpm drizzle-kit generate`
-2. Then to persist your changes to your database, run `pnpm drizzle-kit push`
+1. Then to persist your changes to your database, run `pnpm drizzle-kit push`
 
 #### Development
 
