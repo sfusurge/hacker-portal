@@ -1,14 +1,17 @@
-"use client";
-import { ChangeEvent, useState} from "react";
-import {trpc} from "@/trpc/client";
-import {EmailUser} from '@/db/schema/emails'
+'use client';
+import { ChangeEvent, useState } from 'react';
+import { trpc } from '@/trpc/client';
+import { EmailUser } from '@/db/schema/emails';
 
 type UsersListProps = {
   selectedUsers: EmailUser[];
   setSelectedUsers: React.Dispatch<React.SetStateAction<EmailUser[]>>;
-}
+};
 
-export default function UsersList({ selectedUsers, setSelectedUsers }:UsersListProps) {
+export default function UsersList({
+  selectedUsers,
+  setSelectedUsers,
+}: UsersListProps) {
   const users = trpc.users.getUsers.useQuery().data;
   const updateUser = trpc.users.updateUser.useMutation();
   const deleteUser = trpc.users.deleteUser.useMutation();
@@ -18,13 +21,18 @@ export default function UsersList({ selectedUsers, setSelectedUsers }:UsersListP
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleCheckboxChange = (event: ChangeEvent<HTMLInputElement>,  user: EmailUser) => {
-    if(event.target.checked){
-      setSelectedUsers([...selectedUsers,user])
-    }else{
-      setSelectedUsers(selectedUsers.filter((selected:EmailUser) => selected.id !== user.id))
+  const handleCheckboxChange = (
+    event: ChangeEvent<HTMLInputElement>,
+    user: EmailUser
+  ) => {
+    if (event.target.checked) {
+      setSelectedUsers([...selectedUsers, user]);
+    } else {
+      setSelectedUsers(
+        selectedUsers.filter((selected: EmailUser) => selected.id !== user.id)
+      );
     }
-  }
+  };
 
   const handleUpdateUser = async (user: any) => {
     try {
@@ -40,67 +48,68 @@ export default function UsersList({ selectedUsers, setSelectedUsers }:UsersListP
     }
   };
 
-return (
-  <div>
-    {users?.map((user) => (
+  return (
+    <div>
+      {users?.map((user) => (
         <div key={user.id}>
           <strong>
-            {user.last_name}, {user.first_name}
+            Name: {user.last_name}, {user.first_name}
           </strong>
           <input
-              type="checkbox"
-              value={user.id}
-              checked={selectedUsers.some((selected) => selected.id === user.id)}
-              onChange={(event) => handleCheckboxChange(event, user)}
+            type="checkbox"
+            value={user.id}
+            checked={selectedUsers.some((selected) => selected.id === user.id)}
+            onChange={(event) => handleCheckboxChange(event, user)}
           />
-          <ul>
-            <li>{user.email}</li>
+          <ul className="text-blue-600">
+            <a href={'/qr/' + user.id}> User ID: {user.id}</a>
           </ul>
           <ul>
-            <li>{user.password}</li>
+            <li>Email: {user.email}</li>
+          </ul>
+          <ul>
+            <li>Password {user.password}</li>
           </ul>
           <button
-              onClick={async () => {
-                deleteUser.mutate({
-                  id: user.id
-                });
-              }}
+            onClick={async () => {
+              deleteUser.mutate({
+                id: user.id,
+              });
+            }}
           >
             Delete user
           </button>
           <br></br>
           <div>
             <input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="first name"
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="first name"
             />
             <input
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="last name"
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="last name"
             />
             <input
-                type="text"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="email"
+              type="text"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="email"
             />
             <input
-                type="text"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="password"
+              type="text"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="password"
             />
-            <button onClick={() => handleUpdateUser(user)}>
-              Update User
-            </button>
+            <button onClick={() => handleUpdateUser(user)}>Update User</button>
           </div>
-          <hr/>
+          <hr />
         </div>
-    ))}
-  </div>
-);
+      ))}
+    </div>
+  );
 }

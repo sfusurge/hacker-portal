@@ -1,11 +1,20 @@
 import QRCode from 'qrcode';
 
-export default async function generateQRCode(data: string) {
-    try {
-        const base64Image: string = await QRCode.toDataURL(data);
-        return base64Image.replace(/^data:image\/png;base64,/, ''); // Remove the data URL prefix
-    } catch (err) {
-        console.error("Error generating QR code:", err);
-        throw err;
-    }
+export type QROptions = {
+  margin: number;
+  scale: number;
+  color: {
+    dark: string;
+    light: string;
+  };
+};
+
+export default async function generateQRCode(data: string, opts: QROptions) {
+  try {
+    const base64Image = await QRCode.toDataURL(data, opts);
+    return base64Image;
+  } catch (err) {
+    console.error('Error generating QR code:', err);
+    throw err;
+  }
 }

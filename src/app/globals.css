@@ -6,3 +6,32 @@
     --radius: 0.5rem;
   }
 }
+
+.large-dashes {
+  border-style: dashed;
+  border-color: #4b5563; /* Tailwind neutral-600 color */
+  border-top: 2px dashed #4b5563;
+  border-left: 2px dashed #4b5563;
+  border-image: repeating-linear-gradient(
+      to right,
+      #4b5563 0,
+      #4b5563 10px,
+      transparent 10px,
+      transparent 20px
+    )
+    1;
+}
+
+.large-dashes-vertical {
+  border-left-width: 2px;
+  border-left-style: dashed;
+  border-color: #4b5563;
+  border-image: repeating-linear-gradient(
+      to bottom,
+      #4b5563 0,
+      #4b5563 10px,
+      transparent 10px,
+      transparent 20px
+    )
+    1;
+}
