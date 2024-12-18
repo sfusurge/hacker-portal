@@ -9,7 +9,17 @@ export const sendEmailRouter = router({
     .input(sendEmailSchema)
     .mutation(async ({ input }) => {
       try {
-        const qrcode = await generateQRCode(input.user.id.toString());
+        const opts = {
+          margin: 1,
+          scale: 10,
+          color: {
+            dark: '#000000',
+            light: '#0000',
+          },
+        };
+        const qrcode: string = (
+          await generateQRCode(input.user.id.toString(), opts)
+        ).replace(/^data:image\/png;base64,/, '');
 
         const mailOptions = {
           from: env.SENDINGEMAIL,

@@ -24,7 +24,7 @@ export default function UsersList({ selectedUsers, setSelectedUsers }:UsersListP
     }else{
       setSelectedUsers(selectedUsers.filter((selected:EmailUser) => selected.id !== user.id))
     }
-  }
+  };
 
   const handleUpdateUser = async (user: any) => {
     try {
@@ -52,15 +52,18 @@ export default function UsersList({ selectedUsers, setSelectedUsers }:UsersListP
               checked={selectedUsers.some((selected) => selected.id === user.id)}
               onChange={(event) => handleCheckboxChange(event, user)}
           />
+          <ul className="text-blue-600">
+            <a href={'/qr/' + user.id}> User ID: {user.id}</a>
+          </ul>
           <ul>
             <li>{user.email}</li>
           </ul>
           <button
-              onClick={async () => {
-                deleteUser.mutate({
-                  id: user.id
-                });
-              }}
+            onClick={async () => {
+              deleteUser.mutate({
+                id: user.id,
+              });
+            }}
           >
             Delete user
           </button>
