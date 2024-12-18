@@ -1,13 +1,11 @@
-import { createId } from '@paralleldrive/cuid2';
-import { pgTable, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { hashPassword } from '../utils';
 
 const users = pgTable('users', {
-  id: varchar('id', { length: 128 })
-    .primaryKey()
-    .$defaultFn(() => createId()),
+  id: uuid('id').primaryKey(),
+
   firstName: varchar('first_name', { length: 64 }).notNull(),
   lastName: varchar('last_name', { length: 64 }).notNull(),
   email: varchar('email', { length: 255 }).unique().notNull(),

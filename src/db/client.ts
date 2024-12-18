@@ -1,16 +1,10 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
-const env = process.env;
+// NOTE: DO NOT, use "const env = process.env", as it does not work for clientside env variables.
+// Nextjs statically analyse process.env.foo, assinging it variables messes with that.
 
-export const sql = postgres({
-  host: env.DATABASE_HOST || '127.0.0.1',
-  port: Number(env.DATABASE_PORT) || 5432,
-  user: env.DATABASE_USER || 'root',
-  password: env.DATABASE_PASSWORD || '12345',
-  database: env.DATABASE_NAME || 'portaldb',
+// TODO figure out local supabase dev client.
 
-  prepare: false,
-});
-
+const sql = postgres(process.env.DATABASE_URL!, { prepare: false });
 export const databaseClient = drizzle(sql);
