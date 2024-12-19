@@ -4,6 +4,7 @@ import {
   integer,
   json,
   pgEnum,
+  pgPolicy,
   pgTable,
   serial,
   varchar,
@@ -51,5 +52,6 @@ const userPseronalData = pgTable(
   (table) => [
     // do data consistency checks here as needed.
     check('age', sql`${table.age} > 10`),
+    pgPolicy(),
   ]
-);
+).enableRLS();
