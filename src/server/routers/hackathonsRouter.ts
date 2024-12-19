@@ -23,7 +23,7 @@ export const hackathonsRouter = router({
     .mutation(async (opts) => {
       await databaseClient
         .delete(hackathons)
-        .where(eq(hackathons.hackathon_id, opts.input.id));
+        .where(eq(hackathons.id, opts.input.id));
     }),
 });
 

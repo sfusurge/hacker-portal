@@ -1,4 +1,4 @@
-import { publicProcedure, router } from './trpc';
+import { createCallerFactory, publicProcedure, router } from './trpc';
 
 import { usersRouter } from './routers/usersRouter';
 import { hackathonsRouter } from './routers/hackathonsRouter';
@@ -11,5 +11,8 @@ export const appRouter = router({
   users: usersRouter,
   hackathons: hackathonsRouter,
 });
+
+// For server side call in unit test
+export const createCaller = createCallerFactory(appRouter);
 
 export type AppRouter = typeof appRouter;

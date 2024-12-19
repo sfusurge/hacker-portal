@@ -1,8 +1,8 @@
 'use client';
+import HackathonsList from '@/app/components/HackathonsList';
 import { useState } from 'react';
 import { trpc } from '../trpc/client';
 import UsersList from './components/UsersList';
-import HackathonsList from '@/app/components/HackathonsList';
 
 export default function Home() {
   const appHealthCheck = trpc.health_check.useQuery();
@@ -62,8 +62,8 @@ export default function Home() {
         onClick={async () => {
           addUser.mutate({
             email: email,
-            first_name: firstName,
-            last_name: lastName,
+            firstName: firstName,
+            lastName: lastName,
             password: password,
           });
         }}
@@ -93,8 +93,8 @@ export default function Home() {
         onClick={async () => {
           addHackathon.mutate({
             name: hackathonName,
-            start_date: startDate,
-            end_date: endDate,
+            startDate: startDate,
+            endDate: endDate,
           });
         }}
       >
