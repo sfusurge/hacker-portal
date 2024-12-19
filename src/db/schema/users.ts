@@ -2,7 +2,6 @@ import { createId } from '@paralleldrive/cuid2';
 import { pgTable, varchar } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import { hashPassword } from '../utils';
 
 const users = pgTable('users', {
   id: varchar('id', { length: 128 })
@@ -24,24 +23,15 @@ const insertUserSchema = createInsertSchema(users, {
   id: (schema) => schema.id.optional(),
 });
 
-const updateUserSchema = z
-  .object({
-    // always 128 chars -- add constraint
-    // id is not 128 characters for some reason, i get 400 when i try to set length to 128
-    // id: z.string().length(128),
-    id: z.string(),
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
-    email: z.string().email().optional(),
-    password: z.string().optional(),
-  })
-  .transform(async (input) => {
-    if (typeof input.password === 'undefined') {
-      throw new Error('Password must be defined when updating user details');
-    }
-    input.password = await hashPassword(input.password);
-    return input;
-  });
+const updateUserSchema = z.object({
+  // always 128 chars -- add constraint
+  // id is not 128 characters for some reason, i get 400 when i try to set length to 128
+  // id: z.string().length(128),
+  id: z.string(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  email: z.string().email().optional(),
+});
 
 const deleteUserSchema = z.object({
   id: z.string().min(1),
