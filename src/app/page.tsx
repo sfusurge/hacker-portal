@@ -3,6 +3,9 @@ import { useState } from 'react';
 import { trpc } from '../trpc/client';
 import UsersList from './components/UsersList';
 import HackathonsList from '@/app/components/HackathonsList';
+import Alert from '../components/alert';
+import List from '../components/list';
+import TextField from '../components/text-field';
 
 export default function Home() {
   const appHealthCheck = trpc.health_check.useQuery();
@@ -34,7 +37,11 @@ export default function Home() {
       <hr />
       <br />
       <br />
-
+      <TextField />
+      <br />
+      <List />
+      <br />
+      <Alert />
       <hr />
       <h2 className="font-bold">Add Hacker</h2>
       <input

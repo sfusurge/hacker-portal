@@ -16,7 +16,7 @@ export default function Alert() {
   ];
 
   return (
-    <div className="space-y-4 p-10 bg-black">
+    <div className="space-y-4 p-10 bg-black w-4/6">
       {alertData.map(({ color, Icon }, index) => (
         <div
           key={index}
@@ -29,8 +29,8 @@ export default function Alert() {
           </div>
           <div className="ml-1 flex-grow">
             <div className="flex justify-between items-start">
-              <h2 className={`font-bold text-${color}`}>Title of alert</h2>
-              <button className="text-sm text-white hover:text-gray-700">
+              <h2 className={`font-bold text-white`}>Title of alert</h2>
+              <button className="text-sm text-white hover:text-gray-700 pr-1">
                 ✕
               </button>
             </div>
