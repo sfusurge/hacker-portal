@@ -7,11 +7,18 @@ import {
   pgPolicy,
   pgTable,
   serial,
+  unique,
   varchar,
 } from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { hackathons } from './hackathons';
 import { sql } from 'drizzle-orm';
+import {
+  auditorRole,
+  getCurrentUserPerms,
+  getPermForRole,
+  userRole,
+} from '../roles';
 
 const levelStudyEnum = pgEnum('levelStudy', ['A', 'B', 'C']); //TODO: fill this enum with real values.
 
@@ -52,6 +59,8 @@ const userPseronalData = pgTable(
   (table) => [
     // do data consistency checks here as needed.
     check('age', sql`${table.age} > 10`),
-    pgPolicy(),
+    unique('email'),
+    getPermForRole(auditorRole, 'select'), // auditor can select
+    ...getCurrentUserPerms(userRole, ['select', 'update', 'delete'], 'userId'), // auth user can view and modify thier own data, but not create new entries
   ]
 ).enableRLS();
