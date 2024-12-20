@@ -8,7 +8,7 @@ export default function TextField() {
 
   return (
     <div className="space-y-1 bg-black p-6 w-4/6">
-      <p className="text-sm font-medium text-gray-300 text-lg py-1">Label</p>
+      <p className="text-lg font-medium text-gray-300 text-lg py-1">Label</p>
       <div
         className={`flex items-center rounded-lg px-4 py-4 border 
                 ${isError ? 'border-red-500' : 'border-gray-400'} `}
@@ -23,10 +23,10 @@ export default function TextField() {
       {isError ? (
         <div className="flex items-center space-x-2">
           <Image src={Warning} className="h-6 w-6" alt="warning" />
-          <p className="text-red-500 text-lg py-1">Something went wrong.</p>
+          <p className="text-red-500 text-md py-1">Something went wrong.</p>
         </div>
       ) : (
-        <p className="text-gray-300 text-lg py-1">This is a caption.</p>
+        <p className="text-gray-300 text-md py-1">This is a caption.</p>
       )}
     </div>
   );

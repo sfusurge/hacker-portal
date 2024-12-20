@@ -6,6 +6,7 @@ import HackathonsList from '@/app/components/HackathonsList';
 import Alert from '../components/alert';
 import List from '../components/list';
 import TextField from '../components/text-field';
+import ToolTip from '@/components/tooltip';
 
 export default function Home() {
   const appHealthCheck = trpc.health_check.useQuery();
@@ -36,6 +37,13 @@ export default function Home() {
       <HackathonsList />
       <hr />
       <br />
+      <br />
+      <div className="flex">
+        <ToolTip direction="right" />
+        <ToolTip direction="left" />
+        <ToolTip direction="up" />
+        <ToolTip direction="down" />
+      </div>
       <br />
       <TextField />
       <br />
