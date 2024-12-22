@@ -72,3 +72,9 @@ or
 npm run build
 npm run start
 ```
+
+## Neon Postgres
+
+See notion page for login credentials are env variables
+
+- Neon auto scaling is in effect, currently in development, scaling range is set to 0 to 0.5x. In prod the max range can be up to 2x resource.

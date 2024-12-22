@@ -1,5 +1,5 @@
 {
-  "id": "48b18a2e-c182-4fd4-aaf8-9d16174351e4",
+  "id": "2d4a3f9e-42d5-4ab6-885a-601e5718f85b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -8,9 +8,9 @@
       "name": "hackathons",
       "schema": "",
       "columns": {
-        "hackathon_id": {
-          "name": "hackathon_id",
-          "type": "varchar(128)",
+        "id": {
+          "name": "id",
+          "type": "serial",
           "primaryKey": true,
           "notNull": true
         },
@@ -38,13 +38,131 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
+    "public.userPersonalData": {
+      "name": "userPersonalData",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hackathon_id": {
+          "name": "hackathon_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "first_name": {
+          "name": "first_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_name": {
+          "name": "last_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "age": {
+          "name": "age",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phone_number": {
+          "name": "phone_number",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(150)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "school": {
+          "name": "school",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "level_study": {
+          "name": "level_study",
+          "type": "levelStudy",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'N/A'"
+        },
+        "country": {
+          "name": "country",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "socials": {
+          "name": "socials",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "agree_to_mlh_ads": {
+          "name": "agree_to_mlh_ads",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "userPersonalData_user_id_users_id_fk": {
+          "name": "userPersonalData_user_id_users_id_fk",
+          "tableFrom": "userPersonalData",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "userPersonalData_hackathon_id_hackathons_id_fk": {
+          "name": "userPersonalData_hackathon_id_hackathons_id_fk",
+          "tableFrom": "userPersonalData",
+          "tableTo": "hackathons",
+          "columnsFrom": [
+            "hackathon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "public.users": {
       "name": "users",
       "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "varchar(128)",
+          "type": "serial",
           "primaryKey": true,
           "notNull": true
         },
@@ -65,12 +183,6 @@
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
-        },
-        "password": {
-          "name": "password",
-          "type": "varchar(97)",
-          "primaryKey": false,
-          "notNull": true
         }
       },
       "indexes": {},
@@ -87,7 +199,24 @@
       }
     }
   },
-  "enums": {},
+  "enums": {
+    "public.levelStudy": {
+      "name": "levelStudy",
+      "schema": "public",
+      "values": [
+        "High School",
+        "Undergraduate University (2 years)",
+        "Usergraduate University (3+ years)",
+        "Graduate University",
+        "Code School / Bootcamp",
+        "Trade Program / APprenticeship",
+        "Post Doctorate",
+        "Other",
+        "Not a student",
+        "N/A"
+      ]
+    }
+  },
   "schemas": {},
   "_meta": {
     "columns": {},
