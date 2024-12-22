@@ -7,8 +7,6 @@ const users = pgTable('users', {
   firstName: varchar('first_name', { length: 64 }).notNull(),
   lastName: varchar('last_name', { length: 64 }).notNull(),
   email: varchar('email', { length: 255 }).unique().notNull(),
-  // We also need to account for the metadata which includes the hashing algorithm, its versions, parameters
-  // and the base64 encoded salt used in the hashing process, which is in total 54 characters
 });
 
 const insertUserSchema = createInsertSchema(users, {
@@ -24,7 +22,7 @@ const updateUserSchema = z.object({
 });
 
 const deleteUserSchema = z.object({
-  id: z.string().min(1),
+  id: z.number().int().min(0),
 });
 
 const selectUserSchema = createSelectSchema(users);

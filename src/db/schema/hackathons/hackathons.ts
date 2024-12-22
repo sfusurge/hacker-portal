@@ -11,10 +11,10 @@ const hackathons = pgTable('hackathons', {
 });
 
 const insertHackathonSchema = createInsertSchema(hackathons, {
-  id: (schema) => schema.id.optional(),
-  startDate: (schema) => schema.startDate.date(),
-  endDate: (schema) => schema.endDate.date(),
-}).omit({ id: true });
+  id: (id) => id.optional(),
+  startDate: (startDate) => startDate.date(),
+  endDate: (endDate) => endDate.date(),
+});
 
 const deleteHackathonSchema = z.object({
   id: z.string().min(1),
