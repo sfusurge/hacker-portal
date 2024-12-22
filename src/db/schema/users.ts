@@ -10,8 +10,8 @@ const users = pgTable('users', {
 });
 
 const insertUserSchema = createInsertSchema(users, {
-  email: (schema) => schema.email.email(),
-  id: (schema) => schema.id.optional(),
+  email: (email) => email.email(),
+  id: (id) => id.optional(),
 });
 
 const updateUserSchema = z.object({
