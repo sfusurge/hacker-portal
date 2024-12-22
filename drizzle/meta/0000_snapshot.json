@@ -1,5 +1,5 @@
 {
-  "id": "48b18a2e-c182-4fd4-aaf8-9d16174351e4",
+  "id": "39ac376a-c51c-494b-b3f8-77e203ffb6ce",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -8,9 +8,9 @@
       "name": "hackathons",
       "schema": "",
       "columns": {
-        "hackathon_id": {
-          "name": "hackathon_id",
-          "type": "varchar(128)",
+        "id": {
+          "name": "id",
+          "type": "serial",
           "primaryKey": true,
           "notNull": true
         },
@@ -44,9 +44,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "varchar(128)",
+          "type": "uuid",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
         "first_name": {
           "name": "first_name",
@@ -63,12 +64,6 @@
         "email": {
           "name": "email",
           "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "password": {
-          "name": "password",
-          "type": "varchar(97)",
           "primaryKey": false,
           "notNull": true
         }
