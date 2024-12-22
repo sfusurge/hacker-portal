@@ -18,15 +18,6 @@ and then run `pnpm install` within the project directory to install the packages
 
 Copy and paste the following settings into your local `.env` file, and fill out all the fields with the correct credentials
 
-```YAML
-DATABASE_HOST=
-DATABASE_PORT=
-DATABASE_NAME=
-DATABASE_USER=
-DATABASE_PASSWORD=
-CLIENT_URL=
-```
-
 ## Running the application
 
 #### Generating and Pushing `Drizzle` Migrations to your database
