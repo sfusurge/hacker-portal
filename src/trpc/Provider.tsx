@@ -11,7 +11,7 @@ function Provider({ children }: { children: React.ReactNode }) {
     trpc.createClient({
       links: [
         httpBatchLink({
-          url: process.env.CLIENT_URL || 'http://localhost:3000/api',
+          url: process.env.CLIENT_URL || '/api',
         }),
       ],
     })
