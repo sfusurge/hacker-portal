@@ -11,12 +11,17 @@ export const handler = NextAuth({
   providers: authProviders,
   callbacks: {
     async signIn({ user, account, profile, email }) {
-      process.stdout.write('Provider: ' + account?.provider);
+      // process.stdout.write(JSON.stringify(account));
       if (!user.email) {
         return false;
       }
       const oauthEmail = user.email;
-      databaseClient.select().from(users).where(eq(users.email, oauthEmail));
+      const isRegistered = databaseClient
+        .select()
+        .from(users)
+        .where(eq(users.email, oauthEmail));
+      process.stdout.write(JSON.stringify(isRegistered));
+
       return true;
     },
   },
