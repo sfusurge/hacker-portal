@@ -18,30 +18,16 @@ and then run `pnpm install` within the project directory to install the packages
 
 Copy and paste the following settings into your local `.env` file, and fill out all the fields with the correct credentials
 
-```YAML
-DATABASE_HOST=
-DATABASE_PORT=
-DATABASE_NAME=
-DATABASE_USER=
-DATABASE_PASSWORD=
-CLIENT_URL=
-```
-
 ## Running the application
 
 #### Generating and Pushing `Drizzle` Migrations to your database
 
-1. You can use `docker` to create the local postgresql database
+1. You can use `docker-compose` to create the local postgresql database
 
 ```sh
-docker pull postgres:15
-
-# Whatever value you use here should be the same as .env
-docker run --name hacker-portal-postgres \
-    -e POSTGRES_PASSWORD="<password>" \
-    -e POSTGRES_DB="<name>" \
-    -e POSTGRES_USER="<username>" \
-    -d -p "<port>:<port>" postgres:15
+# just run to run the docker-compose.yaml db configs.
+# then remember to toggle .env file to the local url
+docker-compose up
 ```
 
 1. If you have made additions/modifications to the drizzle schema, please first run `pnpm drizzle-kit generate`
@@ -72,3 +58,9 @@ or
 npm run build
 npm run start
 ```
+
+## Neon Postgres
+
+See notion page for login credentials are env variables
+
+- Neon auto scaling is in effect, currently in development, scaling range is set to 0 to 0.5x. In prod the max range can be up to 2x resource.
