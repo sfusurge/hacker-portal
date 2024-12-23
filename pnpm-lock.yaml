@@ -42,11 +42,11 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       drizzle-orm:
-        specifier: ^0.31.2
-        version: 0.31.2(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1)
+        specifier: ^0.38.2
+        version: 0.38.2(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1)
       drizzle-zod:
         specifier: ^0.6.0
-        version: 0.6.0(drizzle-orm@0.31.2(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1))(zod@3.23.8)
+        version: 0.6.0(drizzle-orm@0.38.2(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1))(zod@3.23.8)
       lucide-react:
         specifier: ^0.460.0
         version: 0.460.0(react@18.3.1)
@@ -1427,17 +1427,19 @@ packages:
     resolution: {integrity: sha512-9THPCb2l1GPt7wxhws9LvTR0YG565ZlVgTuqGMwjs590Kch1pXu4GyjEArVijSF5m0OBj3qgdeKmuJXhKXgWFw==}
     hasBin: true
 
-  drizzle-orm@0.31.2:
-    resolution: {integrity: sha512-QnenevbnnAzmbNzQwbhklvIYrDE8YER8K7kSrAWQSV1YvFCdSQPzj+jzqRdTSsV2cDqSpQ0NXGyL1G9I43LDLg==}
+  drizzle-orm@0.38.2:
+    resolution: {integrity: sha512-eCE3yPRAskLo1WpM9OHpFaM70tBEDsWhwR/0M3CKyztAXKR9Qs3asZlcJOEliIcUSg8GuwrlY0dmYDgmm6y5GQ==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
-      '@cloudflare/workers-types': '>=3'
-      '@electric-sql/pglite': '>=0.1.1'
-      '@libsql/client': '*'
-      '@neondatabase/serverless': '>=0.1'
+      '@cloudflare/workers-types': '>=4'
+      '@electric-sql/pglite': '>=0.2.0'
+      '@libsql/client': '>=0.10.0'
+      '@libsql/client-wasm': '>=0.10.0'
+      '@neondatabase/serverless': '>=0.10.0'
       '@op-engineering/op-sqlite': '>=2'
       '@opentelemetry/api': ^1.4.1
       '@planetscale/database': '>=1'
+      '@prisma/client': '*'
       '@tidbcloud/serverless': '*'
       '@types/better-sqlite3': '*'
       '@types/pg': '*'
@@ -1447,12 +1449,13 @@ packages:
       '@xata.io/client': '*'
       better-sqlite3: '>=7'
       bun-types: '*'
-      expo-sqlite: '>=13.2.0'
+      expo-sqlite: '>=14.0.0'
       knex: '*'
       kysely: '*'
       mysql2: '>=2'
       pg: '>=8'
       postgres: '>=3'
+      prisma: '*'
       react: '>=18'
       sql.js: '>=1'
       sqlite3: '>=5'
@@ -1465,6 +1468,8 @@ packages:
         optional: true
       '@libsql/client':
         optional: true
+      '@libsql/client-wasm':
+        optional: true
       '@neondatabase/serverless':
         optional: true
       '@op-engineering/op-sqlite':
@@ -1472,6 +1477,8 @@ packages:
       '@opentelemetry/api':
         optional: true
       '@planetscale/database':
+        optional: true
+      '@prisma/client':
         optional: true
       '@tidbcloud/serverless':
         optional: true
@@ -1502,6 +1509,8 @@ packages:
       pg:
         optional: true
       postgres:
+        optional: true
+      prisma:
         optional: true
       react:
         optional: true
@@ -4032,7 +4041,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.31.2(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1):
+  drizzle-orm@0.38.2(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1):
     optionalDependencies:
       '@types/pg': 8.11.10
       '@types/react': 18.3.3
@@ -4041,9 +4050,9 @@ snapshots:
       postgres: 3.4.5
       react: 18.3.1
 
-  drizzle-zod@0.6.0(drizzle-orm@0.31.2(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1))(zod@3.23.8):
+  drizzle-zod@0.6.0(drizzle-orm@0.38.2(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1))(zod@3.23.8):
     dependencies:
-      drizzle-orm: 0.31.2(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1)
+      drizzle-orm: 0.38.2(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1)
       zod: 3.23.8
 
   eastasianwidth@0.2.0: {}
