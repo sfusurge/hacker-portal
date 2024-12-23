@@ -20,11 +20,13 @@ const insertUserSchema = createInsertSchema(users, {
   id: (id) => id.optional(),
 });
 
-const updateUserSchema = createUpdateSchema(users);
+const updateUserSchema = createUpdateSchema(users).extend({
+  id: z.string().uuid(),
+});
 
 const deleteUserSchema = z
   .object({
-    id: z.string(),
+    id: z.string().uuid(),
   })
   .required();
 
