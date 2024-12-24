@@ -2,10 +2,20 @@
 
 import NextAuth from 'next-auth/next';
 import { authProviders } from '../authProviders';
+import { checkEmailExists } from '../middleware';
 
 export const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET as string,
   providers: authProviders,
+  callbacks: {
+    async signIn({ account, profile, email }) {
+      // OAuth
+      if (account && profile?.email) {
+        return await checkEmailExists(profile.email);
+      }
+      return false;
+    },
+  },
 });
 
 export { handler as GET, handler as POST };
