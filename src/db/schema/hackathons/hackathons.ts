@@ -12,8 +12,8 @@ const hackathons = pgTable('hackathons', {
 
 const insertHackathonSchema = createInsertSchema(hackathons, {
   id: (id) => id.optional(),
-  startDate: (startDate) => startDate.date(),
-  endDate: (endDate) => endDate.date(),
+  // startDate: (startDate) => startDate.date(),
+  // endDate: (endDate) => endDate.date(),
 });
 
 const deleteHackathonSchema = z.object({

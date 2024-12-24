@@ -8,7 +8,7 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 import { users } from './users';
-import { hackathons } from './hackathons';
+import { hackathons } from './hackathons/hackathons';
 import {
   createInsertSchema,
   createSelectSchema,
