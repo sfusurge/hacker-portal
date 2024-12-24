@@ -2,9 +2,6 @@
 
 import NextAuth from 'next-auth/next';
 import { authProviders } from '../authProviders';
-import { databaseClient } from '@/db/client';
-import { eq } from 'drizzle-orm';
-import { users } from '@/db/schema/users';
 import { checkEmailExists } from '../middleware';
 
 export const handler = NextAuth({
