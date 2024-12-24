@@ -11,14 +11,14 @@ export const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET as string,
   providers: authProviders,
   callbacks: {
-    async signIn({ user, account, profile, email }) {
-      if (!user.email) {
-        return false;
-      }
-
-      const emailExists = await checkEmailExists(user.email);
-      if (emailExists) {
-        return true;
+    async signIn({ account, profile, email }) {
+      // OAuth
+      if (account && profile) {
+        if (profile.email) {
+          if (await checkEmailExists(profile.email)) {
+            return true;
+          }
+        }
       }
       return false;
     },
