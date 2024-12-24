@@ -18,7 +18,6 @@ export default function UsersList() {
       updateUser.mutate({
         id: user.id,
         email: email || user.email,
-        password: password || user.password,
         firstName: firstName || user.first_name,
         lastName: lastName || user.last_name,
       });
@@ -36,9 +35,6 @@ export default function UsersList() {
           </strong>
           <ul>
             <li>{user.email}</li>
-          </ul>
-          <ul>
-            <li>{user.password}</li>
           </ul>
           <button
             onClick={async () => {
@@ -68,12 +64,6 @@ export default function UsersList() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="email"
-            />
-            <input
-              type="text"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="password"
             />
             <button onClick={() => handleUpdateUser(user)}>Update User</button>
           </div>
