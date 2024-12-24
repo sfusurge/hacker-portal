@@ -9,5 +9,5 @@ export async function checkEmailExists(loginEmail: string): Promise<boolean> {
     .where(eq(users.email, loginEmail))
     .execute();
 
-  return userQueryResult.length > 1;
+  return userQueryResult.length > 0;
 }
