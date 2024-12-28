@@ -1,4 +1,5 @@
 CREATE TYPE "public"."levelStudy" AS ENUM('High School', 'Undergraduate University (2 years)', 'Usergraduate University (3+ years)', 'Graduate University', 'Code School / Bootcamp', 'Trade Program / APprenticeship', 'Post Doctorate', 'Other', 'Not a student', 'N/A');--> statement-breakpoint
+CREATE TYPE "public"."provider" AS ENUM('google', 'github', 'email');--> statement-breakpoint
 CREATE TABLE "hackathons" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "hackathons_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"name" varchar(255) NOT NULL,
@@ -24,9 +25,12 @@ CREATE TABLE "userPersonalData" (
 --> statement-breakpoint
 CREATE TABLE "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"first_name" varchar(64) NOT NULL,
-	"last_name" varchar(64) NOT NULL,
-	"email" varchar(255) NOT NULL,
+	"first_name" varchar(64),
+	"last_name" varchar(64),
+	"phone_number" varchar(15),
+	"email" varchar(255),
+	"is_registered" boolean DEFAULT false NOT NULL,
+	"provider" "provider" NOT NULL,
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint

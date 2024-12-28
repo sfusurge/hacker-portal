@@ -1,4 +1,4 @@
-import { boolean, pgTable, uuid, varchar } from 'drizzle-orm/pg-core';
+import { boolean, pgEnum, pgTable, uuid, varchar } from 'drizzle-orm/pg-core';
 import {
   createInsertSchema,
   createSelectSchema,
@@ -6,6 +6,7 @@ import {
 } from 'drizzle-zod';
 import { z } from 'zod';
 
+export const providersEnum = pgEnum('provider', ['google', 'github', 'email']);
 const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   firstName: varchar('first_name', { length: 64 }),
@@ -13,6 +14,7 @@ const users = pgTable('users', {
   phoneNumber: varchar('phone_number', { length: 15 }),
   email: varchar('email', { length: 255 }).unique(),
   isRegistered: boolean('is_registered').default(false).notNull(),
+  provider: providersEnum().notNull(),
 });
 
 const selectUserSchema = createSelectSchema(users);
