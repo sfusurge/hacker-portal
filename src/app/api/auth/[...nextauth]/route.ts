@@ -10,12 +10,8 @@ export const handler = NextAuth({
   callbacks: {
     async signIn({ account, profile, email }) {
       // OAuth
-      if (account && profile) {
-        if (profile.email) {
-          if (await checkEmailExists(profile.email)) {
-            return true;
-          }
-        }
+      if (account && profile?.email) {
+        return await checkEmailExists(profile.email);
       }
       return false;
     },
