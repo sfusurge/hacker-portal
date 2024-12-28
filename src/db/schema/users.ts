@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar } from 'drizzle-orm/pg-core';
+import { boolean, pgTable, uuid, varchar } from 'drizzle-orm/pg-core';
 import {
   createInsertSchema,
   createSelectSchema,
@@ -8,9 +8,11 @@ import { z } from 'zod';
 
 const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
-  firstName: varchar('first_name', { length: 64 }).notNull(),
-  lastName: varchar('last_name', { length: 64 }).notNull(),
-  email: varchar('email', { length: 255 }).unique().notNull(),
+  firstName: varchar('first_name', { length: 64 }),
+  lastName: varchar('last_name', { length: 64 }),
+  phoneNumber: varchar('phone_number', { length: 15 }),
+  email: varchar('email', { length: 255 }).unique(),
+  isRegistered: boolean('is_registered').default(false).notNull(),
 });
 
 const selectUserSchema = createSelectSchema(users);
