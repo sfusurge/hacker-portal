@@ -12,13 +12,14 @@ export const handler = NextAuth({
       // OAuth
       if (account && profile?.email) {
         const isUserValid = await validateUser(profile.email, account.provider);
-        if (isUserValid) return true;
+        if (isUserValid === true) return true;
         if (isUserValid === 'DNE') {
-          const newUser = createOAuthUser(profile.email, account.provider);
-          console.log(newUser);
+          console.log('ERROR: User does not exist');
+          createOAuthUser(profile.email, account.provider);
           return true;
         }
         if (isUserValid === 'ProviderMismatch') {
+          console.log('ERROR: Provider mismatch');
           return false;
         }
       }

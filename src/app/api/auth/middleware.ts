@@ -42,7 +42,7 @@ export async function validateUser(
 }
 
 export async function createOAuthUser(email: string, provider: string) {
-  const newUser = databaseClient
+  return await databaseClient
     .insert(users)
     .values({ email: email, provider: provider, isRegistered: false });
 }
