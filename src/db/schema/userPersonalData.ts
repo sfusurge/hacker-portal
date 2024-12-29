@@ -5,6 +5,7 @@ import {
   pgEnum,
   pgTable,
   serial,
+  uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
 import { users } from './users';
@@ -29,11 +30,9 @@ export const levelStudyEnum = pgEnum('levelStudy', [
   'N/A',
 ]); //TODO: fill this enum with real values.
 
-export const userPseronalData = pgTable('userPersonalData', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').references(() => users.id, {
-    onDelete: 'no action',
-  }),
+export const userPersonalData = pgTable('userPersonalData', {
+  id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'no action' }),
   hackathonId: integer('hackathon_id').references(() => hackathons.id, {
     onDelete: 'cascade',
   }),
@@ -66,17 +65,15 @@ export const userPseronalData = pgTable('userPersonalData', {
   // since they could change each year.
 });
 
-const insertPersonalData = createInsertSchema(userPseronalData, {
-  id: (id) => id.int().min(0),
-});
+const insertPersonalData = createInsertSchema(userPersonalData);
 
 const deletePersonalData = z.object({
   id: z.number().int(),
 });
 
-const selectPersonalData = createSelectSchema(userPseronalData);
+const selectPersonalData = createSelectSchema(userPersonalData);
 
-const updatePersonalData = createUpdateSchema(userPseronalData, {});
+const updatePersonalData = createUpdateSchema(userPersonalData, {});
 
 export {
   insertPersonalData,
