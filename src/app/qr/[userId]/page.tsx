@@ -20,9 +20,9 @@ export default async function QRView({ params }: QRPageProps) {
       light: '#0000',
     },
   };
-  const user = userList.find((user) => user.id === userId);
-  const firstname = user ? user.first_name : null;
-  const lastname = user ? user.last_name : null;
+  const user = userList.find((user) => user.id === parseInt(userId));
+  const firstname = user ? user.firstName : null;
+  const lastname = user ? user.lastName : null;
 
   const qrcode: string = await generateQRCode(userId, opts);
   return (

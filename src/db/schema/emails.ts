@@ -1,18 +1,17 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const sendEmailSchema = z.object({
-    user: z.object({
-        id: z.string(),
-        email: z.string().email(),
-        first_name: z.string(),
-        last_name: z.string()
-    })
+  user: z.object({
+    id: z.number(),
+    email: z.string().email(),
+    firstName: z.string(),
+    lastName: z.string(),
+  }),
 });
 
 export type EmailUser = {
-    id: string,
-    email: string,
-    password: string,
-    first_name: string,
-    last_name: string
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
 };

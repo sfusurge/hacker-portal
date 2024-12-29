@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { redirect } from 'next/navigation';
 import { ChevronDown, ChevronLeft, QrCode } from 'lucide-react';

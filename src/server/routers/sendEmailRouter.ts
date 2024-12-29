@@ -12,10 +12,7 @@ export const sendEmailRouter = router({
         const opts = {
           margin: 1,
           scale: 10,
-          color: {
-            dark: '#000000',
-            light: '#0000',
-          },
+          color: { dark: '#000000', light: '#0000' },
         };
         const qrcode: string = (
           await generateQRCode(input.user.id.toString(), opts)
@@ -24,7 +21,7 @@ export const sendEmailRouter = router({
         const mailOptions = {
           from: env.SENDINGEMAIL,
           to: input.user.email,
-          subject: 'Hello ' + input.user.first_name,
+          subject: 'Hello ' + input.user.firstName,
           text: 'Welcome to JourneyHacks',
           attachments: [
             {
