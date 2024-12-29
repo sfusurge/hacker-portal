@@ -30,7 +30,7 @@ CREATE TABLE "users" (
 	"phone_number" varchar(15),
 	"email" varchar(255),
 	"is_registered" boolean DEFAULT false NOT NULL,
-	"provider" "provider" NOT NULL,
+	"provider" varchar(32) NOT NULL,
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint

@@ -14,7 +14,7 @@ const users = pgTable('users', {
   phoneNumber: varchar('phone_number', { length: 15 }),
   email: varchar('email', { length: 255 }).unique(),
   isRegistered: boolean('is_registered').default(false).notNull(),
-  provider: providersEnum().notNull(),
+  provider: varchar('provider', { length: 32 }).notNull(),
 });
 
 const selectUserSchema = createSelectSchema(users);

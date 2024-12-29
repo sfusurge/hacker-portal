@@ -2,7 +2,7 @@
 
 import NextAuth from 'next-auth/next';
 import { authProviders } from '../authProviders';
-import { checkEmailExists, createOAuthUser } from '../middleware';
+import { createOAuthUser, validateUser } from '../middleware';
 
 export const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET as string,
@@ -11,12 +11,16 @@ export const handler = NextAuth({
     async signIn({ account, profile, email }) {
       // OAuth
       if (account && profile?.email) {
-        const emailExists = await checkEmailExists(profile.email);
-        if (!emailExists) {
+        const isUserValid = await validateUser(profile.email, account.provider);
+        if (isUserValid) return true;
+        if (isUserValid === 'DNE') {
           const newUser = createOAuthUser(profile.email, account.provider);
           console.log(newUser);
+          return true;
         }
-        return true;
+        if (isUserValid === 'ProviderMismatch') {
+          return false;
+        }
       }
       return false;
     },
