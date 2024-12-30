@@ -26,11 +26,17 @@ export function createConnection(
     console.log('ably connection closed');
   });
 
-  return {
-    client,
-  };
+  return client;
 }
 
+/**
+ * genric is T message to send *AND* receive.
+ * @param client
+ * @param channleName
+ * @param eventName
+ * @param onMessage
+ * @returns
+ */
 export async function connectToChannel<T>(
   client: Realtime,
   channleName: string,
@@ -42,9 +48,7 @@ export async function connectToChannel<T>(
     onMessage(message.data as T);
   });
 
-  return {
-    sendMsg: <V>(msg: V) => {
-      channel.publish(eventName, msg);
-    },
+  return (msg: T) => {
+    channel.publish(eventName, msg);
   };
 }

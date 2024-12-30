@@ -12,7 +12,7 @@ export default defineConfig({
     user: env.DATABASE_USER || 'root',
     password: env.DATABASE_PASSWORD || '12345',
     database: env.DATABASE_NAME || 'portaldb',
-    ssl: false,
+    ssl: env.DATABASE_NAME !== undefined, // use ssl if remote db is present.
   },
   verbose: true,
 });
