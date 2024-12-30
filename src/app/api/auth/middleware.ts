@@ -1,31 +1,7 @@
 import { databaseClient } from '@/db/client';
 import { users } from '@/db/schema/users';
 import { eq } from 'drizzle-orm';
-
-export type AuthenticationErrorTypes = {
-  UserDoesNotExist: 'User Does Not Exist';
-  ProviderMismatch: 'User attempted to sign-in with a different provider under the same email';
-};
-
-export type AuthenticationErrorType = keyof AuthenticationErrorTypes; // 'UserDoesNotExist' | 'ProviderMismatch'
-
-export interface AuthenticationError extends Error {
-  name: 'Authentication Error';
-  type: AuthenticationErrorType;
-  userId?: string;
-}
-
-function AuthenticationError(
-  msg: string,
-  errorType: AuthenticationErrorType,
-  userId?: string
-): AuthenticationError {
-  const error = new Error(msg) as AuthenticationError;
-  error.name = 'Authentication Error';
-  error.type = errorType;
-  error.userId = userId;
-  return error;
-}
+import { AuthenticationError } from './errors';
 
 export async function validateUser(
   loginEmail: string,
@@ -36,8 +12,17 @@ export async function validateUser(
     .from(users)
     .where(eq(users.email, loginEmail));
 
-  if (userQueryResult.length === 0) return 'DNE';
-  if (userQueryResult[0].provider !== provider) return 'ProviderMismatch';
+  if (userQueryResult.length === 0)
+    throw new AuthenticationError({
+      name: 'USER_DOES_NOT_EXIST',
+      message: 'User Does Not Exist',
+    });
+  if (userQueryResult[0].provider !== provider)
+    throw new AuthenticationError({
+      name: 'PROVIDER_MISMATCH',
+      message:
+        'User attempted to sign-in with a different provider under the same email',
+    });
   return true;
 }
 

@@ -3,6 +3,7 @@
 import NextAuth from 'next-auth/next';
 import { authProviders } from '../authProviders';
 import { createOAuthUser, validateUser } from '../middleware';
+import { AuthenticationError } from '../errors';
 
 export const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET as string,
@@ -11,16 +12,19 @@ export const handler = NextAuth({
     async signIn({ account, profile, email }) {
       // OAuth
       if (account && profile?.email) {
-        const isUserValid = await validateUser(profile.email, account.provider);
-        if (isUserValid === true) return true;
-        if (isUserValid === 'DNE') {
-          console.log('ERROR: User does not exist');
-          createOAuthUser(profile.email, account.provider);
+        try {
+          await validateUser(profile.email, account.provider);
           return true;
-        }
-        if (isUserValid === 'ProviderMismatch') {
-          console.log('ERROR: Provider mismatch');
-          return false;
+        } catch (error) {
+          if (error instanceof AuthenticationError) {
+            console.log(error);
+            if (error.name === 'USER_DOES_NOT_EXIST') {
+              createOAuthUser(profile.email, account.provider);
+              return true;
+            } else if (error.name === 'PROVIDER_MISMATCH') {
+              return false;
+            }
+          }
         }
       }
       return false;
