@@ -6,7 +6,7 @@ import { AuthenticationError } from './errors';
 export async function validateUser(
   loginEmail: string,
   provider: string
-): Promise<boolean | string> {
+): Promise<true> {
   const userQueryResult = await databaseClient
     .select()
     .from(users)

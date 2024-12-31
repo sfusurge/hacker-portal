@@ -13,7 +13,4 @@ export const authProviders = [
   }),
 ];
 
-export type ProvidersEnum = {
-  GOOGLE: 'google';
-  GITHUB: 'github';
-};
+export type ProvidersEnum = 'google' | 'github';
