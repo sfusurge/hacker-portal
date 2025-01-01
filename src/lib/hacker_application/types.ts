@@ -3,11 +3,17 @@ interface Entry {
   description?: string;
 }
 
-interface Application extends Entry {
+/**
+ * used both as a template, and also to hold current data.
+ * This exist on both client side and server.
+ * It's the client's responsibility to send an ApplicationData that makes sense, complete and up to date.
+ * The server api can reject the request for any reason, so client modifying the question set is not a concern.
+ */
+export interface ApplicationData extends Entry {
   version: number; // version must match, discard the application otherwise. Increment version with every change please.
 
   hackathonName: string; // should this be hackathon id in table instead?
-  submissionTime: string;
+  submissionTime?: string;
 
   pages: ApplicationPage[];
 }
@@ -15,7 +21,7 @@ interface Application extends Entry {
 /**
  * Same info as application, except pages are destructured.
  */
-interface FlatApplication extends Entry {
+export interface FlatApplication extends Entry {
   version: number; // version must match, discard the application otherwise. Increment version with every change please.
 
   hackathonName: string; // should this be hackathon id in table instead?
@@ -24,39 +30,55 @@ interface FlatApplication extends Entry {
   questions: ApplicationQuestion[];
 }
 
-interface ApplicationPage extends Entry {
+export interface ApplicationPage extends Entry {
   questions: ApplicationQuestion[];
 }
 
-type ApplicationQuestion =
+export type ApplicationQuestion =
   | QuestionCheckBoxInput
   | QuestionDatePicker
   | QuestionTextAreaInput
   | QuestionTextLineInput
   | QuestionNumberInput
   | QuestionMultipleChoice
-  | QuestionSchoolName;
+  | QuestionSchoolName
+  | QuestionMultipleCheckBox
+  | QuestionNameInput;
 
 interface Question extends Entry {
   questionId: number; // must be unique to the application.
+  type: string | 'N/A';
   required?: boolean;
+  role?: string; // optionally specify the "role" of the entry, for auto filling purposes.
 }
 
-interface QuestionTextLineInput extends Question {
+export interface QuestionTextLineInput extends Question {
   type: 'text-line';
   placeHolder?: string;
   value?: string;
-  maxCharacter: number;
+  maxCount?: number;
+
+  validationPatterns?: {
+    pattern: string; //regex pattern
+    errorMsg: string; // message to display if the pattern fails
+  };
 }
 
-interface QuestionTextAreaInput extends Question {
+export interface QuestionNameInput extends Question {
+  type: 'name';
+  firstName?: string;
+  lastName?: string;
+  maxCount?: number;
+}
+
+export interface QuestionTextAreaInput extends Question {
   type: 'text-area';
   placeHolder?: string;
   value?: string;
-  maxCharacter: number;
+  maxCount?: number;
 }
 
-interface QuestionNumberInput extends Question {
+export interface QuestionNumberInput extends Question {
   type: 'number';
   placeHolder?: number;
   value?: number;
@@ -64,31 +86,40 @@ interface QuestionNumberInput extends Question {
   max?: number;
 }
 
-interface QuestionCheckBoxInput extends Question {
+export interface QuestionCheckBoxInput extends Question {
   type: 'checkbox';
   value?: boolean;
 }
 
 /**
  * For short and finite number of choices. For example T-shirt sizes, not university name.
- * In Choices, "value" is the internal data, "name" is whats actually displayed.
+ * In Choices, "data" is the internal data, "name" is whats actually displayed.
  */
-interface QuestionMultipleChoice extends Question {
+export interface QuestionMultipleChoice extends Question {
   type: 'multiple-choice';
   value?: string;
-  choices: [{ value: string; name: string }];
+  choices: { data: string; name: string }[];
+}
+
+export interface QuestionMultipleCheckBox extends Question {
+  type: 'multiple-checkbox';
+  choices: {
+    data: string;
+    name: string;
+    value: boolean;
+  }[];
 }
 
 /**
  * Auto completes based on user input, from a near infinite list of uni names.
  */
-interface QuestionSchoolName extends Question {
+export interface QuestionSchoolName extends Question {
   // TODO
   type: 'school-name';
   value?: string;
 }
 
-interface QuestionDatePicker extends Question {
+export interface QuestionDatePicker extends Question {
   type: 'date';
   value?: string;
 }
