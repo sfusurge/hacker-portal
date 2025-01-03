@@ -55,6 +55,7 @@ export function TextLineInput({
                         ? question.validator.pattern
                         : '[\\s\\S]*'
                 }
+                maxLength={question.maxCount ?? 9999}
                 onKeyDown={(e) => {
                     if (e.key === 'enter') {
                         validate();

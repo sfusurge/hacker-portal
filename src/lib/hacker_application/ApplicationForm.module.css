@@ -1,0 +1,19 @@
+.appFormRoot {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.mainTitle {
+    font-size: x-large;
+}
+
+.title {
+    font-size: large;
+}
+
+.description {
+}
+
+.page {
+}
