@@ -17,3 +17,16 @@
 
 .page {
 }
+
+.ver {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: fit-content;
+}
+
+.hor {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+}

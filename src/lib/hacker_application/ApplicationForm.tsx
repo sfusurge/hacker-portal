@@ -10,6 +10,12 @@ import {
 import { splitAtom } from 'jotai/utils';
 import style from './ApplicationForm.module.css';
 import { TextLineInput } from './application_question_fields/TextLineInput';
+import { useMemo } from 'react';
+import { Label } from '@/components/ui/label';
+
+// Atoms
+const pageIndexAtom = atom(0); // defining the state
+
 /**
  *
  * appData can be locally cached or a new empty one.
@@ -21,23 +27,26 @@ export function ApplicationForm({
 }) {
     const appData = useAtomValue(appDataAtom);
 
-    const _pagesAtom = atom<ApplicationPage[], ApplicationPage[][], void>(
-        (get) => {
-            //getter
-            return get(appDataAtom).pages;
-        },
-        (get, set, val) => {
-            set(appDataAtom, (prev) => {
-                prev.pages = val;
-                return { ...prev };
-            });
-        }
-    );
+    // useMemo to not recreate the atom each time.
+    const _pagesAtom = useMemo(() => {
+        return atom<ApplicationPage[], ApplicationPage[][], void>(
+            (get) => {
+                //getter
+                return get(appDataAtom).pages;
+            },
+            (get, set, val) => {
+                set(appDataAtom, (prev) => {
+                    prev.pages = val;
+                    return { ...prev };
+                });
+            }
+        );
+    }, []);
 
-    const pageIndexAtom = atom(0); // defining the state
     const currentPageIndex = useAtomValue(pageIndexAtom); // using the state to get the for reals value
 
     const pagesAtomsAtom = splitAtom(_pagesAtom);
+
     const [pagesAtoms] = useAtom(pagesAtomsAtom);
 
     return (
@@ -45,9 +54,11 @@ export function ApplicationForm({
             <h1 className={style.mainTitle}>{appData.hackathonName}</h1>
             <p className={style.description}>{appData.description}</p>
 
-            <PageIndicator></PageIndicator>
-            <Page pageAtom={pagesAtoms[currentPageIndex]}></Page>
-            <PageButtons indexAtom={pageIndexAtom} />
+            {/* <PageIndicator></PageIndicator> */}
+            <div>
+                <Page pageAtom={pagesAtoms[currentPageIndex]}></Page>
+                <PageButtons indexAtom={pageIndexAtom} />
+            </div>
         </div>
     );
 }
@@ -58,34 +69,68 @@ function Question({
     questionAtom: PrimitiveAtom<ApplicationQuestion>;
 }) {
     const question = useAtomValue(questionAtom);
+    const error = useMemo(() => atom<string | undefined>(undefined), []);
 
-    switch (question.type) {
-        case 'text-line':
-            // save to cast since "type" is checked.
-            // no strict checking is needed. If submitted data is badly formatted/illegal, it's the server's responsibility to reject it.
-            return (
-                <TextLineInput
-                    dataAtom={
-                        questionAtom as PrimitiveAtom<QuestionTextLineInput>
-                    }
-                />
-            );
+    function getInnerInput(
+        type: ApplicationQuestion['type'],
+        _questionAtom: PrimitiveAtom<ApplicationQuestion>,
+        _errorAtom: PrimitiveAtom<string | undefined>
+    ) {
+        switch (type) {
+            case 'text-line':
+                // save to cast since "type" is checked.
+                // no strict checking is needed. If submitted data is badly formatted/illegal, it's the server's responsibility to reject it.
+                return (
+                    <TextLineInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionTextLineInput>
+                        }
+                        errorAtom={_errorAtom}
+                    />
+                );
 
-        default:
-            throw new Error(`unexpected input type: ${question.type}`);
+            default:
+                throw new Error(`unexpected input type: ${type}`);
+        }
     }
+
+    return (
+        <div className={style.ver} style={{ gap: '0.25rem' }}>
+            {question.title && <Label>{question.title}</Label>}
+            {question.description && <span>{question.description}</span>}
+            {getInnerInput(question.type, questionAtom, error)}
+        </div>
+    );
 }
 
 function Page({ pageAtom }: { pageAtom: PrimitiveAtom<ApplicationPage> }) {
     const page = useAtomValue(pageAtom);
 
-    const questionsAtom = atom((get) => get(pageAtom).questions);
+    const questionsAtom = useMemo(() => {
+        return atom(
+            (get) => get(pageAtom).questions,
+            (get, set, val: ApplicationQuestion[]) => {
+                set(pageAtom, (prev) => {
+                    prev.questions = val;
+                    return { ...prev };
+                });
+            }
+        );
+    }, []);
     const questionAtomsAtom = splitAtom(questionsAtom);
     const [questionAtoms] = useAtom(questionAtomsAtom);
 
     return (
         <div className={style.page}>
             {page.title && <h2 className={style.title}>{page.title}</h2>}
+            {page.description && (
+                <p className={style.description}>{page.description}</p>
+            )}
+            <div className={style.ver}>
+                {questionAtoms.map((questionAtom, index) => (
+                    <Question key={index} questionAtom={questionAtom} />
+                ))}
+            </div>
         </div>
     );
 }

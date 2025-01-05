@@ -12,7 +12,7 @@ export const applicationSet: ApplicationData = {
     Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
     `,
     submissionTime: undefined, // no initial time set.
-    version: 0,
+    version: 2,
     pages: [
         {
             title: 'First page',
@@ -39,7 +39,7 @@ export const applicationSet: ApplicationData = {
                     required: true,
                     validator: {
                         pattern:
-                            '([a-zA-Z]\\d[a-zA-Z]\\s?\\d[a-zA-Z]d)|(\\d{5}(?:-\\d{4})?)',
+                            '([a-zA-Z]\\d[a-zA-Z]\\s?\\d[a-zA-Z]\\d)|(\\d{5}(?:-\\d{4})?)',
                         errorMsg:
                             'Not a valid canadian postal code, nor a US zip code!',
                     },
