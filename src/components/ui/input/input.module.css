@@ -21,3 +21,7 @@
 
     color: grey;
 }
+
+.textinput:user-invalid {
+    outline: 2px solid red;
+}

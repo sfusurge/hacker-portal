@@ -69,7 +69,7 @@ export const FormTextInput = forwardRef<
         }
         return (
             <Input
-                className={cn('relative pb-4', {
+                className={cn('relative pb-4', style.textinput, {
                     [style.hasError]: error !== undefined,
                     [style.hasLength]: props.maxLength !== undefined,
                 })}
