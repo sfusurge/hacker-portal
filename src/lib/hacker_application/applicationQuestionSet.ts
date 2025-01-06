@@ -12,7 +12,7 @@ export const applicationSet: ApplicationData = {
     Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
     `,
     submissionTime: undefined, // no initial time set.
-    version: 2,
+    version: 322,
     pages: [
         {
             title: 'First page',
@@ -32,16 +32,13 @@ export const applicationSet: ApplicationData = {
                     questionId: 10, // questionId can be anything, as long as they are all unique.
                     type: 'text-line',
                     title: 'Postal Code',
-                    description:
-                        'Text with validation, Canadian or US postal code',
+                    description: 'Text with validation, Canadian or US postal code',
                     maxCount: 7,
                     placeHolder: 'A1C 2B3',
                     required: true,
                     validator: {
-                        pattern:
-                            '([a-zA-Z]\\d[a-zA-Z]\\s?\\d[a-zA-Z]\\d)|(\\d{5}(?:-\\d{4})?)',
-                        errorMsg:
-                            'Not a valid canadian postal code, nor a US zip code!',
+                        pattern: '([a-zA-Z]\\d[a-zA-Z]\\s?\\d[a-zA-Z]\\d)|(\\d{5}(?:-\\d{4})?)',
+                        errorMsg: 'Not a valid canadian postal code, nor a US zip code!',
                     },
                 },
                 // {
@@ -108,6 +105,57 @@ export const applicationSet: ApplicationData = {
                 //         { data: "pasta", name: "Pasta", value: false },
                 //     ],
                 // },
+            ],
+        },
+
+        {
+            title: 'Second page',
+            description: 'The first page with bunch of input fields',
+            questions: [
+                {
+                    questionId: 9,
+                    type: 'text-line',
+                    title: 'Type something',
+                    description: 'Any text is fine',
+                    maxCount: 50,
+                    placeHolder: 'bleh',
+                    required: true,
+                    value: 'default text',
+                },
+            ],
+        },
+
+        {
+            title: 'Third page',
+            description: 'The first page with bunch of input fields',
+            questions: [
+                {
+                    questionId: 9,
+                    type: 'text-line',
+                    title: 'Type something',
+                    description: 'Any text is fine',
+                    maxCount: 50,
+                    placeHolder: 'bleh',
+                    required: true,
+                    value: 'default text',
+                },
+            ],
+        },
+
+        {
+            title: 'Final page',
+            description: 'The first page with bunch of input fields',
+            questions: [
+                {
+                    questionId: 999,
+                    type: 'text-line',
+                    title: 'Type something',
+                    description: 'Any text is fine',
+                    maxCount: 50,
+                    placeHolder: 'bleh',
+                    required: true,
+                    value: 'default text',
+                },
             ],
         },
     ],

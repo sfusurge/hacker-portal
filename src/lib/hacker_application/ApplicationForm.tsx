@@ -1,17 +1,13 @@
 'use client';
 
 import { atom, PrimitiveAtom, useAtom, useAtomValue } from 'jotai';
-import {
-    ApplicationData,
-    ApplicationPage,
-    ApplicationQuestion,
-    QuestionTextLineInput,
-} from './types';
+import { ApplicationData, ApplicationPage, ApplicationQuestion, QuestionTextLineInput } from './types';
 import { splitAtom } from 'jotai/utils';
 import style from './ApplicationForm.module.css';
 import { TextLineInput } from './application_question_fields/TextLineInput';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 
 // Atoms
 const pageIndexAtom = atom(0); // defining the state
@@ -20,11 +16,7 @@ const pageIndexAtom = atom(0); // defining the state
  *
  * appData can be locally cached or a new empty one.
  */
-export function ApplicationForm({
-    appDataAtom,
-}: {
-    appDataAtom: PrimitiveAtom<ApplicationData>;
-}) {
+export function ApplicationForm({ appDataAtom }: { appDataAtom: PrimitiveAtom<ApplicationData> }) {
     const appData = useAtomValue(appDataAtom);
 
     // useMemo to not recreate the atom each time.
@@ -54,20 +46,16 @@ export function ApplicationForm({
             <h1 className={style.mainTitle}>{appData.hackathonName}</h1>
             <p className={style.description}>{appData.description}</p>
 
-            {/* <PageIndicator></PageIndicator> */}
-            <div>
+            <PageIndicator></PageIndicator>
+            <div className={style.formContainer}>
                 <Page pageAtom={pagesAtoms[currentPageIndex]}></Page>
-                <PageButtons indexAtom={pageIndexAtom} />
+                <PageButtons indexAtom={pageIndexAtom} pageCount={pagesAtoms.length} />
             </div>
         </div>
     );
 }
 
-function Question({
-    questionAtom,
-}: {
-    questionAtom: PrimitiveAtom<ApplicationQuestion>;
-}) {
+function Question({ questionAtom }: { questionAtom: PrimitiveAtom<ApplicationQuestion> }) {
     const question = useAtomValue(questionAtom);
     const error = useMemo(() => atom<string | undefined>(undefined), []);
 
@@ -80,14 +68,7 @@ function Question({
             case 'text-line':
                 // save to cast since "type" is checked.
                 // no strict checking is needed. If submitted data is badly formatted/illegal, it's the server's responsibility to reject it.
-                return (
-                    <TextLineInput
-                        dataAtom={
-                            _questionAtom as PrimitiveAtom<QuestionTextLineInput>
-                        }
-                        errorAtom={_errorAtom}
-                    />
-                );
+                return <TextLineInput dataAtom={_questionAtom as PrimitiveAtom<QuestionTextLineInput>} />;
 
             default:
                 throw new Error(`unexpected input type: ${type}`);
@@ -120,17 +101,18 @@ function Page({ pageAtom }: { pageAtom: PrimitiveAtom<ApplicationPage> }) {
     const questionAtomsAtom = splitAtom(questionsAtom);
     const [questionAtoms] = useAtom(questionAtomsAtom);
 
+    const formRef = useRef<HTMLFormElement>(null);
+
     return (
         <div className={style.page}>
             {page.title && <h2 className={style.title}>{page.title}</h2>}
-            {page.description && (
-                <p className={style.description}>{page.description}</p>
-            )}
-            <div className={style.ver}>
+            {page.description && <p className={style.description}>{page.description}</p>}
+
+            <form ref={formRef} className={style.ver}>
                 {questionAtoms.map((questionAtom, index) => (
                     <Question key={index} questionAtom={questionAtom} />
                 ))}
-            </div>
+            </form>
         </div>
     );
 }
@@ -146,6 +128,43 @@ function PageIndicator() {
  * Present Prev, Next page buttons. And also
  *
  */
-function PageButtons({ indexAtom }: { indexAtom: PrimitiveAtom<number> }) {
-    return <></>;
+function PageButtons({
+    indexAtom,
+    pageCount,
+    review_submit,
+}: {
+    indexAtom: PrimitiveAtom<number>;
+    pageCount: number;
+    review_submit?: () => void;
+}) {
+    const [index, setIndex] = useAtom(indexAtom);
+
+    return (
+        <div className={style.pageButtons}>
+            {index > 0 && (
+                <Button
+                    onClick={() => {
+                        if (index > 0) {
+                            setIndex(index - 1);
+                        }
+                    }}
+                >
+                    Previous
+                </Button>
+            )}
+
+            {index < pageCount - 1 && (
+                <Button
+                    onClick={() => {
+                        if (index < pageCount) {
+                            setIndex(index + 1);
+                        }
+                    }}
+                >
+                    Next
+                </Button>
+            )}
+            {index === pageCount - 1 && <Button onClick={review_submit}>Review & Submit</Button>}
+        </div>
+    );
 }

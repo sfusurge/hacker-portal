@@ -30,3 +30,17 @@
     flex-direction: row;
     gap: 0.5rem;
 }
+
+.formContainer {
+    position: relative;
+    padding-bottom: 5rem;
+}
+
+.pageButtons {
+    position: absolute;
+    right: 1rem;
+    bottom: 1rem;
+
+    display: flex;
+    gap: 1rem;
+}

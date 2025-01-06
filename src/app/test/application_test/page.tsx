@@ -3,14 +3,28 @@
 import { TextLineInput } from '@/lib/hacker_application/application_question_fields/TextLineInput';
 import { ApplicationForm } from '@/lib/hacker_application/ApplicationForm';
 import { applicationSet } from '@/lib/hacker_application/applicationQuestionSet';
+import { ApplicationData } from '@/lib/hacker_application/types';
 import { Provider, useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { useEffect } from 'react';
 
-const questionSetAtom = atomWithStorage(
-    'demo question set',
-    structuredClone(applicationSet)
-);
+const questionSetAtom = atomWithStorage('demo question set', structuredClone(applicationSet), {
+    getItem(key, initialValue) {
+        const obj: ApplicationData = JSON.parse(localStorage.getItem(key) ?? '');
+
+        if (obj.version === initialValue.version) {
+            return obj;
+        } else {
+            return initialValue;
+        }
+    },
+    setItem(key, newValue) {
+        localStorage.setItem(key, JSON.stringify(newValue));
+    },
+    removeItem(key) {
+        localStorage.removeItem(key);
+    },
+});
 
 export default function ApplicationTest() {
     /**
@@ -27,14 +41,6 @@ export default function ApplicationTest() {
 }
 
 function ApplicationWithProvider() {
-    const [questions, setQuestions] = useAtom(questionSetAtom);
-    useEffect(() => {
-        if (questions.version !== applicationSet.version) {
-            // if question versioin, then discard local version.
-            setQuestions(structuredClone(applicationSet));
-        }
-    }, [questions]);
-
     return (
         <div>
             <ApplicationForm appDataAtom={questionSetAtom}></ApplicationForm>
@@ -45,7 +51,7 @@ function ApplicationWithProvider() {
                     overflow: 'scroll',
                 }}
             >
-                <code>{JSON.stringify(questions, undefined, 2)}</code>
+                {/* <code>{JSON.stringify(questions, undefined, 2)}</code> */}
             </pre>
         </div>
     );
