@@ -2,7 +2,7 @@
 
 import { Label } from '@/components/ui/label';
 import { QuestionTextLineInput } from '../types';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/input/input';
 import { atom, PrimitiveAtom, useAtom, useSetAtom, type Atom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
@@ -33,8 +33,6 @@ export function TextLineInput({
             inputRef.current.setCustomValidity('');
             inputRef.current.checkValidity();
         }
-
-        console.log(question.validator, inputRef.current.validity);
 
         if (inputRef.current.validity.valid) {
             // if valid then update question value
