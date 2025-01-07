@@ -46,7 +46,7 @@ export function ApplicationForm({
 
     const currentPageIndex = useAtomValue(pageIndexAtom); // using the state to get the for reals value
 
-    const pagesAtomsAtom = splitAtom(_pagesAtom); // create an atom containing a list of atoms
+    const pagesAtomsAtom = splitAtom(_pagesAtom); // create an atom containing a list of atoms, from a single atom containing a list
     const [pagesAtoms] = useAtom(pagesAtomsAtom); // getting the list of atoms out of the previous ato
 
     const pageStatesAtom = useMemo(
@@ -119,8 +119,19 @@ function Page({
 }) {
     const page = useAtomValue(pageAtom);
     const setPageState = useSetAtom(pageStateAtom);
+    const formRef = useRef<HTMLFormElement>(null);
+    useEffect(() => {
+        if (formRef.current) {
+            const valid = formRef.current.checkValidity();
+            console.log(valid);
 
-    console.log(hidden);
+            // setPageState({
+            //     title:page.title!,
+            //     error:!valid,
+            //     state:"completed"
+            // });
+        }
+    }, [page]);
 
     const questionsAtom = useMemo(
         () =>
@@ -139,7 +150,12 @@ function Page({
     const [questionAtoms] = useAtom(questionAtomsAtom);
 
     return (
-        <form className={style.page} style={hidden ? { display: 'none' } : {}}>
+        <form
+            ref={formRef}
+            className={style.page}
+            style={hidden ? { display: 'none' } : {}}
+            noValidate
+        >
             {page.title && <h2 className={style.title}>{page.title}</h2>}
             {page.description && <p className={style.description}></p>}
             {questionAtoms.map((item, index) => (

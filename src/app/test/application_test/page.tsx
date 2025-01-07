@@ -1,20 +1,16 @@
 'use client';
 
-import { TextLineInput } from '@/lib/hacker_application/application_question_fields/TextLineInput';
 import { ApplicationForm } from '@/lib/hacker_application/ApplicationForm';
 import { applicationSet } from '@/lib/hacker_application/applicationQuestionSet';
 import { ApplicationData } from '@/lib/hacker_application/types';
 import { Provider, useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import { useEffect } from 'react';
 
 const questionSetAtom = atomWithStorage(
     'demo question set',
     structuredClone(applicationSet),
     {
         getItem(key, initialValue) {
-            console.log(localStorage.getItem(key));
-
             const obj: ApplicationData = JSON.parse(
                 localStorage.getItem(key) ?? '{}'
             );

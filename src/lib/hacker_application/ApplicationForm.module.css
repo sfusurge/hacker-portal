@@ -86,7 +86,7 @@
     flex-direction: column;
     gap: 0.5rem;
     justify-content: start;
-    align-items: center;
+    align-items: start;
 
     padding: 1rem;
     border-right: 2px solid black;

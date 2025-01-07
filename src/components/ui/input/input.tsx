@@ -68,49 +68,53 @@ export const FormTextInput = forwardRef<
             }
         }
         return (
-            <Input
-                {...props}
-                className={cn('relative pb-4', style.textinput, {
+            <div
+                style={
+                    {
+                        '--errMsg': `"${error}"`,
+                        '--lengthMsg': `"${inputRef.current?.value.length}/${props.maxLength}"`,
+                    } as CSSProperties
+                }
+                className={cn(style.inputHolder, {
                     [style.hasError]: error !== undefined,
                     [style.hasLength]: props.maxLength !== undefined,
                 })}
-                style={
-                    {
-                        '--errMsg': error,
-                        '--lengthMsg': `${inputRef.current?.value.length}/${props.maxLength}`,
-                    } as CSSProperties
-                }
-                ref={inputRef}
-                onKeyDown={(e) => {
-                    if (!lazy) {
-                        return;
-                    }
+            >
+                <Input
+                    {...props}
+                    className={cn('relative pb-4', style.textinput)}
+                    ref={inputRef}
+                    onKeyDown={(e) => {
+                        if (!lazy) {
+                            return;
+                        }
 
-                    if (e.key === 'enter') {
+                        if (e.key === 'enter') {
+                            validate();
+                        }
+                    }}
+                    onBlur={() => {
+                        if (!lazy) {
+                            return;
+                        }
                         validate();
-                    }
-                }}
-                onBlur={() => {
-                    if (!lazy) {
-                        return;
-                    }
-                    validate();
-                }}
-                onChange={() => {
-                    if (!lazy) {
-                        return;
-                    }
+                    }}
+                    onChange={() => {
+                        if (!lazy) {
+                            return;
+                        }
 
-                    if (timer.current !== undefined) {
-                        clearTimeout(timer.current);
-                    }
+                        if (timer.current !== undefined) {
+                            clearTimeout(timer.current);
+                        }
 
-                    timer.current = setTimeout(() => {
-                        validate();
-                        timer.current = undefined;
-                    }, timeOut);
-                }}
-            ></Input>
+                        timer.current = setTimeout(() => {
+                            validate();
+                            timer.current = undefined;
+                        }, timeOut);
+                    }}
+                ></Input>
+            </div>
         );
     }
 );

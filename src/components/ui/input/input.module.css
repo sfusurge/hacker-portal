@@ -1,4 +1,5 @@
-.hasError {
+.hasError,
+.hasLength {
     padding-bottom: 1rem;
     position: relative;
 }
@@ -14,12 +15,12 @@
 
 .hasLength::after {
     content: var(--lengthMsg);
-
     position: absolute;
-    right: 0;
+    right: 0.5rem;
     border: 0;
 
     color: grey;
+    font-size: smaller;
 }
 
 .textinput:user-invalid {
