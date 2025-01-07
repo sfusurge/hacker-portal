@@ -49,15 +49,19 @@ export function ApplicationForm({
     const pagesAtomsAtom = splitAtom(_pagesAtom); // create an atom containing a list of atoms
     const [pagesAtoms] = useAtom(pagesAtomsAtom); // getting the list of atoms out of the previous ato
 
-    const pageStatesAtom = atom(
-        appData.pages.map(
-            (item) =>
-                ({
-                    title: item.title!,
-                    state: 'not started',
-                    error: false,
-                }) as PageFormState
-        )
+    const pageStatesAtom = useMemo(
+        () =>
+            atom(
+                appData.pages.map(
+                    (item) =>
+                        ({
+                            title: item.title!,
+                            state: 'not started',
+                            error: false,
+                        }) as PageFormState
+                )
+            ),
+        []
     );
     const pageStateAtomsAtom = splitAtom(pageStatesAtom);
     const [pageStateAtoms] = useAtom(pageStateAtomsAtom);
@@ -72,9 +76,10 @@ export function ApplicationForm({
             ></PageIndicator>
             {pagesAtoms.map((pageAtom, index) => (
                 <Page
+                    key={index}
                     pageAtom={pageAtom}
                     pageStateAtom={pageStateAtoms[currentPageIndex]}
-                    hidden={index === currentPageIndex}
+                    hidden={index !== currentPageIndex}
                 ></Page>
             ))}
             <PageButtons
@@ -111,25 +116,31 @@ function Page({
     const page = useAtomValue(pageAtom);
     const setPageState = useSetAtom(pageStateAtom);
 
-    const questionsAtom = atom(
-        (get) => get(pageAtom).questions,
-        (get, set, newQuestion: ApplicationQuestion[]) => {
-            set(pageAtom, (prev) => {
-                prev.questions = newQuestion;
-                return { ...prev };
-            });
-        }
+    console.log(hidden);
+
+    const questionsAtom = useMemo(
+        () =>
+            atom(
+                (get) => get(pageAtom).questions,
+                (get, set, newQuestion: ApplicationQuestion[]) => {
+                    set(pageAtom, (prev) => {
+                        prev.questions = newQuestion;
+                        return { ...prev };
+                    });
+                }
+            ),
+        []
     );
     const questionAtomsAtom = splitAtom(questionsAtom);
     const [questionAtoms] = useAtom(questionAtomsAtom);
 
     return (
-        <form
-            className={style.page}
-            style={hidden ? { display: 'hidden' } : {}}
-        >
+        <form className={style.page} style={hidden ? { display: 'none' } : {}}>
             {page.title && <h2 className={style.title}>{page.title}</h2>}
             {page.description && <p className={style.description}></p>}
+            {questionAtoms.map((item, index) => (
+                <Question questionAtom={item} key={index}></Question>
+            ))}
         </form>
     );
 }

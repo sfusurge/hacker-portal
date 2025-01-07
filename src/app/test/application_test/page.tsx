@@ -4,7 +4,7 @@ import { TextLineInput } from '@/lib/hacker_application/application_question_fie
 import { ApplicationForm } from '@/lib/hacker_application/ApplicationForm';
 import { applicationSet } from '@/lib/hacker_application/applicationQuestionSet';
 import { ApplicationData } from '@/lib/hacker_application/types';
-import { Provider, useAtom } from 'jotai';
+import { Provider, useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { useEffect } from 'react';
 
@@ -13,8 +13,10 @@ const questionSetAtom = atomWithStorage(
     structuredClone(applicationSet),
     {
         getItem(key, initialValue) {
+            console.log(localStorage.getItem(key));
+
             const obj: ApplicationData = JSON.parse(
-                localStorage.getItem(key) ?? ''
+                localStorage.getItem(key) ?? '{}'
             );
 
             if (obj.version === initialValue.version) {
@@ -47,6 +49,7 @@ export default function ApplicationTest() {
 }
 
 function ApplicationWithProvider() {
+    const questions = useAtomValue(questionSetAtom);
     return (
         <div>
             <ApplicationForm appDataAtom={questionSetAtom}></ApplicationForm>
@@ -57,7 +60,7 @@ function ApplicationWithProvider() {
                     overflow: 'scroll',
                 }}
             >
-                {/* <code>{JSON.stringify(questions, undefined, 2)}</code> */}
+                <code>{JSON.stringify(questions, undefined, 2)}</code>
             </pre>
         </div>
     );
