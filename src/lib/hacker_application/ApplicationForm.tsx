@@ -70,25 +70,29 @@ export function ApplicationForm({
         <div className={style.appFormRoot}>
             <h1 className={style.mainTitle}>{appData.hackathonName}</h1>
 
-            <PageIndicator
-                pageStateAtoms={pageStatesAtom}
-                indexAtom={pageIndexAtom}
-            ></PageIndicator>
-            {pagesAtoms.map((pageAtom, index) => (
-                <Page
-                    key={index}
-                    pageAtom={pageAtom}
-                    pageStateAtom={pageStateAtoms[currentPageIndex]}
-                    hidden={index !== currentPageIndex}
-                ></Page>
-            ))}
-            <PageButtons
-                indexAtom={pageIndexAtom}
-                pageCount={pagesAtoms.length}
-                review_submit={() => {
-                    alert('review!');
-                }}
-            />
+            <div className={style.appFormContent}>
+                <PageIndicator
+                    pageStateAtoms={pageStatesAtom}
+                    indexAtom={pageIndexAtom}
+                ></PageIndicator>
+                <div className={style.formContainer}>
+                    {pagesAtoms.map((pageAtom, index) => (
+                        <Page
+                            key={index}
+                            pageAtom={pageAtom}
+                            pageStateAtom={pageStateAtoms[currentPageIndex]}
+                            hidden={index !== currentPageIndex}
+                        ></Page>
+                    ))}
+                    <PageButtons
+                        indexAtom={pageIndexAtom}
+                        pageCount={pagesAtoms.length}
+                        review_submit={() => {
+                            alert('review!');
+                        }}
+                    />
+                </div>
+            </div>
         </div>
     );
 }
