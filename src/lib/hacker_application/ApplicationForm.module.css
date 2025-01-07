@@ -1,3 +1,5 @@
+/* ==== root ==== */
+
 .appFormRoot {
     display: flex;
     flex-direction: column;
@@ -8,6 +10,8 @@
     font-size: x-large;
 }
 
+/* ==== shared ==== */
+
 .title {
     font-size: large;
 }
@@ -15,9 +19,37 @@
 .description {
 }
 
+.ver {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: fit-content;
+}
+
+.hor {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+}
+
 /* ==== page ====*/
 
 .page {
+}
+
+.formContainer {
+    position: relative;
+    padding-bottom: 5rem;
+}
+
+/* ==== page buttons */
+.pageButtons {
+    position: absolute;
+    right: 1rem;
+    bottom: 1rem;
+
+    display: flex;
+    gap: 1rem;
 }
 
 /* ==== page status ==== */

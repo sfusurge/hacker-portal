@@ -10,7 +10,13 @@ import {
 import { splitAtom } from 'jotai/utils';
 import style from './ApplicationForm.module.css';
 import { TextLineInput } from './application_question_fields/TextLineInput';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+
+// Atoms
+const pageIndexAtom = atom(0); // defining the state
+
 /**
  *
  * appData can be locally cached or a new empty one.
@@ -22,20 +28,22 @@ export function ApplicationForm({
 }) {
     const appData = useAtomValue(appDataAtom);
 
-    const _pagesAtom = atom(
-        (get) => {
-            //getter
-            return get(appDataAtom).pages;
-        },
-        (get, set, val: ApplicationPage[]) => {
-            set(appDataAtom, (prev) => {
-                prev.pages = val;
-                return { ...prev };
-            });
-        }
-    );
+    // useMemo to not recreate the atom each time.
+    const _pagesAtom = useMemo(() => {
+        return atom<ApplicationPage[], ApplicationPage[][], void>(
+            (get) => {
+                //getter
+                return get(appDataAtom).pages;
+            },
+            (get, set, val) => {
+                set(appDataAtom, (prev) => {
+                    prev.pages = val;
+                    return { ...prev };
+                });
+            }
+        );
+    }, []);
 
-    const pageIndexAtom = atom(0); // defining the state
     const currentPageIndex = useAtomValue(pageIndexAtom); // using the state to get the for reals value
 
     const pagesAtomsAtom = splitAtom(_pagesAtom); // create an atom containing a list of atoms
@@ -69,7 +77,13 @@ export function ApplicationForm({
                     hidden={index === currentPageIndex}
                 ></Page>
             ))}
-            <PageButtons indexAtom={pageIndexAtom} />
+            <PageButtons
+                indexAtom={pageIndexAtom}
+                pageCount={pagesAtoms.length}
+                review_submit={() => {
+                    alert('review!');
+                }}
+            />
         </div>
     );
 }
@@ -169,34 +183,88 @@ function PageIndicator({
     );
 }
 
-/**
- * Present Prev, Next page buttons. And also
- *
- */
-function PageButtons({ indexAtom }: { indexAtom: PrimitiveAtom<number> }) {
-    return <></>;
-}
-
 function Question({
     questionAtom,
 }: {
     questionAtom: PrimitiveAtom<ApplicationQuestion>;
 }) {
     const question = useAtomValue(questionAtom);
+    const error = useMemo(() => atom<string | undefined>(undefined), []);
 
-    switch (question.type) {
-        case 'text-line':
-            // save to cast since "type" is checked.
-            // no strict checking is needed. If submitted data is badly formatted/illegal, it's the server's responsibility to reject it.
-            return (
-                <TextLineInput
-                    dataAtom={
-                        questionAtom as PrimitiveAtom<QuestionTextLineInput>
-                    }
-                />
-            );
+    function getInnerInput(
+        type: ApplicationQuestion['type'],
+        _questionAtom: PrimitiveAtom<ApplicationQuestion>,
+        _errorAtom: PrimitiveAtom<string | undefined>
+    ) {
+        switch (type) {
+            case 'text-line':
+                // save to cast since "type" is checked.
+                // no strict checking is needed. If submitted data is badly formatted/illegal, it's the server's responsibility to reject it.
+                return (
+                    <TextLineInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionTextLineInput>
+                        }
+                    />
+                );
 
-        default:
-            throw new Error(`unexpected input type: ${question.type}`);
+            default:
+                throw new Error(`unexpected input type: ${type}`);
+        }
     }
+
+    return (
+        <div className={style.ver} style={{ gap: '0.25rem' }}>
+            {question.title && <Label>{question.title}</Label>}
+            {question.description && <span>{question.description}</span>}
+            {getInnerInput(question.type, questionAtom, error)}
+        </div>
+    );
+}
+
+/**
+ * Present Prev, Next page buttons. And also
+ *
+ */
+function PageButtons({
+    indexAtom,
+    pageCount,
+    review_submit,
+}: {
+    indexAtom: PrimitiveAtom<number>;
+    pageCount: number;
+    review_submit?: () => void;
+}) {
+    const [index, setIndex] = useAtom(indexAtom);
+
+    return (
+        <div className={style.pageButtons}>
+            {index > 0 && (
+                <Button
+                    onClick={() => {
+                        if (index > 0) {
+                            setIndex(index - 1);
+                        }
+                    }}
+                >
+                    Previous
+                </Button>
+            )}
+
+            {index < pageCount - 1 && (
+                <Button
+                    onClick={() => {
+                        if (index < pageCount) {
+                            setIndex(index + 1);
+                        }
+                    }}
+                >
+                    Next
+                </Button>
+            )}
+            {index === pageCount - 1 && (
+                <Button onClick={review_submit}>Review & Submit</Button>
+            )}
+        </div>
+    );
 }

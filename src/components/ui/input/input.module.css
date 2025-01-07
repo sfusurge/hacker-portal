@@ -1,0 +1,27 @@
+.hasError {
+    padding-bottom: 1rem;
+    position: relative;
+}
+
+.hasError::before {
+    content: var(--errMsg);
+    color: red;
+
+    position: absolute;
+    left: 0;
+    bottom: 0;
+}
+
+.hasLength::after {
+    content: var(--lengthMsg);
+
+    position: absolute;
+    right: 0;
+    border: 0;
+
+    color: grey;
+}
+
+.textinput:user-invalid {
+    outline: 2px solid red;
+}

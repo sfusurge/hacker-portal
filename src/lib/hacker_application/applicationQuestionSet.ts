@@ -8,7 +8,7 @@ export const applicationSet: ApplicationData = {
     hackathonName: 'demo_hackathon', // this should match the internal name of the hackathon, will not be displayed.
     title: 'Demo Hackathon Application',
     submissionTime: undefined, // no initial time set.
-    version: 0,
+    version: 322,
     pages: [
         {
             title: 'First page',
@@ -35,7 +35,7 @@ export const applicationSet: ApplicationData = {
                     required: true,
                     validator: {
                         pattern:
-                            '([a-zA-Z]\\d[a-zA-Z]\\s?\\d[a-zA-Z]d)|(\\d{5}(?:-\\d{4})?)',
+                            '([a-zA-Z]\\d[a-zA-Z]\\s?\\d[a-zA-Z]\\d)|(\\d{5}(?:-\\d{4})?)',
                         errorMsg:
                             'Not a valid canadian postal code, nor a US zip code!',
                     },
@@ -104,6 +104,57 @@ export const applicationSet: ApplicationData = {
                 //         { data: "pasta", name: "Pasta", value: false },
                 //     ],
                 // },
+            ],
+        },
+
+        {
+            title: 'Second page',
+            description: 'The first page with bunch of input fields',
+            questions: [
+                {
+                    questionId: 9,
+                    type: 'text-line',
+                    title: 'Type something',
+                    description: 'Any text is fine',
+                    maxCount: 50,
+                    placeHolder: 'bleh',
+                    required: true,
+                    value: 'default text',
+                },
+            ],
+        },
+
+        {
+            title: 'Third page',
+            description: 'The first page with bunch of input fields',
+            questions: [
+                {
+                    questionId: 9,
+                    type: 'text-line',
+                    title: 'Type something',
+                    description: 'Any text is fine',
+                    maxCount: 50,
+                    placeHolder: 'bleh',
+                    required: true,
+                    value: 'default text',
+                },
+            ],
+        },
+
+        {
+            title: 'Final page',
+            description: 'The first page with bunch of input fields',
+            questions: [
+                {
+                    questionId: 999,
+                    type: 'text-line',
+                    title: 'Type something',
+                    description: 'Any text is fine',
+                    maxCount: 50,
+                    placeHolder: 'bleh',
+                    required: true,
+                    value: 'default text',
+                },
             ],
         },
     ],
