@@ -13,6 +13,7 @@ import { TextLineInput } from './application_question_fields/TextLineInput';
 import { useEffect, useMemo, useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { isApplicationQuestionFilled } from './application_question_fields/shared';
 
 // Atoms
 const pageIndexAtom = atom(0); // defining the state
@@ -122,14 +123,34 @@ function Page({
     const formRef = useRef<HTMLFormElement>(null);
     useEffect(() => {
         if (formRef.current) {
-            const valid = formRef.current.checkValidity();
-            console.log(valid);
+            const error = !formRef.current.checkValidity();
 
-            // setPageState({
-            //     title:page.title!,
-            //     error:!valid,
-            //     state:"completed"
-            // });
+            // when page content changes, check if everything in the page is filled
+            let atLeastOneFilled = false;
+            let allFilled = true;
+
+            for (const question of page.questions) {
+                const filled = isApplicationQuestionFilled(question);
+
+                atLeastOneFilled ||= filled;
+                allFilled &&= filled;
+
+                if (atLeastOneFilled && !allFilled) {
+                    break;
+                }
+            }
+
+            let state: PageFormState['state'] = 'not started';
+            if (allFilled) {
+                state = 'completed';
+            } else if (atLeastOneFilled) {
+                state = 'started';
+            }
+            setPageState({
+                title: page.title!,
+                error,
+                state,
+            });
         }
     }, [page]);
 

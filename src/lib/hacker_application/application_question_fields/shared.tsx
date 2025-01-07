@@ -19,9 +19,12 @@ export function isApplicationQuestionFilled(question: ApplicationQuestion) {
             return question.value ?? false;
 
         case 'multiple-checkbox':
-            return true; // TODO
+            return question.choices.length > 0;
+
+        case 'multiple-choice':
+            return question.value !== undefined;
 
         default:
-            break;
+            throw 'Unexpected question while checking if empty';
     }
 }
