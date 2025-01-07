@@ -15,5 +15,22 @@
 .description {
 }
 
+/* ==== page ====*/
+
 .page {
+}
+
+/* ==== page status ==== */
+
+.pageStatusContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    justify-content: start;
+    align-items: center;
+
+    margin: 1rem;
+}
+
+.pageStatusItem {
 }

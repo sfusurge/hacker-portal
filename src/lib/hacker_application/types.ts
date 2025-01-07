@@ -9,7 +9,8 @@ interface Entry {
  * It's the client's responsibility to send an ApplicationData that makes sense, complete and up to date.
  * The server api can reject the request for any reason, so client modifying the question set is not a concern.
  */
-export interface ApplicationData extends Entry {
+export interface ApplicationData {
+    title?: string;
     version: number; // version must match, discard the application otherwise. Increment version with every change please.
 
     hackathonName: string; // should this be hackathon id in table instead?
@@ -89,6 +90,7 @@ export interface QuestionNumberInput extends Question {
 export interface QuestionCheckBoxInput extends Question {
     type: 'checkbox';
     value?: boolean;
+    required?: boolean;
 }
 
 /**
