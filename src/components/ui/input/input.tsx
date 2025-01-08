@@ -4,6 +4,7 @@ import {
     CSSProperties,
     forwardRef,
     useCallback,
+    useEffect,
     useImperativeHandle,
     useMemo,
     useRef,
@@ -59,14 +60,21 @@ export const FormTextInput = forwardRef<
 
             const valid = inputRef.current.checkValidity();
 
-            if (valid && onLazyChange) {
-                onLazyChange(inputRef.current.value);
-            }
-
             if (!valid && errorMsg) {
                 setError(errorMsg);
             }
+
+            if (valid) {
+                setError(undefined);
+            }
+
+            if (onLazyChange) {
+                // invoke change regardless if valid or not
+                // only check if error should block submit *during* submition
+                onLazyChange(inputRef.current.value);
+            }
         }
+
         return (
             <div
                 style={
@@ -76,13 +84,13 @@ export const FormTextInput = forwardRef<
                     } as CSSProperties
                 }
                 className={cn(style.inputHolder, {
-                    [style.hasError]: error !== undefined,
                     [style.hasLength]: props.maxLength !== undefined,
+                    [style.hasError]: error !== undefined,
                 })}
             >
                 <Input
                     {...props}
-                    className={cn('relative pb-4', style.textinput)}
+                    className={cn(style.textinput)}
                     ref={inputRef}
                     onKeyDown={(e) => {
                         if (!lazy) {

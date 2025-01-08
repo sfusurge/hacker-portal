@@ -1,28 +1,34 @@
-.hasError,
+.hasLength:not(.hasError) {
+    padding-bottom: 1.5rem;
+}
+
 .hasLength {
-    padding-bottom: 1rem;
     position: relative;
 }
 
-.hasError::before {
-    content: var(--errMsg);
-    color: red;
-
-    position: absolute;
-    left: 0;
-    bottom: 0;
-}
-
-.hasLength::after {
+.hasLength::before {
     content: var(--lengthMsg);
     position: absolute;
-    right: 0.5rem;
+    right: 0rem;
+    top: 2.6rem;
     border: 0;
 
     color: grey;
     font-size: smaller;
 }
 
-.textinput:user-invalid {
+.textinput:user-invalid,
+.textinput:invalid:not(:placeholder-shown) {
     outline: 2px solid red;
+}
+
+.hasError:has(.textinput:user-invalid)::after,
+.hasError:has(.textinput:invalid:not(:placeholder-shown))::after {
+    content: var(--errMsg);
+    color: red;
+    font-size: smaller;
+    max-width: calc(100% - 2rem);
+    line-height: 1rem;
+    display: block;
+    padding-top: 0.2rem;
 }

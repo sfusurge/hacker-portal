@@ -28,6 +28,7 @@ export function TextLineInput({
                 question.validator ? question.validator.pattern : '[\\s\\S]*'
             }
             maxLength={question.maxCount ?? 9999}
+            errorMsg={question.validator?.errorMsg}
         ></FormTextInput>
     );
 }

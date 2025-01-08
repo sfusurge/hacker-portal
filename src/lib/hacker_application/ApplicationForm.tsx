@@ -81,7 +81,7 @@ export function ApplicationForm({
                         <Page
                             key={index}
                             pageAtom={pageAtom}
-                            pageStateAtom={pageStateAtoms[currentPageIndex]}
+                            pageStateAtom={pageStateAtoms[index]}
                             hidden={index !== currentPageIndex}
                         ></Page>
                     ))}
@@ -121,9 +121,11 @@ function Page({
     const page = useAtomValue(pageAtom);
     const setPageState = useSetAtom(pageStateAtom);
     const formRef = useRef<HTMLFormElement>(null);
-    useEffect(() => {
+
+    function updateFormStatus() {
         if (formRef.current) {
             const error = !formRef.current.checkValidity();
+            console.log('running', page, error);
 
             // when page content changes, check if everything in the page is filled
             let atLeastOneFilled = false;
@@ -146,12 +148,16 @@ function Page({
             } else if (atLeastOneFilled) {
                 state = 'started';
             }
+
             setPageState({
                 title: page.title!,
                 error,
                 state,
             });
         }
+    }
+    useEffect(() => {
+        updateFormStatus();
     }, [page]);
 
     const questionsAtom = useMemo(
@@ -217,12 +223,16 @@ function PageIndicator({
         }
     }
 
+    useEffect(() => {
+        console.log(pageStates);
+    }, [pageStates]);
+
     return (
         <div className={style.pageStatusContainer}>
             {pageStates.map((item, index) => {
                 return (
                     <button
-                        key={item.title}
+                        key={index}
                         onClick={() => {
                             setIndex(index);
                         }}
@@ -267,7 +277,9 @@ function Question({
 
     return (
         <div className={style.ver} style={{ gap: '0.25rem' }}>
-            {question.title && <Label>{question.title}</Label>}
+            {question.title && (
+                <Label required={question.required}>{question.title}</Label>
+            )}
             {question.description && <span>{question.description}</span>}
             {getInnerInput(question.type, questionAtom, error)}
         </div>

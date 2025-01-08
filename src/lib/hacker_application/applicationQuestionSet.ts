@@ -8,7 +8,7 @@ export const applicationSet: ApplicationData = {
     hackathonName: 'demo_hackathon', // this should match the internal name of the hackathon, will not be displayed.
     title: 'Demo Hackathon Application',
     submissionTime: undefined, // no initial time set.
-    version: 322,
+    version: 1322,
     pages: [
         {
             title: 'First page',
@@ -21,7 +21,7 @@ export const applicationSet: ApplicationData = {
                     description: 'Any text is fine',
                     maxCount: 50,
                     placeHolder: 'bleh',
-                    required: true,
+                    required: false,
                     value: 'default text',
                 },
                 {
@@ -120,6 +120,27 @@ export const applicationSet: ApplicationData = {
                     placeHolder: 'bleh',
                     required: true,
                     value: 'default text',
+                },
+                {
+                    questionId: 92423,
+                    type: 'text-line',
+                    title: 'Type something 2',
+                    description: 'Any text is fine',
+                    maxCount: 50,
+                    placeHolder: 'bleh',
+                    required: false,
+                    value: 'default text',
+                },
+
+                {
+                    questionId: 99292,
+                    type: 'text-line',
+                    title: 'Type something',
+                    description: '(optional)',
+                    maxCount: 50,
+                    placeHolder: 'bleh',
+                    required: false,
+                    value: '',
                 },
             ],
         },
