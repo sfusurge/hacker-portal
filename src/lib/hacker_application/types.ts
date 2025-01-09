@@ -85,6 +85,7 @@ export interface QuestionNumberInput extends Question {
     value?: number;
     min?: number;
     max?: number;
+    errMsg?: string;
 }
 
 export interface QuestionCheckBoxInput extends Question {

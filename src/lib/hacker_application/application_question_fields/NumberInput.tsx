@@ -28,6 +28,7 @@ export function NumberInput({
                     setQuestion({ ...question, value: intVal });
                 }
             }}
+            errorMsg={question.errMsg}
         ></FormTextInput>
     );
 }
