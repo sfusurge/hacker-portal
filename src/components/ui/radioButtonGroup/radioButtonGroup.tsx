@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FormTextInput } from '../input/input';
+import style from './radioButtonGroup.module.css';
 
 export interface RadioButtonGroupProps {
     options: { data: string; name: string }[];
@@ -56,9 +57,13 @@ export function RadioButtonGroup({
     }, [selection]);
 
     return (
-        <fieldset>
+        <fieldset className={style.optionsContainer}>
             {options.map((item, index) => (
-                <label key={index} htmlFor={item.data}>
+                <label
+                    key={index}
+                    htmlFor={item.data}
+                    className={style.optionLabel}
+                >
                     <input
                         type="radio"
                         id={item.data}
@@ -73,6 +78,7 @@ export function RadioButtonGroup({
                                 setSelection(item.data);
                             }
                         }}
+                        className={style.radio}
                     />
                     {item.name}
                 </label>
@@ -80,7 +86,7 @@ export function RadioButtonGroup({
             {
                 // Other - for custom input
                 allowCustomInput && (
-                    <label htmlFor="other">
+                    <label htmlFor="other" className={style.optionLabel}>
                         <input
                             type="radio"
                             id="other"
@@ -93,7 +99,9 @@ export function RadioButtonGroup({
                                     setSelection('');
                                 }
                             }}
+                            className={style.radio}
                         ></input>
+                        Other
                     </label>
                 )
             }
@@ -108,6 +116,8 @@ export function RadioButtonGroup({
                             setSelection(val as string);
                         }}
                         placeholder="Custom value here"
+                        errorMsg="Required!"
+                        required={required}
                     ></FormTextInput>
                 )
             }

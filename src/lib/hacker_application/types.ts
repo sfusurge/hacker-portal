@@ -101,6 +101,8 @@ export interface QuestionCheckBoxInput extends Question {
 export interface QuestionMultipleChoice extends Question {
     type: 'multiple-choice';
     value?: string;
+    allowCustom?: boolean;
+    allowDeselect?: boolean;
     choices: { data: string; name: string }[];
 }
 

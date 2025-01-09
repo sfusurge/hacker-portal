@@ -1,0 +1,51 @@
+.optionsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.optionsContainer:has(label:has(input:user-invalid)) {
+    border: 2px solid red;
+}
+
+.optionsContainer:has(label:has(input:user-invalid))::after {
+    content: 'Required, please make a selection';
+    color: red;
+}
+
+.optionLabel {
+    /* TODO */
+    padding: 0.5rem;
+    transition: filter 400ms ease-out;
+}
+
+.optionLabel:hover {
+    filter: brightness(1.1);
+}
+.optionLabel:active {
+    filter: brightness(0.95);
+}
+
+.optionLabel::before {
+    content: '';
+    display: inline-block;
+    /* Draw a filled circle with css */
+    border-radius: 50%;
+    background-color: lightgrey;
+    width: 1rem;
+    height: 1rem;
+
+    margin-right: 0.5rem;
+
+    vertical-align: middle;
+
+    transition: background-color 400ms ease-out;
+}
+
+.optionLabel:has(input:checked)::before {
+    background-color: black;
+}
+
+.radio {
+    appearance: none;
+}

@@ -8,12 +8,27 @@ export const applicationSet: ApplicationData = {
     hackathonName: 'demo_hackathon', // this should match the internal name of the hackathon, will not be displayed.
     title: 'Demo Hackathon Application',
     submissionTime: undefined, // no initial time set.
-    version: 213222,
+    version: 1,
     pages: [
         {
             title: 'First page',
             description: 'The first page with bunch of input fields',
             questions: [
+                {
+                    questionId: 5,
+                    type: 'multiple-choice',
+                    title: 'T-Shirt Size',
+                    description: 'Select your T-shirt size.',
+                    required: true,
+                    allowCustom: true,
+                    allowDeselect: true,
+                    value: undefined, // No choice selected by default
+                    choices: [
+                        { data: 'small', name: 'Small' },
+                        { data: 'medium', name: 'Medium' },
+                        { data: 'large', name: 'Large' },
+                    ],
+                },
                 {
                     questionId: 0,
                     type: 'text-line',
@@ -89,19 +104,7 @@ export const applicationSet: ApplicationData = {
                 //     required: false,
                 //     value: false, // Default unchecked
                 // },
-                // {
-                //     questionId: 5,
-                //     type: "multiple-choice",
-                //     title: "T-Shirt Size",
-                //     description: "Select your T-shirt size.",
-                //     required: true,
-                //     value: undefined, // No choice selected by default
-                //     choices: [
-                //         { data: "small", name: "Small" },
-                //         { data: "medium", name: "Medium" },
-                //         { data: "large", name: "Large" },
-                //     ],
-                // },
+
                 // {
                 //     questionId: 6,
                 //     type: "multiple-checkbox",

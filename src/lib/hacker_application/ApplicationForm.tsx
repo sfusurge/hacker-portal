@@ -5,6 +5,7 @@ import {
     ApplicationData,
     ApplicationPage,
     ApplicationQuestion,
+    QuestionMultipleChoice,
     QuestionNumberInput,
     QuestionTextLineInput,
 } from './types';
@@ -16,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { isApplicationQuestionFilled } from './application_question_fields/shared';
 import { NumberInput } from './application_question_fields/NumberInput';
+import { RadioInput } from './application_question_fields/RadioInput';
 
 // Atoms
 const pageIndexAtom = atom(0); // defining the state
@@ -278,7 +280,16 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionNumberInput>
                         }
-                    ></NumberInput>
+                    />
+                );
+
+            case 'multiple-choice':
+                return (
+                    <RadioInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionMultipleChoice>
+                        }
+                    />
                 );
 
             default:
