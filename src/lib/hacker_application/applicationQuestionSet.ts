@@ -8,7 +8,7 @@ export const applicationSet: ApplicationData = {
     hackathonName: 'demo_hackathon', // this should match the internal name of the hackathon, will not be displayed.
     title: 'Demo Hackathon Application',
     submissionTime: undefined, // no initial time set.
-    version: 1322,
+    version: 213222,
     pages: [
         {
             title: 'First page',
@@ -23,6 +23,16 @@ export const applicationSet: ApplicationData = {
                     placeHolder: 'bleh',
                     required: false,
                     value: 'default text',
+                },
+                {
+                    questionId: 2313,
+                    type: 'number',
+                    title: 'Age',
+                    description: 'How old are you?',
+                    min: 10,
+                    max: 99,
+                    required: false,
+                    value: 10,
                 },
                 {
                     questionId: 10, // questionId can be anything, as long as they are all unique.

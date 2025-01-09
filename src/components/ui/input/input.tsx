@@ -45,10 +45,9 @@ export const FormTextInput = forwardRef<
         const inputRef = useRef<HTMLInputElement | null>(null);
         useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
-        const [error, setError] = useState<string | undefined>();
         const timer = useRef<ReturnType<typeof setTimeout> | undefined>();
 
-        function validate() {
+        function change() {
             if (!lazy || !inputRef.current) {
                 return;
             }
@@ -56,16 +55,6 @@ export const FormTextInput = forwardRef<
             if (timer) {
                 clearTimeout(timer.current);
                 timer.current = undefined;
-            }
-
-            const valid = inputRef.current.checkValidity();
-
-            if (!valid && errorMsg) {
-                setError(errorMsg);
-            }
-
-            if (valid) {
-                setError(undefined);
             }
 
             if (onLazyChange) {
@@ -79,17 +68,17 @@ export const FormTextInput = forwardRef<
             <div
                 style={
                     {
-                        '--errMsg': `"${error}"`,
-                        '--lengthMsg': `"${inputRef.current?.value.length}/${props.maxLength}"`,
+                        '--errMsg': `"${errorMsg}"`,
+                        '--lengthMsg': `"${inputRef.current?.value.length ?? 0}/${props.maxLength}"`,
                     } as CSSProperties
                 }
                 className={cn(style.inputHolder, {
                     [style.hasLength]: props.maxLength !== undefined,
-                    [style.hasError]: error !== undefined,
                 })}
             >
                 <Input
                     {...props}
+                    type={type}
                     className={cn(style.textinput)}
                     ref={inputRef}
                     onKeyDown={(e) => {
@@ -98,26 +87,24 @@ export const FormTextInput = forwardRef<
                         }
 
                         if (e.key === 'enter') {
-                            validate();
+                            change();
                         }
                     }}
                     onBlur={() => {
                         if (!lazy) {
                             return;
                         }
-                        validate();
+                        change();
                     }}
                     onChange={() => {
                         if (!lazy) {
                             return;
                         }
-
                         if (timer.current !== undefined) {
                             clearTimeout(timer.current);
                         }
-
                         timer.current = setTimeout(() => {
-                            validate();
+                            change();
                             timer.current = undefined;
                         }, timeOut);
                     }}

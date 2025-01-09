@@ -5,6 +5,7 @@ import {
     ApplicationData,
     ApplicationPage,
     ApplicationQuestion,
+    QuestionNumberInput,
     QuestionTextLineInput,
 } from './types';
 import { splitAtom } from 'jotai/utils';
@@ -14,6 +15,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { isApplicationQuestionFilled } from './application_question_fields/shared';
+import { NumberInput } from './application_question_fields/NumberInput';
 
 // Atoms
 const pageIndexAtom = atom(0); // defining the state
@@ -270,6 +272,15 @@ function Question({
                     />
                 );
 
+            case 'number':
+                return (
+                    <NumberInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionNumberInput>
+                        }
+                    ></NumberInput>
+                );
+
             default:
                 throw new Error(`unexpected input type: ${type}`);
         }
@@ -280,7 +291,11 @@ function Question({
             {question.title && (
                 <Label required={question.required}>{question.title}</Label>
             )}
-            {question.description && <span>{question.description}</span>}
+            {question.description && (
+                <span className={style.description}>
+                    {question.description}
+                </span>
+            )}
             {getInnerInput(question.type, questionAtom, error)}
         </div>
     );

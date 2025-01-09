@@ -1,4 +1,4 @@
-.hasLength:not(.hasError) {
+.hasLength:not(:has(.textinput:user-invalid)) {
     padding-bottom: 1.5rem;
 }
 
@@ -22,8 +22,8 @@
     outline: 2px solid red;
 }
 
-.hasError:has(.textinput:user-invalid)::after,
-.hasError:has(.textinput:invalid:not(:placeholder-shown))::after {
+.inputHolder:has(.textinput:user-invalid)::after,
+.inputHolder:has(.textinput:invalid:not(:placeholder-shown))::after {
     content: var(--errMsg);
     color: red;
     font-size: smaller;

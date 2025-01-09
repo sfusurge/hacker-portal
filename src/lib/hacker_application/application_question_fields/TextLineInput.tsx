@@ -29,6 +29,7 @@ export function TextLineInput({
             }
             maxLength={question.maxCount ?? 9999}
             errorMsg={question.validator?.errorMsg}
+            autoComplete=""
         ></FormTextInput>
     );
 }

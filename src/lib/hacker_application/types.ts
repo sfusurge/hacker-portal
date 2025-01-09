@@ -50,7 +50,7 @@ interface Question extends Entry {
     questionId: number; // must be unique to the application.
     type: string | 'N/A';
     required?: boolean;
-    role?: string; // optionally specify the "role" of the entry, for auto filling purposes.
+    autoComplete?: string;
 }
 
 export interface QuestionTextLineInput extends Question {
