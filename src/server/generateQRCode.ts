@@ -1,3 +1,5 @@
+'use server';
+
 import QRCode from 'qrcode';
 
 export type QROptions = {
@@ -11,8 +13,7 @@ export type QROptions = {
 
 export default async function generateQRCode(data: string, opts: QROptions) {
   try {
-    const base64Image = await QRCode.toDataURL(data, opts);
-    return base64Image;
+    return await QRCode.toDataURL(data, opts);
   } catch (err) {
     console.error('Error generating QR code:', err);
     throw err;

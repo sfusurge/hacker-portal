@@ -35,16 +35,3 @@
     )
     1;
 }
-
-.mask {
-  -webkit-mask-image: linear-gradient(to bottom, black, black),
-    linear-gradient(to bottom, black, black);
-  -webkit-mask-size:
-    600px 1000px,
-    275px 275px;
-  -webkit-mask-position:
-    0 0,
-    center;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-composite: xor;
-}

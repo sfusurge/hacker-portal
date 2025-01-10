@@ -57,11 +57,13 @@ export default function UsersList({
           <input
             type="checkbox"
             value={user.id}
-            checked={selectedUsers.some((selected) => selected.id === user.id)}
+            checked={selectedUsers.some(
+              (selected) => selected.id.toString() === user.id
+            )}
             onChange={(event) => handleCheckboxChange(event, user)}
           />
           <ul className="text-blue-600">
-            <a href={'/qr/' + user.id}> User ID: {user.id}</a>
+            <a href={'/qr/displaycode/' + user.id}> User ID: {user.id}</a>
           </ul>
           <ul>
             <li>{user.email}</li>
