@@ -8,7 +8,7 @@ export const applicationSet: ApplicationData = {
     hackathonName: 'demo_hackathon', // this should match the internal name of the hackathon, will not be displayed.
     title: 'Demo Hackathon Application',
     submissionTime: undefined, // no initial time set.
-    version: 12101,
+    version: 121101,
     pages: [
         {
             title: 'First page',
@@ -115,18 +115,20 @@ export const applicationSet: ApplicationData = {
                 //     value: false, // Default unchecked
                 // },
 
-                // {
-                //     questionId: 6,
-                //     type: "multiple-checkbox",
-                //     title: "Preferred Foods",
-                //     description: "Select all the foods you like.",
-                //     required: false,
-                //     choices: [
-                //         { data: "pizza", name: "Pizza", value: false },
-                //         { data: "burger", name: "Burger", value: false },
-                //         { data: "pasta", name: "Pasta", value: false },
-                //     ],
-                // },
+                {
+                    questionId: 6,
+                    type: 'multiple-checkbox',
+                    title: 'Preferred Foods',
+                    description: 'Select all the foods you like.',
+                    required: false,
+                    min: 1,
+                    max: 2,
+                    choices: [
+                        { data: 'pizza', name: 'Pizza', value: false },
+                        { data: 'burger', name: 'Burger', value: false },
+                        { data: 'pasta', name: 'Pasta', value: false },
+                    ],
+                },
             ],
         },
 

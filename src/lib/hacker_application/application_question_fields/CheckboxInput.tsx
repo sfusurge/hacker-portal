@@ -1,6 +1,6 @@
 import { PrimitiveAtom, useAtom } from 'jotai';
-import { QuestionCheckBoxInput, QuestionNumberInput } from '../types';
-import { FormTextInput } from '@/components/ui/input/input';
+import { QuestionCheckBoxInput } from '../types';
+
 import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 
 export function CheckBoxInput({

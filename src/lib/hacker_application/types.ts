@@ -109,6 +109,8 @@ export interface QuestionMultipleChoice extends Question {
 
 export interface QuestionMultipleCheckBox extends Question {
     type: 'multiple-checkbox';
+    min?: number;
+    max?: number;
     choices: {
         data: string;
         name: string;

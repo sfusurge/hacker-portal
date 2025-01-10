@@ -6,6 +6,7 @@ import {
     ApplicationPage,
     ApplicationQuestion,
     QuestionCheckBoxInput,
+    QuestionMultipleCheckBox,
     QuestionMultipleChoice,
     QuestionNumberInput,
     QuestionTextLineInput,
@@ -20,6 +21,8 @@ import { isApplicationQuestionFilled } from './application_question_fields/share
 import { NumberInput } from './application_question_fields/NumberInput';
 import { RadioInput } from './application_question_fields/RadioInput';
 import { CheckBoxInput } from './application_question_fields/CheckboxInput';
+import { CheckboxGroup } from '@/components/ui/checkboxGroup/CheckBoxGroup';
+import { CheckBoxGroupInput } from './application_question_fields/CheckboxGroupInput';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -312,7 +315,14 @@ function Question({
                         }
                     ></CheckBoxInput>
                 );
-
+            case 'multiple-checkbox':
+                return (
+                    <CheckBoxGroupInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionMultipleCheckBox>
+                        }
+                    ></CheckBoxGroupInput>
+                );
             default:
                 throw new Error(`unexpected input type: ${type}`);
         }
