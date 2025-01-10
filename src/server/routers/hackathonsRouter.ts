@@ -4,7 +4,7 @@ import {
   insertHackathonSchema,
   hackathons,
   deleteHackathonSchema,
-} from '@/db/schema/hackathons';
+} from '@/db/schema/hackathons/hackathons';
 import { eq } from 'drizzle-orm';
 
 export const hackathonsRouter = router({
@@ -14,16 +14,14 @@ export const hackathonsRouter = router({
   addHackathon: publicProcedure
     .input(insertHackathonSchema)
     .mutation(async (opts) => {
-      await databaseClient.insert(hackathons).values({
-        ...opts.input,
-      });
+      // await databaseClient.insert(hackathons).values();
     }),
   deleteHackathon: publicProcedure
     .input(deleteHackathonSchema)
     .mutation(async (opts) => {
       await databaseClient
         .delete(hackathons)
-        .where(eq(hackathons.id, opts.input.id));
+        .where(eq(hackathons, opts.input.id));
     }),
 });
 
