@@ -8,7 +8,7 @@ export const applicationSet: ApplicationData = {
     hackathonName: 'demo_hackathon', // this should match the internal name of the hackathon, will not be displayed.
     title: 'Demo Hackathon Application',
     submissionTime: undefined, // no initial time set.
-    version: 1201,
+    version: 12101,
     pages: [
         {
             title: 'First page',
@@ -64,6 +64,16 @@ export const applicationSet: ApplicationData = {
                         errorMsg:
                             'Not a valid canadian postal code, nor a US zip code!',
                     },
+                },
+
+                {
+                    questionId: 21312312,
+                    type: 'checkbox',
+                    title: 'Do you like React',
+                    description: 'You must be a react enjoyer to proceed',
+                    label: 'I love React!!!',
+                    value: false,
+                    required: true,
                 },
                 // {
                 //     questionId: 1,

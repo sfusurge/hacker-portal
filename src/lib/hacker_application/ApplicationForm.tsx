@@ -5,6 +5,7 @@ import {
     ApplicationData,
     ApplicationPage,
     ApplicationQuestion,
+    QuestionCheckBoxInput,
     QuestionMultipleChoice,
     QuestionNumberInput,
     QuestionTextLineInput,
@@ -18,10 +19,11 @@ import { Button } from '@/components/ui/button';
 import { isApplicationQuestionFilled } from './application_question_fields/shared';
 import { NumberInput } from './application_question_fields/NumberInput';
 import { RadioInput } from './application_question_fields/RadioInput';
+import { CheckBoxInput } from './application_question_fields/CheckboxInput';
 
 /**
- * Only render the children when page is mounted, ie, client *only*.
- *
+ * Only render the children when page is mounted, ie, clientside *only*.
+ * This may come in handy when the state management goes outta hand later.
  */
 function ClientOnly({ children, ...delegated }: ComponentProps<'div'>) {
     const [hasMounted, setHasMounted] = useState(false);
@@ -300,11 +302,15 @@ function Question({
                             _questionAtom as PrimitiveAtom<QuestionMultipleChoice>
                         }
                     />
-                    // <SanityTest
-                    //     dataAtom={
-                    //         _questionAtom as PrimitiveAtom<QuestionMultipleChoice>
-                    //     }
-                    // ></SanityTest>
+                );
+
+            case 'checkbox':
+                return (
+                    <CheckBoxInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionCheckBoxInput>
+                        }
+                    ></CheckBoxInput>
                 );
 
             default:

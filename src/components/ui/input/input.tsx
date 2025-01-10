@@ -46,6 +46,7 @@ export const FormTextInput = forwardRef<
             errorMsg,
             type,
             onLazyChange,
+            style: externalStyle,
             ...props
         },
         ref
@@ -53,7 +54,6 @@ export const FormTextInput = forwardRef<
         const inputRef = useRef<HTMLInputElement | null>(null);
         useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
-        const [length, setLength] = useState(0);
         const timer = useRef<ReturnType<typeof setTimeout> | undefined>();
 
         function change() {
@@ -73,14 +73,16 @@ export const FormTextInput = forwardRef<
             }
         }
 
-        useEffect(() => {
-            setLength(((defaultValue as string) ?? '').length);
-        }, [defaultValue]);
+        const length = useMemo(
+            () => ((defaultValue as string) ?? '').length,
+            [defaultValue]
+        );
 
         return (
             <div
                 style={
                     {
+                        ...externalStyle,
                         '--errMsg': `"${errorMsg}"`,
                         '--lengthMsg': `"${length}/${props.maxLength}"`,
                     } as CSSProperties

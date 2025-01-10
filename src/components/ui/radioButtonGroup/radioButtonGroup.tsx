@@ -100,15 +100,7 @@ export function RadioButtonGroup({
             {
                 // Other - for custom input
                 allowCustomInput && (
-                    <label
-                        htmlFor="other"
-                        className={style.optionLabel}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            flexFlow: 'wrap',
-                        }}
-                    >
+                    <label htmlFor="other" className={style.optionLabel}>
                         <input
                             type="radio"
                             id="other"
@@ -132,7 +124,7 @@ export function RadioButtonGroup({
                                     placeholder="Custom value here"
                                     errorMsg="Required!"
                                     required={required}
-                                    style={{ marginLeft: '1rem' }}
+                                    style={{ margin: '0.5rem' }}
                                     defaultValue={selection}
                                 ></FormTextInput>
                             )

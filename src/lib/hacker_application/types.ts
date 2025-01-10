@@ -91,6 +91,7 @@ export interface QuestionNumberInput extends Question {
 export interface QuestionCheckBoxInput extends Question {
     type: 'checkbox';
     value?: boolean;
+    label?: string;
     required?: boolean;
 }
 
