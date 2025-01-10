@@ -1,7 +1,7 @@
 import { PrimitiveAtom, useAtom } from 'jotai';
 import { QuestionCheckBoxInput, QuestionNumberInput } from '../types';
 import { FormTextInput } from '@/components/ui/input/input';
-import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkbox';
+import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 
 export function CheckBoxInput({
     dataAtom,
@@ -13,7 +13,7 @@ export function CheckBoxInput({
         <CheckBoxWithLabel
             name={question.label ?? ''}
             required={question.required ?? false}
-            defaultChecked={question.value ?? false}
+            checked={question.value ?? false}
             onChange={(e) => {
                 setQuestion({ ...question, value: e.target.checked });
             }}

@@ -1,0 +1,41 @@
+.label::before {
+    content: '';
+    display: inline-block;
+
+    width: 20px;
+    height: 20px;
+
+    vertical-align: middle;
+    margin-right: 0.5rem;
+
+    border-radius: 4px;
+    border: 1px solid #525252;
+    background-color: #262626;
+
+    transition: all ease-out 400ms;
+
+    box-sizing: border-box;
+}
+
+.label:hover::before {
+    filter: brightness(1.2);
+}
+
+.label:active::before {
+    filter: brightness(0.9);
+}
+
+.label:has(input:checked)::before {
+    background-color: #6466f1;
+    border-color: #6466f1;
+    background-image: url('/icons/check.svg');
+    background-size: 18px 18px;
+    background-position: center center;
+}
+
+.label {
+    line-height: 20px;
+}
+.check {
+    appearance: none;
+}

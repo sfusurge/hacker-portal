@@ -20,10 +20,12 @@
     border-radius: 6px;
     padding: 12px;
     color: white;
+    /* display: flex;
+    align-items: center; */
 }
 
 .optionLabel:hover::before {
-    filter: brightness(1.5);
+    filter: brightness(1.2);
 }
 .optionLabel:active::before {
     filter: brightness(0.95);
@@ -34,20 +36,24 @@
     display: inline-block;
     /* Draw a filled circle with css */
     border-radius: 50%;
-    background-color: #404040;
-    width: 1rem;
-    height: 1rem;
+    border: 2px solid #404040;
 
+    width: 20px;
+    height: 20px;
+    box-sizing: border-box;
     margin-right: 0.5rem;
 
     vertical-align: middle;
+    transform: translateY(-1px);
     transition:
-        background-color 400ms ease-out,
+        border-color 400ms ease-out,
         filter 400ms ease-out;
 }
 
 .optionLabel:has(input:checked)::before {
-    background-color: #6466f1;
+    border-color: #6466f1;
+    border-width: 6px;
+    background-color: white;
 }
 
 .radio {
