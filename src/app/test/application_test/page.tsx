@@ -5,6 +5,7 @@ import { applicationSet } from '@/lib/hacker_application/applicationQuestionSet'
 import { ApplicationData } from '@/lib/hacker_application/types';
 import { Provider, useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
+import { ComponentProps, useEffect, useState } from 'react';
 
 const questionSetAtom = atomWithStorage(
     'demo question set',

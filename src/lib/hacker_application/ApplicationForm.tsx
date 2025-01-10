@@ -12,12 +12,27 @@ import {
 import { splitAtom } from 'jotai/utils';
 import style from './ApplicationForm.module.css';
 import { TextLineInput } from './application_question_fields/TextLineInput';
-import { useEffect, useMemo, useRef } from 'react';
+import { ComponentProps, useEffect, useMemo, useRef, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { isApplicationQuestionFilled } from './application_question_fields/shared';
 import { NumberInput } from './application_question_fields/NumberInput';
 import { RadioInput } from './application_question_fields/RadioInput';
+
+/**
+ * Only render the children when page is mounted, ie, client *only*.
+ *
+ */
+function ClientOnly({ children, ...delegated }: ComponentProps<'div'>) {
+    const [hasMounted, setHasMounted] = useState(false);
+    useEffect(() => {
+        setHasMounted(true);
+    }, []);
+    if (!hasMounted) {
+        return null;
+    }
+    return <div {...delegated}>{children}</div>;
+}
 
 // Atoms
 const pageIndexAtom = atom(0); // defining the state
@@ -129,7 +144,6 @@ function Page({
     function updateFormStatus() {
         if (formRef.current) {
             const error = !formRef.current.checkValidity();
-            console.log('running', page, error);
 
             // when page content changes, check if everything in the page is filled
             let atLeastOneFilled = false;
@@ -227,10 +241,6 @@ function PageIndicator({
         }
     }
 
-    useEffect(() => {
-        console.log(pageStates);
-    }, [pageStates]);
-
     return (
         <div className={style.pageStatusContainer}>
             {pageStates.map((item, index) => {
@@ -290,6 +300,11 @@ function Question({
                             _questionAtom as PrimitiveAtom<QuestionMultipleChoice>
                         }
                     />
+                    // <SanityTest
+                    //     dataAtom={
+                    //         _questionAtom as PrimitiveAtom<QuestionMultipleChoice>
+                    //     }
+                    // ></SanityTest>
                 );
 
             default:

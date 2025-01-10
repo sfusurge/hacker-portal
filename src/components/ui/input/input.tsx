@@ -39,12 +39,21 @@ export const FormTextInput = forwardRef<
     }
 >(
     (
-        { timeOut = 500, lazy = false, errorMsg, type, onLazyChange, ...props },
+        {
+            defaultValue,
+            timeOut = 500,
+            lazy = false,
+            errorMsg,
+            type,
+            onLazyChange,
+            ...props
+        },
         ref
     ) => {
         const inputRef = useRef<HTMLInputElement | null>(null);
         useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
+        const [length, setLength] = useState(0);
         const timer = useRef<ReturnType<typeof setTimeout> | undefined>();
 
         function change() {
@@ -64,12 +73,16 @@ export const FormTextInput = forwardRef<
             }
         }
 
+        useEffect(() => {
+            setLength(((defaultValue as string) ?? '').length);
+        }, [defaultValue]);
+
         return (
             <div
                 style={
                     {
                         '--errMsg': `"${errorMsg}"`,
-                        '--lengthMsg': `"${inputRef.current?.value.length ?? 0}/${props.maxLength}"`,
+                        '--lengthMsg': `"${length}/${props.maxLength}"`,
                     } as CSSProperties
                 }
                 className={cn(style.inputHolder, {
@@ -79,6 +92,7 @@ export const FormTextInput = forwardRef<
                 <Input
                     {...props}
                     type={type}
+                    defaultValue={defaultValue}
                     className={cn(style.textinput)}
                     ref={inputRef}
                     onKeyDown={(e) => {

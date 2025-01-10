@@ -8,7 +8,7 @@ export const applicationSet: ApplicationData = {
     hackathonName: 'demo_hackathon', // this should match the internal name of the hackathon, will not be displayed.
     title: 'Demo Hackathon Application',
     submissionTime: undefined, // no initial time set.
-    version: 1,
+    version: 1201,
     pages: [
         {
             title: 'First page',
@@ -22,7 +22,7 @@ export const applicationSet: ApplicationData = {
                     required: true,
                     allowCustom: true,
                     allowDeselect: true,
-                    value: undefined, // No choice selected by default
+                    value: 'large', // No choice selected by default
                     choices: [
                         { data: 'small', name: 'Small' },
                         { data: 'medium', name: 'Medium' },
@@ -132,7 +132,7 @@ export const applicationSet: ApplicationData = {
                     maxCount: 50,
                     placeHolder: 'bleh',
                     required: true,
-                    value: 'default text',
+                    value: '',
                 },
                 {
                     questionId: 92423,
