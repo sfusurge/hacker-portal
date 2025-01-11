@@ -15,7 +15,7 @@ export function TextLineInput({
 
     return (
         <FormTextInput
-            type="text"
+            type="search"
             lazy
             timeOut={500}
             onLazyChange={(newVal) => {

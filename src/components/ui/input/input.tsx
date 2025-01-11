@@ -33,7 +33,7 @@ export const FormTextInput = forwardRef<
     ComponentProps<'input'> & {
         lazy?: boolean;
         timeOut?: number;
-        type: 'text' | 'number';
+        type: 'text' | 'number' | 'search';
         errorMsg?: string;
         onLazyChange?: (value: string | number) => void;
     }
@@ -83,7 +83,7 @@ export const FormTextInput = forwardRef<
                 style={
                     {
                         ...externalStyle,
-                        '--errMsg': `"${errorMsg}"`,
+                        '--errMsg': `"${errorMsg ?? 'Invalid'}"`,
                         '--lengthMsg': `"${length}/${props.maxLength}"`,
                     } as CSSProperties
                 }

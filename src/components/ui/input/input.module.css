@@ -17,6 +17,25 @@
     font-size: smaller;
 }
 
+.textinput::-webkit-search-cancel-button {
+    /* this is a nonstandard, webkit only button to delete text content */
+    /* Remove default */
+    -webkit-appearance: none;
+    transform: translateX(8px);
+
+    height: 1.25rem;
+    width: 1.25rem;
+    background: red;
+    display: block;
+    background: url('/icons/xcircle.svg');
+    background-size: contain;
+
+    cursor: pointer;
+}
+
+.textinput {
+}
+
 .textinput:user-invalid,
 .textinput:invalid:not(:placeholder-shown) {
     outline: 2px solid red;
