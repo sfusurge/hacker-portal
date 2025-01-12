@@ -1,7 +1,18 @@
 .hasLength::after {
+    display: block;
     content: var(--length);
     color: grey;
-    margin-left: auto;
-
     font-size: smaller;
+    align-self: end;
+}
+
+.hasLength {
+    display: flex;
+    flex-direction: column;
+    max-width: 800px;
+    /* width: max-content; */
+}
+
+.hasLength > textarea:user-invalid {
+    border-color: red;
 }
