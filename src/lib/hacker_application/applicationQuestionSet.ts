@@ -8,7 +8,7 @@ export const applicationSet: ApplicationData = {
     hackathonName: 'demo_hackathon', // this should match the internal name of the hackathon, will not be displayed.
     title: 'Demo Hackathon Application',
     submissionTime: undefined, // no initial time set.
-    version: 121101,
+    version: 1211011,
     pages: [
         {
             title: 'First page',
@@ -53,16 +53,13 @@ export const applicationSet: ApplicationData = {
                     questionId: 10, // questionId can be anything, as long as they are all unique.
                     type: 'text-line',
                     title: 'Postal Code',
-                    description:
-                        'Text with validation, Canadian or US postal code',
+                    description: 'Text with validation, Canadian or US postal code',
                     maxCount: 7,
                     placeHolder: 'A1C 2B3',
                     required: true,
                     validator: {
-                        pattern:
-                            '([a-zA-Z]\\d[a-zA-Z]\\s?\\d[a-zA-Z]\\d)|(\\d{5}(?:-\\d{4})?)',
-                        errorMsg:
-                            'Not a valid canadian postal code, nor a US zip code!',
+                        pattern: '([a-zA-Z]\\d[a-zA-Z]\\s?\\d[a-zA-Z]\\d)|(\\d{5}(?:-\\d{4})?)',
+                        errorMsg: 'Not a valid canadian postal code, nor a US zip code!',
                     },
                 },
 
@@ -73,6 +70,16 @@ export const applicationSet: ApplicationData = {
                     description: 'You must be a react enjoyer to proceed',
                     label: 'I love React!!!',
                     value: false,
+                    required: true,
+                },
+                {
+                    questionId: 90909090,
+                    type: 'text-area',
+                    description: 'Write down a cookie recipe from memory please.',
+                    title: 'cookie recipe',
+                    maxCount: 200,
+                    placeHolder: '>_...',
+                    value: 'Blah blah',
                     required: true,
                 },
                 // {

@@ -1,0 +1,7 @@
+.hasLength::after {
+    content: var(--length);
+    color: grey;
+    margin-left: auto;
+
+    font-size: smaller;
+}

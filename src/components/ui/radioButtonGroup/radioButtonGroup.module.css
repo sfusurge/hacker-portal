@@ -2,6 +2,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+
+    width: fit-content;
 }
 
 .optionsContainer:has(label:has(input:user-invalid)) {
@@ -20,6 +22,7 @@
     border-radius: 6px;
     padding: 12px;
     color: white;
+    min-width: 200px;
     /* display: flex;
     align-items: center; */
 }

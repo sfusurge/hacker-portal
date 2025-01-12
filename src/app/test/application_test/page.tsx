@@ -3,33 +3,26 @@
 import { ApplicationForm } from '@/lib/hacker_application/ApplicationForm';
 import { applicationSet } from '@/lib/hacker_application/applicationQuestionSet';
 import { ApplicationData } from '@/lib/hacker_application/types';
-import { Provider, useAtom, useAtomValue } from 'jotai';
+import { Provider, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import { ComponentProps, useEffect, useState } from 'react';
 
-const questionSetAtom = atomWithStorage(
-    'demo question set',
-    structuredClone(applicationSet),
-    {
-        getItem(key, initialValue) {
-            const obj: ApplicationData = JSON.parse(
-                localStorage.getItem(key) ?? '{}'
-            );
+const questionSetAtom = atomWithStorage('demo question set', structuredClone(applicationSet), {
+    getItem(key, initialValue) {
+        const obj: ApplicationData = JSON.parse(localStorage.getItem(key) ?? '{}');
 
-            if (obj.version === initialValue.version) {
-                return obj;
-            } else {
-                return initialValue;
-            }
-        },
-        setItem(key, newValue) {
-            localStorage.setItem(key, JSON.stringify(newValue));
-        },
-        removeItem(key) {
-            localStorage.removeItem(key);
-        },
-    }
-);
+        if (obj.version === initialValue.version) {
+            return obj;
+        } else {
+            return initialValue;
+        }
+    },
+    setItem(key, newValue) {
+        localStorage.setItem(key, JSON.stringify(newValue));
+    },
+    removeItem(key) {
+        localStorage.removeItem(key);
+    },
+});
 
 export default function ApplicationTest() {
     /**

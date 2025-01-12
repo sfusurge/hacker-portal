@@ -2,11 +2,7 @@ import { PrimitiveAtom, useAtom } from 'jotai';
 import { QuestionNumberInput } from '../types';
 import { FormTextInput } from '@/components/ui/input/input';
 
-export function NumberInput({
-    dataAtom,
-}: {
-    dataAtom: PrimitiveAtom<QuestionNumberInput>;
-}) {
+export function NumberInput({ dataAtom }: { dataAtom: PrimitiveAtom<QuestionNumberInput> }) {
     const [question, setQuestion] = useAtom(dataAtom);
     return (
         <FormTextInput
@@ -29,6 +25,7 @@ export function NumberInput({
                 }
             }}
             errorMsg={question.errMsg}
+            style={{ maxWidth: '200px' }}
         ></FormTextInput>
     );
 }

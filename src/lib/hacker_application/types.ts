@@ -1,3 +1,5 @@
+import { HTMLInputAutoCompleteAttribute } from 'react';
+
 interface Entry {
     title?: string;
     description?: string;
@@ -50,7 +52,7 @@ interface Question extends Entry {
     questionId: number; // must be unique to the application.
     type: string | 'N/A';
     required?: boolean;
-    autoComplete?: string;
+    autoComplete?: HTMLInputAutoCompleteAttribute;
 }
 
 export interface QuestionTextLineInput extends Question {

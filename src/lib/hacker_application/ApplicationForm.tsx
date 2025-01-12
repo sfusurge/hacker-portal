@@ -9,6 +9,7 @@ import {
     QuestionMultipleCheckBox,
     QuestionMultipleChoice,
     QuestionNumberInput,
+    QuestionTextAreaInput,
     QuestionTextLineInput,
 } from './types';
 import { splitAtom } from 'jotai/utils';
@@ -23,6 +24,7 @@ import { RadioInput } from './application_question_fields/RadioInput';
 import { CheckBoxInput } from './application_question_fields/CheckboxInput';
 import { CheckboxGroup } from '@/components/ui/checkboxGroup/CheckBoxGroup';
 import { CheckBoxGroupInput } from './application_question_fields/CheckboxGroupInput';
+import { TextAreaInput } from './application_question_fields/TextAreaInput';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -46,11 +48,7 @@ const pageIndexAtom = atom(0); // defining the state
  *
  * appData can be locally cached or a new empty one.
  */
-export function ApplicationForm({
-    appDataAtom,
-}: {
-    appDataAtom: PrimitiveAtom<ApplicationData>;
-}) {
+export function ApplicationForm({ appDataAtom }: { appDataAtom: PrimitiveAtom<ApplicationData> }) {
     const appData = useAtomValue(appDataAtom);
 
     // useMemo to not recreate the atom each time.
@@ -96,10 +94,7 @@ export function ApplicationForm({
             <h1 className={style.mainTitle}>{appData.hackathonName}</h1>
 
             <div className={style.appFormContent}>
-                <PageIndicator
-                    pageStateAtoms={pageStatesAtom}
-                    indexAtom={pageIndexAtom}
-                ></PageIndicator>
+                <PageIndicator pageStateAtoms={pageStatesAtom} indexAtom={pageIndexAtom}></PageIndicator>
                 <div className={style.formContainer}>
                     {pagesAtoms.map((pageAtom, index) => (
                         <Page
@@ -200,12 +195,7 @@ function Page({
     const [questionAtoms] = useAtom(questionAtomsAtom);
 
     return (
-        <form
-            ref={formRef}
-            className={style.page}
-            style={hidden ? { display: 'none' } : {}}
-            noValidate
-        >
+        <form ref={formRef} className={style.page} style={hidden ? { display: 'none' } : {}} noValidate>
             {page.title && <h2 className={style.title}>{page.title}</h2>}
             {page.description && <p className={style.description}></p>}
             {questionAtoms.map((item, index) => (
@@ -264,11 +254,7 @@ function PageIndicator({
     );
 }
 
-function Question({
-    questionAtom,
-}: {
-    questionAtom: PrimitiveAtom<ApplicationQuestion>;
-}) {
+function Question({ questionAtom }: { questionAtom: PrimitiveAtom<ApplicationQuestion> }) {
     const question = useAtomValue(questionAtom);
     const error = useMemo(() => atom<string | undefined>(undefined), []);
 
@@ -281,63 +267,34 @@ function Question({
             case 'text-line':
                 // save to cast since "type" is checked.
                 // no strict checking is needed. If submitted data is badly formatted/illegal, it's the server's responsibility to reject it.
-                return (
-                    <TextLineInput
-                        dataAtom={
-                            _questionAtom as PrimitiveAtom<QuestionTextLineInput>
-                        }
-                    />
-                );
+                return <TextLineInput dataAtom={_questionAtom as PrimitiveAtom<QuestionTextLineInput>} />;
 
             case 'number':
-                return (
-                    <NumberInput
-                        dataAtom={
-                            _questionAtom as PrimitiveAtom<QuestionNumberInput>
-                        }
-                    />
-                );
+                return <NumberInput dataAtom={_questionAtom as PrimitiveAtom<QuestionNumberInput>} />;
 
             case 'multiple-choice':
-                return (
-                    <RadioInput
-                        dataAtom={
-                            _questionAtom as PrimitiveAtom<QuestionMultipleChoice>
-                        }
-                    />
-                );
+                return <RadioInput dataAtom={_questionAtom as PrimitiveAtom<QuestionMultipleChoice>} />;
 
             case 'checkbox':
-                return (
-                    <CheckBoxInput
-                        dataAtom={
-                            _questionAtom as PrimitiveAtom<QuestionCheckBoxInput>
-                        }
-                    ></CheckBoxInput>
-                );
+                return <CheckBoxInput dataAtom={_questionAtom as PrimitiveAtom<QuestionCheckBoxInput>}></CheckBoxInput>;
             case 'multiple-checkbox':
                 return (
                     <CheckBoxGroupInput
-                        dataAtom={
-                            _questionAtom as PrimitiveAtom<QuestionMultipleCheckBox>
-                        }
+                        dataAtom={_questionAtom as PrimitiveAtom<QuestionMultipleCheckBox>}
                     ></CheckBoxGroupInput>
                 );
+
+            case 'text-area':
+                return <TextAreaInput dataAtom={_questionAtom as PrimitiveAtom<QuestionTextAreaInput>}></TextAreaInput>;
             default:
                 throw new Error(`unexpected input type: ${type}`);
         }
     }
 
     return (
-        <div className={style.ver} style={{ gap: '0.25rem' }}>
-            {question.title && (
-                <Label required={question.required}>{question.title}</Label>
-            )}
-            {question.description && (
-                <span className={style.description}>
-                    {question.description}
-                </span>
-            )}
+        <div className={style.ver} style={{ gap: '0.25rem', width: '100%' }}>
+            {question.title && <Label required={question.required}>{question.title}</Label>}
+            {question.description && <span className={style.description}>{question.description}</span>}
             {getInnerInput(question.type, questionAtom, error)}
         </div>
     );
@@ -383,9 +340,7 @@ function PageButtons({
                     Next
                 </Button>
             )}
-            {index === pageCount - 1 && (
-                <Button onClick={review_submit}>Review & Submit</Button>
-            )}
+            {index === pageCount - 1 && <Button onClick={review_submit}>Review & Submit</Button>}
         </div>
     );
 }
