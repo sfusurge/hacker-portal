@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 @layer base {
-  :root {
-    --radius: 0.5rem;
-  }
+    :root {
+        --radius: 0.5rem;
+    }
 }

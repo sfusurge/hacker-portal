@@ -19,7 +19,13 @@ export function isApplicationQuestionFilled(question: ApplicationQuestion) {
             return question.value ?? false;
 
         case 'multiple-checkbox':
-            return question.choices.length > 0;
+            let checkedCounts = 0;
+            for (const choice of question.choices) {
+                if (choice.value) {
+                    checkedCounts += 1;
+                }
+            }
+            return checkedCounts >= (question.min ?? 0) && checkedCounts <= (question.max ?? 99);
 
         case 'multiple-choice':
             return question.value !== undefined;

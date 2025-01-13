@@ -16,6 +16,7 @@ export function RadioInput({ dataAtom }: { dataAtom: PrimitiveAtom<QuestionMulti
             onSelection={(newVal) => {
                 setQuestion({ ...question, value: newVal });
             }}
+            name={question.title ?? 'bleh'}
         ></RadioButtonGroup>
     );
 }

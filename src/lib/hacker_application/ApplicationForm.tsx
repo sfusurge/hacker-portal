@@ -43,6 +43,7 @@ function ClientOnly({ children, ...delegated }: ComponentProps<'div'>) {
 
 // Atoms
 const pageIndexAtom = atom(0); // defining the state
+const finalErrCheckAtom = atom(false); // when the user clicks the review & submit for the first time,
 
 /**
  *
@@ -67,11 +68,14 @@ export function ApplicationForm({ appDataAtom }: { appDataAtom: PrimitiveAtom<Ap
         );
     }, []);
 
-    const currentPageIndex = useAtomValue(pageIndexAtom); // using the state to get the for reals value
+    // which page is currently displayed
+    const [currentPageIndex, setPageIndex] = useAtom(pageIndexAtom); // using the state to get the for reals value
 
+    // states of each page.
     const pagesAtomsAtom = splitAtom(_pagesAtom); // create an atom containing a list of atoms, from a single atom containing a list
     const [pagesAtoms] = useAtom(pagesAtomsAtom); // getting the list of atoms out of the previous ato
 
+    // page validations
     const pageStatesAtom = useMemo(
         () =>
             atom(
@@ -107,9 +111,7 @@ export function ApplicationForm({ appDataAtom }: { appDataAtom: PrimitiveAtom<Ap
                     <PageButtons
                         indexAtom={pageIndexAtom}
                         pageCount={pagesAtoms.length}
-                        review_submit={() => {
-                            alert('review!');
-                        }}
+                        pageStatesAtom={pageStatesAtom}
                     />
                 </div>
             </div>
@@ -217,6 +219,7 @@ function PageIndicator({
 }) {
     const pageStates = useAtomValue(pageStateAtoms);
     const setIndex = useSetAtom(indexAtom);
+    const [errCheck, setErrCheck] = useAtom(finalErrCheckAtom);
 
     function getPageStatus(pageState: PageFormState) {
         if (pageState.error) {
@@ -236,6 +239,21 @@ function PageIndicator({
         }
     }
 
+    function trySubmit() {
+        let valid = true;
+
+        for (const pageState of pageStates) {
+            valid &&= !pageState.error;
+        }
+
+        if (!valid) {
+            alert('Not all pages are valid!');
+            setErrCheck(true);
+        } else {
+            setIndex(pageStates.length); // the lastpage + 1 is the review page.
+        }
+    }
+
     return (
         <div className={style.pageStatusContainer}>
             {pageStates.map((item, index) => {
@@ -250,6 +268,7 @@ function PageIndicator({
                     </button>
                 );
             })}
+            <button onClick={trySubmit}>🚀 Review</button>
         </div>
     );
 }
@@ -307,13 +326,31 @@ function Question({ questionAtom }: { questionAtom: PrimitiveAtom<ApplicationQue
 function PageButtons({
     indexAtom,
     pageCount,
-    review_submit,
+    pageStatesAtom,
 }: {
     indexAtom: PrimitiveAtom<number>;
     pageCount: number;
-    review_submit?: () => void;
+
+    pageStatesAtom: PrimitiveAtom<PageFormState[]>;
 }) {
     const [index, setIndex] = useAtom(indexAtom);
+    const pageStates = useAtomValue(pageStatesAtom);
+    const setErrCheck = useSetAtom(finalErrCheckAtom);
+
+    function trySubmit() {
+        let valid = true;
+
+        for (const pageState of pageStates) {
+            valid &&= !pageState.error;
+        }
+
+        if (!valid) {
+            alert('Not all pages are valid!');
+            setErrCheck(true);
+        } else {
+            setIndex(pageCount); // the lastpage + 1 is the review page.
+        }
+    }
 
     return (
         <div className={style.pageButtons}>
@@ -340,7 +377,7 @@ function PageButtons({
                     Next
                 </Button>
             )}
-            {index === pageCount - 1 && <Button onClick={review_submit}>Review & Submit</Button>}
+            {index === pageCount - 1 && <Button onClick={trySubmit}>Review & Submit</Button>}
         </div>
     );
 }

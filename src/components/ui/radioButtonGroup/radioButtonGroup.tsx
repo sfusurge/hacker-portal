@@ -9,6 +9,7 @@ export interface RadioButtonGroupProps {
     required?: boolean;
     onSelection?: (data: string | undefined) => void;
     defaultSelection?: string;
+    name: string;
 }
 
 /**
@@ -37,15 +38,12 @@ export function RadioButtonGroup({
     required = false,
     defaultSelection = undefined,
     onSelection,
+    name,
 }: RadioButtonGroupProps) {
-    const [selection, _setSelection] = useState<string | undefined>(
-        defaultSelection
-    );
+    const [selection, _setSelection] = useState<string | undefined>(defaultSelection);
 
     const datas = useMemo(() => {
-        const set = new Set<string | undefined>(
-            options.map((item) => item.data)
-        );
+        const set = new Set<string | undefined>(options.map((item) => item.data));
         set.add(undefined); // so that undefined is an "expected value"
         return set;
     }, []);
@@ -74,15 +72,11 @@ export function RadioButtonGroup({
     return (
         <fieldset className={style.optionsContainer}>
             {options.map((item, index) => (
-                <label
-                    key={index}
-                    htmlFor={item.data}
-                    className={style.optionLabel}
-                >
+                <label key={index} htmlFor={item.data} className={style.optionLabel}>
                     <input
                         type="radio"
                         id={item.data}
-                        name={item.name}
+                        name={name}
                         value={item.data}
                         required={required}
                         checked={item.data === selection}
@@ -104,7 +98,7 @@ export function RadioButtonGroup({
                         <input
                             type="radio"
                             id="other"
-                            name="other"
+                            name={name}
                             checked={usingCustomInput}
                             onChange={() => {
                                 setSelection('');

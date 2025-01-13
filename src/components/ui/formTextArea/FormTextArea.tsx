@@ -1,4 +1,13 @@
-import { ComponentProps, CSSProperties, forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
+import {
+    ComponentProps,
+    CSSProperties,
+    forwardRef,
+    useEffect,
+    useImperativeHandle,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import { Textarea } from '../textarea';
 import { cn } from '@/lib/utils';
 import style from './FormTextArea.module.css';
@@ -18,7 +27,7 @@ export const FormTextArea = forwardRef<
             onLazyChange,
             timeout = 500,
             maxLength,
-            defaultValue: value = '',
+            defaultValue = '',
             className,
             style: externalStyle,
             ...props
@@ -27,9 +36,13 @@ export const FormTextArea = forwardRef<
     ) => {
         const textRef = useRef<HTMLTextAreaElement>(null);
         useImperativeHandle(ref, () => textRef.current as HTMLTextAreaElement);
-
+        const [value, setValue] = useState(defaultValue);
         const length = useMemo(() => (value as string).length, [value]);
         const timer = useRef<ReturnType<typeof setTimeout> | undefined>();
+
+        useEffect(() => {
+            setValue(defaultValue);
+        }, [defaultValue]);
 
         function change() {
             if (!lazy || !textRef.current) {
@@ -61,7 +74,8 @@ export const FormTextArea = forwardRef<
                     style={externalStyle}
                     maxLength={maxLength}
                     {...props}
-                    onChange={() => {
+                    onChange={(e) => {
+                        setValue(e.target.value);
                         if (timer.current !== undefined) {
                             clearTimeout(timer.current);
                         }
@@ -69,6 +83,7 @@ export const FormTextArea = forwardRef<
                         timer.current = setTimeout(change, timeout);
                     }}
                     onBlur={change}
+                    value={value}
                 ></Textarea>
             </div>
         );
