@@ -15,6 +15,13 @@
     transition: all ease-out 400ms;
 
     box-sizing: border-box;
+
+    cursor: pointer;
+}
+
+.label:has(input:disabled)::before {
+    background-color: grey;
+    cursor: not-allowed;
 }
 
 .label:hover::before {

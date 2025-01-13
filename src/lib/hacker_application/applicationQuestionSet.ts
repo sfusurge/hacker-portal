@@ -8,7 +8,7 @@ export const applicationSet: ApplicationData = {
     hackathonName: 'demo_hackathon', // this should match the internal name of the hackathon, will not be displayed.
     title: 'Demo Hackathon Application',
     submissionTime: undefined, // no initial time set.
-    version: 1211011,
+    version: 1,
     pages: [
         {
             title: 'First page',
@@ -126,8 +126,8 @@ export const applicationSet: ApplicationData = {
                     questionId: 6,
                     type: 'multiple-checkbox',
                     title: 'Preferred Foods',
-                    description: 'Select all the foods you like.',
-                    required: false,
+                    description: 'Select all the foods you like. (At least 1, at most 2)',
+                    required: true,
                     min: 1,
                     max: 2,
                     choices: [

@@ -1,0 +1,7 @@
+.checkboxgroupfield:has(input[type='text']:invalid)::after {
+    content: var(--errMsg);
+
+    display: block;
+    color: red;
+    font-size: smaller;
+}
