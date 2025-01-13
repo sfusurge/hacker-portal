@@ -5,6 +5,7 @@
     flex-direction: column;
     gap: 0.5rem;
 
+    max-height: 100dvh;
     max-width: 1200px;
     margin: 4rem;
     margin-left: auto;
@@ -24,6 +25,8 @@
 
     border: 2px solid black;
     border-radius: 10px;
+
+    overflow-y: auto;
 }
 
 /* ==== shared ==== */

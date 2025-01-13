@@ -33,9 +33,6 @@
     cursor: pointer;
 }
 
-.textinput {
-}
-
 .textinput:user-invalid,
 .textinput:invalid:not(:placeholder-shown) {
     outline: 2px solid red;

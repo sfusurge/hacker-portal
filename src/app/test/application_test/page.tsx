@@ -42,7 +42,13 @@ function ApplicationWithProvider() {
     const questions = useAtomValue(questionSetAtom);
     return (
         <div>
-            <ApplicationForm appDataAtom={questionSetAtom}></ApplicationForm>
+            <ApplicationForm
+                appDataAtom={questionSetAtom}
+                submitApplication={() => {
+                    console.log('Submitting!!!');
+                    console.log(questions);
+                }}
+            ></ApplicationForm>
             <pre
                 style={{
                     width: '700px',

@@ -25,6 +25,7 @@ import { CheckBoxInput } from './application_question_fields/CheckboxInput';
 import { CheckboxGroup } from '@/components/ui/checkboxGroup/CheckBoxGroup';
 import { CheckBoxGroupInput } from './application_question_fields/CheckboxGroupInput';
 import { TextAreaInput } from './application_question_fields/TextAreaInput';
+import { ReviewPage } from './ReviewPage';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -49,7 +50,13 @@ const finalErrCheckAtom = atom(false); // when the user clicks the review & subm
  *
  * appData can be locally cached or a new empty one.
  */
-export function ApplicationForm({ appDataAtom }: { appDataAtom: PrimitiveAtom<ApplicationData> }) {
+export function ApplicationForm({
+    appDataAtom,
+    submitApplication,
+}: {
+    appDataAtom: PrimitiveAtom<ApplicationData>;
+    submitApplication: () => void;
+}) {
     const appData = useAtomValue(appDataAtom);
 
     // useMemo to not recreate the atom each time.
@@ -100,6 +107,15 @@ export function ApplicationForm({ appDataAtom }: { appDataAtom: PrimitiveAtom<Ap
             <div className={style.appFormContent}>
                 <PageIndicator pageStateAtoms={pageStatesAtom} indexAtom={pageIndexAtom}></PageIndicator>
                 <div className={style.formContainer}>
+                    {currentPageIndex === pagesAtoms.length && (
+                        <ReviewPage
+                            application={appData}
+                            submit={() => {
+                                submitApplication();
+                            }}
+                        ></ReviewPage>
+                    )}
+
                     {pagesAtoms.map((pageAtom, index) => (
                         <Page
                             key={index}
@@ -108,10 +124,14 @@ export function ApplicationForm({ appDataAtom }: { appDataAtom: PrimitiveAtom<Ap
                             hidden={index !== currentPageIndex}
                         ></Page>
                     ))}
+
                     <PageButtons
                         indexAtom={pageIndexAtom}
                         pageCount={pagesAtoms.length}
                         pageStatesAtom={pageStatesAtom}
+                        submit={() => {
+                            submitApplication();
+                        }}
                     />
                 </div>
             </div>
@@ -222,7 +242,7 @@ function PageIndicator({
     const [errCheck, setErrCheck] = useAtom(finalErrCheckAtom);
 
     function getPageStatus(pageState: PageFormState) {
-        if (pageState.error) {
+        if (pageState.error && errCheck) {
             return '❗';
         }
 
@@ -239,7 +259,7 @@ function PageIndicator({
         }
     }
 
-    function trySubmit() {
+    function tryReview() {
         let valid = true;
 
         for (const pageState of pageStates) {
@@ -268,7 +288,7 @@ function PageIndicator({
                     </button>
                 );
             })}
-            <button onClick={trySubmit}>🚀 Review</button>
+            <button onClick={tryReview}>🚀 Review</button>
         </div>
     );
 }
@@ -320,24 +340,26 @@ function Question({ questionAtom }: { questionAtom: PrimitiveAtom<ApplicationQue
 }
 
 /**
- * Present Prev, Next page buttons. And also
- *
+ * Present Prev, Next page buttons.
+ * Button to review application when on last page.
+ * Button to submit when in the review page.
  */
 function PageButtons({
     indexAtom,
     pageCount,
     pageStatesAtom,
+    submit,
 }: {
     indexAtom: PrimitiveAtom<number>;
     pageCount: number;
-
     pageStatesAtom: PrimitiveAtom<PageFormState[]>;
+    submit?: () => void;
 }) {
     const [index, setIndex] = useAtom(indexAtom);
     const pageStates = useAtomValue(pageStatesAtom);
     const setErrCheck = useSetAtom(finalErrCheckAtom);
 
-    function trySubmit() {
+    function tryReview() {
         let valid = true;
 
         for (const pageState of pageStates) {
@@ -377,7 +399,16 @@ function PageButtons({
                     Next
                 </Button>
             )}
-            {index === pageCount - 1 && <Button onClick={trySubmit}>Review & Submit</Button>}
+            {index === pageCount - 1 && <Button onClick={tryReview}>Review Application</Button>}
+            {index === pageCount && (
+                <Button
+                    onClick={() => {
+                        submit && submit();
+                    }}
+                >
+                    Submit!
+                </Button>
+            )}
         </div>
     );
 }
