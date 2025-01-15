@@ -31,7 +31,7 @@ export default function SelectOption({ setCheckInType }: SelectOptionProps) {
                 Select Event
               </div>
             </div>
-            <div className="self-stretch text-white/60 text-sm font-normal font-['Inter'] leading-tight">
+            <div className="self-stretch text-white/60 text-sm font-normal leading-tight">
               What kind of check-in are you doing?
             </div>
           </div>

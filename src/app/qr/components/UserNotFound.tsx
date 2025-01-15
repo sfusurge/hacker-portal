@@ -27,13 +27,13 @@ export default function UserNotFound({
             </div>
 
             <div className="self-stretch">
-              <span className="text-white/60 text-sm font-normal font-['Inter'] leading-tight">
+              <span className="text-white/60 text-sm font-normal leading-tight">
                 No user was found with the ID
               </span>
-              <span className="text-white text-sm font-medium font-['DM Mono'] leading-none">
+              <span className="text-white text-sm font-medium leading-none">
                 {' ' + userId + '. '}
               </span>
-              <span className="text-white/60 text-sm font-normal font-['Inter'] leading-tight">
+              <span className="text-white/60 text-sm font-normal leading-tight">
                 Try scanning the QR code again or input the ID manually. If this
                 issue persists, contact an organizer.
               </span>
@@ -52,13 +52,13 @@ export default function UserNotFound({
             </div>
 
             <div className="self-stretch justify-center items-start gap-2 inline-flex">
-              <div className="text-center text-white/30 text-xs font-medium font-['Inter'] leading-3">
+              <div className="text-center text-white/30 text-xs font-medium leading-3">
                 OR
               </div>
             </div>
 
             <button
-              className="self-stretch px-1 py-2 bg-neutral-800/60 rounded-lg border border-neutral-600/60 justify-center items-center inline-flex overflow-hidden text-white text-base font-medium "
+              className="self-stretch px-1 py-2 bg-neutral-800/60 rounded-lg border border-neutral-600/60 justify-center items-center inline-flex overflow-hidden text-white text-base font-medium"
               onClick={backToManual}
             >
               Check in manually

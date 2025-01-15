@@ -59,11 +59,11 @@ export default function SelectWorkshop() {
 
           <div className="self-stretch p-6 flex-col justify-start items-start gap-2 flex">
             <div className="self-stretch pr-2 justify-between items-center inline-flex">
-              <div className="text-center text-white text-base font-semibold font-['Inter'] leading-tight">
+              <div className="text-center text-white text-base font-semibold ">
                 Select Workshop or Event
               </div>
             </div>
-            <div className="self-stretch text-white/60 text-sm font-normal font-['Inter'] leading-tight">
+            <div className="self-stretch text-white/60 text-sm font-normal">
               What workshop/event are you checking in for?
             </div>
           </div>

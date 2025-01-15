@@ -50,7 +50,7 @@ export default function CheckinTicket({
     const formattedDateTime = `${formattedDate} at ${formattedTime}`;
     return formattedDateTime;
   };
-  // @ts-ignore
+
   const user = userList.find((user) => user.id.toString() === userId);
   const firstname = user ? user.firstName : null;
   const lastname = user ? user.lastName : null;
@@ -90,7 +90,7 @@ export default function CheckinTicket({
 
   return (
     <div className="flex flex-col justify-center items-center overflow-hidden relative gap-2">
-      {/*Toast*/}
+      {/*Toast, needs redoing, this method sucks*/}
       <div
         className={`p-4 w-96 bg-success-950/30 text-white rounded-lg shadow-lg 
                     transition-transform duration-300 ease-in-out transform ${showToast ? 'translate-x-0' : 'translate-x-96 md:invisible'}`}
@@ -116,7 +116,7 @@ export default function CheckinTicket({
               className="rounded-full mb-4 block"
             />
             <header className="self-stretch h-11 flex-col justify-center items-center gap-0.5 flex">
-              <div className="text-center text-white text-xl font-semibold font-['Inter'] leading-snug">
+              <div className="text-center text-white text-xl font-semibold leading-snug">
                 {firstname + ' ' + lastname}
               </div>
               <div className="text-white/60 text-sm font-normal">Hacker</div>
@@ -145,7 +145,7 @@ export default function CheckinTicket({
               <div className="self-stretch h-px border border-neutral-700/20" />
 
               <div className="self-stretch justify-between items-center inline-flex overflow-hidden">
-                <div className="grow shrink basis-0 text-white/60 text-sm font-normal font-['Inter'] leading-tight">
+                <div className="grow shrink basis-0 text-white/60 text-sm font-normal leading-tight">
                   Check-in time
                 </div>
                 <div className="h-7 justify-end items-center gap-3 flex">

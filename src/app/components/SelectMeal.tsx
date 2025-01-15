@@ -18,7 +18,7 @@ export default function SelectMeal() {
           <div className="w-9 h-1.5 relative bg-neutral-750 rounded-full" />
           <div className="self-stretch h-24 p-6 flex-col justify-start items-start gap-2 flex">
             <div className="self-stretch pr-2 justify-between items-center inline-flex">
-              <div className="text-center text-white text-base font-semibold font-['Inter'] leading-tight">
+              <div className="text-center text-white text-base font-semibold">
                 Select Meal
               </div>
             </div>
@@ -30,7 +30,7 @@ export default function SelectMeal() {
 
         <div className="self-stretch h-72 px-6 pb-10 bg-neutral-900 flex-col justify-start items-start flex overflow-hidden">
           <div className="self-stretch h-60 flex-col justify-start items-start gap-4 flex">
-            <div className="text-white/60 text-sm font-medium font-['DM Mono'] leading-none">
+            <div className="text-white/60 text-sm font-medium leading-none">
               DAY 1
             </div>
             <button
@@ -38,7 +38,7 @@ export default function SelectMeal() {
               onClick={setDayOneLunch}
             >
               <div className="px-3 justify-center items-center flex">
-                <div className="text-white text-base font-medium font-['Inter'] leading-none">
+                <div className="text-white text-base font-medium leading-none">
                   Lunch
                 </div>
               </div>
