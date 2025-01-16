@@ -1,9 +1,87 @@
 {
-  "id": "712b74ce-f732-40b7-9b56-53e09eadcd13",
+  "id": "3468b6a1-c55e-437a-b970-6401892b31f3",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.applications": {
+      "name": "applications",
+      "schema": "",
+      "columns": {
+        "hackathon_id": {
+          "name": "hackathon_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "response": {
+          "name": "response",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_date": {
+          "name": "created_date",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_date": {
+          "name": "updated_date",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "applications_hackathon_id_hackathons_id_fk": {
+          "name": "applications_hackathon_id_hackathons_id_fk",
+          "tableFrom": "applications",
+          "tableTo": "hackathons",
+          "columnsFrom": [
+            "hackathon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "applications_user_id_users_id_fk": {
+          "name": "applications_user_id_users_id_fk",
+          "tableFrom": "applications",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "applications_hackathon_id_user_id_pk": {
+          "name": "applications_hackathon_id_user_id_pk",
+          "columns": [
+            "hackathon_id",
+            "user_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.hackathons": {
       "name": "hackathons",
       "schema": "",
@@ -52,8 +130,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.userPersonalData": {
-      "name": "userPersonalData",
+    "public.user_personal_data": {
+      "name": "user_personal_data",
       "schema": "",
       "columns": {
         "id": {
@@ -63,7 +141,7 @@
           "notNull": true,
           "identity": {
             "type": "always",
-            "name": "userPersonalData_id_seq",
+            "name": "user_personal_data_id_seq",
             "schema": "public",
             "increment": "1",
             "startWith": "1",
@@ -123,7 +201,7 @@
         },
         "level_study": {
           "name": "level_study",
-          "type": "levelStudy",
+          "type": "level_study",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false,
@@ -151,9 +229,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "userPersonalData_user_id_users_id_fk": {
-          "name": "userPersonalData_user_id_users_id_fk",
-          "tableFrom": "userPersonalData",
+        "user_personal_data_user_id_users_id_fk": {
+          "name": "user_personal_data_user_id_users_id_fk",
+          "tableFrom": "user_personal_data",
           "tableTo": "users",
           "columnsFrom": [
             "user_id"
@@ -164,9 +242,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "userPersonalData_hackathon_id_hackathons_id_fk": {
-          "name": "userPersonalData_hackathon_id_hackathons_id_fk",
-          "tableFrom": "userPersonalData",
+        "user_personal_data_hackathon_id_hackathons_id_fk": {
+          "name": "user_personal_data_hackathon_id_hackathons_id_fk",
+          "tableFrom": "user_personal_data",
           "tableTo": "hackathons",
           "columnsFrom": [
             "hackathon_id"
@@ -232,8 +310,8 @@
     }
   },
   "enums": {
-    "public.levelStudy": {
-      "name": "levelStudy",
+    "public.level_study": {
+      "name": "level_study",
       "schema": "public",
       "values": [
         "High School",
@@ -241,7 +319,7 @@
         "Usergraduate University (3+ years)",
         "Graduate University",
         "Code School / Bootcamp",
-        "Trade Program / APprenticeship",
+        "Trade Program / Apprenticeship",
         "Post Doctorate",
         "Other",
         "Not a student",

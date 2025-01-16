@@ -4,7 +4,6 @@ import {
   json,
   pgEnum,
   pgTable,
-  serial,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
@@ -17,22 +16,24 @@ import {
 } from 'drizzle-zod';
 import { z } from 'zod';
 
-export const levelStudyEnum = pgEnum('levelStudy', [
+export const levelStudyEnum = pgEnum('level_study', [
   'High School',
   'Undergraduate University (2 years)',
   'Usergraduate University (3+ years)',
   'Graduate University',
   'Code School / Bootcamp',
-  'Trade Program / APprenticeship',
+  'Trade Program / Apprenticeship',
   'Post Doctorate',
   'Other',
   'Not a student',
   'N/A',
 ]); //TODO: fill this enum with real values.
 
-export const userPersonalData = pgTable('userPersonalData', {
+export const userPersonalData = pgTable('user_personal_data', {
   id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
-  userId: uuid('user_id').references(() => users.id, { onDelete: 'no action' }),
+  userId: uuid('user_id').references(() => users.id, {
+    onDelete: 'no action',
+  }),
   hackathonId: integer('hackathon_id').references(() => hackathons.id, {
     onDelete: 'cascade',
   }),
