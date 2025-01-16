@@ -54,7 +54,7 @@ describe('Hackathon CRUDL tests', () => {
     async () => {
       assert.doesNotThrow(async () => {
         await trpcClient.hackathons.deleteHackathon({
-          id: `random_id_${Math.random()}`,
+          id: 1,
         });
       });
     }

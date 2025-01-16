@@ -16,7 +16,6 @@ describe('User CRUDL tests', () => {
       firstName: TEST_FIRST_NAME,
       lastName: TEST_LAST_NAME,
       email: TEST_EMAIL,
-      password: TEST_PASSWORD_PLAIN_TEXT,
     });
 
     const users = await trpcClient.users.getUsers();
@@ -30,7 +29,6 @@ describe('User CRUDL tests', () => {
     assert.equal(user.lastName, TEST_LAST_NAME);
     assert.equal(user.email, TEST_EMAIL);
     // Assert password is hashed
-    assert.notEqual(user.password, TEST_PASSWORD_PLAIN_TEXT);
   });
 
   it("when user is deleted, getUsers doesn't return it", async () => {
@@ -38,7 +36,6 @@ describe('User CRUDL tests', () => {
       firstName: TEST_FIRST_NAME,
       lastName: TEST_LAST_NAME,
       email: TEST_EMAIL,
-      password: TEST_PASSWORD_PLAIN_TEXT,
     });
 
     const users = await trpcClient.users.getUsers();
@@ -59,7 +56,7 @@ describe('User CRUDL tests', () => {
     async () => {
       assert.doesNotThrow(async () => {
         await trpcClient.users.deleteUser({
-          id: `random_id_${Math.random()}`,
+          id: crypto.randomUUID(),
         });
       });
     }

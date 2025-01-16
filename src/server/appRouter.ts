@@ -2,6 +2,7 @@ import { createCallerFactory, publicProcedure, router } from './trpc';
 
 import { usersRouter } from './routers/usersRouter';
 import { hackathonsRouter } from './routers/hackathonsRouter';
+import { applicationsRouter } from './routers/applicationsRouter';
 
 export const appRouter = router({
   health_check: publicProcedure.query(() => {
@@ -10,6 +11,8 @@ export const appRouter = router({
 
   users: usersRouter,
   hackathons: hackathonsRouter,
+
+  applications: applicationsRouter,
 });
 
 // For server side call in unit test
