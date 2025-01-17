@@ -13,9 +13,14 @@ export const usersRouter = router({
     return await databaseClient.select().from(users);
   }),
   addUser: publicProcedure.input(insertUserSchema).mutation(async (opts) => {
-    await databaseClient.insert(users).values({
-      ...opts.input,
-    });
+    const [user] = await databaseClient
+      .insert(users)
+      .values({
+        ...opts.input,
+      })
+      .returning();
+
+    return user;
   }),
   deleteUser: publicProcedure.input(deleteUserSchema).mutation(async (opts) => {
     await databaseClient.delete(users).where(eq(users.id, opts.input.id));

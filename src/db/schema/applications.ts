@@ -3,8 +3,8 @@ import {
   json,
   pgTable,
   primaryKey,
+  timestamp,
   uuid,
-  varchar,
 } from 'drizzle-orm/pg-core';
 import { hackathons } from './hackathons';
 import { users } from './users';
@@ -21,8 +21,14 @@ export const applications = pgTable(
       .references(() => users.id)
       .notNull(),
     response: json().notNull(),
-    createdDate: varchar('created_date', { length: 255 }).notNull(),
-    updatedDate: varchar('updated_date', { length: 255 }).notNull(),
+    createdDate: timestamp()
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+    updatedDate: timestamp()
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
   },
   (table) => {
     return [

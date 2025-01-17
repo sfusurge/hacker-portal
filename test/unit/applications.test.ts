@@ -1,6 +1,6 @@
 import { createCaller } from '@/server/appRouter';
 import { beforeEach } from 'node:test';
-import { describe, it, vi } from 'vitest';
+import { assert, describe, it, vi } from 'vitest';
 
 import { getServerSession } from 'next-auth';
 import {
@@ -25,23 +25,29 @@ describe('applications routes tests', () => {
       },
     });
 
-    await trpcClient.users.addUser({
+    const user = await trpcClient.users.addUser({
       email: 'foo@sfusurge.com',
       firstName: 'foo',
       lastName: 'bar',
     });
 
-    const foo = await trpcClient.hackathons.addHackathon({
+    const hackathon = await trpcClient.hackathons.addHackathon({
       name: TEST_HACKATHON_NAME,
       startDate: TEST_HACKATHON_START_DATE,
       endDate: TEST_HACKATHON_END_DATE,
     });
 
-    await trpcClient.applications.submitApplication({
-      hackathonId: foo[0].id,
+    const application = await trpcClient.applications.submitApplication({
+      hackathonId: hackathon.id,
       response: {
         foo: 'bar',
       },
     });
+
+    assert.isNotNull(application.updatedDate);
+    assert.isNotNull(application.createdDate);
+    assert.equal(application.hackathonId, hackathon.id);
+    assert.equal(application.userId, user.id);
+    assert.deepEqual(application.response, { foo: 'bar' });
   });
 });

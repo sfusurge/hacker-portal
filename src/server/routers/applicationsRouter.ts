@@ -14,16 +14,14 @@ export interface SubmitApplicationResponse {
   hackathonId: number;
   userId: string;
   response: Record<string, unknown>;
-  createdDate: string;
-  updatedDate: string;
+  createdDate: Date;
+  updatedDate: Date;
 }
 
 export const applicationsRouter = router({
   submitApplication: publicProcedure
     .input(insertApplicationSchema)
-    .mutation(async ({ input }) => {
-      const now = Date().toString();
-
+    .mutation(async ({ input }): Promise<SubmitApplicationResponse> => {
       const session = await getServerSession();
 
       const email = session?.user?.email;
@@ -32,20 +30,23 @@ export const applicationsRouter = router({
         throw new InternalServerError("Can't get email from getServerSession");
       }
 
-      return await databaseClient
+      const [application] = await databaseClient
         .insert(applications)
         .values({
           userId: sql`(SELECT ${users.id} FROM ${users} WHERE ${users.email} = ${email} LIMIT 1)`,
           hackathonId: input.hackathonId,
           response: input.response,
-          createdDate: now,
-          updatedDate: now,
         })
         .onConflictDoUpdate({
           target: [applications.hackathonId, applications.userId],
-          set: { updatedDate: now, response: input.response },
+          set: { response: input.response },
         })
         .returning();
+
+      return {
+        ...application,
+        response: application.response as Record<string, unknown>,
+      };
     }),
 
   getApplications: publicProcedure

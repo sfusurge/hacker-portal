@@ -14,12 +14,14 @@ export const hackathonsRouter = router({
   addHackathon: publicProcedure
     .input(insertHackathonSchema)
     .mutation(async (opts) => {
-      return await databaseClient
+      const [hackathon] = await databaseClient
         .insert(hackathons)
         .values({
           ...opts.input,
         })
         .returning();
+
+      return hackathon;
     }),
   deleteHackathon: publicProcedure
     .input(deleteHackathonSchema)
