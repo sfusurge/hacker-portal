@@ -7,6 +7,13 @@ CREATE TABLE "hackathons" (
 	"end_date" varchar(255) NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "user_display_id" (
+	"display_id" varchar(6) PRIMARY KEY NOT NULL,
+	"user_id" integer NOT NULL,
+	CONSTRAINT "user_display_id_display_id_unique" UNIQUE("display_id"),
+	CONSTRAINT "user_display_id_user_id_unique" UNIQUE("user_id")
+);
+--> statement-breakpoint
 CREATE TABLE "userPersonalData" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "userPersonalData_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"user_id" uuid,
@@ -24,7 +31,7 @@ CREATE TABLE "userPersonalData" (
 );
 --> statement-breakpoint
 CREATE TABLE "users" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "users_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"first_name" varchar(64),
 	"last_name" varchar(64),
 	"phone_number" varchar(15),
@@ -34,5 +41,7 @@ CREATE TABLE "users" (
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
+ALTER TABLE "user_display_id" ADD CONSTRAINT "user_display_id_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "userPersonalData" ADD CONSTRAINT "userPersonalData_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "userPersonalData" ADD CONSTRAINT "userPersonalData_hackathon_id_hackathons_id_fk" FOREIGN KEY ("hackathon_id") REFERENCES "public"."hackathons"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "userPersonalData" ADD CONSTRAINT "userPersonalData_hackathon_id_hackathons_id_fk" FOREIGN KEY ("hackathon_id") REFERENCES "public"."hackathons"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+CREATE UNIQUE INDEX "userid_index" ON "user_display_id" USING btree ("user_id");

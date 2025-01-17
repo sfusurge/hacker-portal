@@ -1,11 +1,13 @@
 import { publicProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
+import { userDisplayIds } from '@/db/schema/userDisplayId';
 import {
   insertUserSchema,
   deleteUserSchema,
   updateUserSchema,
   users,
 } from '@/db/schema/users';
+import { getSixDigitId } from '@/lib/PRNG/LCG';
 import { eq } from 'drizzle-orm';
 
 export const usersRouter = router({
@@ -13,8 +15,20 @@ export const usersRouter = router({
     return await databaseClient.select().from(users);
   }),
   addUser: publicProcedure.input(insertUserSchema).mutation(async (opts) => {
-    await databaseClient.insert(users).values({
-      ...opts.input,
+    // create the user, and catch their id
+    const res = await databaseClient
+      .insert(users)
+      .values({
+        ...opts.input,
+      })
+      .returning({ userId: users.id });
+    if (res.length !== 1) {
+      return; // insertion has failed if no return
+    }
+    // create display id
+    await databaseClient.insert(userDisplayIds).values({
+      userId: res[0].userId,
+      displayId: getSixDigitId(res[0].userId),
     });
   }),
   deleteUser: publicProcedure.input(deleteUserSchema).mutation(async (opts) => {
@@ -22,6 +36,7 @@ export const usersRouter = router({
   }),
   updateUser: publicProcedure.input(updateUserSchema).mutation(async (opts) => {
     const { id, ...updateValues } = opts.input;
+
     await databaseClient
       .update(users)
       .set(updateValues)
