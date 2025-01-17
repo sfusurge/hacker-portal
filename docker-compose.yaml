@@ -18,3 +18,4 @@ services:
 
 volumes:
   db_data:
+# postgres://root:12345@localhost:5432/portaldb

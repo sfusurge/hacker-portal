@@ -1,5 +1,5 @@
 {
-  "id": "dd5b373a-772d-4007-874e-3897d30e2d06",
+  "id": "7e65c369-6ca0-48ec-9e52-13a9d8c256ec",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -122,138 +122,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.userPersonalData": {
-      "name": "userPersonalData",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "always",
-            "name": "userPersonalData_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "hackathon_id": {
-          "name": "hackathon_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "first_name": {
-          "name": "first_name",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "last_name": {
-          "name": "last_name",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "age": {
-          "name": "age",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "phone_number": {
-          "name": "phone_number",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "email": {
-          "name": "email",
-          "type": "varchar(150)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "school": {
-          "name": "school",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "level_study": {
-          "name": "level_study",
-          "type": "levelStudy",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'N/A'"
-        },
-        "country": {
-          "name": "country",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "socials": {
-          "name": "socials",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "agree_to_mlh_ads": {
-          "name": "agree_to_mlh_ads",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "userPersonalData_user_id_users_id_fk": {
-          "name": "userPersonalData_user_id_users_id_fk",
-          "tableFrom": "userPersonalData",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "userPersonalData_hackathon_id_hackathons_id_fk": {
-          "name": "userPersonalData_hackathon_id_hackathons_id_fk",
-          "tableFrom": "userPersonalData",
-          "tableTo": "hackathons",
-          "columnsFrom": [
-            "hackathon_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.users": {
       "name": "users",
       "schema": "",
@@ -331,22 +199,6 @@
     }
   },
   "enums": {
-    "public.levelStudy": {
-      "name": "levelStudy",
-      "schema": "public",
-      "values": [
-        "High School",
-        "Undergraduate University (2 years)",
-        "Usergraduate University (3+ years)",
-        "Graduate University",
-        "Code School / Bootcamp",
-        "Trade Program / APprenticeship",
-        "Post Doctorate",
-        "Other",
-        "Not a student",
-        "N/A"
-      ]
-    },
     "public.provider": {
       "name": "provider",
       "schema": "public",

@@ -17,7 +17,7 @@ import {
 } from 'drizzle-zod';
 import { z } from 'zod';
 
-export const levelStudyEnum = pgEnum('levelStudy', [
+const levelStudyEnum = pgEnum('levelStudy', [
   'High School',
   'Undergraduate University (2 years)',
   'Usergraduate University (3+ years)',
@@ -30,7 +30,7 @@ export const levelStudyEnum = pgEnum('levelStudy', [
   'N/A',
 ]); //TODO: fill this enum with real values.
 
-export const userPersonalData = pgTable('userPersonalData', {
+const userPersonalData = pgTable('userPersonalData', {
   id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'no action' }),
   hackathonId: integer('hackathon_id').references(() => hackathons.id, {

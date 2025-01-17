@@ -12,7 +12,7 @@ function powerMod(b: number, e: number, m: number) {
 
   while (e > 0) {
     if (e % 2 === 1) {
-      r = r ** b % m;
+      r = (r * b) % m;
     }
 
     b = (b * b) % m;
