@@ -3,13 +3,13 @@ import { FormTextInput } from '../input/input';
 import style from './radioButtonGroup.module.css';
 
 export interface RadioButtonGroupProps {
-    options: { data: string; name: string }[];
-    allowDeselect?: boolean;
-    allowCustomInput?: boolean;
-    required?: boolean;
-    onSelection?: (data: string | undefined) => void;
-    defaultSelection?: string;
-    name: string;
+  options: { data: string; name: string }[];
+  allowDeselect?: boolean;
+  allowCustomInput?: boolean;
+  required?: boolean;
+  onSelection?: (data: string | undefined) => void;
+  defaultSelection?: string;
+  name: string;
 }
 
 /**
@@ -32,100 +32,102 @@ export interface RadioButtonGroupProps {
  * ***defaultSelection***: determine if a value should be selected on initial render. Can be any string, will only select on data match.
  */
 export function RadioButtonGroup({
-    options,
-    allowDeselect = false,
-    allowCustomInput = false,
-    required = false,
-    defaultSelection = undefined,
-    onSelection,
-    name,
+  options,
+  allowDeselect = false,
+  allowCustomInput = false,
+  required = false,
+  defaultSelection = undefined,
+  onSelection,
+  name,
 }: RadioButtonGroupProps) {
-    const [selection, _setSelection] = useState<string | undefined>(defaultSelection);
+  const [selection, _setSelection] = useState<string | undefined>(
+    defaultSelection
+  );
 
-    const datas = useMemo(() => {
-        const set = new Set<string | undefined>(options.map((item) => item.data));
-        set.add(undefined); // so that undefined is an "expected value"
-        return set;
-    }, []);
+  const datas = useMemo(() => {
+    const set = new Set<string | undefined>(options.map((item) => item.data));
+    set.add(undefined); // so that undefined is an "expected value"
+    return set;
+  }, []);
 
-    const usingCustomInput = useMemo(() => !datas.has(selection), [selection]);
+  const usingCustomInput = useMemo(() => !datas.has(selection), [selection]);
 
-    function clearSelection(val: string) {
-        if (!allowDeselect) {
-            return;
-        }
-
-        if (val === selection) {
-            setSelection(undefined);
-        }
+  function clearSelection(val: string) {
+    if (!allowDeselect) {
+      return;
     }
 
-    function setSelection(val: string | undefined) {
-        _setSelection(val);
-        onSelection && onSelection(val);
+    if (val === selection) {
+      setSelection(undefined);
     }
+  }
 
-    useEffect(() => {
-        _setSelection(defaultSelection); // :see_no_evil:
-    }, [defaultSelection]);
+  function setSelection(val: string | undefined) {
+    _setSelection(val);
+    onSelection && onSelection(val);
+  }
 
-    return (
-        <fieldset className={style.optionsContainer}>
-            {options.map((item, index) => (
-                <label key={index} htmlFor={item.data} className={style.optionLabel}>
-                    <input
-                        type="radio"
-                        id={item.data}
-                        name={name}
-                        value={item.data}
-                        required={required}
-                        checked={item.data === selection}
-                        onChange={() => {
-                            setSelection(item.data);
-                        }}
-                        className={style.radio}
-                        onClick={() => {
-                            clearSelection(item.data);
-                        }}
-                    />
-                    {item.name}
-                </label>
-            ))}
+  useEffect(() => {
+    _setSelection(defaultSelection); // :see_no_evil:
+  }, [defaultSelection]);
+
+  return (
+    <fieldset className={style.optionsContainer}>
+      {options.map((item, index) => (
+        <label key={index} htmlFor={item.data} className={style.optionLabel}>
+          <input
+            type="radio"
+            id={item.data}
+            name={name}
+            value={item.data}
+            required={required}
+            checked={item.data === selection}
+            onChange={() => {
+              setSelection(item.data);
+            }}
+            className={style.radio}
+            onClick={() => {
+              clearSelection(item.data);
+            }}
+          />
+          {item.name}
+        </label>
+      ))}
+      {
+        // Other - for custom input
+        allowCustomInput && (
+          <label htmlFor="other" className={style.optionLabel}>
+            <input
+              type="radio"
+              id="other"
+              name={name}
+              checked={usingCustomInput}
+              onChange={() => {
+                setSelection('');
+              }}
+              className={style.radio}
+            ></input>
+            Other
             {
-                // Other - for custom input
-                allowCustomInput && (
-                    <label htmlFor="other" className={style.optionLabel}>
-                        <input
-                            type="radio"
-                            id="other"
-                            name={name}
-                            checked={usingCustomInput}
-                            onChange={() => {
-                                setSelection('');
-                            }}
-                            className={style.radio}
-                        ></input>
-                        Other
-                        {
-                            // TODO, give the custom input validation?
-                            allowCustomInput && usingCustomInput && (
-                                <FormTextInput
-                                    type="text"
-                                    lazy
-                                    onLazyChange={(val) => {
-                                        setSelection(val as string);
-                                    }}
-                                    placeholder="Custom value here"
-                                    errorMsg="Required!"
-                                    required={required}
-                                    style={{ margin: '0.5rem' }}
-                                    defaultValue={selection}
-                                ></FormTextInput>
-                            )
-                        }
-                    </label>
-                )
+              // TODO, give the custom input validation?
+              allowCustomInput && usingCustomInput && (
+                <FormTextInput
+                  type="text"
+                  lazy
+                  onLazyChange={(val) => {
+                    setSelection(val as string);
+                  }}
+                  placeholder="Custom value here"
+                  errorMsg="Required!"
+                  required={required}
+                  style={{ margin: '0.5rem' }}
+                  defaultValue={selection}
+                ></FormTextInput>
+              )
             }
-        </fieldset>
-    );
+          </label>
+        )
+      }
+    </fieldset>
+  );
 }

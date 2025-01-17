@@ -1,54 +1,54 @@
 .hasLength:not(:has(.textinput:user-invalid)) {
-    padding-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
 }
 
 .hasLength {
-    position: relative;
+  position: relative;
 }
 
 .hasLength::before {
-    content: var(--lengthMsg);
-    position: absolute;
-    right: 0rem;
-    top: 2.6rem;
-    border: 0;
+  content: var(--lengthMsg);
+  position: absolute;
+  right: 0rem;
+  top: 2.6rem;
+  border: 0;
 
-    color: grey;
-    font-size: smaller;
+  color: grey;
+  font-size: smaller;
 }
 
 .textinput::-webkit-search-cancel-button {
-    /* this is a nonstandard, webkit only button to delete text content */
-    /* Remove default */
-    -webkit-appearance: none;
-    transform: translateX(8px);
+  /* this is a nonstandard, webkit only button to delete text content */
+  /* Remove default */
+  -webkit-appearance: none;
+  transform: translateX(8px);
 
-    height: 1.25rem;
-    width: 1.25rem;
-    background: red;
-    display: block;
-    background: url('/icons/xcircle.svg');
-    background-size: contain;
+  height: 1.25rem;
+  width: 1.25rem;
+  background: red;
+  display: block;
+  background: url('/icons/xcircle.svg');
+  background-size: contain;
 
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .textinput:user-invalid,
 .textinput:invalid:not(:placeholder-shown) {
-    outline: 2px solid red;
+  outline: 2px solid red;
 }
 
 .inputHolder:has(.textinput:user-invalid)::after,
 .inputHolder:has(.textinput:invalid:not(:placeholder-shown))::after {
-    content: var(--errMsg);
-    color: red;
-    font-size: smaller;
-    max-width: calc(100% - 2rem);
-    line-height: 1rem;
-    display: block;
-    padding-top: 0.2rem;
+  content: var(--errMsg);
+  color: red;
+  font-size: smaller;
+  max-width: calc(100% - 2rem);
+  line-height: 1rem;
+  display: block;
+  padding-top: 0.2rem;
 }
 
 .inputHolder {
-    color: black;
+  color: black;
 }

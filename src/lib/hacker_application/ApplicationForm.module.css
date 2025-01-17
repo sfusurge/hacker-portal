@@ -1,99 +1,99 @@
 /* ==== root ==== */
 
 .appFormRoot {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 
-    max-height: 100dvh;
-    max-width: 1200px;
-    margin: 4rem;
-    margin-left: auto;
-    margin-right: auto;
+  max-height: 100dvh;
+  max-width: 1200px;
+  margin: 4rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .mainTitle {
-    font-size: x-large;
+  font-size: x-large;
 }
 
 .appFormContent {
-    display: flex;
-    flex-direction: row;
-    gap: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 0;
 
-    width: 100%;
+  width: 100%;
 
-    border: 2px solid black;
-    border-radius: 10px;
+  border: 2px solid black;
+  border-radius: 10px;
 
-    overflow-y: auto;
+  overflow-y: auto;
 }
 
 /* ==== shared ==== */
 
 .title {
-    font-size: large;
+  font-size: large;
 }
 
 .description {
-    font-size: small;
+  font-size: small;
 }
 
 .ver {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    width: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: fit-content;
 }
 
 .hor {
-    display: flex;
-    flex-direction: row;
-    gap: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
 }
 
 /* ==== page ====*/
 
 .page {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .formContainer {
-    position: relative;
-    padding: 1rem;
-    padding-bottom: 5rem;
-    flex: 1;
+  position: relative;
+  padding: 1rem;
+  padding-bottom: 5rem;
+  flex: 1;
 }
 
 /* ==== page buttons */
 .pageButtons {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    padding: 0.75rem;
-    padding-right: 2rem;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 0.75rem;
+  padding-right: 2rem;
 
-    display: flex;
-    justify-content: end;
-    gap: 1rem;
+  display: flex;
+  justify-content: end;
+  gap: 1rem;
 
-    border-top: 2px solid black;
-    width: 100%;
+  border-top: 2px solid black;
+  width: 100%;
 }
 
 /* ==== page status ==== */
 
 .pageStatusContainer {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    justify-content: start;
-    align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  justify-content: start;
+  align-items: start;
 
-    padding: 1rem;
-    border-right: 2px solid black;
+  padding: 1rem;
+  border-right: 2px solid black;
 }
 
 .pageStatusItem {

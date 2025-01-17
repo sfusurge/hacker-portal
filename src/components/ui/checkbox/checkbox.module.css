@@ -1,48 +1,48 @@
 .label::before {
-    content: '';
-    display: inline-block;
+  content: '';
+  display: inline-block;
 
-    width: 20px;
-    height: 20px;
+  width: 20px;
+  height: 20px;
 
-    vertical-align: middle;
-    margin-right: 0.5rem;
+  vertical-align: middle;
+  margin-right: 0.5rem;
 
-    border-radius: 4px;
-    border: 1px solid #525252;
-    background-color: #262626;
+  border-radius: 4px;
+  border: 1px solid #525252;
+  background-color: #262626;
 
-    transition: all ease-out 400ms;
+  transition: all ease-out 400ms;
 
-    box-sizing: border-box;
+  box-sizing: border-box;
 
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .label:has(input:disabled)::before {
-    background-color: grey;
-    cursor: not-allowed;
+  background-color: grey;
+  cursor: not-allowed;
 }
 
 .label:hover::before {
-    filter: brightness(1.2);
+  filter: brightness(1.2);
 }
 
 .label:active::before {
-    filter: brightness(0.9);
+  filter: brightness(0.9);
 }
 
 .label:has(input:checked)::before {
-    background-color: #6466f1;
-    border-color: #6466f1;
-    background-image: url('/icons/check.svg');
-    background-size: 18px 18px;
-    background-position: center center;
+  background-color: #6466f1;
+  border-color: #6466f1;
+  background-image: url('/icons/check.svg');
+  background-size: 18px 18px;
+  background-position: center center;
 }
 
 .label {
-    line-height: 20px;
+  line-height: 20px;
 }
 .check {
-    appearance: none;
+  appearance: none;
 }
