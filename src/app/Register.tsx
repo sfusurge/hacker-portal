@@ -46,6 +46,7 @@ export function RegisterGoogle({ email }: RegisterGoogleProps) {
       <button
         onClick={async () => {
           addUser.mutate({
+            provider: 'google',
             email: email,
             firstName: firstName,
             lastName: lastName,

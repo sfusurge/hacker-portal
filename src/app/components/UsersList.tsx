@@ -67,6 +67,8 @@ export default function UsersList({
           </ul>
           <ul>
             <li>{user.email}</li>
+            <li>{user.id}</li>
+            <li>{user.displayId}</li>
           </ul>
           <button
             onClick={async () => {
