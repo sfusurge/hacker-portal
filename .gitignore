@@ -40,3 +40,5 @@ next-env.d.ts
 *.sh
 
 **/notes.md
+
+certificates
