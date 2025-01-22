@@ -6,3 +6,32 @@
     --radius: 0.5rem;
   }
 }
+
+.large-dashes {
+  border-top: 1px dashed rgba(75, 85, 99, 0.5);
+  border-left: 2px dashed rgba(75, 85, 99, 0.5);
+  border-right: 2px dashed rgba(75, 85, 99, 0.5);
+  border-bottom: 1px dashed rgba(75, 85, 99, 0.5);
+  border-image: repeating-linear-gradient(
+      to right,
+      rgba(75, 85, 99, 0.5) 0,
+      rgba(75, 85, 99, 0.5) 10px,
+      transparent 10px,
+      transparent 20px
+    )
+    1;
+}
+
+.large-dashes-vertical {
+  border-left-width: 2px;
+  border-left-style: dashed;
+  border-color: rgba(75, 85, 99, 0.5); /* rgba value for opacity */
+  border-image: repeating-linear-gradient(
+      to bottom,
+      rgba(75, 85, 99, 0.5) 0,
+      rgba(75, 85, 99, 0.5) 10px,
+      transparent 10px,
+      transparent 20px
+    )
+    1;
+}
