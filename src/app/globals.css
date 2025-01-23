@@ -4,6 +4,7 @@
 @layer base {
   :root {
     --radius: 0.5rem;
+    color-scheme: dark;
   }
 }
 
@@ -34,4 +35,24 @@
       transparent 20px
     )
     1;
+}
+
+.resizer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: col-resize;
+  z-index: 1;
+  background-color: transparent;
+  transition: background-color 0.2s;
+}
+
+.resizer:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.resizer.isResizing {
+  background-color: rgba(255, 255, 255, 0.6);
 }

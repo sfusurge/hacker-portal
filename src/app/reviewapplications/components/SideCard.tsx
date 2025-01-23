@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import {
   allAttendancePeriods,
+  allDietaryRestrictions,
   allMajors,
   allWorkshops,
 } from '@/app/reviewapplications/components/makeData';
@@ -24,13 +25,12 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
 
   const [name, setName] = useState(sideCardInfo.name || '');
   const [email, setEmail] = useState(sideCardInfo.email || '');
+  const [studentNumber, setStudentNumber] = useState(
+    sideCardInfo.studentNumber || ''
+  );
   const [major, setMajor] = useState(sideCardInfo.major || '');
-  const [status, setStatus] = useState(sideCardInfo.status || '');
   const [enrollmentYear, setEnrollmentYear] = useState(
     sideCardInfo.enrollmentYear || ''
-  );
-  const [photoConsent, setPhotoConsent] = useState(
-    sideCardInfo.photoConsent || false
   );
   const [participantType, setParticipantType] = useState(
     sideCardInfo.participantType || ''
@@ -38,16 +38,14 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
   const [teamMemberNames, setTeamMemberNames] = useState(
     sideCardInfo.teamMemberNames || []
   );
-  const [discordUsername, setDiscordUsername] = useState(
-    sideCardInfo.discordUsername || ''
+
+  const [dietaryRestrictions, setDietaryRestrictions] = useState(
+    sideCardInfo.dietaryRestrictions || []
   );
-  const [attendancePeriod, setAttendancePeriod] = useState(
-    sideCardInfo.attendancePeriod || ''
+
+  const [photoConsent, setPhotoConsent] = useState(
+    sideCardInfo.photoConsent || false
   );
-  const [attendingWorkshops, setAttendingWorkshops] = useState(
-    sideCardInfo.attendingWorkshops || []
-  );
-  const [questions, setQuestions] = useState(sideCardInfo.questions || '');
 
   const handleChangeApplicationStatus = (status: string) => {
     console.log(`Application status changed to: ${status}`);
@@ -59,15 +57,15 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
     setTeamMemberNames(updatedTeamMembers);
   };
 
-  const updateWorkshopAttendance = (
-    workshop: string,
+  const updateDietaryRestriction = (
+    restriction: string,
     isChecked: boolean | string
   ) => {
     if (isChecked) {
-      setAttendingWorkshops([...attendingWorkshops, workshop]);
+      setDietaryRestrictions([...dietaryRestrictions, restriction]);
     } else {
-      setAttendingWorkshops(
-        attendingWorkshops.filter((item) => item !== workshop)
+      setDietaryRestrictions(
+        dietaryRestrictions.filter((item) => item !== restriction)
       );
     }
   };
@@ -179,19 +177,6 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
             ))}
           </div>
 
-          <div>
-            <Label className="text-white/60" htmlFor="discordUsername">
-              Discord Username
-            </Label>
-            <Input
-              type="text"
-              id="discordUsername"
-              value={discordUsername}
-              onChange={(e) => setDiscordUsername(e.target.value)}
-              className="bg-neutral-800 text-white border border-neutral-700/18 w-1/2"
-            />
-          </div>
-
           <RadioGroup
             value={participantType}
             onValueChange={setParticipantType}
@@ -233,64 +218,31 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
             </div>
           </RadioGroup>
 
-          <RadioGroup
-            value={attendancePeriod}
-            onValueChange={setAttendancePeriod}
-          >
-            <Label className="text-white/60">Attendance Period</Label>
-            <div className="flex flex-col gap-2 w-fit">
-              {allAttendancePeriods.map((type) => (
-                <div
-                  className={`flex items-center space-x-2 pl-4 pr-4 pt-3 pb-3 rounded-lg cursor-pointer border ${
-                    attendancePeriod === type
-                      ? 'bg-brand-950/60 border-brand-900'
-                      : 'bg-neutral-800/60 border border-neutral-600/60'
-                  }`}
-                  key={type}
-                  onClick={() => setAttendancePeriod(type)}
-                >
-                  <RadioGroupItem
-                    value={type}
-                    id={type}
-                    onChange={() => setAttendancePeriod(type)}
-                    className={`appearance-none w-5 h-5 rounded-full border ${
-                      attendancePeriod === type
-                        ? 'bg-brand-500 border-blue-800'
-                        : 'bg-neutral-700 border-neutral-500'
-                    }`}
-                  />
-                  <Label
-                    htmlFor={type}
-                    className="cursor-pointer text-white font-light"
-                  >
-                    {type}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </RadioGroup>
-
           <div className="flex flex-col gap-4">
-            <Label className="text-white/60">Workshops Attending</Label>
+            <Label className="text-white/60">Dietary Restrictions</Label>
 
-            <div className="flex flex-col gap-8 ml-3">
-              {allWorkshops.map((workshop) => (
-                <div className="flex items-center space-x-2" key={workshop}>
+            <div className="flex flex-col gap-5 ml-3">
+              {allDietaryRestrictions.map((restriction) => (
+                <div className="flex items-center space-x-2 " key={restriction}>
                   <Checkbox
-                    id={workshop}
-                    checked={attendingWorkshops.includes(workshop)}
+                    id={restriction}
+                    checked={dietaryRestrictions.includes(restriction)}
                     onCheckedChange={(isChecked) =>
-                      updateWorkshopAttendance(workshop, isChecked)
+                      updateDietaryRestriction(restriction, isChecked)
                     }
                     className="data-[state=checked]:bg-blue-500 border-brand-500 size-5"
                   />
-                  <Label htmlFor={workshop} className="text-white font-light">
-                    {workshop}
+                  <Label
+                    htmlFor={restriction}
+                    className="text-white font-light"
+                  >
+                    {restriction}
                   </Label>
                 </div>
               ))}
             </div>
           </div>
+
           <RadioGroup
             value={photoConsent ? 'Yes' : 'No'}
             onValueChange={(value) => setPhotoConsent(value === 'Yes')}
@@ -327,16 +279,6 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
               ))}
             </div>
           </RadioGroup>
-
-          <div>
-            <Label className="text-white/60">Questions</Label>
-            <Textarea
-              id="questions"
-              value={questions}
-              onChange={(e) => setQuestions(e.target.value)}
-              className="bg-neutral-800 text-white border border-neutral-700/18 w-3/4"
-            />
-          </div>
         </div>
       </ScrollArea>
 

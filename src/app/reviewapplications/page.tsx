@@ -12,7 +12,6 @@ export { sideCardAtom };
 
 export default function ReviewApplicationsPage() {
   const [isSideCardOpen, setIsSideCardOpen] = useState(false);
-  //const [sideCardInfo, setSideCardInfo] = useAtom(sideCardAtom);
 
   const toggleSideCard = () => {
     setIsSideCardOpen(!isSideCardOpen);

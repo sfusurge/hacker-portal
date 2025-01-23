@@ -14,11 +14,11 @@ export default function SendEmailPage() {
     try {
       for (let i = 0; i < users.length; i++) {
         sendEmail.mutate({
+          type: 'REJECTJH2025',
           user: {
             id: users[i].id,
             email: users[i].email,
-            firstName: users[i].firstName,
-            lastName: users[i].lastName,
+            name: users[i].firstName + ' ' + users[i].lastName,
           },
         });
       }
@@ -28,9 +28,9 @@ export default function SendEmailPage() {
   };
 
   return (
-    <div className="bg-black flex min-h-screen min-w-screen h-full">
+    <div className="bg-black text-white flex min-h-screen min-w-screen h-full items-center justify-center">
       <section className="relative bg-neutral-900 border border-neutral-750 rounded-xl p-8 shadow-md h-full md:min-w-[608px] md:min-h-[454px] md:w-auto md:h-auto box-border">
-        <h2 className="text-sm font-normal leading-5 text-[#ffffff99] tracking-tightest hidden md:block">
+        <h2 className="text-sm font-normal leading-5 tracking-tightest hidden md:block">
           Send Email
         </h2>
 
