@@ -3,7 +3,7 @@ import {
     TicketIcon,
     FireIcon,
     WrenchScrewdriverIcon,
-} from '@heroicons/react/24/solid';
+} from '@heroicons/react/20/solid';
 
 export const buttonConfig = {
     'Event Check-in': { icon: TicketIcon, label: 'Check in to hackathon' },

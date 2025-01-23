@@ -1,7 +1,7 @@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { XMarkIcon } from '@heroicons/react/24/solid';
-import { Label } from '@/components/ui/label';
+import { Label } from '@/components/ui/label/label';
 import { useState } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';

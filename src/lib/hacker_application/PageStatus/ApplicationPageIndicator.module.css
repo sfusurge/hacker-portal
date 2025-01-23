@@ -1,0 +1,66 @@
+/* ==== page status ==== */
+
+.pageStatusContainer {
+    position: sticky;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+
+    justify-content: start;
+    align-items: start;
+
+    padding: 32px;
+    border-right: 2px solid var(--border-neutral-tertiary);
+}
+
+.pageStatusItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.25rem;
+}
+
+.circle {
+    border-radius: 50%;
+    border: 2px solid var(--border-neutral-secondary);
+    width: 24px;
+    height: 24px;
+    margin: 2px;
+}
+
+.iconHolder {
+    position: relative;
+    width: 28px;
+    height: 28px;
+}
+
+.iconHolder::before {
+    content: '';
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    z-index: 0;
+}
+
+.iconHolder > svg {
+    z-index: 1;
+    position: relative;
+}
+
+.ladderBar {
+    height: 20px;
+    width: 0;
+
+    border: 1px solid var(--border-neutral-secondary);
+    border-radius: 2px;
+    margin-left: 17px;
+}
+
+.ladderBar.done {
+    border-color: var(--outline-brand-primary);
+}

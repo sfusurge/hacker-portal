@@ -5,32 +5,44 @@
     flex-direction: column;
     gap: 0.5rem;
 
-    max-height: 100dvh;
+    height: 90dvh;
     max-width: 1200px;
-    margin: 4rem;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 2rem;
+
+    padding: 40px;
 
     color: white;
+
+    background-color: var(--neutral-950);
+    box-sizing: border-box;
+    border: 1px solid var(--border-neutral-tertiary);
+    border-radius: 24px;
 }
 
 .mainTitle {
     font-size: 30px;
 }
-
+.appFormWrapper {
+    /* used to crop scrol bar */
+    display: flex;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    border: 2px solid var(--border-neutral-secondary);
+    background-color: var(--neutral-925);
+    border-radius: 12px;
+}
 .appFormContent {
     display: flex;
     flex-direction: row;
     gap: 0;
 
     width: 100%;
-
-    border: 2px solid var(--border-neutral-secondary);
-    background-color: var(--neutral-925);
-    border-radius: 10px;
+    max-height: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-neutral-secondary) transparent;
 
     overflow-y: auto;
-    background-color: --backgr;
 }
 
 /* ==== shared ==== */
@@ -62,44 +74,50 @@
 .page {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 32px;
+    padding: 32px;
+    padding-bottom: 4rem;
 }
 
 .formContainer {
     position: relative;
-    padding: 1rem;
-    padding-bottom: 5rem;
     flex: 1;
+    height: fit-content;
 }
 
 /* ==== page buttons */
 .pageButtons {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    padding: 0.75rem;
-    padding-right: 2rem;
-
     display: flex;
-    justify-content: end;
     gap: 1rem;
-
-    border-top: 2px solid black;
+    align-items: center;
     width: 100%;
+    margin-top: 12px;
+
+    --skewMorphic: 0px 1px 0px 0px rgba(255, 255, 255, 0.24) inset,
+        0px 0px 0px 1px rgba(255, 255, 255, 0.12) inset;
 }
 
-/* ==== page status ==== */
-
-.pageStatusContainer {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    justify-content: start;
-    align-items: start;
-
-    padding: 1rem;
-    border-right: 2px solid black;
+.button {
+    border-radius: 8px;
+    box-shadow: var(--skewMorphic);
+    font-size: 16px;
+    padding: 14px 16px;
+    line-height: 16px;
+    transition: filter 400ms ease-out;
 }
 
-.pageStatusItem {
+.button:hover {
+    filter: brightness(1.1);
+}
+.button:active {
+    filter: brightness(0.95);
+}
+.prevButton {
+    background-color: var(--neutral-700);
+}
+
+.nextButton {
+    border-radius: 8px;
+    box-shadow: var(--skewMorphic);
+    background-color: var(--brand-700);
 }

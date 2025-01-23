@@ -43,6 +43,7 @@ body {
     --brand-400: #818cf8;
     --brand-400_60: color-mix(in srgb, var(--brand-400) 60%, transparent);
     --brand-500: #6466f1;
+    --brand-700: #4338ca;
     --brand-900: #302e81;
     --brand-950: #1d1b4b;
     --brand-950_60: color-mix(in srgb, var(--brand-950) 60%, transparent);
@@ -51,6 +52,7 @@ body {
     --neutral-600: #525252;
     --neutral-600_60: color-mix(in srgb, var(--neutral-600) 60%, transparent);
     --neutral-600_30: color-mix(in srgb, var(--neutral-600) 30%, transparent);
+    --neutral-700: #404040;
     --neutral-800: #262626;
     --neutral-800_60: color-mix(in srgb, var(--neutral-800) 60%, transparent);
     --neutral-900: #171717;
@@ -84,4 +86,5 @@ body {
     /* ==== END SEMANTICS ====  */
 
     font-size: 16px;
+    background-color: var(--neutral-950);
 }
