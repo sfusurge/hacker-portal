@@ -17,7 +17,7 @@ const Input = forwardRef<HTMLInputElement, ComponentProps<'input'>>(
             <input
                 type={type}
                 className={cn(
-                    'flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-base file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-neutral-950 placeholder:text-neutral-500  disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:border-neutral-800 dark:bg-neutral-950 dark:file:text-neutral-50 dark:placeholder:text-neutral-400',
+                    'flex h-10 w-full rounded-md border bg-white px-3 py-2 text-base disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:border-neutral-800 dark:bg-neutral-950 dark:file:text-neutral-50 dark:placeholder:text-neutral-400',
                     className
                 )}
                 ref={ref}
@@ -34,6 +34,7 @@ export const FormTextInput = forwardRef<
         lazy?: boolean;
         timeOut?: number;
         type: 'text' | 'number' | 'search';
+        hideBackground?: boolean;
         errorMsg?: string;
         onLazyChange?: (value: string | number) => void;
     }
@@ -45,6 +46,7 @@ export const FormTextInput = forwardRef<
             lazy = false,
             errorMsg,
             type,
+            hideBackground,
             onLazyChange,
             style: externalStyle,
             ...props
@@ -95,7 +97,10 @@ export const FormTextInput = forwardRef<
                     {...props}
                     type={type}
                     defaultValue={defaultValue}
-                    className={cn(style.textinput)}
+                    className={cn(
+                        { [style.hideBackground]: hideBackground },
+                        style.textinput
+                    )}
                     ref={inputRef}
                     onKeyDown={(e) => {
                         if (!lazy) {

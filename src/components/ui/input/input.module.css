@@ -34,7 +34,7 @@
 
 .textinput:user-invalid,
 .textinput:invalid:not(:placeholder-shown) {
-    outline: 2px solid var(--danger-500);
+    border-color: var(--danger-500) !important;
 }
 
 .inputHolder:has(.textinput:user-invalid)::after,
@@ -57,7 +57,17 @@
 .textinput:focus {
     background-color: var(--background-brand-focus);
     border-color: var(--border-brand-primary);
+    outline: none;
 }
 .textinput::placeholder {
     color: var(--text-tertiary);
+}
+
+.textinput.hideBackground {
+    border: none;
+    border-bottom: 2px solid var(--brand-400_60);
+    border-radius: 0;
+    background-color: transparent;
+
+    padding-left: 4px;
 }
