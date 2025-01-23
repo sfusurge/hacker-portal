@@ -1,48 +1,67 @@
 .label::before {
-  content: '';
-  display: inline-block;
+    content: '';
+    display: inline-block;
 
-  width: 20px;
-  height: 20px;
+    width: 16px;
+    height: 16px;
 
-  vertical-align: middle;
-  margin-right: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #525252;
 
-  border-radius: 4px;
-  border: 1px solid #525252;
-  background-color: #262626;
+    background-color: #262626;
+    background-size: 12px 12px;
+    background-position: center center;
 
-  transition: all ease-out 400ms;
+    transition: all ease-out 400ms;
 
-  box-sizing: border-box;
+    box-sizing: border-box;
 
-  cursor: pointer;
-}
-
-.label:has(input:disabled)::before {
-  background-color: grey;
-  cursor: not-allowed;
+    cursor: pointer;
 }
 
 .label:hover::before {
-  filter: brightness(1.2);
+    filter: brightness(1.2);
 }
 
 .label:active::before {
-  filter: brightness(0.9);
+    filter: brightness(0.9);
 }
 
 .label:has(input:checked)::before {
-  background-color: #6466f1;
-  border-color: #6466f1;
-  background-image: url('/icons/check.svg');
-  background-size: 18px 18px;
-  background-position: center center;
+    background-color: #6466f1;
+    border-color: #6466f1;
+    background-image: url('/icons/check.svg');
+    background-size: 12px 12px;
+    background-position: center center;
+}
+
+.label:has(input:disabled)::before {
+    background-color: grey;
+    cursor: not-allowed;
 }
 
 .label {
-  line-height: 20px;
+    line-height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 12px;
+
+    border: 1px solid var(--border-neutral-secondary);
+    border-radius: 8px;
+    background-color: var(--background-neutral-secondary);
+
+    width: auto;
+    max-width: 400px;
+
+    color: white;
 }
+
+.label:has(input:checked) {
+    background-color: var(--background-brand-focus);
+    border-color: var(--border-brand-primary);
+}
+
 .check {
-  appearance: none;
+    appearance: none;
+    margin-right: 12px;
 }

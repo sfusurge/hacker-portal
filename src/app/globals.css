@@ -35,3 +35,48 @@
         )
         1;
 }
+
+body {
+    /* ==== COLORS ==== */
+
+    /* Brand */
+    --brand-400: #818cf8;
+    --brand-500: #6466f1;
+    --brand-900: #302e81;
+    --brand-950: #1d1b4b;
+    --brand-950_60: color-mix(in srgb, var(--brand-950) 60%, transparent);
+
+    /* Neutral */
+    --neutral-600: #525252;
+    --neutral-600_60: color-mix(in srgb, var(--neutral-600) 60%, transparent);
+
+    --neutral-800: #262626;
+    --neutral-800_60: color-mix(in srgb, var(--neutral-800) 60%, transparent);
+
+    /* Danger */
+    --danger-500: #ef4444;
+
+    /* ==== END COLORS ==== */
+
+    /* ==== SEMANTICS ==== */
+
+    /* Text */
+    --text-brand-primary: var(--brand-400);
+    --text-secondary: rgba(255, 255, 255, 0.6);
+    --text-tertiary: rgba(255, 255, 255, 0.3);
+
+    /* border */
+    --border-brand-primary: var(--brand-900);
+    --border-neutral-secondary: var(--neutral-600_60);
+
+    /* background */
+    --background-brand-focus: var(--brand-950_60);
+    --background-neutral-secondary: var(--neutral-800_60);
+
+    /* outline */
+    --outline-brand-primary: var(--brand-500);
+
+    /* ==== END SEMANTICS ====  */
+
+    font-size: 16px;
+}
