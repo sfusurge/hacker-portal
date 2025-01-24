@@ -11,106 +11,106 @@ const drizzleKit = resolve('./node_modules/.bin/drizzle-kit');
 
 // https://vitest.dev/config/#globalsetup
 export default async function setup() {
-  // Throw error if using development or production env for testing
-  console.log(`Setting up test database`);
+    // Throw error if using development or production env for testing
+    console.log(`Setting up test database`);
 
-  const config = loadEnvAndValidate();
+    const config = loadEnvAndValidate();
 
-  const sql = await createDatabase(config);
+    const sql = await createDatabase(config);
 
-  await populateTables();
+    await populateTables();
 
-  return async () => {
-    const { database } = config;
+    return async () => {
+        const { database } = config;
 
-    await dropDatabase(sql, database);
+        await dropDatabase(sql, database);
 
-    await sql.end();
-  };
+        await sql.end();
+    };
 }
 
 function loadEnvAndValidate(): DatabaseConfig {
-  dotenv.config({ debug: true, override: true });
+    dotenv.config({ debug: true, override: true });
 
-  const {
-    DATABASE_HOST,
-    DATABASE_PORT,
-    DATABASE_USER,
-    DATABASE_PASSWORD,
-    DATABASE_NAME,
-  } = process.env;
+    const {
+        DATABASE_HOST,
+        DATABASE_PORT,
+        DATABASE_USER,
+        DATABASE_PASSWORD,
+        DATABASE_NAME,
+    } = process.env;
 
-  if (!DATABASE_HOST) {
-    throw new Error(`env missing DATABASE_HOST`);
-  }
+    if (!DATABASE_HOST) {
+        throw new Error(`env missing DATABASE_HOST`);
+    }
 
-  if (!DATABASE_PORT) {
-    throw new Error(`env missing DATABASE_PORT`);
-  }
+    if (!DATABASE_PORT) {
+        throw new Error(`env missing DATABASE_PORT`);
+    }
 
-  if (!DATABASE_USER) {
-    throw new Error(`env missing DATABASE_USER`);
-  }
+    if (!DATABASE_USER) {
+        throw new Error(`env missing DATABASE_USER`);
+    }
 
-  if (!DATABASE_PASSWORD) {
-    throw new Error(`env missing DATABASE_PASSWORD`);
-  }
-  if (!DATABASE_NAME) {
-    throw new Error(`env missing DATABASE_NAME`);
-  }
+    if (!DATABASE_PASSWORD) {
+        throw new Error(`env missing DATABASE_PASSWORD`);
+    }
+    if (!DATABASE_NAME) {
+        throw new Error(`env missing DATABASE_NAME`);
+    }
 
-  const config: DatabaseConfig = {
-    host: DATABASE_HOST,
-    port: Number(DATABASE_PORT),
-    user: DATABASE_USER,
-    password: DATABASE_PASSWORD,
-    database: `${DATABASE_NAME}_test`,
-  };
+    const config: DatabaseConfig = {
+        host: DATABASE_HOST,
+        port: Number(DATABASE_PORT),
+        user: DATABASE_USER,
+        password: DATABASE_PASSWORD,
+        database: `${DATABASE_NAME}_test`,
+    };
 
-  // Override variables so that drizzle.config.ts use the test database instead
-  process.env.DATABASE_NAME = config.database;
+    // Override variables so that drizzle.config.ts use the test database instead
+    process.env.DATABASE_NAME = config.database;
 
-  console.debug(
-    'Loaded config',
-    JSON.stringify(
-      config,
-      (key, value) => (key === 'password' ? '<redacted>' : value),
-      4
-    )
-  );
+    console.debug(
+        'Loaded config',
+        JSON.stringify(
+            config,
+            (key, value) => (key === 'password' ? '<redacted>' : value),
+            4
+        )
+    );
 
-  return config;
+    return config;
 }
 
 async function createDatabase(config: DatabaseConfig): Promise<postgres.Sql> {
-  const sql = postgres({
-    host: config.host,
-    user: config.user,
-    password: config.password,
-    database: 'postgres',
-  });
+    const sql = postgres({
+        host: config.host,
+        user: config.user,
+        password: config.password,
+        database: 'postgres',
+    });
 
-  await dropDatabase(sql, config.database);
-  await sql`CREATE DATABASE ${sql(config.database)}`;
+    await dropDatabase(sql, config.database);
+    await sql`CREATE DATABASE ${sql(config.database)}`;
 
-  return sql;
+    return sql;
 }
 
 async function dropDatabase(sql: postgres.Sql, databaseName: string) {
-  await sql`DROP DATABASE IF EXISTS ${sql(databaseName)}`;
+    await sql`DROP DATABASE IF EXISTS ${sql(databaseName)}`;
 
-  console.debug(`Dropped database ${databaseName}`);
+    console.debug(`Dropped database ${databaseName}`);
 }
 
 async function populateTables(): Promise<void> {
-  await execPromise(`${drizzleKit} push`);
-  console.log('> drizzle-kit push');
+    await execPromise(`${drizzleKit} push`);
+    console.log('> drizzle-kit push');
 }
 
 interface DatabaseConfig {
-  host: string;
-  port: number;
-  user: string;
-  password: string;
-  database: string;
+    host: string;
+    port: number;
+    user: string;
+    password: string;
+    database: string;
 }

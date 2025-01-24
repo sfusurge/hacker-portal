@@ -1,9 +1,15 @@
 import { HTMLInputAutoCompleteAttribute } from 'react';
 
 interface Entry {
-  title?: string;
-  description?: string;
+    title?: string;
+    description?: string;
 }
+
+type ChoiceOption = {
+    name: string;
+    data: string;
+    other?: boolean;
+};
 
 /**
  * used both as a template, and also to hold current data.
@@ -12,89 +18,89 @@ interface Entry {
  * The server api can reject the request for any reason, so client modifying the question set is not a concern.
  */
 export interface ApplicationData {
-  title?: string;
-  version: number; // version must match, discard the application otherwise. Increment version with every change please.
+    title?: string;
+    version: number; // version must match, discard the application otherwise. Increment version with every change please.
 
-  hackathonName: string; // should this be hackathon id in table instead?
-  submissionTime?: string;
+    hackathonName: string; // should this be hackathon id in table instead?
+    submissionTime?: string;
 
-  pages: ApplicationPage[];
+    pages: ApplicationPage[];
 }
 
 /**
  * Same info as application, except pages are destructured.
  */
 export interface FlatApplication extends Entry {
-  version: number; // version must match, discard the application otherwise. Increment version with every change please.
+    version: number; // version must match, discard the application otherwise. Increment version with every change please.
 
-  hackathonName: string; // should this be hackathon id in table instead?
-  submissionTime: string;
+    hackathonName: string; // should this be hackathon id in table instead?
+    submissionTime: string;
 
-  questions: ApplicationQuestion[];
+    questions: ApplicationQuestion[];
 }
 
 export interface ApplicationPage extends Entry {
-  questions: ApplicationQuestion[];
+    questions: ApplicationQuestion[];
 }
 
 export type ApplicationQuestion =
-  | QuestionCheckBoxInput
-  | QuestionDatePicker
-  | QuestionTextAreaInput
-  | QuestionTextLineInput
-  | QuestionNumberInput
-  | QuestionMultipleChoice
-  | QuestionSchoolName
-  | QuestionMultipleCheckBox
-  | QuestionNameInput;
+    | QuestionCheckBoxInput
+    | QuestionDatePicker
+    | QuestionTextAreaInput
+    | QuestionTextLineInput
+    | QuestionNumberInput
+    | QuestionMultipleChoice
+    | QuestionSchoolName
+    | QuestionMultipleCheckBox
+    | QuestionNameInput;
 
 interface Question extends Entry {
-  questionId: number; // must be unique to the application.
-  type: string | 'N/A';
-  required?: boolean;
-  autoComplete?: HTMLInputAutoCompleteAttribute;
+    questionId: number; // must be unique to the application.
+    type: string | 'N/A';
+    required?: boolean;
+    autoComplete?: HTMLInputAutoCompleteAttribute;
 }
 
 export interface QuestionTextLineInput extends Question {
-  type: 'text-line';
-  placeHolder?: string;
-  value?: string;
-  maxCount?: number;
+    type: 'text-line';
+    placeHolder?: string;
+    value?: string;
+    maxCount?: number;
 
-  validator?: {
-    pattern: string; //regex pattern
-    errorMsg: string; // message to display if the pattern fails
-  };
+    validator?: {
+        pattern: string; //regex pattern
+        errorMsg: string; // message to display if the pattern fails
+    };
 }
 
 export interface QuestionNameInput extends Question {
-  type: 'name';
-  firstName?: string;
-  lastName?: string;
-  maxCount?: number;
+    type: 'name';
+    firstName?: string;
+    lastName?: string;
+    maxCount?: number;
 }
 
 export interface QuestionTextAreaInput extends Question {
-  type: 'text-area';
-  placeHolder?: string;
-  value?: string;
-  maxCount?: number;
+    type: 'text-area';
+    placeHolder?: string;
+    value?: string;
+    maxCount?: number;
 }
 
 export interface QuestionNumberInput extends Question {
-  type: 'number';
-  placeHolder?: number;
-  value?: number;
-  min?: number;
-  max?: number;
-  errMsg?: string;
+    type: 'number';
+    placeHolder?: number;
+    value?: number;
+    min?: number;
+    max?: number;
+    errMsg?: string;
 }
 
 export interface QuestionCheckBoxInput extends Question {
-  type: 'checkbox';
-  value?: boolean;
-  label?: string;
-  required?: boolean;
+    type: 'checkbox';
+    value?: boolean;
+    label?: string;
+    required?: boolean;
 }
 
 /**
@@ -102,34 +108,37 @@ export interface QuestionCheckBoxInput extends Question {
  * In Choices, "data" is the internal data, "name" is whats actually displayed.
  */
 export interface QuestionMultipleChoice extends Question {
-  type: 'multiple-choice';
-  value?: string;
-  allowCustom?: boolean;
-  allowDeselect?: boolean;
-  choices: { data: string; name: string }[];
+    type: 'multiple-choice';
+    value?: string;
+    allowCustom?: boolean;
+    allowDeselect?: boolean;
+    choices: ChoiceOption[];
+    freeFormChoice?: {
+        placeHolder: string;
+    };
 }
 
 export interface QuestionMultipleCheckBox extends Question {
-  type: 'multiple-checkbox';
-  min?: number;
-  max?: number;
-  choices: {
-    data: string;
-    name: string;
-    value: boolean;
-  }[];
+    type: 'multiple-checkbox';
+    min?: number;
+    max?: number;
+    choices: {
+        data: string;
+        name: string;
+        value: boolean;
+    }[];
 }
 
 /**
  * Auto completes based on user input, from a near infinite list of uni names.
  */
 export interface QuestionSchoolName extends Question {
-  // TODO
-  type: 'school-name';
-  value?: string;
+    // TODO
+    type: 'school-name';
+    value?: string;
 }
 
 export interface QuestionDatePicker extends Question {
-  type: 'date';
-  value?: string;
+    type: 'date';
+    value?: string;
 }
