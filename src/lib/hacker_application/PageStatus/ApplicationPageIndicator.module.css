@@ -86,7 +86,7 @@
 .currentPage {
     position: relative;
     flex: 1;
-    border-radius: 50%;
+    border-radius: 20px;
     display: flex;
     justify-content: center;
     gap: 0.5rem;

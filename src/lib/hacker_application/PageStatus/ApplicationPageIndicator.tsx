@@ -95,7 +95,7 @@ export function DesktopPageIndicator({
         <div className={style.pageStatusContainer}>
             {pageStates.map((item, index) => {
                 return (
-                    <>
+                    <div key={index}>
                         <button
                             key={index}
                             onClick={() => {
@@ -109,7 +109,7 @@ export function DesktopPageIndicator({
                         <div
                             className={`${style.ladderBar} ${item.state === 'completed' && !item.error ? style.done : ''}`}
                         />
-                    </>
+                    </div>
                 );
             })}
             <button onClick={tryReview} className={style.pageStatusItem}>
@@ -150,23 +150,49 @@ export function MobilePageIndicator({
         );
     }
 
+    function tryReview() {
+        let valid = true;
+
+        for (const pageState of pageStates) {
+            valid &&= !pageState.error;
+        }
+
+        if (!valid) {
+            alert('Not all pages are valid!');
+            setErrCheck(true);
+        } else {
+            setIndex(pageStates.length); // the lastpage + 1 is the review page.
+        }
+    }
+
+    function incrementIndex(incre: number) {
+        if (index + incre === pageStates.length) {
+            return tryReview();
+        }
+        setIndex(index + incre);
+    }
+
     return (
-        <div className={style.buttonContainer}>
+        <div className={style.navContainer}>
             <SkewmorphicButton
                 style={{ backgroundColor: 'var(--neutral-700)' }}
+                onClick={() => {
+                    incrementIndex(-1);
+                }}
+                disabled={index === 0}
             >
                 <ArrowLeftIcon style={{ width: '36px' }}></ArrowLeftIcon>
             </SkewmorphicButton>
 
-            <button
-                onClick={() => {
-                    setShowPages(!showPages);
-                }}
-                className={style.currentPage}
-            >
-                {getPageTitle(index)}
-
-                <div className={style.pageStatusContainer}>
+            <div className={style.currentPage}>
+                <button
+                    onClick={() => {
+                        setShowPages(!showPages);
+                    }}
+                >
+                    {getPageTitle(index)}
+                </button>
+                <div className={style.buttonContainer}>
                     {pageStates.map((item, _index) => (
                         <button
                             key={_index}
@@ -185,9 +211,13 @@ export function MobilePageIndicator({
 
                     <button>{getPageTitle(pageStates.length)}</button>
                 </div>
-            </button>
+            </div>
             <SkewmorphicButton
                 style={{ backgroundColor: 'var(--neutral-700)' }}
+                onClick={() => {
+                    incrementIndex(1);
+                }}
+                disabled={index === pageStates.length}
             >
                 <ArrowRightIcon style={{ width: '36px' }}></ArrowRightIcon>
             </SkewmorphicButton>

@@ -27,8 +27,9 @@ import { ReviewPage } from './ReviewPage';
 import {
     PageFormState,
     DesktopPageIndicator,
+    MobilePageIndicator,
 } from './PageStatus/ApplicationPageIndicator';
-import { cn } from '../utils';
+import { cn, useWindowSize } from '../utils';
 import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 import { useRouter } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
@@ -108,6 +109,10 @@ export function ApplicationForm({
 
     const router = useRouter();
 
+    // mobile conditional render
+    const [screenWidth, _] = useWindowSize();
+    const isMobile = useMemo(() => screenWidth < 700, [screenWidth]);
+
     return (
         <div className={style.appFormRoot}>
             <button
@@ -121,10 +126,18 @@ export function ApplicationForm({
             </button>
             <div className={style.appFormWrapper}>
                 <div className={style.appFormContent}>
-                    <DesktopPageIndicator
-                        pageStateAtoms={pageStatesAtom}
-                        indexAtom={pageIndexAtom}
-                    ></DesktopPageIndicator>
+                    {isMobile ? (
+                        <MobilePageIndicator
+                            pageStateAtoms={pageStatesAtom}
+                            indexAtom={pageIndexAtom}
+                        />
+                    ) : (
+                        <DesktopPageIndicator
+                            pageStateAtoms={pageStatesAtom}
+                            indexAtom={pageIndexAtom}
+                        />
+                    )}
+
                     <div className={style.formContainer}>
                         {currentPageIndex === pagesAtoms.length && (
                             <ReviewPage
@@ -146,14 +159,20 @@ export function ApplicationForm({
                     </div>
                 </div>
             </div>
-            <PageButtons
-                indexAtom={pageIndexAtom}
-                pageCount={pagesAtoms.length}
-                pageStatesAtom={pageStatesAtom}
-                submit={() => {
-                    submitApplication();
-                }}
-            />
+
+            {
+                // mobile page status indicator also includes buttons.
+                !isMobile && (
+                    <PageButtons
+                        indexAtom={pageIndexAtom}
+                        pageCount={pagesAtoms.length}
+                        pageStatesAtom={pageStatesAtom}
+                        submit={() => {
+                            submitApplication();
+                        }}
+                    />
+                )
+            }
         </div>
     );
 }
