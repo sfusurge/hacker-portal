@@ -2,6 +2,8 @@ import { PrimitiveAtom, useAtomValue, useSetAtom, useAtom } from 'jotai';
 import style from './ApplicationPageIndicator.module.css';
 import { finalErrCheckAtom } from '../ApplicationForm';
 import {
+    ArrowLeftIcon,
+    ArrowRightIcon,
     CheckCircleIcon,
     ExclamationCircleIcon,
 } from '@heroicons/react/24/solid';
@@ -10,7 +12,9 @@ import {
     ArrowUpCircleIcon,
 } from '@heroicons/react/24/outline';
 
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
+import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
+import { cn } from '@/lib/utils';
 
 /**
  * completed: every form field that is required is filled.
@@ -27,6 +31,37 @@ function IconHolder({ children }: { children: ReactNode }) {
     return <div className={style.iconHolder}>{children}</div>;
 }
 
+function getPageStatus(pageState: PageFormState, errCheck: boolean) {
+    if (pageState.error && errCheck) {
+        return (
+            <IconHolder>
+                <ExclamationCircleIcon color="red"></ExclamationCircleIcon>
+            </IconHolder>
+        );
+    }
+
+    switch (pageState.state) {
+        case 'completed':
+            return (
+                <IconHolder>
+                    <CheckCircleIcon color="var(--brand-500)" />
+                </IconHolder>
+            );
+        case 'not started':
+            return <div className={style.circle}></div>;
+        case 'started':
+            return (
+                <EllipsisHorizontalCircleIcon
+                    color="white"
+                    style={{ width: '28px' }}
+                ></EllipsisHorizontalCircleIcon>
+            );
+
+        default:
+            throw 'unexpected page status';
+    }
+}
+
 /**
  * For showing which page the user is currently on.
  */
@@ -40,37 +75,6 @@ export function DesktopPageIndicator({
     const pageStates = useAtomValue(pageStateAtoms);
     const setIndex = useSetAtom(indexAtom);
     const [errCheck, setErrCheck] = useAtom(finalErrCheckAtom);
-
-    function getPageStatus(pageState: PageFormState) {
-        if (pageState.error && errCheck) {
-            return (
-                <IconHolder>
-                    <ExclamationCircleIcon color="red"></ExclamationCircleIcon>
-                </IconHolder>
-            );
-        }
-
-        switch (pageState.state) {
-            case 'completed':
-                return (
-                    <IconHolder>
-                        <CheckCircleIcon color="var(--brand-500)" />
-                    </IconHolder>
-                );
-            case 'not started':
-                return <div className={style.circle}></div>;
-            case 'started':
-                return (
-                    <EllipsisHorizontalCircleIcon
-                        color="white"
-                        style={{ width: '28px' }}
-                    ></EllipsisHorizontalCircleIcon>
-                );
-
-            default:
-                throw 'unexpected page status';
-        }
-    }
 
     function tryReview() {
         let valid = true;
@@ -99,7 +103,7 @@ export function DesktopPageIndicator({
                             }}
                             className={style.pageStatusItem}
                         >
-                            {getPageStatus(item)} {item.title}
+                            {getPageStatus(item, errCheck)} {item.title}
                         </button>
 
                         <div
@@ -114,9 +118,79 @@ export function DesktopPageIndicator({
                         width: '28px',
                         height: '28px',
                     }}
-                />{' '}
+                />
                 Review
             </button>
+        </div>
+    );
+}
+
+export function MobilePageIndicator({
+    pageStateAtoms,
+    indexAtom,
+}: {
+    pageStateAtoms: PrimitiveAtom<PageFormState[]>;
+    indexAtom: PrimitiveAtom<number>;
+}) {
+    const pageStates = useAtomValue(pageStateAtoms);
+    const [index, setIndex] = useAtom(indexAtom);
+    const [errCheck, setErrCheck] = useAtom(finalErrCheckAtom);
+
+    const [showPages, setShowPages] = useState(false);
+
+    function getPageTitle(_index: number) {
+        if (_index === pageStates.length) {
+            return 'Review & Submit';
+        }
+
+        return (
+            <span>
+                {index + 1}. {pageStates[index].title}
+            </span>
+        );
+    }
+
+    return (
+        <div className={style.buttonContainer}>
+            <SkewmorphicButton
+                style={{ backgroundColor: 'var(--neutral-700)' }}
+            >
+                <ArrowLeftIcon style={{ width: '36px' }}></ArrowLeftIcon>
+            </SkewmorphicButton>
+
+            <button
+                onClick={() => {
+                    setShowPages(!showPages);
+                }}
+                className={style.currentPage}
+            >
+                {getPageTitle(index)}
+
+                <div className={style.pageStatusContainer}>
+                    {pageStates.map((item, _index) => (
+                        <button
+                            key={_index}
+                            className={cn({
+                                [style.pageButton]: true,
+                                [style.focus]: _index === index,
+                            })}
+                            onClick={() => {
+                                setIndex(_index);
+                                setShowPages(false);
+                            }}
+                        >
+                            {getPageTitle(_index)}
+                        </button>
+                    ))}
+
+                    <button>{getPageTitle(pageStates.length)}</button>
+                </div>
+            </button>
+            <SkewmorphicButton
+                style={{ backgroundColor: 'var(--neutral-700)' }}
+            >
+                <ArrowRightIcon style={{ width: '36px' }}></ArrowRightIcon>
+            </SkewmorphicButton>
         </div>
     );
 }

@@ -92,32 +92,20 @@
     align-items: center;
     width: 100%;
     margin-top: 12px;
-
-    --skewMorphic: 0px 1px 0px 0px rgba(255, 255, 255, 0.24) inset,
-        0px 0px 0px 1px rgba(255, 255, 255, 0.12) inset;
 }
 
-.button {
-    border-radius: 8px;
-    box-shadow: var(--skewMorphic);
-    font-size: 16px;
-    padding: 14px 16px;
-    line-height: 16px;
-    transition: filter 400ms ease-out;
-}
-
-.button:hover {
-    filter: brightness(1.1);
-}
-.button:active {
-    filter: brightness(0.95);
-}
 .prevButton {
     background-color: var(--neutral-700);
 }
 
 .nextButton {
-    border-radius: 8px;
-    box-shadow: var(--skewMorphic);
     background-color: var(--brand-700);
+}
+
+.homeButton {
+    padding: 12px;
+    font-size: 16px;
+    align-self: flex-start;
+    display: flex;
+    gap: 0.75rem;
 }

@@ -3,12 +3,9 @@ import {
     ComponentProps,
     CSSProperties,
     forwardRef,
-    useCallback,
-    useEffect,
     useImperativeHandle,
     useMemo,
     useRef,
-    useState,
 } from 'react';
 import style from './input.module.css';
 const Input = forwardRef<HTMLInputElement, ComponentProps<'input'>>(

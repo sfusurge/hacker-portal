@@ -17,12 +17,10 @@ import style from './ApplicationForm.module.css';
 import { TextLineInput } from './application_question_fields/TextLineInput';
 import { ComponentProps, useEffect, useMemo, useRef, useState } from 'react';
 import { Label } from '@/components/ui/label/label';
-import { Button } from '@/components/ui/button';
 import { isApplicationQuestionFilled } from './application_question_fields/shared';
 import { NumberInput } from './application_question_fields/NumberInput';
 import { RadioInput } from './application_question_fields/RadioInput';
 import { CheckBoxInput } from './application_question_fields/CheckboxInput';
-import { CheckboxGroup } from '@/components/ui/checkboxGroup/CheckBoxGroup';
 import { CheckBoxGroupInput } from './application_question_fields/CheckboxGroupInput';
 import { TextAreaInput } from './application_question_fields/TextAreaInput';
 import { ReviewPage } from './ReviewPage';
@@ -31,6 +29,9 @@ import {
     DesktopPageIndicator,
 } from './PageStatus/ApplicationPageIndicator';
 import { cn } from '../utils';
+import { ArrowLeftIcon } from '@heroicons/react/24/solid';
+import { useRouter } from 'next/navigation';
+import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -105,8 +106,19 @@ export function ApplicationForm({
     const pageStateAtomsAtom = splitAtom(pageStatesAtom);
     const [pageStateAtoms] = useAtom(pageStateAtomsAtom);
 
+    const router = useRouter();
+
     return (
         <div className={style.appFormRoot}>
+            <button
+                className={style.homeButton}
+                onClick={() => {
+                    router.back(); // TODO redirect back to dashboard
+                }}
+            >
+                <ArrowLeftIcon style={{ width: '24px' }}></ArrowLeftIcon>
+                Dashboard
+            </button>
             <div className={style.appFormWrapper}>
                 <div className={style.appFormContent}>
                     <DesktopPageIndicator
@@ -364,47 +376,47 @@ function PageButtons({
                 Progress saved locally.
             </span>
             {index > 0 && (
-                <button
+                <SkewmorphicButton
                     onClick={() => {
                         if (index > 0) {
                             setIndex(index - 1);
                         }
                     }}
-                    className={cn(style.button, style.prevButton)}
+                    className={style.prevButton}
                 >
                     Previous
-                </button>
+                </SkewmorphicButton>
             )}
 
             {index < pageCount - 1 && (
-                <button
+                <SkewmorphicButton
                     onClick={() => {
                         if (index < pageCount) {
                             setIndex(index + 1);
                         }
                     }}
-                    className={cn(style.button, style.nextButton)}
+                    className={style.nextButton}
                 >
                     Next
-                </button>
+                </SkewmorphicButton>
             )}
             {index === pageCount - 1 && (
-                <button
+                <SkewmorphicButton
                     onClick={tryReview}
-                    className={cn(style.button, style.nextButton)}
+                    className={style.nextButton}
                 >
                     Review Application
-                </button>
+                </SkewmorphicButton>
             )}
             {index === pageCount && (
-                <button
-                    className={cn(style.button, style.nextButton)}
+                <SkewmorphicButton
+                    className={style.nextButton}
                     onClick={() => {
                         submit && submit();
                     }}
                 >
                     Submit!
-                </button>
+                </SkewmorphicButton>
             )}
         </div>
     );

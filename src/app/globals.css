@@ -78,6 +78,7 @@ body {
 
     /* background */
     --background-brand-focus: var(--brand-950_60);
+    --background-brand-secondary: var(--brand-900);
     --background-neutral-secondary: var(--neutral-800_60);
 
     /* outline */
