@@ -55,8 +55,9 @@
 }
 
 .textinput:focus {
-    background-color: var(--background-brand-focus);
-    border-color: var(--border-brand-primary);
+    /* outline: 2px solid var(--brand-500); */
+    outline-offset: 2px;
+    border-color: var(--brand-500);
     outline: none;
 }
 .textinput::placeholder {
