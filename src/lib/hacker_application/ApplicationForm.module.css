@@ -33,6 +33,7 @@
     border-radius: 12px;
 }
 .appFormContent {
+    position: relative;
     display: flex;
     flex-direction: row;
     gap: 0;

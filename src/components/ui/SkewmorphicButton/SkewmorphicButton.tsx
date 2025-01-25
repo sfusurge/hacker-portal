@@ -8,7 +8,11 @@ export const SkewmorphicButton = forwardRef<
     ComponentProps<'button'>
 >(({ ...props }, ref) => {
     return (
-        <button ref={ref} className={cn(props.className, style.button)}>
+        <button
+            ref={ref}
+            {...props}
+            className={cn(props.className, style.button)}
+        >
             {props.children}
         </button>
     );

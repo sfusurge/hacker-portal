@@ -6,13 +6,14 @@ import {
     ArrowRightIcon,
     CheckCircleIcon,
     ExclamationCircleIcon,
+    ChevronUpIcon,
 } from '@heroicons/react/24/solid';
 import {
     EllipsisHorizontalCircleIcon,
     ArrowUpCircleIcon,
 } from '@heroicons/react/24/outline';
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { cn } from '@/lib/utils';
 
@@ -145,7 +146,7 @@ export function MobilePageIndicator({
 
         return (
             <span>
-                {index + 1}. {pageStates[index].title}
+                {_index + 1}. {pageStates[_index].title}
             </span>
         );
     }
@@ -172,6 +173,30 @@ export function MobilePageIndicator({
         setIndex(index + incre);
     }
 
+    // click outside detection
+    const pageContainerRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        function clickOutside(e: MouseEvent | TouchEvent) {
+            const container = pageContainerRef.current;
+
+            if (
+                container &&
+                !container.contains(e.target as Node) &&
+                !e.defaultPrevented
+            ) {
+                setShowPages(false);
+            }
+        }
+        // third arg is true, "useCapture"
+        // detects events from topdown instead of bottom up of the dom tree
+        document.addEventListener('mousedown', clickOutside, true);
+        document.addEventListener('touchstart', clickOutside, true);
+        return () => {
+            document.removeEventListener('mousedown', clickOutside);
+            document.removeEventListener('touchstart', clickOutside);
+        };
+    }, []);
+
     return (
         <div className={style.navContainer}>
             <SkewmorphicButton
@@ -181,36 +206,62 @@ export function MobilePageIndicator({
                 }}
                 disabled={index === 0}
             >
-                <ArrowLeftIcon style={{ width: '36px' }}></ArrowLeftIcon>
+                <ArrowLeftIcon style={{ width: '24px' }}></ArrowLeftIcon>
             </SkewmorphicButton>
 
-            <div className={style.currentPage}>
+            <div ref={pageContainerRef} className={style.currentPage}>
                 <button
                     onClick={() => {
                         setShowPages(!showPages);
                     }}
                 >
-                    {getPageTitle(index)}
+                    {getPageTitle(index)}{' '}
+                    {
+                        <ChevronUpIcon
+                            style={{
+                                width: '16px',
+                                transform: showPages
+                                    ? ''
+                                    : 'transform:rotate(180deg)',
+                            }}
+                        ></ChevronUpIcon>
+                    }
                 </button>
-                <div className={style.buttonContainer}>
-                    {pageStates.map((item, _index) => (
+
+                {showPages && (
+                    <div className={style.buttonContainer}>
+                        {pageStates.map((item, _index) => (
+                            <button
+                                key={_index}
+                                className={cn({
+                                    [style.pageButton]: true,
+                                    [style.focus]: _index === index,
+                                })}
+                                onClick={() => {
+                                    setIndex(_index);
+                                    setShowPages(false);
+                                }}
+                            >
+                                {getPageStatus(item, errCheck)}
+                                {getPageTitle(_index)}
+                            </button>
+                        ))}
+
                         <button
-                            key={_index}
                             className={cn({
                                 [style.pageButton]: true,
-                                [style.focus]: _index === index,
+                                [style.focus]: index === pageStates.length,
                             })}
                             onClick={() => {
-                                setIndex(_index);
-                                setShowPages(false);
+                                tryReview();
                             }}
                         >
-                            {getPageTitle(_index)}
+                            <div style={{ width: '28px' }} />{' '}
+                            {pageStates.length + 1}.{' '}
+                            {getPageTitle(pageStates.length)}
                         </button>
-                    ))}
-
-                    <button>{getPageTitle(pageStates.length)}</button>
-                </div>
+                    </div>
+                )}
             </div>
             <SkewmorphicButton
                 style={{ backgroundColor: 'var(--neutral-700)' }}
@@ -219,7 +270,7 @@ export function MobilePageIndicator({
                 }}
                 disabled={index === pageStates.length}
             >
-                <ArrowRightIcon style={{ width: '36px' }}></ArrowRightIcon>
+                <ArrowRightIcon style={{ width: '24px' }}></ArrowRightIcon>
             </SkewmorphicButton>
         </div>
     );
