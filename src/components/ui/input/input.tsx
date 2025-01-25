@@ -132,4 +132,6 @@ export const FormTextInput = forwardRef<
     }
 );
 
+FormTextInput.displayName = 'FormTextInput';
+
 export { Input };

@@ -1,14 +1,15 @@
 'use client';
 
 import { ApplicationForm } from '@/lib/hacker_application/ApplicationForm';
-import { applicationSet } from '@/lib/hacker_application/applicationQuestionSet';
+import { JOURNEY_HACK_QUESTIONS } from '@/lib/hacker_application/applicationQuestionSet';
 import { ApplicationData } from '@/lib/hacker_application/types';
+import { trpc } from '@/trpc/client';
 import { Provider, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 
 const questionSetAtom = atomWithStorage(
     'demo question set',
-    structuredClone(applicationSet),
+    structuredClone(JOURNEY_HACK_QUESTIONS),
     {
         getItem(key, initialValue) {
             const obj: ApplicationData = JSON.parse(
@@ -45,25 +46,70 @@ export default function ApplicationTest() {
 }
 
 function ApplicationWithProvider() {
+    const submitApplication = trpc.applications.submitApplication.useMutation();
+
     const questions = useAtomValue(questionSetAtom);
+
     return (
         <div>
             <ApplicationForm
                 appDataAtom={questionSetAtom}
                 submitApplication={() => {
-                    console.log('Submitting!!!');
                     console.log(questions);
+
+                    const response = questions.pages
+                        .flatMap((page) => page.questions)
+                        .map((question) => {
+                            const questionId = question.questionId;
+                            const type = question.type;
+
+                            if (type === 'multiple-checkbox') {
+                                return {
+                                    questionId,
+                                    value: question.choices
+                                        .filter(({ value }) => value)
+                                        .map(({ data }) => data),
+                                };
+                            }
+
+                            if (type === 'name') {
+                                return {
+                                    questionId,
+                                    value: `${question.firstName} ${question.lastName}`,
+                                };
+                            }
+
+                            return {
+                                questionId,
+                                value: question.value,
+                            };
+                        })
+                        .reduce(
+                            (response, { questionId, value }) => {
+                                response[questionId] = value;
+
+                                return response;
+                            },
+                            {} as Record<string, any>
+                        );
+
+                    console.log(`Submitting ${JSON.stringify(response)}`);
+
+                    submitApplication.mutate({
+                        hackathonId: 1,
+                        response: response,
+                    });
                 }}
             ></ApplicationForm>
-            {/* <pre
-        style={{
-          width: '700px',
-          height: '800px',
-          overflow: 'scroll',
-        }}
-      >
-        <code>{JSON.stringify(questions, undefined, 2)}</code>
-      </pre> */}
+            <pre
+                style={{
+                    width: '700px',
+                    height: '800px',
+                    overflow: 'scroll',
+                }}
+            >
+                <code>{JSON.stringify(questions, undefined, 2)}</code>
+            </pre>
         </div>
     );
 }
