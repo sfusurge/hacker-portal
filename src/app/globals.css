@@ -2,57 +2,99 @@
 @tailwind components;
 @tailwind utilities;
 @layer base {
-  :root {
-    --radius: 0.5rem;
-    color-scheme: dark;
-  }
+    :root {
+        --radius: 0.5rem;
+        color-scheme: dark;
+    }
 }
 
 .large-dashes {
-  border-top: 1px dashed rgba(75, 85, 99, 0.5);
-  border-left: 2px dashed rgba(75, 85, 99, 0.5);
-  border-right: 2px dashed rgba(75, 85, 99, 0.5);
-  border-bottom: 1px dashed rgba(75, 85, 99, 0.5);
-  border-image: repeating-linear-gradient(
-      to right,
-      rgba(75, 85, 99, 0.5) 0,
-      rgba(75, 85, 99, 0.5) 10px,
-      transparent 10px,
-      transparent 20px
-    )
-    1;
+    border-top: 1px dashed rgba(75, 85, 99, 0.5);
+    border-left: 2px dashed rgba(75, 85, 99, 0.5);
+    border-right: 2px dashed rgba(75, 85, 99, 0.5);
+    border-bottom: 1px dashed rgba(75, 85, 99, 0.5);
+    border-image: repeating-linear-gradient(
+            to right,
+            rgba(75, 85, 99, 0.5) 0,
+            rgba(75, 85, 99, 0.5) 10px,
+            transparent 10px,
+            transparent 20px
+        )
+        1;
 }
 
 .large-dashes-vertical {
-  border-left-width: 2px;
-  border-left-style: dashed;
-  border-color: rgba(75, 85, 99, 0.5); /* rgba value for opacity */
-  border-image: repeating-linear-gradient(
-      to bottom,
-      rgba(75, 85, 99, 0.5) 0,
-      rgba(75, 85, 99, 0.5) 10px,
-      transparent 10px,
-      transparent 20px
-    )
-    1;
-}
-
-.resizer {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 5px;
-  cursor: col-resize;
-  z-index: 1;
-  background-color: transparent;
-  transition: background-color 0.2s;
+    border-left-width: 2px;
+    border-left-style: dashed;
+    border-color: rgba(75, 85, 99, 0.5); /* rgba value for opacity */
+    border-image: repeating-linear-gradient(
+            to bottom,
+            rgba(75, 85, 99, 0.5) 0,
+            rgba(75, 85, 99, 0.5) 10px,
+            transparent 10px,
+            transparent 20px
+        )
+        1;
 }
 
 .resizer:hover {
-  background-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.3);
 }
 
 .resizer.isResizing {
-  background-color: rgba(255, 255, 255, 0.6);
+    background-color: rgba(255, 255, 255, 0.6);
+}
+
+body {
+    /* ==== COLORS ==== */
+
+    /* Brand */
+    --brand-400: #818cf8;
+    --brand-400_60: color-mix(in srgb, var(--brand-400) 60%, transparent);
+    --brand-500: #6466f1;
+    --brand-700: #4338ca;
+    --brand-900: #302e81;
+    --brand-950: #1d1b4b;
+    --brand-950_60: color-mix(in srgb, var(--brand-950) 60%, transparent);
+
+    /* Neutral */
+    --neutral-600: #525252;
+    --neutral-600_60: color-mix(in srgb, var(--neutral-600) 60%, transparent);
+    --neutral-600_30: color-mix(in srgb, var(--neutral-600) 30%, transparent);
+    --neutral-700: #404040;
+    --neutral-800: #262626;
+    --neutral-800_60: color-mix(in srgb, var(--neutral-800) 60%, transparent);
+    --neutral-900: #171717;
+    --neutral-925: #111111;
+    --neutral-950: #0a0a0a;
+
+    /* Danger */
+    --danger-500: #ef4444;
+
+    /* ==== END COLORS ==== */
+
+    /* ==== SEMANTICS ==== */
+
+    /* Text */
+    --text-brand-primary: var(--brand-400);
+    --text-secondary: rgba(255, 255, 255, 0.6);
+    --text-tertiary: rgba(255, 255, 255, 0.3);
+
+    /* border */
+    --border-brand-primary: var(--brand-900);
+    --border-neutral-secondary: var(--neutral-600_60);
+    --border-neutral-tertiary: var(--neutral-600_30);
+
+    /* background */
+    --background-brand-focus: var(--brand-950_60);
+    --background-brand-secondary: var(--brand-900);
+    --background-neutral-secondary: var(--neutral-800_60);
+
+    /* outline */
+    --outline-brand-primary: var(--brand-500);
+
+    /* ==== END SEMANTICS ====  */
+
+    font-size: 16px;
+    background-color: var(--neutral-950);
 }

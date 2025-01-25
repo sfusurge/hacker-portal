@@ -1,0 +1,5 @@
+.required::after {
+    content: '*';
+    color: var(--brand-500);
+    margin-left: 0.4rem;
+}
