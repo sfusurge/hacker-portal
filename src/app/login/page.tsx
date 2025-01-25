@@ -1,37 +1,34 @@
+'use client';
+
 import Image from 'next/image';
+import { Button } from '@/components/ui/Button';
 
 export default function Login() {
     return (
         <div id="auth" className="w-screen bg-neutral-925 h-screen p-6">
-            <a
-                href=""
-                className="h-11 text-white block text-center flex items-center justify-center bg-neutral-800/60 hover:bg-neutral-750/60 w-full rounded-lg border border-box border-neutral-600/60 transition-colors active:bg-neutral/700/60"
-            >
-                <div className="trailing-icon pl-3">
-                    <Image
-                        src="/icons/google.svg"
-                        alt="Google logo"
-                        width={20}
-                        height={20}
-                    ></Image>
-                </div>
-                <span className="px-4 font-medium">Continue with Google</span>
-            </a>
+            <div className="flex flex-col gap-4 justify-end h-full">
+                <Button
+                    variant="default"
+                    hierarchy="secondary"
+                    size="cozy"
+                    className="w-full"
+                    leadingIcon="/icons/google.svg"
+                    leadingIconAlt="Google logo"
+                >
+                    Continue with Google
+                </Button>
 
-            <a
-                href=""
-                className="h-11 text-white block text-center flex items-center justify-center bg-neutral-800/60 hover:bg-neutral-750/60 w-full rounded-lg border border-box border-neutral-600/60 transition-colors active:bg-neutral/700/60"
-            >
-                <div className="trailing-icon pl-3">
-                    <Image
-                        src="/icons/github.svg"
-                        alt="Github logo"
-                        width={20}
-                        height={20}
-                    ></Image>
-                </div>
-                <span className="px-4 font-medium">Continue with GitHub</span>
-            </a>
+                <Button
+                    variant="default"
+                    hierarchy="secondary"
+                    size="cozy"
+                    className="w-full"
+                    leadingIcon="/icons/github.svg"
+                    leadingIconAlt="GitHub logo"
+                >
+                    Continue with GitHub
+                </Button>
+            </div>
         </div>
     );
 }
