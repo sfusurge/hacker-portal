@@ -220,9 +220,7 @@ export function MobilePageIndicator({
                         <ChevronUpIcon
                             style={{
                                 width: '16px',
-                                transform: showPages
-                                    ? ''
-                                    : 'transform:rotate(180deg)',
+                                transform: showPages ? '' : 'rotate(180deg)',
                             }}
                         ></ChevronUpIcon>
                     }

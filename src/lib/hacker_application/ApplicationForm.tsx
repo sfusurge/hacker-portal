@@ -111,7 +111,7 @@ export function ApplicationForm({
 
     // mobile conditional render
     const [screenWidth, _] = useWindowSize();
-    const isMobile = useMemo(() => screenWidth < 700, [screenWidth]);
+    const isMobile = useMemo(() => screenWidth <= 768, [screenWidth]);
 
     return (
         <div className={style.appFormRoot}>

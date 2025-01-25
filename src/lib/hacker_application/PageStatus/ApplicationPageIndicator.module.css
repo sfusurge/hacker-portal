@@ -102,7 +102,7 @@ Use pseudo element to avoid backdrop-filter "root"
 .currentPage {
     position: relative;
     flex: 1;
-    border-radius: 20px;
+    border-radius: 200px;
     display: flex;
     justify-content: center;
     gap: 0.5rem;

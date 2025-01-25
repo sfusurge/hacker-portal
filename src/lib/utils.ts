@@ -17,6 +17,9 @@ export function useWindowSize() {
         }
         window.addEventListener('resize', updateSize);
 
+        // run it once to get the size for initial render
+        updateSize();
+
         return () => {
             window.removeEventListener('resize', updateSize);
         };
