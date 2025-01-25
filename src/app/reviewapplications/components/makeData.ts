@@ -30,15 +30,33 @@ export const allMajors = [
     'Other..',
 ];
 
+export const allDietaryRestrictions = [
+    'Halal',
+    'Vegetarian',
+    'Vegan',
+    'Pescatarian',
+    'Gluten-free',
+    'Kosher',
+    'Other..',
+];
+
 const newApplicant = (): Applicant => {
     return {
         id: faker.number.int(6),
-        name: faker.person.fullName(),
         status: faker.helpers.shuffle(['Pending', 'Accepted', 'Rejected'])[0]!,
+        tempStatus: faker.helpers.shuffle([
+            'Pending',
+            'Accepted',
+            'Rejected',
+        ])[0]!,
         applicationDate: faker.date.anytime(),
+        name: faker.person.fullName(),
         email: faker.internet.email(),
+        studentNumber: faker.number.int(),
         major: faker.helpers.shuffle(allMajors)[0]!,
-        enrollmentYear: faker.number.int(4),
+        enrollmentYear: faker.date
+            .birthdate({ max: 4, min: 0, mode: 'age' })
+            .getFullYear(),
         participantType: faker.helpers.shuffle([
             'Individual',
             'Individual looking for a team',
@@ -49,14 +67,9 @@ const newApplicant = (): Applicant => {
             faker.person.firstName(),
             faker.person.firstName(),
         ],
-        discordUsername: faker.internet.username(),
-        attendancePeriod: faker.helpers.shuffle(allAttendancePeriods)[0]!,
-        attendingWorkshops: [
-            faker.helpers.shuffle(allWorkshops)[0]!,
-            faker.helpers.shuffle(allWorkshops)[0]!,
-            faker.helpers.shuffle(allWorkshops)[0]!,
+        dietaryRestrictions: [
+            faker.helpers.shuffle(allDietaryRestrictions)[0]!,
         ],
-        questions: faker.lorem.words(4),
         photoConsent: faker.datatype.boolean(),
     };
 };

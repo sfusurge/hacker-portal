@@ -14,11 +14,11 @@ export default function SendEmailPage() {
         try {
             for (let i = 0; i < users.length; i++) {
                 sendEmail.mutate({
+                    type: 'REJECTJH2025',
                     user: {
                         id: users[i].id,
                         email: users[i].email,
-                        firstName: users[i].firstName,
-                        lastName: users[i].lastName,
+                        name: users[i].name,
                     },
                 });
             }
