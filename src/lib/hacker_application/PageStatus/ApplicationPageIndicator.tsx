@@ -221,45 +221,48 @@ export function MobilePageIndicator({
                             style={{
                                 width: '16px',
                                 transform: showPages ? '' : 'rotate(180deg)',
+                                transition: 'transform 300ms ease-out',
                             }}
                         ></ChevronUpIcon>
                     }
                 </button>
 
-                {showPages && (
-                    <div className={style.buttonContainer}>
-                        {pageStates.map((item, _index) => (
-                            <button
-                                key={_index}
-                                className={cn({
-                                    [style.pageButton]: true,
-                                    [style.focus]: _index === index,
-                                })}
-                                onClick={() => {
-                                    setIndex(_index);
-                                    setShowPages(false);
-                                }}
-                            >
-                                {getPageStatus(item, errCheck)}
-                                {getPageTitle(_index)}
-                            </button>
-                        ))}
-
+                <div
+                    className={cn(style.buttonContainer, {
+                        [style.visible]: showPages,
+                    })}
+                >
+                    {pageStates.map((item, _index) => (
                         <button
+                            key={_index}
                             className={cn({
                                 [style.pageButton]: true,
-                                [style.focus]: index === pageStates.length,
+                                [style.focus]: _index === index,
                             })}
                             onClick={() => {
-                                tryReview();
+                                setIndex(_index);
+                                setShowPages(false);
                             }}
                         >
-                            <div style={{ width: '28px' }} />{' '}
-                            {pageStates.length + 1}.{' '}
-                            {getPageTitle(pageStates.length)}
+                            {getPageStatus(item, errCheck)}
+                            {getPageTitle(_index)}
                         </button>
-                    </div>
-                )}
+                    ))}
+
+                    <button
+                        className={cn({
+                            [style.pageButton]: true,
+                            [style.focus]: index === pageStates.length,
+                        })}
+                        onClick={() => {
+                            tryReview();
+                        }}
+                    >
+                        <div style={{ width: '28px' }} />{' '}
+                        {pageStates.length + 1}.{' '}
+                        {getPageTitle(pageStates.length)}
+                    </button>
+                </div>
             </div>
             <SkewmorphicButton
                 style={{ backgroundColor: 'var(--neutral-700)' }}

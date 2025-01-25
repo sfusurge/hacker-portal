@@ -136,11 +136,23 @@ Use pseudo element to avoid backdrop-filter "root"
     max-width: 250px;
     z-index: 100;
     left: 50%;
-    transform: translateX(-50%);
     bottom: calc(100% + 10px);
     background-color: var(--background-neutral-secondary);
     padding: 8px;
     font-size: 16px;
+
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 15px);
+    transition:
+        opacity 250ms ease-out,
+        transform 250ms ease-out;
+}
+
+.buttonContainer.visible {
+    opacity: 1;
+    pointer-events: all;
+    transform: translate(-50%, 0);
 }
 
 .buttonContainer::before {

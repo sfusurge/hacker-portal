@@ -110,3 +110,29 @@
     display: flex;
     gap: 0.75rem;
 }
+
+/* mobile */
+@media only screen and (max-width: 786px) {
+    .appFormRoot {
+        padding: 0;
+        border: none;
+        border-radius: 0;
+        margin: 1rem;
+    }
+
+    .appFormWrapper {
+        overflow: visible;
+        border: none;
+        padding: none;
+        background-color: transparent;
+    }
+
+    .appFormContent {
+        overflow: visible;
+    }
+
+    .page {
+        padding: 1rem;
+        padding-bottom: 10rem;
+    }
+}
