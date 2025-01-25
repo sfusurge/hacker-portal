@@ -12,17 +12,17 @@ export const TEST_EMAIL = 'first-last@sfusurge.com';
 export const TEST_PASSWORD_PLAIN_TEXT = 'password123@';
 
 export interface SkipDbCleanUp {
-  skipDbCleanUp: boolean;
+    skipDbCleanUp: boolean;
 }
 
 export interface E2ETestFixture {
-  e2e: boolean;
+    e2e: boolean;
 }
 
 export const itSkipDbCleanUp = it.extend<SkipDbCleanUp>({
-  skipDbCleanUp: true,
+    skipDbCleanUp: true,
 });
 
 export const e2eTest = it.extend<E2ETestFixture>({
-  e2e: true,
+    e2e: true,
 });

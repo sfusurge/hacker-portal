@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import SessionProvider from './SessionProvider';
 
 interface NextAuthSessionProviderProps {
-  readonly children: React.ReactNode;
+    readonly children: React.ReactNode;
 }
 
 /**
@@ -32,10 +32,10 @@ interface NextAuthSessionProviderProps {
  * ```
  */
 async function NextAuthSessionProvider({
-  children,
+    children,
 }: NextAuthSessionProviderProps) {
-  const session = await getServerSession();
-  return <SessionProvider session={session}>{children}</SessionProvider>;
+    const session = await getServerSession();
+    return <SessionProvider session={session}>{children}</SessionProvider>;
 }
 
 export { NextAuthSessionProvider };

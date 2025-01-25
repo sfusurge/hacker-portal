@@ -1,86 +1,83 @@
 import { createCaller } from '@/server/appRouter';
 import { assert, describe, expect, it } from 'vitest';
 import {
-  itSkipDbCleanUp,
-  TEST_FIRST_NAME,
-  TEST_LAST_NAME,
-  TEST_EMAIL,
-  TEST_PASSWORD_PLAIN_TEXT,
+    itSkipDbCleanUp,
+    TEST_FIRST_NAME,
+    TEST_LAST_NAME,
+    TEST_EMAIL,
+    TEST_PASSWORD_PLAIN_TEXT,
 } from '../utils';
 
 describe('User CRUDL tests', () => {
-  const trpcClient = createCaller({});
+    const trpcClient = createCaller({});
 
-  it('when user is created, getUsers returns it with correct fields', async () => {
-    await trpcClient.users.addUser({
-      firstName: TEST_FIRST_NAME,
-      lastName: TEST_LAST_NAME,
-      email: TEST_EMAIL,
-      password: TEST_PASSWORD_PLAIN_TEXT,
-    });
-
-    const users = await trpcClient.users.getUsers();
-
-    assert.equal(users.length, 1);
-
-    const [user] = users;
-
-    assert.isNotNull(user.id);
-    assert.equal(user.firstName, TEST_FIRST_NAME);
-    assert.equal(user.lastName, TEST_LAST_NAME);
-    assert.equal(user.email, TEST_EMAIL);
-    // Assert password is hashed
-    assert.notEqual(user.password, TEST_PASSWORD_PLAIN_TEXT);
-  });
-
-  it("when user is deleted, getUsers doesn't return it", async () => {
-    await trpcClient.users.addUser({
-      firstName: TEST_FIRST_NAME,
-      lastName: TEST_LAST_NAME,
-      email: TEST_EMAIL,
-      password: TEST_PASSWORD_PLAIN_TEXT,
-    });
-
-    const users = await trpcClient.users.getUsers();
-
-    assert.equal(users.length, 1);
-
-    await trpcClient.users.deleteUser({
-      id: users[0].id,
-    });
-
-    const userssAfterDelete = await trpcClient.users.getUsers();
-
-    assert.isEmpty(userssAfterDelete);
-  });
-
-  itSkipDbCleanUp(
-    'when user id is not found, delete still succeeds',
-    async () => {
-      assert.doesNotThrow(async () => {
-        await trpcClient.users.deleteUser({
-          id: `random_id_${Math.random()}`,
+    it('when user is created, getUsers returns it with correct fields', async () => {
+        await trpcClient.users.addUser({
+            firstName: TEST_FIRST_NAME,
+            lastName: TEST_LAST_NAME,
+            email: TEST_EMAIL,
         });
-      });
-    }
-  );
 
-  itSkipDbCleanUp.for([
-    {
-      scenario: 'invalid email',
-      input: {
-        firstName: TEST_FIRST_NAME,
-        lastName: TEST_LAST_NAME,
-        email: 'invalid_email',
-        password: TEST_PASSWORD_PLAIN_TEXT,
-      },
-    },
-  ])(
-    'when create user input is invalid [$scenario], throws exception',
-    async ({ input }) => {
-      await expect(() =>
-        trpcClient.users.addUser(input)
-      ).rejects.toThrowError();
-    }
-  );
+        const users = await trpcClient.users.getUsers();
+
+        assert.equal(users.length, 1);
+
+        const [user] = users;
+
+        assert.isNotNull(user.id);
+        assert.equal(user.firstName, TEST_FIRST_NAME);
+        assert.equal(user.lastName, TEST_LAST_NAME);
+        assert.equal(user.email, TEST_EMAIL);
+        // Assert password is hashed
+    });
+
+    it("when user is deleted, getUsers doesn't return it", async () => {
+        await trpcClient.users.addUser({
+            firstName: TEST_FIRST_NAME,
+            lastName: TEST_LAST_NAME,
+            email: TEST_EMAIL,
+        });
+
+        const users = await trpcClient.users.getUsers();
+
+        assert.equal(users.length, 1);
+
+        await trpcClient.users.deleteUser({
+            id: users[0].id,
+        });
+
+        const userssAfterDelete = await trpcClient.users.getUsers();
+
+        assert.isEmpty(userssAfterDelete);
+    });
+
+    itSkipDbCleanUp(
+        'when user id is not found, delete still succeeds',
+        async () => {
+            assert.doesNotThrow(async () => {
+                await trpcClient.users.deleteUser({
+                    id: crypto.randomUUID(),
+                });
+            });
+        }
+    );
+
+    itSkipDbCleanUp.for([
+        {
+            scenario: 'invalid email',
+            input: {
+                firstName: TEST_FIRST_NAME,
+                lastName: TEST_LAST_NAME,
+                email: 'invalid_email',
+                password: TEST_PASSWORD_PLAIN_TEXT,
+            },
+        },
+    ])(
+        'when create user input is invalid [$scenario], throws exception',
+        async ({ input }) => {
+            await expect(() =>
+                trpcClient.users.addUser(input)
+            ).rejects.toThrowError();
+        }
+    );
 });
