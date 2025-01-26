@@ -1,5 +1,9 @@
 import clsx from 'clsx';
 import { NavLink } from './NavLink';
+import { HomeIcon } from '@heroicons/react/24/outline';
+import { UserGroupIcon } from '@heroicons/react/24/outline';
+import { CalendarDaysIcon } from '@heroicons/react/24/outline';
+import { BellAlertIcon } from '@heroicons/react/24/outline';
 
 interface MobileBottomNavProps {
     className?: string;
@@ -9,16 +13,44 @@ export default function MobileBottomNav({ className }: MobileBottomNavProps) {
     return (
         <div
             className={clsx(
-                'w-screen bg-neutral-900/60 border-t border-t-neutral-600/30 px-2 py-2 h-20 backdrop-blur-xl',
+                'w-screen flex flex-row gap-2 bg-neutral-900/60 border-t border-t-neutral-600/30 px-2 py-2 h-20 backdrop-blur-xl',
                 className
             )}
         >
             <NavLink
                 href="#"
                 label="Home"
-                icon="/icons/github.svg"
+                icon={<HomeIcon></HomeIcon>}
                 iconAlt="Home logo"
+                platform="mobile"
                 active={true}
+            ></NavLink>
+
+            <NavLink
+                href="#"
+                label="Team"
+                icon={<UserGroupIcon></UserGroupIcon>}
+                iconAlt="Team logo"
+                platform="mobile"
+                active={false}
+            ></NavLink>
+
+            <NavLink
+                href="#"
+                label="Schedule"
+                icon={<CalendarDaysIcon></CalendarDaysIcon>}
+                iconAlt="Schedule logo"
+                platform="mobile"
+                active={false}
+            ></NavLink>
+
+            <NavLink
+                href="#"
+                label="Alerts"
+                icon={<BellAlertIcon></BellAlertIcon>}
+                iconAlt="Alerts logo"
+                platform="mobile"
+                active={false}
             ></NavLink>
         </div>
     );
