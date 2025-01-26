@@ -13,22 +13,19 @@ interface NavLinkProps {
     iconAlt?: string;
 }
 
-const navLinkVariants = cva(
-    'h-16 text-xs font-medium flex items-center justify-center rounded-lg flex-1',
-    {
-        variants: {
-            variant: {},
-            platform: {
-                desktop: '',
-                mobile: 'flex-col',
-            },
-            active: {
-                true: 'text-white bg-brand-900',
-                false: 'text-white/60',
-            },
+const navLinkVariants = cva('flex items-center rounded-lg flex-1', {
+    variants: {
+        variant: {},
+        platform: {
+            desktop: 'h-11 flex-row text-base gap-3 px-3',
+            mobile: 'h-16 flex-col justify-center text-xs font-medium gap-2',
         },
-    }
-);
+        active: {
+            true: 'text-white bg-brand-900',
+            false: 'text-white/60',
+        },
+    },
+});
 
 export function NavLink({
     className,
@@ -52,7 +49,7 @@ export function NavLink({
             className={cn(navLinkVariants({ className, platform, active }))}
         >
             {icon && iconAlt && (
-                <div className={cn('h-6 w-6 mb-2', iconStyles)}>{icon}</div>
+                <div className={cn('h-6 w-6', iconStyles)}>{icon}</div>
             )}
             <span className="leading-none">{label}</span>
         </Link>
