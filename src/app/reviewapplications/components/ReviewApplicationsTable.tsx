@@ -11,17 +11,16 @@ import {
     getFilteredRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { makeData } from './makeData';
-
 import { sideCardAtom } from '@/app/reviewapplications/page';
 import { useAtom } from 'jotai';
 import { Input } from '@/components/ui/input';
 import { mkConfig, generateCsv, download } from 'export-to-csv';
-import SideCard from '@/app/reviewapplications/components/SideCard';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
+import { DocumentArrowDownIcon } from '@heroicons/react/24/solid';
+import { EnvelopeIcon } from '@heroicons/react/16/solid';
 
 const validEmailTypes = ['WELCOMEJH2025', 'WAITLISTJH2025', 'REJECTJH2025'];
 
@@ -36,7 +35,6 @@ export type Applicant = {
     major: string;
     enrollmentYear: number;
     participantType: string;
-    teamMemberNames: string[];
     dietaryRestrictions: string[];
     photoConsent: boolean;
 };
@@ -48,12 +46,25 @@ type ReviewApplicationsTableProps = {
 export default function ReviewApplicationsTable({
     toggleSideCard,
 }: ReviewApplicationsTableProps) {
+    const {
+        data: applicationData,
+        isLoading,
+        isError,
+        error,
+    } = trpc.applications.getApplications.useQuery({
+        hackathonId: 1, // Adjust based on the desired hackathon ID
+        userId: undefined, // You can pass a userId if necessary
+        maxResult: 10, // You can adjust this as well
+        nextToken: '1', // Pagination token, can be adjusted
+    });
+
     const sendEmail = trpc.emails.sendEmail.useMutation();
     const [isEmailPopupOpen, setIsEmailPopupOpen] = useState(false);
     const [emailType, setEmailType] = useState('');
     const { toast } = useToast();
 
     const toggleEmailPopup = () => {
+        console.log(applicationData);
         setIsEmailPopupOpen(!isEmailPopupOpen);
     };
 
@@ -94,8 +105,8 @@ export default function ReviewApplicationsTable({
             studentNumber: 987654321,
             major: 'Computer Science',
             enrollmentYear: 2021,
-            participantType: 'Individual',
-            teamMemberNames: ['Alice', 'Bob', 'Charlie'],
+            // participantType: 'Individual',
+            // teamMemberNames: ['Alice', 'Bob', 'Charlie'],
             dietaryRestrictions: ['Vegetarian'],
             photoConsent: true,
         },
@@ -109,8 +120,8 @@ export default function ReviewApplicationsTable({
             studentNumber: 123456789,
             major: 'Engineering',
             enrollmentYear: 2023,
-            participantType: 'Individual looking for a team',
-            teamMemberNames: ['David', 'Eve', 'Frank'],
+            // participantType: 'Individual looking for a team',
+            // teamMemberNames: ['David', 'Eve', 'Frank'],
             dietaryRestrictions: ['Halal'],
             photoConsent: false,
         },
@@ -124,8 +135,8 @@ export default function ReviewApplicationsTable({
             studentNumber: 456123789,
             major: 'Math',
             enrollmentYear: 2020,
-            participantType: 'Team (4 max)',
-            teamMemberNames: ['Grace', 'Heidi', 'Ivan'],
+            // participantType: 'Team (4 max)',
+            // teamMemberNames: ['Grace', 'Heidi', 'Ivan'],
             dietaryRestrictions: ['Vegan'],
             photoConsent: true,
         },
@@ -159,7 +170,7 @@ export default function ReviewApplicationsTable({
                 ref={ref}
                 className={`${className} cursor-pointer`}
                 {...rest}
-                onClick={(e) => e.stopPropagation()} // Prevents the row click event
+                onClick={(e) => e.stopPropagation()}
             />
         );
     }
@@ -208,7 +219,6 @@ export default function ReviewApplicationsTable({
                 </span>
             ),
             cell: (info) => info.getValue(),
-            // footer: (props) => props.column.id,
             size: 150, // Initial width
             minSize: 100, // Minimum width
         },
@@ -231,7 +241,6 @@ export default function ReviewApplicationsTable({
                     </span>
                 );
             },
-            // footer: (props) => props.column.id,
             size: 120,
             minSize: 120,
         },
@@ -254,70 +263,60 @@ export default function ReviewApplicationsTable({
                     </span>
                 );
             },
-            // footer: (props) => props.column.id,
             size: 150,
             minSize: 150,
         },
         {
             accessorKey: 'applicationDate',
             header: () => 'Application Date',
-            // footer: (props) => props.column.id,
             size: 200,
             minSize: 150,
         },
         {
             accessorKey: 'email',
             header: () => 'Email',
-            // footer: (props) => props.column.id,
             size: 200,
             minSize: 150,
         },
         {
             accessorKey: 'studentNumber',
             header: () => 'Student Number',
-            // footer: (props) => props.column.id,
             size: 200,
             minSize: 150,
         },
         {
             accessorKey: 'major',
             header: () => 'Major',
-            // footer: (props) => props.column.id,
             size: 150,
             minSize: 100,
         },
         {
             accessorKey: 'enrollmentYear',
             header: () => 'Enrollment Year',
-            // footer: (props) => props.column.id,
             size: 150,
             minSize: 150,
         },
-        {
-            accessorKey: 'participantType',
-            header: () => 'Participant Type',
-            // footer: (props) => props.column.id,
-            size: 150,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'teamMemberNames',
-            header: () => 'Team Member Names',
-            // footer: (props) => props.column.id,
-            size: 200,
-            minSize: 150,
-        },
+        // {
+        //     accessorKey: 'participantType',
+        //     header: () => 'Participant Type',
+        //     size: 150,
+        //     minSize: 100,
+        // },
+        // {
+        //     accessorKey: 'teamMemberNames',
+        //     header: () => 'Team Member Names',
+        //     size: 200,
+        //     minSize: 150,
+        // },
         {
             accessorKey: 'dietaryRestrictions',
             header: () => 'Dietary Restrictions',
-            // footer: (props) => props.column.id,
             size: 200,
             minSize: 150,
         },
         {
             accessorKey: 'photoConsent',
             header: () => 'Photo Consent',
-            // footer: (props) => props.column.id,
             size: 150,
             minSize: 100,
         },
@@ -363,8 +362,8 @@ export default function ReviewApplicationsTable({
             email: row.original.email,
             major: row.original.major,
             enrollmentYear: row.original.enrollmentYear,
-            participantType: row.original.participantType,
-            teamMemberNames: row.original.teamMemberNames.join(', '),
+            // participantType: row.original.participantType,
+            // teamMemberNames: row.original.teamMemberNames.join(', '),
             dietaryRestrictions: row.original.dietaryRestrictions.join(', '),
             photoConsent: row.original.photoConsent ? 'Yes' : 'No',
         }));
@@ -381,7 +380,7 @@ export default function ReviewApplicationsTable({
     };
 
     return (
-        <div className=" bg-neutral-900 rounded-xl overflow-hidden">
+        <div className="overflow-hidden">
             {/* Global Search */}
             <div className="flex p-4 gap-3 justify-center">
                 <Input
@@ -391,215 +390,238 @@ export default function ReviewApplicationsTable({
                     onChange={(e) => setGlobalFilter(e.target.value)}
                     className="bg-neutral-800 text-white border border-neutral-700/18 w-full"
                 />
-
-                <button
-                    className="px-4 py-2 text-sm bg-neutral-800/60 text-white rounded-md whitespace-nowrap"
-                    type="button"
-                    onClick={() => exportExcel()}
-                >
-                    Export to CSV
-                </button>
-
-                <button
-                    className="px-4 py-2 text-sm bg-neutral-800/60 text-white rounded-md whitespace-nowrap"
-                    type="button"
-                    onClick={() => toggleEmailPopup()}
-                >
-                    Send Emails
-                </button>
             </div>
 
             {/* Scrollable table */}
-            <div className="overflow-x-auto">
-                <table
-                    className="text-left w-full"
-                    style={{ tableLayout: 'fixed', width: '100%' }}
-                >
-                    <thead className="bg-neutral-900 text-gray-200 whitespace-nowrap">
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <tr key={headerGroup.id}>
-                                {headerGroup.headers.map((header, index) => (
-                                    <th
-                                        key={header.id}
-                                        colSpan={header.colSpan}
-                                        style={{
-                                            width: header.getSize(),
-                                            minWidth:
-                                                header.column.columnDef.minSize,
-                                        }}
-                                        className={`relative px-4 py-4 text-sm ${
-                                            index === 0
-                                                ? 'sticky left-0 z-20 bg-neutral-900' // First column
-                                                : index === 1
-                                                  ? 'sticky left-[50px] z-20 bg-neutral-900' // Second column
-                                                  : ''
-                                        }`}
-                                    >
-                                        {header.isPlaceholder
-                                            ? null
-                                            : flexRender(
-                                                  header.column.columnDef
-                                                      .header,
-                                                  header.getContext()
-                                              )}
-                                        {header.column.getCanResize() && (
-                                            <div
-                                                onMouseDown={header.getResizeHandler()}
-                                                onTouchStart={header.getResizeHandler()}
-                                                className={`absolute right-0 top-0 bottom-0 w-2 cursor-col-resize ${
-                                                    header.column.getIsResizing()
-                                                        ? 'bg-gray-500'
-                                                        : ''
-                                                }`}
+            <div className="bg-neutral-900 rounded-xl">
+                <div className="overflow-x-auto">
+                    <table
+                        className="text-left w-full"
+                        style={{ tableLayout: 'fixed', width: '100%' }}
+                    >
+                        <thead className="bg-neutral-900 text-gray-200 whitespace-nowrap">
+                            {table.getHeaderGroups().map((headerGroup) => (
+                                <tr key={headerGroup.id}>
+                                    {headerGroup.headers.map(
+                                        (header, index) => (
+                                            <th
+                                                key={header.id}
+                                                colSpan={header.colSpan}
                                                 style={{
-                                                    zIndex: 50,
-                                                }}
-                                            ></div>
-                                        )}
-                                    </th>
-                                ))}
-                            </tr>
-                        ))}
-                    </thead>
-                    <tbody>
-                        {table.getRowModel().rows.map((row) => (
-                            <Fragment key={row.id}>
-                                <tr
-                                    className="cursor-pointer hover:bg-gray-800"
-                                    onClick={() => {
-                                        toggleSideCard();
-                                        setSideCardInfo(row.original);
-                                    }}
-                                >
-                                    {row
-                                        .getVisibleCells()
-                                        .map((cell, index) => (
-                                            <td
-                                                key={cell.id}
-                                                style={{
-                                                    width: cell.column.getSize(),
+                                                    width: header.getSize(),
                                                     minWidth:
-                                                        cell.column.columnDef
+                                                        header.column.columnDef
                                                             .minSize,
                                                 }}
-                                                className={`border-b border-neutral-600/30 text-sm px-4 py-4 bg-neutral-800/60 ${
+                                                className={`relative px-4 py-4 text-sm ${
                                                     index === 0
-                                                        ? 'sticky left-0 z-10 bg-neutral-800' // First column
+                                                        ? 'sticky left-0 z-20 bg-neutral-900' // First column
                                                         : index === 1
-                                                          ? 'sticky left-[50px] z-10 bg-neutral-800' // Second column
+                                                          ? 'sticky left-[50px] z-20 bg-neutral-900' // Second column
                                                           : ''
                                                 }`}
                                             >
-                                                <div
-                                                    className="truncate"
-                                                    style={{
-                                                        whiteSpace: 'nowrap',
-                                                        overflow: 'hidden',
-                                                        textOverflow:
-                                                            'ellipsis',
-                                                    }}
-                                                >
-                                                    {flexRender(
-                                                        cell.column.columnDef
-                                                            .cell,
-                                                        cell.getContext()
-                                                    )}
-                                                </div>
-                                            </td>
-                                        ))}
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(
+                                                          header.column
+                                                              .columnDef.header,
+                                                          header.getContext()
+                                                      )}
+                                                {header.column.getCanResize() && (
+                                                    <div
+                                                        onMouseDown={header.getResizeHandler()}
+                                                        onTouchStart={header.getResizeHandler()}
+                                                        className={`absolute right-0 top-0 bottom-0 w-2 cursor-col-resize ${
+                                                            header.column.getIsResizing()
+                                                                ? 'bg-gray-500'
+                                                                : ''
+                                                        }`}
+                                                        style={{
+                                                            zIndex: 50,
+                                                        }}
+                                                    ></div>
+                                                )}
+                                            </th>
+                                        )
+                                    )}
                                 </tr>
-                            </Fragment>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {/*Footer*/}
-            <div className="flex flex-col gap-4 px-4 py-4 bg-neutral-900">
-                <div className="flex justify-between items-center gap-2">
-                    <div className="text-sm text-white">
-                        {Object.keys(rowSelection).length} of{' '}
-                        {table.getPreFilteredRowModel().rows.length} Rows
-                        Selected
-                    </div>
-
-                    <div className="flex flex-row items-center gap-1">
-                        <header>Rows per page:</header>
-                        <select
-                            value={table.getState().pagination.pageSize}
-                            onChange={(e) => {
-                                table.setPageSize(Number(e.target.value));
-                            }}
-                            className="px-4 py-2 text-sm bg-neutral-800/60 text-white rounded-md"
-                        >
-                            {[10, 20, 30, 40, 50].map((pageSize) => (
-                                <option key={pageSize} value={pageSize}>
-                                    {pageSize}
-                                </option>
                             ))}
-                        </select>
-                    </div>
+                        </thead>
+                        <tbody>
+                            {table.getRowModel().rows.map((row) => (
+                                <Fragment key={row.id}>
+                                    <tr
+                                        className="cursor-pointer hover:bg-gray-800"
+                                        onClick={() => {
+                                            toggleSideCard();
+                                            setSideCardInfo(row.original);
+                                        }}
+                                    >
+                                        {row
+                                            .getVisibleCells()
+                                            .map((cell, index) => (
+                                                <td
+                                                    key={cell.id}
+                                                    style={{
+                                                        width: cell.column.getSize(),
+                                                        minWidth:
+                                                            cell.column
+                                                                .columnDef
+                                                                .minSize,
+                                                    }}
+                                                    className={`border-b border-neutral-600/30 text-sm px-4 py-4 bg-neutral-800 ${
+                                                        index === 0
+                                                            ? 'sticky left-0 z-10 bg-neutral-800' // First column
+                                                            : index === 1
+                                                              ? 'sticky left-[50px] z-10 bg-neutral-800' // Second column
+                                                              : ''
+                                                    }`}
+                                                >
+                                                    <div
+                                                        className="truncate"
+                                                        style={{
+                                                            whiteSpace:
+                                                                'nowrap',
+                                                            overflow: 'hidden',
+                                                            textOverflow:
+                                                                'ellipsis',
+                                                        }}
+                                                    >
+                                                        {flexRender(
+                                                            cell.column
+                                                                .columnDef.cell,
+                                                            cell.getContext()
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            ))}
+                                    </tr>
+                                </Fragment>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
 
-                    <div className="flex flex-row items-center gap-5">
-                        <div className="flex  items-center gap-1">
-                            <div className="flex items-center gap-1">
-                                Page:
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max={table.getPageCount()}
-                                    value={
-                                        table.getState().pagination.pageIndex +
-                                        1
-                                    } // Bind to the current page index
-                                    onChange={(e) => {
-                                        const page = e.target.value
-                                            ? Number(e.target.value) - 1
-                                            : 0;
-                                        table.setPageIndex(page);
-                                    }}
-                                    className="text-center pl-3 py-2 text-sm bg-neutral-800/60 text-white rounded-md"
-                                />
-                            </div>
-                            <span className="flex items-center gap-1">
-                                of {table.getPageCount()}
-                            </span>
+                {/*Footer*/}
+                <div className="flex flex-col gap-4 px-4 py-4 bg-neutral-900">
+                    <div className="flex justify-between items-center gap-2">
+                        <div className="text-sm text-white">
+                            {Object.keys(rowSelection).length} of{' '}
+                            {table.getPreFilteredRowModel().rows.length} Rows
+                            Selected
                         </div>
 
-                        <div className="flex items-center gap-4">
-                            <button
-                                className=""
-                                onClick={() => table.setPageIndex(0)}
-                                disabled={!table.getCanPreviousPage()}
+                        <div className="flex flex-row items-center gap-1">
+                            <header>Rows per page:</header>
+                            <select
+                                value={table.getState().pagination.pageSize}
+                                onChange={(e) => {
+                                    table.setPageSize(Number(e.target.value));
+                                }}
+                                className="px-4 py-2 text-sm bg-neutral-800/60 text-white rounded-md"
                             >
-                                {'<<'}
-                            </button>
-                            <button
-                                className=""
-                                onClick={() => table.previousPage()}
-                                disabled={!table.getCanPreviousPage()}
-                            >
-                                {'<'}
-                            </button>
-                            <button
-                                className=""
-                                onClick={() => table.nextPage()}
-                                disabled={!table.getCanNextPage()}
-                            >
-                                {'>'}
-                            </button>
-                            <button
-                                className=""
-                                onClick={() =>
-                                    table.setPageIndex(table.getPageCount() - 1)
-                                }
-                                disabled={!table.getCanNextPage()}
-                            >
-                                {'>>'}
-                            </button>
+                                {[10, 20, 30, 40, 50].map((pageSize) => (
+                                    <option key={pageSize} value={pageSize}>
+                                        {pageSize}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="flex flex-row items-center gap-5">
+                            <div className="flex  items-center gap-1">
+                                <div className="flex items-center gap-1">
+                                    Page:
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max={table.getPageCount()}
+                                        value={
+                                            table.getState().pagination
+                                                .pageIndex + 1
+                                        } // Bind to the current page index
+                                        onChange={(e) => {
+                                            const page = e.target.value
+                                                ? Number(e.target.value) - 1
+                                                : 0;
+                                            table.setPageIndex(page);
+                                        }}
+                                        className="text-center pl-3 py-2 text-sm bg-neutral-800/60 text-white rounded-md"
+                                    />
+                                </div>
+                                <span className="flex items-center gap-1">
+                                    of {table.getPageCount()}
+                                </span>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <button
+                                    className=""
+                                    onClick={() => table.setPageIndex(0)}
+                                    disabled={!table.getCanPreviousPage()}
+                                >
+                                    {'<<'}
+                                </button>
+                                <button
+                                    className=""
+                                    onClick={() => table.previousPage()}
+                                    disabled={!table.getCanPreviousPage()}
+                                >
+                                    {'<'}
+                                </button>
+                                <button
+                                    className=""
+                                    onClick={() => table.nextPage()}
+                                    disabled={!table.getCanNextPage()}
+                                >
+                                    {'>'}
+                                </button>
+                                <button
+                                    className=""
+                                    onClick={() =>
+                                        table.setPageIndex(
+                                            table.getPageCount() - 1
+                                        )
+                                    }
+                                    disabled={!table.getCanNextPage()}
+                                >
+                                    {'>>'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div className="flex p-4 gap-3 justify-end">
+                <button
+                    className={`px-4 py-2 text-sm rounded-md whitespace-nowrap flex flex-row items-center justify-center gap-2 ${
+                        Object.keys(rowSelection).length === 0
+                            ? 'bg-neutral-500/18 text-white/18 cursor-not-allowed'
+                            : 'bg-neutral-700 text-white'
+                    }`}
+                    type="button"
+                    onClick={() => toggleEmailPopup()}
+                    disabled={Object.keys(rowSelection).length === 0}
+                >
+                    <EnvelopeIcon className="size-6" />
+                    Email Selected Entries
+                </button>
+
+                <button
+                    className={`px-3 py-2 text-sm rounded-md whitespace-nowrap flex flex-row items-center justify-center gap-2 ${
+                        Object.keys(rowSelection).length === 0
+                            ? 'bg-neutral-500/18 text-white/18 cursor-not-allowed'
+                            : 'bg-neutral-700 text-white'
+                    }`}
+                    type="button"
+                    onClick={() => exportExcel()}
+                    disabled={Object.keys(rowSelection).length === 0}
+                >
+                    <DocumentArrowDownIcon className="size-6" />
+                    Export Selected Rows
+                </button>
             </div>
 
             {/*Send Email Popup*/}

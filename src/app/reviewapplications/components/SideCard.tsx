@@ -32,12 +32,13 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
     const [enrollmentYear, setEnrollmentYear] = useState(
         sideCardInfo.enrollmentYear || ''
     );
-    const [participantType, setParticipantType] = useState(
-        sideCardInfo.participantType || ''
-    );
-    const [teamMemberNames, setTeamMemberNames] = useState(
-        sideCardInfo.teamMemberNames || []
-    );
+
+    // const [participantType, setParticipantType] = useState(
+    //     sideCardInfo.participantType || ''
+    // );
+    // const [teamMemberNames, setTeamMemberNames] = useState(
+    //     sideCardInfo.teamMemberNames || []
+    // );
 
     const [dietaryRestrictions, setDietaryRestrictions] = useState(
         sideCardInfo.dietaryRestrictions || []
@@ -51,11 +52,11 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
         console.log(`Application status changed to: ${status}`);
     };
 
-    const updateTeamMember = (index: number, value: string) => {
-        const updatedTeamMembers = [...teamMemberNames];
-        updatedTeamMembers[index] = value;
-        setTeamMemberNames(updatedTeamMembers);
-    };
+    // const updateTeamMember = (index: number, value: string) => {
+    //     const updatedTeamMembers = [...teamMemberNames];
+    //     updatedTeamMembers[index] = value;
+    //     setTeamMemberNames(updatedTeamMembers);
+    // };
 
     const updateDietaryRestriction = (
         restriction: string,
@@ -96,6 +97,21 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
                                 id="name"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
+                                className="bg-neutral-800 text-white border border-neutral-700/18 w-1/2"
+                            />
+                        </div>
+
+                        <div>
+                            <Label className="text-white/60" htmlFor="email">
+                                Student Number
+                            </Label>
+                            <Input
+                                type="studentNumber"
+                                id="studentNumber"
+                                value={studentNumber}
+                                onChange={(e) =>
+                                    setStudentNumber(e.target.value)
+                                }
                                 className="bg-neutral-800 text-white border border-neutral-700/18 w-1/2"
                             />
                         </div>
@@ -172,66 +188,66 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
                         Event Information
                     </header>
 
-                    <div className="grid gap-4">
-                        <Label className="text-white/60">Team Members</Label>
-                        {teamMemberNames.map((member, index) => (
-                            <Input
-                                key={index}
-                                type="text"
-                                value={member}
-                                onChange={(e) =>
-                                    updateTeamMember(index, e.target.value)
-                                }
-                                placeholder={`Team Member ${index + 1}`}
-                                className="bg-neutral-800 text-white border border-neutral-700/18 w-1/2"
-                            />
-                        ))}
-                    </div>
+                    {/*<div className="grid gap-4">*/}
+                    {/*    <Label className="text-white/60">Team Members</Label>*/}
+                    {/*    {teamMemberNames.map((member, index) => (*/}
+                    {/*        <Input*/}
+                    {/*            key={index}*/}
+                    {/*            type="text"*/}
+                    {/*            value={member}*/}
+                    {/*            onChange={(e) =>*/}
+                    {/*                updateTeamMember(index, e.target.value)*/}
+                    {/*            }*/}
+                    {/*            placeholder={`Team Member ${index + 1}`}*/}
+                    {/*            className="bg-neutral-800 text-white border border-neutral-700/18 w-1/2"*/}
+                    {/*        />*/}
+                    {/*    ))}*/}
+                    {/*</div>*/}
 
-                    <RadioGroup
-                        value={participantType}
-                        onValueChange={setParticipantType}
-                    >
-                        <Label className="text-white/60">
-                            Participant Type
-                        </Label>
-                        <div className="flex flex-col gap-2 w-fit">
-                            {[
-                                'Individual',
-                                'Individual looking for a team',
-                                'Team (4 max)',
-                            ].map((type) => (
-                                <div
-                                    className={`flex items-center space-x-2 pl-4 pr-4 pt-3 pb-3 rounded-lg cursor-pointer border ${
-                                        participantType === type
-                                            ? 'bg-brand-950/60 border-brand-900'
-                                            : 'bg-neutral-800/60 border border-neutral-600/60'
-                                    }`}
-                                    key={type}
-                                    onClick={() => setParticipantType(type)}
-                                >
-                                    <RadioGroupItem
-                                        value={type}
-                                        id={type}
-                                        onChange={() =>
-                                            setParticipantType(type)
-                                        }
-                                        className={`appearance-none w-5 h-5 rounded-full border ${
-                                            participantType === type
-                                                ? 'bg-brand-500 border-blue-800'
-                                                : 'bg-neutral-700 border-neutral-500'
-                                        }`}
-                                    />
-                                    <Label
-                                        htmlFor={type}
-                                        className="cursor-pointer text-white font-light"
-                                    >
-                                        {type}
-                                    </Label>
-                                </div>
-                            ))}
-                        </div>
-                    </RadioGroup>
+                    {/*<RadioGroup*/}
+                    {/*    value={participantType}*/}
+                    {/*    onValueChange={setParticipantType}*/}
+                    {/*>*/}
+                    {/*    <Label className="text-white/60">*/}
+                    {/*        Participant Type*/}
+                    {/*    </Label>*/}
+                    {/*    <div className="flex flex-col gap-2 w-fit">*/}
+                    {/*        {[*/}
+                    {/*            'Individual',*/}
+                    {/*            'Individual looking for a team',*/}
+                    {/*            'Team (4 max)',*/}
+                    {/*        ].map((type) => (*/}
+                    {/*            <div*/}
+                    {/*                className={`flex items-center space-x-2 pl-4 pr-4 pt-3 pb-3 rounded-lg cursor-pointer border ${*/}
+                    {/*                    participantType === type*/}
+                    {/*                        ? 'bg-brand-950/60 border-brand-900'*/}
+                    {/*                        : 'bg-neutral-800/60 border border-neutral-600/60'*/}
+                    {/*                }`}*/}
+                    {/*                key={type}*/}
+                    {/*                onClick={() => setParticipantType(type)}*/}
+                    {/*            >*/}
+                    {/*                <RadioGroupItem*/}
+                    {/*                    value={type}*/}
+                    {/*                    id={type}*/}
+                    {/*                    onChange={() =>*/}
+                    {/*                        setParticipantType(type)*/}
+                    {/*                    }*/}
+                    {/*                    className={`appearance-none w-5 h-5 rounded-full border ${*/}
+                    {/*                        participantType === type*/}
+                    {/*                            ? 'bg-brand-500 border-blue-800'*/}
+                    {/*                            : 'bg-neutral-700 border-neutral-500'*/}
+                    {/*                    }`}*/}
+                    {/*                />*/}
+                    {/*                <Label*/}
+                    {/*                    htmlFor={type}*/}
+                    {/*                    className="cursor-pointer text-white font-light"*/}
+                    {/*                >*/}
+                    {/*                    {type}*/}
+                    {/*                </Label>*/}
+                    {/*            </div>*/}
+                    {/*        ))}*/}
+                    {/*    </div>*/}
+                    {/*</RadioGroup>*/}
 
                     <div className="flex flex-col gap-4">
                         <Label className="text-white/60">
