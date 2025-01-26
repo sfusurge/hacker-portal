@@ -15,9 +15,9 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                 className
             )}
         >
-            <div className="flex flex-col gap-5">
-                <div className="relative aspect-[5/3] rounded-xl overflow-hidden">
-                    <div className="absolute top-0 bg-neutral-900/90 flex flex-row gap-3 w-full p-2">
+            <div className="flex flex-col gap-5 h-full">
+                <div className="relative aspect-[5/3] rounded-xl overflow-hidden border border-neutral-800">
+                    <div className="absolute top-0 bg-neutral-900/50 backdrop-blur-lg flex flex-row gap-3 w-full p-2">
                         <Image
                             src="/login/sparkcheffrizz.png"
                             alt="Sparky wearing a chef\'s hat"
@@ -45,7 +45,7 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                     ></Image>
                 </div>
 
-                <div className="links">
+                <div className="links flex-1 flex flex-col gap-1">
                     <NavLink
                         href="#"
                         label="Home"
@@ -53,6 +53,14 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                         iconAlt="Home logo"
                         platform="desktop"
                         active={true}
+                    ></NavLink>
+                    <NavLink
+                        href="#"
+                        label="Home"
+                        icon={<HomeIcon></HomeIcon>}
+                        iconAlt="Home logo"
+                        platform="desktop"
+                        active={false}
                     ></NavLink>
                 </div>
             </div>
