@@ -66,3 +66,13 @@ export const queryApplicationsSchema = z.object({
     maxResult: z.number().int().optional().default(100),
     nextToken: z.string().regex(/^\d+$/g).optional(),
 });
+
+export const updateApplicationStatusSchema = z.object({
+    hackathonId: z.number().int(),
+    status: z
+        .enum(['Accepted', 'Declined', 'Awaiting Review', 'Wait List'])
+        .optional(),
+    pendingStatus: z
+        .enum(['Accepted', 'Declined', 'Awaiting Review', 'Wait List'])
+        .optional(),
+});

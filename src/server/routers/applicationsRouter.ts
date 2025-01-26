@@ -3,6 +3,7 @@ import {
     insertApplicationSchema,
     queryApplicationsSchema,
     StatusEnum,
+    updateApplicationStatusSchema,
 } from '@/db/schema/applications';
 import { publicProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
@@ -79,5 +80,41 @@ export const applicationsRouter = router({
                 .orderBy(asc(applications.createdDate))
                 .limit(input.maxResult)
                 .offset(offset);
+        }),
+
+    updateApplicationStatus: publicProcedure
+        .input(updateApplicationStatusSchema)
+        .mutation(async ({ input }) => {
+            const session = await getServerSession();
+
+            const email = session?.user?.email;
+
+            if (!email) {
+                throw new InternalServerError(
+                    "Can't get email from getServerSession"
+                );
+            }
+
+            const [application] = await databaseClient
+                .update(applications)
+                .set({
+                    currentStatus: input.status,
+                    pendingStatus: input.pendingStatus,
+                })
+                .where(
+                    and(
+                        eq(applications.hackathonId, input.hackathonId),
+                        eq(
+                            applications.userId,
+                            sql`(SELECT ${users.id} FROM ${users} WHERE ${users.email} = ${email} LIMIT 1)`
+                        )
+                    )
+                )
+                .returning();
+
+            return {
+                ...application,
+                response: application.response as Record<string, unknown>,
+            };
         }),
 });
