@@ -13,7 +13,7 @@ interface NavLinkProps {
     iconAlt?: string;
 }
 
-const navLinkVariants = cva('flex items-center rounded-lg flex-1', {
+const navLinkVariants = cva('flex items-center rounded-lg', {
     variants: {
         variant: {},
         platform: {
