@@ -11,7 +11,7 @@ import {
     getFilteredRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { sideCardAtom } from '@/app/reviewapplications/page';
+import { sideCardAtom } from '@/app/(auth)/admin/reviewapplications/page';
 import { useAtom } from 'jotai';
 import { Input } from '@/components/ui/input';
 import { mkConfig, generateCsv, download } from 'export-to-csv';
@@ -227,7 +227,9 @@ export default function ReviewApplicationsTable({
                                 ? 'bg-success-950 text-success-300'
                                 : value === 'Waitlisted'
                                   ? 'bg-yellow-950 text-yellow-300'
-                                  : 'bg-danger-950 text-danger-300'
+                                  : value === 'Declined'
+                                    ? 'bg-danger-950 text-danger-300'
+                                    : 'bg-neutral-600/30'
                         }`}
                     >
                         {value}
@@ -249,7 +251,9 @@ export default function ReviewApplicationsTable({
                                 ? 'bg-success-950 text-success-300'
                                 : value === 'Waitlisted'
                                   ? 'bg-yellow-950 text-yellow-300'
-                                  : 'bg-danger-950 text-danger-300'
+                                  : value === 'Declined'
+                                    ? 'bg-danger-950 text-danger-300'
+                                    : 'bg-neutral-600/30'
                         }`}
                     >
                         {value}

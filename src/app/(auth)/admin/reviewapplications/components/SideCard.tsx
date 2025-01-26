@@ -6,15 +6,15 @@ import { useState } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAtom } from 'jotai/index';
-import { sideCardAtom } from '@/app/reviewapplications/page';
+import { sideCardAtom } from '@/app/(auth)/admin/reviewapplications/page';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import {
     allAttendancePeriods,
     allDietaryRestrictions,
     allMajors,
     allWorkshops,
-} from '@/app/reviewapplications/components/makeData';
+} from '@/app/(auth)/admin/reviewapplications/components/makeData';
 
 type SideCardProps = {
     toggleSideCard: () => void;

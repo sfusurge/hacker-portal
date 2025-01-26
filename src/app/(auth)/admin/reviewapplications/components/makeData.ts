@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { Applicant } from '@/app/reviewapplications/components/ReviewApplicationsTable';
+import { Applicant } from '@/app/(auth)/admin/reviewapplications/components/ReviewApplicationsTable';
 
 const range = (len: number) => {
     const arr: number[] = [];

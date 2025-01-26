@@ -2,9 +2,9 @@
 
 import ReviewApplicationsTable, {
     Applicant,
-} from '@/app/reviewapplications/components/ReviewApplicationsTable';
+} from '@/app/(auth)/admin/reviewapplications/components/ReviewApplicationsTable';
 import { useEffect, useState } from 'react';
-import SideCard from '@/app/reviewapplications/components/SideCard';
+import SideCard from '@/app/(auth)/admin/reviewapplications/components/SideCard';
 import { atom, useAtom } from 'jotai';
 
 const sideCardAtom = atom<Applicant>({});
