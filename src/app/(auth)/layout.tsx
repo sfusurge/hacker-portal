@@ -1,5 +1,6 @@
 import MobileBottomNav from '@/components/sidebar/MobileBottomNav';
 import MobileTopNav from '@/components/sidebar/MobileTopNav';
+import { getSession, useSession } from 'next-auth/react';
 import DesktopNav from '@/components/sidebar/DesktopNav';
 
 import { ReactNode } from 'react';
@@ -10,6 +11,9 @@ export default function Layout({
 }: {
     children: ReactNode;
 }) {
+    const session = useSession();
+    console.log(session);
+
     return (
         <>
             <div className="bg-neutral-950 h-screen w-screen p-6 md:flex md:p-0">
