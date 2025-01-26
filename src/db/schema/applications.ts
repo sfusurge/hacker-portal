@@ -69,5 +69,10 @@ export const queryApplicationsSchema = z.object({
 
 export const updateApplicationStatusSchema = z.object({
     hackathonId: z.number().int(),
-    status: z.enum(['Accepted', 'Declined', 'Awaiting Review', 'Wait List']),
+    status: z
+        .enum(['Accepted', 'Declined', 'Awaiting Review', 'Wait List'])
+        .optional(),
+    pendingStatus: z
+        .enum(['Accepted', 'Declined', 'Awaiting Review', 'Wait List'])
+        .optional(),
 });

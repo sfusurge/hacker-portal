@@ -98,7 +98,8 @@ export const applicationsRouter = router({
             const [application] = await databaseClient
                 .update(applications)
                 .set({
-                    hackathonId: input.hackathonId,
+                    currentStatus: input.status,
+                    pendingStatus: input.pendingStatus,
                 })
                 .where(
                     and(
