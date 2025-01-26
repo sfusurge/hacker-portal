@@ -38,7 +38,7 @@ export default function MobileTopNav({ className }: MobileTopNavProps) {
                         height={36}
                         alt="Default avatar for the user"
                         src="/sidebar/default-avatar.png"
-                        className="w-10 h-10 rounded-full bg-red-400"
+                        className="w-10 h-10 rounded-full"
                     ></Image>
                 </a>
             </div>
