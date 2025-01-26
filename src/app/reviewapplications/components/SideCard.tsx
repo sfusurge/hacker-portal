@@ -50,6 +50,7 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
 
     const handleChangeApplicationStatus = (status: string) => {
         console.log(`Application status changed to: ${status}`);
+        toggleSideCard();
     };
 
     // const updateTeamMember = (index: number, value: string) => {
