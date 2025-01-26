@@ -46,28 +46,19 @@ type ReviewApplicationsTableProps = {
 export default function ReviewApplicationsTable({
     toggleSideCard,
 }: ReviewApplicationsTableProps) {
-    const {
-        data: applicationData,
-        isLoading,
-        isError,
-        error,
-    } = trpc.applications.getApplications.useQuery({
-        hackathonId: 1, // Adjust based on the desired hackathon ID
-        userId: undefined, // You can pass a userId if necessary
-        maxResult: 10, // You can adjust this as well
-        nextToken: '1', // Pagination token, can be adjusted
-    });
+    const [sideCardInfo, setSideCardInfo] = useAtom(sideCardAtom);
 
     const sendEmail = trpc.emails.sendEmail.useMutation();
     const [isEmailPopupOpen, setIsEmailPopupOpen] = useState(false);
     const [emailType, setEmailType] = useState('');
     const { toast } = useToast();
 
+    // Email popup state toggle
     const toggleEmailPopup = () => {
-        console.log(applicationData);
         setIsEmailPopupOpen(!isEmailPopupOpen);
     };
 
+    //sends emails to selected users
     const handleSendingEmails = async (rows: any, type: string) => {
         try {
             const rowData = rows.map((row: any) => ({
@@ -94,62 +85,64 @@ export default function ReviewApplicationsTable({
         }
     };
 
-    const tempDummy = [
-        {
-            id: 123456,
-            status: 'Accepted',
-            tempStatus: 'Pending',
-            applicationDate: new Date('2024-12-12T10:15:30.000Z'),
-            name: 'Brendan Shen',
-            email: 'brendanshen@hotmail.com',
-            studentNumber: 987654321,
-            major: 'Computer Science',
-            enrollmentYear: 2021,
-            // participantType: 'Individual',
-            // teamMemberNames: ['Alice', 'Bob', 'Charlie'],
-            dietaryRestrictions: ['Vegetarian'],
-            photoConsent: true,
-        },
-        {
-            id: 789012,
-            status: 'Rejected',
-            tempStatus: 'Rejected',
-            applicationDate: new Date('2024-11-30T14:20:15.000Z'),
-            name: 'Brendan Gmail',
-            email: 'brendanshen1256@gmail.com',
-            studentNumber: 123456789,
-            major: 'Engineering',
-            enrollmentYear: 2023,
-            // participantType: 'Individual looking for a team',
-            // teamMemberNames: ['David', 'Eve', 'Frank'],
-            dietaryRestrictions: ['Halal'],
-            photoConsent: false,
-        },
-        {
-            id: 345678,
-            status: 'Waitlisted',
-            tempStatus: 'Waitlisted',
-            applicationDate: new Date('2024-10-01T08:45:00.000Z'),
-            name: 'Brendan SFU',
-            email: 'bqs1@sfu.ca',
-            studentNumber: 456123789,
-            major: 'Math',
-            enrollmentYear: 2020,
-            // participantType: 'Team (4 max)',
-            // teamMemberNames: ['Grace', 'Heidi', 'Ivan'],
-            dietaryRestrictions: ['Vegan'],
-            photoConsent: true,
-        },
-    ];
+    //Function to transform the data received from DB to the json format the table expects
+    const transformResponse = (response: any) => {
+        const tempDummy = response.map((item: any) => {
+            const id = item.userId;
+            const status = item.currentStatus;
+            const tempStatus = item.pendingStatus;
+            const applicationDate = item.createdDate;
+            const {
+                name,
+                email,
+                studentNumber,
+                major,
+                enrollmentYear,
+                dietaryRestrictions,
+                photoConsent,
+            } = item.response;
+            return {
+                id: parseInt(id, 10),
+                status,
+                tempStatus,
+                applicationDate: new Date(applicationDate),
+                name,
+                email,
+                studentNumber,
+                major,
+                enrollmentYear,
+                dietaryRestrictions,
+                photoConsent,
+            };
+        });
+        return tempDummy;
+    };
 
-    const [sideCardInfo, setSideCardInfo] = useAtom(sideCardAtom);
-    //const [data] = useState(makeData(50));
-    const [data] = useState(tempDummy);
+    const [tableSize, setTableSize] = useState(10);
 
+    //Get data from DB
+    const applicationData = trpc.applications.getApplications.useQuery({
+        hackathonId: 1,
+        maxResult: tableSize,
+    });
+
+    //Data state
+    const [data, setData] = useState([]);
+
+    //Change data state on update of DB
+    useEffect(() => {
+        if (applicationData.data) {
+            const transformed = transformResponse(applicationData.data);
+            setData(transformed);
+        }
+    }, [applicationData.data]);
+
+    //Filters and sorting
     const [globalFilter, setGlobalFilter] = useState<string>('');
     const [sorting, setSorting] = useState([]);
     const [rowSelection, setRowSelection] = useState({});
 
+    //I copied this from somewhere, this is for the checkboxes in the table
     function IndeterminateCheckbox({
         indeterminate,
         className = '',
@@ -345,6 +338,10 @@ export default function ReviewApplicationsTable({
         onRowSelectionChange: setRowSelection,
     });
 
+    useEffect(() => {
+        setTableSize(table.getState().pagination.pageSize);
+    }, [table.getState().pagination.pageSize]);
+
     const csvConfig = mkConfig({
         fieldSeparator: ',',
         filename: 'Data',
@@ -378,6 +375,22 @@ export default function ReviewApplicationsTable({
         const csv = generateCsv(csvConfig)(rowData);
         download(csvConfig)(csv);
     };
+
+    if (applicationData.isLoading) {
+        return (
+            <div className="flex justify-center items-center h-full">
+                <p>Loading data...</p>
+            </div>
+        );
+    }
+
+    if (applicationData.isError) {
+        return (
+            <div className="flex justify-center items-center h-full">
+                <p>Error fetching data: {applicationData.error.message}</p>
+            </div>
+        );
+    }
 
     return (
         <div className="overflow-hidden">
