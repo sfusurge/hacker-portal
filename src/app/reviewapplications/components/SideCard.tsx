@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAtom } from 'jotai/index';
 import { sideCardAtom } from '@/app/reviewapplications/page';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import {
     allAttendancePeriods,
     allMajors,
