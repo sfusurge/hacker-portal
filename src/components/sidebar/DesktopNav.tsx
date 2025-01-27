@@ -5,6 +5,14 @@ import { HomeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
+import { ChevronRightIcon } from '@heroicons/react/20/solid';
+import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import { PopoverArrow } from '@radix-ui/react-popover';
 
 interface DesktopNavProps {
     className?: string;
@@ -87,26 +95,48 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                     </div>
                 </div>
 
-                <div className="flex flex-row justify-between items-center">
-                    <div className="flex flex-row gap-3 items-center    ">
-                        <Image
-                            src="/login/sparkcheffrizz.png"
-                            alt="Sparky wearing a chef\'s hat"
-                            width={36}
-                            height={36}
-                            className="rounded-full w-9 h-9"
-                        ></Image>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <button className="group flex flex-row justify-between items-center hover:bg-neutral-750/30 rounded-lg px-3 py-2.5 gap-5 transition-colors">
+                            <div className="flex flex-row gap-4 items-center">
+                                <Image
+                                    alt="Default avatar for the user"
+                                    src="/sidebar/default-avatar.png"
+                                    width={32}
+                                    height={32}
+                                    className="rounded-full w-9 h-9"
+                                ></Image>
 
-                        <div className="flex flex-col gap-2">
-                            <span className="text-white font-medium text-base leading-none">
-                                Hacker name
-                            </span>
-                            <span className="text-white/60 text-sm leading-none">
-                                User type
-                            </span>
-                        </div>
-                    </div>
-                </div>
+                                <div className="flex flex-col gap-2">
+                                    <span className="text-white font-medium text-base leading-tight text-left line-clamp-1">
+                                        Super duper long name
+                                    </span>
+                                    <span className="text-white/60 text-sm leading-none text-left line-clamp-1">
+                                        User type
+                                    </span>
+                                </div>
+                            </div>
+                            <ChevronRightIcon
+                                width={28}
+                                height={28}
+                                className="text-white/60 group-hover:text-white"
+                            />
+                        </button>
+                    </PopoverTrigger>
+                    <PopoverContent sideOffset={8} side="right">
+                        <NavLink
+                            href="#"
+                            label="Sign out"
+                            icon={
+                                <ArrowLeftEndOnRectangleIcon></ArrowLeftEndOnRectangleIcon>
+                            }
+                            iconAlt="Sign out logo"
+                            platform="desktop"
+                            variant="error"
+                            active={null}
+                        ></NavLink>
+                    </PopoverContent>
+                </Popover>
             </div>
         </div>
     );
