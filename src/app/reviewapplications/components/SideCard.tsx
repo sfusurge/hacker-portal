@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAtom } from 'jotai/index';
-import { sideCardAtom } from '@/app/reviewapplications/page';
+import { sideCardAtom } from './ReviewApplicationsTable';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/Button';
 import {

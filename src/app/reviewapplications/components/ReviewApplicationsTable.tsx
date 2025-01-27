@@ -11,8 +11,11 @@ import {
 } from '@tanstack/react-table';
 import { makeData } from './makeData';
 
-import { sideCardAtom } from '@/app/reviewapplications/page';
+import { atom } from 'jotai';
 import { useAtom } from 'jotai';
+
+const sideCardAtom = atom<Applicant>({});
+export { sideCardAtom };
 
 export type Applicant = {
     id: number;
