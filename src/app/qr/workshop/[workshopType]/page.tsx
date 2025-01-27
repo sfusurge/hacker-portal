@@ -1,7 +1,7 @@
 import ScanPage from '@/app/qr/components/ScanPage';
 
 type WorkshopScanProps = {
-    params: { workshopType: string };
+    params: Promise<{ workshopType: string }>;
 };
 
 export default async function WorkshopScanProps({ params }: WorkshopScanProps) {

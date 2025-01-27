@@ -5,7 +5,7 @@ import { authProviders } from '../authProviders';
 import { createOAuthUser, validateUser } from '../middleware';
 import { AuthenticationError } from '../errors';
 
-export const handler = NextAuth({
+const handler = NextAuth({
     secret: process.env.NEXTAUTH_SECRET as string,
     providers: authProviders,
     callbacks: {

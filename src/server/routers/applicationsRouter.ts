@@ -81,3 +81,5 @@ export const applicationsRouter = router({
                 .offset(offset);
         }),
 });
+
+export type ApplicationsRouter = typeof applicationsRouter;

@@ -61,4 +61,4 @@ export const usersRouter = router({
         }),
 });
 
-export type usersRouter = typeof usersRouter;
+export type UsersRouter = typeof usersRouter;
