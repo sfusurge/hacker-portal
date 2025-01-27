@@ -32,7 +32,7 @@ export const applications = pgTable(
         hackathonId: integer('hackathon_id')
             .references(() => hackathons.id)
             .notNull(),
-        userId: uuid('user_id')
+        userId: integer('user_id')
             .references(() => users.id)
             .notNull(),
         currentStatus: applicationStatusEnum()
@@ -62,13 +62,14 @@ export const insertApplicationSchema = createInsertSchema(applications).pick({
 
 export const queryApplicationsSchema = z.object({
     hackathonId: z.number().int(),
-    userId: z.string().uuid().optional(),
+    userId: z.number().int().optional(),
     maxResult: z.number().int().optional().default(100),
     nextToken: z.string().regex(/^\d+$/g).optional(),
 });
 
 export const updateApplicationStatusSchema = z.object({
     hackathonId: z.number().int(),
+    userId: z.number().int(),
     status: z
         .enum(['Accepted', 'Declined', 'Awaiting Review', 'Wait List'])
         .optional(),
