@@ -5,7 +5,6 @@ import {
     pgTable,
     primaryKey,
     timestamp,
-    uuid,
 } from 'drizzle-orm/pg-core';
 import { hackathons } from './hackathons';
 import { users } from './users';
@@ -18,7 +17,8 @@ export type StatusEnum =
     | 'Accepted'
     | 'Declined'
     | 'Wait List';
-export const applicationStatusEnum = pgEnum('status', [
+
+export const applicationStatusEnum = pgEnum('application_status', [
     'N/A',
     'Awaiting Review',
     'Accepted',
@@ -32,7 +32,7 @@ export const applications = pgTable(
         hackathonId: integer('hackathon_id')
             .references(() => hackathons.id)
             .notNull(),
-        userId: uuid('user_id')
+        userId: integer('user_id')
             .references(() => users.id)
             .notNull(),
         currentStatus: applicationStatusEnum()
@@ -62,7 +62,7 @@ export const insertApplicationSchema = createInsertSchema(applications).pick({
 
 export const queryApplicationsSchema = z.object({
     hackathonId: z.number().int(),
-    userId: z.string().uuid().optional(),
+    userId: z.number().int().optional(),
     maxResult: z.number().int().optional().default(100),
     nextToken: z.string().regex(/^\d+$/g).optional(),
 });

@@ -32,11 +32,10 @@ export const middleware = auth(async (req) => {
         }
 
         if (!dbUser) {
+            const target = new URL('/login', req.url);
+            target.searchParams.set('from', path);
             // user not logged in, and redirect after login
-            return NextResponse.redirect(
-                `/login?redirect=${encodeURIComponent(path)}`,
-                { status: 302 }
-            );
+            return NextResponse.redirect(target, { status: 302 });
         }
 
         // user is valid, now check if is admin

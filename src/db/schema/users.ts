@@ -19,7 +19,7 @@ export const UserRoleEnum = {
     admin: 'admin',
 };
 
-const userRoleDbEnum = pgEnum('user_role', [
+export const userRoleDbEnum = pgEnum('user_role', [
     UserRoleEnum.admin,
     UserRoleEnum.user,
 ]);

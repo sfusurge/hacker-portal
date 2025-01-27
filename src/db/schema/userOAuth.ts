@@ -16,7 +16,7 @@ export const ProvidersEnum = {
 
 export type ProvidersEnumType = typeof ProvidersEnum;
 
-const providerDbEnum = pgEnum('provider', [
+export const providerDbEnum = pgEnum('oauth_provider', [
     ProvidersEnum.GITHUB,
     ProvidersEnum.GOOGLE,
     ProvidersEnum.NULL,
