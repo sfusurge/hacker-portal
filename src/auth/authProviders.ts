@@ -11,8 +11,3 @@ export const authProviders = [
         clientSecret: process.env.AUTH_GITHUB_SECRET as string,
     }),
 ];
-
-export type ProvidersEnum = {
-    GOOGLE: 'google';
-    GITHUB: 'github';
-};

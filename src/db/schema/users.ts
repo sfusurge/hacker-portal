@@ -1,5 +1,6 @@
 import {
     boolean,
+    index,
     integer,
     pgEnum,
     pgTable,
@@ -12,16 +13,22 @@ import {
 } from 'drizzle-zod';
 import { z } from 'zod';
 
-export const providersEnum = pgEnum('provider', ['google', 'github', 'email']);
-const users = pgTable('users', {
-    id: integer('id').generatedAlwaysAsIdentity({ startWith: 1 }).primaryKey(),
-    firstName: varchar('first_name', { length: 64 }),
-    lastName: varchar('last_name', { length: 64 }),
-    phoneNumber: varchar('phone_number', { length: 15 }),
-    email: varchar('email', { length: 255 }).unique(),
-    isRegistered: boolean('is_registered').default(false).notNull(),
-    provider: varchar('provider', { length: 32 }).notNull(),
-});
+const users = pgTable(
+    'users',
+    {
+        id: integer('id')
+            .generatedAlwaysAsIdentity({ startWith: 1 })
+            .primaryKey(),
+        firstName: varchar('first_name', { length: 64 }),
+        lastName: varchar('last_name', { length: 64 }),
+        phoneNumber: varchar('phone_number', { length: 15 }),
+        email: varchar('email', { length: 255 }).unique(),
+        isRegistered: boolean('is_registered').default(false).notNull(),
+    },
+    (table) => ({
+        emailIndex: index('email_index').on(table.email),
+    })
+);
 
 const selectUserSchema = createSelectSchema(users); // select a user by either their primary key id or their display id.
 
@@ -41,7 +48,6 @@ const updateUserSchema = z.object({
         .max(255, 'email too long')
         .optional(),
     isRegistered: z.boolean().default(false).optional(),
-    provider: z.string().max(32, 'provider name too long').optional(),
 });
 
 const deleteUserSchema = z.object({
