@@ -30,7 +30,7 @@ export const allAttendancePeriods = [
 ];
 export const allMajors = [
     'Business',
-    'Computer Science',
+    'Computing Science',
     'Data Science',
     'Engineering',
     'Health Science',
@@ -69,12 +69,12 @@ export default function SideCard({
     const updateApplication =
         trpc.applications.updateApplicationStatus.useMutation();
 
-    // const [participantType, setParticipantType] = useState(
-    //     sideCardInfo.participantType || ''
-    // );
-    // const [teamMemberNames, setTeamMemberNames] = useState(
-    //     sideCardInfo.teamMemberNames || []
-    // );
+    const [participantType, setParticipantType] = useState(
+        sideCardInfo.participantType || ''
+    );
+    const [teamMemberNames, setTeamMemberNames] = useState(
+        sideCardInfo.teamMemberNames || ''
+    );
 
     const [dietaryRestrictions, setDietaryRestrictions] = useState(
         sideCardInfo.dietaryRestrictions || []
@@ -241,6 +241,19 @@ export default function SideCard({
                         Event Information
                     </header>
 
+                    <div>
+                        <Label className="text-white/60" htmlFor="email">
+                            Team Member Names
+                        </Label>
+                        <Input
+                            type="teamMemberNames"
+                            id="teamMemberNames"
+                            value={teamMemberNames}
+                            onChange={(e) => setTeamMemberNames(e.target.value)}
+                            className="bg-neutral-800 text-white border border-neutral-700/18 w-1/2"
+                        />
+                    </div>
+
                     {/*<div className="grid gap-4">*/}
                     {/*    <Label className="text-white/60">Team Members</Label>*/}
                     {/*    {teamMemberNames.map((member, index) => (*/}
@@ -257,50 +270,50 @@ export default function SideCard({
                     {/*    ))}*/}
                     {/*</div>*/}
 
-                    {/*<RadioGroup*/}
-                    {/*    value={participantType}*/}
-                    {/*    onValueChange={setParticipantType}*/}
-                    {/*>*/}
-                    {/*    <Label className="text-white/60">*/}
-                    {/*        Participant Type*/}
-                    {/*    </Label>*/}
-                    {/*    <div className="flex flex-col gap-2 w-fit">*/}
-                    {/*        {[*/}
-                    {/*            'Individual',*/}
-                    {/*            'Individual looking for a team',*/}
-                    {/*            'Team (4 max)',*/}
-                    {/*        ].map((type) => (*/}
-                    {/*            <div*/}
-                    {/*                className={`flex items-center space-x-2 pl-4 pr-4 pt-3 pb-3 rounded-lg cursor-pointer border ${*/}
-                    {/*                    participantType === type*/}
-                    {/*                        ? 'bg-brand-950/60 border-brand-900'*/}
-                    {/*                        : 'bg-neutral-800/60 border border-neutral-600/60'*/}
-                    {/*                }`}*/}
-                    {/*                key={type}*/}
-                    {/*                onClick={() => setParticipantType(type)}*/}
-                    {/*            >*/}
-                    {/*                <RadioGroupItem*/}
-                    {/*                    value={type}*/}
-                    {/*                    id={type}*/}
-                    {/*                    onChange={() =>*/}
-                    {/*                        setParticipantType(type)*/}
-                    {/*                    }*/}
-                    {/*                    className={`appearance-none w-5 h-5 rounded-full border ${*/}
-                    {/*                        participantType === type*/}
-                    {/*                            ? 'bg-brand-500 border-blue-800'*/}
-                    {/*                            : 'bg-neutral-700 border-neutral-500'*/}
-                    {/*                    }`}*/}
-                    {/*                />*/}
-                    {/*                <Label*/}
-                    {/*                    htmlFor={type}*/}
-                    {/*                    className="cursor-pointer text-white font-light"*/}
-                    {/*                >*/}
-                    {/*                    {type}*/}
-                    {/*                </Label>*/}
-                    {/*            </div>*/}
-                    {/*        ))}*/}
-                    {/*    </div>*/}
-                    {/*</RadioGroup>*/}
+                    <RadioGroup
+                        value={participantType}
+                        onValueChange={setParticipantType}
+                    >
+                        <Label className="text-white/60">
+                            Participant Type
+                        </Label>
+                        <div className="flex flex-col gap-2 w-fit">
+                            {[
+                                'Individual',
+                                'Individual looking for a team',
+                                'Team (4 max)',
+                            ].map((type) => (
+                                <div
+                                    className={`flex items-center space-x-2 pl-4 pr-4 pt-3 pb-3 rounded-lg cursor-pointer border ${
+                                        participantType === type
+                                            ? 'bg-brand-950/60 border-brand-900'
+                                            : 'bg-neutral-800/60 border border-neutral-600/60'
+                                    }`}
+                                    key={type}
+                                    onClick={() => setParticipantType(type)}
+                                >
+                                    <RadioGroupItem
+                                        value={type}
+                                        id={type}
+                                        onChange={() =>
+                                            setParticipantType(type)
+                                        }
+                                        className={`appearance-none w-5 h-5 rounded-full border ${
+                                            participantType === type
+                                                ? 'bg-brand-500 border-blue-800'
+                                                : 'bg-neutral-700 border-neutral-500'
+                                        }`}
+                                    />
+                                    <Label
+                                        htmlFor={type}
+                                        className="cursor-pointer text-white font-light"
+                                    >
+                                        {type}
+                                    </Label>
+                                </div>
+                            ))}
+                        </div>
+                    </RadioGroup>
 
                     <div className="flex flex-col gap-4">
                         <Label className="text-white/60">

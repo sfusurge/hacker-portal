@@ -49,6 +49,7 @@ export type Applicant = {
     major: string;
     enrollmentYear: number;
     participantType: string;
+    teamMemberNames: string;
     dietaryRestrictions: string[];
     photoConsent: boolean;
 };
@@ -108,14 +109,25 @@ export default function ReviewApplicationsTable({
             const status = item.currentStatus;
             const tempStatus = item.pendingStatus;
             const applicationDate = item.createdDate;
+            // const {
+            //     name,
+            //     email,
+            //     studentNumber,
+            //     major,
+            //     enrollmentYear,
+            //     dietaryRestrictions,
+            //     photoConsent,
+            // } = item.response;
             const {
-                name,
-                email,
-                studentNumber,
-                major,
-                enrollmentYear,
-                dietaryRestrictions,
-                photoConsent,
+                '1': name,
+                '2': email,
+                '3': studentNumber,
+                '4': major,
+                '5': enrollmentYear,
+                '6': participantType,
+                '7': teamMemberNames,
+                '8': dietaryRestrictions,
+                '9': photoConsent,
             } = item.response;
             return {
                 id: parseInt(id, 10),
@@ -127,6 +139,8 @@ export default function ReviewApplicationsTable({
                 studentNumber,
                 major,
                 enrollmentYear,
+                participantType,
+                teamMemberNames,
                 dietaryRestrictions,
                 photoConsent,
             };
@@ -330,18 +344,18 @@ export default function ReviewApplicationsTable({
             size: 150,
             minSize: 150,
         },
-        // {
-        //     accessorKey: 'participantType',
-        //     header: () => 'Participant Type',
-        //     size: 150,
-        //     minSize: 100,
-        // },
-        // {
-        //     accessorKey: 'teamMemberNames',
-        //     header: () => 'Team Member Names',
-        //     size: 200,
-        //     minSize: 150,
-        // },
+        {
+            accessorKey: 'participantType',
+            header: () => 'Participant Type',
+            size: 150,
+            minSize: 100,
+        },
+        {
+            accessorKey: 'teamMemberNames',
+            header: () => 'Team Member Names',
+            size: 200,
+            minSize: 150,
+        },
         {
             accessorKey: 'dietaryRestrictions',
             header: () => 'Dietary Restrictions',
@@ -400,8 +414,8 @@ export default function ReviewApplicationsTable({
             email: row.original.email,
             major: row.original.major,
             enrollmentYear: row.original.enrollmentYear,
-            // participantType: row.original.participantType,
-            // teamMemberNames: row.original.teamMemberNames.join(', '),
+            participantType: row.original.participantType,
+            teamMemberNames: row.original.teamMemberNames,
             dietaryRestrictions: row.original.dietaryRestrictions.join(', '),
             photoConsent: row.original.photoConsent ? 'Yes' : 'No',
         }));
