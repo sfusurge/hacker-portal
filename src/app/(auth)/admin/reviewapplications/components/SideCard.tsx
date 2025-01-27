@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAtom } from 'jotai/index';
-import { sideCardAtom } from '@/app/(auth)/admin/reviewapplications/page';
+import { sideCardAtom } from '@/app/(auth)/admin/reviewapplications/components/ReviewApplicationsTable';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/Button';
 
@@ -398,7 +398,7 @@ export default function SideCard({
                         Accepted
                     </Button>
                     <Button
-                        key={'Reject'}
+                        key={'Decline'}
                         className={`h-7 bg-danger-950 text-danger-300`}
                         onClick={() =>
                             handleChangeApplicationStatus('Declined')
@@ -422,7 +422,7 @@ export default function SideCard({
                             handleChangeApplicationStatus('Awaiting Review')
                         }
                     >
-                        Pending
+                        Await Review
                     </Button>
                 </div>
             </section>

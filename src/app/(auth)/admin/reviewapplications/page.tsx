@@ -5,10 +5,6 @@ import ReviewApplicationsTable, {
 } from '@/app/(auth)/admin/reviewapplications/components/ReviewApplicationsTable';
 import { useEffect, useState } from 'react';
 import SideCard from '@/app/(auth)/admin/reviewapplications/components/SideCard';
-import { atom, useAtom } from 'jotai';
-
-const sideCardAtom = atom<Applicant>({});
-export { sideCardAtom };
 
 export default function ReviewApplicationsPage() {
     const [isSideCardOpen, setIsSideCardOpen] = useState(false);

@@ -18,8 +18,14 @@ import {
     getFilteredRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { sideCardAtom } from '@/app/(auth)/admin/reviewapplications/page';
-import { useAtom } from 'jotai';
+
+import { atom, useAtom } from 'jotai';
+
+const sideCardAtom = atom<Applicant>({});
+export { sideCardAtom };
+
+// import { sideCardAtom } from '@/app/(auth)/admin/reviewapplications/page';
+// import { useAtom } from 'jotai';
 import { Input } from '@/components/ui/input';
 import { mkConfig, generateCsv, download } from 'export-to-csv';
 import { Label } from '@/components/ui/label';
