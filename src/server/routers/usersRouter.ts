@@ -37,10 +37,13 @@ export const usersRouter = router({
             return; // insertion has failed if no return
         }
         // create display id
-        await databaseClient.insert(userDisplayIds).values({
-            userId: res[0].userId,
-            displayId: getSixDigitId(res[0].userId),
-        });
+        return await databaseClient
+            .insert(userDisplayIds)
+            .values({
+                userId: res[0].userId,
+                displayId: getSixDigitId(res[0].userId),
+            })
+            .returning();
     }),
     deleteUser: publicProcedure
         .input(deleteUserSchema)

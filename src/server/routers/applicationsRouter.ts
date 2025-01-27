@@ -14,7 +14,7 @@ import { InternalServerError } from '../exceptions';
 
 export interface SubmitApplicationResponse {
     hackathonId: number;
-    userId: string;
+    userId: number;
     response: Record<string, unknown>;
     createdDate: Date;
     currentStatus: StatusEnum;
@@ -85,16 +85,6 @@ export const applicationsRouter = router({
     updateApplicationStatus: publicProcedure
         .input(updateApplicationStatusSchema)
         .mutation(async ({ input }) => {
-            const session = await getServerSession();
-
-            const email = session?.user?.email;
-
-            if (!email) {
-                throw new InternalServerError(
-                    "Can't get email from getServerSession"
-                );
-            }
-
             const [application] = await databaseClient
                 .update(applications)
                 .set({
@@ -104,10 +94,7 @@ export const applicationsRouter = router({
                 .where(
                     and(
                         eq(applications.hackathonId, input.hackathonId),
-                        eq(
-                            applications.userId,
-                            sql`(SELECT ${users.id} FROM ${users} WHERE ${users.email} = ${email} LIMIT 1)`
-                        )
+                        eq(applications.userId, input.userId)
                     )
                 )
                 .returning();

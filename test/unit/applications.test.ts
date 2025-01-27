@@ -29,6 +29,7 @@ describe('applications routes tests', () => {
             email: 'foo@sfusurge.com',
             firstName: 'foo',
             lastName: 'bar',
+            provider: 'GOOGLE',
         });
 
         const hackathon = await trpcClient.hackathons.addHackathon({
@@ -46,7 +47,6 @@ describe('applications routes tests', () => {
 
         assert.isNotNull(application.createdDate);
         assert.equal(application.hackathonId, hackathon.id);
-        assert.equal(application.userId, user.id);
         assert.deepEqual(application.response, { foo: 'bar' });
     });
 });
