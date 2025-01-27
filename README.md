@@ -63,4 +63,8 @@ npm run start
 
 See notion page for login credentials are env variables
 
-- Neon auto scaling is in effect, currently in development, scaling range is set to 0 to 0.5x. In prod the max range can be up to 2x resource.
+-   Neon auto scaling is in effect, currently in development, scaling range is set to 0 to 0.5x. In prod the max range can be up to 2x resource.
+
+## Design
+
+-   See design [figma workspace](https://www.figma.com/design/02aQ4FvurxQn9sPqaCTqZn/Ottertable-High-Fidelity-Wireframes?node-id=482-5020&p=f&m=dev)

@@ -1,14 +1,21 @@
+version: '3.9'
+# docker-compose up db
+# docker-compose exec db bash
 services:
-  postgres:
-    stdin_open: true # docker run -i
-    tty: true # docker run -t
-    image: postgres:14-alpine
-    ports:
-      - 5432:5432
-    volumes:
-      - ~/apps/postgres:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_PASSWORD=abc123
-      - POSTGRES_USER=admin
-      - POSTGRES_DB=hacker_portal_dev
-# postgresql://admin:abc123@localhost:5432/hacker_portal_dev
+    db:
+        image: postgres:14-alpine
+        container_name: postgres_container
+        stdin_open: true
+        tty: true
+        environment:
+            POSTGRES_USER: root
+            POSTGRES_PASSWORD: '12345'
+            POSTGRES_DB: portaldb
+        ports:
+            - '5432:5432'
+        volumes:
+            - db_data:/var/lib/postgresql/data
+
+volumes:
+    db_data:
+# postgres://root:12345@localhost:5432/portaldb
