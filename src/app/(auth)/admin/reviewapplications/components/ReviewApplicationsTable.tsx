@@ -1,7 +1,14 @@
 'use client';
 
 import { trpc } from '@/trpc/client';
-import { Fragment, HTMLProps, useEffect, useRef, useState } from 'react';
+import {
+    Fragment,
+    HTMLProps,
+    useEffect,
+    useReducer,
+    useRef,
+    useState,
+} from 'react';
 import {
     ColumnDef,
     flexRender,
@@ -22,7 +29,8 @@ import { useToast } from '@/hooks/use-toast';
 import { DocumentArrowDownIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/16/solid';
 
-const validEmailTypes = ['WELCOMEJH2025', 'WAITLISTJH2025', 'REJECTJH2025'];
+// const validEmailTypes = ['WELCOMEJH2025', 'WAITLISTJH2025', 'REJECTJH2025'];
+const validEmailTypes = ['WELCOMEJH2025'];
 
 export type Applicant = {
     id: number;
@@ -41,10 +49,12 @@ export type Applicant = {
 
 type ReviewApplicationsTableProps = {
     toggleSideCard: () => void;
+    refreshTable: boolean;
 };
 
 export default function ReviewApplicationsTable({
     toggleSideCard,
+    refreshTable,
 }: ReviewApplicationsTableProps) {
     const [sideCardInfo, setSideCardInfo] = useAtom(sideCardAtom);
 
@@ -137,9 +147,20 @@ export default function ReviewApplicationsTable({
         }
     }, [applicationData.data]);
 
+    // useEffect(() => {
+    //     if (refreshTable) {
+    //         applicationData.refetch().then((response) => {
+    //             if (response.data) {
+    //                 const transformed = transformResponse(response.data);
+    //                 setData(transformed);
+    //             }
+    //         });
+    //     }
+    // }, [refreshTable, applicationData]);
+
     //Filters and sorting
     const [globalFilter, setGlobalFilter] = useState<string>('');
-    const [sorting, setSorting] = useState([]);
+    const [sorting, setSorting] = useState([{ id: 'name', asc: true }]);
     const [rowSelection, setRowSelection] = useState({});
 
     //I copied this from somewhere, this is for the checkboxes in the table
@@ -225,7 +246,7 @@ export default function ReviewApplicationsTable({
                         className={`px-3 py-0.5 text-xs rounded-md ${
                             value === 'Accepted'
                                 ? 'bg-success-950 text-success-300'
-                                : value === 'Waitlisted'
+                                : value === 'Wait List'
                                   ? 'bg-yellow-950 text-yellow-300'
                                   : value === 'Declined'
                                     ? 'bg-danger-950 text-danger-300'
@@ -249,7 +270,7 @@ export default function ReviewApplicationsTable({
                         className={`px-3 py-0.5 text-xs rounded-md ${
                             value === 'Accepted'
                                 ? 'bg-success-950 text-success-300'
-                                : value === 'Waitlisted'
+                                : value === 'Wait List'
                                   ? 'bg-yellow-950 text-yellow-300'
                                   : value === 'Declined'
                                     ? 'bg-danger-950 text-danger-300'
@@ -261,6 +282,12 @@ export default function ReviewApplicationsTable({
                 );
             },
             size: 150,
+            minSize: 150,
+        },
+        {
+            accessorKey: 'id',
+            header: () => 'Hacker ID',
+            size: 200,
             minSize: 150,
         },
         {

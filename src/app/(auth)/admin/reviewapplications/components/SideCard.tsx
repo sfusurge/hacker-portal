@@ -9,19 +9,47 @@ import { useAtom } from 'jotai/index';
 import { sideCardAtom } from '@/app/(auth)/admin/reviewapplications/page';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/Button';
-import {
-    allAttendancePeriods,
-    allDietaryRestrictions,
-    allMajors,
-    allWorkshops,
-} from '@/app/(auth)/admin/reviewapplications/components/makeData';
+
+import { trpc } from '@/trpc/client';
 
 type SideCardProps = {
     toggleSideCard: () => void;
 };
 
+export const allWorkshops = [
+    'Intro to GitHub (1 - 1:30pm)',
+    'Intro to React.js (2 - 3pm)',
+    'Intro to Figma (3 - 4pm)',
+];
+export const allAttendancePeriods = [
+    'Half Day Workshops (12:30 - 4pm)',
+    'Half Day PM Build (4 - 8:30pm)',
+    'Full Day (12:30 - 8:30pm)',
+];
+export const allMajors = [
+    'Business',
+    'Computer Science',
+    'Data Science',
+    'Engineering',
+    'Health Science',
+    'Math',
+    'SIAT',
+    'Other..',
+];
+
+export const allDietaryRestrictions = [
+    'Halal',
+    'Vegetarian',
+    'Vegan',
+    'Pescatarian',
+    'Gluten-free',
+    'Kosher',
+    'Other..',
+];
+
 export default function SideCard({ toggleSideCard }: SideCardProps) {
     const [sideCardInfo] = useAtom(sideCardAtom);
+    const [id, setId] = useState(sideCardInfo.id || '');
 
     const [name, setName] = useState(sideCardInfo.name || '');
     const [email, setEmail] = useState(sideCardInfo.email || '');
@@ -32,6 +60,9 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
     const [enrollmentYear, setEnrollmentYear] = useState(
         sideCardInfo.enrollmentYear || ''
     );
+
+    const updateApplication =
+        trpc.applications.updateApplicationStatus.useMutation();
 
     // const [participantType, setParticipantType] = useState(
     //     sideCardInfo.participantType || ''
@@ -49,7 +80,18 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
     );
 
     const handleChangeApplicationStatus = (status: string) => {
-        console.log(`Application status changed to: ${status}`);
+        //console.log(`Application status changed to: ${status}`);
+        try {
+            updateApplication.mutate({
+                hackathonId: 1,
+                userId: id,
+                status: status,
+                pendingStatus: status,
+            });
+            console.log('Application status updated successfully!');
+        } catch (error) {
+            console.error('Failed to update application:', error);
+        }
         toggleSideCard();
     };
 
@@ -337,7 +379,7 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
                 </header>
                 <div className="flex flex-wrap gap-5">
                     <Button
-                        key={'Accepted'}
+                        key={'Accept'}
                         className={`h-7 bg-success-950 text-success-300`}
                         onClick={() =>
                             handleChangeApplicationStatus('Accepted')
@@ -346,27 +388,29 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
                         Accepted
                     </Button>
                     <Button
-                        key={'Rejected'}
+                        key={'Reject'}
                         className={`h-7 bg-danger-950 text-danger-300`}
                         onClick={() =>
-                            handleChangeApplicationStatus('Rejected')
+                            handleChangeApplicationStatus('Declined')
                         }
                     >
                         Rejected
                     </Button>
                     <Button
-                        key={'Waitlisted'}
+                        key={'Waitlist'}
                         className={`h-7 bg-yellow-950 text-yellow-300`}
                         onClick={() =>
-                            handleChangeApplicationStatus('Waitlisted')
+                            handleChangeApplicationStatus('Wait List')
                         }
                     >
                         Waitlisted
                     </Button>
                     <Button
-                        key={'Pending'}
+                        key={'Awaiting Review'}
                         className={`h-7 bg-neutral-800 text-white`}
-                        onClick={() => handleChangeApplicationStatus('Pending')}
+                        onClick={() =>
+                            handleChangeApplicationStatus('Awaiting Review')
+                        }
                     >
                         Pending
                     </Button>
