@@ -10,6 +10,13 @@ const config: Config = {
     ],
     theme: {
         extend: {
+            borderWidth: {
+                '1': '1px',
+            },
+            boxShadow: {
+                'skeumorphic-sm':
+                    '0px 1px 0px 0px rgba(255, 255, 255, 0.24) inset, 0px 0px 0px 1px rgba(255, 255, 255, 0.12) inset',
+            },
             keyframes: {
                 'caret-blink': {
                     '0%,70%,100%': { opacity: '1' },
@@ -104,6 +111,8 @@ const config: Config = {
                     '900': '#7f1c1d',
                     '950': '#45090a',
                 },
+                white: '#ffffff',
+                black: '#000000',
             },
             fontSize: {
                 xs: '0.75rem',
