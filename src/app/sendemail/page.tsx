@@ -3,7 +3,6 @@
 import { trpc } from '@/trpc/client';
 import { useState } from 'react';
 import { EmailUser } from '@/db/schema/emails';
-import UsersList from '@/app/components/UsersList';
 
 export default function SendEmailPage() {
     const sendEmail = trpc.emails.sendEmail.useMutation();
@@ -36,11 +35,6 @@ export default function SendEmailPage() {
 
                 <div>
                     <h2 className="font-bold">Users</h2>
-                    <UsersList
-                        selectedUsers={selectedUsers}
-                        setSelectedUsers={setSelectedUsers}
-                    />
-
                     <button
                         onClick={async () => {
                             await handleSendingEmails(selectedUsers);
