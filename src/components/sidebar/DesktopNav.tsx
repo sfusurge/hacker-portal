@@ -133,7 +133,7 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                             iconAlt="Sign out logo"
                             platform="desktop"
                             variant="error"
-                            active={null}
+                            className="px-2"
                         ></NavLink>
                     </PopoverContent>
                 </Popover>
