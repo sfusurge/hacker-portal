@@ -11,9 +11,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/Button';
 
 import { trpc } from '@/trpc/client';
+import { EmailUser } from '@/db/schema/emails';
 
 type SideCardProps = {
     toggleSideCard: () => void;
+    setRefreshTable: React.Dispatch<React.SetStateAction<{}>>;
 };
 
 export const allWorkshops = [
@@ -47,7 +49,10 @@ export const allDietaryRestrictions = [
     'Other..',
 ];
 
-export default function SideCard({ toggleSideCard }: SideCardProps) {
+export default function SideCard({
+    toggleSideCard,
+    setRefreshTable,
+}: SideCardProps) {
     const [sideCardInfo] = useAtom(sideCardAtom);
     const [id, setId] = useState(sideCardInfo.id || '');
 
@@ -92,6 +97,11 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
         } catch (error) {
             console.error('Failed to update application:', error);
         }
+        setRefreshTable({
+            userId: id,
+            status: status,
+            pendingStatus: status,
+        });
         toggleSideCard();
     };
 

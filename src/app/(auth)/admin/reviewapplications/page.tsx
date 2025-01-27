@@ -13,13 +13,12 @@ export { sideCardAtom };
 export default function ReviewApplicationsPage() {
     const [isSideCardOpen, setIsSideCardOpen] = useState(false);
     //const [sideCardInfo, setSideCardInfo] = useAtom(sideCardAtom);
-    const [refreshTable, setRefreshTable] = useState(false);
+    const [refreshTable, setRefreshTable] = useState({});
 
     const openSideCard = () => {
         setIsSideCardOpen(true);
     };
     const closeSideCard = () => {
-        setRefreshTable(!refreshTable);
         setIsSideCardOpen(false);
     };
 
@@ -40,7 +39,10 @@ export default function ReviewApplicationsPage() {
                 >
                     {isSideCardOpen && (
                         <div className="flex justify-end">
-                            <SideCard toggleSideCard={closeSideCard} />
+                            <SideCard
+                                toggleSideCard={closeSideCard}
+                                setRefreshTable={setRefreshTable}
+                            />
                         </div>
                     )}
                 </div>

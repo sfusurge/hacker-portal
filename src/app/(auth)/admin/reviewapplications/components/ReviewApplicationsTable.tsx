@@ -49,7 +49,7 @@ export type Applicant = {
 
 type ReviewApplicationsTableProps = {
     toggleSideCard: () => void;
-    refreshTable: boolean;
+    refreshTable: any;
 };
 
 export default function ReviewApplicationsTable({
@@ -147,16 +147,20 @@ export default function ReviewApplicationsTable({
         }
     }, [applicationData.data]);
 
-    // useEffect(() => {
-    //     if (refreshTable) {
-    //         applicationData.refetch().then((response) => {
-    //             if (response.data) {
-    //                 const transformed = transformResponse(response.data);
-    //                 setData(transformed);
-    //             }
-    //         });
-    //     }
-    // }, [refreshTable, applicationData]);
+    useEffect(() => {
+        // @ts-ignore
+        setData((prevData) =>
+            prevData.map((item) =>
+                item.id === refreshTable.userId
+                    ? {
+                          ...item,
+                          status: refreshTable.status,
+                          tempStatus: refreshTable.pendingStatus,
+                      }
+                    : item
+            )
+        );
+    }, [refreshTable]);
 
     //Filters and sorting
     const [globalFilter, setGlobalFilter] = useState<string>('');
