@@ -112,9 +112,6 @@ export const applicationsRouter = router({
                 )
                 .returning();
 
-            return {
-                ...application,
-                response: application.response as Record<string, unknown>,
-            };
+            return application;
         }),
 });
