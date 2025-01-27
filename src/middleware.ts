@@ -1,5 +1,8 @@
 import { auth } from '@/auth/auth';
 import { NextRequest, NextResponse } from 'next/server';
+import { databaseClient } from './db/client';
+import { UserRoleEnum, users, UserTableType } from './db/schema/users';
+import { eq } from 'drizzle-orm';
 
 // Since nextjs don't support middleware route groups yet.
 
@@ -10,16 +13,40 @@ function getFirstSegment(str: string) {
     return str.substring(1, idx === -1 ? str.length : idx);
 }
 
-export const middleware = auth((req) => {
+export const middleware = auth(async (req) => {
     // do stuff with the req here
     const path = req.nextUrl.pathname;
+    let dbUser: UserTableType | undefined = undefined;
 
     if (authRoutes.has(getFirstSegment(path))) {
-        console.log('TODO: check for auth user');
-    }
+        const sessionUser = (await auth())?.user;
+        // check if session exist
+        if (sessionUser && sessionUser.email) {
+            // check if user exist in db
+            dbUser = (
+                await databaseClient
+                    .select()
+                    .from(users)
+                    .where(eq(users.email, sessionUser.email))
+            )[0];
+        }
 
-    if (path.startsWith('/admin')) {
-        console.log('TODO: check for admin permission');
+        if (!dbUser) {
+            // user not logged in, and redirect after login
+            return NextResponse.redirect(
+                `/login?redirect=${encodeURIComponent(path)}`,
+                { status: 302 }
+            );
+        }
+
+        // user is valid, now check if is admin
+        if (path.startsWith('/admin')) {
+            if (dbUser.userRole !== UserRoleEnum.admin) {
+                return NextResponse.rewrite(new URL('/not-found', req.url), {
+                    status: 403,
+                });
+            }
+        }
     }
 });
 

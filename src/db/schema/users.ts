@@ -1,3 +1,4 @@
+import { InferSelectModel } from 'drizzle-orm';
 import {
     boolean,
     index,
@@ -13,6 +14,16 @@ import {
 } from 'drizzle-zod';
 import { z } from 'zod';
 
+export const UserRoleEnum = {
+    user: 'user',
+    admin: 'admin',
+};
+
+const userRoleDbEnum = pgEnum('user_role', [
+    UserRoleEnum.admin,
+    UserRoleEnum.user,
+]);
+
 const users = pgTable(
     'users',
     {
@@ -22,8 +33,8 @@ const users = pgTable(
         firstName: varchar('first_name', { length: 64 }),
         lastName: varchar('last_name', { length: 64 }),
         phoneNumber: varchar('phone_number', { length: 15 }),
-        email: varchar('email', { length: 255 }).unique(),
-        isRegistered: boolean('is_registered').default(false).notNull(),
+        email: varchar('email', { length: 255 }).unique().notNull(),
+        userRole: userRoleDbEnum('user_role').default('user').notNull(),
     },
     (table) => ({
         emailIndex: index('email_index').on(table.email),
@@ -54,6 +65,8 @@ const deleteUserSchema = z.object({
     id: z.number().int(),
 });
 
+type UserTableType = InferSelectModel<typeof users>;
+
 export {
     deleteUserSchema,
     insertUserSchema,
@@ -61,3 +74,4 @@ export {
     updateUserSchema,
     users,
 };
+export type { UserTableType };
