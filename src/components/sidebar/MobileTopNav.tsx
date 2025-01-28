@@ -42,6 +42,7 @@ export default function MobileTopNav({ className }: MobileTopNavProps) {
 
                 <Popover>
                     <PopoverTrigger asChild>
+                        {/* TODO RAY ADD THE USER IMAGE HERE */}
                         <Image
                             width={36}
                             height={36}
@@ -55,6 +56,7 @@ export default function MobileTopNav({ className }: MobileTopNavProps) {
                         side="bottom"
                         className="z-[200]"
                     >
+                        {/* TODO RAY ADD THE SIGN OUT FUNCTION HERE */}
                         <NavLink
                             href="#"
                             label="Sign out"
