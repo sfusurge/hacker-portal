@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { log } from 'console';
 import { Conditional } from '@/lib/Conditional';
+import { redirect } from 'next/navigation';
 
 export type AppStatus =
     | 'Not Yet Started'
@@ -21,7 +22,9 @@ const statusColorMap = {
 
 export default function ApplicationCard({ status }: { status: AppStatus }) {
     const statusHeadingStyles = cn({});
-
+    const handleClick = () => {
+        redirect('/application');
+    };
     return (
         <div className="bg-neutral-900 rounded-xl border border-neutral-600/30">
             <div className="p-5 flex flex-row items-center justify-between w-full border-b border-b-neutral-600/30">
@@ -44,6 +47,7 @@ export default function ApplicationCard({ status }: { status: AppStatus }) {
                         variant="brand"
                         hierarchy="primary"
                         className="hidden md:block"
+                        onClick={handleClick}
                     >
                         Apply
                     </Button>
