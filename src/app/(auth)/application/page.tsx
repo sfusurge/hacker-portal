@@ -7,6 +7,10 @@ import { trpc } from '@/trpc/client';
 import { Provider, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { redirect } from 'next/navigation';
+import { useState } from 'react';
+import Image from 'next/image';
+import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
+import style from '@/lib/hacker_application/ApplicationForm.module.css';
 
 const questionSetAtom = atomWithStorage(
     'demo question set',
@@ -51,6 +55,11 @@ function ApplicationWithProvider() {
 
     const questions = useAtomValue(questionSetAtom);
 
+    const [finished, setFinished] = useState(false);
+
+    const returnHome = () => {
+        redirect('/');
+    };
     /*
      * submitApplication.mutate({
      *   response: {
@@ -60,57 +69,85 @@ function ApplicationWithProvider() {
      * })
      * */
     return (
-        <div>
-            <ApplicationForm
-                appDataAtom={questionSetAtom}
-                submitApplication={() => {
-                    const response = questions.pages
-                        .flatMap((page) => page.questions)
-                        .map((question) => {
-                            const questionId = question.questionId;
-                            const type = question.type;
+        <div className="flex flex-col justify-center items-center h-full">
+            {!finished && (
+                <ApplicationForm
+                    appDataAtom={questionSetAtom}
+                    submitApplication={() => {
+                        const response = questions.pages
+                            .flatMap((page) => page.questions)
+                            .map((question) => {
+                                const questionId = question.questionId;
+                                const type = question.type;
 
-                            if (type === 'multiple-checkbox') {
+                                if (type === 'multiple-checkbox') {
+                                    return {
+                                        questionId,
+                                        value: question.choices
+                                            .filter(({ value }) => value)
+                                            .map(({ data }) => data),
+                                    };
+                                }
+
+                                if (type === 'name') {
+                                    return {
+                                        questionId,
+                                        value: `${question.firstName} ${question.lastName}`,
+                                    };
+                                }
+
                                 return {
                                     questionId,
-                                    value: question.choices
-                                        .filter(({ value }) => value)
-                                        .map(({ data }) => data),
+                                    value: question.value,
                                 };
-                            }
+                            })
+                            .reduce(
+                                (response, { questionId, value }) => {
+                                    response[questionId] = value;
 
-                            if (type === 'name') {
-                                return {
-                                    questionId,
-                                    value: `${question.firstName} ${question.lastName}`,
-                                };
-                            }
+                                    return response;
+                                },
+                                {} as Record<string, any>
+                            );
 
-                            return {
-                                questionId,
-                                value: question.value,
-                            };
-                        })
-                        .reduce(
-                            (response, { questionId, value }) => {
-                                response[questionId] = value;
+                        console.log(`Submitting ${JSON.stringify(response)}`);
 
-                                return response;
-                            },
-                            {} as Record<string, any>
-                        );
+                        submitApplication.mutate({
+                            hackathonId: 1,
+                            response: response,
+                        });
 
-                    console.log(`Submitting ${JSON.stringify(response)}`);
+                        // TODO, show submittion screen
+                        setFinished(true);
+                    }}
+                ></ApplicationForm>
+            )}
+            {finished && (
+                <div className="flex flex-col items-center justify-center gap-10">
+                    <Image
+                        src={'/login/team.svg'}
+                        alt={'The Surge Team!'}
+                        width={430}
+                        height={317}
+                    />
+                    <div className="flex flex-col gap-1 justify-center items-center">
+                        <h1 className="text-white font-sans text-3xl font-semibold">
+                            Application Submitted!
+                        </h1>
+                        <h2 className="text-white/60 text-sm font-sans">
+                            Your application has been submitted and will go
+                            under review by the JourneyHacks team soon.
+                        </h2>
+                    </div>
 
-                    submitApplication.mutate({
-                        hackathonId: 1,
-                        response: response,
-                    });
-
-                    // TODO, show submittion screen
-                    redirect('/application/submitted');
-                }}
-            ></ApplicationForm>
+                    <SkewmorphicButton
+                        onClick={returnHome}
+                        className={style.nextButton}
+                    >
+                        Back to Dashboard
+                    </SkewmorphicButton>
+                </div>
+            )}
         </div>
     );
 }
