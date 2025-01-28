@@ -112,4 +112,4 @@ export const sendEmailRouter = router({
         }),
 });
 
-export type sendEmailRouter = typeof sendEmailRouter;
+export type SendEmailRouter = typeof sendEmailRouter;

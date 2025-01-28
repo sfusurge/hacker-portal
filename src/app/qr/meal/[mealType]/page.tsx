@@ -1,7 +1,7 @@
 import ScanPage from '@/app/qr/components/ScanPage';
 
 type MealScanProps = {
-    params: { mealType: string };
+    params: Promise<{ mealType: string }>;
 };
 
 export default async function MealScan({ params }: MealScanProps) {

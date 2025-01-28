@@ -92,7 +92,7 @@ export default function CheckinTicket({
             setQRCode(code);
         };
         fetchQRcode(userId);
-    }, []);
+    }, [userId]);
 
     return (
         <div className="flex flex-col justify-center items-center overflow-hidden relative gap-2">

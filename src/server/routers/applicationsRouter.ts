@@ -102,3 +102,5 @@ export const applicationsRouter = router({
             return application;
         }),
 });
+
+export type ApplicationsRouter = typeof applicationsRouter;
