@@ -13,6 +13,9 @@ import {
     createUpdateSchema,
 } from 'drizzle-zod';
 import { z } from 'zod';
+import { databaseClient } from '../client';
+import { userDisplayIds } from './userDisplayId';
+import { getSixDigitId } from '@/lib/PRNG/LCG';
 
 export const UserRoleEnum = {
     user: 'user',
@@ -75,3 +78,32 @@ export {
     users,
 };
 export type { UserTableType };
+
+export async function addUser(vals: z.infer<typeof insertUserSchema>) {
+    // create the user, and catch their id
+    const res = (
+        await databaseClient
+            .insert(users)
+            .values({
+                ...vals,
+            })
+            .returning({
+                id: users.id,
+                email: users.email,
+                userRole: users.userRole,
+            })
+    )[0];
+    console.log('create user', res);
+
+    if (!res) {
+        return; // insertion has failed if no return
+    }
+    console.log(getSixDigitId(res.id));
+    // create display id
+    const displayRes = await databaseClient.insert(userDisplayIds).values({
+        userId: res.id,
+        displayId: getSixDigitId(res.id),
+    });
+
+    return res;
+}

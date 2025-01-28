@@ -3,8 +3,9 @@ import GoogleProvider from 'next-auth/providers/google';
 import GithubProvider from 'next-auth/providers/github';
 import { NextResponse } from 'next/server';
 import { databaseClient } from '@/db/client';
-import { users } from '@/db/schema/users';
+import { addUser, users } from '@/db/schema/users';
 import { eq } from 'drizzle-orm';
+import { userOAuth } from '@/db/schema/userOAuth';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     secret: process.env.NEXTAUTH_SECRET,
@@ -22,7 +23,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         signIn: '/login',
     },
     callbacks: {
-        signIn: async ({ user }) => {
+        signIn: async ({ user, profile, credentials, account }) => {
             if (!user.email) {
                 // bad login, somehow
                 return await signOut({
@@ -30,7 +31,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 });
             }
 
-            const dbUser = (
+            let dbUser = (
                 await databaseClient
                     .select()
                     .from(users)
@@ -40,10 +41,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
             // logged in, but user doesn't exist in db, so lets make one.
             if (!dbUser) {
-                await databaseClient.insert(users).values({
+                const res = await addUser({
                     email: user.email,
-                    userRole: 'user',
                 });
+
+                if (res) {
+                    dbUser = {
+                        ...res,
+                        firstName: null,
+                        lastName: null,
+                        phoneNumber: null,
+                    };
+                }
+            }
+
+            if (dbUser) {
+                // now check if the oauth provider is should be registered
+                await databaseClient
+                    .insert(userOAuth)
+                    .values({
+                        userId: dbUser.id,
+                        provider: account?.provider,
+                    })
+                    .onConflictDoNothing();
             }
 
             return true;

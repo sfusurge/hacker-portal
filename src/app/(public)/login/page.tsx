@@ -1,7 +1,11 @@
-import { auth, loginWithProvider, signIn } from '@/auth/auth';
+'use server';
+import { auth, loginWithProvider, signIn, signOut } from '@/auth/auth';
 import { Button } from '@/components/ui/button';
+import { databaseClient } from '@/db/client';
+import { users } from '@/db/schema/users';
+import { eq } from 'drizzle-orm';
 import Image from 'next/image';
-import { useSearchParams } from 'next/navigation';
+import { notFound, redirect, useSearchParams } from 'next/navigation';
 
 export default async function Login({
     searchParams,
@@ -10,20 +14,54 @@ export default async function Login({
 }) {
     const redirectTarget = (await searchParams)['from'] as string;
 
+    const session = await auth();
+
+    if (session) {
+        // user already logged in
+
+        // check if user needs to input personal info still
+        const res = (
+            await databaseClient
+                .select()
+                .from(users)
+                .where(eq(users.email, session.user?.email!))
+        )[0];
+        if (!res) {
+            // somehow this user isnt created, signout/invalidate the sesson
+            await notFound();
+        }
+
+        if (!res.firstName || !res.lastName || !res.phoneNumber) {
+            // user info isn't filled out, redirect to userinfo
+            let target = '/login/userinfo';
+            if (redirectTarget) {
+                target = `${target}?from=${encodeURIComponent(redirectTarget)}`;
+            }
+            return redirect(target);
+        }
+
+        // user info is all filled
+        if (redirectTarget) {
+            return redirect(redirectTarget);
+        }
+
+        // no target specified = default home
+        return redirect('/home');
+    }
+
     async function loginWithGoogle() {
         'use server';
-        const res = await signIn('google', {
-            redirect: redirectTarget !== undefined,
-            redirectTo: redirectTarget,
+
+        await signIn('google', {
+            redirectTo: `/login${redirectTarget !== undefined ? '?from=' + encodeURIComponent(redirectTarget) : ''}`,
         });
-        console.log('sign in done :', res);
-        const session = await auth();
-        console.log('session: ', session);
     }
 
     async function loginWithGithub() {
         'use server';
-        await loginWithProvider('github', redirectTarget);
+        await signIn('github', {
+            redirectTo: `/login${redirectTarget !== undefined ? '?from=' + encodeURIComponent(redirectTarget) : ''}`,
+        });
     }
 
     return (
