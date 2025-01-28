@@ -12,38 +12,60 @@ interface ButtonProps {
 }
 
 const buttonVariants = cva(
-    'font-medium text-center flex items-center justify-center transition-colors',
+    'text-white font-medium text-center flex items-center justify-center transition-colors',
     {
         variants: {
             variant: {
-                default: 'text-white',
+                default: '',
                 success: '',
                 caution: '',
                 error: '',
-                brand: 'bg-brand-500',
+                brand: '',
             },
             hierarchy: {
-                primary: '',
+                primary:
+                    'shadow-[0px_1px_0px_0px_rgba(255,255,255,0.24)_inset,0px_0px_0px_1px_rgba(255,255,255,0.12)_inset]',
                 secondary: 'border',
                 tertiary: '',
             },
             size: {
-                cozy: 'h-11 rounded-lg',
-                compact: 'h-9 rounded-md',
+                cozy: 'h-11 rounded-lg text-md',
+                compact: 'h-9 rounded-md text-sm',
+            },
+            disabled: {
+                true: '',
+                false: '',
             },
         },
         compoundVariants: [
+            {
+                variant: 'brand',
+                hierarchy: 'primary',
+                className: 'text-white bg-brand-600 hover:bg-brand-700',
+            },
+            {
+                variant: 'brand',
+                hierarchy: 'primary',
+                disabled: true,
+                className: 'text-brand-400/18 bg-brand-950 pointer-events-none',
+            },
+            {
+                variant: 'default',
+                hierarchy: 'primary',
+                className: 'bg-neutral-700 hover:bg-neutral-600',
+            },
             {
                 variant: 'default',
                 hierarchy: 'secondary',
                 className:
                     'bg-neutral-800/60 hover:bg-neutral-750/60 border-neutral-600/60',
             },
+            {
+                variant: 'caution',
+                hierarchy: 'primary',
+                className: 'bg-caution-700 hover:bg-caution-600',
+            },
         ],
-        defaultVariants: {
-            variant: 'default',
-            size: 'cozy',
-        },
     }
 );
 
@@ -80,8 +102,15 @@ const Button = forwardRef<
             <button
                 ref={ref}
                 {...props}
+                disabled={disabled}
                 className={cn(
-                    buttonVariants({ className, variant, size, hierarchy })
+                    buttonVariants({
+                        className,
+                        disabled,
+                        variant,
+                        size,
+                        hierarchy,
+                    })
                 )}
             >
                 {leadingIcon && leadingIconAlt && (

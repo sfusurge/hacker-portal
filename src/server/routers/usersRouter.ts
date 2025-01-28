@@ -6,6 +6,7 @@ import {
     deleteUserSchema,
     updateUserSchema,
     users,
+    addUser,
 } from '@/db/schema/users';
 import { getSixDigitId } from '@/lib/PRNG/LCG';
 import { eq } from 'drizzle-orm';

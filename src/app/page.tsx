@@ -4,8 +4,15 @@ import { useState } from 'react';
 import { trpc } from '@/trpc/client';
 import { EmailUser } from '@/db/schema/emails';
 import { Register, RegisterGoogle } from './Register';
+import { redirect } from 'next/navigation';
 
-export default function Home() {
+export default function LandingPage() {
+    // render nothing, always redirect to login for now
+
+    redirect('/login');
+}
+
+function Home() {
     const { data: session, status } = useSession();
     const appHealthCheck = trpc.health_check.useQuery();
     const [selectedUsers, setSelectedUsers] = useState<EmailUser[]>([]);

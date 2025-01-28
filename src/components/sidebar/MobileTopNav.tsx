@@ -24,10 +24,10 @@ export default function MobileTopNav({ className }: MobileTopNavProps) {
                     ></Image>
 
                     <div className="flex flex-col gap-2">
-                        <span className="text-sm font-medium leading-none text-white">
+                        <span className="text-sm font-medium line-clamp-1 leading-none text-white">
                             JourneyHacks 2025
                         </span>
-                        <span className="text-sm leading-none text-white/60">
+                        <span className="text-sm leading-none line-clamp-1 text-white/60">
                             February 14, 2025
                         </span>
                     </div>
@@ -38,7 +38,7 @@ export default function MobileTopNav({ className }: MobileTopNavProps) {
                         height={36}
                         alt="Default avatar for the user"
                         src="/sidebar/default-avatar.png"
-                        className="w-10 h-10 rounded-full bg-red-400"
+                        className="w-10 h-10 aspect-square rounded-full"
                     ></Image>
                 </a>
             </div>

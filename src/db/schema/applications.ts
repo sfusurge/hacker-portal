@@ -5,7 +5,6 @@ import {
     pgTable,
     primaryKey,
     timestamp,
-    uuid,
 } from 'drizzle-orm/pg-core';
 import { hackathons } from './hackathons';
 import { users } from './users';
@@ -18,7 +17,8 @@ export type StatusEnum =
     | 'Accepted'
     | 'Declined'
     | 'Wait List';
-export const applicationStatusEnum = pgEnum('status', [
+
+export const applicationStatusEnum = pgEnum('application_status', [
     'N/A',
     'Awaiting Review',
     'Accepted',

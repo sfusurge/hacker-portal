@@ -1,9 +1,69 @@
-'use client';
-
-import { Button } from '@/components/ui/Button';
+'use server';
+import { auth, loginWithProvider, signIn, signOut } from '@/auth/auth';
+import { Button } from '@/components/ui/button';
+import { databaseClient } from '@/db/client';
+import { users } from '@/db/schema/users';
+import { eq } from 'drizzle-orm';
 import Image from 'next/image';
+import { notFound, redirect, useSearchParams } from 'next/navigation';
 
-export default function Login() {
+export default async function Login({
+    searchParams,
+}: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+    const redirectTarget = (await searchParams)['from'] as string;
+
+    const session = await auth();
+
+    if (session) {
+        // user already logged in
+
+        // check if user needs to input personal info still
+        const res = (
+            await databaseClient
+                .select()
+                .from(users)
+                .where(eq(users.email, session.user?.email!))
+        )[0];
+        if (!res) {
+            // somehow this user isnt created, signout/invalidate the sesson
+            await notFound();
+        }
+
+        if (!res.firstName || !res.lastName || !res.phoneNumber) {
+            // user info isn't filled out, redirect to userinfo
+            let target = '/login/userinfo';
+            if (redirectTarget) {
+                target = `${target}?from=${encodeURIComponent(redirectTarget)}`;
+            }
+            return redirect(target);
+        }
+
+        // user info is all filled
+        if (redirectTarget) {
+            return redirect(redirectTarget);
+        }
+
+        // no target specified = default home
+        return redirect('/home');
+    }
+
+    async function loginWithGoogle() {
+        'use server';
+
+        await signIn('google', {
+            redirectTo: `/login${redirectTarget !== undefined ? '?from=' + encodeURIComponent(redirectTarget) : ''}`,
+        });
+    }
+
+    async function loginWithGithub() {
+        'use server';
+        await signIn('github', {
+            redirectTo: `/login${redirectTarget !== undefined ? '?from=' + encodeURIComponent(redirectTarget) : ''}`,
+        });
+    }
+
     return (
         <div id="auth" className="md:grid md:grid-cols-2 2xl:grid-cols-3">
             <div className="w-screen max-h-screen bg-neutral-925 h-screen p-6 flex flex-col gap-14 justify-center md:w-full 2xl:col-span-1">
@@ -26,27 +86,32 @@ export default function Login() {
                     </div>
 
                     <div className="flex flex-col gap-4 *:max-w-96 items-center w-full">
-                        <Button
-                            variant="default"
-                            hierarchy="secondary"
-                            size="cozy"
-                            className="w-full"
-                            leadingIcon="/icons/google.svg"
-                            leadingIconAlt="Google logo"
-                        >
-                            Continue with Google
-                        </Button>
+                        <form action={loginWithGoogle} className="w-full">
+                            <Button
+                                type="submit"
+                                variant="default"
+                                hierarchy="secondary"
+                                size="cozy"
+                                className="w-full"
+                                leadingIcon="/icons/google.svg"
+                                leadingIconAlt="Google logo"
+                            >
+                                Continue with Google
+                            </Button>
+                        </form>
 
-                        <Button
-                            variant="default"
-                            hierarchy="secondary"
-                            size="cozy"
-                            className="w-full"
-                            leadingIcon="/icons/github.svg"
-                            leadingIconAlt="GitHub logo"
-                        >
-                            Continue with GitHub
-                        </Button>
+                        <form action={loginWithGithub} className="w-full">
+                            <Button
+                                variant="default"
+                                hierarchy="secondary"
+                                size="cozy"
+                                className="w-full"
+                                leadingIcon="/icons/github.svg"
+                                leadingIconAlt="GitHub logo"
+                            >
+                                Continue with GitHub
+                            </Button>
+                        </form>
                     </div>
                 </div>
             </div>
