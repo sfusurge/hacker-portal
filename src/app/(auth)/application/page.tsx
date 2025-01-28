@@ -7,6 +7,9 @@ import { trpc } from '@/trpc/client';
 import { Provider, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { redirect } from 'next/navigation';
+import { useState } from 'react';
+import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
+import style from '@/lib/hacker_application/ApplicationForm.module.css';
 
 const questionSetAtom = atomWithStorage(
     'question set',
@@ -47,6 +50,9 @@ export default function Application() {
         trpc.applications.userAlreadySubmitted.useQuery({});
     const questions = useAtomValue(questionSetAtom);
 
+    const returnHome = () => {
+        redirect('/');
+    };
     /*
      * submitApplication.mutate({
      *   response: {
