@@ -1,11 +1,31 @@
+'use client';
+
 import Image from 'next/image';
 import clsx from 'clsx';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import { NavLink } from './NavLink';
+import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
+import { useAtom, useAtomValue } from 'jotai';
+import { MergedUserData } from '@/app/(auth)/layout';
+import { useHydrateAtoms } from 'jotai/utils';
+
+import * as PopoverPrimitive from '@radix-ui/react-popover';
 
 interface MobileTopNavProps {
     className?: string;
+    initialData?: MergedUserData;
 }
 
-export default function MobileTopNav({ className }: MobileTopNavProps) {
+export default function MobileTopNav({
+    initialData,
+    className,
+}: MobileTopNavProps) {
+    console.log(initialData);
+
     return (
         <div
             className={clsx(
@@ -32,15 +52,40 @@ export default function MobileTopNav({ className }: MobileTopNavProps) {
                         </span>
                     </div>
                 </div>
-                <a href="" aria-label="User profile">
-                    <Image
-                        width={36}
-                        height={36}
-                        alt="Default avatar for the user"
-                        src="/sidebar/default-avatar.png"
-                        className="w-10 h-10 aspect-square rounded-full"
-                    ></Image>
-                </a>
+
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <img
+                            width={36}
+                            height={36}
+                            alt="Default avatar for the user"
+                            src={
+                                initialData?.image ??
+                                '/sidebar/default-avatar.png'
+                            }
+                            className="w-10 h-10 aspect-square rounded-full"
+                        ></img>
+                    </PopoverTrigger>
+                    <PopoverContent
+                        sideOffset={8}
+                        side="bottom"
+                        className="z-[200]"
+                    >
+                        {/* TODO RAY ADD THE SIGN OUT FUNCTION HERE */}
+                        <NavLink
+                            href="#"
+                            label="Sign out"
+                            icon={
+                                <ArrowLeftEndOnRectangleIcon></ArrowLeftEndOnRectangleIcon>
+                            }
+                            iconAlt="Sign out logo"
+                            platform="desktop"
+                            variant="error"
+                            className="px-2"
+                        ></NavLink>
+                        <PopoverPrimitive.Arrow className="mr-4 fill-neutral-850 shadow-lg" />
+                    </PopoverContent>
+                </Popover>
             </div>
         </div>
     );

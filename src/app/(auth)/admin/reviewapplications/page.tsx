@@ -8,7 +8,6 @@ import SideCard from '@/app/(auth)/admin/reviewapplications/components/SideCard'
 
 export default function ReviewApplicationsPage() {
     const [isSideCardOpen, setIsSideCardOpen] = useState(false);
-    //const [sideCardInfo, setSideCardInfo] = useAtom(sideCardAtom);
     const [refreshTable, setRefreshTable] = useState({});
 
     const openSideCard = () => {

@@ -9,9 +9,18 @@ import { CheckCircleIcon } from '@heroicons/react/24/solid';
 type CheckInTicketProps = {
     userId: string;
     userList:
-        | { id: string; firstName: string; lastName: string; email: string }[]
+        | {
+              displayId: string;
+              userId: number;
+              id: number;
+              firstName: string | null;
+              lastName: string | null;
+              phoneNumber: string | null;
+              email: string;
+              userRole: string;
+          }[]
         | undefined;
-    checkInType: string;
+    checkInType: 'Event Check-in' | 'Meal Check-in' | 'Workshop Check-in'; // Fixed union type
     specificMeal: string;
     specificWorkshop: string;
 };
@@ -35,19 +44,20 @@ export default function CheckinTicket({
     const createFormattedDateTime = () => {
         const now = new Date();
 
-        const optionsDate = { month: 'long', day: 'numeric' };
-        // @ts-ignore
+        const optionsDate: Intl.DateTimeFormatOptions = {
+            month: 'long',
+            day: 'numeric',
+        };
         const formattedDate = new Intl.DateTimeFormat(
             'en-US',
             optionsDate
         ).format(now);
 
-        const optionsTime = {
+        const optionsTime: Intl.DateTimeFormatOptions = {
             hour: 'numeric',
             minute: '2-digit',
             hour12: true,
         };
-        // @ts-ignore
         const formattedTime = new Intl.DateTimeFormat(
             'en-US',
             optionsTime
@@ -57,7 +67,7 @@ export default function CheckinTicket({
         return formattedDateTime;
     };
 
-    const user = userList.find((user) => user.id.toString() === userId);
+    const user = userList?.find((user) => user.id.toString() === userId);
     const firstname = user ? user.firstName : null;
     const lastname = user ? user.lastName : null;
 

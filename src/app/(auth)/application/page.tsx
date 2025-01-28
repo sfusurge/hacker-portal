@@ -6,6 +6,7 @@ import { ApplicationData } from '@/lib/hacker_application/types';
 import { trpc } from '@/trpc/client';
 import { Provider, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
+import { redirect } from 'next/navigation';
 
 const questionSetAtom = atomWithStorage(
     'demo question set',
@@ -63,8 +64,6 @@ function ApplicationWithProvider() {
             <ApplicationForm
                 appDataAtom={questionSetAtom}
                 submitApplication={() => {
-                    console.log(questions);
-
                     const response = questions.pages
                         .flatMap((page) => page.questions)
                         .map((question) => {
@@ -107,6 +106,9 @@ function ApplicationWithProvider() {
                         hackathonId: 1,
                         response: response,
                     });
+
+                    // TODO, show submittion screen
+                    redirect('/application/submitted');
                 }}
             ></ApplicationForm>
         </div>

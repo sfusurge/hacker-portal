@@ -1,3 +1,5 @@
+'use client';
+
 import clsx from 'clsx';
 import Image from 'next/image';
 import { NavLink } from './NavLink';
@@ -12,13 +14,26 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import { PopoverArrow } from '@radix-ui/react-popover';
+
+import * as PopoverPrimitive from '@radix-ui/react-popover';
+import { MergedUserData } from '@/app/(auth)/layout';
+
+import { signOut } from 'next-auth/react';
+import { redirect } from 'next/navigation';
 
 interface DesktopNavProps {
     className?: string;
+    initialData?: MergedUserData;
 }
 
-export default function DesktopNav({ className }: DesktopNavProps) {
+export default function DesktopNav({
+    className,
+    initialData,
+}: DesktopNavProps) {
+    const returnHome = () => {
+        redirect('/');
+    };
+
     return (
         <div
             className={clsx(
@@ -36,6 +51,7 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                                 width={36}
                                 height={36}
                                 className="rounded-lg w-8 h-8 pointer-events-none"
+                                onClick={returnHome}
                             ></Image>
 
                             <div className="flex flex-col gap-2">
@@ -65,6 +81,7 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                             iconAlt="Home logo"
                             platform="desktop"
                             active={true}
+                            onClick={returnHome}
                         ></NavLink>
                         <NavLink
                             href="#"
@@ -73,6 +90,7 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                             iconAlt="Team logo"
                             platform="desktop"
                             active={false}
+                            onClick={returnHome}
                         ></NavLink>
 
                         <NavLink
@@ -82,6 +100,7 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                             iconAlt="Schedule logo"
                             platform="desktop"
                             active={false}
+                            onClick={returnHome}
                         ></NavLink>
 
                         <NavLink
@@ -91,7 +110,19 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                             iconAlt="Alerts logo"
                             platform="desktop"
                             active={false}
+                            onClick={returnHome}
                         ></NavLink>
+
+                        {initialData?.userRole === 'admin' && (
+                            <NavLink
+                                href="/admin/reviewapplications"
+                                label="Review Application (Admin)"
+                                icon={<BellAlertIcon></BellAlertIcon>}
+                                iconAlt="Alerts logo"
+                                platform="desktop"
+                                active={false}
+                            ></NavLink>
+                        )}
                     </div>
                 </div>
 
@@ -99,20 +130,25 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                     <PopoverTrigger asChild>
                         <button className="group flex flex-row justify-between items-center hover:bg-neutral-750/30 rounded-lg px-3 py-2.5 gap-5 transition-colors">
                             <div className="flex flex-row gap-4 items-center">
-                                <Image
+                                <img
                                     alt="Default avatar for the user"
-                                    src="/sidebar/default-avatar.png"
+                                    src={
+                                        initialData?.image ??
+                                        '/sidebar/default-avatar.png'
+                                    }
                                     width={32}
                                     height={32}
                                     className="rounded-full w-9 h-9"
-                                ></Image>
+                                ></img>
 
                                 <div className="flex flex-col gap-2">
                                     <span className="text-white font-medium text-base leading-tight text-left line-clamp-1">
-                                        Super duper long name
+                                        {initialData?.firstName}{' '}
+                                        {initialData?.lastName}
                                     </span>
+
                                     <span className="text-white/60 text-sm leading-none text-left line-clamp-1">
-                                        User type
+                                        {initialData?.userRole}
                                     </span>
                                 </div>
                             </div>
@@ -124,17 +160,20 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                         </button>
                     </PopoverTrigger>
                     <PopoverContent sideOffset={8} side="right">
+                        {/* TODO RAY ADD THE SIGN OUT FUNCTION HERE */}
                         <NavLink
                             href="#"
                             label="Sign out"
-                            icon={
-                                <ArrowLeftEndOnRectangleIcon></ArrowLeftEndOnRectangleIcon>
-                            }
+                            icon={<ArrowLeftEndOnRectangleIcon />}
                             iconAlt="Sign out logo"
                             platform="desktop"
                             variant="error"
                             className="px-2"
+                            onClick={() => {
+                                signOut();
+                            }}
                         ></NavLink>
+                        <PopoverPrimitive.Arrow className="fill-neutral-850 shadow-lg" />
                     </PopoverContent>
                 </Popover>
             </div>

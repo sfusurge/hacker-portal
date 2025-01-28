@@ -21,11 +21,9 @@ import {
 
 import { atom, useAtom } from 'jotai';
 
-const sideCardAtom = atom<Applicant>({});
+const sideCardAtom = atom<Applicant>();
 export { sideCardAtom };
 
-// import { sideCardAtom } from '@/app/(auth)/admin/reviewapplications/page';
-// import { useAtom } from 'jotai';
 import { Input } from '@/components/ui/input';
 import { mkConfig, generateCsv, download } from 'export-to-csv';
 import { Label } from '@/components/ui/label';
@@ -35,7 +33,6 @@ import { useToast } from '@/hooks/use-toast';
 import { DocumentArrowDownIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/16/solid';
 
-// const validEmailTypes = ['WELCOMEJH2025', 'WAITLISTJH2025', 'REJECTJH2025'];
 const validEmailTypes = ['WELCOMEJH2025'];
 
 export type Applicant = {
@@ -157,7 +154,7 @@ export default function ReviewApplicationsTable({
     });
 
     //Data state
-    const [data, setData] = useState([]);
+    const [data, setData] = useState<Applicant[]>([]);
 
     //Change data state on update of DB
     useEffect(() => {
@@ -168,8 +165,7 @@ export default function ReviewApplicationsTable({
     }, [applicationData.data]);
 
     useEffect(() => {
-        // @ts-ignore
-        setData((prevData) =>
+        setData((prevData: Applicant[]) =>
             prevData.map((item) =>
                 item.id === refreshTable.userId
                     ? {
@@ -184,7 +180,11 @@ export default function ReviewApplicationsTable({
 
     //Filters and sorting
     const [globalFilter, setGlobalFilter] = useState<string>('');
-    const [sorting, setSorting] = useState([{ id: 'name', asc: true }]);
+    type SortingState = { id: string; desc: boolean }[];
+
+    const [sorting, setSorting] = useState<SortingState>([
+        { id: 'name', desc: false },
+    ]);
     const [rowSelection, setRowSelection] = useState({});
 
     //I copied this from somewhere, this is for the checkboxes in the table
