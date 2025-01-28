@@ -46,6 +46,8 @@
     align-items: center;
     padding: 12px;
 
+    height: 48px;
+
     border: 1px solid var(--border-neutral-secondary);
     border-radius: 8px;
     background-color: var(--background-neutral-secondary);
