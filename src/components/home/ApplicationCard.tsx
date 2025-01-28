@@ -25,7 +25,7 @@ const statusColorMap = {
 export default function ApplicationCard({ status }: { status: AppStatus }) {
     const leadingIconStyles = cn({
         'text-white': status === 'Not Yet Started',
-        'text-danger-500': status === 'In Progress',
+        'text-caution-500': status === 'In Progress',
         'text-yellow-500': status === 'Submitted – Under Review',
     });
     const handleClick = () => {
@@ -121,11 +121,7 @@ export default function ApplicationCard({ status }: { status: AppStatus }) {
             >
                 <div className="p-5 border-t border-t-neutral-600/30 md:hidden *:w-full">
                     <Conditional showWhen={status === 'Not Yet Started'}>
-                        <Button
-                            size="cozy"
-                            variant="default"
-                            hierarchy="primary"
-                        >
+                        <Button size="cozy" variant="brand" hierarchy="primary">
                             Begin application
                         </Button>
                     </Conditional>

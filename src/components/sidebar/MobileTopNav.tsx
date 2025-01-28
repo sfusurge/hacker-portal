@@ -12,6 +12,7 @@ import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
 import { useAtom, useAtomValue } from 'jotai';
 import { MergedUserData } from '@/app/(auth)/layout';
 import { useHydrateAtoms } from 'jotai/utils';
+import { signOut } from 'next-auth/react';
 
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 
@@ -82,6 +83,9 @@ export default function MobileTopNav({
                             platform="desktop"
                             variant="error"
                             className="px-2"
+                            onClick={() => {
+                                signOut();
+                            }}
                         ></NavLink>
                         <PopoverPrimitive.Arrow className="mr-4 fill-neutral-850 shadow-lg" />
                     </PopoverContent>
