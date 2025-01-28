@@ -19,7 +19,7 @@ export default function ReviewApplicationsPage() {
     };
 
     return (
-        <div className="bg-black flex min-h-screen min-w-screen text-gray-200 p-4">
+        <div>
             <ReviewApplicationsTable
                 toggleSideCard={openSideCard}
                 refreshTable={refreshTable}

@@ -461,7 +461,7 @@ export default function ReviewApplicationsTable({
             </div>
 
             {/* Scrollable table */}
-            <div className="bg-neutral-900 rounded-xl p-1">
+            <div className="bg-neutral-900 rounded-xl p-1 w-full">
                 <div className="overflow-x-auto">
                     <table
                         className="text-left w-full"
