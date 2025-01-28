@@ -4,9 +4,14 @@ import { sendEmailSchema } from '@/db/schema/emails';
 import { transporter } from '@/server/nodemailerTransporter';
 const env = process.env;
 import Handlebars from 'handlebars';
-import { welcomeEmailTemplate } from './templates';
+import { acceptanceEmailTemplate, welcomeEmailTemplate } from './templates';
 
-const validEmailTypes = ['WELCOMEJH2025', 'WAITLISTJH2025', 'REJECTJH2025'];
+const validEmailTypes = [
+    'ACCEPTJH2025',
+    'WELCOMEJH2025',
+    'WAITLISTJH2025',
+    'REJECTJH2025',
+];
 
 export const sendEmailRouter = router({
     sendEmail: publicProcedure
@@ -21,12 +26,9 @@ export const sendEmailRouter = router({
                         color: { dark: '#000000', light: '#0000' },
                     };
 
-                    //QRCode generation
-                    const qrcode: string = (
-                        await generateQRCode(input.user.id.toString(), opts)
-                    ).replace(/^data:image\/png;base64,/, '');
                     let mailOptions = {};
 
+                    //QRCode generation
                     if (input.type === 'WELCOMEJH2025') {
                         //Compile HTML template
                         const template =
@@ -39,63 +41,86 @@ export const sendEmailRouter = router({
                         mailOptions = {
                             from: env.SENDINGEMAIL,
                             to: input.user.email,
-                            subject: '🎉 StormHacks Information',
-                            text: 'Welcome to JourneyHacks',
-                            attachments: [
-                                {
-                                    filename: 'qr.png',
-                                    content: Buffer.from(qrcode, 'base64'),
-                                    cid: 'qrcode',
-                                },
-                            ],
+                            subject: 'Your JourneyHacks Application',
+                            text: 'Thank you for applying to JourneyHacks!',
                             html: htmlContent,
                         };
-                    } else if (input.type === 'WAITLISTJH2025') {
-                        //Compile HTML template
-                        const template =
-                            Handlebars.compile(welcomeEmailTemplate);
-                        const htmlContent = template({
-                            firstName: input.user.name,
-                        });
+                    } else {
+                        const qrcode: string = (
+                            await generateQRCode(input.user.id.toString(), opts)
+                        ).replace(/^data:image\/png;base64,/, '');
 
-                        //Email transport options
-                        mailOptions = {
-                            from: env.SENDINGEMAIL,
-                            to: input.user.email,
-                            subject: '🎉 JourneyHacks Information',
-                            text: 'Welcome to JourneyHacks',
-                            attachments: [
-                                {
-                                    filename: 'qr.png',
-                                    content: Buffer.from(qrcode, 'base64'),
-                                    cid: 'qrcode',
-                                },
-                            ],
-                            html: htmlContent,
-                        };
-                    } else if (input.type === 'REJECTJH2025') {
-                        //Compile HTML template
-                        const template =
-                            Handlebars.compile(welcomeEmailTemplate);
-                        const htmlContent = template({
-                            firstName: input.user.name,
-                        });
+                        if (input.type === 'ACCEPTJH2025') {
+                            //Compile HTML template
+                            const template = Handlebars.compile(
+                                acceptanceEmailTemplate
+                            );
+                            const htmlContent = template({
+                                firstName: input.user.name,
+                            });
 
-                        //Email transport options
-                        mailOptions = {
-                            from: env.SENDINGEMAIL,
-                            to: input.user.email,
-                            subject: 'Get rejected lol ' + input.user.name,
-                            text: 'Welcome to JourneyHacks',
-                            attachments: [
-                                {
-                                    filename: 'qr.png',
-                                    content: Buffer.from(qrcode, 'base64'),
-                                    cid: 'qrcode',
-                                },
-                            ],
-                            html: htmlContent,
-                        };
+                            //Email transport options
+                            mailOptions = {
+                                from: env.SENDINGEMAIL,
+                                to: input.user.email,
+                                subject: '🎉 StormHacks Information',
+                                text: 'Welcome to JourneyHacks',
+                                attachments: [
+                                    {
+                                        filename: 'qr.png',
+                                        content: Buffer.from(qrcode, 'base64'),
+                                        cid: 'qrcode',
+                                    },
+                                ],
+                                html: htmlContent,
+                            };
+                        } else if (input.type === 'WAITLISTJH2025') {
+                            //Compile HTML template
+                            const template =
+                                Handlebars.compile(welcomeEmailTemplate);
+                            const htmlContent = template({
+                                firstName: input.user.name,
+                            });
+
+                            //Email transport options
+                            mailOptions = {
+                                from: env.SENDINGEMAIL,
+                                to: input.user.email,
+                                subject: '🎉 JourneyHacks Information',
+                                text: 'Welcome to JourneyHacks',
+                                attachments: [
+                                    {
+                                        filename: 'qr.png',
+                                        content: Buffer.from(qrcode, 'base64'),
+                                        cid: 'qrcode',
+                                    },
+                                ],
+                                html: htmlContent,
+                            };
+                        } else if (input.type === 'REJECTJH2025') {
+                            //Compile HTML template
+                            const template =
+                                Handlebars.compile(welcomeEmailTemplate);
+                            const htmlContent = template({
+                                firstName: input.user.name,
+                            });
+
+                            //Email transport options
+                            mailOptions = {
+                                from: env.SENDINGEMAIL,
+                                to: input.user.email,
+                                subject: 'Get rejected lol ' + input.user.name,
+                                text: 'Welcome to JourneyHacks',
+                                attachments: [
+                                    {
+                                        filename: 'qr.png',
+                                        content: Buffer.from(qrcode, 'base64'),
+                                        cid: 'qrcode',
+                                    },
+                                ],
+                                html: htmlContent,
+                            };
+                        }
                     }
                     //Send out email
                     transporter.sendMail(mailOptions, (error, info) => {
