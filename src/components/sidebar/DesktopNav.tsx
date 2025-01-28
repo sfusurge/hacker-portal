@@ -1,3 +1,5 @@
+'use client';
+
 import clsx from 'clsx';
 import Image from 'next/image';
 import { NavLink } from './NavLink';
@@ -16,7 +18,8 @@ import {
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { MergedUserData } from '@/app/(auth)/layout';
 
-const PopoverArrow = PopoverPrimitive.Arrow;
+import { signOut } from 'next-auth/react';
+import { redirect } from 'next/navigation';
 
 interface DesktopNavProps {
     className?: string;
@@ -27,6 +30,9 @@ export default function DesktopNav({
     className,
     initialData,
 }: DesktopNavProps) {
+    const returnHome = () => {
+        redirect('/');
+    };
     return (
         <div
             className={clsx(
@@ -44,6 +50,7 @@ export default function DesktopNav({
                                 width={36}
                                 height={36}
                                 className="rounded-lg w-8 h-8 pointer-events-none"
+                                onClick={returnHome}
                             ></Image>
 
                             <div className="flex flex-col gap-2">
@@ -73,6 +80,7 @@ export default function DesktopNav({
                             iconAlt="Home logo"
                             platform="desktop"
                             active={true}
+                            onClick={returnHome}
                         ></NavLink>
                         <NavLink
                             href="#"
@@ -81,6 +89,7 @@ export default function DesktopNav({
                             iconAlt="Team logo"
                             platform="desktop"
                             active={false}
+                            onClick={returnHome}
                         ></NavLink>
 
                         <NavLink
@@ -90,6 +99,7 @@ export default function DesktopNav({
                             iconAlt="Schedule logo"
                             platform="desktop"
                             active={false}
+                            onClick={returnHome}
                         ></NavLink>
 
                         <NavLink
@@ -99,6 +109,7 @@ export default function DesktopNav({
                             iconAlt="Alerts logo"
                             platform="desktop"
                             active={false}
+                            onClick={returnHome}
                         ></NavLink>
                     </div>
                 </div>
@@ -141,13 +152,14 @@ export default function DesktopNav({
                         <NavLink
                             href="#"
                             label="Sign out"
-                            icon={
-                                <ArrowLeftEndOnRectangleIcon></ArrowLeftEndOnRectangleIcon>
-                            }
+                            icon={<ArrowLeftEndOnRectangleIcon />}
                             iconAlt="Sign out logo"
                             platform="desktop"
                             variant="error"
                             className="px-2"
+                            onClick={() => {
+                                signOut();
+                            }}
                         ></NavLink>
                         <PopoverPrimitive.Arrow className="fill-neutral-850 shadow-lg" />
                     </PopoverContent>
