@@ -10,7 +10,7 @@ import {
 import { NavLink } from './NavLink';
 import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
 import { useAtom, useAtomValue } from 'jotai';
-import { MergedUserData, userAtom } from '@/app/(auth)/layout';
+import { MergedUserData } from '@/app/(auth)/layout';
 import { useHydrateAtoms } from 'jotai/utils';
 
 import * as PopoverPrimitive from '@radix-ui/react-popover';
@@ -24,8 +24,7 @@ export default function MobileTopNav({
     initialData,
     className,
 }: MobileTopNavProps) {
-    // useHydrateAtoms([[userAtom, initialData]]);
-    // const userData = useAtomValue(userAtom);
+    console.log(initialData);
 
     return (
         <div
@@ -56,15 +55,16 @@ export default function MobileTopNav({
 
                 <Popover>
                     <PopoverTrigger asChild>
-                        {/* userData?.image ??  */}
-                        {/* TODO RAY ADD THE USER IMAGE HERE */}
-                        <Image
+                        <img
                             width={36}
                             height={36}
                             alt="Default avatar for the user"
-                            src={'/sidebar/default-avatar.png'}
+                            src={
+                                initialData?.image ??
+                                '/sidebar/default-avatar.png'
+                            }
                             className="w-10 h-10 aspect-square rounded-full"
-                        ></Image>
+                        ></img>
                     </PopoverTrigger>
                     <PopoverContent
                         sideOffset={8}

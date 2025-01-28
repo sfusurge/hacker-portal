@@ -14,14 +14,19 @@ import {
 } from '@/components/ui/popover';
 
 import * as PopoverPrimitive from '@radix-ui/react-popover';
+import { MergedUserData } from '@/app/(auth)/layout';
 
 const PopoverArrow = PopoverPrimitive.Arrow;
 
 interface DesktopNavProps {
     className?: string;
+    initialData?: MergedUserData;
 }
 
-export default function DesktopNav({ className }: DesktopNavProps) {
+export default function DesktopNav({
+    className,
+    initialData,
+}: DesktopNavProps) {
     return (
         <div
             className={clsx(
@@ -102,23 +107,25 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                     <PopoverTrigger asChild>
                         <button className="group flex flex-row justify-between items-center hover:bg-neutral-750/30 rounded-lg px-3 py-2.5 gap-5 transition-colors">
                             <div className="flex flex-row gap-4 items-center">
-                                {/* TODO RAY ADD USER IMAGE HERE */}
-                                <Image
+                                <img
                                     alt="Default avatar for the user"
-                                    src="/sidebar/default-avatar.png"
+                                    src={
+                                        initialData?.image ??
+                                        '/sidebar/default-avatar.png'
+                                    }
                                     width={32}
                                     height={32}
                                     className="rounded-full w-9 h-9"
-                                ></Image>
+                                ></img>
 
                                 <div className="flex flex-col gap-2">
-                                    {/* TODO RAY ADD THE USER NAME HERE */}
                                     <span className="text-white font-medium text-base leading-tight text-left line-clamp-1">
-                                        Super duper long name
+                                        {initialData?.firstName}{' '}
+                                        {initialData?.lastName}
                                     </span>
-                                    {/* TODO RAY ADD THE USER TYPE HERE */}
+
                                     <span className="text-white/60 text-sm leading-none text-left line-clamp-1">
-                                        User type
+                                        {initialData?.userRole}
                                     </span>
                                 </div>
                             </div>
