@@ -34,6 +34,7 @@ export const FormTextInput = forwardRef<
         hideBackground?: boolean;
         errorMsg?: string;
         onLazyChange?: (value: string | number) => void;
+        className?: string;
     }
 >(
     (
@@ -46,6 +47,7 @@ export const FormTextInput = forwardRef<
             hideBackground,
             onLazyChange,
             style: externalStyle,
+            className,
             ...props
         },
         ref
@@ -96,7 +98,8 @@ export const FormTextInput = forwardRef<
                     defaultValue={defaultValue}
                     className={cn(
                         { [style.hideBackground]: hideBackground },
-                        style.textinput
+                        style.textinput,
+                        className
                     )}
                     ref={inputRef}
                     onKeyDown={(e) => {

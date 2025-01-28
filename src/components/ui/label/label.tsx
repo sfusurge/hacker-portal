@@ -7,7 +7,7 @@ import style from './label.module.css';
 import { cn } from '@/lib/utils';
 
 const labelVariants = cva(
-    'text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+    'text-white/60 mb-2.5 block text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
 );
 
 const Label = React.forwardRef<
