@@ -4,6 +4,49 @@ import { getSession, useSession } from 'next-auth/react';
 import DesktopNav from '@/components/sidebar/DesktopNav';
 
 import { ReactNode } from 'react';
+import { atom } from 'jotai';
+import { atomWithRefresh } from 'jotai/utils';
+import { auth } from '@/auth/auth';
+import { databaseClient } from '@/db/client';
+import { users } from '@/db/schema/users';
+import { eq } from 'drizzle-orm';
+import { userDisplayIds } from '@/db/schema/userDisplayId';
+
+export const userAtom = atomWithRefresh(async (get) => {
+    const session = await auth();
+    if (!session || !session.user || !session.user.email) {
+        return undefined;
+    }
+
+    const dbUser = (
+        await databaseClient
+            .select()
+            .from(users)
+            .limit(1)
+            .where(eq(users.email, session.user?.email))
+    )[0];
+
+    if (!dbUser) {
+        return undefined;
+    }
+
+    const displayId = (
+        await databaseClient
+            .select()
+            .from(userDisplayIds)
+            .where(eq(userDisplayIds.userId, dbUser.id))
+    )[0];
+
+    if (!displayId) {
+        return undefined;
+    }
+
+    return {
+        ...dbUser,
+        displayId: displayId.displayId,
+        image: session.user.image,
+    };
+});
 
 export default function Layout({
     children,
