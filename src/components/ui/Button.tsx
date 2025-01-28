@@ -31,12 +31,22 @@ const buttonVariants = cva(
                 cozy: 'h-11 rounded-lg',
                 compact: 'h-9 rounded-md',
             },
+            disabled: {
+                true: '',
+                false: '',
+            },
         },
         compoundVariants: [
             {
                 variant: 'brand',
                 hierarchy: 'primary',
                 className: 'text-white bg-brand-600 hover:bg-brand-700',
+            },
+            {
+                variant: 'brand',
+                hierarchy: 'primary',
+                disabled: true,
+                className: 'text-brand-400/18 bg-brand-950 pointer-events-none',
             },
             {
                 variant: 'default',
@@ -82,7 +92,13 @@ const Button = forwardRef<
                 ref={ref}
                 {...props}
                 className={cn(
-                    buttonVariants({ className, variant, size, hierarchy })
+                    buttonVariants({
+                        className,
+                        disabled,
+                        variant,
+                        size,
+                        hierarchy,
+                    })
                 )}
             >
                 {leadingIcon && leadingIconAlt && (
