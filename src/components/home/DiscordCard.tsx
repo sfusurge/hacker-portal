@@ -10,7 +10,7 @@ export default function DiscordCard() {
                         Stay in the Loop
                     </span>
                     <h2 className="text-white text-xl font-semibold leading-tight">
-                        Join the SFU Surge Discord Server!
+                        Join the Surge Discord!
                     </h2>
                 </div>
                 <Button
@@ -19,7 +19,7 @@ export default function DiscordCard() {
                     hierarchy="primary"
                     className="hidden md:block"
                 >
-                    Join server
+                    Join
                 </Button>
             </div>
             <div className="text-center p-5 pb-0 md:p-8 md:pb-0">
