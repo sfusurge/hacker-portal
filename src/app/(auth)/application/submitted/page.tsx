@@ -1,6 +1,7 @@
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import style from 'styled-jsx/style';
 import Image from 'next/image';
+import { redirect } from 'next/navigation';
 
 export default function SubmitPage() {
     return (
@@ -22,8 +23,12 @@ export default function SubmitPage() {
             </div>
 
             <SkewmorphicButton
-                onClick={returnHome}
-                className={style.nextButton}
+                onClick={() => {
+                    redirect('/');
+                }}
+                style={{
+                    background: 'var(--brand-500)',
+                }}
             >
                 Back to Dashboard
             </SkewmorphicButton>

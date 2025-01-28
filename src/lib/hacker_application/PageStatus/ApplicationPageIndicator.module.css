@@ -31,7 +31,7 @@
 
 .iconHolder {
     position: relative;
-    width: 28px;
+    min-width: 28px;
     height: 28px;
 }
 
@@ -133,7 +133,7 @@ Use pseudo element to avoid backdrop-filter "root"
 
     position: absolute;
     width: 100%;
-    max-width: 250px;
+    max-width: 350px;
     z-index: 100;
     left: 50%;
     bottom: calc(100% + 10px);
