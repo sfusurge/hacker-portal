@@ -2,8 +2,6 @@
 import { signOut, useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { trpc } from '@/trpc/client';
-import UsersList from './components/UsersList';
-import HackathonsList from '@/app/components/HackathonsList';
 import { EmailUser } from '@/db/schema/emails';
 import { Register, RegisterGoogle } from './Register';
 import { redirect } from 'next/navigation';
@@ -51,10 +49,6 @@ function Home() {
                 <br />
                 <hr />
                 <h2 className="font-bold">Users</h2>
-                <UsersList
-                    selectedUsers={selectedUsers}
-                    setSelectedUsers={setSelectedUsers}
-                />
                 <br />
                 <button
                     onClick={async () => {
@@ -64,9 +58,6 @@ function Home() {
                     Send Email to Selected Hackers
                 </button>
                 <br></br>
-                <hr />
-                <h2 className="font-bold">Hackathons</h2>
-                <HackathonsList />
                 <hr />
             </>
         );

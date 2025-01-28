@@ -7,9 +7,6 @@ import { useEffect, useState } from 'react';
 import SideCard from '@/app/reviewapplications/components/SideCard';
 import { atom, useAtom } from 'jotai';
 
-const sideCardAtom = atom<Applicant>({});
-export { sideCardAtom };
-
 export default function ReviewApplicationsPage() {
     const [isSideCardOpen, setIsSideCardOpen] = useState(false);
     //const [sideCardInfo, setSideCardInfo] = useAtom(sideCardAtom);
