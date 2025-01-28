@@ -7,7 +7,7 @@ export default function Home() {
             <h1 className="text-3xl text-white font-semibold">
                 Hi, really long username!
             </h1>
-            <div className="grid gap-6 md:gap-8 pb-6 xl:grid-cols-2">
+            <div className="grid gap-6 md:gap-8 pb-6 md:pb-0 xl:grid-cols-2">
                 <ApplicationCard status="In Progress"></ApplicationCard>
                 <DiscordCard></DiscordCard>
             </div>

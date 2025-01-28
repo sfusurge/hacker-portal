@@ -17,7 +17,7 @@ export default function Layout({
                 <MobileTopNav className="top-0 left-0 fixed z-[999] md:hidden"></MobileTopNav>
                 <MobileBottomNav className="bottom-0 left-0 fixed z-[999] md:hidden"></MobileBottomNav>
                 <DesktopNav className="hidden md:block"></DesktopNav>
-                <main className="mt-20 pb-20 md:max-h-screen md:flex-1 md:bg-neutral-925 md:my-5 md:p-10 md:rounded-2xl md:border md:border-neutral-600/30">
+                <main className="mt-20 pb-20 md:max-h-screen md:flex-1 md:bg-neutral-925 md:my-5 md:p-10 md:rounded-2xl md:border md:border-neutral-600/30 md:overflow-y-scroll">
                     {children}
                 </main>
             </div>
