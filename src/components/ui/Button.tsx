@@ -102,6 +102,7 @@ const Button = forwardRef<
             <button
                 ref={ref}
                 {...props}
+                disabled={disabled}
                 className={cn(
                     buttonVariants({
                         className,

@@ -30,7 +30,7 @@ export const FormTextInput = forwardRef<
     ComponentProps<'input'> & {
         lazy?: boolean;
         timeOut?: number;
-        type: 'text' | 'number' | 'search';
+        type: 'text' | 'number' | 'search' | string;
         hideBackground?: boolean;
         errorMsg?: string;
         onLazyChange?: (value: string | number) => void;
@@ -90,6 +90,8 @@ export const FormTextInput = forwardRef<
                 }
                 className={cn(style.inputHolder, {
                     [style.hasLength]: props.maxLength !== undefined,
+                    [style.hasError]:
+                        props.required || props.pattern !== undefined,
                 })}
             >
                 <Input
