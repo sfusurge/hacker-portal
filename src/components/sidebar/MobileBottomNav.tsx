@@ -1,3 +1,5 @@
+'use client';
+
 import clsx from 'clsx';
 import { NavLink } from './NavLink';
 import { HomeIcon } from '@heroicons/react/24/outline';
@@ -23,7 +25,7 @@ export default function MobileBottomNav({ className }: MobileBottomNavProps) {
                 icon={<HomeIcon></HomeIcon>}
                 iconAlt="Home logo"
                 platform="mobile"
-                active={true}
+                active={window.location.pathname === '/home'}
             ></NavLink>
 
             <NavLink
@@ -33,6 +35,7 @@ export default function MobileBottomNav({ className }: MobileBottomNavProps) {
                 iconAlt="Team logo"
                 platform="mobile"
                 active={false}
+                disabled={true}
             ></NavLink>
 
             <NavLink
@@ -42,6 +45,7 @@ export default function MobileBottomNav({ className }: MobileBottomNavProps) {
                 iconAlt="Schedule logo"
                 platform="mobile"
                 active={false}
+                disabled={true}
             ></NavLink>
 
             <NavLink
@@ -50,7 +54,7 @@ export default function MobileBottomNav({ className }: MobileBottomNavProps) {
                 icon={<BellAlertIcon></BellAlertIcon>}
                 iconAlt="Alerts logo"
                 platform="mobile"
-                active={false}
+                disabled={true}
             ></NavLink>
         </div>
     );

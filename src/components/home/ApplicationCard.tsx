@@ -121,7 +121,12 @@ export default function ApplicationCard({ status }: { status: AppStatus }) {
             >
                 <div className="p-5 border-t border-t-neutral-600/30 md:hidden *:w-full">
                     <Conditional showWhen={status === 'Not Yet Started'}>
-                        <Button size="cozy" variant="brand" hierarchy="primary">
+                        <Button
+                            size="cozy"
+                            variant="brand"
+                            hierarchy="primary"
+                            onClick={() => redirect('/application')}
+                        >
                             Begin application
                         </Button>
                     </Conditional>
@@ -130,6 +135,7 @@ export default function ApplicationCard({ status }: { status: AppStatus }) {
                             size="cozy"
                             variant="caution"
                             hierarchy="primary"
+                            onClick={() => redirect('/application')}
                         >
                             Continue application
                         </Button>
