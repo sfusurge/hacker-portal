@@ -220,7 +220,7 @@ export const applicationSet: ApplicationData = {
 
 export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
     title: 'First page',
-    version: 10,
+    version: 101,
     hackathonName: 'Journey Hacks 2025',
     pages: [
         {

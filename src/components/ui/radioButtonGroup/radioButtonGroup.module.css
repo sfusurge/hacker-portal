@@ -7,11 +7,7 @@
     max-width: 400px;
 }
 
-.optionsContainer:has(label:has(input:user-invalid)) {
-    border: 2px solid var(--danger-500);
-}
-
-.optionsContainer:has(label:has(input:user-invalid))::after {
+.optionsContainer:user-invalid::after {
     content: 'Required, please make a selection';
     color: var(--danger-500);
 }
