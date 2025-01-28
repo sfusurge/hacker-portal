@@ -48,6 +48,15 @@
     padding-top: 0.2rem;
 }
 
+.inputHolder.hasError::after {
+    content: '_';
+    font-size: smaller;
+    line-height: 1rem;
+    display: block;
+    padding-top: 0.2rem;
+    color: transparent;
+}
+
 .textinput {
     color: white;
     background-color: var(--background-neutral-secondary);

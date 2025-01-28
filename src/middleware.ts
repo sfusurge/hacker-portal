@@ -14,7 +14,6 @@ function getFirstSegment(str: string) {
 }
 
 export const middleware = auth(async (req) => {
-    return;
     // do stuff with the req here
     const path = req.nextUrl.pathname;
     if (authRoutes.has(getFirstSegment(path))) {

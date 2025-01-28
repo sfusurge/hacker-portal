@@ -27,7 +27,7 @@ export function TextLineInput({
             pattern={
                 question.validator ? question.validator.pattern : '[\\s\\S]*'
             }
-            maxLength={question.maxCount ?? 9999}
+            maxLength={question.maxCount}
             errorMsg={question.validator?.errorMsg}
             autoComplete={question.autoComplete ?? ''}
             style={{ maxWidth: '400px' }}
