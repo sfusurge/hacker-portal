@@ -1,3 +1,5 @@
+import { auth } from '@/auth/auth';
+import { databaseClient } from '@/db/client';
 import {
     applications,
     insertApplicationSchema,
@@ -5,13 +7,11 @@ import {
     StatusEnum,
     updateApplicationStatusSchema,
 } from '@/db/schema/applications';
-import { publicProcedure, router } from '../trpc';
-import { databaseClient } from '@/db/client';
-import { and, asc, eq, sql } from 'drizzle-orm';
 import { users } from '@/db/schema/users';
-import { InternalServerError } from '../exceptions';
-import { auth } from '@/auth/auth';
+import { and, asc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
+import { InternalServerError } from '../exceptions';
+import { publicProcedure, router } from '../trpc';
 
 export interface SubmitApplicationResponse {
     hackathonId: number;
@@ -22,7 +22,9 @@ export interface SubmitApplicationResponse {
     pendingStatus: StatusEnum;
 }
 
-const nullSchema = z.object({});
+const nullSchema = z.object({
+    hackathonId: z.number().int().optional(),
+});
 
 export const applicationsRouter = router({
     userAlreadySubmitted: publicProcedure
@@ -30,21 +32,22 @@ export const applicationsRouter = router({
         .query(async ({ input }) => {
             const session = await auth();
 
-            const user = (
-                await databaseClient
-                    .select()
-                    .from(users)
-                    .where(eq(users.email, session?.user?.email!))
-            )[0];
-            if (!user) {
-                return false;
-            }
-
             const app = (
                 await databaseClient
                     .select()
                     .from(applications)
-                    .where(eq(applications.userId, user.id))
+                    .leftJoin(
+                        users,
+                        and(
+                            eq(applications.userId, users.id),
+                            eq(users.email, session?.user?.email!)
+                        )
+                    )
+                    .where(
+                        input.hackathonId !== undefined
+                            ? eq(applications.hackathonId, input.hackathonId)
+                            : undefined
+                    )
             )[0];
 
             return app !== undefined;
