@@ -23,13 +23,14 @@ const buttonVariants = cva(
                 brand: '',
             },
             hierarchy: {
-                primary: '',
+                primary:
+                    'shadow-[0px_1px_0px_0px_rgba(255,255,255,0.24)_inset,0px_0px_0px_1px_rgba(255,255,255,0.12)_inset]',
                 secondary: 'border',
                 tertiary: '',
             },
             size: {
-                cozy: 'h-11 rounded-lg',
-                compact: 'h-9 rounded-md',
+                cozy: 'h-11 rounded-lg text-md',
+                compact: 'h-9 rounded-md text-sm',
             },
             disabled: {
                 true: '',
@@ -47,6 +48,11 @@ const buttonVariants = cva(
                 hierarchy: 'primary',
                 disabled: true,
                 className: 'text-brand-400/18 bg-brand-950 pointer-events-none',
+            },
+            {
+                variant: 'default',
+                hierarchy: 'primary',
+                className: 'bg-neutral-700 hover:bg-neutral-600',
             },
             {
                 variant: 'default',
