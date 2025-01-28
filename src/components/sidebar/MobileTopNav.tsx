@@ -8,6 +8,10 @@ import {
 import { NavLink } from './NavLink';
 import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
 
+import * as PopoverPrimitive from '@radix-ui/react-popover';
+
+const PopoverArrow = PopoverPrimitive.Arrow;
+
 interface MobileTopNavProps {
     className?: string;
 }
@@ -68,6 +72,7 @@ export default function MobileTopNav({ className }: MobileTopNavProps) {
                             variant="error"
                             className="px-2"
                         ></NavLink>
+                        <PopoverPrimitive.Arrow className="mr-4 fill-neutral-850 shadow-lg" />
                     </PopoverContent>
                 </Popover>
             </div>

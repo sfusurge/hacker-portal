@@ -31,7 +31,6 @@ const PopoverContent = React.forwardRef<
                 {...props}
             >
                 {children}
-                <PopoverPrimitive.Arrow className="mr-4 fill-neutral-850 shadow-lg" />
             </PopoverPrimitive.Content>
         </PopoverPrimitive.Portal>
     )

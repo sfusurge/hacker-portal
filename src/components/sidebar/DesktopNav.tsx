@@ -12,7 +12,10 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import { PopoverArrow } from '@radix-ui/react-popover';
+
+import * as PopoverPrimitive from '@radix-ui/react-popover';
+
+const PopoverArrow = PopoverPrimitive.Arrow;
 
 interface DesktopNavProps {
     className?: string;
@@ -139,6 +142,7 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                             variant="error"
                             className="px-2"
                         ></NavLink>
+                        <PopoverPrimitive.Arrow className="fill-neutral-850 shadow-lg" />
                     </PopoverContent>
                 </Popover>
             </div>
