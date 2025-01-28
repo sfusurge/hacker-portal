@@ -50,6 +50,14 @@ function ApplicationWithProvider() {
 
     const questions = useAtomValue(questionSetAtom);
 
+    /*
+     * submitApplication.mutate({
+     *   response: {
+     *    hackathonId: <hackathonId>, // some hardcoded value
+     *    [questionId]: response value as any
+     *   }
+     * })
+     * */
     return (
         <div>
             <ApplicationForm

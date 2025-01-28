@@ -252,6 +252,7 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
                     questionId: 4,
                     type: 'multiple-choice',
                     title: 'Major',
+                    allowCustom: true,
                     choices: [
                         {
                             data: 'Business',
@@ -276,11 +277,6 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
                         {
                             data: 'Math',
                             name: 'Math',
-                        },
-                        {
-                            data: 'Other',
-                            name: 'Other',
-                            other: true,
                         },
                     ],
                 },

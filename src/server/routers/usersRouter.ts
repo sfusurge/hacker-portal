@@ -6,7 +6,6 @@ import {
     deleteUserSchema,
     updateUserSchema,
     users,
-    addUser,
 } from '@/db/schema/users';
 import { getSixDigitId } from '@/lib/PRNG/LCG';
 import { eq } from 'drizzle-orm';
@@ -27,7 +26,24 @@ export const usersRouter = router({
         });
     }),
     addUser: publicProcedure.input(insertUserSchema).mutation(async (opts) => {
-        await addUser(opts.input);
+        // create the user, and catch their id
+        const res = await databaseClient
+            .insert(users)
+            .values({
+                ...opts.input,
+            })
+            .returning({ userId: users.id });
+        if (res.length !== 1) {
+            return; // insertion has failed if no return
+        }
+        // create display id
+        return await databaseClient
+            .insert(userDisplayIds)
+            .values({
+                userId: res[0].userId,
+                displayId: getSixDigitId(res[0].userId),
+            })
+            .returning();
     }),
     deleteUser: publicProcedure
         .input(deleteUserSchema)

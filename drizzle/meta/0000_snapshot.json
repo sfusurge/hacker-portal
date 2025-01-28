@@ -1,5 +1,5 @@
 {
-  "id": "96cbdbfc-4e5f-4c76-b6aa-4bfe19b34105",
+  "id": "8c4bd585-ceb6-445b-8c7d-d2d875394f29",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -22,7 +22,7 @@
         },
         "currentStatus": {
           "name": "currentStatus",
-          "type": "application_status",
+          "type": "status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
@@ -30,7 +30,7 @@
         },
         "pendingStatus": {
           "name": "pendingStatus",
-          "type": "application_status",
+          "type": "status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
@@ -141,6 +141,73 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.questions": {
+      "name": "questions",
+      "schema": "",
+      "columns": {
+        "hackathon_id": {
+          "name": "hackathon_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "question_number": {
+          "name": "question_number",
+          "type": "serial",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "varchar(2048)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "required": {
+          "name": "required",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "questions_hackathon_id_hackathons_id_fk": {
+          "name": "questions_hackathon_id_hackathons_id_fk",
+          "tableFrom": "questions",
+          "tableTo": "hackathons",
+          "columnsFrom": [
+            "hackathon_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "questions_hackathon_id_question_number_pk": {
+          "name": "questions_hackathon_id_question_number_pk",
+          "columns": [
+            "hackathon_id",
+            "question_number"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.user_display_id": {
       "name": "user_display_id",
       "schema": "",
@@ -158,7 +225,23 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "userid_index": {
+          "name": "userid_index",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "user_display_id_user_id_users_id_fk": {
           "name": "user_display_id_user_id_users_id_fk",
@@ -175,56 +258,22 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.user_oauth": {
-      "name": "user_oauth",
-      "schema": "",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "provider": {
-          "name": "provider",
-          "type": "oauth_provider",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'n/a'"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "user_oauth_user_id_users_id_fk": {
-          "name": "user_oauth_user_id_users_id_fk",
-          "tableFrom": "user_oauth",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "user_oauth_user_id_provider_pk": {
-          "name": "user_oauth_user_id_provider_pk",
+      "uniqueConstraints": {
+        "user_display_id_display_id_unique": {
+          "name": "user_display_id_display_id_unique",
+          "nullsNotDistinct": false,
           "columns": [
-            "user_id",
-            "provider"
+            "display_id"
+          ]
+        },
+        "user_display_id_user_id_unique": {
+          "name": "user_display_id_user_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_id"
           ]
         }
       },
-      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -272,34 +321,23 @@
           "name": "email",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
-        "user_role": {
-          "name": "user_role",
-          "type": "user_role",
-          "typeSchema": "public",
+        "is_registered": {
+          "name": "is_registered",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": "'user'"
+          "default": false
+        },
+        "provider": {
+          "name": "provider",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true
         }
       },
-      "indexes": {
-        "email_index": {
-          "name": "email_index",
-          "columns": [
-            {
-              "expression": "email",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
@@ -317,8 +355,8 @@
     }
   },
   "enums": {
-    "public.application_status": {
-      "name": "application_status",
+    "public.status": {
+      "name": "status",
       "schema": "public",
       "values": [
         "N/A",
@@ -328,21 +366,24 @@
         "Wait List"
       ]
     },
-    "public.oauth_provider": {
-      "name": "oauth_provider",
+    "public.type": {
+      "name": "type",
       "schema": "public",
       "values": [
-        "github",
-        "google",
-        "n/a"
+        "MULTIPLE_CHOICE",
+        "TEXT",
+        "NUMBER",
+        "CHECKBOX",
+        "TEXT_AREA"
       ]
     },
-    "public.user_role": {
-      "name": "user_role",
+    "public.provider": {
+      "name": "provider",
       "schema": "public",
       "values": [
-        "admin",
-        "user"
+        "google",
+        "github",
+        "email"
       ]
     }
   },
