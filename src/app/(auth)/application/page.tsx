@@ -9,7 +9,7 @@ import { atomWithStorage } from 'jotai/utils';
 import { redirect } from 'next/navigation';
 
 const questionSetAtom = atomWithStorage(
-    'demo question set',
+    'question set',
     structuredClone(JOURNEY_HACK_QUESTIONS),
     {
         getItem(key, initialValue) {
@@ -32,23 +32,19 @@ const questionSetAtom = atomWithStorage(
     }
 );
 
-export default function ApplicationTest() {
-    /**
-     * // TODO
-     * Currently this solutiion creates a slight flick during intial load.
-     * todo: investigate in this potential solution
-     * https://jotai.org/docs/utilities/storage#server-side-rendering
-     */
-    return (
-        <Provider>
-            <ApplicationWithProvider></ApplicationWithProvider>
-        </Provider>
-    );
-}
+/**
+ * // TODO
+ * Currently this solutiion creates a slight flick during intial load.
+ * todo: investigate in this potential solution
+ * https://jotai.org/docs/utilities/storage#server-side-rendering
+ */
 
-function ApplicationWithProvider() {
+export default function Application() {
+    console.log(trpc);
+
     const submitApplication = trpc.applications.submitApplication.useMutation();
-
+    const applicationSubmitted =
+        trpc.applications.userAlreadySubmitted.useQuery({});
     const questions = useAtomValue(questionSetAtom);
 
     /*
@@ -60,57 +56,59 @@ function ApplicationWithProvider() {
      * })
      * */
     return (
-        <div>
-            <ApplicationForm
-                appDataAtom={questionSetAtom}
-                submitApplication={() => {
-                    const response = questions.pages
-                        .flatMap((page) => page.questions)
-                        .map((question) => {
-                            const questionId = question.questionId;
-                            const type = question.type;
+        <ApplicationForm
+            appDataAtom={questionSetAtom}
+            submitApplication={() => {
+                if (applicationSubmitted) {
+                    return;
+                }
 
-                            if (type === 'multiple-checkbox') {
-                                return {
-                                    questionId,
-                                    value: question.choices
-                                        .filter(({ value }) => value)
-                                        .map(({ data }) => data),
-                                };
-                            }
+                const response = questions.pages
+                    .flatMap((page) => page.questions)
+                    .map((question) => {
+                        const questionId = question.questionId;
+                        const type = question.type;
 
-                            if (type === 'name') {
-                                return {
-                                    questionId,
-                                    value: `${question.firstName} ${question.lastName}`,
-                                };
-                            }
-
+                        if (type === 'multiple-checkbox') {
                             return {
                                 questionId,
-                                value: question.value,
+                                value: question.choices
+                                    .filter(({ value }) => value)
+                                    .map(({ data }) => data),
                             };
-                        })
-                        .reduce(
-                            (response, { questionId, value }) => {
-                                response[questionId] = value;
+                        }
 
-                                return response;
-                            },
-                            {} as Record<string, any>
-                        );
+                        if (type === 'name') {
+                            return {
+                                questionId,
+                                value: `${question.firstName} ${question.lastName}`,
+                            };
+                        }
 
-                    console.log(`Submitting ${JSON.stringify(response)}`);
+                        return {
+                            questionId,
+                            value: question.value,
+                        };
+                    })
+                    .reduce(
+                        (response, { questionId, value }) => {
+                            response[questionId] = value;
 
-                    submitApplication.mutate({
-                        hackathonId: 1,
-                        response: response,
-                    });
+                            return response;
+                        },
+                        {} as Record<string, any>
+                    );
 
-                    // TODO, show submittion screen
-                    redirect('/application/submitted');
-                }}
-            ></ApplicationForm>
-        </div>
+                console.log(`Submitting ${JSON.stringify(response)}`);
+
+                submitApplication.mutate({
+                    hackathonId: 1,
+                    response: response,
+                });
+
+                // TODO, show submittion screen
+                redirect('/application/submitted');
+            }}
+        ></ApplicationForm>
     );
 }

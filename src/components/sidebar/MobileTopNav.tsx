@@ -9,9 +9,7 @@ import {
 } from '@/components/ui/popover';
 import { NavLink } from './NavLink';
 import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
-import { useAtom, useAtomValue } from 'jotai';
 import { MergedUserData } from '@/app/(auth)/layout';
-import { useHydrateAtoms } from 'jotai/utils';
 
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 

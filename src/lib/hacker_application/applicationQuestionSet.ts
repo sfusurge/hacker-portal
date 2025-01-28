@@ -246,6 +246,10 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
                     type: 'text-line',
                     title: 'Student number',
                     placeHolder: 'Short answer text',
+                    validator: {
+                        errorMsg: 'Not a valid student number!',
+                        pattern: '[0-9]{9}',
+                    },
                     required: true,
                 },
                 {
