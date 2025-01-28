@@ -12,7 +12,7 @@ import { users } from '@/db/schema/users';
 import { eq } from 'drizzle-orm';
 import { userDisplayIds } from '@/db/schema/userDisplayId';
 
-export const userAtom = atomWithRefresh(async (get) => {
+async function getUserData() {
     const session = await auth();
     if (!session || !session.user || !session.user.email) {
         return undefined;
@@ -46,18 +46,26 @@ export const userAtom = atomWithRefresh(async (get) => {
         displayId: displayId.displayId,
         image: session.user.image,
     };
-});
+}
+export type MergedUserData = Awaited<ReturnType<typeof getUserData>>;
 
-export default function Layout({
+export const userAtom = atom<MergedUserData>();
+
+export default async function Layout({
     children,
     ...props
 }: {
     children: ReactNode;
 }) {
+    const initialUserData = await getUserData();
+
     return (
         <>
             <div className="bg-neutral-950 h-screen w-screen p-6 md:flex md:p-0 md:pr-5">
-                <MobileTopNav className="top-0 left-0 fixed z-[100] md:hidden"></MobileTopNav>
+                <MobileTopNav
+                    initialData={initialUserData}
+                    className="top-0 left-0 fixed z-[100] md:hidden"
+                ></MobileTopNav>
                 <MobileBottomNav className="bottom-0 left-0 fixed z-[100] md:hidden"></MobileBottomNav>
                 <DesktopNav className="hidden md:block"></DesktopNav>
                 <main className="mt-20 pb-20 md:max-h-screen md:flex-1 md:bg-neutral-925 md:my-5 md:p-10 md:rounded-2xl md:border md:border-neutral-600/30 md:overflow-y-scroll">

@@ -1,3 +1,5 @@
+'use client';
+
 import Image from 'next/image';
 import clsx from 'clsx';
 import {
@@ -7,12 +9,22 @@ import {
 } from '@/components/ui/popover';
 import { NavLink } from './NavLink';
 import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
+import { useAtom, useAtomValue } from 'jotai';
+import { MergedUserData, userAtom } from '@/app/(auth)/layout';
+import { useHydrateAtoms } from 'jotai/utils';
 
 interface MobileTopNavProps {
     className?: string;
+    initialData?: MergedUserData;
 }
 
-export default function MobileTopNav({ className }: MobileTopNavProps) {
+export default function MobileTopNav({
+    initialData = undefined,
+    className,
+}: MobileTopNavProps) {
+    //    useHydrateAtoms([[userAtom, initialData]]);
+    //    const userData = useAtomValue(userAtom);
+
     return (
         <div
             className={clsx(
@@ -42,11 +54,12 @@ export default function MobileTopNav({ className }: MobileTopNavProps) {
 
                 <Popover>
                     <PopoverTrigger asChild>
+                        {/* userData?.image ??  */}
                         <Image
                             width={36}
                             height={36}
                             alt="Default avatar for the user"
-                            src="/sidebar/default-avatar.png"
+                            src={'/sidebar/default-avatar.png'}
                             className="w-10 h-10 aspect-square rounded-full"
                         ></Image>
                     </PopoverTrigger>
