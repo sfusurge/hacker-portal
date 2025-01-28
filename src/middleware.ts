@@ -16,37 +16,13 @@ function getFirstSegment(str: string) {
 export const middleware = auth(async (req) => {
     // do stuff with the req here
     const path = req.nextUrl.pathname;
-    let dbUser: UserTableType | undefined = undefined;
-
     if (authRoutes.has(getFirstSegment(path))) {
         const sessionUser = (await auth())?.user;
-        // check if session exist
-        if (sessionUser && sessionUser.email) {
-            // check if user exist in db
-            dbUser = (
-                await databaseClient
-                    .select()
-                    .from(users)
-                    .where(eq(users.email, sessionUser.email))
-            )[0];
-        }
-        console.log(sessionUser);
-        console.log(dbUser);
-
-        if (!dbUser) {
+        // redirect unauthenticated users.
+        if (!sessionUser) {
             const target = new URL('/login', req.url);
             target.searchParams.set('from', path);
-            // user not logged in, and redirect after login
-            return NextResponse.redirect(target, { status: 302 });
-        }
-
-        // user is valid, now check if is admin
-        if (path.startsWith('/admin')) {
-            if (dbUser.userRole !== UserRoleEnum.admin) {
-                return NextResponse.rewrite(new URL('/not-found', req.url), {
-                    status: 403,
-                });
-            }
+            NextResponse.redirect(target, { status: 302 });
         }
     }
 });

@@ -1,13 +1,29 @@
+import { auth, loginWithProvider, signIn } from '@/auth/auth';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 
-export default function Login() {
+export default async function Login({
+    searchParams,
+}: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+    const redirectTarget = (await searchParams)['from'] as string;
+
     async function loginWithGoogle() {
         'use server';
+        const res = await signIn('google', {
+            redirect: redirectTarget !== undefined,
+            redirectTo: redirectTarget,
+        });
+        console.log('sign in done :', res);
+        const session = await auth();
+        console.log('session: ', session);
     }
 
     async function loginWithGithub() {
         'use server';
+        await loginWithProvider('github', redirectTarget);
     }
 
     return (
