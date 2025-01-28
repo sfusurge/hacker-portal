@@ -4,19 +4,12 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-
-    height: 90dvh;
+    height: calc(100dvh - 2.5rem);
     max-width: 1200px;
-    margin: 2rem;
-
-    padding: 40px;
-
     color: white;
-
-    background-color: var(--neutral-950);
     box-sizing: border-box;
-    border: 1px solid var(--border-neutral-tertiary);
-    border-radius: 24px;
+
+    padding: 24px;
 }
 
 .mainTitle {
@@ -73,11 +66,11 @@
 /* ==== page ====*/
 
 .page {
+    padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 32px;
-    padding: 32px;
-    padding-bottom: 6rem;
+    padding-bottom: 7rem;
 }
 
 .formContainer {
@@ -117,7 +110,6 @@
         padding: 0;
         border: none;
         border-radius: 0;
-        margin: 1rem;
     }
 
     .appFormWrapper {
@@ -129,10 +121,5 @@
 
     .appFormContent {
         overflow: visible;
-    }
-
-    .page {
-        padding: 1rem;
-        padding-bottom: 10rem;
     }
 }

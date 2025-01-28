@@ -30,10 +30,11 @@ export const FormTextInput = forwardRef<
     ComponentProps<'input'> & {
         lazy?: boolean;
         timeOut?: number;
-        type: 'text' | 'number' | 'search';
+        type: 'text' | 'number' | 'search' | string;
         hideBackground?: boolean;
         errorMsg?: string;
         onLazyChange?: (value: string | number) => void;
+        className?: string;
     }
 >(
     (
@@ -46,6 +47,7 @@ export const FormTextInput = forwardRef<
             hideBackground,
             onLazyChange,
             style: externalStyle,
+            className,
             ...props
         },
         ref
@@ -88,6 +90,8 @@ export const FormTextInput = forwardRef<
                 }
                 className={cn(style.inputHolder, {
                     [style.hasLength]: props.maxLength !== undefined,
+                    [style.hasError]:
+                        props.required || props.pattern !== undefined,
                 })}
             >
                 <Input
@@ -96,7 +100,8 @@ export const FormTextInput = forwardRef<
                     defaultValue={defaultValue}
                     className={cn(
                         { [style.hideBackground]: hideBackground },
-                        style.textinput
+                        style.textinput,
+                        className
                     )}
                     ref={inputRef}
                     onKeyDown={(e) => {

@@ -8,9 +8,9 @@ import {
 import { publicProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
 import { and, asc, eq, sql } from 'drizzle-orm';
-import { getServerSession } from 'next-auth';
 import { users } from '@/db/schema/users';
 import { InternalServerError } from '../exceptions';
+import { auth } from '@/auth/auth';
 
 export interface SubmitApplicationResponse {
     hackathonId: number;
@@ -25,7 +25,7 @@ export const applicationsRouter = router({
     submitApplication: publicProcedure
         .input(insertApplicationSchema)
         .mutation(async ({ input }): Promise<SubmitApplicationResponse> => {
-            const session = await getServerSession();
+            const session = await auth();
 
             const email = session?.user?.email;
 

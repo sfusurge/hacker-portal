@@ -1,5 +1,7 @@
+import { InferSelectModel } from 'drizzle-orm';
 import {
     boolean,
+    index,
     integer,
     pgEnum,
     pgTable,
@@ -11,17 +13,36 @@ import {
     createUpdateSchema,
 } from 'drizzle-zod';
 import { z } from 'zod';
+import { databaseClient } from '../client';
+import { userDisplayIds } from './userDisplayId';
+import { getSixDigitId } from '@/lib/PRNG/LCG';
 
-export const providersEnum = pgEnum('provider', ['google', 'github', 'email']);
-const users = pgTable('users', {
-    id: integer('id').generatedAlwaysAsIdentity({ startWith: 1 }).primaryKey(),
-    firstName: varchar('first_name', { length: 64 }),
-    lastName: varchar('last_name', { length: 64 }),
-    phoneNumber: varchar('phone_number', { length: 15 }),
-    email: varchar('email', { length: 255 }).unique(),
-    isRegistered: boolean('is_registered').default(false).notNull(),
-    provider: varchar('provider', { length: 32 }).notNull(),
-});
+export const UserRoleEnum = {
+    user: 'user',
+    admin: 'admin',
+};
+
+export const userRoleDbEnum = pgEnum('user_role', [
+    UserRoleEnum.admin,
+    UserRoleEnum.user,
+]);
+
+const users = pgTable(
+    'users',
+    {
+        id: integer('id')
+            .generatedAlwaysAsIdentity({ startWith: 1 })
+            .primaryKey(),
+        firstName: varchar('first_name', { length: 64 }),
+        lastName: varchar('last_name', { length: 64 }),
+        phoneNumber: varchar('phone_number', { length: 15 }),
+        email: varchar('email', { length: 255 }).unique().notNull(),
+        userRole: userRoleDbEnum('user_role').default('user').notNull(),
+    },
+    (table) => ({
+        emailIndex: index('email_index').on(table.email),
+    })
+);
 
 const selectUserSchema = createSelectSchema(users); // select a user by either their primary key id or their display id.
 
@@ -41,12 +62,13 @@ const updateUserSchema = z.object({
         .max(255, 'email too long')
         .optional(),
     isRegistered: z.boolean().default(false).optional(),
-    provider: z.string().max(32, 'provider name too long').optional(),
 });
 
 const deleteUserSchema = z.object({
     id: z.number().int(),
 });
+
+type UserTableType = InferSelectModel<typeof users>;
 
 export {
     deleteUserSchema,
@@ -55,3 +77,33 @@ export {
     updateUserSchema,
     users,
 };
+export type { UserTableType };
+
+export async function addUser(vals: z.infer<typeof insertUserSchema>) {
+    // create the user, and catch their id
+    const res = (
+        await databaseClient
+            .insert(users)
+            .values({
+                ...vals,
+            })
+            .returning({
+                id: users.id,
+                email: users.email,
+                userRole: users.userRole,
+            })
+    )[0];
+    console.log('create user', res);
+
+    if (!res) {
+        return; // insertion has failed if no return
+    }
+    console.log(getSixDigitId(res.id));
+    // create display id
+    const displayRes = await databaseClient.insert(userDisplayIds).values({
+        userId: res.id,
+        displayId: getSixDigitId(res.id),
+    });
+
+    return res;
+}

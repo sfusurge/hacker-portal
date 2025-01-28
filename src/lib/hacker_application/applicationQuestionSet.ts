@@ -8,7 +8,7 @@ export const applicationSet: ApplicationData = {
     hackathonName: 'demo_hackathon', // this should match the internal name of the hackathon, will not be displayed.
     title: 'Demo Hackathon Application',
     submissionTime: undefined, // no initial time set.
-    version: 1,
+    version: 10,
     pages: [
         {
             title: 'First page',
@@ -220,7 +220,7 @@ export const applicationSet: ApplicationData = {
 
 export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
     title: 'First page',
-    version: 1,
+    version: 10,
     hackathonName: 'Journey Hacks 2025',
     pages: [
         {

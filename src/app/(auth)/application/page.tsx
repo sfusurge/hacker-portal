@@ -109,15 +109,6 @@ function ApplicationWithProvider() {
                     });
                 }}
             ></ApplicationForm>
-            <pre
-                style={{
-                    width: '700px',
-                    height: '800px',
-                    overflow: 'scroll',
-                }}
-            >
-                <code>{JSON.stringify(questions, undefined, 2)}</code>
-            </pre>
         </div>
     );
 }

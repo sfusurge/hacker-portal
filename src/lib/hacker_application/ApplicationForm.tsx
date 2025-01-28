@@ -31,7 +31,7 @@ import {
 } from './PageStatus/ApplicationPageIndicator';
 import { cn, useWindowSize } from '../utils';
 import { ArrowLeftIcon } from '@heroicons/react/24/solid';
-import { useRouter } from 'next/navigation';
+import { redirect, useRouter } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 
 /**
@@ -115,15 +115,17 @@ export function ApplicationForm({
 
     return (
         <div className={style.appFormRoot}>
-            <button
-                className={style.homeButton}
-                onClick={() => {
-                    router.back(); // TODO redirect back to dashboard
-                }}
-            >
-                <ArrowLeftIcon style={{ width: '24px' }}></ArrowLeftIcon>
-                Dashboard
-            </button>
+            {isMobile && (
+                <button
+                    className={cn(style.homeButton, 'md:hidden')}
+                    onClick={() => {
+                        redirect('/home');
+                    }}
+                >
+                    <ArrowLeftIcon style={{ width: '24px' }}></ArrowLeftIcon>
+                    Dashboard
+                </button>
+            )}
             <div className={style.appFormWrapper}>
                 <div className={style.appFormContent}>
                     {isMobile ? (
@@ -335,12 +337,15 @@ function Question({
     }
 
     return (
-        <div className={style.ver} style={{ gap: '0.25rem', width: '100%' }}>
+        <div
+            className={cn(style.ver)}
+            style={{ gap: '0.75rem', width: '100%' }}
+        >
             {question.title && (
                 <Label required={question.required}>{question.title}</Label>
             )}
             {question.description && (
-                <span className={style.description}>
+                <span className={cn(style.description, 'mb-1.5')}>
                     {question.description}
                 </span>
             )}
