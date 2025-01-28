@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { HomeIcon } from '@heroicons/react/24/outline';
+
 import NotFound from './components/NotFound';
 
 export default function NotFoundPage() {
@@ -15,7 +15,7 @@ export default function NotFoundPage() {
                             hierarchy="primary"
                             className="text-white bg-brand-600 hover:bg-brand-700"
                         >
-                            Return to home
+                            <a href="/login">Return to home</a>
                         </Button>
                     </div>
                 </NotFound>

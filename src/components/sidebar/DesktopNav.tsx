@@ -33,6 +33,7 @@ export default function DesktopNav({
     const returnHome = () => {
         redirect('/');
     };
+
     return (
         <div
             className={clsx(
@@ -111,6 +112,17 @@ export default function DesktopNav({
                             active={false}
                             onClick={returnHome}
                         ></NavLink>
+
+                        {initialData?.userRole === 'admin' && (
+                            <NavLink
+                                href="/admin/reviewapplications"
+                                label="Review Application (Admin)"
+                                icon={<BellAlertIcon></BellAlertIcon>}
+                                iconAlt="Alerts logo"
+                                platform="desktop"
+                                active={false}
+                            ></NavLink>
+                        )}
                     </div>
                 </div>
 
