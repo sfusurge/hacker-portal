@@ -39,10 +39,10 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                             ></Image>
 
                             <div className="flex flex-col gap-2">
-                                <span className="text-sm font-medium leading-none text-white">
+                                <span className="text-sm font-medium leading-none text-white line-clamp-1">
                                     JourneyHacks 2025
                                 </span>
-                                <span className="text-sm leading-none text-white/60">
+                                <span className="text-sm leading-none text-white/60 line-clamp-1">
                                     February 14, 2025
                                 </span>
                             </div>
