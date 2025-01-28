@@ -161,7 +161,6 @@ export default function DesktopNav({
                         </button>
                     </PopoverTrigger>
                     <PopoverContent sideOffset={8} side="right">
-                        {/* TODO RAY ADD THE SIGN OUT FUNCTION HERE */}
                         <NavLink
                             href="#"
                             label="Sign out"
@@ -170,8 +169,10 @@ export default function DesktopNav({
                             platform="desktop"
                             variant="error"
                             className="px-2"
-                            onClick={() => {
-                                signOut();
+                            onClick={async () => {
+                                await signOut({
+                                    redirectTo: '/login',
+                                });
                             }}
                         ></NavLink>
                         <PopoverPrimitive.Arrow className="fill-neutral-850 shadow-lg" />

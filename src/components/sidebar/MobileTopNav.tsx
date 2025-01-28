@@ -24,8 +24,6 @@ export default function MobileTopNav({
     initialData,
     className,
 }: MobileTopNavProps) {
-    console.log(initialData);
-
     return (
         <div
             className={clsx(
@@ -71,7 +69,6 @@ export default function MobileTopNav({
                         side="bottom"
                         className="z-[200]"
                     >
-                        {/* TODO RAY ADD THE SIGN OUT FUNCTION HERE */}
                         <NavLink
                             href="#"
                             label="Sign out"
@@ -82,8 +79,10 @@ export default function MobileTopNav({
                             platform="desktop"
                             variant="error"
                             className="px-2"
-                            onClick={() => {
-                                signOut();
+                            onClick={async () => {
+                                await signOut({
+                                    redirectTo: '/',
+                                });
                             }}
                         ></NavLink>
                         <PopoverPrimitive.Arrow className="mr-4 fill-neutral-850 shadow-lg" />

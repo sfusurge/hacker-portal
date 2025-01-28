@@ -197,9 +197,12 @@ function Page({
     const setPageState = useSetAtom(pageStateAtom);
     const formRef = useRef<HTMLFormElement>(null);
 
-    function updateFormStatus() {
+    function updateFormStatus(extraCheck = false) {
         if (formRef.current) {
             const error = !formRef.current.checkValidity();
+            if (error && extraCheck) {
+                formRef.current.reportValidity();
+            }
 
             // when page content changes, check if everything in the page is filled
             let atLeastOneFilled = false;
@@ -233,6 +236,10 @@ function Page({
     useEffect(() => {
         updateFormStatus();
     }, [page]);
+
+    useEffect(() => {
+        updateFormStatus(true);
+    }, []);
 
     const questionsAtom = useMemo(
         () =>
@@ -375,12 +382,15 @@ function PageButtons({
     const [index, setIndex] = useAtom(indexAtom);
     const pageStates = useAtomValue(pageStatesAtom);
     const setErrCheck = useSetAtom(finalErrCheckAtom);
-
+    console.log(pageStates);
     function tryReview() {
         let valid = true;
 
         for (const pageState of pageStates) {
             valid &&= !pageState.error;
+            if (!valid) {
+                console.log('err', pageState);
+            }
         }
 
         if (!valid) {
@@ -437,7 +447,7 @@ function PageButtons({
             )}
             {index === pageCount && (
                 <SkewmorphicButton
-                    className={style.nextButton}
+                    className={cn(style.nextButton)}
                     onClick={() => {
                         submit && submit();
                     }}

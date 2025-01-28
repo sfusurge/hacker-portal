@@ -8,11 +8,7 @@
     padding-bottom: 20px;
 }
 
-.optionsContainer:has(label:has(input:user-invalid)) {
-    border: 2px solid var(--danger-500);
-}
-
-.optionsContainer:has(label:has(input:user-invalid))::after {
+.optionsContainer:user-invalid::after {
     content: 'Required, please make a selection';
     color: var(--danger-500);
 }
@@ -30,7 +26,7 @@
     cursor: pointer;
     line-height: normal;
     transition: background-color 400ms ease-out;
-    height: 48px;
+    min-height: 48px;
 }
 
 .optionLabel:has(input:checked) {
