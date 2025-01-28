@@ -13,7 +13,7 @@ import {
 import Link from 'next/link';
 import Image from 'next/image';
 import ManualCheckIn from '@/app/qr/components/ManualCheckInPopUp';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -22,7 +22,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import CheckinTicket from '@/app/qr/components/CheckinTicket';
-import { trpc } from '@/trpc/client';
+import { GetUsersOutput, trpc } from '@/trpc/client';
 import UserNotFound from '@/app/qr/components/UserNotFound';
 import SelectMeal from '@/app/components/SelectMeal';
 import SelectWorkshop from '@/app/components/SelectWorkshop';
@@ -85,9 +85,7 @@ export default function ScanPage({
     //Second state is so that the pop animation works with the conditional render of checkInTicket
     const [secondState, setSecondState] = useState(false);
 
-    const [userList, setUserList] = useState<
-        { id: string; firstName: string; lastName: string; email: string }[]
-    >([]);
+    const [userList, setUserList] = useState<GetUsersOutput | undefined>([]);
 
     const handleCloseAll = () => {
         setIsInvalidUser(false);
@@ -134,7 +132,7 @@ export default function ScanPage({
                 setSpecificWorkshop(workshopType);
             }
         }
-    }, []);
+    }, [event, meal, mealType, workshop, workshopType]);
 
     useEffect(() => {
         setUserList(us);

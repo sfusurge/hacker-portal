@@ -1,7 +1,7 @@
 import QRTicket from '@/app/components/QRTicket';
 
 type QRPageProps = {
-    params: { userId: string };
+    params: Promise<{ userId: string }>;
 };
 
 export default async function QRView({ params }: QRPageProps) {

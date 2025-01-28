@@ -33,4 +33,4 @@ export const hackathonsRouter = router({
 });
 
 // Type declaration
-export type hackathonsRouter = typeof hackathonsRouter;
+export type HackathonsRouter = typeof hackathonsRouter;
