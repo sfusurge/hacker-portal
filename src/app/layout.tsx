@@ -19,6 +19,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
+            <link rel="icon" href="/login/sparkcheffrizz.png" sizes="any" />
             <body className={inter.className}>
                 <SessionProvider>
                     <Provider>{children}</Provider>

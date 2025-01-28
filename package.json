@@ -70,6 +70,8 @@
         "drizzle-kit": "^0.30.3",
         "eslint": "^8",
         "eslint-config-next": "15.0.3",
+        "export-to-csv": "^1.4.0",
+        "handlebars": "^4.7.8",
         "husky": "^9.1.6",
         "nodemailer": "^6.9.16",
         "postcss": "^8",

@@ -3,6 +3,7 @@ import {
     insertApplicationSchema,
     queryApplicationsSchema,
     StatusEnum,
+    updateApplicationStatusSchema,
 } from '@/db/schema/applications';
 import { publicProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
@@ -13,7 +14,7 @@ import { auth } from '@/auth/auth';
 
 export interface SubmitApplicationResponse {
     hackathonId: number;
-    userId: string;
+    userId: number;
     response: Record<string, unknown>;
     createdDate: Date;
     currentStatus: StatusEnum;
@@ -79,6 +80,26 @@ export const applicationsRouter = router({
                 .orderBy(asc(applications.createdDate))
                 .limit(input.maxResult)
                 .offset(offset);
+        }),
+
+    updateApplicationStatus: publicProcedure
+        .input(updateApplicationStatusSchema)
+        .mutation(async ({ input }) => {
+            const [application] = await databaseClient
+                .update(applications)
+                .set({
+                    currentStatus: input.status,
+                    pendingStatus: input.pendingStatus,
+                })
+                .where(
+                    and(
+                        eq(applications.hackathonId, input.hackathonId),
+                        eq(applications.userId, input.userId)
+                    )
+                )
+                .returning();
+
+            return application;
         }),
 });
 

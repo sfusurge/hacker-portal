@@ -1,73 +1,122 @@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { XMarkIcon } from '@heroicons/react/24/solid';
-import { Label } from '@/components/ui/label/label';
+import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAtom } from 'jotai/index';
-import { sideCardAtom } from './ReviewApplicationsTable';
+import { sideCardAtom } from '@/app/(auth)/admin/reviewapplications/components/ReviewApplicationsTable';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/Button';
-import {
-    allAttendancePeriods,
-    allMajors,
-    allWorkshops,
-} from '@/app/reviewapplications/components/makeData';
+import { Button } from '@/components/ui/button';
+
+import { trpc } from '@/trpc/client';
+import { EmailUser } from '@/db/schema/emails';
 
 type SideCardProps = {
     toggleSideCard: () => void;
+    setRefreshTable: React.Dispatch<React.SetStateAction<{}>>;
 };
 
-export default function SideCard({ toggleSideCard }: SideCardProps) {
-    const [sideCardInfo] = useAtom(sideCardAtom);
+export const allWorkshops = [
+    'Intro to GitHub (1 - 1:30pm)',
+    'Intro to React.js (2 - 3pm)',
+    'Intro to Figma (3 - 4pm)',
+];
+export const allAttendancePeriods = [
+    'Half Day Workshops (12:30 - 4pm)',
+    'Half Day PM Build (4 - 8:30pm)',
+    'Full Day (12:30 - 8:30pm)',
+];
+export const allMajors = [
+    'Business',
+    'Computing Science',
+    'Data Science',
+    'Engineering',
+    'Health Science',
+    'Math',
+    'SIAT',
+    'Other..',
+];
 
-    const [name, setName] = useState(sideCardInfo.name || '');
-    const [email, setEmail] = useState(sideCardInfo.email || '');
-    const [major, setMajor] = useState(sideCardInfo.major || '');
-    const [status, setStatus] = useState(sideCardInfo.status || '');
-    const [enrollmentYear, setEnrollmentYear] = useState(
-        sideCardInfo.enrollmentYear || ''
+export const allDietaryRestrictions = [
+    'Halal',
+    'Vegetarian',
+    'Vegan',
+    'Pescatarian',
+    'Gluten-free',
+    'Kosher',
+    'Other..',
+];
+
+export default function SideCard({
+    toggleSideCard,
+    setRefreshTable,
+}: SideCardProps) {
+    const [sideCardInfo] = useAtom(sideCardAtom) || {};
+    const [id, setId] = useState<number>(sideCardInfo?.id || 0);
+    const [name, setName] = useState(sideCardInfo?.name || '');
+    const [email, setEmail] = useState(sideCardInfo?.email || '');
+    const [studentNumber, setStudentNumber] = useState(
+        sideCardInfo?.studentNumber || ''
     );
-    const [photoConsent, setPhotoConsent] = useState(
-        sideCardInfo.photoConsent || false
+    const [major, setMajor] = useState(sideCardInfo?.major || '');
+    const [enrollmentYear, setEnrollmentYear] = useState(
+        sideCardInfo?.enrollmentYear || ''
     );
     const [participantType, setParticipantType] = useState(
-        sideCardInfo.participantType || ''
+        sideCardInfo?.participantType || ''
     );
     const [teamMemberNames, setTeamMemberNames] = useState(
-        sideCardInfo.teamMemberNames || []
+        sideCardInfo?.teamMemberNames || ''
     );
-    const [discordUsername, setDiscordUsername] = useState(
-        sideCardInfo.discordUsername || ''
+    const [dietaryRestrictions, setDietaryRestrictions] = useState(
+        sideCardInfo?.dietaryRestrictions || []
     );
-    const [attendancePeriod, setAttendancePeriod] = useState(
-        sideCardInfo.attendancePeriod || ''
+    const [photoConsent, setPhotoConsent] = useState(
+        sideCardInfo?.photoConsent || false
     );
-    const [attendingWorkshops, setAttendingWorkshops] = useState(
-        sideCardInfo.attendingWorkshops || []
-    );
-    const [questions, setQuestions] = useState(sideCardInfo.questions || '');
 
-    const handleChangeApplicationStatus = (status: string) => {
-        console.log(`Application status changed to: ${status}`);
+    const updateApplication =
+        trpc.applications.updateApplicationStatus.useMutation();
+
+    const handleChangeApplicationStatus = (
+        status: 'Awaiting Review' | 'Accepted' | 'Declined' | 'Wait List'
+    ) => {
+        try {
+            updateApplication.mutate({
+                hackathonId: 1,
+                userId: id,
+                status: status,
+                pendingStatus: status,
+            });
+            console.log('Application status updated successfully!');
+        } catch (error) {
+            console.error('Failed to update application:', error);
+        }
+        setRefreshTable({
+            userId: id,
+            status: status,
+            pendingStatus: status,
+        });
+        toggleSideCard();
     };
 
-    const updateTeamMember = (index: number, value: string) => {
-        const updatedTeamMembers = [...teamMemberNames];
-        updatedTeamMembers[index] = value;
-        setTeamMemberNames(updatedTeamMembers);
-    };
+    // const updateTeamMember = (index: number, value: string) => {
+    //     const updatedTeamMembers = [...teamMemberNames];
+    //     updatedTeamMembers[index] = value;
+    //     setTeamMemberNames(updatedTeamMembers);
+    // };
 
-    const updateWorkshopAttendance = (
-        workshop: string,
+    const updateDietaryRestriction = (
+        restriction: string,
         isChecked: boolean | string
     ) => {
         if (isChecked) {
-            setAttendingWorkshops([...attendingWorkshops, workshop]);
+            setDietaryRestrictions([...dietaryRestrictions, restriction]);
         } else {
-            setAttendingWorkshops(
-                attendingWorkshops.filter((item) => item !== workshop)
+            setDietaryRestrictions(
+                dietaryRestrictions.filter((item) => item !== restriction)
             );
         }
     };
@@ -98,6 +147,21 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
                                 id="name"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
+                                className="bg-neutral-800 text-white border border-neutral-700/18 w-1/2"
+                            />
+                        </div>
+
+                        <div>
+                            <Label className="text-white/60" htmlFor="email">
+                                Student Number
+                            </Label>
+                            <Input
+                                type="studentNumber"
+                                id="studentNumber"
+                                value={studentNumber}
+                                onChange={(e) =>
+                                    setStudentNumber(e.target.value)
+                                }
                                 className="bg-neutral-800 text-white border border-neutral-700/18 w-1/2"
                             />
                         </div>
@@ -174,37 +238,34 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
                         Event Information
                     </header>
 
-                    <div className="grid gap-4">
-                        <Label className="text-white/60">Team Members</Label>
-                        {teamMemberNames.map((member, index) => (
-                            <Input
-                                key={index}
-                                type="text"
-                                value={member}
-                                onChange={(e) =>
-                                    updateTeamMember(index, e.target.value)
-                                }
-                                placeholder={`Team Member ${index + 1}`}
-                                className="bg-neutral-800 text-white border border-neutral-700/18 w-1/2"
-                            />
-                        ))}
-                    </div>
-
                     <div>
-                        <Label
-                            className="text-white/60"
-                            htmlFor="discordUsername"
-                        >
-                            Discord Username
+                        <Label className="text-white/60" htmlFor="email">
+                            Team Member Names
                         </Label>
                         <Input
-                            type="text"
-                            id="discordUsername"
-                            value={discordUsername}
-                            onChange={(e) => setDiscordUsername(e.target.value)}
+                            type="teamMemberNames"
+                            id="teamMemberNames"
+                            value={teamMemberNames}
+                            onChange={(e) => setTeamMemberNames(e.target.value)}
                             className="bg-neutral-800 text-white border border-neutral-700/18 w-1/2"
                         />
                     </div>
+
+                    {/*<div className="grid gap-4">*/}
+                    {/*    <Label className="text-white/60">Team Members</Label>*/}
+                    {/*    {teamMemberNames.map((member, index) => (*/}
+                    {/*        <Input*/}
+                    {/*            key={index}*/}
+                    {/*            type="text"*/}
+                    {/*            value={member}*/}
+                    {/*            onChange={(e) =>*/}
+                    {/*                updateTeamMember(index, e.target.value)*/}
+                    {/*            }*/}
+                    {/*            placeholder={`Team Member ${index + 1}`}*/}
+                    {/*            className="bg-neutral-800 text-white border border-neutral-700/18 w-1/2"*/}
+                    {/*        />*/}
+                    {/*    ))}*/}
+                    {/*</div>*/}
 
                     <RadioGroup
                         value={participantType}
@@ -251,81 +312,41 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
                         </div>
                     </RadioGroup>
 
-                    <RadioGroup
-                        value={attendancePeriod}
-                        onValueChange={setAttendancePeriod}
-                    >
-                        <Label className="text-white/60">
-                            Attendance Period
-                        </Label>
-                        <div className="flex flex-col gap-2 w-fit">
-                            {allAttendancePeriods.map((type) => (
-                                <div
-                                    className={`flex items-center space-x-2 pl-4 pr-4 pt-3 pb-3 rounded-lg cursor-pointer border ${
-                                        attendancePeriod === type
-                                            ? 'bg-brand-950/60 border-brand-900'
-                                            : 'bg-neutral-800/60 border border-neutral-600/60'
-                                    }`}
-                                    key={type}
-                                    onClick={() => setAttendancePeriod(type)}
-                                >
-                                    <RadioGroupItem
-                                        value={type}
-                                        id={type}
-                                        onChange={() =>
-                                            setAttendancePeriod(type)
-                                        }
-                                        className={`appearance-none w-5 h-5 rounded-full border ${
-                                            attendancePeriod === type
-                                                ? 'bg-brand-500 border-blue-800'
-                                                : 'bg-neutral-700 border-neutral-500'
-                                        }`}
-                                    />
-                                    <Label
-                                        htmlFor={type}
-                                        className="cursor-pointer text-white font-light"
-                                    >
-                                        {type}
-                                    </Label>
-                                </div>
-                            ))}
-                        </div>
-                    </RadioGroup>
-
                     <div className="flex flex-col gap-4">
                         <Label className="text-white/60">
-                            Workshops Attending
+                            Dietary Restrictions
                         </Label>
 
-                        <div className="flex flex-col gap-8 ml-3">
-                            {allWorkshops.map((workshop) => (
+                        <div className="flex flex-col gap-5 ml-3">
+                            {allDietaryRestrictions.map((restriction) => (
                                 <div
-                                    className="flex items-center space-x-2"
-                                    key={workshop}
+                                    className="flex items-center space-x-2 "
+                                    key={restriction}
                                 >
                                     <Checkbox
-                                        id={workshop}
-                                        checked={attendingWorkshops.includes(
-                                            workshop
+                                        id={restriction}
+                                        checked={dietaryRestrictions.includes(
+                                            restriction
                                         )}
                                         onCheckedChange={(isChecked) =>
-                                            updateWorkshopAttendance(
-                                                workshop,
+                                            updateDietaryRestriction(
+                                                restriction,
                                                 isChecked
                                             )
                                         }
                                         className="data-[state=checked]:bg-blue-500 border-brand-500 size-5"
                                     />
                                     <Label
-                                        htmlFor={workshop}
+                                        htmlFor={restriction}
                                         className="text-white font-light"
                                     >
-                                        {workshop}
+                                        {restriction}
                                     </Label>
                                 </div>
                             ))}
                         </div>
                     </div>
+
                     <RadioGroup
                         value={photoConsent ? 'Yes' : 'No'}
                         onValueChange={(value) =>
@@ -369,16 +390,6 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
                             ))}
                         </div>
                     </RadioGroup>
-
-                    <div>
-                        <Label className="text-white/60">Questions</Label>
-                        <Textarea
-                            id="questions"
-                            value={questions}
-                            onChange={(e) => setQuestions(e.target.value)}
-                            className="bg-neutral-800 text-white border border-neutral-700/18 w-3/4"
-                        />
-                    </div>
                 </div>
             </ScrollArea>
 
@@ -388,7 +399,7 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
                 </header>
                 <div className="flex flex-wrap gap-5">
                     <Button
-                        key={'Accepted'}
+                        key={'Accept'}
                         className={`h-7 bg-success-950 text-success-300`}
                         onClick={() =>
                             handleChangeApplicationStatus('Accepted')
@@ -397,29 +408,31 @@ export default function SideCard({ toggleSideCard }: SideCardProps) {
                         Accepted
                     </Button>
                     <Button
-                        key={'Rejected'}
+                        key={'Decline'}
                         className={`h-7 bg-danger-950 text-danger-300`}
                         onClick={() =>
-                            handleChangeApplicationStatus('Rejected')
+                            handleChangeApplicationStatus('Declined')
                         }
                     >
                         Rejected
                     </Button>
                     <Button
-                        key={'Waitlisted'}
+                        key={'Waitlist'}
                         className={`h-7 bg-yellow-950 text-yellow-300`}
                         onClick={() =>
-                            handleChangeApplicationStatus('Waitlisted')
+                            handleChangeApplicationStatus('Wait List')
                         }
                     >
                         Waitlisted
                     </Button>
                     <Button
-                        key={'Pending'}
+                        key={'Awaiting Review'}
                         className={`h-7 bg-neutral-800 text-white`}
-                        onClick={() => handleChangeApplicationStatus('Pending')}
+                        onClick={() =>
+                            handleChangeApplicationStatus('Awaiting Review')
+                        }
                     >
-                        Pending
+                        Await Review
                     </Button>
                 </div>
             </section>

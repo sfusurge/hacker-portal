@@ -18,7 +18,7 @@ export const middleware = auth(async (req) => {
     const path = req.nextUrl.pathname;
     if (authRoutes.has(getFirstSegment(path))) {
         const sessionUser = (await auth())?.user;
-        console.log('auth', sessionUser);
+
         // redirect unauthenticated users.
         if (!sessionUser) {
             const target = new URL('/login', req.url);

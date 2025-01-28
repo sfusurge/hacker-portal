@@ -13,7 +13,7 @@ import {
 import Link from 'next/link';
 import Image from 'next/image';
 import ManualCheckIn from '@/app/qr/components/ManualCheckInPopUp';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -68,7 +68,7 @@ export default function ScanPage({
     const [isInvalidUser, setIsInvalidUser] = useState(false);
 
     const submitId = (id: string) => {
-        if (userList.find((user) => user.id.toString() === id) === undefined) {
+        if (userList?.find((user) => user.id.toString() === id) === undefined) {
             setUserId(id);
             setIsInvalidUser(true);
         } else {
@@ -76,8 +76,9 @@ export default function ScanPage({
         }
     };
 
-    const [checkInType, setCheckInType] = useState<string>('Event Check-in');
-
+    const [checkInType, setCheckInType] = useState<
+        'Event Check-in' | 'Meal Check-in' | 'Workshop Check-in'
+    >('Event Check-in');
     const [dropdownOption, setDropdownOption] = useState<string>('');
 
     const [userId, setUserId] = useState<string>('');
@@ -197,7 +198,6 @@ export default function ScanPage({
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
-                                variant="outline"
                                 className="text-white/80 text-sm flex flex-row gap-x-2 hover:shadow-lg hover:bg-neutral-900 hover:text-white/80
                         bg-neutral-900/50 items-center min-w-40 justify-center border border-neutral-750 pt-2 pb-2
                         rounded-full transition-shadow duration-300"
