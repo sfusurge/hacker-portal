@@ -30,6 +30,8 @@ export const middleware = auth(async (req) => {
                     .where(eq(users.email, sessionUser.email))
             )[0];
         }
+        console.log(sessionUser);
+        console.log(dbUser);
 
         if (!dbUser) {
             const target = new URL('/login', req.url);

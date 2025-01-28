@@ -1,5 +1,5 @@
 {
-  "id": "72154ba7-0037-4f77-aaea-2b45ec91099f",
+  "id": "96cbdbfc-4e5f-4c76-b6aa-4bfe19b34105",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -276,7 +276,7 @@
         },
         "user_role": {
           "name": "user_role",
-          "type": "db_user_role",
+          "type": "user_role",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
@@ -337,8 +337,8 @@
         "n/a"
       ]
     },
-    "public.db_user_role": {
-      "name": "db_user_role",
+    "public.user_role": {
+      "name": "user_role",
       "schema": "public",
       "values": [
         "admin",

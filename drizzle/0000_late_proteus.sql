@@ -1,6 +1,6 @@
 CREATE TYPE "public"."application_status" AS ENUM('N/A', 'Awaiting Review', 'Accepted', 'Declined', 'Wait List');--> statement-breakpoint
 CREATE TYPE "public"."oauth_provider" AS ENUM('github', 'google', 'n/a');--> statement-breakpoint
-CREATE TYPE "public"."db_user_role" AS ENUM('admin', 'user');--> statement-breakpoint
+CREATE TYPE "public"."user_role" AS ENUM('admin', 'user');--> statement-breakpoint
 CREATE TABLE "applications" (
 	"hackathon_id" integer NOT NULL,
 	"user_id" integer NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE "users" (
 	"last_name" varchar(64),
 	"phone_number" varchar(15),
 	"email" varchar(255) NOT NULL,
-	"user_role" "db_user_role" DEFAULT 'user' NOT NULL,
+	"user_role" "user_role" DEFAULT 'user' NOT NULL,
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint

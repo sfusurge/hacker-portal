@@ -1,9 +1,15 @@
-'use client';
-
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 
 export default function Login() {
+    async function loginWithGoogle() {
+        'use server';
+    }
+
+    async function loginWithGithub() {
+        'use server';
+    }
+
     return (
         <div id="auth" className="md:grid md:grid-cols-2 2xl:grid-cols-3">
             <div className="w-screen max-h-screen bg-neutral-925 h-screen p-6 flex flex-col gap-14 justify-center md:w-full 2xl:col-span-1">
@@ -26,27 +32,32 @@ export default function Login() {
                     </div>
 
                     <div className="flex flex-col gap-4 *:max-w-96 items-center w-full">
-                        <Button
-                            variant="default"
-                            hierarchy="secondary"
-                            size="cozy"
-                            className="w-full"
-                            leadingIcon="/icons/google.svg"
-                            leadingIconAlt="Google logo"
-                        >
-                            Continue with Google
-                        </Button>
+                        <form action={loginWithGoogle} className="w-full">
+                            <Button
+                                type="submit"
+                                variant="default"
+                                hierarchy="secondary"
+                                size="cozy"
+                                className="w-full"
+                                leadingIcon="/icons/google.svg"
+                                leadingIconAlt="Google logo"
+                            >
+                                Continue with Google
+                            </Button>
+                        </form>
 
-                        <Button
-                            variant="default"
-                            hierarchy="secondary"
-                            size="cozy"
-                            className="w-full"
-                            leadingIcon="/icons/github.svg"
-                            leadingIconAlt="GitHub logo"
-                        >
-                            Continue with GitHub
-                        </Button>
+                        <form action={loginWithGithub} className="w-full">
+                            <Button
+                                variant="default"
+                                hierarchy="secondary"
+                                size="cozy"
+                                className="w-full"
+                                leadingIcon="/icons/github.svg"
+                                leadingIconAlt="GitHub logo"
+                            >
+                                Continue with GitHub
+                            </Button>
+                        </form>
                     </div>
                 </div>
             </div>
