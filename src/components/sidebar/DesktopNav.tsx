@@ -72,7 +72,7 @@ export default function DesktopNav({
                             icon={<HomeIcon></HomeIcon>}
                             iconAlt="Home logo"
                             platform="desktop"
-                            active={true}
+                            active={false}
                         ></NavLink>
                         <NavLink
                             href="#"
