@@ -59,10 +59,10 @@ export default function ApplicationCard({ status }: { status: AppStatus }) {
                         Hacker registration closes in...
                     </p>
                 </div>
-                <div className="grid grid-cols-3 gap-4 max-w-96 w-full">
-                    <div className="bg-neutral-850">32</div>
-                    <div className="bg-neutral-850">32</div>
-                    <div className="bg-neutral-850">53</div>
+                <div className="grid grid-cols-3 gap-4 max-w-96 w-full *:bg-neutral-850 *:border *:border-neutral-600/30">
+                    <div>32</div>
+                    <div>32</div>
+                    <div>53</div>
                 </div>
             </div>
 
