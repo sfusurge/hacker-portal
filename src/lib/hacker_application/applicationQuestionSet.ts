@@ -224,7 +224,7 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
     hackathonName: 'Journey Hacks 2025',
     pages: [
         {
-            title: 'first page',
+            title: 'JourneyHacks Application',
             description: '',
             questions: [
                 {
@@ -318,7 +318,7 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
                     questionId: 8,
                     type: 'multiple-checkbox',
                     title: 'Please fill out any dietary restrictions',
-                    required: true,
+                    required: false,
                     choices: [
                         {
                             data: 'Halal',

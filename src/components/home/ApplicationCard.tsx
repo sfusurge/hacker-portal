@@ -7,6 +7,8 @@ import { log } from 'console';
 import { Conditional } from '@/lib/Conditional';
 import Countdown from './Countdown';
 import { redirect } from 'next/navigation';
+import { intervalToDuration } from 'date-fns';
+import { useEffect, useState } from 'react';
 
 export type AppStatus =
     | 'Not Yet Started'
@@ -21,11 +23,39 @@ const statusColorMap = {
     'Not Yet Started': '#ababab',
 };
 
+const getTimeLeft = (targetDate: Date) => {
+    const now = new Date();
+    const duration = intervalToDuration({
+        start: now,
+        end: new Date(targetDate),
+    });
+
+    return {
+        days: duration.days?.toString() || '0',
+        hours: duration.hours?.toString() || '0',
+        minutes: duration.minutes?.toString() || '0',
+    };
+};
+
 export default function ApplicationCard({ status }: { status: AppStatus }) {
     const statusHeadingStyles = cn({});
     const handleClick = () => {
         redirect('/application');
     };
+
+    //February 14, 2025, 9:00 AM PST in UTC (which is 5:00 PM UTC)
+    const JHDate = new Date(Date.UTC(2025, 1, 14, 17)); //months start at 0
+
+    const [timeLeft, setTimeLeft] = useState(getTimeLeft(JHDate));
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setTimeLeft(getTimeLeft(JHDate));
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [JHDate]);
+
     return (
         <div className="bg-neutral-900 flex flex-col rounded-xl border border-neutral-600/30">
             <div className="p-5 flex flex-row items-center justify-between w-full border-b border-b-neutral-600/30">
@@ -65,9 +95,9 @@ export default function ApplicationCard({ status }: { status: AppStatus }) {
                     </p>
                 </div>
                 <div className="grid grid-cols-3 gap-4 max-w-96 w-full">
-                    <Countdown label="DAYS" time="32"></Countdown>
-                    <Countdown label="HOURS" time="12"></Countdown>
-                    <Countdown label="MINS" time="54"></Countdown>
+                    <Countdown label="DAYS" time={timeLeft.days}></Countdown>
+                    <Countdown label="HOURS" time={timeLeft.hours}></Countdown>
+                    <Countdown label="MINS" time={timeLeft.minutes}></Countdown>
                 </div>
             </div>
 

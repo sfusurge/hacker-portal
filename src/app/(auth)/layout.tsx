@@ -49,12 +49,7 @@ export async function getUserData() {
 }
 export type MergedUserData = Awaited<ReturnType<typeof getUserData>>;
 
-export default async function Layout({
-    children,
-    ...props
-}: {
-    children: ReactNode;
-}) {
+export default async function Layout({ children }: { children: ReactNode }) {
     const initialUserData = await getUserData();
 
     return (
