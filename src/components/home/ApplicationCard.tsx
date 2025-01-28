@@ -7,6 +7,7 @@ import { log } from 'console';
 import { Conditional } from '@/lib/Conditional';
 import Countdown from './Countdown';
 import { redirect } from 'next/navigation';
+import CountdownTimer from './Countdown';
 
 export type AppStatus =
     | 'Not Yet Started'
@@ -64,11 +65,7 @@ export default function ApplicationCard({ status }: { status: AppStatus }) {
                         Hacker registration closes in...
                     </p>
                 </div>
-                <div className="grid grid-cols-3 gap-4 max-w-96 w-full">
-                    <Countdown label="DAYS" time="32"></Countdown>
-                    <Countdown label="HOURS" time="12"></Countdown>
-                    <Countdown label="MINS" time="54"></Countdown>
-                </div>
+                <CountdownTimer targetDate="2025-02-12T07:59:00.000Z" />
             </div>
 
             <Conditional
