@@ -4,12 +4,10 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    height: calc(100dvh - 2.5rem);
+    height: calc(100dvh - 124px);
     max-width: 1200px;
     color: white;
     box-sizing: border-box;
-
-    padding: 24px;
 }
 
 .mainTitle {
@@ -21,8 +19,8 @@
     height: 100%;
     max-height: 100%;
     overflow: hidden;
-    border: 2px solid var(--border-neutral-secondary);
-    background-color: var(--neutral-925);
+    border: 1px solid var(--border-neutral-tertiary);
+    background-color: var(--neutral-900);
     border-radius: 12px;
 }
 .appFormContent {
@@ -71,6 +69,11 @@
     flex-direction: column;
     gap: 32px;
     padding-bottom: 7rem;
+}
+@media only screen and (min-width: 768px) {
+    .page {
+        padding-bottom: 24px;
+    }
 }
 
 .formContainer {
