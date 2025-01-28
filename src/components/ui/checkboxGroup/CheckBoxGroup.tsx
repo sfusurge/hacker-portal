@@ -11,7 +11,7 @@ interface CheckBoxGroupProps {
     required?: boolean;
 }
 export function CheckboxGroup({
-    min = 1,
+    min = 0,
     max = 1,
     choices,
     selected: _selected,

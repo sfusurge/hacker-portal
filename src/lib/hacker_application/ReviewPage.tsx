@@ -2,6 +2,7 @@ import { ApplicationData, ApplicationQuestion } from './types';
 import style from './ApplicationForm.module.css';
 import { Button } from '@/components/ui/button';
 import { useMemo } from 'react';
+import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 
 /**
  * Review Page Gets a submit button if mobile mode.
@@ -64,6 +65,7 @@ export function ReviewPage({
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '1.5rem',
+                margin: '1rem',
             }}
         >
             <h1 className="text-2xl">Review Application</h1>
@@ -79,7 +81,14 @@ export function ReviewPage({
                 );
             })}
 
-            {mobileMode && <Button onClick={submit}>Submit!</Button>}
+            {mobileMode && (
+                <SkewmorphicButton
+                    onClick={submit}
+                    style={{ background: 'var(--brand-500)' }}
+                >
+                    Submit!
+                </SkewmorphicButton>
+            )}
         </div>
     );
 }

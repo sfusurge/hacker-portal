@@ -33,6 +33,8 @@ import { cn, useWindowSize } from '../utils';
 import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 import { redirect, useRouter } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
+import { hideBottomNavAtom } from '@/components/sidebar/MobileBottomNav';
+import { useMediaQuery } from '@uidotdev/usehooks';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -64,6 +66,7 @@ export function ApplicationForm({
     appDataAtom: PrimitiveAtom<ApplicationData>;
     submitApplication: () => void;
 }) {
+    'use client';
     const appData = useAtomValue(appDataAtom);
 
     // useMemo to not recreate the atom each time.
@@ -107,11 +110,12 @@ export function ApplicationForm({
     const pageStateAtomsAtom = splitAtom(pageStatesAtom);
     const [pageStateAtoms] = useAtom(pageStateAtomsAtom);
 
-    const router = useRouter();
-
     // mobile conditional render
-    const [screenWidth, _] = useWindowSize();
-    const isMobile = useMemo(() => screenWidth <= 768, [screenWidth]);
+    const isMobile = useMediaQuery('only screen and (max-width: 768px');
+    const setHideBottomNav = useSetAtom(hideBottomNavAtom);
+    useEffect(() => {
+        setHideBottomNav(isMobile);
+    }, [isMobile]);
 
     return (
         <div className={style.appFormRoot}>
@@ -147,6 +151,7 @@ export function ApplicationForm({
                                 submit={() => {
                                     submitApplication();
                                 }}
+                                mobileMode={isMobile}
                             ></ReviewPage>
                         )}
 

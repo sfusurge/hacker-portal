@@ -11,6 +11,7 @@ import { and, asc, eq, sql } from 'drizzle-orm';
 import { users } from '@/db/schema/users';
 import { InternalServerError } from '../exceptions';
 import { auth } from '@/auth/auth';
+import { z } from 'zod';
 
 export interface SubmitApplicationResponse {
     hackathonId: number;
@@ -21,7 +22,34 @@ export interface SubmitApplicationResponse {
     pendingStatus: StatusEnum;
 }
 
+const nullSchema = z.object({});
+
 export const applicationsRouter = router({
+    userAlreadySubmitted: publicProcedure
+        .input(nullSchema)
+        .query(async ({ input }) => {
+            const session = await auth();
+
+            const user = (
+                await databaseClient
+                    .select()
+                    .from(users)
+                    .where(eq(users.email, session?.user?.email!))
+            )[0];
+            if (!user) {
+                return false;
+            }
+
+            const app = (
+                await databaseClient
+                    .select()
+                    .from(applications)
+                    .where(eq(applications.userId, user.id))
+            )[0];
+
+            return app !== undefined;
+        }),
+
     submitApplication: publicProcedure
         .input(insertApplicationSchema)
         .mutation(async ({ input }): Promise<SubmitApplicationResponse> => {

@@ -4,7 +4,7 @@ import { getSession, useSession } from 'next-auth/react';
 import DesktopNav from '@/components/sidebar/DesktopNav';
 
 import { ReactNode } from 'react';
-import { atom } from 'jotai';
+import { atom, useAtomValue } from 'jotai';
 import { atomWithRefresh } from 'jotai/utils';
 import { auth } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
@@ -49,17 +49,15 @@ export async function getUserData() {
 }
 export type MergedUserData = Awaited<ReturnType<typeof getUserData>>;
 
-export default async function Layout({
-    children,
-    ...props
-}: {
-    children: ReactNode;
-}) {
+export default async function Layout({ children }: { children: ReactNode }) {
     const initialUserData = await getUserData();
 
     return (
         <>
-            <div className="bg-neutral-950 h-screen w-screen p-6 md:flex md:p-0 md:pr-5">
+            <div
+                className="bg-neutral-950  p-6 md:flex md:p-0 md:pr-5"
+                style={{ height: '100dvh' }}
+            >
                 <MobileTopNav
                     initialData={initialUserData}
                     className="top-0 left-0 fixed z-[100] md:hidden"
