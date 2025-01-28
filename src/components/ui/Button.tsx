@@ -12,11 +12,11 @@ interface ButtonProps {
 }
 
 const buttonVariants = cva(
-    'font-medium text-center flex items-center justify-center transition-colors',
+    'text-white font-medium text-center flex items-center justify-center transition-colors',
     {
         variants: {
             variant: {
-                default: 'text-white',
+                default: '',
                 success: '',
                 caution: '',
                 error: '',
@@ -59,6 +59,11 @@ const buttonVariants = cva(
                 hierarchy: 'secondary',
                 className:
                     'bg-neutral-800/60 hover:bg-neutral-750/60 border-neutral-600/60',
+            },
+            {
+                variant: 'caution',
+                hierarchy: 'primary',
+                className: 'bg-caution-700 hover:bg-caution-600',
             },
         ],
     }

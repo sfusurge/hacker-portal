@@ -16,7 +16,7 @@ export default function DiscordCard() {
                 <Button
                     size="cozy"
                     variant="default"
-                    hierarchy="secondary"
+                    hierarchy="primary"
                     className="hidden md:block"
                 >
                     Join server
