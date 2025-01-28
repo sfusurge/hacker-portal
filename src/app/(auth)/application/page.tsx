@@ -63,8 +63,6 @@ function ApplicationWithProvider() {
             <ApplicationForm
                 appDataAtom={questionSetAtom}
                 submitApplication={() => {
-                    console.log(questions);
-
                     const response = questions.pages
                         .flatMap((page) => page.questions)
                         .map((question) => {
