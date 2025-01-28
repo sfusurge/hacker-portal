@@ -13,6 +13,10 @@ import { useAtom, useAtomValue } from 'jotai';
 import { MergedUserData, userAtom } from '@/app/(auth)/layout';
 import { useHydrateAtoms } from 'jotai/utils';
 
+import * as PopoverPrimitive from '@radix-ui/react-popover';
+
+const PopoverArrow = PopoverPrimitive.Arrow;
+
 interface MobileTopNavProps {
     className?: string;
     initialData?: MergedUserData;
@@ -55,6 +59,7 @@ export default function MobileTopNav({
                 <Popover>
                     <PopoverTrigger asChild>
                         {/* userData?.image ??  */}
+                        {/* TODO RAY ADD THE USER IMAGE HERE */}
                         <Image
                             width={36}
                             height={36}
@@ -68,6 +73,7 @@ export default function MobileTopNav({
                         side="bottom"
                         className="z-[200]"
                     >
+                        {/* TODO RAY ADD THE SIGN OUT FUNCTION HERE */}
                         <NavLink
                             href="#"
                             label="Sign out"
@@ -79,6 +85,7 @@ export default function MobileTopNav({
                             variant="error"
                             className="px-2"
                         ></NavLink>
+                        <PopoverPrimitive.Arrow className="mr-4 fill-neutral-850 shadow-lg" />
                     </PopoverContent>
                 </Popover>
             </div>

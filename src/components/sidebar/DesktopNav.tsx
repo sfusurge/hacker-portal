@@ -12,7 +12,10 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import { PopoverArrow } from '@radix-ui/react-popover';
+
+import * as PopoverPrimitive from '@radix-ui/react-popover';
+
+const PopoverArrow = PopoverPrimitive.Arrow;
 
 interface DesktopNavProps {
     className?: string;
@@ -99,6 +102,7 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                     <PopoverTrigger asChild>
                         <button className="group flex flex-row justify-between items-center hover:bg-neutral-750/30 rounded-lg px-3 py-2.5 gap-5 transition-colors">
                             <div className="flex flex-row gap-4 items-center">
+                                {/* TODO RAY ADD USER IMAGE HERE */}
                                 <Image
                                     alt="Default avatar for the user"
                                     src="/sidebar/default-avatar.png"
@@ -108,9 +112,11 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                                 ></Image>
 
                                 <div className="flex flex-col gap-2">
+                                    {/* TODO RAY ADD THE USER NAME HERE */}
                                     <span className="text-white font-medium text-base leading-tight text-left line-clamp-1">
                                         Super duper long name
                                     </span>
+                                    {/* TODO RAY ADD THE USER TYPE HERE */}
                                     <span className="text-white/60 text-sm leading-none text-left line-clamp-1">
                                         User type
                                     </span>
@@ -124,6 +130,7 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                         </button>
                     </PopoverTrigger>
                     <PopoverContent sideOffset={8} side="right">
+                        {/* TODO RAY ADD THE SIGN OUT FUNCTION HERE */}
                         <NavLink
                             href="#"
                             label="Sign out"
@@ -135,6 +142,7 @@ export default function DesktopNav({ className }: DesktopNavProps) {
                             variant="error"
                             className="px-2"
                         ></NavLink>
+                        <PopoverPrimitive.Arrow className="fill-neutral-850 shadow-lg" />
                     </PopoverContent>
                 </Popover>
             </div>
