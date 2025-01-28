@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAtom } from 'jotai/index';
 import { sideCardAtom } from '@/app/(auth)/admin/reviewapplications/components/ReviewApplicationsTable';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 
 import { trpc } from '@/trpc/client';
 import { EmailUser } from '@/db/schema/emails';
@@ -53,39 +53,36 @@ export default function SideCard({
     toggleSideCard,
     setRefreshTable,
 }: SideCardProps) {
-    const [sideCardInfo] = useAtom(sideCardAtom);
-    const [id, setId] = useState(sideCardInfo.id || '');
-
-    const [name, setName] = useState(sideCardInfo.name || '');
-    const [email, setEmail] = useState(sideCardInfo.email || '');
+    const [sideCardInfo] = useAtom(sideCardAtom) || {};
+    const [id, setId] = useState<number>(sideCardInfo?.id || 0);
+    const [name, setName] = useState(sideCardInfo?.name || '');
+    const [email, setEmail] = useState(sideCardInfo?.email || '');
     const [studentNumber, setStudentNumber] = useState(
-        sideCardInfo.studentNumber || ''
+        sideCardInfo?.studentNumber || ''
     );
-    const [major, setMajor] = useState(sideCardInfo.major || '');
+    const [major, setMajor] = useState(sideCardInfo?.major || '');
     const [enrollmentYear, setEnrollmentYear] = useState(
-        sideCardInfo.enrollmentYear || ''
+        sideCardInfo?.enrollmentYear || ''
+    );
+    const [participantType, setParticipantType] = useState(
+        sideCardInfo?.participantType || ''
+    );
+    const [teamMemberNames, setTeamMemberNames] = useState(
+        sideCardInfo?.teamMemberNames || ''
+    );
+    const [dietaryRestrictions, setDietaryRestrictions] = useState(
+        sideCardInfo?.dietaryRestrictions || []
+    );
+    const [photoConsent, setPhotoConsent] = useState(
+        sideCardInfo?.photoConsent || false
     );
 
     const updateApplication =
         trpc.applications.updateApplicationStatus.useMutation();
 
-    const [participantType, setParticipantType] = useState(
-        sideCardInfo.participantType || ''
-    );
-    const [teamMemberNames, setTeamMemberNames] = useState(
-        sideCardInfo.teamMemberNames || ''
-    );
-
-    const [dietaryRestrictions, setDietaryRestrictions] = useState(
-        sideCardInfo.dietaryRestrictions || []
-    );
-
-    const [photoConsent, setPhotoConsent] = useState(
-        sideCardInfo.photoConsent || false
-    );
-
-    const handleChangeApplicationStatus = (status: string) => {
-        //console.log(`Application status changed to: ${status}`);
+    const handleChangeApplicationStatus = (
+        status: 'Awaiting Review' | 'Accepted' | 'Declined' | 'Wait List'
+    ) => {
         try {
             updateApplication.mutate({
                 hackathonId: 1,

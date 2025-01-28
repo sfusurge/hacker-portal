@@ -1,6 +1,6 @@
 import { ApplicationData, ApplicationQuestion } from './types';
 import style from './ApplicationForm.module.css';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { useMemo } from 'react';
 
 /**
