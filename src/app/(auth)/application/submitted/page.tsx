@@ -1,37 +1,31 @@
-import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
-import style from 'styled-jsx/style';
 import Image from 'next/image';
-import { redirect } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 export default function SubmitPage() {
     return (
-        <div className="flex flex-col items-center justify-center gap-10">
+        <div className="flex flex-col h-full w-full items-center justify-center gap-8">
             <Image
-                src={'/login/team.svg'}
-                alt={'The Surge Team!'}
-                width={430}
-                height={317}
-            />
-            <div className="flex flex-col gap-1 justify-center items-center">
-                <h1 className="text-white font-sans text-3xl font-semibold">
-                    Application Submitted!
+                src="/login/application-review.png"
+                width={1537}
+                height={1134}
+                className="max-w-[280px]"
+                alt="Four otters are gathered around a table, reviewing application submissions."
+            ></Image>
+            <div className="text-center text-white">
+                <p className="font-semibold text-sm text-brand-400 mb-2">
+                    Submission Successful
+                </p>
+                <h1 className="text-3xl font-semibold text-white text-balance leading-tight mb-3">
+                    Thank you for applying to JourneyHacks 2025!
                 </h1>
-                <h2 className="text-white/60 text-sm font-sans">
-                    Your application has been submitted and will go under review
-                    by the JourneyHacks team soon.
-                </h2>
+                <p className="text-base text-balance text-white/60">
+                    Keep an eye on your inbox for any updates regarding your
+                    application status.
+                </p>
             </div>
-
-            <SkewmorphicButton
-                onClick={() => {
-                    redirect('/');
-                }}
-                style={{
-                    background: 'var(--brand-500)',
-                }}
-            >
-                Back to Dashboard
-            </SkewmorphicButton>
+            <Button variant="brand" hierarchy="primary" size="cozy">
+                Return to home
+            </Button>
         </div>
     );
 }

@@ -46,7 +46,7 @@ export default function DiscordCard() {
                     className="w-full"
                     onClick={handleClick}
                 >
-                    Join server
+                    Join Discord server
                 </Button>
             </div>
         </div>

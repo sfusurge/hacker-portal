@@ -1,6 +1,7 @@
 import { CSSProperties, useEffect, useMemo, useRef } from 'react';
 import { CheckBoxWithLabel } from '../checkbox/checkboxWithLabel';
 import style from './CheckBoxGroup.module.css';
+
 interface CheckBoxGroupProps {
     min?: number;
     max?: number;

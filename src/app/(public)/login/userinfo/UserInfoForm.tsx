@@ -59,8 +59,8 @@ export default function UserInfoForm() {
                             </p>
                         </div>
                         <form ref={formRef} action={updateUserWithRedirect}>
-                            <div className="flex flex-col gap-8 *:max-w-96 w-full items-center">
-                                <div className="w-full flex flex-col md:flex-row gap-8">
+                            <div className="flex flex-col gap-4 *:max-w-96 w-full items-center">
+                                <div className="w-full flex flex-col md:flex-row gap-4 md:gap-6">
                                     <div className="w-full">
                                         <Label required={true}>
                                             First name
@@ -112,7 +112,7 @@ export default function UserInfoForm() {
                                 </div>
                             </div>
 
-                            <div className="flex flex-col gap-4 *:max-w-96 items-center w-full">
+                            <div className="flex flex-col mt-6 gap-4 *:max-w-96 items-center w-full">
                                 <Button
                                     type="submit"
                                     variant="brand"

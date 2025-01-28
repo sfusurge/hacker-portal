@@ -7,8 +7,7 @@ import { log } from 'console';
 import { Conditional } from '@/lib/Conditional';
 import Countdown from './Countdown';
 import { redirect } from 'next/navigation';
-import { intervalToDuration } from 'date-fns';
-import { useEffect, useState } from 'react';
+import CountdownTimer from './Countdown';
 
 export type AppStatus =
     | 'Not Yet Started'
@@ -19,42 +18,16 @@ export type AppStatus =
     | 'Rejected'
     | 'Waitlisted';
 
-const statusColorMap = {
-    'Not Yet Started': '#ababab',
-};
-
-const getTimeLeft = (targetDate: Date) => {
-    const now = new Date();
-    const duration = intervalToDuration({
-        start: now,
-        end: new Date(targetDate),
+export default function ApplicationCard({ status }: { status: AppStatus }) {
+    const leadingIconStyles = cn({
+        'text-white': status === 'Not Yet Started',
+        'text-caution-500': status === 'In Progress',
+        'text-yellow-500': status === 'Submitted – Under Review',
     });
 
-    return {
-        days: duration.days?.toString() || '0',
-        hours: duration.hours?.toString() || '0',
-        minutes: duration.minutes?.toString() || '0',
-    };
-};
-
-export default function ApplicationCard({ status }: { status: AppStatus }) {
-    const statusHeadingStyles = cn({});
     const handleClick = () => {
         redirect('/application');
     };
-
-    //February 14, 2025, 9:00 AM PST in UTC (which is 5:00 PM UTC)
-    const JHDate = new Date(Date.UTC(2025, 1, 14, 17)); //months start at 0
-
-    const [timeLeft, setTimeLeft] = useState(getTimeLeft(JHDate));
-
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setTimeLeft(getTimeLeft(JHDate));
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, [JHDate]);
 
     return (
         <div className="bg-neutral-900 flex flex-col rounded-xl border border-neutral-600/30">
@@ -63,7 +36,12 @@ export default function ApplicationCard({ status }: { status: AppStatus }) {
                     <span className="text-sm text-white/60 font-medium leading-none">
                         Your Application Status
                     </span>
-                    <h2 className="text-white text-xl font-semibold">
+                    <h2
+                        className={cn(
+                            'text-xl font-semibold text-left',
+                            leadingIconStyles
+                        )}
+                    >
                         {status}
                     </h2>
                 </div>
@@ -73,32 +51,64 @@ export default function ApplicationCard({ status }: { status: AppStatus }) {
                         status !== 'Rejected'
                     }
                 >
-                    <Button
-                        size="cozy"
-                        variant="brand"
-                        hierarchy="primary"
-                        className="hidden md:block"
-                        onClick={handleClick}
-                    >
-                        Apply
-                    </Button>
+                    <Conditional showWhen={status === 'Not Yet Started'}>
+                        <Button
+                            size="cozy"
+                            variant="brand"
+                            hierarchy="primary"
+                            className="hidden md:block"
+                            onClick={handleClick}
+                        >
+                            Apply
+                        </Button>
+                    </Conditional>
+                    <Conditional showWhen={status === 'In Progress'}>
+                        <Button
+                            size="cozy"
+                            variant="caution"
+                            hierarchy="primary"
+                            className="hidden md:block"
+                            onClick={handleClick}
+                        >
+                            Continue
+                        </Button>
+                    </Conditional>
                 </Conditional>
             </div>
-
-            <div className="text-center p-5 md:p-8 flex flex-col gap-6 items-center flex-1 justify-center">
-                <div>
-                    <h2 className="text-white text-lg font-medium mb-1">
-                        Don't miss out!
-                    </h2>
-                    <p className="text-white/60 text-sm">
-                        Hacker registration closes in...
-                    </p>
-                </div>
-                <div className="grid grid-cols-3 gap-4 max-w-96 w-full">
-                    <Countdown label="DAYS" time={timeLeft.days}></Countdown>
-                    <Countdown label="HOURS" time={timeLeft.hours}></Countdown>
-                    <Countdown label="MINS" time={timeLeft.minutes}></Countdown>
-                </div>
+            <div className="text-center p-5 lg:p-8 flex flex-col gap-6 items-center flex-1 justify-center">
+                <Conditional
+                    showWhen={
+                        status === 'Not Yet Started' || status === 'In Progress'
+                    }
+                >
+                    <div>
+                        <h2 className="text-white text-lg font-medium mb-1">
+                            Don't miss out!
+                        </h2>
+                        <p className="text-white/60 text-sm">
+                            Hacker registration closes in...
+                        </p>
+                    </div>
+                    <CountdownTimer targetDate="2025-02-12T07:59:00.000Z" />
+                </Conditional>
+                <Conditional showWhen={status === 'Submitted – Under Review'}>
+                    <Image
+                        src="/login/application-review.png"
+                        width={1537}
+                        height={1134}
+                        className="max-w-[240px] mb-2"
+                        alt="Four otters are gathered around a table, reviewing application submissions."
+                    ></Image>
+                    <div className="text-left md:text-center">
+                        <h2 className="text-white text-balance text-xl font-medium mb-2.5">
+                            We’re currently reviewing your application 📝
+                        </h2>
+                        <p className="text-white/60 md:text-balance">
+                            Your application has been submitted and is being
+                            reviewed by the StormHacks team.
+                        </p>
+                    </div>
+                </Conditional>
             </div>
 
             <Conditional
@@ -111,8 +121,9 @@ export default function ApplicationCard({ status }: { status: AppStatus }) {
                     <Conditional showWhen={status === 'Not Yet Started'}>
                         <Button
                             size="cozy"
-                            variant="default"
+                            variant="brand"
                             hierarchy="primary"
+                            onClick={() => redirect('/application')}
                         >
                             Begin application
                         </Button>
@@ -122,6 +133,7 @@ export default function ApplicationCard({ status }: { status: AppStatus }) {
                             size="cozy"
                             variant="caution"
                             hierarchy="primary"
+                            onClick={() => redirect('/application')}
                         >
                             Continue application
                         </Button>

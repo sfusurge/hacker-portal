@@ -80,7 +80,7 @@ export default function DesktopNav({
                             icon={<HomeIcon></HomeIcon>}
                             iconAlt="Home logo"
                             platform="desktop"
-                            active={true}
+                            active={window.location.pathname === '/home'}
                             onClick={returnHome}
                         ></NavLink>
                         <NavLink
@@ -90,7 +90,7 @@ export default function DesktopNav({
                             iconAlt="Team logo"
                             platform="desktop"
                             active={false}
-                            onClick={returnHome}
+                            disabled={true}
                         ></NavLink>
 
                         <NavLink
@@ -100,7 +100,7 @@ export default function DesktopNav({
                             iconAlt="Schedule logo"
                             platform="desktop"
                             active={false}
-                            onClick={returnHome}
+                            disabled={true}
                         ></NavLink>
 
                         <NavLink
@@ -110,7 +110,7 @@ export default function DesktopNav({
                             iconAlt="Alerts logo"
                             platform="desktop"
                             active={false}
-                            onClick={returnHome}
+                            disabled={true}
                         ></NavLink>
 
                         {initialData?.userRole === 'admin' && (
@@ -121,6 +121,7 @@ export default function DesktopNav({
                                 iconAlt="Alerts logo"
                                 platform="desktop"
                                 active={false}
+                                disabled={true}
                             ></NavLink>
                         )}
                     </div>

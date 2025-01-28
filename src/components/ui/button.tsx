@@ -47,7 +47,8 @@ const buttonVariants = cva(
                 variant: 'brand',
                 hierarchy: 'primary',
                 disabled: true,
-                className: 'text-brand-400/18 bg-brand-950 pointer-events-none',
+                className:
+                    'shadow-none text-brand-400/18 bg-brand-950 pointer-events-none',
             },
             {
                 variant: 'default',

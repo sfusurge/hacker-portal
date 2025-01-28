@@ -10,6 +10,7 @@ import {
 import { NavLink } from './NavLink';
 import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
 import { MergedUserData } from '@/app/(auth)/layout';
+import { useHydrateAtoms } from 'jotai/utils';
 
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { signOut } from 'next-auth/react';

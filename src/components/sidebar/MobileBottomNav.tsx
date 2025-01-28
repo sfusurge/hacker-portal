@@ -32,7 +32,7 @@ export default function MobileBottomNav({ className }: MobileBottomNavProps) {
                         icon={<HomeIcon></HomeIcon>}
                         iconAlt="Home logo"
                         platform="mobile"
-                        active={true}
+                        active={window.location.pathname === '/home'}
                     ></NavLink>
 
                     <NavLink
@@ -42,6 +42,7 @@ export default function MobileBottomNav({ className }: MobileBottomNavProps) {
                         iconAlt="Team logo"
                         platform="mobile"
                         active={false}
+                        disabled={true}
                     ></NavLink>
 
                     <NavLink
@@ -51,6 +52,7 @@ export default function MobileBottomNav({ className }: MobileBottomNavProps) {
                         iconAlt="Schedule logo"
                         platform="mobile"
                         active={false}
+                        disabled={true}
                     ></NavLink>
 
                     <NavLink
@@ -60,6 +62,7 @@ export default function MobileBottomNav({ className }: MobileBottomNavProps) {
                         iconAlt="Alerts logo"
                         platform="mobile"
                         active={false}
+                        disabled={true}
                     ></NavLink>
                 </div>
             )}

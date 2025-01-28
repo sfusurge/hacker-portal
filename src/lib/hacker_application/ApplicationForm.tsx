@@ -260,7 +260,7 @@ function Page({
     return (
         <form
             ref={formRef}
-            className={style.page}
+            className={cn(style.page, 'md:pb-0')}
             style={hidden ? { display: 'none' } : {}}
             noValidate
         >
@@ -349,10 +349,7 @@ function Question({
     }
 
     return (
-        <div
-            className={cn(style.ver)}
-            style={{ gap: '0.75rem', width: '100%' }}
-        >
+        <div className={cn(style.ver)} style={{ width: '100%' }}>
             {question.title && (
                 <Label required={question.required}>{question.title}</Label>
             )}
@@ -411,6 +408,7 @@ function PageButtons({
                     color: 'var( --text-secondary)',
                     marginRight: 'auto',
                 }}
+                className="text-sm"
             >
                 Progress saved locally.
             </span>
@@ -449,7 +447,7 @@ function PageButtons({
             )}
             {index === pageCount && (
                 <SkewmorphicButton
-                    className={style.nextButton}
+                    className={cn(style.nextButton)}
                     onClick={() => {
                         submit && submit();
                     }}

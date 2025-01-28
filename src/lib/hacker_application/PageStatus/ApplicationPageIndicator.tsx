@@ -117,8 +117,6 @@ export function DesktopPageIndicator({
                 <ArrowUpCircleIcon
                     style={{
                         minWidth: '28px',
-                        width: '28px',
-
                         height: '28px',
                     }}
                 />

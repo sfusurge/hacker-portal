@@ -66,6 +66,7 @@ export function ReviewPage({
                 flexDirection: 'column',
                 gap: '1.5rem',
                 margin: '1rem',
+                marginBottom: '7rem',
             }}
         >
             <h1 className="text-2xl">Review Application</h1>
