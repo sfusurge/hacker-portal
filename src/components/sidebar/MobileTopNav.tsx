@@ -1,5 +1,12 @@
 import Image from 'next/image';
 import clsx from 'clsx';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import { NavLink } from './NavLink';
+import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
 
 interface MobileTopNavProps {
     className?: string;
@@ -32,15 +39,35 @@ export default function MobileTopNav({ className }: MobileTopNavProps) {
                         </span>
                     </div>
                 </div>
-                <a href="" aria-label="User profile">
-                    <Image
-                        width={36}
-                        height={36}
-                        alt="Default avatar for the user"
-                        src="/sidebar/default-avatar.png"
-                        className="w-10 h-10 aspect-square rounded-full"
-                    ></Image>
-                </a>
+
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Image
+                            width={36}
+                            height={36}
+                            alt="Default avatar for the user"
+                            src="/sidebar/default-avatar.png"
+                            className="w-10 h-10 aspect-square rounded-full"
+                        ></Image>
+                    </PopoverTrigger>
+                    <PopoverContent
+                        sideOffset={8}
+                        side="bottom"
+                        className="z-[200]"
+                    >
+                        <NavLink
+                            href="#"
+                            label="Sign out"
+                            icon={
+                                <ArrowLeftEndOnRectangleIcon></ArrowLeftEndOnRectangleIcon>
+                            }
+                            iconAlt="Sign out logo"
+                            platform="desktop"
+                            variant="error"
+                            className="px-2"
+                        ></NavLink>
+                    </PopoverContent>
+                </Popover>
             </div>
         </div>
     );
