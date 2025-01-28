@@ -73,10 +73,13 @@ export const applicationsRouter = router({
                     hackathonId: input.hackathonId,
                     response: input.response,
                 })
-                .onConflictDoUpdate({
+                .onConflictDoNothing({
                     target: [applications.hackathonId, applications.userId],
-                    set: { response: input.response },
                 })
+                // .onConflictDoUpdate({
+                //     target: [applications.hackathonId, applications.userId],
+                //     set: { response: input.response },
+                // })
                 .returning();
 
             return {
