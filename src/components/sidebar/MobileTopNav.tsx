@@ -15,19 +15,17 @@ import { useHydrateAtoms } from 'jotai/utils';
 
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 
-const PopoverArrow = PopoverPrimitive.Arrow;
-
 interface MobileTopNavProps {
     className?: string;
     initialData?: MergedUserData;
 }
 
 export default function MobileTopNav({
-    initialData = undefined,
+    initialData,
     className,
 }: MobileTopNavProps) {
-    //    useHydrateAtoms([[userAtom, initialData]]);
-    //    const userData = useAtomValue(userAtom);
+    // useHydrateAtoms([[userAtom, initialData]]);
+    // const userData = useAtomValue(userAtom);
 
     return (
         <div
