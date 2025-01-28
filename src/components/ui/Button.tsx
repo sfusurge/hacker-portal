@@ -20,7 +20,7 @@ const buttonVariants = cva(
                 success: '',
                 caution: '',
                 error: '',
-                brand: 'bg-brand-500',
+                brand: '',
             },
             hierarchy: {
                 primary: '',
@@ -34,16 +34,17 @@ const buttonVariants = cva(
         },
         compoundVariants: [
             {
+                variant: 'brand',
+                hierarchy: 'primary',
+                className: 'text-white bg-brand-600 hover:bg-brand-700',
+            },
+            {
                 variant: 'default',
                 hierarchy: 'secondary',
                 className:
                     'bg-neutral-800/60 hover:bg-neutral-750/60 border-neutral-600/60',
             },
         ],
-        defaultVariants: {
-            variant: 'default',
-            size: 'cozy',
-        },
     }
 );
 
