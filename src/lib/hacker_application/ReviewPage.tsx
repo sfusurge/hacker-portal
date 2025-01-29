@@ -31,7 +31,11 @@ export function ReviewPage({
                 break;
 
             case 'multiple-checkbox':
-                res = question.choices.map((item) => item.name).join(', ');
+                console.log;
+                res = question.choices
+                    .filter((item) => item.value)
+                    .map((item) => item.name)
+                    .join(', ');
                 break;
             case 'multiple-choice':
                 res = question.value as string;
