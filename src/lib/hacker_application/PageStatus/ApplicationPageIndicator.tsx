@@ -102,7 +102,7 @@ export function DesktopPageIndicator({
                             onClick={() => {
                                 setIndex(index);
                             }}
-                            className={style.pageStatusItem}
+                            className={cn(style.pageStatusItem, 'text-left')}
                         >
                             {getPageStatus(item, errCheck)} {item.title}
                         </button>
@@ -145,7 +145,7 @@ export function MobilePageIndicator({
         }
 
         return (
-            <span>
+            <span className="line-clamp-1 leading-none">
                 {_index + 1}. {pageStates[_index].title}
             </span>
         );
@@ -219,8 +219,8 @@ export function MobilePageIndicator({
                     {
                         <ChevronUpIcon
                             style={{
-                                width: '16px',
-                                transform: showPages ? '' : 'rotate(180deg)',
+                                width: '20px',
+                                transform: showPages ? '' : 'rotate(-180deg)',
                                 transition: 'transform 300ms ease-out',
                             }}
                         ></ChevronUpIcon>

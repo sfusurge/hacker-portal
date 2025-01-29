@@ -7,6 +7,14 @@
     padding: 14px 16px;
     line-height: 16px;
     transition: filter 400ms ease-out;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.icon_button {
+    width: 44px;
+    height: 44px;
 }
 
 .button:hover {

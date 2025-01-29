@@ -12,6 +12,7 @@
 
 .mainTitle {
     font-size: 30px;
+    font-weight: 500;
 }
 .appFormWrapper {
     /* used to crop scrol bar */

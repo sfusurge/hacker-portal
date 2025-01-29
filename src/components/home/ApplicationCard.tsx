@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils';
 import { Conditional } from '@/lib/Conditional';
 import { redirect } from 'next/navigation';
 import CountdownTimer from './Countdown';
+import { trpc } from '@/trpc/client';
+import { useEffect, useState } from 'react';
 
 export type AppStatus =
     | 'Not Yet Started'
@@ -16,7 +18,29 @@ export type AppStatus =
     | 'Rejected'
     | 'Waitlisted';
 
-export default function ApplicationCard({ status }: { status: AppStatus }) {
+export default function ApplicationCard() {
+    let status: AppStatus;
+    const [questionSetExists, setQuestionSetExists] = useState(false);
+
+    const applicationSubmitted =
+        trpc.applications.userAlreadySubmitted.useQuery({});
+
+    useEffect(() => {
+        const questionSet = localStorage.getItem('question set');
+
+        if (questionSet !== null) {
+            setQuestionSetExists(true);
+        }
+    }, []);
+
+    if (applicationSubmitted.data) {
+        status = 'Submitted – Under Review';
+    } else if (questionSetExists) {
+        status = 'In Progress';
+    } else {
+        status = 'Not Yet Started';
+    }
+
     const leadingIconStyles = cn({
         'text-white': status === 'Not Yet Started',
         'text-caution-500': status === 'In Progress',
