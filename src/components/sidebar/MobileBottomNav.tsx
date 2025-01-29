@@ -31,7 +31,7 @@ export default function MobileBottomNav({ className }: MobileBottomNavProps) {
                         icon={<HomeIcon></HomeIcon>}
                         iconAlt="Home logo"
                         platform="mobile"
-                        active={window.location.pathname === '/home'}
+                        active={window?.location.pathname === '/home'}
                     ></NavLink>
 
                     <NavLink

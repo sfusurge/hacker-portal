@@ -34,7 +34,7 @@ export default function MobileTopNav({
             <div className="flex flex-row items-center w-full justify-between">
                 <div className="flex flex-row gap-3 my-auto">
                     <Image
-                        src="/login/sparkcheffrizz.png"
+                        src="/login/sparkcheffrizz.webp"
                         alt="Sparky wearing a chef\'s hat"
                         width={36}
                         height={36}
@@ -59,7 +59,7 @@ export default function MobileTopNav({
                             alt="Default avatar for the user"
                             src={
                                 initialData?.image ??
-                                '/sidebar/default-avatar.png'
+                                '/sidebar/default-avatar.webp'
                             }
                             className="w-10 h-10 aspect-square rounded-full"
                         ></img>

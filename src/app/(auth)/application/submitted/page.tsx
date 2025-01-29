@@ -5,7 +5,7 @@ export default function SubmitPage() {
     return (
         <div className="flex flex-col h-full w-full items-center justify-center gap-8">
             <Image
-                src="/login/application-review.png"
+                src="/login/application-review.webp"
                 width={1537}
                 height={1134}
                 className="max-w-[280px]"

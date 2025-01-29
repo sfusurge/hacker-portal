@@ -93,7 +93,7 @@ export default function ApplicationCard({ status }: { status: AppStatus }) {
                 </Conditional>
                 <Conditional showWhen={status === 'Submitted – Under Review'}>
                     <Image
-                        src="/login/application-review.png"
+                        src="/login/application-review.webp"
                         width={1537}
                         height={1134}
                         className="max-w-[240px] mb-2"
