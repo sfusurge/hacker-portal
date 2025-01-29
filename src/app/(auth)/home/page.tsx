@@ -17,14 +17,14 @@ export default async function Home() {
 
     const trpcClient = createCaller({});
 
-    const application = await trpcClient.applications.getApplications({
-        hackathonId: 1,
-        userId: data?.id,
-    });
+    // const application = await trpcClient.applications.getApplications({
+    //     hackathonId: 1,
+    //     userId: data?.id,
+    // });
 
-    let status =
-        backendStatusToClientStatus[application[0]?.currentStatus] ??
-        'In Progress';
+    // let status =
+    //     backendStatusToClientStatus[application[0]?.currentStatus] ??
+    //     'In Progress';
 
     return (
         <div className="flex flex-col gap-6 md:gap-8">
@@ -33,7 +33,7 @@ export default async function Home() {
             </h1>
 
             <div className="grid gap-6 md:gap-8 pb-6 md:pb-0 xl:grid-cols-2">
-                <ApplicationCard status={status}></ApplicationCard>
+                <ApplicationCard />
                 <DiscordCard></DiscordCard>
             </div>
         </div>
