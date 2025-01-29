@@ -220,7 +220,7 @@ export const applicationSet: ApplicationData = {
 
 export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
     title: 'First page',
-    version: 1111,
+    version: 11111,
     hackathonName: 'JourneyHacks 2025',
     pages: [
         {
@@ -242,7 +242,7 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
                     placeHolder: 'name@sfu.com',
                     required: true,
                     validator: {
-                        pattern: '^[\\w-.]+@([\\w-]+.)+[\\w-]{2,4}$',
+                        pattern: '[\\w-.]+@([\\w-]+.)+[\\w-]{2,4}',
                         errorMsg: 'Not a valid email',
                     },
                     maxCount: 100,
