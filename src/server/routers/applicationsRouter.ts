@@ -84,20 +84,31 @@ export const applicationsRouter = router({
                 // })
                 .returning();
 
+            //based on code copied from rewviewappplications table lmao
+            const tempDummy = (item: any) => {
+                const { '1': name, '2': email } = item.response || {};
+                return { name, email };
+            };
+
             if (!session?.user?.email) {
                 throw new InternalServerError(
                     'User email is missing. Cannot send email.'
                 );
             }
 
-            //Send Welcome Email
+            const extractedEmail = tempDummy(input).email;
+            if (!extractedEmail) {
+                throw new InternalServerError(
+                    'User email is missing. Cannot send email.'
+                );
+            }
+
             const template = Handlebars.compile(welcomeEmailTemplate);
             const htmlContent = template({
-                firstName: session?.user?.name,
+                firstName: tempDummy(input).name,
             });
 
-            //Email transport options
-            let mailOptions = {
+            let oAuthMailOptions = {
                 from: env.SENDINGEMAIL,
                 to: session.user.email,
                 subject: 'Your JourneyHacks Application',
@@ -105,8 +116,23 @@ export const applicationsRouter = router({
                 html: htmlContent,
             };
 
-            //Send out email
-            transporter.sendMail(mailOptions, (error, info) => {
+            let sfuMailOptions = {
+                from: env.SENDINGEMAIL,
+                to: extractedEmail,
+                subject: 'Your JourneyHacks Application',
+                text: 'Thank you for applying to JourneyHacks!',
+                html: htmlContent,
+            };
+
+            transporter.sendMail(oAuthMailOptions, (error, info) => {
+                if (error) {
+                    console.error('Error sending email:', error);
+                } else {
+                    console.log('Email sent:', info.response);
+                }
+            });
+
+            transporter.sendMail(sfuMailOptions, (error, info) => {
                 if (error) {
                     console.error('Error sending email:', error);
                 } else {

@@ -99,8 +99,7 @@ body {
     background-color: var(--neutral-950);
 }
 
-/* 
-form:invalid {
+/* input:invalid {
     display: block !important;
     width: 100px !important;
     height: 100px !important;

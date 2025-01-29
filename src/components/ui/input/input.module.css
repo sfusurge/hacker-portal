@@ -10,7 +10,7 @@
     content: var(--lengthMsg);
     position: absolute;
     right: 0rem;
-    top: 2.6rem;
+    top: 50px;
     border: 0;
 
     color: grey;
