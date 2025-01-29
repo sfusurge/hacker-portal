@@ -9,6 +9,7 @@
 
     justify-content: start;
     align-items: start;
+    max-width: 224px;
 
     padding: 24px;
     padding-left: 20px;

@@ -102,7 +102,7 @@ export function DesktopPageIndicator({
                             onClick={() => {
                                 setIndex(index);
                             }}
-                            className={style.pageStatusItem}
+                            className={cn(style.pageStatusItem, 'text-left')}
                         >
                             {getPageStatus(item, errCheck)} {item.title}
                         </button>
