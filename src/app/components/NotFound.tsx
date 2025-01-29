@@ -8,7 +8,7 @@ export default function NotFound(props: NotFoundProps) {
     return (
         <div className="flex flex-col h-full w-full items-center justify-center gap-8">
             <Image
-                src="/login/sad-otter.png"
+                src="/login/sad-otter.webp"
                 width={699}
                 height={725}
                 className="max-w-[240px]"

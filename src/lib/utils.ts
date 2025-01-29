@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function useWindowSize() {
-    const [[width, height], setSize] = useState([0, 0]);
+    const [[width, height], setSize] = useState([9999, 9999]);
 
     useLayoutEffect(() => {
         function updateSize() {

@@ -220,11 +220,11 @@ export const applicationSet: ApplicationData = {
 
 export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
     title: 'First page',
-    version: 10,
-    hackathonName: 'Journey Hacks 2025',
+    version: 101,
+    hackathonName: 'JourneyHacks 2025',
     pages: [
         {
-            title: 'first page',
+            title: 'Application',
             description: '',
             questions: [
                 {
@@ -246,6 +246,10 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
                     type: 'text-line',
                     title: 'Student number',
                     placeHolder: 'Short answer text',
+                    validator: {
+                        errorMsg: 'Not a valid student number!',
+                        pattern: '[0-9]{9}',
+                    },
                     required: true,
                 },
                 {
@@ -318,7 +322,7 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
                     questionId: 8,
                     type: 'multiple-checkbox',
                     title: 'Please fill out any dietary restrictions',
-                    required: true,
+                    required: false,
                     choices: [
                         {
                             data: 'Halal',

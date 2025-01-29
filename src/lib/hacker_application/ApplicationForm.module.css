@@ -4,12 +4,10 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    height: calc(100dvh - 2.5rem);
+    height: calc(100dvh - 124px);
     max-width: 1200px;
     color: white;
     box-sizing: border-box;
-
-    padding: 24px;
 }
 
 .mainTitle {
@@ -21,8 +19,8 @@
     height: 100%;
     max-height: 100%;
     overflow: hidden;
-    border: 2px solid var(--border-neutral-secondary);
-    background-color: var(--neutral-925);
+    border: 1px solid var(--border-neutral-tertiary);
+    background-color: var(--neutral-900);
     border-radius: 12px;
 }
 .appFormContent {
@@ -73,6 +71,12 @@
     padding-bottom: 7rem;
 }
 
+@media only screen and (min-width: 768px) {
+    .page {
+        padding-bottom: 24px;
+    }
+}
+
 .formContainer {
     position: relative;
     flex: 1;
@@ -105,7 +109,7 @@
 }
 
 /* mobile */
-@media only screen and (max-width: 786px) {
+@media only screen and (max-width: 768px) {
     .appFormRoot {
         padding: 0;
         border: none;

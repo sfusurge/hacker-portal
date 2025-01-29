@@ -54,6 +54,7 @@
     line-height: 1rem;
     display: block;
     padding-top: 0.2rem;
+    height: 20px;
     color: transparent;
 }
 
@@ -61,6 +62,7 @@
     color: white;
     background-color: var(--background-neutral-secondary);
     border: 1px solid var(--border-neutral-secondary);
+    height: 48px;
 }
 
 .textinput:focus {

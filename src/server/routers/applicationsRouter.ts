@@ -1,3 +1,5 @@
+import { auth } from '@/auth/auth';
+import { databaseClient } from '@/db/client';
 import {
     applications,
     insertApplicationSchema,
@@ -5,12 +7,15 @@ import {
     StatusEnum,
     updateApplicationStatusSchema,
 } from '@/db/schema/applications';
-import { publicProcedure, router } from '../trpc';
-import { databaseClient } from '@/db/client';
-import { and, asc, eq, sql } from 'drizzle-orm';
 import { users } from '@/db/schema/users';
+import { and, asc, eq, sql } from 'drizzle-orm';
+import { z } from 'zod';
 import { InternalServerError } from '../exceptions';
-import { auth } from '@/auth/auth';
+import { publicProcedure, router } from '../trpc';
+import Handlebars from 'handlebars';
+import { welcomeEmailTemplate } from '@/server/routers/templates';
+import { transporter } from '@/server/nodemailerTransporter';
+const env = process.env;
 
 export interface SubmitApplicationResponse {
     hackathonId: number;
@@ -21,7 +26,35 @@ export interface SubmitApplicationResponse {
     pendingStatus: StatusEnum;
 }
 
+const nullSchema = z.object({
+    hackathonId: z.number().int().optional(),
+});
+
 export const applicationsRouter = router({
+    userAlreadySubmitted: publicProcedure
+        .input(nullSchema)
+        .query(async ({ input }) => {
+            const session = await auth();
+
+            const app = await databaseClient
+                .select()
+                .from(applications)
+                .innerJoin(
+                    users,
+                    and(
+                        eq(applications.userId, users.id),
+                        eq(users.email, session?.user?.email!)
+                    )
+                )
+                .where(
+                    input.hackathonId !== undefined
+                        ? eq(applications.hackathonId, input.hackathonId)
+                        : undefined
+                );
+
+            return app.length > 0;
+        }),
+
     submitApplication: publicProcedure
         .input(insertApplicationSchema)
         .mutation(async ({ input }): Promise<SubmitApplicationResponse> => {
@@ -42,11 +75,44 @@ export const applicationsRouter = router({
                     hackathonId: input.hackathonId,
                     response: input.response,
                 })
-                .onConflictDoUpdate({
+                .onConflictDoNothing({
                     target: [applications.hackathonId, applications.userId],
-                    set: { response: input.response },
                 })
+                // .onConflictDoUpdate({
+                //     target: [applications.hackathonId, applications.userId],
+                //     set: { response: input.response },
+                // })
                 .returning();
+
+            if (!session?.user?.email) {
+                throw new InternalServerError(
+                    'User email is missing. Cannot send email.'
+                );
+            }
+
+            //Send Welcome Email
+            const template = Handlebars.compile(welcomeEmailTemplate);
+            const htmlContent = template({
+                firstName: session?.user?.name,
+            });
+
+            //Email transport options
+            let mailOptions = {
+                from: env.SENDINGEMAIL,
+                to: session.user.email,
+                subject: 'Your JourneyHacks Application',
+                text: 'Thank you for applying to JourneyHacks!',
+                html: htmlContent,
+            };
+
+            //Send out email
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.error('Error sending email:', error);
+                } else {
+                    console.log('Email sent:', info.response);
+                }
+            });
 
             return {
                 ...application,

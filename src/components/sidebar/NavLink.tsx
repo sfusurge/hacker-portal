@@ -27,7 +27,11 @@ const navLinkVariants = cva(
             },
             active: {
                 true: 'text-white bg-brand-950 hover:bg-brand-900',
-                false: 'text-white/60 bg-transparent hover:bg-neutral-750/30',
+                false: 'text-white/60 hover:text-white bg-transparent hover:bg-neutral-750/30',
+            },
+            disabled: {
+                true: 'text-white/18 pointer-events-none',
+                false: '',
             },
         },
     }
@@ -39,16 +43,19 @@ export function NavLink({
     href,
     label,
     icon,
+    disabled,
     iconAlt,
     platform,
     active,
     ...props
 }: ComponentProps<'a'> & NavLinkProps & VariantProps<typeof navLinkVariants>) {
     const iconStyles = cn({
-        'text-brand-400 group-hover:text-brand-200': active && icon,
-        'text-white/30 group-hover:text-white/60': !active && icon,
+        'text-brand-400 group-hover:text-brand-200':
+            active && !disabled && icon,
+        'text-white/30 group-hover:text-white/60': !active && !disabled && icon,
         'text-danger-400/60 group-hover:text-danger-400':
-            variant === 'error' && icon,
+            variant === 'error' && !disabled && icon,
+        'text-white/18': disabled && icon,
     });
 
     return (
@@ -56,7 +63,13 @@ export function NavLink({
             href={href}
             {...props}
             className={cn(
-                navLinkVariants({ variant, className, platform, active })
+                navLinkVariants({
+                    variant,
+                    className,
+                    platform,
+                    active,
+                    disabled,
+                })
             )}
         >
             {icon && iconAlt && (
@@ -64,7 +77,7 @@ export function NavLink({
                     {icon}
                 </div>
             )}
-            <span className="leading-none">{label}</span>
+            <span className={cn('leading-none')}>{label}</span>
         </Link>
     );
 }

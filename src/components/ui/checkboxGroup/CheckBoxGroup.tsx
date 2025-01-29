@@ -1,6 +1,7 @@
 import { CSSProperties, useEffect, useMemo, useRef } from 'react';
 import { CheckBoxWithLabel } from '../checkbox/checkboxWithLabel';
 import style from './CheckBoxGroup.module.css';
+
 interface CheckBoxGroupProps {
     min?: number;
     max?: number;
@@ -10,7 +11,7 @@ interface CheckBoxGroupProps {
     required?: boolean;
 }
 export function CheckboxGroup({
-    min = 1,
+    min = 0,
     max = 1,
     choices,
     selected: _selected,

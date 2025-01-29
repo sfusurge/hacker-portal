@@ -33,7 +33,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DocumentArrowDownIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/16/solid';
 
-const validEmailTypes = ['WELCOMEJH2025'];
+const validEmailTypes = ['ACCEPTJH2025'];
 
 export type Applicant = {
     id: number;

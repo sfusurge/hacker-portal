@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import GithubProvider from 'next-auth/providers/github';
-import { NextResponse } from 'next/server';
+
 import { databaseClient } from '@/db/client';
 import { addUser, users } from '@/db/schema/users';
 import { eq } from 'drizzle-orm';
@@ -70,15 +70,3 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         },
     },
 });
-
-export async function loginWithProvider(
-    provider: 'google' | 'github',
-    redirectTarget: string | undefined
-) {
-    const res = await signIn(provider, {
-        redirect: redirectTarget !== undefined,
-        redirectTo: redirectTarget,
-    });
-
-    console.log('login finished, res is: ', res);
-}

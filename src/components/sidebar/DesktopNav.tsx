@@ -19,7 +19,7 @@ import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { MergedUserData } from '@/app/(auth)/layout';
 
 import { signOut } from 'next-auth/react';
-import { redirect } from 'next/navigation';
+import { redirect, usePathname } from 'next/navigation';
 
 interface DesktopNavProps {
     className?: string;
@@ -31,8 +31,10 @@ export default function DesktopNav({
     initialData,
 }: DesktopNavProps) {
     const returnHome = () => {
-        redirect('/');
+        redirect('/home');
     };
+
+    const url = usePathname();
 
     return (
         <div
@@ -46,7 +48,7 @@ export default function DesktopNav({
                     <div className="relative aspect-[5/3] rounded-xl overflow-hidden border border-neutral-800">
                         <div className="absolute top-0 bg-neutral-900/50 backdrop-blur-lg flex flex-row gap-3 w-full p-2">
                             <Image
-                                src="/login/sparkcheffrizz.png"
+                                src="/login/sparkcheffrizz.webp"
                                 alt="Sparky wearing a chef\'s hat"
                                 width={36}
                                 height={36}
@@ -65,10 +67,10 @@ export default function DesktopNav({
                         </div>
 
                         <Image
-                            src="/sidebar/stormy-sparky-header.png"
+                            src="/sidebar/stormy-sparky-header.webp"
                             alt="Stormy and Sparky cooking"
-                            width={1080}
-                            height={1080}
+                            width={200}
+                            height={200}
                             className="w-full h-full object-cover"
                         ></Image>
                     </div>
@@ -80,7 +82,7 @@ export default function DesktopNav({
                             icon={<HomeIcon></HomeIcon>}
                             iconAlt="Home logo"
                             platform="desktop"
-                            active={true}
+                            active={url.startsWith('/home')}
                             onClick={returnHome}
                         ></NavLink>
                         <NavLink
@@ -90,7 +92,7 @@ export default function DesktopNav({
                             iconAlt="Team logo"
                             platform="desktop"
                             active={false}
-                            onClick={returnHome}
+                            disabled={true}
                         ></NavLink>
 
                         <NavLink
@@ -100,7 +102,7 @@ export default function DesktopNav({
                             iconAlt="Schedule logo"
                             platform="desktop"
                             active={false}
-                            onClick={returnHome}
+                            disabled={true}
                         ></NavLink>
 
                         <NavLink
@@ -110,7 +112,7 @@ export default function DesktopNav({
                             iconAlt="Alerts logo"
                             platform="desktop"
                             active={false}
-                            onClick={returnHome}
+                            disabled={true}
                         ></NavLink>
 
                         {initialData?.userRole === 'admin' && (
@@ -121,6 +123,7 @@ export default function DesktopNav({
                                 iconAlt="Alerts logo"
                                 platform="desktop"
                                 active={false}
+                                disabled={false}
                             ></NavLink>
                         )}
                     </div>
@@ -134,7 +137,7 @@ export default function DesktopNav({
                                     alt="Default avatar for the user"
                                     src={
                                         initialData?.image ??
-                                        '/sidebar/default-avatar.png'
+                                        '/sidebar/default-avatar.webpp'
                                     }
                                     width={32}
                                     height={32}
@@ -169,8 +172,10 @@ export default function DesktopNav({
                             platform="desktop"
                             variant="error"
                             className="px-2"
-                            onClick={() => {
-                                signOut();
+                            onClick={async () => {
+                                await signOut({
+                                    redirectTo: '/login',
+                                });
                             }}
                         ></NavLink>
                         <PopoverPrimitive.Arrow className="fill-neutral-850 shadow-lg" />

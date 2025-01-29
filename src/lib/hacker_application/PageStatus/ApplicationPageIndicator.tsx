@@ -54,7 +54,7 @@ function getPageStatus(pageState: PageFormState, errCheck: boolean) {
             return (
                 <EllipsisHorizontalCircleIcon
                     color="white"
-                    style={{ width: '28px' }}
+                    style={{ minWidth: '28px', width: '28px' }}
                 ></EllipsisHorizontalCircleIcon>
             );
 
@@ -116,7 +116,7 @@ export function DesktopPageIndicator({
             <button onClick={tryReview} className={style.pageStatusItem}>
                 <ArrowUpCircleIcon
                     style={{
-                        width: '28px',
+                        minWidth: '28px',
                         height: '28px',
                     }}
                 />

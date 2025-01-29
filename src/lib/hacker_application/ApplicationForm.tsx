@@ -33,6 +33,8 @@ import { cn, useWindowSize } from '../utils';
 import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 import { redirect, useRouter } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
+import { hideBottomNavAtom } from '@/components/sidebar/MobileBottomNav';
+import { useMediaQuery } from '@uidotdev/usehooks';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -64,6 +66,7 @@ export function ApplicationForm({
     appDataAtom: PrimitiveAtom<ApplicationData>;
     submitApplication: () => void;
 }) {
+    'use client';
     const appData = useAtomValue(appDataAtom);
 
     // useMemo to not recreate the atom each time.
@@ -107,11 +110,12 @@ export function ApplicationForm({
     const pageStateAtomsAtom = splitAtom(pageStatesAtom);
     const [pageStateAtoms] = useAtom(pageStateAtomsAtom);
 
-    const router = useRouter();
-
     // mobile conditional render
-    const [screenWidth, _] = useWindowSize();
-    const isMobile = useMemo(() => screenWidth <= 768, [screenWidth]);
+    const isMobile = useMediaQuery('only screen and (max-width: 768px');
+    const setHideBottomNav = useSetAtom(hideBottomNavAtom);
+    useEffect(() => {
+        setHideBottomNav(isMobile);
+    }, [isMobile]);
 
     return (
         <div className={style.appFormRoot}>
@@ -147,6 +151,7 @@ export function ApplicationForm({
                                 submit={() => {
                                     submitApplication();
                                 }}
+                                mobileMode={isMobile}
                             ></ReviewPage>
                         )}
 
@@ -192,9 +197,12 @@ function Page({
     const setPageState = useSetAtom(pageStateAtom);
     const formRef = useRef<HTMLFormElement>(null);
 
-    function updateFormStatus() {
+    function updateFormStatus(extraCheck = false) {
         if (formRef.current) {
             const error = !formRef.current.checkValidity();
+            if (error && extraCheck) {
+                formRef.current.reportValidity();
+            }
 
             // when page content changes, check if everything in the page is filled
             let atLeastOneFilled = false;
@@ -229,6 +237,10 @@ function Page({
         updateFormStatus();
     }, [page]);
 
+    useEffect(() => {
+        updateFormStatus(true);
+    }, []);
+
     const questionsAtom = useMemo(
         () =>
             atom(
@@ -248,7 +260,7 @@ function Page({
     return (
         <form
             ref={formRef}
-            className={style.page}
+            className={cn(style.page, 'md:pb-0')}
             style={hidden ? { display: 'none' } : {}}
             noValidate
         >
@@ -337,10 +349,7 @@ function Question({
     }
 
     return (
-        <div
-            className={cn(style.ver)}
-            style={{ gap: '0.75rem', width: '100%' }}
-        >
+        <div className={cn(style.ver)} style={{ width: '100%' }}>
             {question.title && (
                 <Label required={question.required}>{question.title}</Label>
             )}
@@ -396,6 +405,7 @@ function PageButtons({
                     color: 'var( --text-secondary)',
                     marginRight: 'auto',
                 }}
+                className="text-sm"
             >
                 Progress saved locally.
             </span>
@@ -434,7 +444,7 @@ function PageButtons({
             )}
             {index === pageCount && (
                 <SkewmorphicButton
-                    className={style.nextButton}
+                    className={cn(style.nextButton)}
                     onClick={() => {
                         submit && submit();
                     }}

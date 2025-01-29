@@ -9,11 +9,11 @@ import {
 } from '@/components/ui/popover';
 import { NavLink } from './NavLink';
 import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
-import { useAtom, useAtomValue } from 'jotai';
 import { MergedUserData } from '@/app/(auth)/layout';
 import { useHydrateAtoms } from 'jotai/utils';
 
 import * as PopoverPrimitive from '@radix-ui/react-popover';
+import { signOut } from 'next-auth/react';
 
 interface MobileTopNavProps {
     className?: string;
@@ -24,8 +24,6 @@ export default function MobileTopNav({
     initialData,
     className,
 }: MobileTopNavProps) {
-    console.log(initialData);
-
     return (
         <div
             className={clsx(
@@ -36,7 +34,7 @@ export default function MobileTopNav({
             <div className="flex flex-row items-center w-full justify-between">
                 <div className="flex flex-row gap-3 my-auto">
                     <Image
-                        src="/login/sparkcheffrizz.png"
+                        src="/login/sparkcheffrizz.webp"
                         alt="Sparky wearing a chef\'s hat"
                         width={36}
                         height={36}
@@ -61,7 +59,7 @@ export default function MobileTopNav({
                             alt="Default avatar for the user"
                             src={
                                 initialData?.image ??
-                                '/sidebar/default-avatar.png'
+                                '/sidebar/default-avatar.webp'
                             }
                             className="w-10 h-10 aspect-square rounded-full"
                         ></img>
@@ -71,7 +69,6 @@ export default function MobileTopNav({
                         side="bottom"
                         className="z-[200]"
                     >
-                        {/* TODO RAY ADD THE SIGN OUT FUNCTION HERE */}
                         <NavLink
                             href="#"
                             label="Sign out"
@@ -82,6 +79,11 @@ export default function MobileTopNav({
                             platform="desktop"
                             variant="error"
                             className="px-2"
+                            onClick={async () => {
+                                await signOut({
+                                    redirectTo: '/',
+                                });
+                            }}
                         ></NavLink>
                         <PopoverPrimitive.Arrow className="mr-4 fill-neutral-850 shadow-lg" />
                     </PopoverContent>

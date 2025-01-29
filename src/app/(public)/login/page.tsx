@@ -1,5 +1,5 @@
 'use server';
-import { auth, loginWithProvider, signIn, signOut } from '@/auth/auth';
+import { auth, signIn, signOut } from '@/auth/auth';
 import { Button } from '@/components/ui/button';
 import { databaseClient } from '@/db/client';
 import { users } from '@/db/schema/users';
@@ -69,7 +69,7 @@ export default async function Login({
             <div className="w-screen max-h-screen bg-neutral-925 h-screen p-6 flex flex-col gap-14 justify-center md:w-full 2xl:col-span-1">
                 <div className="flex flex-col gap-8 justify-center">
                     <Image
-                        src="/login/sparkcheffrizz.png"
+                        src="/login/sparkcheffrizz.webp"
                         width={80}
                         height={80}
                         className="rounded-lg mx-auto"
@@ -81,7 +81,7 @@ export default async function Login({
                             Welcome
                         </p>
                         <h1 className="text-3xl font-semibold text-white text-balance leading-tight">
-                            Sign in to the Surge portal
+                            Sign in to the Surge Portal
                         </h1>
                     </div>
 
@@ -116,7 +116,7 @@ export default async function Login({
                 </div>
             </div>
             <Image
-                src="/login/journeyhacks-header-2x.png"
+                src="/login/journeyhacks-header-2x.webp"
                 alt="Stormy and Sparky are cooking."
                 width={1920}
                 height={1080}
