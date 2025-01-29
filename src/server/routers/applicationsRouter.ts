@@ -12,6 +12,10 @@ import { and, asc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { InternalServerError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
+import Handlebars from 'handlebars';
+import { welcomeEmailTemplate } from '@/server/routers/templates';
+import { transporter } from '@/server/nodemailerTransporter';
+const env = process.env;
 
 export interface SubmitApplicationResponse {
     hackathonId: number;
@@ -79,6 +83,36 @@ export const applicationsRouter = router({
                 //     set: { response: input.response },
                 // })
                 .returning();
+
+            if (!session?.user?.email) {
+                throw new InternalServerError(
+                    'User email is missing. Cannot send email.'
+                );
+            }
+
+            //Send Welcome Email
+            const template = Handlebars.compile(welcomeEmailTemplate);
+            const htmlContent = template({
+                firstName: session?.user?.name,
+            });
+
+            //Email transport options
+            let mailOptions = {
+                from: env.SENDINGEMAIL,
+                to: session.user.email,
+                subject: 'Your JourneyHacks Application',
+                text: 'Thank you for applying to JourneyHacks!',
+                html: htmlContent,
+            };
+
+            //Send out email
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.error('Error sending email:', error);
+                } else {
+                    console.log('Email sent:', info.response);
+                }
+            });
 
             return {
                 ...application,
