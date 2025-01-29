@@ -63,7 +63,7 @@ export default function Application() {
         <ApplicationForm
             appDataAtom={questionSetAtom}
             submitApplication={() => {
-                if (applicationSubmitted) {
+                if (applicationSubmitted.data) {
                     return;
                 }
 

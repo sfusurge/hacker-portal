@@ -3,9 +3,7 @@
 import { Button } from '../ui/button';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { log } from 'console';
 import { Conditional } from '@/lib/Conditional';
-import Countdown from './Countdown';
 import { redirect } from 'next/navigation';
 import CountdownTimer from './Countdown';
 
