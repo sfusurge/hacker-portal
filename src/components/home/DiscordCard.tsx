@@ -1,13 +1,12 @@
 'use client';
 
+import Link from 'next/link';
 import { Button } from '../ui/button';
 import Image from 'next/image';
-import { redirect, useRouter } from 'next/navigation';
+
+const DISCORD_LINK = 'https://discord.com/invite/U5q6RkHHtA/login';
 
 export default function DiscordCard() {
-    const handleClick = () => {
-        redirect('https://discord.com/invite/U5q6RkHHtA/login');
-    };
     return (
         <div className="bg-neutral-900 rounded-xl border border-neutral-600/30">
             <div className="p-5 flex flex-row items-center justify-between w-full border-b border-b-neutral-600/30">
@@ -24,9 +23,10 @@ export default function DiscordCard() {
                     variant="default"
                     hierarchy="primary"
                     className="hidden md:block"
-                    onClick={handleClick}
                 >
-                    Join
+                    <Link href={DISCORD_LINK} target="_blank">
+                        Join
+                    </Link>
                 </Button>
             </div>
             <div className="text-center p-5 pb-0 md:p-8 md:pb-0">
@@ -44,9 +44,8 @@ export default function DiscordCard() {
                     variant="default"
                     hierarchy="primary"
                     className="w-full"
-                    onClick={handleClick}
                 >
-                    Join Discord server
+                    <Link href={DISCORD_LINK}>Join Discord server</Link>
                 </Button>
             </div>
         </div>
