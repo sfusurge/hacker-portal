@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Provider from '@/trpc/Provider';
 import { SessionProvider } from 'next-auth/react';
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -34,6 +35,7 @@ export default function RootLayout({
                     <Provider>{children}</Provider>
                 </SessionProvider>
             </body>
+            <GoogleAnalytics gaId="G-99DQSJDLRK" />
         </html>
     );
 }
