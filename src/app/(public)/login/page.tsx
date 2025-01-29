@@ -26,6 +26,7 @@ export default async function Login({
                 .from(users)
                 .where(eq(users.email, session.user?.email!))
         )[0];
+
         if (!res) {
             // somehow this user isnt created, signout/invalidate the sesson
             await notFound();

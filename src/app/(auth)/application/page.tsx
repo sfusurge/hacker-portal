@@ -45,21 +45,13 @@ export default function Application() {
     const submitApplication = trpc.applications.submitApplication.useMutation();
     const applicationSubmitted =
         trpc.applications.userAlreadySubmitted.useQuery({});
-    const [questions, setQuestions] = useAtom(questionSetAtom);
+    const [questions, _] = useAtom(questionSetAtom);
 
     const session = useSession();
 
     useEffect(() => {
         if (session.data?.user?.email) {
-            if (!localStorage.getItem('email')) {
-                localStorage.setItem('email', session.data.user.email);
-            } else {
-                if (localStorage.getItem('email') !== session.data.user.email) {
-                    localStorage.setItem('email', session.data.user.email);
-
-                    setQuestions(structuredClone(JOURNEY_HACK_QUESTIONS)); // reset if its somebody else's email
-                }
-            }
+            localStorage.setItem('email', session.data.user.email);
         }
     }, [session]);
 
