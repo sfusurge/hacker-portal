@@ -17,15 +17,14 @@ export default async function Home() {
 
     const trpcClient = createCaller({});
 
-    data?.id;
-
     const application = await trpcClient.applications.getApplications({
         hackathonId: 1,
         userId: data?.id,
     });
 
     let status =
-        backendStatusToClientStatus[application[0]?.currentStatus ?? 'N/A'];
+        backendStatusToClientStatus[application[0]?.currentStatus] ??
+        'In Progress';
 
     return (
         <div className="flex flex-col gap-6 md:gap-8">
