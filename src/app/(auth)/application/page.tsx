@@ -55,11 +55,6 @@ export default function Application() {
                 localStorage.setItem('email', session.data.user.email);
             } else {
                 if (localStorage.getItem('email') !== session.data.user.email) {
-                    console.log(
-                        'test',
-                        localStorage.getItem('email'),
-                        session.data.user.email
-                    );
                     localStorage.setItem('email', session.data.user.email);
 
                     setQuestions(structuredClone(JOURNEY_HACK_QUESTIONS)); // reset if its somebody else's email

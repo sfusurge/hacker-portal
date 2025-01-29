@@ -21,8 +21,8 @@ export default function MobileBottomNav({ className }: MobileBottomNavProps) {
     const url = usePathname();
 
     useEffect(() => {
-        for (const exclude in excludedUrls) {
-            if (url.startsWith(exclude)) {
+        for (const excludeURL of excludedUrls) {
+            if (url.startsWith(excludeURL)) {
                 return setHideBottom(true);
             }
             setHideBottom(false);
