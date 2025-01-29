@@ -1,7 +1,13 @@
+'use client';
+
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { redirect } from 'next/navigation';
 
 export default function SubmitPage() {
+    const goHome = () => {
+        redirect('/home');
+    };
     return (
         <div className="flex flex-col h-full w-full items-center justify-center gap-8">
             <Image
@@ -23,7 +29,12 @@ export default function SubmitPage() {
                     application status.
                 </p>
             </div>
-            <Button variant="brand" hierarchy="primary" size="cozy">
+            <Button
+                variant="brand"
+                hierarchy="primary"
+                size="cozy"
+                onClick={goHome}
+            >
                 Return to home
             </Button>
         </div>

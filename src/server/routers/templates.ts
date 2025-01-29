@@ -1407,9 +1407,6 @@ export const welcomeEmailTemplate = `<!doctype html>
 
 }</style></head>
     <body>
-        <!--*|IF:MC_PREVIEW_TEXT|*-->
-        <!--[if !gte mso 9]><!----><span class="mcnPreviewText" style="display:none; font-size:0px; line-height:0px; max-height:0px; max-width:0px; opacity:0; overflow:hidden; visibility:hidden; mso-hide:all;">*|MC_PREVIEW_TEXT|*</span><!--<![endif]-->
-        <!--*|END:IF|*-->
         <center>
             <table align="center" border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" id="bodyTable">
                 <tr>
@@ -1434,15 +1431,6 @@ export const welcomeEmailTemplate = `<!doctype html>
 \t\t\t\t<!--[if mso]>
 \t\t\t\t<td valign="top" width="600" style="width:600px;">
 \t\t\t\t<![endif]-->
-                <table align="left" border="0" cellpadding="0" cellspacing="0" style="max-width:100%; min-width:100%;" width="100%" class="mcnTextContentContainer">
-                    <tbody><tr>
-                        
-                        <td valign="top" class="mcnTextContent" style="padding: 0px 18px 9px; text-align: center;">
-                        
-                            <a href="*|ARCHIVE|*" target="_blank">View this email in your browser</a>
-                        </td>
-                    </tr>
-                </tbody></table>
 \t\t\t\t<!--[if mso]>
 \t\t\t\t</td>
 \t\t\t\t<![endif]-->
@@ -1678,16 +1666,6 @@ SFU Surge</span>&nbsp;</p>
 \t\t\t\t<!--[if mso]>
 \t\t\t\t<td valign="top" width="600" style="width:600px;">
 \t\t\t\t<![endif]-->
-                <table align="left" border="0" cellpadding="0" cellspacing="0" style="max-width:100%; min-width:100%;" width="100%" class="mcnTextContentContainer">
-                    <tbody><tr>
-                        
-                        <td valign="top" class="mcnTextContent" style="padding-top:0; padding-right:18px; padding-bottom:9px; padding-left:18px;">
-                        
-                            <h4 class="null" data-pm-slice="1 1 []" style="text-align: center;"><a href="*|ARCHIVE|*" tabindex="-1">View this email in your browser</a></h4>
-
-                        </td>
-                    </tr>
-                </tbody></table>
 \t\t\t\t<!--[if mso]>
 \t\t\t\t</td>
 \t\t\t\t<![endif]-->
