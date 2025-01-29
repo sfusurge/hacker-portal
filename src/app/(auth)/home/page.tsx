@@ -1,22 +1,31 @@
 import ApplicationCard, { AppStatus } from '@/components/home/ApplicationCard';
 import DiscordCard from '@/components/home/DiscordCard';
 import { getUserData } from '../layout';
-import { trpc } from '@/trpc/client';
 import { createCaller } from '@/server/appRouter';
+
+const backendStatusToClientStatus: Record<string, AppStatus> = {
+    'N/A': 'Not Yet Started',
+    'Awaiting Review': 'Submitted – Under Review',
+    // TODO: be more specific here
+    Accepted: 'Accepted – Awaiting RSVP',
+    Declined: 'Rejected',
+    'Wait List': 'Waitlisted',
+};
 
 export default async function Home() {
     const data = await getUserData();
-    let status: AppStatus;
+
     const trpcClient = createCaller({});
 
-    const applicationSubmitted =
-        await trpcClient.applications.userAlreadySubmitted({});
+    data?.id;
 
-    if (applicationSubmitted) {
-        status = 'Submitted – Under Review';
-    } else {
-        status = 'Not Yet Started';
-    }
+    const application = await trpcClient.applications.getApplications({
+        hackathonId: 1,
+        userId: data?.id,
+    });
+
+    let status =
+        backendStatusToClientStatus[application[0]?.currentStatus ?? 'N/A'];
 
     return (
         <div className="flex flex-col gap-6 md:gap-8">

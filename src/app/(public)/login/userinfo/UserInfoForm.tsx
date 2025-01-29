@@ -138,7 +138,7 @@ export default function UserInfoForm() {
                     </div>
                 </div>
                 <Image
-                    src="/login/journeyhacks-header-2x.png"
+                    src="/login/journeyhacks-header-2x.webp"
                     alt="Stormy and Sparky are cooking."
                     width={1920}
                     height={1080}

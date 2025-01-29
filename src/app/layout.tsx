@@ -13,9 +13,9 @@ export const metadata: Metadata = {
     openGraph: {
         images: [
             {
-                url: 'https://portal.sfusurge.com/hacker-portal-preview.png', // Must be an absolute URL
-                width: 1200,
-                height: 630,
+                url: 'https://portal.sfusurge.com/hacker-portal-preview.webp', // Must be an absolute URL
+                width: 500,
+                height: 262,
             },
         ],
     },
@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <link rel="icon" href="/login/sparkcheffrizz.png" sizes="any" />
+            <link rel="icon" href="/login/sparkcheffrizz.webp" sizes="any" />
             <body className={inter.className}>
                 <SessionProvider>
                     <Provider>{children}</Provider>

@@ -46,7 +46,7 @@ export default function DesktopNav({
                     <div className="relative aspect-[5/3] rounded-xl overflow-hidden border border-neutral-800">
                         <div className="absolute top-0 bg-neutral-900/50 backdrop-blur-lg flex flex-row gap-3 w-full p-2">
                             <Image
-                                src="/login/sparkcheffrizz.png"
+                                src="/login/sparkcheffrizz.webp"
                                 alt="Sparky wearing a chef\'s hat"
                                 width={36}
                                 height={36}
@@ -65,10 +65,10 @@ export default function DesktopNav({
                         </div>
 
                         <Image
-                            src="/sidebar/stormy-sparky-header.png"
+                            src="/sidebar/stormy-sparky-header.webp"
                             alt="Stormy and Sparky cooking"
-                            width={1080}
-                            height={1080}
+                            width={200}
+                            height={200}
                             className="w-full h-full object-cover"
                         ></Image>
                     </div>
@@ -80,7 +80,7 @@ export default function DesktopNav({
                             icon={<HomeIcon></HomeIcon>}
                             iconAlt="Home logo"
                             platform="desktop"
-                            active={window.location.pathname === '/home'}
+                            active={window?.location.pathname === '/home'}
                             onClick={returnHome}
                         ></NavLink>
                         <NavLink
@@ -135,7 +135,7 @@ export default function DesktopNav({
                                     alt="Default avatar for the user"
                                     src={
                                         initialData?.image ??
-                                        '/sidebar/default-avatar.png'
+                                        '/sidebar/default-avatar.webpp'
                                     }
                                     width={32}
                                     height={32}
