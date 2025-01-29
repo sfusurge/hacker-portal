@@ -1467,7 +1467,7 @@ export const welcomeEmailTemplate = `<!doctype html>
                         
                             <h1 class="null" data-pm-slice="1 1 []" style="text-align: center;"><img data-file-id="14708117" height="165" src="https://mcusercontent.com/33345c9bc17f10bac6afdd0ac/images/5176a243-4b0f-190e-8898-5c29ca42784c.png" style="border: 0px  ; width: 660px; height: 165px; margin: 0px;" width="660"><br>
 <br>
-<span style="color:#a87570"><strong><span style="font-size:31px"><span style="font-family:helvetica neue,helvetica,arial,verdana,sans-serif">Welcome to JourneyHacks&nbsp;2025!</span></span></strong></span></h1>
+<span style="color:#a87570"><strong><span style="font-size:31px"><span style="font-family:helvetica neue,helvetica,arial,verdana,sans-serif">Your JourneyHacks 2025 Application is in Review 🦦</span></span></strong></span></h1>
 
 <p style="text-align: center;">&nbsp;</p>
 

@@ -46,7 +46,10 @@ export const allDietaryRestrictions = [
     'Pescatarian',
     'Gluten-free',
     'Kosher',
-    'Other..',
+    'Dairy Free',
+    'Egg Allergy',
+    'Nut Allergy',
+    'Seafood Allergy',
 ];
 
 export default function SideCard({

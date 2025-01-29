@@ -41,7 +41,8 @@ export const sendEmailRouter = router({
                         mailOptions = {
                             from: env.SENDINGEMAIL,
                             to: input.user.email,
-                            subject: 'Your JourneyHacks Application',
+                            subject:
+                                "We've Received Your JourneyHacks Application 😎",
                             text: 'Thank you for applying to JourneyHacks!',
                             html: htmlContent,
                         };

@@ -220,7 +220,7 @@ export const applicationSet: ApplicationData = {
 
 export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
     title: 'First page',
-    version: 11111,
+    version: 1111,
     hackathonName: 'JourneyHacks 2025',
     pages: [
         {
@@ -239,7 +239,7 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
                     questionId: 2,
                     type: 'text-line',
                     title: 'SFU email',
-                    placeHolder: 'name@sfu.com',
+                    placeHolder: 'name@sfu.ca',
                     required: true,
                     validator: {
                         pattern: '[\\w-.]+@([\\w-]+.)+[\\w-]{2,4}',
@@ -250,8 +250,7 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
                 {
                     questionId: 3,
                     type: 'text-line',
-                    title: 'Student number',
-                    placeHolder: 'Short answer text',
+                    title: 'Student Number',
                     validator: {
                         errorMsg: 'Not a valid student number!',
                         pattern: '[0-9]{9}',
@@ -289,13 +288,17 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
                             data: 'Math',
                             name: 'Math',
                         },
+                        {
+                            data: 'SIAT',
+                            name: 'SIAT',
+                        },
                     ],
                 },
                 {
                     questionId: 5,
                     type: 'text-line',
-                    title: 'Enrollment Year',
-                    placeHolder: 'Short answer text',
+                    title: 'Year of Study',
+                    placeHolder: '(e.g. 1st year, 2nd year)',
                     required: true,
                 },
                 {
@@ -322,14 +325,16 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
                     questionId: 7,
                     type: 'text-line',
                     title: 'Full name of team members',
-                    placeHolder: 'Long answer text',
+                    description: 'Please use commas to separate names.',
                     required: false,
                     maxCount: 150,
                 },
                 {
                     questionId: 8,
                     type: 'multiple-checkbox',
-                    title: 'Please fill out any dietary restrictions',
+                    title: 'Please fill out any dietary restrictions.',
+                    description:
+                        ' Please email us at sfusurgelogistics@gmail.com if you have any restrictions that are not included on this list, and include your First Name, Last Name, and Student Number.',
                     required: false,
                     choices: [
                         {
@@ -360,6 +365,26 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
                         {
                             data: 'Kosher',
                             name: 'Kosher',
+                            value: false,
+                        },
+                        {
+                            data: 'Dairy Free',
+                            name: 'Dairy Free',
+                            value: false,
+                        },
+                        {
+                            data: 'Egg Allergy',
+                            name: 'Egg Allergy',
+                            value: false,
+                        },
+                        {
+                            data: 'Nut Allergy',
+                            name: 'Nut Allergy',
+                            value: false,
+                        },
+                        {
+                            data: 'Seafood Allergy',
+                            name: 'Seafood Allergy',
                             value: false,
                         },
                     ],
