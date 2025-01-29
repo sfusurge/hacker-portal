@@ -31,7 +31,7 @@ import {
 } from './PageStatus/ApplicationPageIndicator';
 import { cn } from '../utils';
 import { ArrowLeftIcon } from '@heroicons/react/24/solid';
-import { redirect, useRouter } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { useMediaQuery } from '@uidotdev/usehooks';
 
