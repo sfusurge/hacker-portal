@@ -121,7 +121,7 @@ export default function DesktopNav({
                                 iconAlt="Alerts logo"
                                 platform="desktop"
                                 active={false}
-                                disabled={true}
+                                disabled={false}
                             ></NavLink>
                         )}
                     </div>

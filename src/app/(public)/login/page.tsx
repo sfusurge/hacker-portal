@@ -81,7 +81,7 @@ export default async function Login({
                             Welcome
                         </p>
                         <h1 className="text-3xl font-semibold text-white text-balance leading-tight">
-                            Sign in to the Surge portal
+                            Sign in to the Surge Portal
                         </h1>
                     </div>
 
