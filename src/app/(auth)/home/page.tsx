@@ -1,15 +1,31 @@
-import ApplicationCard from '@/components/home/ApplicationCard';
+import ApplicationCard, { AppStatus } from '@/components/home/ApplicationCard';
 import DiscordCard from '@/components/home/DiscordCard';
 import { getUserData } from '../layout';
 import { createCaller } from '@/server/appRouter';
+
+const backendStatusToClientStatus: Record<string, AppStatus> = {
+    'N/A': 'Not Yet Started',
+    'Awaiting Review': 'Submitted – Under Review',
+    // TODO: be more specific here
+    Accepted: 'Accepted – Awaiting RSVP',
+    Declined: 'Rejected',
+    'Wait List': 'Waitlisted',
+};
 
 export default async function Home() {
     const data = await getUserData();
 
     const trpcClient = createCaller({});
 
-    const applicationSubmitted =
-        await trpcClient.applications.userAlreadySubmitted({});
+    data?.id;
+
+    const application = await trpcClient.applications.getApplications({
+        hackathonId: 1,
+        userId: data?.id,
+    });
+
+    let status =
+        backendStatusToClientStatus[application[0]?.currentStatus ?? 'N/A'];
 
     return (
         <div className="flex flex-col gap-6 md:gap-8">
@@ -18,15 +34,7 @@ export default async function Home() {
             </h1>
 
             <div className="grid gap-6 md:gap-8 pb-6 md:pb-0 xl:grid-cols-2">
-                <ApplicationCard
-                    status={
-                        // TODO: return status of application and use that
-                        // status instead
-                        applicationSubmitted
-                            ? 'Submitted – Under Review'
-                            : 'In Progress'
-                    }
-                ></ApplicationCard>
+                <ApplicationCard status={status}></ApplicationCard>
                 <DiscordCard></DiscordCard>
             </div>
         </div>
