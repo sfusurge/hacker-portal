@@ -4,8 +4,6 @@ import { getUserData } from '@/app/(auth)/layout';
 import { redirect } from 'next/navigation';
 
 export default async function UserInfoPage() {
-    console.log('UserInfoPage');
-
     const data = await getUserData();
 
     if (data?.firstName && data.lastName && data.phoneNumber) {

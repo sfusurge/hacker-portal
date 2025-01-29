@@ -200,6 +200,7 @@ export function MobilePageIndicator({
     return (
         <div className={style.navContainer}>
             <SkewmorphicButton
+                icon
                 style={{ backgroundColor: 'var(--neutral-700)' }}
                 onClick={() => {
                     incrementIndex(-1);
@@ -265,6 +266,7 @@ export function MobilePageIndicator({
                 </div>
             </div>
             <SkewmorphicButton
+                icon
                 style={{ backgroundColor: 'var(--neutral-700)' }}
                 onClick={() => {
                     incrementIndex(1);
