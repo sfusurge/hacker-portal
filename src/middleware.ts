@@ -1,8 +1,5 @@
 import { auth } from '@/auth/auth';
-import { NextRequest, NextResponse } from 'next/server';
-import { databaseClient } from './db/client';
-import { UserRoleEnum, users, UserTableType } from './db/schema/users';
-import { eq } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
 
 // Since nextjs don't support middleware route groups yet.
 

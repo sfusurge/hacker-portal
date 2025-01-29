@@ -151,7 +151,9 @@ export default function DesktopNav({
                                     </span>
 
                                     <span className="text-white/60 text-sm leading-none text-left line-clamp-1">
-                                        {initialData?.userRole}
+                                        {initialData?.userRole === 'user'
+                                            ? 'Hacker'
+                                            : 'admin'}
                                     </span>
                                 </div>
                             </div>
