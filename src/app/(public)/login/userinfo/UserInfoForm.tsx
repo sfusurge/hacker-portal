@@ -37,7 +37,7 @@ export default function UserInfoForm() {
 
     function submit() {
         if (formRef.current) {
-            formRef.current.submit();
+            formRef.current.requestSubmit();
         }
     }
 
