@@ -19,7 +19,7 @@ import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { MergedUserData } from '@/app/(auth)/layout';
 
 import { signOut } from 'next-auth/react';
-import { redirect } from 'next/navigation';
+import { redirect, usePathname } from 'next/navigation';
 
 interface DesktopNavProps {
     className?: string;
@@ -31,8 +31,10 @@ export default function DesktopNav({
     initialData,
 }: DesktopNavProps) {
     const returnHome = () => {
-        redirect('/');
+        redirect('/home');
     };
+
+    const url = usePathname();
 
     return (
         <div
@@ -80,7 +82,7 @@ export default function DesktopNav({
                             icon={<HomeIcon></HomeIcon>}
                             iconAlt="Home logo"
                             platform="desktop"
-                            active={window?.location.pathname === '/home'}
+                            active={url.startsWith('/home')}
                             onClick={returnHome}
                         ></NavLink>
                         <NavLink

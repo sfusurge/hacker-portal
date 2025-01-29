@@ -48,9 +48,6 @@ export default function Application() {
         trpc.applications.userAlreadySubmitted.useQuery({});
     const questions = useAtomValue(questionSetAtom);
 
-    const returnHome = () => {
-        redirect('/');
-    };
     /*
      * submitApplication.mutate({
      *   response: {

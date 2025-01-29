@@ -7,6 +7,7 @@ import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
 import { atom, useAtomValue } from 'jotai';
+import { usePathname } from 'next/navigation';
 
 interface MobileBottomNavProps {
     className?: string;
@@ -15,6 +16,7 @@ export const hideBottomNavAtom = atom(false);
 
 export default function MobileBottomNav({ className }: MobileBottomNavProps) {
     const hideBottomNav = useAtomValue(hideBottomNavAtom);
+    const url = usePathname();
 
     return (
         <>
@@ -31,7 +33,7 @@ export default function MobileBottomNav({ className }: MobileBottomNavProps) {
                         icon={<HomeIcon></HomeIcon>}
                         iconAlt="Home logo"
                         platform="mobile"
-                        active={window?.location.pathname === '/home'}
+                        active={url.startsWith('/home')}
                     ></NavLink>
 
                     <NavLink
