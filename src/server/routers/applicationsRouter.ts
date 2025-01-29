@@ -86,8 +86,8 @@ export const applicationsRouter = router({
 
             //based on code copied from rewviewappplications table lmao
             const tempDummy = (item: any) => {
-                const { '2': email } = item.response || {};
-                return { email };
+                const { '1': name, '2': email } = item.response || {};
+                return { name, email };
             };
 
             if (!session?.user?.email) {
@@ -105,7 +105,7 @@ export const applicationsRouter = router({
 
             const template = Handlebars.compile(welcomeEmailTemplate);
             const htmlContent = template({
-                firstName: session?.user?.name,
+                firstName: tempDummy(input).name,
             });
 
             let oAuthMailOptions = {
