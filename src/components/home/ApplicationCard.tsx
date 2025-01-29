@@ -111,7 +111,7 @@ export default function ApplicationCard() {
                             Hacker registration closes in...
                         </p>
                     </div>
-                    <CountdownTimer targetDate="2025-02-12T07:59:00.000Z" />
+                    <CountdownTimer targetDate="2025-02-11T07:59:00.000Z" />
                 </Conditional>
                 <Conditional showWhen={status === 'Submitted – Under Review'}>
                     <Image
