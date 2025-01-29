@@ -4,12 +4,11 @@ import { ApplicationForm } from '@/lib/hacker_application/ApplicationForm';
 import { JOURNEY_HACK_QUESTIONS } from '@/lib/hacker_application/applicationQuestionSet';
 import { ApplicationData } from '@/lib/hacker_application/types';
 import { trpc } from '@/trpc/client';
-import { Provider, useAtomValue } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
+import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
-import { useState } from 'react';
-import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
-import style from '@/lib/hacker_application/ApplicationForm.module.css';
+import { useEffect } from 'react';
 
 const questionSetAtom = atomWithStorage(
     'question set',
@@ -46,16 +45,16 @@ export default function Application() {
     const submitApplication = trpc.applications.submitApplication.useMutation();
     const applicationSubmitted =
         trpc.applications.userAlreadySubmitted.useQuery({});
-    const questions = useAtomValue(questionSetAtom);
+    const [questions, _] = useAtom(questionSetAtom);
 
-    /*
-     * submitApplication.mutate({
-     *   response: {
-     *    hackathonId: <hackathonId>, // some hardcoded value
-     *    [questionId]: response value as any
-     *   }
-     * })
-     * */
+    const session = useSession();
+
+    useEffect(() => {
+        if (session.data?.user?.email) {
+            localStorage.setItem('email', session.data.user.email);
+        }
+    }, [session]);
+
     return (
         <ApplicationForm
             appDataAtom={questionSetAtom}
@@ -107,7 +106,6 @@ export default function Application() {
                     response: response,
                 });
 
-                // TODO, show submittion screen
                 redirect('/application/submitted');
             }}
         ></ApplicationForm>

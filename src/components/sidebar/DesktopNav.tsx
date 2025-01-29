@@ -67,7 +67,7 @@ export default function DesktopNav({
                         </div>
 
                         <Image
-                            src="/sidebar/stormy-sparky-header.webp"
+                            src="/dashboard/sidebar-header.webp"
                             alt="Stormy and Sparky cooking"
                             width={200}
                             height={200}
@@ -151,7 +151,9 @@ export default function DesktopNav({
                                     </span>
 
                                     <span className="text-white/60 text-sm leading-none text-left line-clamp-1">
-                                        {initialData?.userRole}
+                                        {initialData?.userRole === 'user'
+                                            ? 'Hacker'
+                                            : 'admin'}
                                     </span>
                                 </div>
                             </div>

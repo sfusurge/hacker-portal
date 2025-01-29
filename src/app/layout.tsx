@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Provider from '@/trpc/Provider';
 import { SessionProvider } from 'next-auth/react';
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -28,12 +29,13 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <link rel="icon" href="/login/sparkcheffrizz.webp" sizes="any" />
+            <link rel="icon" href="/favicon.png" sizes="any" />
             <body className={inter.className}>
                 <SessionProvider>
                     <Provider>{children}</Provider>
                 </SessionProvider>
             </body>
+            <GoogleAnalytics gaId="G-99DQSJDLRK" />
         </html>
     );
 }

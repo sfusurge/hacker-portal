@@ -1,6 +1,5 @@
 import { ApplicationData, ApplicationQuestion } from './types';
 import style from './ApplicationForm.module.css';
-import { Button } from '@/components/ui/button';
 import { useMemo } from 'react';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 
@@ -65,11 +64,11 @@ export function ReviewPage({
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '1.5rem',
-                margin: '1rem',
+                padding: '24px',
                 marginBottom: '7rem',
             }}
         >
-            <h1 className="text-2xl">Review Application</h1>
+            <h1 className="text-2xl font-medium">Review Application</h1>
 
             {flattenedQuestions.map((question, index) => {
                 return (

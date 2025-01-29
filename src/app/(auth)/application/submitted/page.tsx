@@ -3,11 +3,17 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { redirect } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function SubmitPage() {
     const goHome = () => {
         redirect('/home');
     };
+
+    useEffect(() => {
+        localStorage.removeItem('question set');
+    }, []);
+
     return (
         <div className="flex flex-col h-full w-full items-center justify-center gap-8">
             <Image

@@ -6,17 +6,28 @@ import { HomeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
-import { atom, useAtomValue } from 'jotai';
+
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 interface MobileBottomNavProps {
     className?: string;
 }
-export const hideBottomNavAtom = atom(false);
 
+const excludedUrls = ['/application'];
 export default function MobileBottomNav({ className }: MobileBottomNavProps) {
-    const hideBottomNav = useAtomValue(hideBottomNavAtom);
+    const [hideBottomNav, setHideBottom] = useState(false);
+
     const url = usePathname();
+
+    useEffect(() => {
+        for (const excludeURL of excludedUrls) {
+            if (url.startsWith(excludeURL)) {
+                return setHideBottom(true);
+            }
+            setHideBottom(false);
+        }
+    }, [url]);
 
     return (
         <>

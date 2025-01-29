@@ -29,11 +29,10 @@ import {
     DesktopPageIndicator,
     MobilePageIndicator,
 } from './PageStatus/ApplicationPageIndicator';
-import { cn, useWindowSize } from '../utils';
+import { cn } from '../utils';
 import { ArrowLeftIcon } from '@heroicons/react/24/solid';
-import { redirect, useRouter } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
-import { hideBottomNavAtom } from '@/components/sidebar/MobileBottomNav';
 import { useMediaQuery } from '@uidotdev/usehooks';
 
 /**
@@ -111,11 +110,7 @@ export function ApplicationForm({
     const [pageStateAtoms] = useAtom(pageStateAtomsAtom);
 
     // mobile conditional render
-    const isMobile = useMediaQuery('only screen and (max-width: 768px');
-    const setHideBottomNav = useSetAtom(hideBottomNavAtom);
-    useEffect(() => {
-        setHideBottomNav(isMobile);
-    }, [isMobile]);
+    const isMobile = useMediaQuery('only screen and (max-width: 767.5px');
 
     return (
         <div className={style.appFormRoot}>

@@ -26,6 +26,7 @@ export default async function Login({
                 .from(users)
                 .where(eq(users.email, session.user?.email!))
         )[0];
+
         if (!res) {
             // somehow this user isnt created, signout/invalidate the sesson
             await notFound();
@@ -76,12 +77,12 @@ export default async function Login({
                         alt="Sparky wearing a chef\'s hat"
                     ></Image>
 
-                    <div className="text-center">
-                        <p className="font-semibold text-sm text-brand-400 mb-2">
+                    <div className="text-center flex flex-col gap-4 *:max-w-96 items-center w-full">
+                        <p className="font-semibold text-sm text-brand-400 mb-2 text-center">
                             Welcome
                         </p>
-                        <h1 className="text-3xl font-semibold text-white text-balance leading-tight">
-                            Sign in to the Surge Portal
+                        <h1 className="text-3xl font-semibold text-white text-balance leading-tight text-center">
+                            Sign in to the Surge Portal to apply to our events
                         </h1>
                     </div>
 
