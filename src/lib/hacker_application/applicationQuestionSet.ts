@@ -334,7 +334,7 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
                     type: 'multiple-checkbox',
                     title: 'Please fill out any dietary restrictions.',
                     description:
-                        ' Please email us at sfusurge@gmail.com if you have any restrictions that are not included on this list, and include your First Name, Last Name, and Student Number.',
+                        ' Please email us at sfusurgelogistics@gmail.com if you have any restrictions that are not included on this list, and include your First Name, Last Name, and Student Number.',
                     required: false,
                     choices: [
                         {

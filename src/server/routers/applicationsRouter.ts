@@ -111,7 +111,7 @@ export const applicationsRouter = router({
             let oAuthMailOptions = {
                 from: env.SENDINGEMAIL,
                 to: session.user.email,
-                subject: 'Your JourneyHacks Application',
+                subject: "We've Received Your JourneyHacks Application 😎",
                 text: 'Thank you for applying to JourneyHacks!',
                 html: htmlContent,
             };
@@ -119,7 +119,7 @@ export const applicationsRouter = router({
             let sfuMailOptions = {
                 from: env.SENDINGEMAIL,
                 to: extractedEmail,
-                subject: 'Your JourneyHacks Application',
+                subject: "We've Received Your JourneyHacks Application 😎",
                 text: 'Thank you for applying to JourneyHacks!',
                 html: htmlContent,
             };
