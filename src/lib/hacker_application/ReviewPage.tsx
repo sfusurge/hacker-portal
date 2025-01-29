@@ -1,6 +1,8 @@
+'use client';
+
 import { ApplicationData, ApplicationQuestion } from './types';
 import style from './ApplicationForm.module.css';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 
 /**
@@ -31,7 +33,11 @@ export function ReviewPage({
                 break;
 
             case 'multiple-checkbox':
-                res = question.choices.map((item) => item.name).join(', ');
+                console.log;
+                res = question.choices
+                    .filter((item) => item.value)
+                    .map((item) => item.name)
+                    .join(', ');
                 break;
             case 'multiple-choice':
                 res = question.value as string;

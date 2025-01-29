@@ -112,6 +112,25 @@ export function ApplicationForm({
     // mobile conditional render
     const isMobile = useMediaQuery('only screen and (max-width: 767.5px');
 
+    const pageContainerRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (pageContainerRef.current) {
+            setTimeout(() => {
+                if (isMobile) {
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth',
+                    });
+                } else {
+                    pageContainerRef.current!.scrollTo({
+                        behavior: 'smooth',
+                        top: 0,
+                    });
+                }
+            }, 0);
+        }
+    }, [currentPageIndex]);
+
     return (
         <div className={style.appFormRoot}>
             {isMobile && (
@@ -126,7 +145,7 @@ export function ApplicationForm({
                 </button>
             )}
             <div className={style.appFormWrapper}>
-                <div className={style.appFormContent}>
+                <div className={style.appFormContent} ref={pageContainerRef}>
                     {isMobile ? (
                         <MobilePageIndicator
                             pageStateAtoms={pageStatesAtom}

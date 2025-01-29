@@ -53,6 +53,10 @@ export default function Application() {
         if (session.data?.user?.email) {
             localStorage.setItem('email', session.data.user.email);
         }
+
+        if (applicationSubmitted.data) {
+            redirect('/home');
+        }
     }, [session]);
 
     return (
