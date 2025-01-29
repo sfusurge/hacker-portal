@@ -368,7 +368,7 @@ function Question({
                 <Label required={question.required}>{question.title}</Label>
             )}
             {question.description && (
-                <span className={cn(style.description, 'mb-1.5 w-96')}>
+                <span className={cn(style.description, 'mb-1.5 max-w-96')}>
                     {question.description}
                 </span>
             )}
