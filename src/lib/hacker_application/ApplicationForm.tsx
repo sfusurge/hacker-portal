@@ -110,7 +110,7 @@ export function ApplicationForm({
     const [pageStateAtoms] = useAtom(pageStateAtomsAtom);
 
     // mobile conditional render
-    const isMobile = useMediaQuery('only screen and (max-width: 767px');
+    const isMobile = useMediaQuery('only screen and (max-width: 767.5px');
 
     return (
         <div className={style.appFormRoot}>
