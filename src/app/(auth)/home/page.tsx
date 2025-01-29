@@ -17,8 +17,6 @@ export default async function Home() {
 
     const trpcClient = createCaller({});
 
-    data?.id;
-
     const application = await trpcClient.applications.getApplications({
         hackathonId: 1,
         userId: data?.id,
