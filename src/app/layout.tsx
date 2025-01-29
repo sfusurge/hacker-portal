@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <link rel="icon" href="/login/sparkcheffrizz.webp" sizes="any" />
+            <link rel="icon" href="/favicon.png" sizes="any" />
             <body className={inter.className}>
                 <SessionProvider>
                     <Provider>{children}</Provider>

@@ -67,7 +67,7 @@ export default function DesktopNav({
                         </div>
 
                         <Image
-                            src="/sidebar/stormy-sparky-header.webp"
+                            src="/dashboard/sidebar-header.webp"
                             alt="Stormy and Sparky cooking"
                             width={200}
                             height={200}
