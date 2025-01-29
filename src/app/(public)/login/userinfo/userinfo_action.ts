@@ -11,7 +11,7 @@ export async function updateUserInfo(
     formdata: FormData
 ) {
     'use server';
-    console.log('running server side submit', redirectTarget, formdata);
+
     const session = await auth();
     await databaseClient
         .update(users)

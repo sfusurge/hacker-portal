@@ -382,15 +382,12 @@ function PageButtons({
     const [index, setIndex] = useAtom(indexAtom);
     const pageStates = useAtomValue(pageStatesAtom);
     const setErrCheck = useSetAtom(finalErrCheckAtom);
-    console.log(pageStates);
+
     function tryReview() {
         let valid = true;
 
         for (const pageState of pageStates) {
             valid &&= !pageState.error;
-            if (!valid) {
-                console.log('err', pageState);
-            }
         }
 
         if (!valid) {

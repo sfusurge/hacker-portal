@@ -15,7 +15,6 @@ export const hideBottomNavAtom = atom(false);
 
 export default function MobileBottomNav({ className }: MobileBottomNavProps) {
     const hideBottomNav = useAtomValue(hideBottomNavAtom);
-    console.log('?>', hideBottomNav);
 
     return (
         <>

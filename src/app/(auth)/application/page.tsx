@@ -43,8 +43,6 @@ const questionSetAtom = atomWithStorage(
  */
 
 export default function Application() {
-    console.log(trpc);
-
     const submitApplication = trpc.applications.submitApplication.useMutation();
     const applicationSubmitted =
         trpc.applications.userAlreadySubmitted.useQuery({});

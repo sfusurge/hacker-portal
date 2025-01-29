@@ -93,12 +93,11 @@ export async function addUser(vals: z.infer<typeof insertUserSchema>) {
                 userRole: users.userRole,
             })
     )[0];
-    console.log('create user', res);
 
     if (!res) {
         return; // insertion has failed if no return
     }
-    console.log(getSixDigitId(res.id));
+
     // create display id
     const displayRes = await databaseClient.insert(userDisplayIds).values({
         userId: res.id,
