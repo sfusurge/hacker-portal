@@ -165,6 +165,7 @@ export default function DesktopNav({
                         </button>
                     </PopoverTrigger>
                     <PopoverContent sideOffset={8} side="right">
+                        {/* TODO RAY ADD THE SIGN OUT FUNCTION HERE */}
                         <NavLink
                             href="#"
                             label="Sign out"
