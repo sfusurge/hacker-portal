@@ -220,7 +220,7 @@ export const applicationSet: ApplicationData = {
 
 export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
     title: 'First page',
-    version: 111,
+    version: 1111,
     hackathonName: 'JourneyHacks 2025',
     pages: [
         {
@@ -231,15 +231,21 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
                     questionId: 1,
                     type: 'text-line',
                     title: 'Full Name',
-                    placeHolder: 'Short answer text',
+                    placeHolder: 'Name...',
                     required: true,
+                    maxCount: 50,
                 },
                 {
                     questionId: 2,
                     type: 'text-line',
                     title: 'SFU email',
-                    placeHolder: 'Short answer text',
+                    placeHolder: 'name@sfu.com',
                     required: true,
+                    validator: {
+                        pattern: '^[\\w-.]+@([\\w-]+.)+[\\w-]{2,4}$',
+                        errorMsg: 'Not a valid email',
+                    },
+                    maxCount: 100,
                 },
                 {
                     questionId: 3,
@@ -250,6 +256,7 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
                         errorMsg: 'Not a valid student number!',
                         pattern: '[0-9]{9}',
                     },
+                    maxCount: 9,
                     required: true,
                 },
                 {
@@ -317,6 +324,7 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
                     title: 'Full name of team members',
                     placeHolder: 'Long answer text',
                     required: false,
+                    maxCount: 150,
                 },
                 {
                     questionId: 8,
