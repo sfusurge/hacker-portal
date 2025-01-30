@@ -145,12 +145,12 @@ export default function ReviewApplicationsTable({
         return tempDummy;
     };
 
-    const [tableSize, setTableSize] = useState(10);
+    // const [tableSize, setTableSize] = useState(10);
 
     //Get data from DB
     const applicationData = trpc.applications.getApplications.useQuery({
         hackathonId: 1,
-        maxResult: tableSize,
+        maxResult: 200,
     });
 
     //Data state
@@ -393,9 +393,9 @@ export default function ReviewApplicationsTable({
         onRowSelectionChange: setRowSelection,
     });
 
-    useEffect(() => {
-        setTableSize(table.getState().pagination.pageSize);
-    }, [table.getState().pagination.pageSize]);
+    // useEffect(() => {
+    //     setTableSize(table.getState().pagination.pageSize);
+    // }, [table.getState().pagination.pageSize]);
 
     const csvConfig = mkConfig({
         fieldSeparator: ',',

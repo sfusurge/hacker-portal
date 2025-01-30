@@ -220,7 +220,7 @@ export const applicationSet: ApplicationData = {
 
 export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
     title: 'First page',
-    version: 1111,
+    version: 11111,
     hackathonName: 'JourneyHacks 2025',
     pages: [
         {
@@ -242,7 +242,9 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
                     placeHolder: 'name@sfu.ca',
                     required: true,
                     validator: {
-                        pattern: '[\\w-.]+@([\\w-]+.)+[\\w-]{2,4}',
+                        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions/Character_class#v-mode_character_class
+                        // "-" must now be escaped in character sets
+                        pattern: '^[\\w\\-\\.]+@([\\w\\-]+\\.)+[\\w\\-]{2,4}$',
                         errorMsg: 'Not a valid email',
                     },
                     maxCount: 100,
@@ -334,7 +336,7 @@ export const JOURNEY_HACK_QUESTIONS: ApplicationData = {
                     type: 'multiple-checkbox',
                     title: 'Please fill out any dietary restrictions.',
                     description:
-                        ' Please email us at sfusurgelogistics@gmail.com if you have any restrictions that are not included on this list, and include your First Name, Last Name, and Student Number.',
+                        'Please email us at sfusurgelogistics@gmail.com if you have any restrictions that are not included on this list, and include your First Name, Last Name, and Student Number.',
                     required: false,
                     choices: [
                         {

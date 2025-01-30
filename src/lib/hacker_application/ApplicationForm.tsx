@@ -211,12 +211,14 @@ function Page({
     const setPageState = useSetAtom(pageStateAtom);
     const formRef = useRef<HTMLFormElement>(null);
 
+    const finalErrCheck = useAtomValue(finalErrCheckAtom);
+
     function updateFormStatus(extraCheck = false) {
         if (formRef.current) {
-            const error = !formRef.current.checkValidity();
-            if (error && extraCheck) {
-                formRef.current.reportValidity();
-            }
+            // check and report if user is trying to submit
+            let error = finalErrCheck
+                ? !formRef.current.reportValidity()
+                : !formRef.current.checkValidity();
 
             // when page content changes, check if everything in the page is filled
             let atLeastOneFilled = false;
@@ -238,6 +240,11 @@ function Page({
                 state = 'completed';
             } else if (atLeastOneFilled) {
                 state = 'started';
+            }
+
+            // extra check during initial load when the form is filled, to fix some strange bug.
+            if (error && extraCheck && state === 'completed') {
+                error = formRef.current.reportValidity();
             }
 
             setPageState({

@@ -6,6 +6,10 @@ import { redirect } from 'next/navigation';
 export default async function UserInfoPage() {
     const data = await getUserData();
 
+    if (!data) {
+        redirect('/signout');
+    }
+
     if (data?.firstName && data.lastName && data.phoneNumber) {
         redirect('/home');
     }

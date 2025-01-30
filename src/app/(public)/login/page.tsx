@@ -5,7 +5,7 @@ import { databaseClient } from '@/db/client';
 import { users } from '@/db/schema/users';
 import { eq } from 'drizzle-orm';
 import Image from 'next/image';
-import { notFound, redirect, useSearchParams } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 export default async function Login({
     searchParams,
@@ -29,7 +29,8 @@ export default async function Login({
 
         if (!res) {
             // somehow this user isnt created, signout/invalidate the sesson
-            await notFound();
+            // await notFound();
+            return redirect('/signout');
         }
 
         if (!res.firstName || !res.lastName || !res.phoneNumber) {
