@@ -1,6 +1,6 @@
 import MobileBottomNav from '@/components/sidebar/MobileBottomNav';
 import MobileTopNav from '@/components/sidebar/MobileTopNav';
-import { getSession, useSession } from 'next-auth/react';
+import { getSession, signOut, useSession } from 'next-auth/react';
 import DesktopNav from '@/components/sidebar/DesktopNav';
 
 import { ReactNode } from 'react';
@@ -12,6 +12,7 @@ import { users } from '@/db/schema/users';
 import { eq } from 'drizzle-orm';
 import { userDisplayIds } from '@/db/schema/userDisplayId';
 import { CacheClearer } from './CacheClear';
+import { redirect } from 'next/navigation';
 
 export async function getUserData() {
     const session = await auth();
@@ -52,6 +53,10 @@ export type MergedUserData = Awaited<ReturnType<typeof getUserData>>;
 
 export default async function Layout({ children }: { children: ReactNode }) {
     const initialUserData = await getUserData();
+
+    if (!initialUserData) {
+        return await redirect('/signout');
+    }
 
     return (
         <>

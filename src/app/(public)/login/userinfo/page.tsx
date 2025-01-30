@@ -6,9 +6,8 @@ import { redirect } from 'next/navigation';
 export default async function UserInfoPage() {
     const data = await getUserData();
 
-    console.log(data);
     if (!data) {
-        redirect('/login');
+        redirect('/signout');
     }
 
     if (data?.firstName && data.lastName && data.phoneNumber) {
