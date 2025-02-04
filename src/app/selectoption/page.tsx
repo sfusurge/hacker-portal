@@ -2,8 +2,8 @@
 
 import SelectOption from '@/app/selectoption/components/SelectOption';
 import { useEffect, useState } from 'react';
-import SelectMeal from '@/app/components/SelectMeal';
-import SelectWorkshop from '@/app/components/SelectWorkshop';
+import SelectMeal from '@/app/qr/checkin_components/SelectMeal';
+import SelectWorkshop from '@/app/qr/checkin_components/SelectWorkshop';
 import { redirect } from 'next/navigation';
 
 export default function SelectOptionPage() {

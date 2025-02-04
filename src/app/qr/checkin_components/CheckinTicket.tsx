@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
 import { useEffect, useState } from 'react';
-import CheckinButton from '@/app/qr/components/CheckInButton';
+import CheckinButton from '@/app/qr/checkin_components/CheckInButton';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
 
 type CheckInTicketProps = {

@@ -29,11 +29,12 @@ import {
     DesktopPageIndicator,
     MobilePageIndicator,
 } from './PageStatus/ApplicationPageIndicator';
-import { cn } from '../utils';
+
 import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 import { redirect } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { useMediaQuery } from '@uidotdev/usehooks';
+import { cn } from '@/lib/utils';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.

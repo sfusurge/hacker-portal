@@ -12,7 +12,7 @@ import {
 } from '@heroicons/react/24/solid';
 import Link from 'next/link';
 import Image from 'next/image';
-import ManualCheckIn from '@/app/qr/components/ManualCheckInPopUp';
+import ManualCheckIn from '@/app/qr/checkin_components/ManualCheckInPopUp';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -21,11 +21,11 @@ import {
     DropdownMenuRadioItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import CheckinTicket from '@/app/qr/components/CheckinTicket';
+import CheckinTicket from '@/app/qr/checkin_components/CheckinTicket';
 import { GetUsersOutput, trpc } from '@/trpc/client';
-import UserNotFound from '@/app/qr/components/UserNotFound';
-import SelectMeal from '@/app/components/SelectMeal';
-import SelectWorkshop from '@/app/components/SelectWorkshop';
+import UserNotFound from '@/app/qr/checkin_components/UserNotFound';
+import SelectMeal from '@/app/qr/checkin_components/SelectMeal';
+import SelectWorkshop from '@/app/qr/checkin_components/SelectWorkshop';
 import { redirect } from 'next/navigation';
 
 type ScanPageProps = {

@@ -1,4 +1,4 @@
-import ScanPage from '@/app/qr/components/ScanPage';
+import ScanPage from '@/app/qr/checkin_components/ScanPage';
 
 type WorkshopScanProps = {
     params: Promise<{ workshopType: string }>;

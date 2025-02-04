@@ -1,4 +1,4 @@
-import QRTicket from '@/app/components/QRTicket';
+import QRTicket from '@/app/qr/checkin_components/QRTicket';
 
 type QRPageProps = {
     params: Promise<{ userId: string }>;

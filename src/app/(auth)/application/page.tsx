@@ -1,14 +1,14 @@
 'use client';
 
-import { ApplicationForm } from '@/lib/hacker_application/ApplicationForm';
-import { JOURNEY_HACK_QUESTIONS } from '@/lib/hacker_application/applicationQuestionSet';
-import { ApplicationData } from '@/lib/hacker_application/types';
 import { trpc } from '@/trpc/client';
 import { useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import { useEffect } from 'react';
+import { ApplicationForm } from './application_components/ApplicationForm';
+import { JOURNEY_HACK_QUESTIONS } from './application_components/applicationQuestionSet';
+import { ApplicationData } from './application_components/types';
 
 const questionSetAtom = atomWithStorage(
     'question set',
