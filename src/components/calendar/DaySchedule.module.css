@@ -1,0 +1,195 @@
+.scheduleRootWrapper {
+    --border: 1px solid grey;
+    --rowHeight: 60px;
+    --minColWidth: 150px;
+    --headerHeight: 24px;
+
+    border: var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 2rem;
+
+    width: 100%;
+    max-width: 500px;
+    height: 700px;
+}
+.scheduleRoot {
+    height: 100%;
+    width: 100%;
+    position: relative;
+    overflow: auto;
+}
+
+.scheduleContainer {
+    height: fit-content;
+
+    display: flex;
+    flex-direction: row;
+}
+
+.timeColumn {
+    display: flex;
+    flex-direction: column;
+
+    border-right: var(--border);
+    box-sizing: border-box;
+
+    min-width: 50px;
+    height: fit-content;
+
+    position: sticky;
+    left: 0;
+    background-color: white;
+    z-index: 3;
+}
+
+.timeLabel {
+    min-height: var(--rowHeight);
+    border-bottom: var(--border);
+    box-sizing: border-box;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.timeLabel:last-child {
+    border: none;
+}
+
+.header {
+    height: var(--headerHeight);
+    text-justify: center;
+    border-bottom: var(--border);
+    box-sizing: border-box;
+
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background-color: white;
+}
+
+.dayColumn {
+    flex: 1;
+    min-width: var(--minColWidth);
+    border-right: var(--border);
+
+    height: auto;
+}
+
+.dayColumnContent {
+    /* background to draw lines */
+    background-size: 100% var(--rowHeight);
+    background-repeat: repeat;
+    background-image: linear-gradient(to top, lightgrey 1px, transparent 1px);
+
+    height: calc(100% - var(--headerHeight));
+
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+
+    position: relative;
+}
+
+.dayEventColumn {
+    /* to provide an anchor for all the position abs children */
+    position: relative;
+    flex: 1;
+}
+
+.dayEvent {
+    border-radius: 5px;
+    overflow: hidden;
+
+    position: absolute;
+
+    --margin: 0.15rem;
+    /* fake margin */
+    left: var(--margin);
+    /* top to be controlled by js */
+    top: calc(var(--top) + var(--margin));
+    height: calc(var(--height) - var(--margin) * 2);
+    width: calc(100% - var(--margin) * 2);
+
+    display: flex;
+    flex-direction: column;
+
+    font-size: 12px;
+    padding: 0.2rem;
+
+    background-color: white;
+}
+
+.dayEvent::after {
+    content: '';
+
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+
+    border-top: 3px solid var(--color);
+}
+
+.dayEvent::before {
+    content: '';
+
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+
+    background-color: var(--color);
+    z-index: 1;
+    opacity: 0.3;
+}
+
+.dayEvent:hover {
+    min-width: fit-content;
+    min-height: fit-content;
+}
+
+.dayColumn:last-child {
+    border: none;
+}
+
+.timeMarker {
+    position: absolute;
+    left: 0;
+    top: var(--top);
+    z-index: 2;
+
+    width: 100%;
+    border-bottom: 2px solid red;
+    box-sizing: border-box;
+
+    opacity: 0.6;
+}
+
+.timeMarker::after {
+    content: '';
+
+    position: absolute;
+    top: 0.5px;
+    right: 0;
+
+    border: 0.25rem solid transparent;
+
+    border-right: 0.25rem solid red;
+    transform: translate(0, -50%);
+}
+
+.timeMarker::before {
+    content: '';
+
+    position: absolute;
+    right: 100%;
+    top: 0;
+    z-index: -1;
+
+    width: 500%;
+    border-bottom: 2px red dashed;
+}

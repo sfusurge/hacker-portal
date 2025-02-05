@@ -1,0 +1,21 @@
+.labelChildrenContainer {
+    width: min-content;
+
+    position: absolute;
+    z-index: 101;
+
+    top: var(--top);
+    left: var(--left);
+}
+
+/* used to click to dismiss */
+.background {
+    position: fixed;
+    z-index: 100;
+
+    left: 0;
+    top: 0;
+
+    width: 100dvw;
+    height: 100dvh;
+}
