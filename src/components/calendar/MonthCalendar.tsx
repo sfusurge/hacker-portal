@@ -40,6 +40,12 @@ function range(count: number) {
     return out;
 }
 
+/**
+ * TODOs
+ * * Add handles/atoms to select current month, and starting month
+ * * Add callbacks or atom for currently selected day, selected event
+ *
+ */
 export function MonthCalendar(props: { events: CalendarEventType[] }) {
     // just a wrapper to provide Provider for context.
     return <MonthCalendarContent {...props}></MonthCalendarContent>;

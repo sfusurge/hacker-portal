@@ -11,6 +11,12 @@ import {
 import dayjs, { Dayjs } from 'dayjs';
 import { useAtomValue, useSetAtom } from 'jotai';
 
+/**
+ * TODO
+ * add callbacks or atoms etc etc for selected CalendarEvents or other "events"
+ * @param param0
+ * @returns
+ */
 export function DaySchedule({
     events,
     startDate,
