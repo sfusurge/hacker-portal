@@ -18,6 +18,7 @@ import {
 import { DynamicMessage } from '../DynamicMessage';
 import { Card, CardContent, CardHeader } from '../../ui/card';
 import { AnimatePresence } from 'motion/react';
+import { cn } from '@/lib/utils';
 
 function getMonthInfo(year: number, month: number): MonthInfoType {
     const target = dayjs(new Date(year, month, 1));
@@ -29,7 +30,15 @@ function getMonthInfo(year: number, month: number): MonthInfoType {
         displayName: target.format('MMMM DD, YYYY'), // November 23, 2024
         firstDayOffset: target.day(), // day in week of the first day.
         weeksInMonth: Math.ceil((target.daysInMonth() + target.day()) / 7),
-        weekdayNames: ['Sun', 'Mon', 'Tue', 'Wed', 'Thr', 'Fri', 'Sat'],
+        weekdayNames: [
+            'Sunday',
+            'Monday',
+            'Tuesday',
+            'Wednesday',
+            'Thursday',
+            'Friday',
+            'Saturday',
+        ],
     } as MonthInfoType;
 }
 
@@ -93,10 +102,18 @@ export function MonthCalendarContent({
 
     return (
         <div>
+            {/* Week day name row, such as Sun, Mon, Tues, ... */}
+            <div className={style.weekdayNameRow}>
+                {monthInfo.weekdayNames.map((item, index) => (
+                    <span key={item} className={style.weekdayName}>
+                        {item}
+                    </span>
+                ))}
+            </div>
             <div ref={renderRootRef} className={style.calendarRenderRoot}>
                 {/* AnimatePresence needed for framer motion, needs to always exist and wrap content. 
-      (As in, content is toggling within AnimatePresence. TODO: Refactor into it's own component)
-      */}
+                (As in, content is toggling within AnimatePresence. TODO: Refactor into it's own component)
+                */}
 
                 <AnimatePresence>
                     {selectedEvent && selectedEvent.element && (
@@ -134,15 +151,6 @@ export function MonthCalendarContent({
                         } as CSSProperties
                     }
                 >
-                    {/* Week day name row, such as Sun, Mon, Tues, ... */}
-                    <div className={style.weekdayNameRow}>
-                        {monthInfo.weekdayNames.map((item, index) => (
-                            <span key={item} className={style.weekdayName}>
-                                {item}
-                            </span>
-                        ))}
-                    </div>
-
                     {/* Day in month, each row is a week as a flex row
                 then each row contains items for each day.
             */}
@@ -206,19 +214,7 @@ function OutOfBoundMonthDay({
     }
 
     return (
-        <div className={style.monthDayItem}>
-            <div
-                style={{
-                    background: 'grey',
-                    opacity: '0.3',
-                    position: 'absolute',
-                    left: '0',
-                    top: '0',
-                    zIndex: '1',
-                    width: '100%',
-                    height: '100%',
-                }}
-            ></div>
+        <div className={cn(style.monthDayItem, style.disabled)}>
             <span className={style.monthDayLabel}>{label}</span>
         </div>
     );
