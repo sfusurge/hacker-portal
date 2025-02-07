@@ -1,10 +1,12 @@
 'use client';
-import { DaySchedule } from '@/components/calendar/DaySchedule';
+import { DaySchedule } from '@/components/calendar/DaySchedule/DaySchedule';
+import { DayjsifyEvents } from '@/components/calendar/MonthCalendarShared';
 import { CalendarEventType } from '@/components/calendar/types';
 import dayjs from 'dayjs';
+import { useMemo } from 'react';
 
 export default function SchedulePage() {
-    const events: CalendarEventType[] = [
+    const _events: CalendarEventType[] = [
         {
             id: 1,
             title: 'Opening Ceremony',
@@ -138,6 +140,7 @@ export default function SchedulePage() {
             color: '#33FF57',
         },
     ];
+    const events = useMemo(() => DayjsifyEvents(_events), [_events]);
 
     return (
         <DaySchedule

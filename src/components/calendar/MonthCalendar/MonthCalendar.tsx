@@ -1,19 +1,22 @@
 'use client';
 
 import { CSSProperties, useMemo, useRef } from 'react';
-import { CalendarEventType, MonthInfoType } from './types';
+import { CalendarEventType, MonthInfoType } from '../types';
 import dayjs, { Dayjs } from 'dayjs';
 import style from './MonthCalendar.module.css';
-import { useAtom, useSetAtom } from 'jotai';
+import { Provider, useAtom, useSetAtom } from 'jotai';
 import {
     getEventsOfMonth,
     groupEventsByDay,
     selectedEventAtom,
     selectedDayAtom,
     yearMonthDay,
-} from './MonthCalendarShared';
-import { DynamicMessage } from './DynamicMessage';
-import { Card, CardContent, CardHeader } from '../ui/card';
+    currentYearMonthAtom,
+    DayjsifyEvents,
+    InternalCalendarEventType,
+} from '../MonthCalendarShared';
+import { DynamicMessage } from '../DynamicMessage';
+import { Card, CardContent, CardHeader } from '../../ui/card';
 import { AnimatePresence } from 'motion/react';
 
 function getMonthInfo(year: number, month: number): MonthInfoType {
@@ -46,17 +49,21 @@ function range(count: number) {
  * * Add callbacks or atom for currently selected day, selected event
  *
  */
-export function MonthCalendar(props: { events: CalendarEventType[] }) {
+export function MonthCalendar(props: { events: InternalCalendarEventType[] }) {
     // just a wrapper to provide Provider for context.
-    return <MonthCalendarContent {...props}></MonthCalendarContent>;
+    return (
+        <Provider>
+            <MonthCalendarContent {...props}></MonthCalendarContent>
+        </Provider>
+    );
 }
 
 export function MonthCalendarContent({
     events,
 }: {
-    events: CalendarEventType[];
+    events: InternalCalendarEventType[];
 }) {
-    const [year, month] = [2024, 11]; // for testing, month is 0 indexed
+    const [{ year, month }, updateYearMonth] = useAtom(currentYearMonthAtom);
 
     const monthInfo = useMemo(() => {
         return getMonthInfo(year, month);
@@ -64,7 +71,7 @@ export function MonthCalendarContent({
 
     // filter to only include events of the current month, grouped by day, each day's event sorted by title alphabetically.
     const eventsOfMonth = useMemo<{
-        [dayOfMonth: number]: CalendarEventType[];
+        [dayOfMonth: number]: InternalCalendarEventType[];
     }>(
         () =>
             // have a view of only this month
@@ -221,7 +228,7 @@ function MonthDay({
     events,
 }: {
     date: Dayjs;
-    events: CalendarEventType[];
+    events: InternalCalendarEventType[];
 }) {
     date = yearMonthDay(date);
     const [selected, setSelected] = useAtom(selectedDayAtom);
@@ -249,7 +256,7 @@ function MonthDay({
     );
 }
 
-function MonthDayEvent({ event }: { event: CalendarEventType }) {
+function MonthDayEvent({ event }: { event: InternalCalendarEventType }) {
     const setSelectedEvent = useSetAtom(selectedEventAtom);
     const ref = useRef<HTMLDivElement>(null);
     return (

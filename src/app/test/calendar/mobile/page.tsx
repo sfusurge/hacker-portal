@@ -1,9 +1,12 @@
-import { MobileMonthCalendar } from '@/components/calendar/MobileMonthCalendar';
+'use client';
+import { MobileMonthCalendar } from '@/components/calendar/MobileMonthCalendar/MobileMonthCalendar';
+import { DayjsifyEvents } from '@/components/calendar/MonthCalendarShared';
 import { CalendarEventType } from '@/components/calendar/types';
 import { Provider } from 'jotai';
+import { useMemo } from 'react';
 
 export default function MobileTestingPage() {
-    const events: CalendarEventType[] = [
+    const _events: CalendarEventType[] = [
         {
             id: 1,
             title: 'Initial Planning Meeting',
@@ -180,6 +183,8 @@ export default function MobileTestingPage() {
             color: '#A833FF',
         },
     ];
+
+    const events = useMemo(() => DayjsifyEvents(_events), [_events]);
 
     return (
         <Provider>

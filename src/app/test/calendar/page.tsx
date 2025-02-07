@@ -1,12 +1,14 @@
 'use client';
 
 import { CalendarEventType } from '@/components/calendar/types';
-import { MonthCalendar } from '@/components/calendar/MonthCalendar';
-import { LinearTimeline } from '@/components/calendar/LinearTimeline';
+import { MonthCalendar } from '@/components/calendar/MonthCalendar/MonthCalendar';
+import { LinearTimeline } from '@/components/calendar/LinearTimeLine/LinearTimeline';
 import { Provider } from 'jotai';
+import { useMemo } from 'react';
+import { DayjsifyEvents } from '@/components/calendar/MonthCalendarShared';
 
 export default function Calendar() {
-    const events: CalendarEventType[] = [
+    const _events: CalendarEventType[] = [
         {
             id: 1,
             title: 'Initial Planning Meeting',
@@ -183,6 +185,9 @@ export default function Calendar() {
             color: '#A833FF',
         },
     ];
+
+    const events = useMemo(() => DayjsifyEvents(_events), [_events]);
+
     return (
         // Provider provides context for this page, so that calendar variables is only shared within this page, not truely global.
         <Provider>
