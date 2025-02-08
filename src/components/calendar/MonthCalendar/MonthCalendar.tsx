@@ -315,7 +315,7 @@ function MonthDay({
                 )}
             >
                 {events.map((item, index) => {
-                    if (index < maxItems || viewAll || events.length == 1) {
+                    if (index <= maxItems || viewAll) {
                         return (
                             <MonthDayEvent
                                 key={item.id}
@@ -324,7 +324,7 @@ function MonthDay({
                         );
                     }
                 })}
-                {!viewAll && events.length > maxItems && events.length != 1 && (
+                {!viewAll && events.length > maxItems + 1 && (
                     <EventHolder
                         color="#4338CA"
                         content={`${events.length - maxItems} more...`}
