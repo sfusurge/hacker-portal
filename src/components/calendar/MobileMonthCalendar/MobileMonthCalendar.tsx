@@ -40,8 +40,6 @@ export function MobileMonthCalendar({
     );
 
     useEffect(() => {
-        console.log('bleh', timelineRef.current);
-
         if (timelineRef.current) {
             setMaxHeight(window.innerHeight - timelineRef.current.offsetTop);
         }

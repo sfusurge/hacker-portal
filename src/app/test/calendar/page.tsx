@@ -14,7 +14,7 @@ export default function Calendar() {
             title: 'Initial Planning Meeting',
             description:
                 'Discuss overall goals, timeline, and roles for the hackathon.',
-            startTime: new Date('2025-02-05T10:00:00'),
+            startTime: new Date('2025-01-31T10:00:00'),
             duration: 90,
             color: '#FF5733',
         },
@@ -201,13 +201,13 @@ export default function Calendar() {
                     }}
                 >
                     <MonthCalendar events={events}></MonthCalendar>
-
+                    {/* 
                     <LinearTimeline
                         events={events}
                         styles={{
                             maxHeight: '600px',
                         }}
-                    ></LinearTimeline>
+                    ></LinearTimeline> */}
                 </div>
             </div>
         </Provider>
