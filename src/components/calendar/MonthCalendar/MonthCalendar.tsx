@@ -14,11 +14,15 @@ import {
     currentYearMonthAtom,
     DayjsifyEvents,
     InternalCalendarEventType,
+    weeksInMonth,
 } from '../MonthCalendarShared';
 import { DynamicMessage } from '../DynamicMessage';
 import { Card, CardContent, CardHeader } from '../../ui/card';
 import { AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { EventCard } from '../EventCard/EventCard';
+import { Button } from '@/components/ui/button';
+import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 
 function getMonthInfo(year: number, month: number): MonthInfoType {
     const target = dayjs(new Date(year, month, 1));
@@ -29,7 +33,8 @@ function getMonthInfo(year: number, month: number): MonthInfoType {
         daysInMonth: target.daysInMonth(),
         displayName: target.format('MMMM DD, YYYY'), // November 23, 2024
         firstDayOffset: target.day(), // day in week of the first day.
-        weeksInMonth: Math.ceil((target.daysInMonth() + target.day()) / 7),
+        firstDay: target,
+        weeksInMonth: weeksInMonth(target),
         weekdayNames: [
             'Sunday',
             'Monday',
@@ -80,7 +85,6 @@ export function MonthCalendarContent({
     const eventsOfMonth = useMemo<{
         [dayOfMonth: number]: InternalCalendarEventType[];
     }>(() => {
-        console.log('adasdas', dayjs(new Date(year, month, 1)));
         // have a view of only this month
         return groupEventsByDay(
             getEventsOfMonth(events, month, year),
@@ -104,7 +108,7 @@ export function MonthCalendarContent({
     useEffect(() => {
         const resizeObserver = new ResizeObserver((e) => {
             const height = e[0].contentRect.height;
-            setRowHeight(Math.floor(height / 5));
+            setRowHeight(Math.floor(height / monthInfo.weeksInMonth));
         });
 
         resizeObserver.observe(renderRootRef.current!);
@@ -137,20 +141,15 @@ export function MonthCalendarContent({
                                 setSelectedEvent(undefined);
                             }}
                         >
-                            <Card
-                                style={{
-                                    border: `2px solid ${selectedEvent.event.color}`,
-                                    minWidth: '200px',
-                                }}
-                            >
-                                <CardHeader>
-                                    {selectedEvent.event.title}
-                                </CardHeader>
-
-                                <CardContent>
-                                    {selectedEvent.event.description}
-                                </CardContent>
-                            </Card>
+                            <EventCard event={selectedEvent.event}>
+                                <SkewmorphicButton
+                                    style={{
+                                        backgroundColor: 'var(--brand-700)',
+                                    }}
+                                >
+                                    More Info
+                                </SkewmorphicButton>
+                            </EventCard>
                         </DynamicMessage>
                     )}
                 </AnimatePresence>
@@ -177,18 +176,6 @@ export function MonthCalendarContent({
                                     1 -
                                     monthInfo.firstDayOffset;
 
-                                // invalid days
-                                // if (d < 1 || d > currMonth.daysInMonth()) {
-                                //     return (
-                                //         <OutOfBoundMonthDay
-                                //             key={d}
-                                //             day={d}
-                                //             currMonth={currMonth}
-                                //             prevMonth={prevMonth}
-                                //         ></OutOfBoundMonthDay>
-                                //     );
-                                // }
-
                                 return (
                                     <MonthDay
                                         // pass events of particular day to the matching day
@@ -205,32 +192,6 @@ export function MonthCalendarContent({
                     ))}
                 </div>
             </div>
-        </div>
-    );
-}
-
-function OutOfBoundMonthDay({
-    day,
-    prevMonth,
-    currMonth,
-}: {
-    day: number;
-    prevMonth: Dayjs;
-    currMonth: Dayjs;
-}) {
-    let label = -1;
-
-    if (day < 1) {
-        label = prevMonth.daysInMonth() + day;
-    }
-
-    if (day > currMonth.daysInMonth()) {
-        label = day - currMonth.daysInMonth();
-    }
-
-    return (
-        <div className={cn(style.monthDayItem, style.disabled)}>
-            <span className={style.monthDayLabel}>{label}</span>
         </div>
     );
 }

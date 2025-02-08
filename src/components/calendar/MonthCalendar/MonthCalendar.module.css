@@ -235,5 +235,5 @@
 }
 
 .monthDayLabel.selected {
-    background-color: var(--background-brand-secondary);
+    background-color: var(--brand-500);
 }
