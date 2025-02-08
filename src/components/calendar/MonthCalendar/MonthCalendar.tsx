@@ -1,10 +1,10 @@
 'use client';
 
-import { CSSProperties, useMemo, useRef } from 'react';
+import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarEventType, MonthInfoType } from '../types';
 import dayjs, { Dayjs } from 'dayjs';
 import style from './MonthCalendar.module.css';
-import { Provider, useAtom, useSetAtom } from 'jotai';
+import { atom, Provider, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
     getEventsOfMonth,
     groupEventsByDay,
@@ -67,6 +67,7 @@ export function MonthCalendar(props: { events: InternalCalendarEventType[] }) {
     );
 }
 
+const rowHeightAtom = atom(170);
 export function MonthCalendarContent({
     events,
 }: {
@@ -99,6 +100,18 @@ export function MonthCalendarContent({
 
     const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
     const renderRootRef = useRef<HTMLDivElement>(null);
+
+    const setRowHeight = useSetAtom(rowHeightAtom);
+    useEffect(() => {
+        const resizeObserver = new ResizeObserver((e) => {
+            const height = e[0].contentRect.height;
+            setRowHeight(Math.floor(height / 5));
+        });
+
+        resizeObserver.observe(renderRootRef.current!);
+
+        return () => resizeObserver.disconnect();
+    }, []);
 
     return (
         <div>
@@ -219,6 +232,11 @@ function OutOfBoundMonthDay({
         </div>
     );
 }
+
+const maxItemsAtom = atom((get) => {
+    return Math.max(0, Math.floor(get(rowHeightAtom) / 30 - 2)); // 30px per item, -1 for date number, -1 for "more item" item.
+});
+
 function MonthDay({
     date,
     events,
@@ -229,14 +247,48 @@ function MonthDay({
     date = yearMonthDay(date);
     const [selected, setSelected] = useAtom(selectedDayAtom);
 
+    const [viewAll, setViewAll] = useState(false);
+    const maxItems = useAtomValue(maxItemsAtom);
+    const itemRef = useRef<HTMLDivElement>(null);
+
+    function clickOutside(e: Event) {
+        if (
+            itemRef.current &&
+            !itemRef.current.contains(e.target! as Node) &&
+            !e.defaultPrevented
+        ) {
+            // hide extra events if clicked outside
+            hide();
+        }
+    }
+
+    function showAll() {
+        // show extra events
+        setViewAll(true);
+        document.addEventListener('click', clickOutside, true);
+    }
+
+    function hide() {
+        setViewAll(false);
+        document.removeEventListener('click', clickOutside, true);
+    }
+
     return (
         <div
-            className={style.monthDayItem}
+            ref={itemRef}
+            className={cn(style.monthDayItem, viewAll && style.extended)}
+            style={
+                {
+                    '--maxHeight': `${events.length * 30 + 30}px`,
+                } as CSSProperties
+            }
             onClick={() => {
                 if (!date.isSame(selected, 'date')) {
                     setSelected(date);
+                    showAll();
                 } else {
                     setSelected(undefined);
+                    hide();
                 }
             }}
         >
@@ -245,9 +297,30 @@ function MonthDay({
             >
                 {date.date()}
             </span>
-            {events.map((item) => (
-                <MonthDayEvent key={item.id} event={item}></MonthDayEvent>
-            ))}
+            <div
+                className={cn(
+                    style.monthEventContainer,
+                    viewAll && style.extended
+                )}
+            >
+                {events.map((item, index) => {
+                    if (index < maxItems || viewAll) {
+                        return (
+                            <MonthDayEvent
+                                key={item.id}
+                                event={item}
+                            ></MonthDayEvent>
+                        );
+                    }
+                })}
+                {!viewAll && events.length > maxItems && (
+                    <EventHolder
+                        color="#4338CA"
+                        content={`${events.length - maxItems} more...`}
+                        onclick={showAll}
+                    ></EventHolder>
+                )}
+            </div>
         </div>
     );
 }
@@ -269,6 +342,30 @@ function MonthDayEvent({ event }: { event: InternalCalendarEventType }) {
             }}
         >
             {event.title}
+        </div>
+    );
+}
+
+function EventHolder({
+    color,
+    content,
+    onclick,
+}: {
+    color: string;
+    content: string;
+    onclick: () => void;
+}) {
+    return (
+        <div
+            className={style.monthEventItem}
+            style={
+                {
+                    '--eventBackground': color,
+                } as CSSProperties
+            }
+            onClick={onclick}
+        >
+            {content}
         </div>
     );
 }

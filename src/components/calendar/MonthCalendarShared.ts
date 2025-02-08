@@ -117,3 +117,54 @@ export function DayjsifyEvents(
         };
     });
 }
+
+// TODO remove debug code
+export function getDebugLongDescription(eventId: string) {
+    // gpt generated example event description
+    return `
+# 🚀 Hackathon Workshop: Build a Full-Stack App with Svelte & Firebase
+
+Join us for an exciting hands-on workshop where you'll learn how to build a full-stack web application using **Svelte** and **Firebase**! Whether you're new to web development or looking to expand your tech stack, this workshop is perfect for you.
+
+## 📅 Event Details
+- **Date:** [Insert Date]
+- **Time:** [Insert Time] (Local Time)
+- **Location:** [Insert Location or Virtual Link]
+- **Duration:** 2 hours
+- **Difficulty Level:** Beginner to Intermediate
+
+## 🛠 What You'll Learn
+✅ Introduction to Svelte framework  
+✅ Setting up Firebase for authentication & database  
+✅ Building a responsive web app  
+✅ Deploying your app live  
+
+![Svelte Logo](https://upload.wikimedia.org/wikipedia/commons/1/1b/Svelte_Logo.svg)
+
+
+## 🎯 Who Should Attend?
+- Hackathon participants who want to build web apps quickly
+- Developers curious about Svelte & Firebase
+- Anyone interested in full-stack development
+
+## 📌 Prerequisites
+- Basic HTML, CSS, and JavaScript knowledge
+- A laptop with Node.js installed
+- A GitHub account (optional but recommended)
+
+## 📝 Registration
+Spots are limited! Register now at [Insert Registration Link]
+
+![Hackathon Coding](https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/JavaScript-logo.png/500px-JavaScript-logo.png)
+
+
+## 💡 About the Instructor
+[Your Name] is a [Your Title] with experience in full-stack development and cloud technologies. Passionate about open-source and teaching, they have led numerous workshops on modern web frameworks.
+
+---
+
+🔗 Stay Connected: Follow us on [Insert Social Media Links] for updates!
+
+#Hackathon #WebDevelopment #Svelte #Firebase
+    `;
+}
