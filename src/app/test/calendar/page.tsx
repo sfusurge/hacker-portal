@@ -14,7 +14,7 @@ export default function Calendar() {
             title: 'Initial Planning Meeting',
             description:
                 'Discuss overall goals, timeline, and roles for the hackathon.',
-            startTime: new Date('2024-11-01T10:00:00'),
+            startTime: new Date('2025-02-05T10:00:00'),
             duration: 90,
             color: '#FF5733',
         },
@@ -23,7 +23,7 @@ export default function Calendar() {
             title: 'Budget Review',
             description:
                 'Finalize budget allocation for venue, catering, prizes, and swag.',
-            startTime: new Date('2024-11-02T14:00:00'),
+            startTime: new Date('2025-02-05T14:00:00'),
             duration: 60,
             color: '#33A8FF',
         },
@@ -32,7 +32,7 @@ export default function Calendar() {
             title: 'Sponsor Outreach',
             description:
                 'Follow up with potential sponsors and confirm commitments.',
-            startTime: new Date('2024-11-04T10:00:00'),
+            startTime: new Date('2025-02-05T12:00:00'),
             duration: 120,
             color: '#A833FF',
         },
@@ -40,7 +40,7 @@ export default function Calendar() {
             id: 4,
             title: 'Volunteer Recruitment',
             description: 'Organize volunteer applications and assign roles.',
-            startTime: new Date('2024-11-05T09:00:00'),
+            startTime: new Date('2025-02-05T09:00:00'),
             duration: 120,
             color: '#F2A233',
         },
@@ -49,7 +49,7 @@ export default function Calendar() {
             title: 'Venue Walkthrough',
             description:
                 'Inspect the venue and confirm logistics for the event day.',
-            startTime: new Date('2024-11-05T10:00:00'),
+            startTime: new Date('2025-02-05T10:00:00'),
             duration: 120,
             color: '#33FF57',
         },
