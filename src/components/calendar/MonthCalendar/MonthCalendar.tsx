@@ -82,12 +82,14 @@ export function MonthCalendarContent({
     // filter to only include events of the current month, grouped by day, each day's event sorted by title alphabetically.
     const eventsOfMonth = useMemo<{
         [dayOfMonth: number]: InternalCalendarEventType[];
-    }>(
-        () =>
-            // have a view of only this month
-            groupEventsByDay(getEventsOfMonth(events, month, year)),
-        [year, month]
-    );
+    }>(() => {
+        console.log('adasdas', dayjs(new Date(year, month, 1)));
+        // have a view of only this month
+        return groupEventsByDay(
+            getEventsOfMonth(events, month, year),
+            dayjs(new Date(year, month, 1))
+        );
+    }, [year, month]);
 
     const [prevMonth, currMonth, nextMonth] = useMemo(
         () => [
@@ -179,16 +181,16 @@ export function MonthCalendarContent({
                                     monthInfo.firstDayOffset;
 
                                 // invalid days
-                                if (d < 1 || d > currMonth.daysInMonth()) {
-                                    return (
-                                        <OutOfBoundMonthDay
-                                            key={d}
-                                            day={d}
-                                            currMonth={currMonth}
-                                            prevMonth={prevMonth}
-                                        ></OutOfBoundMonthDay>
-                                    );
-                                }
+                                // if (d < 1 || d > currMonth.daysInMonth()) {
+                                //     return (
+                                //         <OutOfBoundMonthDay
+                                //             key={d}
+                                //             day={d}
+                                //             currMonth={currMonth}
+                                //             prevMonth={prevMonth}
+                                //         ></OutOfBoundMonthDay>
+                                //     );
+                                // }
 
                                 return (
                                     <MonthDay
@@ -196,6 +198,9 @@ export function MonthCalendarContent({
                                         events={eventsOfMonth[d] ?? []}
                                         key={d}
                                         date={dayjs(new Date(year, month, d))}
+                                        disabled={
+                                            d < 1 || d > currMonth.daysInMonth()
+                                        }
                                     />
                                 );
                             })}
@@ -240,9 +245,11 @@ const maxItemsAtom = atom((get) => {
 function MonthDay({
     date,
     events,
+    disabled = false,
 }: {
     date: Dayjs;
     events: InternalCalendarEventType[];
+    disabled: boolean;
 }) {
     date = yearMonthDay(date);
     const [selected, setSelected] = useAtom(selectedDayAtom);
@@ -276,7 +283,11 @@ function MonthDay({
     return (
         <div
             ref={itemRef}
-            className={cn(style.monthDayItem, viewAll && style.extended)}
+            className={cn(
+                style.monthDayItem,
+                viewAll && style.extended,
+                disabled && style.disabled
+            )}
             style={
                 {
                     '--maxHeight': `${events.length * 30 + 30}px`,
@@ -304,7 +315,7 @@ function MonthDay({
                 )}
             >
                 {events.map((item, index) => {
-                    if (index < maxItems || viewAll) {
+                    if (index < maxItems || viewAll || events.length == 1) {
                         return (
                             <MonthDayEvent
                                 key={item.id}
@@ -313,7 +324,7 @@ function MonthDay({
                         );
                     }
                 })}
-                {!viewAll && events.length > maxItems && (
+                {!viewAll && events.length > maxItems && events.length != 1 && (
                     <EventHolder
                         color="#4338CA"
                         content={`${events.length - maxItems} more...`}
@@ -337,7 +348,8 @@ function MonthDayEvent({ event }: { event: InternalCalendarEventType }) {
                     '--eventBackground': event.color,
                 } as CSSProperties
             }
-            onClick={() => {
+            onClick={(e) => {
+                e.stopPropagation();
                 setSelectedEvent({ event, element: ref.current! });
             }}
         >

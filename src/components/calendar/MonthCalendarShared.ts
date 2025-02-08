@@ -56,15 +56,14 @@ export const currentTimeAtom = atom<Dayjs>(
 
 export function groupEventsByDay(
     events: InternalCalendarEventType[],
-    idxType: 'timestamp' | 'date' = 'date'
+    firstDayOfMonth: Dayjs
 ) {
     const grouped = {
         ...Object.groupBy(events, (item) => {
-            if (idxType === 'date') {
-                return item.startTime.date();
-            } else {
-                return item.startTime.startOf('day').unix();
-            }
+            return (
+                Math.floor(item.startTime.diff(firstDayOfMonth, 'hour') / 24) +
+                1
+            );
         }),
     } as { [dayOfMonth: number]: InternalCalendarEventType[] };
 
@@ -74,7 +73,6 @@ export function groupEventsByDay(
         });
         grouped[parseInt(key)] = val;
     }
-    console.log({ ...grouped });
 
     return grouped;
 }
@@ -86,10 +84,15 @@ export function getEventsOfMonth(
 ) {
     const filtered = events.filter((item) => {
         const start = item.startTime;
-        const end = item.startTime.add(item.duration, 'minute');
-
-        return start.month() == month && start.year() == year;
+        console.log(month, item.startTime.month(), item.title);
+        return (
+            (Math.abs(month - item.startTime.month()) <= 1 ||
+                month - item.startTime.month() === 11) &&
+            Math.abs(year - start.year()) <= 1
+        );
     });
+
+    console.log(filtered);
 
     return filtered;
 }
