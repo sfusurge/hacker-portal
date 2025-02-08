@@ -1,3 +1,4 @@
+import { Dayjs } from 'dayjs';
 import { array, number, string, z } from 'zod';
 
 export const CalendarEvent = z.object({
@@ -11,15 +12,13 @@ export const CalendarEvent = z.object({
 
 export type CalendarEventType = z.infer<typeof CalendarEvent>;
 
-export const MonthInfo = z.object({
-    // this object is used to store precomputed value about the current month to make rendering code cleaner
-    year: number().int().min(2000).max(2099),
-    month: number().int().min(1).max(12),
-    displayName: string(),
-    daysInMonth: number().int().min(28).max(31),
-    firstDayOffset: number().min(0).max(6), // 0 means start on sunday, 6 means start on saturaday
-    weeksInMonth: number().min(4).max(6), // how many rows does this month take on the calendar,
-    weekdayNames: array(string()),
-});
-
-export type MonthInfoType = z.infer<typeof MonthInfo>;
+export interface MonthInfoType {
+    year: number;
+    month: number;
+    displayName: string;
+    daysInMonth: number;
+    firstDayOffset: number;
+    weeksInMonth: number;
+    weekdayNames: string[];
+    firstDay: Dayjs;
+}

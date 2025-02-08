@@ -108,6 +108,10 @@ export function yearMonthDay(d: Dayjs) {
     return dayjs(new Date(d.year(), d.month(), d.date()));
 }
 
+export function weeksInMonth(firstDay: Dayjs) {
+    return Math.ceil((firstDay.daysInMonth() + firstDay.day()) / 7);
+}
+
 export type InternalCalendarEventType = Omit<CalendarEventType, 'startTime'> & {
     startTime: Dayjs;
     endTime: Dayjs;
