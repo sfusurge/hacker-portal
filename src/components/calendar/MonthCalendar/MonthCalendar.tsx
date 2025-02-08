@@ -60,11 +60,7 @@ function range(count: number) {
  */
 export function MonthCalendar(props: { events: InternalCalendarEventType[] }) {
     // just a wrapper to provide Provider for context.
-    return (
-        <Provider>
-            <MonthCalendarContent {...props}></MonthCalendarContent>
-        </Provider>
-    );
+    return <MonthCalendarContent {...props}></MonthCalendarContent>;
 }
 
 const rowHeightAtom = atom(170);
@@ -76,6 +72,7 @@ export function MonthCalendarContent({
     const [{ year, month }, updateYearMonth] = useAtom(currentYearMonthAtom);
 
     const monthInfo = useMemo(() => {
+        console.log('cuange');
         return getMonthInfo(year, month);
     }, [year, month]);
 

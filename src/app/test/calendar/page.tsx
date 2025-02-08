@@ -3,9 +3,14 @@
 import { CalendarEventType } from '@/components/calendar/types';
 import { MonthCalendar } from '@/components/calendar/MonthCalendar/MonthCalendar';
 import { LinearTimeline } from '@/components/calendar/LinearTimeLine/LinearTimeline';
-import { Provider } from 'jotai';
+import { Provider, useAtom, useSetAtom } from 'jotai';
 import { useMemo } from 'react';
-import { DayjsifyEvents } from '@/components/calendar/MonthCalendarShared';
+import {
+    currentYearMonthAtom,
+    DayjsifyEvents,
+} from '@/components/calendar/MonthCalendarShared';
+import { Button } from '@/components/ui/button';
+import dayjs from 'dayjs';
 
 export default function Calendar() {
     const _events: CalendarEventType[] = [
@@ -187,29 +192,58 @@ export default function Calendar() {
     ];
 
     const events = useMemo(() => DayjsifyEvents(_events), [_events]);
-
+    const [{ year, month }, updateMonth] = useAtom(currentYearMonthAtom);
     return (
         // Provider provides context for this page, so that calendar variables is only shared within this page, not truely global.
-        <Provider>
-            <div>
-                <h1>Calendar Test page</h1>
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        height: 'min-content',
+
+        <div>
+            <h1>Calendar Test page</h1>
+            <div className="flex">
+                <Button
+                    onClick={() => {
+                        updateMonth('-1 month');
                     }}
                 >
-                    <MonthCalendar events={events}></MonthCalendar>
-                    {/* 
+                    Prev
+                </Button>
+                <Button
+                    onClick={() => {
+                        updateMonth('set', {
+                            year: dayjs().year(),
+                            month: dayjs().month(),
+                        });
+                    }}
+                >
+                    Current
+                </Button>
+                <Button
+                    onClick={() => {
+                        updateMonth('+1 month');
+                    }}
+                >
+                    Next
+                </Button>
+                <span>
+                    Year {year}, Month: {month}
+                </span>
+            </div>
+
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    height: 'min-content',
+                }}
+            >
+                <MonthCalendar events={events}></MonthCalendar>
+                {/* 
                     <LinearTimeline
                         events={events}
                         styles={{
                             maxHeight: '600px',
                         }}
                     ></LinearTimeline> */}
-                </div>
             </div>
-        </Provider>
+        </div>
     );
 }

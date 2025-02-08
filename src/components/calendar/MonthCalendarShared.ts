@@ -26,20 +26,23 @@ export const currentYearMonthAtom = atom(
         get,
         set,
         changeType: '+1 month' | '-1 month' | 'set',
-        newVal: { year: number; month: number }
+        newVal?: { year: number; month: number }
     ) => {
         const oldVal = get(_currentYearMonth);
+        let date = dayjs(new Date(oldVal.year, oldVal.month, 1));
         if (changeType === '+1 month') {
+            date = date.add(1, 'month');
             set(_currentYearMonth, {
-                year: oldVal.year + (oldVal.month === 11 ? 1 : 0), // increment year if its already end of year
-                month: (oldVal.month + 1) % 12,
+                year: date.year(),
+                month: date.month(),
             });
         } else if (changeType === '-1 month') {
+            date = date.subtract(1, 'month');
             set(_currentYearMonth, {
-                year: oldVal.year - (oldVal.month === 0 ? 1 : 0), // increment year if its already end of year
-                month: (oldVal.month - 1) % 12,
+                year: date.year(),
+                month: date.month(),
             });
-        } else if (changeType === 'set') {
+        } else if (changeType === 'set' && newVal) {
             set(_currentYearMonth, newVal);
         }
     }
