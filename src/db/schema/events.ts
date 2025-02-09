@@ -2,10 +2,11 @@ import {
     index,
     integer,
     pgTable,
+    text,
     timestamp,
     varchar,
 } from 'drizzle-orm/pg-core';
-import { createInsertSchema } from 'drizzle-zod';
+import { createInsertSchema, createUpdateSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { hackathons } from './hackathons';
 
@@ -22,6 +23,7 @@ export const events = pgTable(
         endDate: timestamp('end_date').notNull(),
         location: varchar('location', { length: 1024 }).notNull(),
         description: varchar('description', { length: 2048 }).default(''),
+        longDescription: text('long_description'),
     },
     (table) => {
         return [index().on(table.hackathonId)];
@@ -34,6 +36,18 @@ export const getEventsSchema = z.object({
     hackathonId: z.number().int(),
 });
 
+export const getEventLongDescriptionSchema = z.object({
+    eventId: z.number().int(),
+});
+
+export const updateEventSchema = createUpdateSchema(events)
+    .omit({
+        hackathonId: true,
+    })
+    .extend({
+        eventId: z.number().int(),
+    });
+
 export const deleteEventSchema = z.object({
-    id: z.number().int(),
+    eventId: z.number().int(),
 });
