@@ -1,14 +1,17 @@
 import {
+    deleteEventSchema,
     events as eventsTable,
+    getEventLongDescriptionSchema,
     getEventsSchema,
     insertEventSchema,
+    updateEventSchema,
 } from '@/db/schema/events';
 import { publicProcedure, router } from '../trpc';
 import { InternalServerError, UnAuthorizedError } from '../exceptions';
 import { getUserData } from '@/app/(auth)/layout';
 import { UserRoleEnum } from '@/db/schema/users';
 import { databaseClient } from '@/db/client';
-import { and, eq } from 'drizzle-orm';
+import { and, asc, eq, getTableColumns } from 'drizzle-orm';
 import { checkIns } from '@/db/schema/checkIn';
 
 export const eventsRouter = router({
@@ -34,6 +37,7 @@ export const eventsRouter = router({
                     location: input.location,
                     color: input.color,
                     description: input.description,
+                    longDescription: input.longDescription,
                 })
                 .returning();
 
@@ -51,8 +55,15 @@ export const eventsRouter = router({
                 );
             }
 
+            const { longDescription, ...rest } = getTableColumns(eventsTable);
+
             const rows = await databaseClient
-                .select()
+                .select({
+                    checkIn: {
+                        userId: checkIns.userId,
+                    },
+                    event: rest,
+                })
                 .from(eventsTable)
                 .leftJoin(
                     checkIns,
@@ -61,19 +72,64 @@ export const eventsRouter = router({
                         eq(checkIns.userId, user.id)
                     )
                 )
-                .where(eq(eventsTable.hackathonId, input.hackathonId));
+                .where(eq(eventsTable.hackathonId, input.hackathonId))
+                // events with earlier startDate comes first
+                // if 2 events have same startDate, then the one with earlier
+                // endDate comes first
+                .orderBy(asc(eventsTable.startDate), asc(eventsTable.endDate));
 
             console.log(`Returned rows: ${JSON.stringify(rows)}`);
 
-            const events = rows.map(
-                ({ events: event, check_ins: checkIns }) => {
-                    return {
-                        ...event,
-                        checkedIn: checkIns !== undefined,
-                    };
-                }
-            );
+            const events = rows.map(({ checkIn, event }) => {
+                return {
+                    ...event,
+                    checkedIn: checkIn != null,
+                };
+            });
 
             return events;
+        }),
+
+    getEventLongDescription: publicProcedure
+        .input(getEventLongDescriptionSchema)
+        .query(async ({ input }) => {
+            const [event] = await databaseClient
+                .select({
+                    id: eventsTable.id,
+                    longDescription: eventsTable.longDescription,
+                })
+                .from(eventsTable)
+                .where(eq(eventsTable.id, input.eventId))
+                .limit(1);
+
+            return event;
+        }),
+
+    updateEvent: publicProcedure
+        .input(updateEventSchema)
+        .mutation(async ({ input }) => {
+            const [event] = await databaseClient
+                .update(eventsTable)
+                .set({
+                    title: input.title,
+                    color: input.color,
+                    startDate: input.startDate,
+                    endDate: input.endDate,
+                    location: input.location,
+                    description: input.description,
+                    longDescription: input.longDescription,
+                })
+                .where(eq(eventsTable.id, input.eventId))
+                .returning();
+
+            return event;
+        }),
+
+    deleteEvent: publicProcedure
+        .input(deleteEventSchema)
+        .mutation(async ({ input }) => {
+            return await databaseClient
+                .delete(eventsTable)
+                .where(eq(eventsTable.id, input.eventId));
         }),
 });
