@@ -16,10 +16,15 @@ export const checkInRouter = router({
                 );
             }
 
-            await databaseClient.insert(checkIns).values({
-                userId: user.id,
-                eventId: input.eventId,
-            });
+            await databaseClient
+                .insert(checkIns)
+                .values({
+                    userId: user.id,
+                    eventId: input.eventId,
+                })
+                .onConflictDoNothing({
+                    target: [checkIns.userId, checkIns.eventId],
+                });
 
             return true;
         }),
