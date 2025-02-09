@@ -130,19 +130,23 @@ export function DynamicMessage({
                 !e.defaultPrevented
             ) {
                 // clicked outside
-                // e.preventDefault();
-                // e.stopImmediatePropagation();
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
+                document.removeEventListener(
+                    'click',
+                    clickedOutsideCallback,
+                    true
+                );
                 closeLabel();
             }
         },
         [closeLabel]
     );
     useEffect(() => {
-        document.addEventListener('click', clickedOutsideCallback, {
-            capture: true,
-        });
+        document.addEventListener('click', clickedOutsideCallback, true);
         return () => {
-            document.removeEventListener('click', clickedOutsideCallback);
+            document.removeEventListener('click', clickedOutsideCallback, true);
         };
     }, []);
 
