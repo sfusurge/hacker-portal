@@ -16,7 +16,7 @@ import {
     InternalCalendarEventType,
     weeksInMonth,
 } from '../MonthCalendarShared';
-import { DynamicMessage } from '../DynamicMessage';
+import { DynamicMessage } from '../DynamicMessage/DynamicMessage';
 import { Card, CardContent, CardHeader } from '../../ui/card';
 import { AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -77,7 +77,6 @@ export function MonthCalendarContent({
     const [{ year, month }, updateYearMonth] = useAtom(currentYearMonthAtom);
 
     const monthInfo = useMemo(() => {
-        console.log('cuange');
         return getMonthInfo(year, month);
     }, [year, month]);
 
@@ -308,7 +307,7 @@ function MonthDayEvent({ event }: { event: InternalCalendarEventType }) {
             }
             onClick={(e) => {
                 e.stopPropagation();
-                setSelectedEvent({ event, element: ref.current! });
+                setSelectedEvent({ event, element: ref.current!.parentNode! });
             }}
         >
             {event.title}

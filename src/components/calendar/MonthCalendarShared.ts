@@ -10,7 +10,7 @@ export const selectedDayAtom = atom<Dayjs | undefined>(undefined);
 
 export interface SelectedEventInfo {
     event: InternalCalendarEventType;
-    element: HTMLDivElement | undefined;
+    element: Node | undefined;
 }
 export const selectedEventAtom = atom<SelectedEventInfo | undefined>(undefined);
 const _currentYearMonth = atom({
@@ -87,16 +87,12 @@ export function getEventsOfMonth(
 ) {
     const filtered = events.filter((item) => {
         const start = item.startTime;
-        console.log(month, item.startTime.month(), item.title);
         return (
             (Math.abs(month - item.startTime.month()) <= 1 ||
                 month - item.startTime.month() === 11) &&
             Math.abs(year - start.year()) <= 1
         );
     });
-
-    console.log(filtered);
-
     return filtered;
 }
 
