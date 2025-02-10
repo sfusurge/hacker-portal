@@ -1,4 +1,5 @@
 import QRTicket from '@/app/qr/checkin_components/QRTicket';
+import TicketLoader from '@/app/qr/checkin_components/TicketLoader';
 
 type QRPageProps = {
     params: Promise<{ userId: string }>;
@@ -6,9 +7,5 @@ type QRPageProps = {
 
 export default async function QRView({ params }: QRPageProps) {
     const { userId } = await params;
-    return (
-        <div className="bg-black flex justify-center items-center min-h-screen min-w-screen h-full">
-            <QRTicket userId={userId} />
-        </div>
-    );
+    return <TicketLoader userId={userId} />;
 }

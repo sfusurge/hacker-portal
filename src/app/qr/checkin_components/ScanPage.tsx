@@ -44,7 +44,7 @@ export default function ScanPage({
     workshop,
     workshopType,
 }: ScanPageProps) {
-    const us = trpc.users.getUsers.useQuery().data;
+    const hackers = trpc.users.getUsers.useQuery().data;
 
     //Manual input component state
     const [isManualCheckInOpen, setIsManualCheckInOpen] = useState(false);
@@ -68,7 +68,7 @@ export default function ScanPage({
     const [isInvalidUser, setIsInvalidUser] = useState(false);
 
     const submitId = (id: string) => {
-        if (userList?.find((user) => user.id.toString() === id) === undefined) {
+        if (userList?.find((user) => user.displayId === id) === undefined) {
             setUserId(id);
             setIsInvalidUser(true);
         } else {
@@ -136,7 +136,7 @@ export default function ScanPage({
     }, [event, meal, mealType, workshop, workshopType]);
 
     useEffect(() => {
-        setUserList(us);
+        setUserList(hackers);
     });
 
     useEffect(() => {
@@ -198,12 +198,14 @@ export default function ScanPage({
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
-                                className="text-white/80 text-sm flex flex-row gap-x-2 hover:shadow-lg hover:bg-neutral-900 hover:text-white/80
-                        bg-neutral-900/50 items-center min-w-40 justify-center border border-neutral-750 pt-2 pb-2
-                        rounded-full transition-shadow duration-300"
+                                className="flexhover:shadow-lg hover:bg-neutral-900 hover:text-white/80
+                                bg-neutral-900/50 items-center justify-center border border-neutral-750 pl-0.5 pr-0.5
+                                rounded-full transition-shadow duration-300"
                             >
-                                {checkInType}
-                                <ChevronDownIcon className="size-6" />
+                                <div className="flex flex-row gap-x-2">
+                                    {checkInType}
+                                    <ChevronDownIcon className="size-6" />
+                                </div>
                             </Button>
                         </DropdownMenuTrigger>
 

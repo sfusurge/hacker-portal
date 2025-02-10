@@ -2,6 +2,8 @@ import ApplicationCard, { AppStatus } from '@/components/home/ApplicationCard';
 import DiscordCard from '@/components/home/DiscordCard';
 import { getUserData } from '../layout';
 import { createCaller } from '@/server/appRouter';
+import QRCard from '@/components/home/QRCard';
+import generateQRCode, { QROptions } from '@/server/generateQRCode';
 
 const backendStatusToClientStatus: Record<string, AppStatus> = {
     'N/A': 'Not Yet Started',
@@ -14,6 +16,18 @@ const backendStatusToClientStatus: Record<string, AppStatus> = {
 
 export default async function Home() {
     const data = await getUserData();
+
+    const opts: QROptions = {
+        margin: 1,
+        scale: 10,
+        color: {
+            dark: '#FFFFFF',
+            light: '#0000',
+        },
+    };
+
+    const displayId = data.displayId;
+    const userQR: string = await generateQRCode(displayId, opts);
 
     const trpcClient = createCaller({});
 
@@ -33,7 +47,8 @@ export default async function Home() {
             </h1>
 
             <div className="grid gap-6 md:gap-8 pb-6 md:pb-0 xl:grid-cols-2">
-                <ApplicationCard />
+                {/*<ApplicationCard />*/}
+                <QRCard userData={data} image={userQR} />
                 <DiscordCard></DiscordCard>
             </div>
         </div>
