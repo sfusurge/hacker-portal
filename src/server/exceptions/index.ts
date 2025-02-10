@@ -4,8 +4,13 @@ export class InternalServerError extends Error {
     }
 }
 
-export class UnAuthorizedError extends Error {
-    constructor(email?: string, role?: string) {
+interface UnauthorizedErrorProps {
+    email?: string;
+    role?: string;
+}
+
+export class UnauthorizedError extends Error {
+    constructor({ email, role }: UnauthorizedErrorProps = {}) {
         super(`${email} with ${role} trying to access admin route`);
     }
 }

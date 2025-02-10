@@ -2,7 +2,7 @@ import { getUserData } from '@/app/(auth)/layout';
 import { databaseClient } from '@/db/client';
 import { checkIns, insertCheckInSchema } from '@/db/schema/checkIn';
 import { UserRoleEnum } from '@/db/schema/users';
-import { UnAuthorizedError } from '../exceptions';
+import { UnauthorizedError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
 
 export const checkInRouter = router({
@@ -13,7 +13,10 @@ export const checkInRouter = router({
 
             // Only admin can check people in
             if (user?.userRole !== UserRoleEnum.admin) {
-                throw new UnAuthorizedError(user?.email, user?.userRole);
+                throw new UnauthorizedError({
+                    email: user?.email,
+                    role: user?.userRole,
+                });
             }
 
             await databaseClient
