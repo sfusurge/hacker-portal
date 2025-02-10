@@ -8,6 +8,7 @@
     z-index: 1000;
 
     width: 80dvw;
+    max-height: 90dvh;
     max-width: 1200px;
 
     overflow: hidden;
@@ -19,13 +20,26 @@
     backdrop-filter: blur(10px);
 }
 
+@media only screen and (max-width: 768px) {
+    .longDescriptionContainer {
+        border: none;
+        border-radius: 0;
+
+        top: 0;
+        left: 0;
+        transform: none;
+
+        width: 100dvw;
+        max-height: 100dvh;
+    }
+}
+
 .contentHolder {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
 
     min-height: 500px;
-    max-height: 90dvh;
 
     padding: 1.5rem;
 

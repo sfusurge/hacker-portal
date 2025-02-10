@@ -121,6 +121,14 @@ export function MonthCalendarContent({
 
     return (
         <div>
+            {selectedEvent && selectedEvent.element && showMoreInfo && (
+                <LongDescriptionModal
+                    event={selectedEvent.event}
+                    onClose={() => {
+                        setShowMore(false);
+                    }}
+                />
+            )}
             {/* Week day name row, such as Sun, Mon, Tues, ... */}
             <div className={style.weekdayNameRow}>
                 {monthInfo.weekdayNames.map((item, index) => (
@@ -130,15 +138,6 @@ export function MonthCalendarContent({
                 ))}
             </div>
             <div ref={renderRootRef} className={style.calendarRenderRoot}>
-                {selectedEvent && selectedEvent.element && showMoreInfo && (
-                    <LongDescriptionModal
-                        event={selectedEvent.event}
-                        onClose={() => {
-                            setShowMore(false);
-                        }}
-                    />
-                )}
-
                 {/* AnimatePresence needed for framer motion, needs to always exist and wrap content. 
                 (As in, content is toggling within AnimatePresence. TODO: Refactor into it's own component)
                 */}
