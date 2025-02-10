@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { EventCard } from '../EventCard/EventCard';
 import { Button } from '@/components/ui/button';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
+import { LongDescriptionModal } from '../EventLongDescription/EventLongDescription';
 
 function getMonthInfo(year: number, month: number): MonthInfoType {
     const target = dayjs(new Date(year, month, 1));
@@ -115,6 +116,9 @@ export function MonthCalendarContent({
         return () => resizeObserver.disconnect();
     }, []);
 
+    // full details display
+    const [showMoreInfo, setShowMore] = useState(false);
+
     return (
         <div>
             {/* Week day name row, such as Sun, Mon, Tues, ... */}
@@ -126,6 +130,15 @@ export function MonthCalendarContent({
                 ))}
             </div>
             <div ref={renderRootRef} className={style.calendarRenderRoot}>
+                {selectedEvent && selectedEvent.element && showMoreInfo && (
+                    <LongDescriptionModal
+                        event={selectedEvent.event}
+                        onClose={() => {
+                            setShowMore(false);
+                        }}
+                    />
+                )}
+
                 {/* AnimatePresence needed for framer motion, needs to always exist and wrap content. 
                 (As in, content is toggling within AnimatePresence. TODO: Refactor into it's own component)
                 */}
@@ -135,7 +148,7 @@ export function MonthCalendarContent({
                         <DynamicMessage
                             rootRef={renderRootRef.current!}
                             parentRef={selectedEvent.element}
-                            closeLabel={() => {
+                            onClose={() => {
                                 // disable prompt
                                 setSelectedEvent(undefined);
                             }}
@@ -144,6 +157,9 @@ export function MonthCalendarContent({
                                 <SkewmorphicButton
                                     style={{
                                         backgroundColor: 'var(--brand-700)',
+                                    }}
+                                    onClick={() => {
+                                        setShowMore(true);
                                     }}
                                 >
                                     More Info
@@ -272,7 +288,11 @@ function MonthDay({
                 )}
             >
                 {events.map((item, index) => {
-                    if (index <= maxItems || viewAll) {
+                    if (
+                        index < maxItems ||
+                        maxItems == events.length - 1 ||
+                        viewAll
+                    ) {
                         return (
                             <MonthDayEvent
                                 key={item.id}

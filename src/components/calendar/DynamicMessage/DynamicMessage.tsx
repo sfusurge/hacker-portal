@@ -10,6 +10,7 @@ import {
 } from 'react';
 import style from './DynamicMessage.module.css';
 import { motion, AnimatePresence } from 'motion/react';
+
 // lower is always 0
 function limitDimention(
     max: number,
@@ -48,12 +49,14 @@ export function DynamicMessage({
     children,
     rootRef,
     parentRef,
-    closeLabel,
+    onClose,
+    onOpen,
 }: Readonly<{
     children?: ReactNode;
     rootRef: HTMLDivElement;
     parentRef: Node;
-    closeLabel: () => void;
+    onClose: () => void;
+    onOpen?: () => void;
 }>) {
     const margin = 12; // 12px margin between parent and message box
 
@@ -123,62 +126,72 @@ export function DynamicMessage({
         return [calcTop, calcLeft];
     }, [width, height, childRef.current, parentRef, rootRef]);
 
-    const clickedOutsideCallback = useCallback(
-        (e: MouseEvent) => {
-            if (
-                !childRef.current?.contains(e.target as Node) &&
-                !e.defaultPrevented
-            ) {
-                // clicked outside
-                e.preventDefault();
-                e.stopImmediatePropagation();
+    // const clickedOutsideCallback = useCallback(
+    //     (e: MouseEvent) => {
+    //         if (
+    //             !childRef.current?.contains(e.target as Node) &&
+    //             !e.defaultPrevented
+    //         ) {
+    //             // clicked outside
+    //             e.preventDefault();
+    //             e.stopImmediatePropagation();
 
-                document.removeEventListener(
-                    'click',
-                    clickedOutsideCallback,
-                    true
-                );
-                closeLabel();
-            }
-        },
-        [closeLabel]
-    );
+    //             document.removeEventListener(
+    //                 'click',
+    //                 clickedOutsideCallback,
+    //                 true
+    //             );
+    //             closeLabel();
+    //         }
+    //     },
+    //     [closeLabel]
+    // );
+    // useEffect(() => {
+    //     document.addEventListener('click', clickedOutsideCallback, true);
+    //     return () => {
+    //         document.removeEventListener('click', clickedOutsideCallback, true);
+    //     };
+    // }, []);
     useEffect(() => {
-        document.addEventListener('click', clickedOutsideCallback, true);
-        return () => {
-            document.removeEventListener('click', clickedOutsideCallback, true);
-        };
+        onOpen && onOpen();
     }, []);
-
     return (
-        <motion.div
-            ref={childRef}
-            style={
-                {
-                    '--top': `${top}px`,
-                    '--left': `${left}px`,
-                } as CSSProperties
-            }
-            className={style.labelChildrenContainer}
-            initial={{
-                x: -25,
-                opacity: 0,
-            }}
-            animate={{
-                x: 0,
-                opacity: 1,
-                transition: {
-                    duration: 0.2,
-                    ease: 'circOut',
-                },
-            }}
-            exit={{
-                x: 25,
-                opacity: 0,
-            }}
-        >
-            {children}
-        </motion.div>
+        <>
+            <div
+                className={style.backdrop}
+                onClick={() => {
+                    onClose();
+                }}
+            ></div>
+            <motion.div
+                ref={childRef}
+                style={
+                    {
+                        '--top': `${top}px`,
+                        '--left': `${left}px`,
+                    } as CSSProperties
+                }
+                className={style.labelChildrenContainer}
+                initial={{
+                    x: -25,
+                    opacity: 0,
+                }}
+                animate={{
+                    x: 0,
+                    opacity: 1,
+                    transition: {
+                        duration: 0.2,
+                        ease: 'circOut',
+                    },
+                }}
+                exit={{
+                    x: 25,
+                    opacity: 0,
+                }}
+            >
+                {children}
+            </motion.div>
+        </>
     );
 }
 

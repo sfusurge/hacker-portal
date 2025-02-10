@@ -63,7 +63,8 @@ export default function Calendar() {
             title: 'Swag Order Finalization',
             description:
                 'Confirm designs and quantities for T-shirts, stickers, and goodies.',
-            startTime: new Date('2024-11-06T11:00:00'),
+            startTime: new Date('2025-02-05T10:00:00'),
+
             duration: 60,
             color: '#33A8FF',
         },

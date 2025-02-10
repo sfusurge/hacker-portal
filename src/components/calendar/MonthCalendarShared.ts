@@ -108,6 +108,18 @@ export function weeksInMonth(firstDay: Dayjs) {
     return Math.ceil((firstDay.daysInMonth() + firstDay.day()) / 7);
 }
 
+function getHour(t: Dayjs) {
+    if (t.minute() === 0) {
+        return t.format('h A');
+    } else {
+        return t.format('h:mm A');
+    }
+}
+
+export function getEventDurationString(event: InternalCalendarEventType) {
+    return `${event.startTime.format('ddd, MMM D')} - ${getHour(event.startTime)} to ${getHour(event.endTime)}`;
+}
+
 export type InternalCalendarEventType = Omit<CalendarEventType, 'startTime'> & {
     startTime: Dayjs;
     endTime: Dayjs;

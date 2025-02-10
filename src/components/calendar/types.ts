@@ -8,6 +8,7 @@ export const CalendarEvent = z.object({
     startTime: z.coerce.date(),
     duration: z.number().nonnegative(), // in minutes
     color: z.string(), // background color
+    location: z.string().optional(),
 });
 
 export type CalendarEventType = z.infer<typeof CalendarEvent>;

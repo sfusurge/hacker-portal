@@ -4,6 +4,7 @@ import { usersRouter } from './routers/usersRouter';
 import { hackathonsRouter } from './routers/hackathonsRouter';
 import { applicationsRouter } from './routers/applicationsRouter';
 import { sendEmailRouter } from './routers/sendEmailRouter';
+import { eventsRouter } from './routers/eventsRouter';
 
 export const appRouter = router({
     health_check: publicProcedure.query(() => {
@@ -12,9 +13,9 @@ export const appRouter = router({
 
     users: usersRouter,
     hackathons: hackathonsRouter,
-
     applications: applicationsRouter,
     emails: sendEmailRouter,
+    events: eventsRouter,
 });
 
 // For server side call in unit test
