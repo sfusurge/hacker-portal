@@ -1,28 +1,28 @@
 'use client';
-import { Calendar } from '@/components/ui/calendar';
-import { CalendarEventType } from './types';
-import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
-import dayjs from 'dayjs';
-import style from './MobileMonthCalendar.module.css';
-import { useAtom } from 'jotai';
-import {
-    getEventsOfMonth,
-    selectedDayAtom,
-    yearMonthDay,
-} from './MonthCalendarShared';
 
-import './MobileMonthCalendar.css';
-import { LinearTimeline } from './LinearTimeline';
+import dayjs from 'dayjs';
+import { useAtom } from 'jotai';
+
+import { useState, useMemo, useRef, useEffect, CSSProperties } from 'react';
+import style from './MobileMonthCalendar.module.css';
+import { LinearTimeline } from '../LinearTimeLine/LinearTimeline';
+import {
+    selectedDayAtom,
+    getEventsOfMonth,
+    yearMonthDay,
+    InternalCalendarEventType,
+    currentYearMonthAtom,
+} from '../MonthCalendarShared';
+import { CalendarEventType } from '../types';
+import { Calendar } from '@/components/ui/calendar';
 
 export function MobileMonthCalendar({
     events,
 }: {
-    events: CalendarEventType[];
+    events: InternalCalendarEventType[];
 }) {
-    const [[year, month], setYearMonth] = useState([
-        dayjs().year(),
-        dayjs().month(),
-    ]);
+    const [{ year, month }, updateYearMonth] = useAtom(currentYearMonthAtom);
+
     const [currMonth] = useMemo(
         () => [dayjs(new Date(year, month, 1))],
         [year, month]
@@ -40,8 +40,6 @@ export function MobileMonthCalendar({
     );
 
     useEffect(() => {
-        console.log('bleh', timelineRef.current);
-
         if (timelineRef.current) {
             setMaxHeight(window.innerHeight - timelineRef.current.offsetTop);
         }
@@ -64,7 +62,7 @@ export function MobileMonthCalendar({
                 }}
                 defaultMonth={currMonth.toDate()}
                 modifiers={{
-                    hasEvent: filteredEvents.map((e) => e.startTime),
+                    hasEvent: filteredEvents.map((e) => e.startTime.toDate()),
                 }}
                 modifiersClassNames={{
                     hasEvent: 'hasEvent',
@@ -78,7 +76,10 @@ export function MobileMonthCalendar({
                     }
                 }}
                 onMonthChange={(m) => {
-                    setYearMonth([m.getFullYear(), m.getMonth()]);
+                    updateYearMonth('set', {
+                        year: m.getFullYear(),
+                        month: m.getMonth(),
+                    });
                 }}
             />
 

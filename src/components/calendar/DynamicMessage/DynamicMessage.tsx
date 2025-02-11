@@ -52,14 +52,14 @@ export function DynamicMessage({
 }: Readonly<{
     children?: ReactNode;
     rootRef: HTMLDivElement;
-    parentRef: HTMLDivElement;
+    parentRef: Node;
     closeLabel: () => void;
 }>) {
     const margin = 12; // 12px margin between parent and message box
 
     const childRef = useRef<HTMLDivElement>(null);
 
-    const [width, height] = useDocumentSize();
+    const [width, height] = useWindowSize();
 
     const [top, left] = useMemo(() => {
         let calcTop = 0;
@@ -67,10 +67,11 @@ export function DynamicMessage({
         if (childRef.current && parentRef) {
             const root = rootRef.getBoundingClientRect();
             const child = childRef.current.getBoundingClientRect();
-            const parent = parentRef.getBoundingClientRect();
-
+            const parent = (
+                parentRef as HTMLDivElement
+            ).getBoundingClientRect();
             // try right side
-            if (parent.right + margin + child.width < width) {
+            if (parent.right + margin * 2 + child.width < width) {
                 // will fit in right side
 
                 calcTop = limitDimention(
@@ -81,7 +82,7 @@ export function DynamicMessage({
                     parent.height
                 );
                 calcLeft = parent.width + margin;
-            } else if (parent.top - margin - child.height > 0) {
+            } else if (parent.top - margin * 2 - child.height > 0) {
                 // try fitting top side
 
                 calcLeft = limitDimention(
@@ -92,7 +93,7 @@ export function DynamicMessage({
                     parent.width
                 );
                 calcTop = -(child.height + margin);
-            } else if (parent.bottom + margin + child.height > height) {
+            } else if (parent.bottom + margin * 2 + child.height > height) {
                 // fitting bottom side
                 calcLeft = limitDimention(
                     width,
@@ -120,7 +121,7 @@ export function DynamicMessage({
         }
 
         return [calcTop, calcLeft];
-    }, [width, height, childRef.current, parentRef]);
+    }, [width, height, childRef.current, parentRef, rootRef]);
 
     const clickedOutsideCallback = useCallback(
         (e: MouseEvent) => {
@@ -129,19 +130,23 @@ export function DynamicMessage({
                 !e.defaultPrevented
             ) {
                 // clicked outside
-                // e.preventDefault();
-                // e.stopImmediatePropagation();
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
+                document.removeEventListener(
+                    'click',
+                    clickedOutsideCallback,
+                    true
+                );
                 closeLabel();
             }
         },
         [closeLabel]
     );
     useEffect(() => {
-        document.addEventListener('click', clickedOutsideCallback, {
-            capture: true,
-        });
+        document.addEventListener('click', clickedOutsideCallback, true);
         return () => {
-            document.removeEventListener('click', clickedOutsideCallback);
+            document.removeEventListener('click', clickedOutsideCallback, true);
         };
     }, []);
 
@@ -180,17 +185,15 @@ export function DynamicMessage({
 /*
 https://stackoverflow.com/a/19014495/12471420
 */
-function useDocumentSize() {
+function useWindowSize() {
+    //  minus 20 to approx scrollbar size
     const [size, setSize] = useState([
-        document.documentElement.scrollWidth,
-        document.documentElement.scrollHeight,
+        window.innerWidth - 20,
+        window.innerHeight,
     ]);
     useLayoutEffect(() => {
         function updateSize() {
-            setSize([
-                document.documentElement.scrollWidth,
-                document.documentElement.scrollHeight,
-            ]);
+            setSize([window.innerWidth - 20, window.innerHeight]);
         }
         window.addEventListener('resize', updateSize);
         updateSize(); // update immediately for initial render

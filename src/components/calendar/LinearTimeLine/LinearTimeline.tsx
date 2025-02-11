@@ -1,4 +1,4 @@
-import { CalendarEventType } from './types';
+import { CalendarEventType } from '../types';
 
 import style from './LinearTimeline.module.css';
 import { CSSProperties, useEffect, useRef, useState } from 'react';
@@ -7,7 +7,8 @@ import {
     timeBetween,
     selectedDayAtom,
     yearMonthDay,
-} from './MonthCalendarShared';
+    InternalCalendarEventType,
+} from '../MonthCalendarShared';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import dayjs from 'dayjs';
 
@@ -18,7 +19,7 @@ export function LinearTimeline({
     events,
     styles,
 }: Readonly<{
-    events: CalendarEventType[];
+    events: InternalCalendarEventType[];
     styles?: CSSProperties | undefined;
 }>) {
     return <_LinearTimeline events={events} styles={styles}></_LinearTimeline>;
@@ -28,7 +29,7 @@ function _LinearTimeline({
     events,
     styles,
 }: {
-    events: CalendarEventType[];
+    events: InternalCalendarEventType[];
     styles: CSSProperties | undefined;
 }) {
     const eventsGroupedByDay = groupEventsByDay(events);
@@ -63,11 +64,11 @@ function _LinearTimeline({
 function TimeLineDayWrapper({
     eventsOfDay,
 }: {
-    eventsOfDay: CalendarEventType[];
+    eventsOfDay: InternalCalendarEventType[];
 }) {
     const [_selectedDay, set_SelectedDay] = useAtom(selectedDayAtom);
 
-    const dayId = yearMonthDay(dayjs(eventsOfDay[0].startTime));
+    const dayId = yearMonthDay(eventsOfDay[0].startTime);
 
     const ref = useRef<HTMLDivElement>(null);
 
@@ -88,7 +89,7 @@ function TimeLineDayWrapper({
                     set_SelectedDay(dayId);
                 }}
             >
-                {dayjs(eventsOfDay[0].startTime).format(DATE_FORMAT)}
+                {eventsOfDay[0].startTime.format(DATE_FORMAT)}
             </div>
 
             {eventsOfDay.map((item) => (
@@ -98,7 +99,7 @@ function TimeLineDayWrapper({
     );
 }
 
-function TimelineItem({ event }: { event: CalendarEventType }) {
+function TimelineItem({ event }: { event: InternalCalendarEventType }) {
     const [contentHeight, setContentHeight] = useState(0);
     const innerContentRef = useRef<HTMLDivElement | null>(null);
 
@@ -152,15 +153,15 @@ function TimelineItem({ event }: { event: CalendarEventType }) {
     );
 }
 
-function TimeLabel({ event }: { event: CalendarEventType }) {
+function TimeLabel({ event }: { event: InternalCalendarEventType }) {
     const currentTime = useAtomValue(currentTimeAtom);
 
     return (
         <span>
-            {timeBetween(currentTime, event.startTime, event.duration)
+            {timeBetween(currentTime, event.startTime, event.endTime)
                 ? '> '
                 : ''}
-            {dayjs(event.startTime).format('h:mm A')}
+            {event.startTime.format('h:mm A')}
         </span>
     );
 }

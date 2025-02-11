@@ -2,9 +2,13 @@
     /* to provide positioning reference for all children */
     position: relative;
 
-    width: 600px;
-    height: 600px;
+    width: 100%;
+    min-width: 800px;
+    min-height: 800px;
+    height: 100%;
     display: flex;
+
+    color: var(--text-regular);
 }
 
 .calendarContainer {
@@ -14,12 +18,10 @@
     display: flex;
     flex-direction: column;
 
-    --borderSpec: 1px solid grey;
+    --borderSpec: 1px solid var(--border-neutral-secondary);
     border: var(--borderSpec);
     border-radius: 10px;
     box-sizing: border-box;
-
-    overflow: hidden;
 }
 
 /* Week title row */
@@ -35,11 +37,10 @@
 .weekdayName {
     text-align: center;
     line-height: 24px;
-
+    font-size: 14px;
     flex: 1;
-
+    color: var(--text-secondary);
     box-sizing: border-box;
-    border-right: var(--borderSpec);
 }
 .weekdayName:last-child {
     border-color: transparent;
@@ -51,9 +52,23 @@
     flex-direction: row;
 
     flex: 1;
-
+    min-height: 0;
     box-sizing: border-box;
     border-bottom: var(--borderSpec);
+}
+
+/* janky corner rounding, with out the parent hiding overflows. */
+.monthDayRow:first-child > .monthDayItem:first-child {
+    border-top-left-radius: 10px;
+}
+.monthDayRow:first-child > .monthDayItem:last-child {
+    border-top-right-radius: 10px;
+}
+.monthDayRow:last-child > .monthDayItem:first-child {
+    border-bottom-left-radius: 10px;
+}
+.monthDayRow:last-child > .monthDayItem:last-child {
+    border-bottom-right-radius: 10px;
 }
 
 .monthDayRow:last-child {
@@ -64,14 +79,27 @@
     flex: 1;
     position: relative;
     /* min-width:0 makes the flex item not expand beyond space allocated by flex, somehow
-  https://stackoverflow.com/a/66689926
-  */
+    https://stackoverflow.com/a/66689926
+    */
     min-width: 0;
 
     box-sizing: border-box;
     border-right: var(--borderSpec);
 
+    background-color: var(--background-sunkan);
     transition: background-color 400ms ease-out;
+
+    display: flex;
+    flex-direction: column;
+
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+}
+
+.monthDayItem.disabled {
+    background-color: var(--background-neutral-secondary);
+    filter: brightness(0.7);
 }
 
 .monthDayItem:last-child {
@@ -79,33 +107,61 @@
 }
 
 .monthDayItem:hover {
-    background-color: #deeff9;
+    background-color: var(--neutral-800);
 }
 
 .monthDayItem.presentDay {
     background-color: #ffcccb;
 }
 
+.monthDayItem.extended {
+    position: relative;
+    z-index: 5;
+    background-color: var(--neutral-800);
+    border-bottom: var(--borderSpec);
+
+    /* max width/height provided by js to transition */
+    height: fit-content;
+    max-height: var(--maxHeight);
+}
+
 /* Stuff inside month item */
 
 /* Event item */
+
+.monthEventContainer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-height: 100%; /* make height not bigger than parent*/
+    gap: 0.2rem;
+    padding: 0.25rem;
+}
+
+.monthEventContainer.extended {
+    height: fit-content;
+    overflow: visible;
+}
+
 .monthEventItem {
     /* to make ::before work */
     position: relative;
 
-    margin: 0.25rem;
+    height: 24px;
+    min-height: 24px;
+    min-width: 100%;
+    width: auto;
 
-    height: 20px;
-    line-height: 20px;
+    line-height: 24px;
     font-size: 12px;
-    font-weight: bold;
     text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 
-    padding-left: 0.4rem;
+    padding: 0 0.4rem;
 
     border-radius: 4px;
-    background-color: white;
-    overflow: hidden;
+    background-color: transparent;
 
     cursor: pointer;
     user-select: none;
@@ -144,9 +200,15 @@
     border-left: 3px solid var(--eventBackground);
 }
 
-.monthEventItem:hover {
-    scale: 1.1;
-    filter: brightness(1.05);
+.monthEventItem:hover,
+.monthEventItem::before {
+    filter: brightness(1.2);
+}
+
+.monthEventItem:hover,
+.monthEventItem:active {
+    z-index: 5;
+    width: fit-content;
 }
 
 /* month day label */
@@ -157,12 +219,10 @@
     justify-content: center;
     align-items: center;
 
-    width: 20px;
-    height: 20px;
-
-    margin: 0.25rem;
-    padding: 0.1rem;
-    margin-left: auto;
+    width: 28px;
+    height: 28px;
+    min-height: 28px;
+    margin: 4px;
 
     font-size: 14px;
 
@@ -175,6 +235,5 @@
 }
 
 .monthDayLabel.selected {
-    color: white;
-    background-color: dodgerblue;
+    background-color: var(--brand-500);
 }

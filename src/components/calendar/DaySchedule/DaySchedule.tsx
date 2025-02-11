@@ -1,23 +1,29 @@
 'use client';
 
-import { CalendarEventType } from './types';
-import { CSSProperties, useMemo, useState } from 'react';
+import { CSSProperties, useMemo, useRef, useState } from 'react';
 import style from './DaySchedule.module.css';
 import {
     currentTimeAtom,
     groupEventsByDay,
+    InternalCalendarEventType,
     selectedEventAtom,
-} from './MonthCalendarShared';
+} from '../MonthCalendarShared';
 import dayjs, { Dayjs } from 'dayjs';
 import { useAtomValue, useSetAtom } from 'jotai';
 
+/**
+ * TODO
+ * add callbacks or atoms etc etc for selected CalendarEvents or other "events"
+ * @param param0
+ * @returns
+ */
 export function DaySchedule({
     events,
     startDate,
     days,
     minColumnWidth,
 }: {
-    events: CalendarEventType[];
+    events: InternalCalendarEventType[];
     startDate: Dayjs;
     days: number;
     minColumnWidth: number;
@@ -28,7 +34,7 @@ export function DaySchedule({
         return ProcessEventsForSchedule(
             groupEventsByDay(
                 events.filter((item) => {
-                    const startTime = dayjs(item.startTime);
+                    const startTime = item.startTime;
                     return (
                         startTime.isAfter(startDate) &&
                         startTime.isBefore(endDate)
@@ -81,14 +87,12 @@ export function DaySchedule({
                             })}
                         </div>
 
-                        {Object.entries(processedEvents).map((item) => {
+                        {Object.entries(processedEvents).map((item, index) => {
                             const [epochTimeString, columnsOfDay] = item;
                             const day = dayjs(parseInt(epochTimeString));
-                            console.log(day.date(), currentTime.date());
-
                             return (
                                 <div
-                                    key={epochTimeString}
+                                    key={`${epochTimeString}_${index}`}
                                     className={style.dayColumn}
                                 >
                                     <div className={style.header}>
@@ -140,9 +144,9 @@ export function DaySchedule({
  * @param events
  */
 function ProcessEventsForSchedule(eventsMaps: {
-    [id: number]: CalendarEventType[];
+    [id: number]: InternalCalendarEventType[];
 }) {
-    const out: { [id: string]: CalendarEventType[][] } = {};
+    const out: { [id: string]: InternalCalendarEventType[][] } = {};
 
     const events = Object.values(eventsMaps);
     const eventTimes = Object.keys(eventsMaps);
@@ -152,11 +156,13 @@ function ProcessEventsForSchedule(eventsMaps: {
             continue;
         }
 
-        const columns: CalendarEventType[][] = [[eventsOfDay.splice(0, 1)[0]]];
+        const columns: InternalCalendarEventType[][] = [
+            [eventsOfDay.splice(0, 1)[0]],
+        ];
 
         for (let e of eventsOfDay) {
             // handle the case when event runs past midnight
-            const eventTime = dayjs(e.startTime);
+            const eventTime = e.startTime;
             if (
                 !eventTime.add(e.duration, 'minute').isSame(eventTime, 'date')
             ) {
@@ -173,8 +179,7 @@ function ProcessEventsForSchedule(eventsMaps: {
                         const nextevent = { ...e };
                         nextevent.startTime = eventTime
                             .add(1, 'day')
-                            .startOf('day')
-                            .toDate();
+                            .startOf('day');
                         nextevent.duration = minutesAfterMidnight;
 
                         // hand off the later half of the event to the next day
@@ -190,12 +195,12 @@ function ProcessEventsForSchedule(eventsMaps: {
             for (const element of columns) {
                 const c = element;
                 const lastEvent = c.at(-1);
-                const lastEventTime = dayjs(lastEvent?.startTime).add(
+                const lastEventTime = lastEvent?.startTime.add(
                     lastEvent?.duration!,
                     'minute'
                 );
 
-                if (!lastEventTime.isAfter(eventTime)) {
+                if (!eventTime.isBefore(lastEventTime)) {
                     //current event does not overlap last event of this column
                     inserted = true;
                     c.push(e);
@@ -219,13 +224,13 @@ function DayEventItem({
     event,
     parentHeight,
 }: {
-    event: CalendarEventType;
+    event: InternalCalendarEventType;
     parentHeight: number;
 }) {
     const minutesInDay = 1440;
     const [top, height] = useMemo(() => {
         const minutesAtStart =
-            event.startTime.getHours() * 60 + event.startTime.getMinutes();
+            event.startTime.hour() * 60 + event.startTime.minute();
 
         return [
             (minutesAtStart / minutesInDay) * parentHeight,
@@ -235,13 +240,19 @@ function DayEventItem({
 
     const setSelectedEvent = useSetAtom(selectedEventAtom);
 
-    const eventTime = dayjs(event.startTime);
+    const eventTime = event.startTime;
+
+    const containerRef = useRef<HTMLDivElement>(null);
 
     return (
         <div
+            ref={containerRef}
             className={style.dayEvent}
             onClick={() => {
-                setSelectedEvent({ element: undefined, event });
+                setSelectedEvent({
+                    element: containerRef.current ?? undefined,
+                    event,
+                });
             }}
             style={
                 {
