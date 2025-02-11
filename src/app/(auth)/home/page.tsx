@@ -26,7 +26,7 @@ export default async function Home() {
         },
     };
 
-    const displayId = data.displayId;
+    const displayId = data.id.toString();
     const userQR: string = await generateQRCode(displayId, opts);
 
     const trpcClient = createCaller({});

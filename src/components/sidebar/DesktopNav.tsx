@@ -7,6 +7,7 @@ import { HomeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
+import { QrCodeIcon } from '@heroicons/react/24/solid';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
 import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
 import {
@@ -121,6 +122,18 @@ export default function DesktopNav({
                                 label="Review Application (Admin)"
                                 icon={<BellAlertIcon></BellAlertIcon>}
                                 iconAlt="Alerts logo"
+                                platform="desktop"
+                                active={false}
+                                disabled={false}
+                            ></NavLink>
+                        )}
+
+                        {initialData?.userRole === 'admin' && (
+                            <NavLink
+                                href="/qr/hackathon/"
+                                label="Hacker Checkin (Admin)"
+                                icon={<QrCodeIcon></QrCodeIcon>}
+                                iconAlt="QR logo"
                                 platform="desktop"
                                 active={false}
                                 disabled={false}

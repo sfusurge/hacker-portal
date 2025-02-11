@@ -9,13 +9,19 @@ import { BellAlertIcon } from '@heroicons/react/24/outline';
 
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { QrCodeIcon } from '@heroicons/react/24/solid';
+import { MergedUserData } from '@/app/(auth)/layout';
 
 interface MobileBottomNavProps {
     className?: string;
+    initialData?: MergedUserData;
 }
 
 const excludedUrls = ['/application'];
-export default function MobileBottomNav({ className }: MobileBottomNavProps) {
+export default function MobileBottomNav({
+    initialData,
+    className,
+}: MobileBottomNavProps) {
     const [hideBottomNav, setHideBottom] = useState(false);
 
     const url = usePathname();
@@ -76,6 +82,18 @@ export default function MobileBottomNav({ className }: MobileBottomNavProps) {
                         active={false}
                         disabled={true}
                     ></NavLink>
+
+                    {initialData?.userRole === 'admin' && (
+                        <NavLink
+                            href="/qr/hackathon/"
+                            label="Check-In"
+                            icon={<QrCodeIcon></QrCodeIcon>}
+                            iconAlt="QR logo"
+                            platform="mobile"
+                            active={false}
+                            disabled={false}
+                        ></NavLink>
+                    )}
                 </div>
             )}
         </>

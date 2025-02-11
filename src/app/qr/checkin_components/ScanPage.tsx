@@ -46,6 +46,10 @@ export default function ScanPage({
 }: ScanPageProps) {
     const hackers = trpc.users.getUsers.useQuery().data;
 
+    const [currentHacker, setCurrentHacker] = useState<
+        GetUsersOutput | undefined
+    >();
+
     //Manual input component state
     const [isManualCheckInOpen, setIsManualCheckInOpen] = useState(false);
     const toggleManualCheckIn = () => {
@@ -54,7 +58,8 @@ export default function ScanPage({
 
     //Check in component state
     const [isCheckInPrompt, setIsCheckInPrompt] = useState(false);
-    const toggleCheckInPrompt = (id: string) => {
+    const toggleCheckInPrompt = (id: string, user: any) => {
+        setCurrentHacker(user);
         setUserId(id);
         setIsCheckInPrompt(true);
     };
@@ -67,12 +72,19 @@ export default function ScanPage({
     //Invalid userid component state
     const [isInvalidUser, setIsInvalidUser] = useState(false);
 
-    const submitId = (id: string) => {
-        if (userList?.find((user) => user.displayId === id) === undefined) {
+    const submitId = (id: string, displayId: boolean) => {
+        let user;
+        if (displayId) {
+            user = userList?.find((user) => user.displayId === id);
+        } else {
+            user = userList?.find((user) => user.id.toString() === id);
+        }
+
+        if (!user) {
             setUserId(id);
             setIsInvalidUser(true);
         } else {
-            toggleCheckInPrompt(id);
+            toggleCheckInPrompt(id, user);
         }
     };
 
@@ -160,7 +172,7 @@ export default function ScanPage({
             <div className="relative w-full aspect-[3/4] min-h-screen md:max-w-sm">
                 <div className="absolute inset-0 overflow-hidden">
                     <Scanner
-                        onScan={(result) => submitId(result[0].rawValue)}
+                        onScan={(result) => submitId(result[0].rawValue, false)}
                         components={{
                             audio: false,
                             torch: false,
@@ -291,8 +303,9 @@ export default function ScanPage({
                     >
                         {secondState && (
                             <CheckinTicket
-                                userId={userId}
-                                userList={userList}
+                                // userId={userId}
+                                // userList={userList}
+                                currentHacker={currentHacker}
                                 checkInType={checkInType}
                                 specificMeal={specificMeal}
                                 specificWorkshop={specificWorkshop}

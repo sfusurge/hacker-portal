@@ -65,8 +65,7 @@ export default function QRCard({ userData, image }: QRCardProps) {
                         </h2>
                         <h3 className="text-white/70">
                             You’ve been assigned the following QR code, which
-                            you’ll need to check in to the hackathon and pick up
-                            meals throughout the event.
+                            you’ll need to check in to the hackathon.
                         </h3>
                     </div>
 

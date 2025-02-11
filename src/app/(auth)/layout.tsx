@@ -69,7 +69,10 @@ export default async function Layout({ children }: { children: ReactNode }) {
                     initialData={initialUserData}
                     className="top-0 left-0 fixed z-[100] md:hidden"
                 ></MobileTopNav>
-                <MobileBottomNav className="bottom-0 left-0 fixed z-[100] md:hidden"></MobileBottomNav>
+                <MobileBottomNav
+                    initialData={initialUserData}
+                    className="bottom-0 left-0 fixed z-[100] md:hidden"
+                ></MobileBottomNav>
                 <DesktopNav
                     initialData={initialUserData}
                     className="hidden md:block"

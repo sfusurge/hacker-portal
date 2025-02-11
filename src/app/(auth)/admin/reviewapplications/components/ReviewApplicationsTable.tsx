@@ -84,7 +84,7 @@ export default function ReviewApplicationsTable({
                 sendEmail.mutate({
                     type: type,
                     user: {
-                        id: rowData[i].id,
+                        displayId: rowData[i].id,
                         email: rowData[i].email,
                         name: rowData[i].name,
                     },

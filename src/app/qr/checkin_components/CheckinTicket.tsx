@@ -5,33 +5,42 @@ import generateQRCode, { QROptions } from '@/server/generateQRCode';
 import { useEffect, useState } from 'react';
 import CheckinButton from '@/app/qr/checkin_components/CheckInButton';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
+import { GetUsersOutput, trpc } from '@/trpc/client';
 
 type CheckInTicketProps = {
-    userId: string;
-    userList:
-        | {
-              displayId: string;
-              userId: number;
-              id: number;
-              firstName: string | null;
-              lastName: string | null;
-              phoneNumber: string | null;
-              email: string;
-              userRole: string;
-          }[]
-        | undefined;
+    // userId: string;
+    // userList:
+    //     | {
+    //           displayId: string;
+    //           userId: number;
+    //           id: number;
+    //           firstName: string | null;
+    //           lastName: string | null;
+    //           phoneNumber: string | null;
+    //           email: string;
+    //           userRole: string;
+    //       }[]
+    //     | undefined;
+    currentHacker: GetUsersOutput[0];
     checkInType: 'Event Check-in' | 'Meal Check-in' | 'Workshop Check-in'; // Fixed union type
     specificMeal: string;
     specificWorkshop: string;
 };
 
 export default function CheckinTicket({
-    userId,
-    userList,
+    // userId,
+    // userList,
+    currentHacker,
     checkInType,
 }: CheckInTicketProps) {
     const [QRCode, setQRCode] = useState('/qrfinder.svg');
-    const pfp = '/pfp_placeholder.png';
+    const pfp = '/favicon.png';
+    const submitCheckIn = trpc.checkin.checkIn.useMutation();
+    const getevents = trpc.events.getEvents.useQuery({
+        hackathonId: 1,
+    });
+
+    console.log(getevents);
 
     const [showToast, setShowToast] = useState(false);
 
@@ -67,9 +76,14 @@ export default function CheckinTicket({
         return formattedDateTime;
     };
 
-    const user = userList?.find((user) => user.id.toString() === userId);
-    const firstname = user ? user.firstName : null;
-    const lastname = user ? user.lastName : null;
+    // const user = userList?.find((user) => user.displayId === userId);
+    // const realId = user ? user.id : null;
+    // const firstname = user ? user.firstName : null;
+    // const lastname = user ? user.lastName : null;
+    const realId = currentHacker?.id;
+    const firstname = currentHacker.firstName;
+    const lastname = currentHacker.lastName;
+    const userId = currentHacker?.id.toString();
 
     const [checkInStatus, setCheckInStatus] = useState(false);
 
@@ -84,6 +98,10 @@ export default function CheckinTicket({
     }, [checkInStatus]);
 
     const toggleCheckInStatus = () => {
+        submitCheckIn.mutate({
+            userId: realId,
+            eventId: 1,
+        });
         handleShowToast();
         setCheckInStatus(!checkInStatus);
     };

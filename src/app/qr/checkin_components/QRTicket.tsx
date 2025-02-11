@@ -44,10 +44,12 @@ export default function QRTicket({
     return (
         <div className="fixed inset-0 flex md:items-center items-end justify-center bg-black bg-opacity-80 z-[150]">
             <div className="relative bg-neutral-900 border border-neutral-750 rounded-xl p-8 shadow-lg w-full max-w-lg md:max-w-2xl animate-fadeIn">
-                {/*<button*/}
-                {/*    className="absolute top-2 left-1/2 transform -translate-x-1/2 rounded-full transition-colors duration-200 block md:hidden">*/}
-                {/*    <div className="w-9 h-1.5 bg-neutral-700 rounded-full"></div>*/}
-                {/*</button>*/}
+                <button
+                    className="absolute top-2 left-1/2 transform -translate-x-1/2 rounded-full transition-colors duration-200 block md:hidden"
+                    onClick={closeTicket}
+                >
+                    <div className="w-9 h-1.5 bg-neutral-700 rounded-full"></div>
+                </button>
 
                 <button
                     className="absolute top-2 right-2 p-1 rounded-full md:hover:bg-neutral-800 transition-colors duration-200"

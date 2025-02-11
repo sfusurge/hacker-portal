@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 type ManualCheckInProps = {
     onClose: () => void;
-    toggleCheckInPrompt: (id: string) => void;
+    toggleCheckInPrompt: (id: string, displayId: boolean) => void;
 };
 
 export default function ManualCheckIn({
@@ -17,7 +17,7 @@ export default function ManualCheckIn({
     const isInputComplete = input.length === 6;
 
     const handleClick = () => {
-        toggleCheckInPrompt(input);
+        toggleCheckInPrompt(input, true);
     };
 
     return (
