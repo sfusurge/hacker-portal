@@ -14,6 +14,19 @@ import { databaseClient } from '@/db/client';
 import { and, asc, eq, getTableColumns } from 'drizzle-orm';
 import { checkIns } from '@/db/schema/checkIn';
 
+export interface CalendarEvent {
+    id: number;
+    checkedIn: boolean;
+    hasLongDescription: boolean;
+    startDate: Date;
+    endDate: Date;
+    hackathonId: number;
+    title: string;
+    color: string;
+    location: string;
+    description: string | null;
+}
+
 export const eventsRouter = router({
     createEvent: publicProcedure
         .input(insertEventSchema)
@@ -62,7 +75,7 @@ export const eventsRouter = router({
                     checkIn: {
                         userId: checkIns.userId,
                     },
-                    event: rest,
+                    event: eventsTable,
                 })
                 .from(eventsTable)
                 .leftJoin(
@@ -80,14 +93,19 @@ export const eventsRouter = router({
 
             console.log(`Returned rows: ${JSON.stringify(rows)}`);
 
-            const events = rows.map(({ checkIn, event }) => {
+            const events = rows.map(({ checkIn, event: _event }) => {
+                const { longDescription, ...event } = { ..._event };
                 return {
                     ...event,
                     checkedIn: checkIn != null,
+                    hasLongDescription:
+                        longDescription !== undefined &&
+                        longDescription !== null &&
+                        longDescription.length > 0,
                 };
             });
 
-            return events;
+            return events as CalendarEvent[];
         }),
 
     getEventLongDescription: publicProcedure

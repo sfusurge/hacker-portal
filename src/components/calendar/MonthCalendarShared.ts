@@ -1,8 +1,9 @@
 'use client';
 import { atom, useAtom } from 'jotai';
-import { CalendarEventType } from './types';
+
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/en-ca';
+import { CalendarEvent } from '@/server/routers/eventsRouter';
 dayjs.locale('en-ca'); // use canadian locale, always.
 
 // ===== start atoms =====
@@ -120,19 +121,27 @@ export function getEventDurationString(event: InternalCalendarEventType) {
     return `${event.startTime.format('ddd, MMM D')} - ${getHour(event.startTime)} to ${getHour(event.endTime)}`;
 }
 
-export type InternalCalendarEventType = Omit<CalendarEventType, 'startTime'> & {
+export type InternalCalendarEventType = Omit<
+    CalendarEvent,
+    'startDate' | 'endDate'
+> & {
     startTime: Dayjs;
     endTime: Dayjs;
+    duration: number;
 };
+
 export function DayjsifyEvents(
-    events: CalendarEventType[]
+    events: CalendarEvent[]
 ): InternalCalendarEventType[] {
     return events.map((e) => {
-        return {
+        const res = {
             ...e,
-            startTime: dayjs(e.startTime),
-            endTime: dayjs(e.startTime).add(e.duration, 'minute'),
+            startTime: dayjs(e.startDate),
+            endTime: dayjs(e.endDate),
+            duration: 0,
         };
+        res.duration = Math.ceil(res.startTime.diff(res.endTime, 'minute'));
+        return res;
     });
 }
 

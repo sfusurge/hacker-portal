@@ -40,7 +40,7 @@ export function DaySchedule({
                         startTime.isBefore(endDate)
                     );
                 }),
-                'timestamp'
+                dayjs(new Date(startDate.year(), startDate.month(), 1))
             )
         );
     }, [events]);

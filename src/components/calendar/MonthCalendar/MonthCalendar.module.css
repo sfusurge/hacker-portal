@@ -169,6 +169,8 @@
     transition:
         scale 250ms ease-out,
         filter 250ms ease-out;
+
+    background-color: black;
 }
 
 .monthEventItem::before {

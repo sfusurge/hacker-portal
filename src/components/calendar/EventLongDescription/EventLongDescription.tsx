@@ -8,6 +8,7 @@ import {
 import { ClockIcon, MapPinIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { trpc } from '@/trpc/client';
 import { useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 
 function MarkdownDisplay({ content }: { content: string }) {
     const markdownContent = useRemarkSync(content);
@@ -44,9 +45,41 @@ export function LongDescriptionModal({
 
     return (
         <>
-            <div className={style.backdrop} onClick={closeModal} />
-
-            <div className={style.longDescriptionContainer}>
+            <motion.div
+                initial={{
+                    opacity: 0.4,
+                }}
+                animate={{
+                    opacity: 0.6,
+                    transition: {
+                        ease: 'easeOut',
+                        duration: 0.2,
+                    },
+                }}
+                exit={{ opacity: 0 }}
+                className={style.backdrop}
+                onClick={closeModal}
+            />
+            <motion.div
+                initial={{
+                    x: '-50%',
+                    y: 'calc(-50% + 20px)',
+                    opacity: 0.8,
+                }}
+                animate={{
+                    x: '-50%',
+                    y: '-50%',
+                    opacity: 1,
+                    transition: {
+                        ease: 'easeOut',
+                        duration: 0.2,
+                    },
+                }}
+                exit={{
+                    opacity: 0,
+                }}
+                className={style.longDescriptionContainer}
+            >
                 <div className={style.contentHolder}>
                     <h1 className={style.title}>
                         {event.title}
@@ -72,7 +105,7 @@ export function LongDescriptionModal({
                         content={longDescription.data?.longDescription ?? 'N/A'}
                     />
                 </div>
-            </div>
+            </motion.div>
         </>
     );
 }

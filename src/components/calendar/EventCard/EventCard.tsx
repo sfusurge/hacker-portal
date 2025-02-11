@@ -5,7 +5,7 @@ import {
 } from '../MonthCalendarShared';
 import style from './EventCard.module.css';
 import { cn } from '@/lib/utils';
-import { ClockIcon } from '@heroicons/react/24/solid';
+import { ClockIcon, MapPinIcon } from '@heroicons/react/24/solid';
 import { Dayjs } from 'dayjs';
 
 export interface EventCardProps {
@@ -24,6 +24,14 @@ export function EventCard({ event, children }: EventCardProps) {
                 <ClockIcon style={{ width: '1rem' }} />{' '}
                 {getEventDurationString(event)}
             </span>
+
+            {event.location && (
+                <span className={style.line}>
+                    <MapPinIcon style={{ width: '24px' }} />
+                    {event.location}
+                </span>
+            )}
+
             {event.description && <span>{event.description}</span>}
             {isValidElement(children) && <div className={style.divider} />}
             <div

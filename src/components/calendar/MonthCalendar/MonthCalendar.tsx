@@ -1,7 +1,7 @@
 'use client';
 
 import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
-import { CalendarEventType, MonthInfoType } from '../types';
+import { MonthInfoType } from '../types';
 import dayjs, { Dayjs } from 'dayjs';
 import style from './MonthCalendar.module.css';
 import { atom, Provider, useAtom, useAtomValue, useSetAtom } from 'jotai';
@@ -17,11 +17,11 @@ import {
     weeksInMonth,
 } from '../MonthCalendarShared';
 import { DynamicMessage } from '../DynamicMessage/DynamicMessage';
-import { Card, CardContent, CardHeader } from '../../ui/card';
+
 import { AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { EventCard } from '../EventCard/EventCard';
-import { Button } from '@/components/ui/button';
+
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { LongDescriptionModal } from '../EventLongDescription/EventLongDescription';
 
@@ -121,14 +121,16 @@ export function MonthCalendarContent({
 
     return (
         <div>
-            {selectedEvent && selectedEvent.element && showMoreInfo && (
-                <LongDescriptionModal
-                    event={selectedEvent.event}
-                    onClose={() => {
-                        setShowMore(false);
-                    }}
-                />
-            )}
+            <AnimatePresence>
+                {selectedEvent && selectedEvent.element && showMoreInfo && (
+                    <LongDescriptionModal
+                        event={selectedEvent.event}
+                        onClose={() => {
+                            setShowMore(false);
+                        }}
+                    />
+                )}
+            </AnimatePresence>
             {/* Week day name row, such as Sun, Mon, Tues, ... */}
             <div className={style.weekdayNameRow}>
                 {monthInfo.weekdayNames.map((item, index) => (
