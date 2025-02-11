@@ -22,7 +22,8 @@ const navLinkVariants = cva(
                 error: 'text-danger-400 bg-danger-950/0 hover:bg-danger-950/60',
             },
             platform: {
-                desktop: 'h-11 flex-row text-base gap-3 px-3',
+                desktop:
+                    'h-11 flex-row text-base gap-3 px-3 justify-center lg:justify-start',
                 mobile: 'h-16 flex-col justify-center text-xs font-medium gap-2',
             },
             active: {
@@ -73,11 +74,18 @@ export function NavLink({
             )}
         >
             {icon && iconAlt && (
-                <div className={cn('h-6 w-6 transition-colors', iconStyles)}>
-                    {icon}
+                <div
+                    className={cn(
+                        'w-6 h-6 transition-colors flex items-center justify-center',
+                        iconStyles
+                    )}
+                >
+                    <div className="w-6 h-6 [&>svg]:w-full [&>svg]:h-full">
+                        {icon}
+                    </div>
                 </div>
             )}
-            <span className={cn('leading-none')}>{label}</span>
+            <span className={cn('leading-none lg:block hidden')}>{label}</span>
         </Link>
     );
 }

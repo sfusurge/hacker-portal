@@ -39,22 +39,24 @@ export default function DesktopNav({
     return (
         <div
             className={clsx(
-                'h-screen bg-neutral-950 p-5 max-w-[300px]',
+                'h-screen bg-neutral-950 p-5 lg:max-w-[300px] max-w-[80px] transition-all duration-200',
                 className
             )}
         >
             <div className="flex flex-col h-full justify-between">
                 <div className="flex flex-col gap-5">
-                    <div className="relative aspect-[5/3] rounded-xl overflow-hidden border border-neutral-800">
-                        <div className="absolute top-0 bg-neutral-900/50 backdrop-blur-lg flex flex-row gap-3 w-full p-2">
-                            <Image
-                                src="/login/sparkcheffrizz.webp"
-                                alt="Sparky wearing a chef\'s hat"
-                                width={36}
-                                height={36}
-                                className="rounded-lg w-8 h-8 pointer-events-none"
-                                onClick={returnHome}
-                            ></Image>
+                    <div className="relative aspect-[5/3] lg:aspect-[5/3] aspect-square rounded-xl overflow-hidden border border-neutral-800">
+                        <div className="absolute top-0 bg-neutral-900/50 backdrop-blur-lg flex flex-row gap-3 w-full p-2 lg:flex hidden items-center">
+                            <div className="w-9 h-9 flex-shrink-0 flex items-center justify-center">
+                                <Image
+                                    src="/login/sparkcheffrizz.webp"
+                                    alt="Sparky wearing a chef's hat"
+                                    width={36}
+                                    height={36}
+                                    className="rounded-lg w-full h-full object-cover pointer-events-none"
+                                    onClick={returnHome}
+                                ></Image>
+                            </div>
 
                             <div className="flex flex-col gap-2">
                                 <span className="text-sm font-medium leading-none text-white line-clamp-1">
@@ -63,6 +65,19 @@ export default function DesktopNav({
                                 <span className="text-sm leading-none text-white/60 line-clamp-1">
                                     February 14, 2025
                                 </span>
+                            </div>
+                        </div>
+
+                        <div className="absolute top-0 bg-neutral-900/50 backdrop-blur-lg w-full p-2 lg:hidden flex justify-center items-center">
+                            <div className="w-9 h-9 flex-shrink-0 flex items-center justify-center">
+                                <Image
+                                    src="/login/sparkcheffrizz.webp"
+                                    alt="Sparky wearing a chef's hat"
+                                    width={36}
+                                    height={36}
+                                    className="rounded-lg w-full h-full object-cover pointer-events-none"
+                                    onClick={returnHome}
+                                ></Image>
                             </div>
                         </div>
 
@@ -132,19 +147,21 @@ export default function DesktopNav({
                 <Popover>
                     <PopoverTrigger asChild>
                         <button className="group flex flex-row justify-between items-center hover:bg-neutral-750/30 rounded-lg px-3 py-2.5 gap-5 transition-colors">
-                            <div className="flex flex-row gap-4 items-center">
-                                <img
-                                    alt="Default avatar for the user"
-                                    src={
-                                        initialData?.image ??
-                                        '/sidebar/default-avatar.webpp'
-                                    }
-                                    width={32}
-                                    height={32}
-                                    className="rounded-full w-9 h-9"
-                                ></img>
+                            <div className="flex flex-row gap-4 items-center justify-center lg:justify-start w-full">
+                                <div className="w-9 h-9 flex-shrink-0">
+                                    <img
+                                        alt="Default avatar for the user"
+                                        src={
+                                            initialData?.image ??
+                                            '/sidebar/default-avatar.webpp'
+                                        }
+                                        width={36}
+                                        height={36}
+                                        className="rounded-full w-full h-full object-cover"
+                                    ></img>
+                                </div>
 
-                                <div className="flex flex-col gap-2">
+                                <div className="flex flex-col gap-2 lg:flex hidden">
                                     <span className="text-white font-medium text-base leading-tight text-left line-clamp-1">
                                         {initialData?.firstName}{' '}
                                         {initialData?.lastName}
@@ -160,7 +177,7 @@ export default function DesktopNav({
                             <ChevronRightIcon
                                 width={28}
                                 height={28}
-                                className="text-white/60 group-hover:text-white"
+                                className="text-white/60 group-hover:text-white lg:block hidden"
                             />
                         </button>
                     </PopoverTrigger>
