@@ -64,6 +64,7 @@ export const eventsRouter = router({
                 .select({
                     checkIn: {
                         userId: checkIns.userId,
+                        checkInTime: checkIns.checkInTime,
                     },
                     event: rest,
                 })
@@ -87,6 +88,7 @@ export const eventsRouter = router({
                 return {
                     ...event,
                     checkedIn: checkIn != null,
+                    checkInTime: checkIn?.checkInTime ?? null,
                 };
             });
 
