@@ -18,7 +18,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetDate }) => {
             new Date(targetDate).getTime() - new Date().getTime()
         );
 
-        if (difference > 0) {
+        if (difference >= 0) {
             return {
                 days: Math.floor(difference / (1000 * 60 * 60 * 24)),
                 hours: Math.floor((difference / (1000 * 60 * 60)) % 24),

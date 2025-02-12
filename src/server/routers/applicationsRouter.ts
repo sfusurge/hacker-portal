@@ -58,6 +58,9 @@ export const applicationsRouter = router({
     submitApplication: publicProcedure
         .input(insertApplicationSchema)
         .mutation(async ({ input }): Promise<SubmitApplicationResponse> => {
+            throw new InternalServerError(
+                'Applications are no longer accepted.'
+            ); // FIXME
             const session = await auth();
 
             const email = session?.user?.email;
