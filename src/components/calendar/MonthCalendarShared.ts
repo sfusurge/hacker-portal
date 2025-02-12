@@ -140,7 +140,9 @@ export function DayjsifyEvents(
             endTime: dayjs(e.endDate),
             duration: 0,
         };
-        res.duration = Math.ceil(res.startTime.diff(res.endTime, 'minute'));
+        res.duration = Math.abs(
+            Math.ceil(res.startTime.diff(res.endTime, 'minute'))
+        );
         return res;
     });
 }

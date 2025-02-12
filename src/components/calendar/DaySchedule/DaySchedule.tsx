@@ -9,7 +9,15 @@ import {
     selectedEventAtom,
 } from '../MonthCalendarShared';
 import dayjs, { Dayjs } from 'dayjs';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { DynamicMessage } from '../DynamicMessage/DynamicMessage';
+import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
+import { EventCard } from '../EventCard/EventCard';
+import { AnimatePresence } from 'motion/react';
+import { LongDescriptionModal } from '../EventLongDescription/EventLongDescription';
+
+// size of UI, shared
+const [rowHeight, headerHeight] = [90, 30];
 
 /**
  * TODO
@@ -28,7 +36,10 @@ export function DaySchedule({
     days: number;
     minColumnWidth: number;
 }) {
-    const endDate = startDate.clone().add(days, 'day').endOf('day');
+    const endDate = startDate
+        .clone()
+        .add(Math.max(0, days - 1), 'day')
+        .endOf('day');
 
     const processedEvents = useMemo(() => {
         return ProcessEventsForSchedule(
@@ -45,29 +56,79 @@ export function DaySchedule({
         );
     }, [events]);
 
-    const selectedEvent = useAtomValue(selectedEventAtom);
-
-    const [rowHeight, headerHeight] = [60, 24];
+    const rootRef = useRef<HTMLDivElement>(null);
+    const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
 
     const [containerHeight, setContainerHeight] = useState(0);
     const currentTime = useAtomValue(currentTimeAtom);
 
+    const [showMore, setShowMore] = useState(false);
+
     let zero = dayjs().hour(0);
     return (
-        <>
-            <h1>Selected event: {selectedEvent?.event.title}</h1>
+        <div>
+            <div
+                ref={rootRef}
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: 0,
+                    height: `${headerHeight}px`,
+                }}
+            >
+                {/* spacer to provide reference position for dynamic message*/}
+            </div>
+            <AnimatePresence>
+                {selectedEvent && selectedEvent.element && (
+                    <DynamicMessage
+                        rootRef={rootRef.current!}
+                        parentRef={selectedEvent.element}
+                        onClose={() => {
+                            setSelectedEvent(undefined);
+                        }}
+                    >
+                        <EventCard event={selectedEvent.event}>
+                            <SkewmorphicButton
+                                style={{
+                                    backgroundColor: 'var(--brand-700)',
+                                }}
+                                onClick={() => {
+                                    setShowMore(true);
+                                }}
+                            >
+                                More Info
+                            </SkewmorphicButton>
+                        </EventCard>
+                    </DynamicMessage>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {selectedEvent && selectedEvent.element && showMore && (
+                    <LongDescriptionModal
+                        event={selectedEvent.event}
+                        onClose={() => {
+                            setShowMore(false);
+                        }}
+                    />
+                )}
+            </AnimatePresence>
+
             <div
                 className={style.scheduleRootWrapper}
                 style={
                     {
                         '--rowHeight': `${rowHeight}px`,
                         '--minColWidth': `${minColumnWidth}px`,
+                        '--headerHeight': `${headerHeight}px`,
                     } as CSSProperties
                 }
             >
                 <div className={style.scheduleRoot}>
                     <div
                         ref={(ref) => {
+                            console.log(ref?.scrollHeight!, headerHeight);
                             setContainerHeight(
                                 ref?.scrollHeight! - headerHeight
                             );
@@ -75,7 +136,14 @@ export function DaySchedule({
                         className={style.scheduleContainer}
                     >
                         <div className={style.timeColumn}>
-                            <div className={style.header} />
+                            <div
+                                className={style.header}
+                                style={
+                                    {
+                                        '--headerHeight': `${headerHeight}px`,
+                                    } as CSSProperties
+                                }
+                            />
                             {[...Array(24).keys()].map((idx) => {
                                 const timeLabel = zero.format('h a'); //5 am
                                 zero = zero.add(1, 'hour');
@@ -95,7 +163,14 @@ export function DaySchedule({
                                     key={`${epochTimeString}_${index}`}
                                     className={style.dayColumn}
                                 >
-                                    <div className={style.header}>
+                                    <div
+                                        className={style.header}
+                                        style={
+                                            {
+                                                '--headerHeight': `${headerHeight}px`,
+                                            } as CSSProperties
+                                        }
+                                    >
                                         {day.format('MMM D, ddd')}
                                     </div>
                                     <div className={style.dayColumnContent}>
@@ -134,7 +209,7 @@ export function DaySchedule({
                     </div>
                 </div>
             </div>
-        </>
+        </div>
     );
 }
 
@@ -262,11 +337,15 @@ function DayEventItem({
                 } as CSSProperties
             }
         >
-            <span>{event.title}</span>
-            <span>
-                {eventTime.format('h:mm A')} -{' '}
-                {eventTime.add(event.duration, 'minutes').format('h:mm A')}
-            </span>
+            <div className={style.dayEventContent}>
+                <span className={style.dayEventLine}>{event.title}</span>
+                <span className={style.dayEventLine}>
+                    {`${eventTime.format('h:mm A')} - ${eventTime.add(event.duration, 'minutes').format('h:mm A')}`}
+                </span>
+                {event.location && (
+                    <span className={style.dayEventLine}>{event.location}</span>
+                )}
+            </div>
         </div>
     );
 }
