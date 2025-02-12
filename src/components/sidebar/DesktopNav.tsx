@@ -96,13 +96,13 @@ export default function DesktopNav({
                         ></NavLink>
 
                         <NavLink
-                            href="#"
+                            href="/calendar"
                             label="Schedule"
                             icon={<CalendarDaysIcon></CalendarDaysIcon>}
                             iconAlt="Schedule logo"
                             platform="desktop"
                             active={false}
-                            disabled={true}
+                            disabled={false}
                         ></NavLink>
 
                         <NavLink

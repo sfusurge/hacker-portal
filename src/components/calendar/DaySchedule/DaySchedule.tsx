@@ -4,6 +4,7 @@ import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import style from './DaySchedule.module.css';
 import {
     currentTimeAtom,
+    DayjsifyEvents,
     groupEventsByDay,
     InternalCalendarEventType,
     selectedEventAtom,
@@ -15,6 +16,7 @@ import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/Skewmorphic
 import { EventCard } from '../EventCard/EventCard';
 import { AnimatePresence } from 'motion/react';
 import { LongDescriptionModal } from '../EventLongDescription/EventLongDescription';
+import { CalendarEvent } from '@/server/routers/eventsRouter';
 
 // size of UI, shared
 const [rowHeight, headerHeight] = [90, 30];
@@ -26,12 +28,12 @@ const [rowHeight, headerHeight] = [90, 30];
  * @returns
  */
 export function DaySchedule({
-    events,
+    events: _events,
     startDate,
     days,
     minColumnWidth,
 }: {
-    events: InternalCalendarEventType[];
+    events: CalendarEvent[];
     startDate: Dayjs;
     days: number;
     minColumnWidth: number;
@@ -40,6 +42,8 @@ export function DaySchedule({
         .clone()
         .add(Math.max(0, days - 1), 'day')
         .endOf('day');
+
+    const events = useMemo(() => DayjsifyEvents(_events), [_events]);
 
     const processedEvents = useMemo(() => {
         return ProcessEventsForSchedule(
@@ -66,7 +70,11 @@ export function DaySchedule({
 
     let zero = dayjs().hour(0);
     return (
-        <div>
+        <div
+            style={{
+                height: '100%',
+            }}
+        >
             <div
                 ref={rootRef}
                 style={{
@@ -157,7 +165,7 @@ export function DaySchedule({
 
                         {Object.entries(processedEvents).map((item, index) => {
                             const [epochTimeString, columnsOfDay] = item;
-                            const day = columnsOfDay[0][0].startTime;
+                            const day = startDate.add(index, 'day');
                             return (
                                 <div
                                     key={`${epochTimeString}_${index}`}
@@ -294,6 +302,10 @@ function ProcessEventsForSchedule(eventsMaps: {
             }
         }
         out[eventTimes[i]] = columns;
+    }
+    // no empty returns
+    if (Object.keys(out).length === 0) {
+        return { 0: [[]] };
     }
 
     return out;

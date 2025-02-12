@@ -13,6 +13,7 @@ import { eq } from 'drizzle-orm';
 import { userDisplayIds } from '@/db/schema/userDisplayId';
 import { CacheClearer } from './CacheClear';
 import { redirect } from 'next/navigation';
+import { ClientAuthContext } from './ClientAuthContext';
 
 export async function getUserData() {
     const session = await auth();
@@ -60,6 +61,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
 
     return (
         <>
+            <ClientAuthContext userData={initialUserData}></ClientAuthContext>
             <div
                 className="bg-neutral-950  p-6 md:flex md:p-0 md:pr-5"
                 style={{ height: '100dvh' }}

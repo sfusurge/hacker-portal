@@ -1,0 +1,27 @@
+.drawerContainer {
+    position: fixed;
+    z-index: 100;
+    top: 0;
+    left: 100%;
+
+    height: 100dvh;
+    width: fit-content;
+    min-width: 300px;
+    max-width: 100dvw;
+
+    border-left: 2px solid var(--border-neutral-secondary);
+    padding: 2rem;
+    background-color: var(--background-neutral-secondary);
+    display: flex;
+    flex-direction: column;
+}
+
+.backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100dvw;
+    height: 100dvh;
+    background-color: black;
+    opacity: 0.6;
+}

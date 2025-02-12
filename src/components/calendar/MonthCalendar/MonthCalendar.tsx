@@ -24,6 +24,7 @@ import { EventCard } from '../EventCard/EventCard';
 
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { LongDescriptionModal } from '../EventLongDescription/EventLongDescription';
+import { CalendarEvent } from '@/server/routers/eventsRouter';
 
 function getMonthInfo(year: number, month: number): MonthInfoType {
     const target = dayjs(new Date(year, month, 1));
@@ -58,23 +59,14 @@ function range(count: number) {
     return out;
 }
 
-/**
- * TODOs
- * * Add handles/atoms to select current month, and starting month
- * * Add callbacks or atom for currently selected day, selected event
- *
- */
-export function MonthCalendar(props: { events: InternalCalendarEventType[] }) {
-    // just a wrapper to provide Provider for context.
-    return <MonthCalendarContent {...props}></MonthCalendarContent>;
-}
-
 const rowHeightAtom = atom(170);
-export function MonthCalendarContent({
-    events,
+export function MonthCalendar({
+    events: _events,
 }: {
-    events: InternalCalendarEventType[];
+    events: CalendarEvent[];
 }) {
+    const events = useMemo(() => DayjsifyEvents(_events), [_events]);
+
     const [{ year, month }, updateYearMonth] = useAtom(currentYearMonthAtom);
 
     const monthInfo = useMemo(() => {
@@ -120,7 +112,7 @@ export function MonthCalendarContent({
     const [showMoreInfo, setShowMore] = useState(false);
 
     return (
-        <div>
+        <div style={{ height: '100%', width: '100%' }}>
             <AnimatePresence>
                 {selectedEvent && selectedEvent.element && showMoreInfo && (
                     <LongDescriptionModal
@@ -132,17 +124,18 @@ export function MonthCalendarContent({
                 )}
             </AnimatePresence>
             {/* Week day name row, such as Sun, Mon, Tues, ... */}
-            <div className={style.weekdayNameRow}>
-                {monthInfo.weekdayNames.map((item, index) => (
-                    <span key={item} className={style.weekdayName}>
-                        {item}
-                    </span>
-                ))}
-            </div>
+
             <div ref={renderRootRef} className={style.calendarRenderRoot}>
                 {/* AnimatePresence needed for framer motion, needs to always exist and wrap content. 
                 (As in, content is toggling within AnimatePresence. TODO: Refactor into it's own component)
                 */}
+                <div className={style.weekdayNameRow}>
+                    {monthInfo.weekdayNames.map((item, index) => (
+                        <span key={item} className={style.weekdayName}>
+                            {item}
+                        </span>
+                    ))}
+                </div>
 
                 <AnimatePresence>
                     {selectedEvent && selectedEvent.element && (

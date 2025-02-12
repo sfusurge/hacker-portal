@@ -58,13 +58,13 @@ export default function MobileBottomNav({ className }: MobileBottomNavProps) {
                     ></NavLink>
 
                     <NavLink
-                        href="#"
+                        href="/calendar"
                         label="Schedule"
                         icon={<CalendarDaysIcon></CalendarDaysIcon>}
                         iconAlt="Schedule logo"
                         platform="mobile"
                         active={false}
-                        disabled={true}
+                        disabled={false}
                     ></NavLink>
 
                     <NavLink
