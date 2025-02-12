@@ -153,7 +153,8 @@ export default function ScanPage({
 
     useEffect(() => {
         if (dropdownOption === 'Meal Check-in') {
-            toggleMeals();
+            // toggleMeals();
+            redirect('/qr/meal/D1L');
         } else if (dropdownOption === 'Workshop Check-in') {
             toggleWorkshops();
         } else if (dropdownOption === 'Event Check-in') {
@@ -240,13 +241,13 @@ export default function ScanPage({
                                     <FireIcon className="size-6" />
                                     Meal Check-in
                                 </DropdownMenuRadioItem>
-                                <DropdownMenuRadioItem
-                                    value="Workshop Check-in"
-                                    className="gap-2"
-                                >
-                                    <WrenchScrewdriverIcon className="size-6" />
-                                    Workshop Check-in
-                                </DropdownMenuRadioItem>
+                                {/*<DropdownMenuRadioItem*/}
+                                {/*    value="Workshop Check-in"*/}
+                                {/*    className="gap-2"*/}
+                                {/*>*/}
+                                {/*    <WrenchScrewdriverIcon className="size-6" />*/}
+                                {/*    Workshop Check-in*/}
+                                {/*</DropdownMenuRadioItem>*/}
                             </DropdownMenuRadioGroup>
                         </DropdownMenuContent>
                     </DropdownMenu>

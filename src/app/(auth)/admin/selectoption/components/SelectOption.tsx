@@ -37,8 +37,9 @@ export default function SelectOption({ setCheckInType }: SelectOptionProps) {
                     </div>
                 </div>
 
-                <div className="self-stretch w-96 h-52 px-6 pb-10 bg-neutral-900 flex-col justify-start items-start flex overflow-hidden">
-                    <div className="self-stretch h-40 flex-col justify-start items-start gap-4 flex">
+                {/*<div className="self-stretch w-96 h-52 px-6 pb-10 bg-neutral-900 flex-col justify-start items-start flex overflow-hidden">*/}
+                <div className="self-stretch w-96 px-6 pb-10 bg-neutral-900 flex-col justify-start items-start flex overflow-hidden">
+                    <div className="self-stretch flex-col justify-start items-start gap-4 flex">
                         <button
                             className="self-stretch px-1 py-2 bg-neutral-800/60 rounded-lg border border-neutral-600/60 justify-center items-center inline-flex overflow-hidden"
                             onClick={SetEvent}
@@ -63,17 +64,17 @@ export default function SelectOption({ setCheckInType }: SelectOptionProps) {
                                 </div>
                             </div>
                         </button>
-                        <button
-                            className="self-stretch px-1 py-2 bg-neutral-800/60 rounded-lg border border-neutral-600/60 justify-center items-center inline-flex overflow-hidden"
-                            onClick={SetWorkshop}
-                        >
-                            <div className="px-3 justify-center items-center flex">
-                                <div className="text-white text-base flex flex-row gap-2">
-                                    <WrenchScrewdriverIcon className="size-6" />
-                                    Workshop check in
-                                </div>
-                            </div>
-                        </button>
+                        {/*<button*/}
+                        {/*    className="self-stretch px-1 py-2 bg-neutral-800/60 rounded-lg border border-neutral-600/60 justify-center items-center inline-flex overflow-hidden"*/}
+                        {/*    onClick={SetWorkshop}*/}
+                        {/*>*/}
+                        {/*    <div className="px-3 justify-center items-center flex">*/}
+                        {/*        <div className="text-white text-base flex flex-row gap-2">*/}
+                        {/*            <WrenchScrewdriverIcon className="size-6" />*/}
+                        {/*            Workshop check in*/}
+                        {/*        </div>*/}
+                        {/*    </div>*/}
+                        {/*</button>*/}
                     </div>
                 </div>
             </div>

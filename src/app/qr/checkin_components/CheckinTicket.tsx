@@ -8,102 +8,68 @@ import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { GetUsersOutput, trpc } from '@/trpc/client';
 
 type CheckInTicketProps = {
-    // userId: string;
-    // userList:
-    //     | {
-    //           displayId: string;
-    //           userId: number;
-    //           id: number;
-    //           firstName: string | null;
-    //           lastName: string | null;
-    //           phoneNumber: string | null;
-    //           email: string;
-    //           userRole: string;
-    //       }[]
-    //     | undefined;
     currentHacker: GetUsersOutput[0];
-    checkInType: 'Event Check-in' | 'Meal Check-in' | 'Workshop Check-in'; // Fixed union type
+    checkInType: 'Event Check-in' | 'Meal Check-in' | 'Workshop Check-in';
     specificMeal: string;
     specificWorkshop: string;
 };
 
 export default function CheckinTicket({
-    // userId,
-    // userList,
     currentHacker,
     checkInType,
 }: CheckInTicketProps) {
+    const typeConverter = (checkInType: string) => {
+        if (checkInType === 'Event Check-in') {
+            return 4;
+        } else if (checkInType === 'Meal Check-in') {
+            return 2;
+        } else {
+            return 0;
+        }
+    };
+    const eventId = typeConverter(checkInType);
+
     const [QRCode, setQRCode] = useState('/qrfinder.svg');
     const pfp = '/favicon.png';
-    const submitCheckIn = trpc.checkin.checkIn.useMutation();
-    const getevents = trpc.events.getEvents.useQuery({
-        hackathonId: 1,
-    });
 
-    console.log(getevents);
+    const submitCheckIn = trpc.checkIn.checkIn.useMutation();
+    const isCheckedIn = trpc.checkIn.isCheckedIn;
 
     const [showToast, setShowToast] = useState(false);
+    const [checkInStatus, setCheckInStatus] = useState(false);
+    const [checkInTime, setCheckInTime] = useState('N/A');
 
     const handleShowToast = () => {
-        setCheckInTime(createFormattedDateTime);
         setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000); // Hide after 3 seconds
+        setTimeout(() => setShowToast(false), 3000);
     };
 
-    const createFormattedDateTime = () => {
-        const now = new Date();
-
-        const optionsDate: Intl.DateTimeFormatOptions = {
-            month: 'long',
-            day: 'numeric',
-        };
-        const formattedDate = new Intl.DateTimeFormat(
-            'en-US',
-            optionsDate
-        ).format(now);
-
-        const optionsTime: Intl.DateTimeFormatOptions = {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-        };
-        const formattedTime = new Intl.DateTimeFormat(
-            'en-US',
-            optionsTime
-        ).format(now);
-
-        const formattedDateTime = `${formattedDate} at ${formattedTime}`;
-        return formattedDateTime;
-    };
-
-    // const user = userList?.find((user) => user.displayId === userId);
-    // const realId = user ? user.id : null;
-    // const firstname = user ? user.firstName : null;
-    // const lastname = user ? user.lastName : null;
     const realId = currentHacker?.id;
     const firstname = currentHacker.firstName;
     const lastname = currentHacker.lastName;
     const userId = currentHacker?.id.toString();
 
-    const [checkInStatus, setCheckInStatus] = useState(false);
-
-    const [checkInTime, setCheckInTime] = useState('N/A');
-
-    const [checkInStatusText, setCheckInStatusText] = useState('RSVPd');
+    const checked = isCheckedIn.useQuery({ userId: realId, eventId: eventId });
 
     useEffect(() => {
-        if (checkInStatus) {
-            setCheckInStatusText('Checked In');
+        if (checked.data) {
+            setCheckInStatus(checked.data.isCheckedIn);
+            if (checked.data.isCheckedIn && checked.data.checkInTime) {
+                setCheckInTime(
+                    new Date(checked.data.checkInTime).toLocaleString()
+                );
+            }
         }
-    }, [checkInStatus]);
+    }, [checked.data]);
 
-    const toggleCheckInStatus = () => {
-        submitCheckIn.mutate({
+    const toggleCheckInStatus = async () => {
+        await submitCheckIn.mutateAsync({
             userId: realId,
-            eventId: 1,
+            eventId: eventId,
         });
+
         handleShowToast();
-        setCheckInStatus(!checkInStatus);
+        checked.refetch();
     };
 
     useEffect(() => {
@@ -119,21 +85,20 @@ export default function CheckinTicket({
             const code = await generateQRCode(id, opts);
             setQRCode(code);
         };
-        fetchQRcode(userId);
+        if (userId) fetchQRcode(userId);
     }, [userId]);
 
     return (
         <div className="flex flex-col justify-center items-center overflow-hidden relative gap-2">
-            {/*Toast, needs redoing, this method sucks*/}
-            <div
-                className={`p-4 w-96 bg-success-950/30 text-white rounded-lg shadow-lg 
-                    transition-transform duration-300 ease-in-out transform ${showToast ? 'translate-x-0' : 'translate-x-96 md:invisible'}`}
-            >
-                <div className="flex flex-row items-center gap-2">
-                    <CheckCircleIcon className="size-6 fill-success-500" />
-                    <header>Successfully checked in!</header>
+            {/* Toast Notification */}
+            {showToast && (
+                <div className="p-4 w-96 bg-success-950/30 text-white rounded-lg shadow-lg transition-transform duration-300 ease-in-out transform">
+                    <div className="flex flex-row items-center gap-2">
+                        <CheckCircleIcon className="size-6 fill-success-500" />
+                        <header>Successfully checked in!</header>
+                    </div>
                 </div>
-            </div>
+            )}
 
             <div className="md:max-w-sm min-w-screen flex-col justify-start items-start inline-flex bg-neutral-900 rounded-tl-xl rounded-xl border-t border-neutral-600/30">
                 <div className="flex-col justify-center items-center inline-flex gap-4">
@@ -176,10 +141,16 @@ export default function CheckinTicket({
                                 </div>
                                 <div className="h-7 justify-end items-center gap-3 flex">
                                     <div
-                                        className={`px-3 rounded-lg justify-center items-center gap-1 flex overflow-hidden" ${checkInStatus ? 'bg-success-950 text-success-300' : 'bg-brand-950 text-white/60'}`}
+                                        className={`px-3 rounded-lg justify-center items-center gap-1 flex overflow-hidden ${
+                                            checkInStatus
+                                                ? 'bg-success-950 text-success-300'
+                                                : 'bg-brand-950 text-white/60'
+                                        }`}
                                     >
                                         <div className="text-center text-sm font-medium">
-                                            {checkInStatusText}
+                                            {checkInStatus
+                                                ? 'Checked In'
+                                                : 'Not Checked In'}
                                         </div>
                                     </div>
                                 </div>

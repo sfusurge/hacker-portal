@@ -8,6 +8,8 @@ import { Conditional } from '@/lib/Conditional';
 import QRTicket from '@/app/qr/checkin_components/QRTicket';
 import { GetUsersOutput } from '@/trpc/client';
 import { cn } from '@/lib/utils';
+import SelectOption from '@/app/(auth)/admin/selectoption/components/SelectOption';
+import SelectMeal from '@/app/qr/checkin_components/SelectMeal';
 
 type QRCardProps = {
     userData:
@@ -93,15 +95,23 @@ export default function QRCard({ userData, image }: QRCardProps) {
                     </section>
                 </div>
             </div>
-            <Conditional showWhen={isTicketOpen}>
-                <QRTicket
-                    userId={userData?.displayId}
-                    firstName={userData?.firstName}
-                    lastName={userData?.lastName}
-                    image={image}
-                    closeTicket={handleCloseTicket}
-                />
-            </Conditional>
+
+            <div
+                className={`fixed w-full inset-0 z-[200] bg-black bg-opacity-80 transition-opacity duration-300 ${isTicketOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            >
+                <div
+                    className={`fixed bottom-0 left-0 right-0 h-[100vh] transition-transform duration-300 transform ${isTicketOpen ? 'translate-y-0' : 'translate-y-full'}`}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <QRTicket
+                        userId={userData?.displayId}
+                        firstName={userData?.firstName}
+                        lastName={userData?.lastName}
+                        image={image}
+                        closeTicket={handleCloseTicket}
+                    />
+                </div>
+            </div>
         </>
     );
 }

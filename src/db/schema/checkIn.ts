@@ -8,6 +8,7 @@ import {
 import { createInsertSchema } from 'drizzle-zod';
 import { hackathons } from './hackathons';
 import { users } from './users';
+import { z } from 'zod';
 
 export const checkIns = pgTable(
     'check_ins',
@@ -34,4 +35,9 @@ export const checkIns = pgTable(
 
 export const insertCheckInSchema = createInsertSchema(checkIns).omit({
     checkInTime: true,
+});
+
+export const isCheckInSchema = z.object({
+    userId: z.number().int(),
+    eventId: z.number().int(),
 });
