@@ -22,8 +22,7 @@ const navLinkVariants = cva(
                 error: 'text-danger-400 bg-danger-950/0 hover:bg-danger-950/60',
             },
             platform: {
-                desktop:
-                    'h-11 flex-row text-base gap-3 px-3 justify-center lg:justify-start',
+                desktop: 'h-11 flex-row text-base gap-3 px-3',
                 mobile: 'h-16 flex-col justify-center text-xs font-medium gap-2',
             },
             active: {
@@ -59,6 +58,8 @@ export function NavLink({
         'text-white/18': disabled && icon,
     });
 
+    const isCollapsed = className?.includes('justify-center');
+
     return (
         <Link
             href={href}
@@ -66,11 +67,12 @@ export function NavLink({
             className={cn(
                 navLinkVariants({
                     variant,
-                    className,
                     platform,
                     active,
                     disabled,
-                })
+                }),
+                isCollapsed ? 'justify-center' : 'justify-start',
+                className
             )}
         >
             {icon && iconAlt && (
@@ -85,7 +87,7 @@ export function NavLink({
                     </div>
                 </div>
             )}
-            <span className={cn('leading-none lg:block hidden')}>{label}</span>
+            {!isCollapsed && <span className="leading-none">{label}</span>}
         </Link>
     );
 }
