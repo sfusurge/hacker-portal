@@ -15,7 +15,7 @@ import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
 import { MergedUserData } from '@/app/(auth)/layout';
 import { signOut } from 'next-auth/react';
 import { redirect, usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface DesktopNavProps {
     className?: string;
@@ -27,6 +27,28 @@ export default function DesktopNav({
     initialData,
 }: DesktopNavProps) {
     const [manuallyCollapsed, setManuallyCollapsed] = useState(false);
+    const [isLargeScreen, setIsLargeScreen] = useState(true);
+
+    useEffect(() => {
+        // Initial check
+        const checkScreenSize = () => {
+            const isLarge = window.innerWidth >= 1024;
+            setIsLargeScreen(isLarge);
+            if (!isLarge) {
+                setManuallyCollapsed(true);
+            }
+        };
+
+        // Check on mount
+        checkScreenSize();
+
+        // Add resize listener
+        window.addEventListener('resize', checkScreenSize);
+
+        // Cleanup
+        return () => window.removeEventListener('resize', checkScreenSize);
+    }, []);
+
     const returnHome = () => {
         redirect('/home');
     };
@@ -193,21 +215,25 @@ export default function DesktopNav({
                 )}
             >
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setManuallyCollapsed(!manuallyCollapsed)}
-                        className="flex bg-neutral-950 rounded-lg p-1.5 hover:bg-neutral-900 transition-colors"
-                        aria-label={
-                            manuallyCollapsed
-                                ? 'Expand sidebar'
-                                : 'Collapse sidebar'
-                        }
-                    >
-                        {manuallyCollapsed ? (
-                            <ChevronDoubleRightIcon className="w-5 h-5 text-white/60 hover:text-white" />
-                        ) : (
-                            <ChevronDoubleLeftIcon className="w-5 h-5 text-white/60 hover:text-white" />
-                        )}
-                    </button>
+                    {isLargeScreen && (
+                        <button
+                            onClick={() =>
+                                setManuallyCollapsed(!manuallyCollapsed)
+                            }
+                            className="flex bg-neutral-950 rounded-lg p-1.5 hover:bg-neutral-900 transition-colors"
+                            aria-label={
+                                manuallyCollapsed
+                                    ? 'Expand sidebar'
+                                    : 'Collapse sidebar'
+                            }
+                        >
+                            {manuallyCollapsed ? (
+                                <ChevronDoubleRightIcon className="w-5 h-5 text-white/60 hover:text-white" />
+                            ) : (
+                                <ChevronDoubleLeftIcon className="w-5 h-5 text-white/60 hover:text-white" />
+                            )}
+                        </button>
+                    )}
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 flex-shrink-0">
