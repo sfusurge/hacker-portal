@@ -66,6 +66,9 @@ export function ClientCalendarPage({
                     Current
                 </Button>
                 <Button
+                    size="compact"
+                    hierarchy="primary"
+                    variant="brand"
                     onClick={() => {
                         updateYearMonth('+1 month');
                     }}
