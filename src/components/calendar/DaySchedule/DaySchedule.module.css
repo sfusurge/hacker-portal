@@ -66,7 +66,7 @@
 
     position: sticky;
     top: 0;
-    z-index: 3;
+    z-index: 30;
     background-color: var(--neutral-900);
 
     display: flex;
@@ -123,6 +123,8 @@
 
     padding: 0.2rem 0.5rem;
     background-color: var(--neutral-800);
+
+    transition: filter 400ms ease-out;
 }
 
 .dayEvent::after {
@@ -152,9 +154,16 @@
 }
 
 .dayEvent:hover,
-.dayEvent:focus {
+.dayEvent:active {
     min-height: fit-content;
     z-index: 10;
+}
+
+.dayEvent:hover {
+    filter: brightness(1.2);
+}
+.dayEvent:active {
+    filter: brightness(0.9);
 }
 
 .dayEventContent {
@@ -181,23 +190,8 @@
     z-index: 2;
 
     width: 100%;
-    border-bottom: 2px solid red;
+    border-bottom: 2px solid #ff4d4d99;
     box-sizing: border-box;
-
-    opacity: 0.6;
-}
-
-.timeMarker::after {
-    content: '';
-
-    position: absolute;
-    top: 0.5px;
-    right: 0;
-
-    border: 0.25rem solid transparent;
-
-    border-right: 0.25rem solid red;
-    transform: translate(0, -50%);
 }
 
 .timeMarker::before {
@@ -209,5 +203,18 @@
     z-index: -1;
 
     width: 500%;
-    border-bottom: 2px red dashed;
+    border-bottom: 2px #ff4d4d99 dashed;
+}
+
+.timeText {
+    border-radius: 4px;
+    font-size: 12px;
+    color: white;
+    background-color: #ff4d4d;
+    padding: 0.1rem 0.2rem;
+
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
 }

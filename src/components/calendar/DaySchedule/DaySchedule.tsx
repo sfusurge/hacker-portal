@@ -1,6 +1,6 @@
 'use client';
 
-import { CSSProperties, useMemo, useRef, useState } from 'react';
+import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import style from './DaySchedule.module.css';
 import {
     currentTimeAtom,
@@ -157,7 +157,7 @@ export function DaySchedule({
 
                         {Object.entries(processedEvents).map((item, index) => {
                             const [epochTimeString, columnsOfDay] = item;
-                            const day = dayjs(parseInt(epochTimeString));
+                            const day = columnsOfDay[0][0].startTime;
                             return (
                                 <div
                                     key={`${epochTimeString}_${index}`}
@@ -175,7 +175,11 @@ export function DaySchedule({
                                     </div>
                                     <div className={style.dayColumnContent}>
                                         {containerHeight > 0 &&
-                                            day.isSame(currentTime, 'day') && (
+                                            (true ||
+                                                day.isSame(
+                                                    currentTime,
+                                                    'day'
+                                                )) && (
                                                 <TimelineMarker
                                                     parentHeight={
                                                         containerHeight
@@ -351,7 +355,7 @@ function DayEventItem({
 }
 
 function TimelineMarker({ parentHeight }: { parentHeight: number }) {
-    const currentTime = useAtomValue(currentTimeAtom);
+    const [currentTime, setCurrentTime] = useAtom(currentTimeAtom);
 
     const minutesInDay = 1440;
     const top = useMemo(() => {
@@ -361,14 +365,34 @@ function TimelineMarker({ parentHeight }: { parentHeight: number }) {
         );
     }, [currentTime]);
 
+    const markerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentTime(dayjs());
+        }, 60000);
+        setCurrentTime(dayjs());
+        markerRef.current!.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+            inline: 'center',
+        });
+        return () => {
+            clearInterval(interval);
+        };
+    }, []);
+
     return (
         <div
+            ref={markerRef}
             style={
                 {
                     '--top': `${Math.round(top)}px`,
                 } as CSSProperties
             }
             className={style.timeMarker}
-        ></div>
+        >
+            <div className={style.timeText}>{currentTime.format('hh:mm')}</div>
+        </div>
     );
 }
