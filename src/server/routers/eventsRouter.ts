@@ -7,8 +7,8 @@ import {
     updateEventSchema,
 } from '@/db/schema/events';
 import { publicProcedure, router } from '../trpc';
-import { InternalServerError, UnAuthorizedError } from '../exceptions';
-import { getUserData } from '@/app/(auth)/layout';
+import { InternalServerError, UnauthorizedError } from '../exceptions';
+import { getUserData } from '@/app/(auth)/home/layout';
 import { UserRoleEnum } from '@/db/schema/users';
 import { databaseClient } from '@/db/client';
 import { and, asc, eq, getTableColumns } from 'drizzle-orm';
@@ -22,7 +22,10 @@ export const eventsRouter = router({
 
             // Only admin can create events
             if (user?.userRole !== UserRoleEnum.admin) {
-                throw new UnAuthorizedError(user?.email, user?.userRole);
+                throw new UnauthorizedError({
+                    email: user?.email,
+                    role: user?.userRole,
+                });
             }
 
             console.log(`Inserting ${JSON.stringify(input)}`);
@@ -61,6 +64,7 @@ export const eventsRouter = router({
                 .select({
                     checkIn: {
                         userId: checkIns.userId,
+                        checkInTime: checkIns.checkInTime,
                     },
                     event: rest,
                 })
@@ -84,6 +88,7 @@ export const eventsRouter = router({
                 return {
                     ...event,
                     checkedIn: checkIn != null,
+                    checkInTime: checkIn?.checkInTime ?? null,
                 };
             });
 

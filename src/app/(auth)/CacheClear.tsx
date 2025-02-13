@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { MergedUserData } from './layout';
+import { MergedUserData } from './home/layout';
 
 export function CacheClearer({ initialData }: { initialData: MergedUserData }) {
     useEffect(() => {

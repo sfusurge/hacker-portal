@@ -1,9 +1,11 @@
 import { createCallerFactory, publicProcedure, router } from './trpc';
 
-import { usersRouter } from './routers/usersRouter';
-import { hackathonsRouter } from './routers/hackathonsRouter';
 import { applicationsRouter } from './routers/applicationsRouter';
+import { checkInRouter } from './routers/checkInRouter';
+import { eventsRouter } from './routers/eventsRouter';
+import { hackathonsRouter } from './routers/hackathonsRouter';
 import { sendEmailRouter } from './routers/sendEmailRouter';
+import { usersRouter } from './routers/usersRouter';
 
 export const appRouter = router({
     health_check: publicProcedure.query(() => {
@@ -15,6 +17,9 @@ export const appRouter = router({
 
     applications: applicationsRouter,
     emails: sendEmailRouter,
+
+    events: eventsRouter,
+    checkIn: checkInRouter,
 });
 
 // For server side call in unit test
