@@ -5,7 +5,6 @@ import { checkInRouter } from './routers/checkInRouter';
 import { eventsRouter } from './routers/eventsRouter';
 import { hackathonsRouter } from './routers/hackathonsRouter';
 import { sendEmailRouter } from './routers/sendEmailRouter';
-import { eventsRouter } from './routers/eventsRouter';
 import { usersRouter } from './routers/usersRouter';
 
 export const appRouter = router({
