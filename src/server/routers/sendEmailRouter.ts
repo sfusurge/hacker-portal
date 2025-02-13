@@ -23,7 +23,7 @@ export const sendEmailRouter = router({
                     const opts = {
                         margin: 1,
                         scale: 10,
-                        color: { dark: '#000000', light: '#0000' },
+                        color: { dark: '#000000', light: '#FFFFFF' },
                     };
 
                     let mailOptions = {};
@@ -64,8 +64,9 @@ export const sendEmailRouter = router({
                             mailOptions = {
                                 from: env.SENDINGEMAIL,
                                 to: input.user.email,
-                                subject: '🎉 StormHacks Information',
-                                text: 'Welcome to JourneyHacks',
+                                subject:
+                                    "🎉 You've been accepted to JourneyHacks!!",
+                                text: 'Surge is excited to welcome you as a hacker to JourneyHacks!',
                                 attachments: [
                                     {
                                         filename: 'qr.png',

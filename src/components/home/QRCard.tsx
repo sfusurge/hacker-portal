@@ -31,7 +31,7 @@ type QRCardProps = {
 export default function QRCard({ userData, image }: QRCardProps) {
     const [isTicketOpen, setIsTicketOpen] = useState(false);
     const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
-    console.log(userData);
+    // console.log(userData);
     const userId = userData.id;
     const handleOpenTicket = () => {
         setIsTicketOpen(true);
@@ -46,9 +46,6 @@ export default function QRCard({ userData, image }: QRCardProps) {
     const handleCloseWithdrawPrompt = () => {
         setIsWithdrawPromptOpen(false);
     };
-
-    const updateApplication =
-        trpc.applications.updateApplicationStatus.useMutation();
 
     const handleWithdraw = () => {
         handleOpenWithdrawPrompt();

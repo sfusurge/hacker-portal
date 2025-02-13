@@ -44,10 +44,11 @@ export default function ApplicationCard({
     let status;
     const [questionSetExists, setQuestionSetExists] = useState(false);
 
-    const getApplicationStatus = trpc.applications.getApplications.useQuery({
-        hackathonId: 1,
-        userId: userData.userId,
-    });
+    const getApplicationStatus =
+        trpc.applications.getApplicationStatus.useQuery({
+            hackathonId: 1,
+            userId: userData.userId,
+        });
 
     const applicationSubmitted =
         trpc.applications.userAlreadySubmitted.useQuery({});
@@ -61,7 +62,8 @@ export default function ApplicationCard({
     }, []);
 
     if (applicationSubmitted.data) {
-        status = getApplicationStatus.data[0].currentStatus;
+        //console.log( getApplicationStatus.data)
+        status = getApplicationStatus.data.currentStatus;
     } else if (questionSetExists) {
         status = 'In Progress';
     } else {

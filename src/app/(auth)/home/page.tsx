@@ -49,7 +49,6 @@ export default async function Home() {
 
             <div className="grid gap-6 md:gap-8 pb-6 md:pb-0 xl:grid-cols-2">
                 <ApplicationCard userData={data} image={userQR} />
-                {/*<QRCard userData={data} image={userQR} />*/}
                 <DiscordCard />
             </div>
         </div>

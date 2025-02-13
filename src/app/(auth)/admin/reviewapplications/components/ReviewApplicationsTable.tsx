@@ -81,10 +81,11 @@ export default function ReviewApplicationsTable({
                 email: row.original.email,
             }));
             for (let i = 0; i < rowData.length; i++) {
+                //console.log(rowData[i]);
                 sendEmail.mutate({
                     type: type,
                     user: {
-                        displayId: rowData[i].id,
+                        id: rowData[i].id,
                         email: rowData[i].email,
                         name: rowData[i].name,
                     },

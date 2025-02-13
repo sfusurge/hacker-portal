@@ -19,7 +19,11 @@ interface MobileBottomNavProps {
     initialData?: MergedUserData;
 }
 
-const excludedUrls = ['/application'];
+const excludedUrls = [
+    '/application',
+    '/admin/qr/meal/D1L',
+    '/admin/qr/hackathon',
+];
 export default function MobileBottomNav({
     initialData,
     className,
