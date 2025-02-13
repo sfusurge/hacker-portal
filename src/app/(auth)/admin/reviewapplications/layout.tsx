@@ -11,9 +11,10 @@ import { databaseClient } from '@/db/client';
 import { users } from '@/db/schema/users';
 import { eq } from 'drizzle-orm';
 import { userDisplayIds } from '@/db/schema/userDisplayId';
-import { CacheClearer } from './CacheClear';
+import { CacheClearer } from '@/app/(auth)/CacheClear';
 import { redirect } from 'next/navigation';
 import { ClientAuthContext } from './ClientAuthContext';
+import { headers } from 'next/headers';
 
 export async function getUserData() {
     const session = await auth();
@@ -71,7 +72,10 @@ export default async function Layout({ children }: { children: ReactNode }) {
                     initialData={initialUserData}
                     className="top-0 left-0 fixed z-[100] md:hidden"
                 ></MobileTopNav>
-                <MobileBottomNav className="bottom-0 left-0 fixed z-[100] md:hidden"></MobileBottomNav>
+                <MobileBottomNav
+                    initialData={initialUserData}
+                    className="bottom-0 left-0 fixed z-[100] md:hidden"
+                ></MobileBottomNav>
                 <DesktopNav
                     initialData={initialUserData}
                     className="hidden md:block"

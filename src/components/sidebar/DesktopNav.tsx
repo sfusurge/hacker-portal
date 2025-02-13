@@ -7,8 +7,10 @@ import { HomeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
+import { QrCodeIcon } from '@heroicons/react/24/solid';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
 import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
+import { EnvelopeIcon } from '@heroicons/react/24/outline';
 import {
     Popover,
     PopoverContent,
@@ -16,7 +18,7 @@ import {
 } from '@/components/ui/popover';
 
 import * as PopoverPrimitive from '@radix-ui/react-popover';
-import { MergedUserData } from '@/app/(auth)/layout';
+import { MergedUserData } from '@/app/(auth)/home/layout';
 
 import { signOut } from 'next-auth/react';
 import { redirect, usePathname } from 'next/navigation';
@@ -119,8 +121,20 @@ export default function DesktopNav({
                             <NavLink
                                 href="/admin/reviewapplications"
                                 label="Review Application (Admin)"
-                                icon={<BellAlertIcon></BellAlertIcon>}
+                                icon={<EnvelopeIcon></EnvelopeIcon>}
                                 iconAlt="Alerts logo"
+                                platform="desktop"
+                                active={false}
+                                disabled={false}
+                            ></NavLink>
+                        )}
+
+                        {initialData?.userRole === 'admin' && (
+                            <NavLink
+                                href="/admin/qr/hackathon/"
+                                label="Hacker Checkin (Admin)"
+                                icon={<QrCodeIcon></QrCodeIcon>}
+                                iconAlt="QR logo"
                                 platform="desktop"
                                 active={false}
                                 disabled={false}

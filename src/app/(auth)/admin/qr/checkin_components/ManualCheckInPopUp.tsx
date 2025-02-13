@@ -1,11 +1,11 @@
 'use client';
 
-import InputOtp from '@/app/qr/checkin_components/six_digit_input-otp';
+import InputOtp from '@/app/(auth)/admin/qr/checkin_components/six_digit_input-otp';
 import { useState } from 'react';
 
 type ManualCheckInProps = {
     onClose: () => void;
-    toggleCheckInPrompt: (id: string) => void;
+    toggleCheckInPrompt: (id: string, displayId: boolean) => void;
 };
 
 export default function ManualCheckIn({
@@ -17,7 +17,7 @@ export default function ManualCheckIn({
     const isInputComplete = input.length === 6;
 
     const handleClick = () => {
-        toggleCheckInPrompt(input);
+        toggleCheckInPrompt(input, true);
     };
 
     return (

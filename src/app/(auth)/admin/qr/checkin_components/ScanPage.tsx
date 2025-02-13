@@ -12,7 +12,7 @@ import {
 } from '@heroicons/react/24/solid';
 import Link from 'next/link';
 import Image from 'next/image';
-import ManualCheckIn from '@/app/qr/checkin_components/ManualCheckInPopUp';
+import ManualCheckIn from '@/app/(auth)/admin/qr/checkin_components/ManualCheckInPopUp';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -21,11 +21,11 @@ import {
     DropdownMenuRadioItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import CheckinTicket from '@/app/qr/checkin_components/CheckinTicket';
+import CheckinTicket from '@/app/(auth)/admin/qr/checkin_components/CheckinTicket';
 import { GetUsersOutput, trpc } from '@/trpc/client';
-import UserNotFound from '@/app/qr/checkin_components/UserNotFound';
-import SelectMeal from '@/app/qr/checkin_components/SelectMeal';
-import SelectWorkshop from '@/app/qr/checkin_components/SelectWorkshop';
+import UserNotFound from '@/app/(auth)/admin/qr/checkin_components/UserNotFound';
+import SelectMeal from '@/app/(auth)/admin/qr/checkin_components/SelectMeal';
+import SelectWorkshop from '@/app/(auth)/admin/qr/checkin_components/SelectWorkshop';
 import { redirect } from 'next/navigation';
 
 type ScanPageProps = {
@@ -44,7 +44,11 @@ export default function ScanPage({
     workshop,
     workshopType,
 }: ScanPageProps) {
-    const us = trpc.users.getUsers.useQuery().data;
+    const hackers = trpc.users.getUsers.useQuery().data;
+
+    const [currentHacker, setCurrentHacker] = useState<
+        GetUsersOutput | undefined
+    >();
 
     //Manual input component state
     const [isManualCheckInOpen, setIsManualCheckInOpen] = useState(false);
@@ -54,7 +58,8 @@ export default function ScanPage({
 
     //Check in component state
     const [isCheckInPrompt, setIsCheckInPrompt] = useState(false);
-    const toggleCheckInPrompt = (id: string) => {
+    const toggleCheckInPrompt = (id: string, user: any) => {
+        setCurrentHacker(user);
         setUserId(id);
         setIsCheckInPrompt(true);
     };
@@ -67,12 +72,19 @@ export default function ScanPage({
     //Invalid userid component state
     const [isInvalidUser, setIsInvalidUser] = useState(false);
 
-    const submitId = (id: string) => {
-        if (userList?.find((user) => user.id.toString() === id) === undefined) {
+    const submitId = (id: string, displayId: boolean) => {
+        let user;
+        if (displayId) {
+            user = userList?.find((user) => user.displayId === id);
+        } else {
+            user = userList?.find((user) => user.id.toString() === id);
+        }
+
+        if (!user) {
             setUserId(id);
             setIsInvalidUser(true);
         } else {
-            toggleCheckInPrompt(id);
+            toggleCheckInPrompt(id, user);
         }
     };
 
@@ -136,16 +148,17 @@ export default function ScanPage({
     }, [event, meal, mealType, workshop, workshopType]);
 
     useEffect(() => {
-        setUserList(us);
+        setUserList(hackers);
     });
 
     useEffect(() => {
         if (dropdownOption === 'Meal Check-in') {
-            toggleMeals();
+            // toggleMeals();
+            redirect('/admin/qr/meal/D1L');
         } else if (dropdownOption === 'Workshop Check-in') {
             toggleWorkshops();
         } else if (dropdownOption === 'Event Check-in') {
-            redirect('/qr/hackathon');
+            redirect('/admin/qr/hackathon');
         }
     }, [dropdownOption]);
 
@@ -160,7 +173,7 @@ export default function ScanPage({
             <div className="relative w-full aspect-[3/4] min-h-screen md:max-w-sm">
                 <div className="absolute inset-0 overflow-hidden">
                     <Scanner
-                        onScan={(result) => submitId(result[0].rawValue)}
+                        onScan={(result) => submitId(result[0].rawValue, false)}
                         components={{
                             audio: false,
                             torch: false,
@@ -185,7 +198,7 @@ export default function ScanPage({
                 />
 
                 <div className="absolute top-4 left-4">
-                    <Link href="/">
+                    <Link href="/home">
                         <button className="text-white flex flex-row gap-x-2 hover:shadow-lg transition-shadow duration-300">
                             <ChevronLeftIcon className="size-6" />
                             <p className="">Back</p>
@@ -198,12 +211,14 @@ export default function ScanPage({
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
-                                className="text-white/80 text-sm flex flex-row gap-x-2 hover:shadow-lg hover:bg-neutral-900 hover:text-white/80
-                        bg-neutral-900/50 items-center min-w-40 justify-center border border-neutral-750 pt-2 pb-2
-                        rounded-full transition-shadow duration-300"
+                                className="flexhover:shadow-lg hover:bg-neutral-900 hover:text-white/80
+                                bg-neutral-900/50 items-center justify-center border border-neutral-750 pl-0.5 pr-0.5
+                                rounded-full transition-shadow duration-300"
                             >
-                                {checkInType}
-                                <ChevronDownIcon className="size-6" />
+                                <div className="flex flex-row gap-x-2">
+                                    {checkInType}
+                                    <ChevronDownIcon className="size-6" />
+                                </div>
                             </Button>
                         </DropdownMenuTrigger>
 
@@ -226,13 +241,13 @@ export default function ScanPage({
                                     <FireIcon className="size-6" />
                                     Meal Check-in
                                 </DropdownMenuRadioItem>
-                                <DropdownMenuRadioItem
-                                    value="Workshop Check-in"
-                                    className="gap-2"
-                                >
-                                    <WrenchScrewdriverIcon className="size-6" />
-                                    Workshop Check-in
-                                </DropdownMenuRadioItem>
+                                {/*<DropdownMenuRadioItem*/}
+                                {/*    value="Workshop Check-in"*/}
+                                {/*    className="gap-2"*/}
+                                {/*>*/}
+                                {/*    <WrenchScrewdriverIcon className="size-6" />*/}
+                                {/*    Workshop Check-in*/}
+                                {/*</DropdownMenuRadioItem>*/}
                             </DropdownMenuRadioGroup>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -289,8 +304,9 @@ export default function ScanPage({
                     >
                         {secondState && (
                             <CheckinTicket
-                                userId={userId}
-                                userList={userList}
+                                // userId={userId}
+                                // userList={userList}
+                                currentHacker={currentHacker}
                                 checkInType={checkInType}
                                 specificMeal={specificMeal}
                                 specificWorkshop={specificWorkshop}

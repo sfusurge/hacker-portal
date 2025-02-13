@@ -16,7 +16,8 @@ export type StatusEnum =
     | 'Awaiting Review'
     | 'Accepted'
     | 'Declined'
-    | 'Wait List';
+    | 'Wait List'
+    | 'Withdrawn';
 
 export const applicationStatusEnum = pgEnum('application_status', [
     'N/A',
@@ -24,6 +25,7 @@ export const applicationStatusEnum = pgEnum('application_status', [
     'Accepted',
     'Declined',
     'Wait List',
+    'Withdrawn',
 ]);
 
 export const applications = pgTable(
@@ -71,9 +73,21 @@ export const updateApplicationStatusSchema = z.object({
     hackathonId: z.number().int(),
     userId: z.number().int(),
     status: z
-        .enum(['Accepted', 'Declined', 'Awaiting Review', 'Wait List'])
+        .enum([
+            'Accepted',
+            'Declined',
+            'Awaiting Review',
+            'Wait List',
+            'Withdrawn',
+        ])
         .optional(),
     pendingStatus: z
-        .enum(['Accepted', 'Declined', 'Awaiting Review', 'Wait List'])
+        .enum([
+            'Accepted',
+            'Declined',
+            'Awaiting Review',
+            'Wait List',
+            'Withdrawn',
+        ])
         .optional(),
 });
