@@ -76,6 +76,7 @@ body {
     /* ==== SEMANTICS ==== */
 
     /* Text */
+    --text-regular: #f5f5f5;
     --text-brand-primary: var(--brand-400);
     --text-secondary: rgba(255, 255, 255, 0.6);
     --text-tertiary: rgba(255, 255, 255, 0.3);
@@ -89,9 +90,8 @@ body {
     --background-brand-focus: var(--brand-950_60);
     --background-brand-secondary: var(--brand-900);
     --background-neutral-secondary: var(--neutral-800_60);
-
-    /* outline */
-    --outline-brand-primary: var(--brand-500);
+    --background-sunkan: var(--neutral-925) /* outline */
+        --outline-brand-primary: var(--brand-500);
 
     /* ==== END SEMANTICS ====  */
 

@@ -196,6 +196,53 @@ export const applicationsRouter = router({
 
             return application;
         }),
+    getApplicationStatus: publicProcedure
+        .input(
+            z.object({
+                hackathonId: z.number().int(),
+                userId: z.number().int().optional(),
+            })
+        )
+        .query(async ({ input }) => {
+            const session = await auth();
+            let userId: number;
+
+            if (input.userId) {
+                userId = input.userId;
+            } else {
+                const email = session?.user?.email;
+                if (!email) {
+                    throw new InternalServerError('User not authenticated');
+                }
+
+                const user = await databaseClient
+                    .select({ id: users.id })
+                    .from(users)
+                    .where(eq(users.email, email))
+                    .limit(1);
+
+                if (user.length === 0) {
+                    throw new InternalServerError('User not found');
+                }
+                userId = user[0].id;
+            }
+
+            const [application] = await databaseClient
+                .select({
+                    currentStatus: applications.currentStatus,
+                    pendingStatus: applications.pendingStatus,
+                })
+                .from(applications)
+                .where(
+                    and(
+                        eq(applications.hackathonId, input.hackathonId),
+                        eq(applications.userId, userId)
+                    )
+                )
+                .limit(1);
+
+            return application ?? null;
+        }),
 });
 
 export type ApplicationsRouter = typeof applicationsRouter;
