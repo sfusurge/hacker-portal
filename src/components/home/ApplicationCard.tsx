@@ -114,6 +114,7 @@ export default function ApplicationCard({
                             hierarchy="primary"
                             className="hidden md:block"
                             onClick={handleClick}
+                            disabled
                         >
                             Apply
                         </Button>
@@ -125,6 +126,7 @@ export default function ApplicationCard({
                             hierarchy="primary"
                             className="hidden md:block"
                             onClick={handleClick}
+                            disabled
                         >
                             Continue
                         </Button>
@@ -180,6 +182,7 @@ export default function ApplicationCard({
                             variant="brand"
                             hierarchy="primary"
                             onClick={() => redirect('/application')}
+                            disabled
                         >
                             Begin application
                         </Button>
@@ -190,6 +193,7 @@ export default function ApplicationCard({
                             variant="caution"
                             hierarchy="primary"
                             onClick={() => redirect('/application')}
+                            disabled
                         >
                             Continue application
                         </Button>
