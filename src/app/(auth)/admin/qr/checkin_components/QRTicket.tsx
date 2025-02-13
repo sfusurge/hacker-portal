@@ -108,7 +108,7 @@ export default function QRTicket({
                                 <Image
                                     src={pfp}
                                     alt="Profile Picture"
-                                    width={44}
+                                    th={44}
                                     height={44}
                                     className="rounded-full"
                                 />
