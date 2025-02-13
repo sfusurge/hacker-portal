@@ -15,7 +15,7 @@ import WithdrawCard from '@/components/home/WithdrawCard';
 export type AppStatus =
     | 'Not Yet Started'
     | 'In Progress'
-    | 'Submitted – Under Review'
+    | 'Awaiting Review'
     | 'Accepted – Awaiting RSVP'
     | "Accepted and RSVP'd"
     | 'Rejected'
@@ -71,7 +71,7 @@ export default function ApplicationCard({
     const leadingIconStyles = cn({
         'text-white': status === 'Not Yet Started',
         'text-caution-500': status === 'In Progress',
-        'text-yellow-500': status === 'Submitted – Under Review',
+        'text-yellow-500': status === 'Awaiting Review',
     });
 
     const handleClick = () => {
@@ -102,8 +102,7 @@ export default function ApplicationCard({
                 </div>
                 <Conditional
                     showWhen={
-                        status !== 'Submitted – Under Review' &&
-                        status !== 'Rejected'
+                        status !== 'Awaiting Review' && status !== 'Rejected'
                     }
                 >
                     <Conditional showWhen={status === 'Not Yet Started'}>
@@ -147,7 +146,7 @@ export default function ApplicationCard({
                     </div>
                     <CountdownTimer targetDate="2025-02-11T07:59:00.000Z" />
                 </Conditional>
-                <Conditional showWhen={status === 'Submitted – Under Review'}>
+                <Conditional showWhen={status === 'Awaiting Review'}>
                     <Image
                         src="/login/application-review.webp"
                         width={1537}
@@ -168,10 +167,7 @@ export default function ApplicationCard({
             </div>
 
             <Conditional
-                showWhen={
-                    status !== 'Submitted – Under Review' &&
-                    status !== 'Rejected'
-                }
+                showWhen={status !== 'Awaiting Review' && status !== 'Rejected'}
             >
                 <div className="p-5 border-t border-t-neutral-600/30 md:hidden *:w-full">
                     <Conditional showWhen={status === 'Not Yet Started'}>
