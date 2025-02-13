@@ -10,9 +10,9 @@ import { BellAlertIcon } from '@heroicons/react/24/outline';
 import { redirect, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { QrCodeIcon } from '@heroicons/react/24/solid';
-import { MergedUserData } from '@/app/(auth)/layout';
+import { MergedUserData } from '@/app/(auth)/home/layout';
 import SelectOption from '@/app/(auth)/admin/selectoption/components/SelectOption';
-import SelectMeal from '@/app/qr/checkin_components/SelectMeal';
+import SelectMeal from '@/app/(auth)/admin/qr/checkin_components/SelectMeal';
 
 interface MobileBottomNavProps {
     className?: string;
@@ -69,11 +69,11 @@ export default function MobileBottomNav({
 
     useEffect(() => {
         if (checkInType === 'Meal Check-in') {
-            redirect('/qr/meal/D1L');
+            redirect('/admin/qr/meal/D1L');
             // } else if (checkInType === 'Workshop Check-in') {
             //     toggleWorkshops();
         } else if (checkInType === 'Hackathon Check-in') {
-            redirect('/qr/hackathon');
+            redirect('/admin/qr/hackathon');
         }
     }, [checkInType]);
 

@@ -8,7 +8,7 @@ import {
 } from '@/db/schema/events';
 import { publicProcedure, router } from '../trpc';
 import { InternalServerError, UnauthorizedError } from '../exceptions';
-import { getUserData } from '@/app/(auth)/layout';
+import { getUserData } from '@/app/(auth)/home/layout';
 import { UserRoleEnum } from '@/db/schema/users';
 import { databaseClient } from '@/db/client';
 import { and, asc, eq, getTableColumns } from 'drizzle-orm';

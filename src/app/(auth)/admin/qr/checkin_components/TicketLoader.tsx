@@ -1,6 +1,6 @@
 'use client';
 
-import QRTicket from '@/app/qr/checkin_components/QRTicket';
+import QRTicket from '@/app/(auth)/admin/qr/checkin_components/QRTicket';
 import { GetUsersOutput, trpc } from '@/trpc/client';
 
 type TicketLoaderProps = {

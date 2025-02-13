@@ -11,8 +11,9 @@ import { databaseClient } from '@/db/client';
 import { users } from '@/db/schema/users';
 import { eq } from 'drizzle-orm';
 import { userDisplayIds } from '@/db/schema/userDisplayId';
-import { CacheClearer } from './CacheClear';
+import { CacheClearer } from '@/app/(auth)/CacheClear';
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 
 export async function getUserData() {
     const session = await auth();

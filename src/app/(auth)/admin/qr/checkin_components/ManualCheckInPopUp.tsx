@@ -1,6 +1,6 @@
 'use client';
 
-import InputOtp from '@/app/qr/checkin_components/six_digit_input-otp';
+import InputOtp from '@/app/(auth)/admin/qr/checkin_components/six_digit_input-otp';
 import { useState } from 'react';
 
 type ManualCheckInProps = {

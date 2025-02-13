@@ -2,13 +2,13 @@ import { redirect } from 'next/navigation';
 
 export default function SelectMeal() {
     const setDayOneLunch = () => {
-        redirect('/qr/meal/D1L');
+        redirect('/admin/qr/meal/D1L');
     };
     const setDayOneDinner = () => {
-        redirect('/qr/meal/D1D');
+        redirect('/admin/qr/meal/D1D');
     };
     const setDayTwoLunch = () => {
-        redirect('/qr/meal/D2D');
+        redirect('/admin/qr/meal/D2D');
     };
 
     return (

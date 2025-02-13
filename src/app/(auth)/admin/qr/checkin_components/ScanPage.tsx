@@ -12,7 +12,7 @@ import {
 } from '@heroicons/react/24/solid';
 import Link from 'next/link';
 import Image from 'next/image';
-import ManualCheckIn from '@/app/qr/checkin_components/ManualCheckInPopUp';
+import ManualCheckIn from '@/app/(auth)/admin/qr/checkin_components/ManualCheckInPopUp';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -21,11 +21,11 @@ import {
     DropdownMenuRadioItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import CheckinTicket from '@/app/qr/checkin_components/CheckinTicket';
+import CheckinTicket from '@/app/(auth)/admin/qr/checkin_components/CheckinTicket';
 import { GetUsersOutput, trpc } from '@/trpc/client';
-import UserNotFound from '@/app/qr/checkin_components/UserNotFound';
-import SelectMeal from '@/app/qr/checkin_components/SelectMeal';
-import SelectWorkshop from '@/app/qr/checkin_components/SelectWorkshop';
+import UserNotFound from '@/app/(auth)/admin/qr/checkin_components/UserNotFound';
+import SelectMeal from '@/app/(auth)/admin/qr/checkin_components/SelectMeal';
+import SelectWorkshop from '@/app/(auth)/admin/qr/checkin_components/SelectWorkshop';
 import { redirect } from 'next/navigation';
 
 type ScanPageProps = {
@@ -154,11 +154,11 @@ export default function ScanPage({
     useEffect(() => {
         if (dropdownOption === 'Meal Check-in') {
             // toggleMeals();
-            redirect('/qr/meal/D1L');
+            redirect('/admin/qr/meal/D1L');
         } else if (dropdownOption === 'Workshop Check-in') {
             toggleWorkshops();
         } else if (dropdownOption === 'Event Check-in') {
-            redirect('/qr/hackathon');
+            redirect('/admin/qr/hackathon');
         }
     }, [dropdownOption]);
 
@@ -198,7 +198,7 @@ export default function ScanPage({
                 />
 
                 <div className="absolute top-4 left-4">
-                    <Link href="/">
+                    <Link href="/home">
                         <button className="text-white flex flex-row gap-x-2 hover:shadow-lg transition-shadow duration-300">
                             <ChevronLeftIcon className="size-6" />
                             <p className="">Back</p>

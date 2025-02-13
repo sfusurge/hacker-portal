@@ -1,6 +1,6 @@
 import ApplicationCard, { AppStatus } from '@/components/home/ApplicationCard';
 import DiscordCard from '@/components/home/DiscordCard';
-import { getUserData } from '../layout';
+import { getUserData } from './layout';
 import { createCaller } from '@/server/appRouter';
 import QRCard from '@/components/home/QRCard';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
@@ -16,6 +16,7 @@ const backendStatusToClientStatus: Record<string, AppStatus> = {
 
 export default async function Home() {
     const data = await getUserData();
+    //console.log(data);
 
     const opts: QROptions = {
         margin: 1,
@@ -26,10 +27,10 @@ export default async function Home() {
         },
     };
 
-    const displayId = data.id.toString();
-    const userQR: string = await generateQRCode(displayId, opts);
+    const displayId = data.id;
+    const userQR: string = await generateQRCode(displayId.toString(), opts);
 
-    const trpcClient = createCaller({});
+    // const trpcClient = createCaller({});
 
     // const application = await trpcClient.applications.getApplications({
     //     hackathonId: 1,
@@ -47,9 +48,9 @@ export default async function Home() {
             </h1>
 
             <div className="grid gap-6 md:gap-8 pb-6 md:pb-0 xl:grid-cols-2">
-                {/*<ApplicationCard />*/}
-                <QRCard userData={data} image={userQR} />
-                <DiscordCard></DiscordCard>
+                <ApplicationCard userData={data} image={userQR} />
+                {/*<QRCard userData={data} image={userQR} />*/}
+                <DiscordCard />
             </div>
         </div>
     );

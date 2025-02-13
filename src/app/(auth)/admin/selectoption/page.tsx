@@ -2,8 +2,8 @@
 
 import SelectOption from '@/app/(auth)/admin/selectoption/components/SelectOption';
 import { useEffect, useState } from 'react';
-import SelectMeal from '@/app/qr/checkin_components/SelectMeal';
-import SelectWorkshop from '@/app/qr/checkin_components/SelectWorkshop';
+import SelectMeal from '@/app/(auth)/admin/qr/checkin_components/SelectMeal';
+import SelectWorkshop from '@/app/(auth)/admin/qr/checkin_components/SelectWorkshop';
 import { redirect } from 'next/navigation';
 
 export default function SelectOptionPage() {
@@ -43,7 +43,7 @@ export default function SelectOptionPage() {
         } else if (checkInType === 'Workshop Check-in') {
             toggleWorkshops();
         } else if (checkInType === 'Hackathon Check-in') {
-            redirect('/qr/hackathon');
+            redirect('/qr/admin/hackathon');
         }
     }, [checkInType]);
 

@@ -1,4 +1,4 @@
-import { getUserData } from '@/app/(auth)/layout';
+import { getUserData } from '@/app/(auth)/home/layout';
 import { databaseClient } from '@/db/client';
 import {
     checkIns,

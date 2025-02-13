@@ -8,6 +8,9 @@ import { redirect } from 'next/navigation';
 import CountdownTimer from './Countdown';
 import { trpc } from '@/trpc/client';
 import { useEffect, useState } from 'react';
+import QRTicket from '@/app/(auth)/admin/qr/checkin_components/QRTicket';
+import QRCard from '@/components/home/QRCard';
+import WithdrawCard from '@/components/home/WithdrawCard';
 
 export type AppStatus =
     | 'Not Yet Started'
@@ -18,9 +21,33 @@ export type AppStatus =
     | 'Rejected'
     | 'Waitlisted';
 
-export default function ApplicationCard() {
-    let status: AppStatus;
+type ApplicationCardProps = {
+    userData:
+        | {
+              displayId: string;
+              userId: number;
+              id: number;
+              firstName: string | null;
+              lastName: string | null;
+              phoneNumber: string | null;
+              email: string;
+              userRole: string;
+          }
+        | undefined;
+    image: string;
+};
+
+export default function ApplicationCard({
+    userData,
+    image,
+}: ApplicationCardProps) {
+    let status;
     const [questionSetExists, setQuestionSetExists] = useState(false);
+
+    const getApplicationStatus = trpc.applications.getApplications.useQuery({
+        hackathonId: 1,
+        userId: userData.userId,
+    });
 
     const applicationSubmitted =
         trpc.applications.userAlreadySubmitted.useQuery({});
@@ -34,7 +61,7 @@ export default function ApplicationCard() {
     }, []);
 
     if (applicationSubmitted.data) {
-        status = 'Submitted – Under Review';
+        status = getApplicationStatus.data[0].currentStatus;
     } else if (questionSetExists) {
         status = 'In Progress';
     } else {
@@ -50,6 +77,12 @@ export default function ApplicationCard() {
     const handleClick = () => {
         redirect('/application');
     };
+
+    if (status === 'Accepted') {
+        return <QRCard userData={userData} image={image} />;
+    } else if (status === 'Withdrawn') {
+        return <WithdrawCard />;
+    }
 
     return (
         <div className="bg-neutral-900 flex flex-col rounded-xl border border-neutral-600/30">
@@ -97,6 +130,7 @@ export default function ApplicationCard() {
                     </Conditional>
                 </Conditional>
             </div>
+
             <div className="text-center p-5 lg:p-8 flex flex-col gap-6 items-center flex-1 justify-center">
                 <Conditional
                     showWhen={

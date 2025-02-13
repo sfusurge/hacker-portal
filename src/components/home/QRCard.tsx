@@ -5,17 +5,18 @@ import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/Skewmorphic
 import style from '@/app/(auth)/application/application_components/ApplicationForm.module.css';
 import { useState } from 'react';
 import { Conditional } from '@/lib/Conditional';
-import QRTicket from '@/app/qr/checkin_components/QRTicket';
-import { GetUsersOutput } from '@/trpc/client';
+import QRTicket from '@/app/(auth)/admin/qr/checkin_components/QRTicket';
+import { GetUsersOutput, trpc } from '@/trpc/client';
 import { cn } from '@/lib/utils';
 import SelectOption from '@/app/(auth)/admin/selectoption/components/SelectOption';
-import SelectMeal from '@/app/qr/checkin_components/SelectMeal';
+import SelectMeal from '@/app/(auth)/admin/qr/checkin_components/SelectMeal';
+import WithdrawPrompt from '@/components/home/WithdrawPrompt';
 
 type QRCardProps = {
     userData:
         | {
               displayId: string;
-              userId: number;
+              image: string | null | undefined;
               id: number;
               firstName: string | null;
               lastName: string | null;
@@ -29,11 +30,28 @@ type QRCardProps = {
 
 export default function QRCard({ userData, image }: QRCardProps) {
     const [isTicketOpen, setIsTicketOpen] = useState(false);
+    const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
+    console.log(userData);
+    const userId = userData.id;
     const handleOpenTicket = () => {
         setIsTicketOpen(true);
     };
     const handleCloseTicket = () => {
         setIsTicketOpen(false);
+    };
+
+    const handleOpenWithdrawPrompt = () => {
+        setIsWithdrawPromptOpen(true);
+    };
+    const handleCloseWithdrawPrompt = () => {
+        setIsWithdrawPromptOpen(false);
+    };
+
+    const updateApplication =
+        trpc.applications.updateApplicationStatus.useMutation();
+
+    const handleWithdraw = () => {
+        handleOpenWithdrawPrompt();
     };
 
     return (
@@ -67,8 +85,22 @@ export default function QRCard({ userData, image }: QRCardProps) {
                         </h2>
                         <h3 className="text-white/70">
                             You’ve been assigned the following QR code, which
-                            you’ll need to check in to the hackathon.
+                            you’ll need to check in to the hackathon and pick up
+                            meals throughout the event.
                         </h3>
+
+                        <p className="text-white/70">
+                            {
+                                'If you’re no longer able to make it to the event, please '
+                            }
+                            <button
+                                className="inline text-white underline hover:text-white/70"
+                                onClick={handleWithdraw}
+                            >
+                                withdraw your application
+                            </button>
+                            .
+                        </p>
                     </div>
 
                     <section className="hidden md:block">
@@ -112,6 +144,13 @@ export default function QRCard({ userData, image }: QRCardProps) {
                     />
                 </div>
             </div>
+
+            <Conditional showWhen={isWithdrawPromptOpen}>
+                <WithdrawPrompt
+                    userId={userId}
+                    closePrompt={handleCloseWithdrawPrompt}
+                />
+            </Conditional>
         </>
     );
 }
