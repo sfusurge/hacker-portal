@@ -166,7 +166,7 @@ export default function ApplicationCard({
                         </h2>
                         <p className="text-white/60 md:text-balance">
                             Your application has been submitted and is being
-                            reviewed by the StormHacks team.
+                            reviewed by the Surge team.
                         </p>
                     </div>
                 </Conditional>
@@ -202,7 +202,7 @@ export default function ApplicationCard({
                         showWhen={status === 'Accepted – Awaiting RSVP'}
                     >
                         <Button size="cozy" variant="brand" hierarchy="primary">
-                            RSVP to StormHacks 2024
+                            RSVP to JourneyHacks 2025
                         </Button>
                     </Conditional>
                     <Conditional showWhen={status === "Accepted and RSVP'd"}>
