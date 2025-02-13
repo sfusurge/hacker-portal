@@ -77,7 +77,7 @@ export default function QRTicket({
                         </h2>
 
                         <h1 className="text-center text-xl font-semibold leading-5 tracking-tightest text-white">
-                            StormHacks 2024
+                            JourneyHacks 2025
                         </h1>
                     </header>
 
