@@ -1,9 +1,10 @@
 import ApplicationCard, { AppStatus } from '@/components/home/ApplicationCard';
 import DiscordCard from '@/components/home/DiscordCard';
-import { getUserData } from './layout';
+
 import { createCaller } from '@/server/appRouter';
 import QRCard from '@/components/home/QRCard';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
+import { getUserData } from '../layout';
 
 const backendStatusToClientStatus: Record<string, AppStatus> = {
     'N/A': 'Not Yet Started',
@@ -27,7 +28,7 @@ export default async function Home() {
         },
     };
 
-    const displayId = data.id;
+    const displayId = data!.id;
     const userQR: string = await generateQRCode(displayId.toString(), opts);
 
     // const trpcClient = createCaller({});

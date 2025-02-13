@@ -1,11 +1,10 @@
 import MobileBottomNav from '@/components/sidebar/MobileBottomNav';
 import MobileTopNav from '@/components/sidebar/MobileTopNav';
-import { getSession, signOut, useSession } from 'next-auth/react';
+
 import DesktopNav from '@/components/sidebar/DesktopNav';
 
 import { ReactNode } from 'react';
-import { atom, useAtomValue } from 'jotai';
-import { atomWithRefresh } from 'jotai/utils';
+
 import { auth } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
 import { users } from '@/db/schema/users';
@@ -14,7 +13,6 @@ import { userDisplayIds } from '@/db/schema/userDisplayId';
 import { CacheClearer } from '@/app/(auth)/CacheClear';
 import { redirect } from 'next/navigation';
 import { ClientAuthContext } from './ClientAuthContext';
-import { headers } from 'next/headers';
 
 export async function getUserData() {
     const session = await auth();
