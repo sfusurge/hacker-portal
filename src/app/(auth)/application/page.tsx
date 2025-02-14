@@ -59,6 +59,10 @@ export default function Application() {
         }
     }, [session]);
 
+    useEffect(() => {
+        document.body.style.setProperty('--paddingTop', '4rem');
+    }, []);
+
     return (
         <ApplicationForm
             appDataAtom={questionSetAtom}
