@@ -108,7 +108,7 @@ export default function MobileBottomNav({
                     ></NavLink>
 
                     <NavLink
-                        href="/calendar"
+                        href="/schedule"
                         label="Schedule"
                         icon={<CalendarDaysIcon></CalendarDaysIcon>}
                         iconAlt="Schedule logo"
