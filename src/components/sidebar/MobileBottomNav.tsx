@@ -21,6 +21,7 @@ interface MobileBottomNavProps {
 const excludedUrls = [
     '/application',
     '/admin/qr/meal/D1L',
+    '/admin/qr/meal/D1D',
     '/admin/qr/hackathon',
 ];
 export default function MobileBottomNav({
@@ -71,10 +72,12 @@ export default function MobileBottomNav({
     // };
 
     useEffect(() => {
-        if (checkInType === 'Meal Check-in') {
+        if (checkInType === 'Lunch Check-in') {
             redirect('/admin/qr/meal/D1L');
             // } else if (checkInType === 'Workshop Check-in') {
             //     toggleWorkshops();
+        } else if (checkInType === 'Dinner Check-in') {
+            redirect('/admin/qr/meal/D1D');
         } else if (checkInType === 'Hackathon Check-in') {
             redirect('/admin/qr/hackathon');
         }

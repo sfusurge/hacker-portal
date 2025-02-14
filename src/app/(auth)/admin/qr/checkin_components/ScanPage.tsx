@@ -89,7 +89,10 @@ export default function ScanPage({
     };
 
     const [checkInType, setCheckInType] = useState<
-        'Event Check-in' | 'Meal Check-in' | 'Workshop Check-in'
+        | 'Event Check-in'
+        | 'Lunch Check-in'
+        | 'Dinner Check-in'
+        | 'Workshop Check-in'
     >('Event Check-in');
     const [dropdownOption, setDropdownOption] = useState<string>('');
 
@@ -136,10 +139,16 @@ export default function ScanPage({
     const [specificWorkshop, setSpecificWorkshop] = useState<string>('');
 
     useEffect(() => {
+        console.log(event, meal, mealType, workshop, workshopType);
         if (!event) {
             if (meal) {
-                setCheckInType('Meal Check-in');
-                setSpecificMeal(mealType);
+                if (mealType === 'D1L') {
+                    setCheckInType('Lunch Check-in');
+                    setSpecificMeal(mealType);
+                } else {
+                    setCheckInType('Dinner Check-in');
+                    setSpecificMeal(mealType);
+                }
             } else if (workshop) {
                 setCheckInType('Workshop Check-in');
                 setSpecificWorkshop(workshopType);
@@ -152,9 +161,11 @@ export default function ScanPage({
     });
 
     useEffect(() => {
-        if (dropdownOption === 'Meal Check-in') {
+        if (dropdownOption === 'Lunch Check-in') {
             // toggleMeals();
             redirect('/admin/qr/meal/D1L');
+        } else if (dropdownOption === 'Dinner Check-in') {
+            redirect('/admin/qr/meal/D1D');
         } else if (dropdownOption === 'Workshop Check-in') {
             toggleWorkshops();
         } else if (dropdownOption === 'Event Check-in') {
@@ -177,7 +188,7 @@ export default function ScanPage({
                     top: '50%',
                     left: '50%',
                     transform: 'translate(-50%, -50%)',
-                    zIndex: 10000,
+                    zIndex: 10,
                 }}
                 className="relative w-full aspect-[3/4] min-h-screen md:max-w-sm"
             >
@@ -217,7 +228,7 @@ export default function ScanPage({
                 </div>
 
                 {/*Shadcn dropdown*/}
-                <div className="absolute top-20 left-1/2 transform -translate-x-1/2">
+                <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-[1000]">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
@@ -245,12 +256,20 @@ export default function ScanPage({
                                     Event Check-in
                                 </DropdownMenuRadioItem>
                                 <DropdownMenuRadioItem
-                                    value="Meal Check-in"
+                                    value="Lunch Check-in"
                                     className="gap-2"
                                 >
                                     <FireIcon className="size-6" />
-                                    Meal Check-in
+                                    Lunch Check-in
                                 </DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem
+                                    value="Dinner Check-in"
+                                    className="gap-2"
+                                >
+                                    <FireIcon className="size-6" />
+                                    Dinner Check-in
+                                </DropdownMenuRadioItem>
+
                                 {/*<DropdownMenuRadioItem*/}
                                 {/*    value="Workshop Check-in"*/}
                                 {/*    className="gap-2"*/}
