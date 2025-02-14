@@ -19,7 +19,7 @@ import { redirect, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import React from 'react';
 import { MergedUserData } from '@/app/(auth)/layout';
-import { SwitchTransition } from 'react-transition-group';
+import { SwitchTransition, CSSTransition } from 'react-transition-group';
 
 interface DesktopNavProps {
     className?: string;
@@ -100,7 +100,6 @@ export default function DesktopNav({
 
                             <div className="absolute inset-0">
                                 <SwitchTransition mode="out-in">
-                                    {/* @ts-ignore */}
                                     <CSSTransition
                                         key={
                                             collapsed ? 'collapsed' : 'expanded'
@@ -221,9 +220,7 @@ export default function DesktopNav({
                                     }
                                     iconAlt="QR logo"
                                     platform="desktop"
-                                    active={url.startsWith(
-                                        '/admin/qr/hackathon/'
-                                    )}
+                                    active={url.startsWith('/admin/qr')}
                                     className={clsx({
                                         'justify-center': collapsed,
                                     })}
