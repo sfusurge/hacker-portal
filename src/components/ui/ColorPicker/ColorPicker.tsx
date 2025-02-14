@@ -15,6 +15,7 @@ export function ColorPicker({
         <div className={style.row}>
             {colors.map((item) => (
                 <button
+                    type="button"
                     style={
                         {
                             '--color': item,
