@@ -39,9 +39,11 @@ export default function MobileTopNav({
     useEffect(() => {
         for (const excludeURL of excludedUrls) {
             if (url.startsWith(excludeURL)) {
+                document.body.style.setProperty('--paddingTop', '0rem');
                 return setHideTopNav(true);
             }
             setHideTopNav(false);
+            document.body.style.setProperty('--paddingTop', '4rem');
         }
     }, [url]);
 
