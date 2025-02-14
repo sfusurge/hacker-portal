@@ -11,7 +11,7 @@ function getFirstSegment(str: string) {
 }
 
 export const middleware = auth(async (req) => {
-    // do stuff with the req here
+    // TODO do stuff with the req here
     const path = req.nextUrl.pathname;
     if (authRoutes.has(getFirstSegment(path))) {
         const sessionUser = (await auth())?.user;
