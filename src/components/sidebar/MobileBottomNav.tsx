@@ -11,6 +11,7 @@ import { redirect, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { QrCodeIcon } from '@heroicons/react/24/solid';
 import { MergedUserData } from '@/app/(auth)/layout';
+import SelectOption from '@/app/(auth)/admin/selectoption/components/SelectOption';
 
 interface MobileBottomNavProps {
     className?: string;
@@ -108,7 +109,7 @@ export default function MobileBottomNav({
                     ></NavLink>
 
                     <NavLink
-                        href="/calendar"
+                        href="/schedule"
                         label="Schedule"
                         icon={<CalendarDaysIcon></CalendarDaysIcon>}
                         iconAlt="Schedule logo"
@@ -142,7 +143,7 @@ export default function MobileBottomNav({
                 </div>
             )}
             <div>
-                {/* <div
+                <div
                     className={`fixed w-full inset-0 z-[200] bg-black bg-opacity-50 transition-opacity duration-300 ${isOptionsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                     onClick={toggleOptions}
                 >
@@ -152,7 +153,7 @@ export default function MobileBottomNav({
                     >
                         <SelectOption setCheckInType={setCheckInType} />
                     </div>
-                </div> */}
+                </div>
 
                 {/*<div*/}
                 {/*    className={`fixed inset-0 z-[200] bg-black bg-opacity-50 transition-opacity duration-300 ${isMealsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}*/}

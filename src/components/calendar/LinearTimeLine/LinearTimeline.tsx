@@ -6,12 +6,18 @@ import {
     selectedDayAtom,
     yearMonthDay,
     InternalCalendarEventType,
+    currentYearMonthAtom,
+    getEventDurationString,
+    selectedEventAtom,
 } from '../MonthCalendarShared';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import dayjs from 'dayjs';
+import { ClockIcon, MapPinIcon } from '@heroicons/react/24/solid';
+import { Button } from '@/components/ui/button';
+import { AnimatePresence } from 'motion/react';
+import { LongDescriptionModal } from '../EventLongDescription/EventLongDescription';
 
 const DATE_FORMAT = 'MMM DD, dddd';
-const currentTimeAtom = atom(dayjs());
 
 export function LinearTimeline({
     events,
@@ -23,6 +29,10 @@ export function LinearTimeline({
     return <_LinearTimeline events={events} styles={styles}></_LinearTimeline>;
 }
 
+const showMoreInfoEvent = atom<InternalCalendarEventType | undefined>(
+    undefined
+);
+
 function _LinearTimeline({
     events,
     styles,
@@ -30,32 +40,41 @@ function _LinearTimeline({
     events: InternalCalendarEventType[];
     styles: CSSProperties | undefined;
 }) {
-    const eventsGroupedByDay = groupEventsByDay(events);
+    const { month, year } = useAtomValue(currentYearMonthAtom);
 
-    const setCurrentTime = useSetAtom(currentTimeAtom);
+    const eventsGroupedByDay = groupEventsByDay(
+        events,
+        dayjs(new Date(month, year, 1))
+    );
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentTime(dayjs());
-        }, 1000);
-        return () => {
-            clearInterval(interval);
-        };
-    }, []);
+    const [showMoreInfo, setShowMore] = useAtom(showMoreInfoEvent);
 
     return (
-        <div className={style.timelineContainer} style={styles}>
-            {Object.entries(eventsGroupedByDay).map((e) => {
-                const [key, eventsOfDay] = e;
+        <>
+            <AnimatePresence>
+                {showMoreInfo && (
+                    <LongDescriptionModal
+                        event={showMoreInfo}
+                        onClose={() => {
+                            setShowMore(undefined);
+                        }}
+                    />
+                )}
+            </AnimatePresence>
 
-                return (
-                    <TimeLineDayWrapper
-                        key={key}
-                        eventsOfDay={eventsOfDay}
-                    ></TimeLineDayWrapper>
-                );
-            })}
-        </div>
+            <div className={style.timelineContainer} style={styles}>
+                {Object.entries(eventsGroupedByDay).map((e) => {
+                    const [key, eventsOfDay] = e;
+
+                    return (
+                        <TimeLineDayWrapper
+                            key={key}
+                            eventsOfDay={eventsOfDay}
+                        ></TimeLineDayWrapper>
+                    );
+                })}
+            </div>
+        </>
     );
 }
 
@@ -100,14 +119,18 @@ function TimeLineDayWrapper({
 function TimelineItem({ event }: { event: InternalCalendarEventType }) {
     const [contentHeight, setContentHeight] = useState(0);
     const innerContentRef = useRef<HTMLDivElement | null>(null);
-
+    const [selectedEvent, setSelected] = useAtom(selectedEventAtom);
     function expandContent() {
         if (contentHeight === 0) {
             setContentHeight(innerContentRef.current?.scrollHeight!);
+            setSelected({ element: undefined, event: event });
         } else {
             setContentHeight(0);
+            setSelected(undefined);
         }
     }
+
+    const setShowMore = useSetAtom(showMoreInfoEvent);
 
     return (
         <div
@@ -144,7 +167,33 @@ function TimelineItem({ event }: { event: InternalCalendarEventType }) {
                         padding: '0.5rem',
                     }}
                 >
-                    {event.description}
+                    <span className={style.line}>
+                        <ClockIcon style={{ width: '1rem' }} />{' '}
+                        {getEventDurationString(event)}
+                    </span>
+
+                    {event.location && (
+                        <span className={style.line}>
+                            <MapPinIcon style={{ width: '1rem' }} />
+                            {event.location}
+                        </span>
+                    )}
+
+                    {event.description && (
+                        <span className={style.line}>{event.description}</span>
+                    )}
+
+                    <Button
+                        onClick={() => {
+                            setShowMore(event);
+                        }}
+                        size="compact"
+                        variant="default"
+                        hierarchy="secondary"
+                        style={{ margin: '0.25rem', marginLeft: 'auto' }}
+                    >
+                        More Info
+                    </Button>
                 </div>
             </div>
         </div>
@@ -152,14 +201,5 @@ function TimelineItem({ event }: { event: InternalCalendarEventType }) {
 }
 
 function TimeLabel({ event }: { event: InternalCalendarEventType }) {
-    const currentTime = useAtomValue(currentTimeAtom);
-
-    return (
-        <span>
-            {timeBetween(currentTime, event.startTime, event.endTime)
-                ? '> '
-                : ''}
-            {event.startTime.format('h:mm A')}
-        </span>
-    );
+    return <span>{event.startTime.format('h:mm A')}</span>;
 }

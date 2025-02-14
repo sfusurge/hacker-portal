@@ -3,6 +3,7 @@
     max-width: 300px;
     min-width: 300px;
     min-height: 300px;
+    height: 100%;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
@@ -14,7 +15,7 @@
     /* Note that on Chrome smooth scroll is disabled by default */
     scroll-behavior: smooth !important;
 
-    border: 2px solid grey;
+    border: 1px solid var(--border-neutral-secondary);
     border-radius: 5px;
 }
 
@@ -36,9 +37,9 @@
     padding: 0.25rem;
     padding-left: 1rem;
 
-    background-color: lightgrey;
-    border-top: 2px solid grey;
-    border-bottom: 2px solid grey;
+    background-color: var(--background-neutral-secondary);
+
+    border-bottom: 2px solid var(--border-neutral-tertiary);
 
     /* sticky and have later item push up this item */
     position: sticky;
@@ -109,4 +110,9 @@
 .timelineItemMoreContent {
     transition: max-height ease-out 250ms;
     width: 100%;
+}
+
+.line {
+    display: flex;
+    font-size: 14px;
 }

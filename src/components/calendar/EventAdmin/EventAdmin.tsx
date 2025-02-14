@@ -22,7 +22,7 @@ export const editModeAtom = atom(false);
 export function EventAdmin({ eventsAtom }: EventAdminProps) {
     const [_selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
     const [events, setEvents] = useAtom(eventsAtom);
-    const setEditMode = useSetAtom(editModeAtom);
+    const [editMode, setEditMode] = useAtom(editModeAtom);
 
     function ConvertEvent(e: InternalCalendarEventType | undefined) {
         if (e) {
@@ -98,6 +98,13 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
     function deleteEvent() {
         deleteApi.mutate({ eventId: event.id });
     }
+
+    useEffect(() => {
+        if (!editMode) {
+            setSelectedEvent(undefined);
+        }
+    }, [editMode]);
+
     return (
         <>
             <SideDrawer visibleAtom={editModeAtom}>

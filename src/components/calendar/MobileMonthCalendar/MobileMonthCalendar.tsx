@@ -40,7 +40,7 @@ export function MobileMonthCalendar({
     const [maxHeight, setMaxHeight] = useState(0);
 
     const filteredEvents = useMemo(
-        () => getEventsOfMonth(events, month, year),
+        () => getEventsOfMonth(events, month, year, false),
         [year, month]
     );
 
@@ -67,7 +67,9 @@ export function MobileMonthCalendar({
                 }}
                 defaultMonth={currMonth.toDate()}
                 modifiers={{
-                    hasEvent: filteredEvents.map((e) => e.startTime.toDate()),
+                    hasEvent: filteredEvents.map((e) => {
+                        return e.startTime.toDate();
+                    }),
                 }}
                 modifiersClassNames={{
                     hasEvent: 'hasEvent',
