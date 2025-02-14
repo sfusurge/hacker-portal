@@ -81,22 +81,24 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
             });
         }
 
-        const res = await eventsFetch.refetch();
-        setEvents(
-            res.data?.map((item) => {
-                return {
-                    ...item,
-                    startDate: new Date(item.startDate),
-                    endDate: new Date(item.endDate),
-                };
-            }) ?? []
-        );
-
+        setTimeout(async () => {
+            const res = await eventsFetch.refetch();
+            setEvents(
+                res.data?.map((item) => {
+                    return {
+                        ...item,
+                        startDate: new Date(item.startDate),
+                        endDate: new Date(item.endDate),
+                    };
+                }) ?? []
+            );
+        }, 2000);
         setEditMode(false);
     }
 
     function deleteEvent() {
         deleteApi.mutate({ eventId: event.id });
+        setEditMode(false);
     }
 
     useEffect(() => {
@@ -238,6 +240,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                     </Button>
                     {_selectedEvent && (
                         <Button
+                            type="button"
                             onClick={deleteEvent}
                             size={'compact'}
                             hierarchy={'primary'}
