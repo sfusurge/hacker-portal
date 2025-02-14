@@ -4,7 +4,7 @@ import style from './SideDrawer.module.css';
 import { motion, AnimatePresence } from 'motion/react';
 import { PrimitiveAtom, useAtom } from 'jotai';
 import { Button } from '../button';
-import { ChevronRightIcon } from '@heroicons/react/20/solid';
+
 import { ChevronLeftIcon } from '@heroicons/react/24/solid';
 
 export function SideDrawer({
@@ -17,7 +17,9 @@ export function SideDrawer({
     const [visible, setVisible] = useAtom(visibleAtom);
 
     useEffect(() => {
-        function onBack() {}
+        function onBack() {
+            setVisible(false);
+        }
 
         if (visible) {
             window.addEventListener('popstate', onBack);
@@ -31,7 +33,6 @@ export function SideDrawer({
 
     return (
         <>
-            {' '}
             <AnimatePresence>
                 {visible && (
                     <motion.div

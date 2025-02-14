@@ -57,6 +57,8 @@ export const updateEventSchema = createUpdateSchema(events)
     })
     .extend({
         eventId: z.number().int(),
+        startDate: z.number().int(),
+        endDate: z.number().int(),
     });
 
 export const deleteEventSchema = z.object({

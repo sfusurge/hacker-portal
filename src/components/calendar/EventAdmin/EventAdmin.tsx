@@ -1,5 +1,5 @@
 import { CalendarEvent } from '@/server/routers/eventsRouter';
-import { atom, PrimitiveAtom, useAtom, useAtomValue } from 'jotai';
+import { atom, PrimitiveAtom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
     InternalCalendarEventType,
     selectedEventAtom,
@@ -21,7 +21,7 @@ export const editModeAtom = atom(false);
 export function EventAdmin({ eventsAtom }: EventAdminProps) {
     const [_selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
     const [events, setEvents] = useAtom(eventsAtom);
-    const editMode = useAtomValue(editModeAtom);
+    const setEditMode = useSetAtom(editModeAtom);
 
     function ConvertEvent(e: InternalCalendarEventType | undefined) {
         if (e) {
@@ -37,6 +37,11 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
     }
 
     const [event, setEvent] = useState(ConvertEvent(_selectedEvent?.event));
+
+    useEffect(() => {
+        setEvent(ConvertEvent(_selectedEvent?.event));
+    }, [_selectedEvent?.event]);
+
     const longDescriptionFetch = trpc.events.getEventLongDescription.useQuery({
         eventId: event.id ?? -1,
     });
@@ -53,47 +58,47 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
             enabled: false,
         }
     );
-    function saveEvent(e: SubmitEvent) {
-        e.preventDefault();
-        createEventApi.mutate({
-            color: '',
-            endDate: new Date(),
-            startDate: new Date(),
-            hackathonId: 1,
-            location: '',
-            title: '',
-            description: '',
-            longDescription: '',
-        });
+    console.log(event.endDate?.toISOString().slice(0, -8));
 
-        return;
+    async function saveEvent(e: SubmitEvent) {
+        e.preventDefault();
         if (!_selectedEvent) {
             console.log({ ...event, eventId: event.id });
-            createEventApi.mutate({ ...event, longDescription });
+            createEventApi.mutate({
+                ...event,
+                startDate: event.startDate.getTime(),
+                endDate: event.endDate.getTime(),
+                longDescription,
+            });
         } else {
             updateEventapi.mutate({
                 ...event,
                 eventId: event.id,
+                startDate: event.startDate.getTime(),
+                endDate: event.endDate.getTime(),
                 longDescription,
             });
         }
 
-        eventsFetch.refetch();
-        const y = eventsFetch.data;
-        console.log(y);
-        const s = (eventsFetch.data ?? []) as CalendarEvent[];
-        setEvents(eventsFetch.data ?? []);
-    }
+        const res = await eventsFetch.refetch();
+        setEvents(
+            res.data?.map((item) => {
+                return {
+                    ...item,
+                    startDate: new Date(item.startDate),
+                    endDate: new Date(item.endDate),
+                };
+            }) ?? []
+        );
 
-    useEffect(() => {
-        console.log(event);
-    }, [event]);
+        setEditMode(false);
+    }
 
     return (
         <>
             <SideDrawer visibleAtom={editModeAtom}>
                 <h1>{event ? 'Edit event' : 'Add event'}</h1>
-                <button onClick={saveEvent}>TRest</button>
+                {/* @ts-ignore */}
                 <form onSubmit={saveEvent}>
                     <div>
                         <Label>Event Name</Label>
@@ -154,7 +159,9 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                     <div>
                         <Label>Start Time</Label>
                         <FormTextInput
-                            defaultValue={event.startDate?.toDateString()}
+                            defaultValue={event.startDate
+                                ?.toISOString()
+                                .slice(0, -8)}
                             type="datetime-local"
                             lazy
                             required
@@ -167,7 +174,9 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                     <div>
                         <Label>End Time</Label>
                         <FormTextInput
-                            defaultValue={event.endDate?.toDateString()}
+                            defaultValue={event.endDate
+                                ?.toISOString()
+                                .slice(0, -8)}
                             type="datetime-local"
                             lazy
                             required

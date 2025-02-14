@@ -103,6 +103,7 @@ export function ClientCalendarPage({
                             size="compact"
                             variant="brand"
                             hierarchy="primary"
+                            style={{ position: 'relative', zIndex: 1000 }}
                         >
                             {selectedEvent?.event ? (
                                 <span>

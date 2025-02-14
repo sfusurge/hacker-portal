@@ -25,8 +25,8 @@ export interface CalendarEvent {
     title: string;
     color: string;
     location: string;
-    description: string | null;
-    checkInTime: string | null;
+    description?: string | undefined;
+    checkInTime?: string | undefined;
 }
 
 export const eventsRouter = router({
@@ -58,7 +58,7 @@ export const eventsRouter = router({
                 })
                 .returning();
 
-            return event;
+            // return event;
         }),
 
     getEvents: publicProcedure
@@ -103,11 +103,12 @@ export const eventsRouter = router({
                 return {
                     ...event,
                     checkedIn: checkIn != null,
+                    description: event.description ?? undefined,
                     hasLongDescription:
                         longDescription !== undefined &&
                         longDescription !== null &&
                         longDescription.length > 0,
-                    checkInTime: checkIn?.checkInTime ?? null,
+                    checkInTime: checkIn?.checkInTime ?? undefined,
                 };
             });
 
@@ -137,8 +138,8 @@ export const eventsRouter = router({
                 .set({
                     title: input.title,
                     color: input.color,
-                    startDate: input.startDate,
-                    endDate: input.endDate,
+                    startDate: new Date(input.startDate),
+                    endDate: new Date(input.endDate),
                     location: input.location,
                     description: input.description,
                     longDescription: input.longDescription,
