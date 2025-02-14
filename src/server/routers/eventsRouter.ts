@@ -35,8 +35,8 @@ export const eventsRouter = router({
                 .values({
                     hackathonId: input.hackathonId,
                     title: input.title,
-                    startDate: input.startDate,
-                    endDate: input.endDate,
+                    startDate: new Date(input.startDate),
+                    endDate: new Date(input.endDate),
                     location: input.location,
                     color: input.color,
                     description: input.description,
