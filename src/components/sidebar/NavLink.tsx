@@ -58,6 +58,8 @@ export function NavLink({
         'text-white/18': disabled && icon,
     });
 
+    const isCollapsed = className?.includes('justify-center');
+
     return (
         <Link
             href={href}
@@ -65,19 +67,27 @@ export function NavLink({
             className={cn(
                 navLinkVariants({
                     variant,
-                    className,
                     platform,
                     active,
                     disabled,
-                })
+                }),
+                isCollapsed ? 'justify-center' : 'justify-start',
+                className
             )}
         >
             {icon && iconAlt && (
-                <div className={cn('h-6 w-6 transition-colors', iconStyles)}>
-                    {icon}
+                <div
+                    className={cn(
+                        'w-6 h-6 transition-colors flex items-center justify-center',
+                        iconStyles
+                    )}
+                >
+                    <div className="w-6 h-6 [&>svg]:w-full [&>svg]:h-full">
+                        {icon}
+                    </div>
                 </div>
             )}
-            <span className={cn('leading-none')}>{label}</span>
+            {!isCollapsed && <span className="leading-none">{label}</span>}
         </Link>
     );
 }
