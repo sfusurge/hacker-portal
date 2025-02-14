@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { PrimitiveAtom, useAtom } from 'jotai';
 import { Button } from '../button';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
+import { ChevronLeftIcon } from '@heroicons/react/24/solid';
 
 export function SideDrawer({
     visibleAtom,
@@ -29,58 +30,64 @@ export function SideDrawer({
     }, [visible]);
 
     return (
-        <AnimatePresence>
-            {visible && (
-                <motion.div
-                    initial={{
-                        opacity: 0,
-                    }}
-                    animate={{
-                        opacity: 1,
-                        transition: {
-                            duration: 0.4,
-                            ease: 'easeOut',
-                        },
-                    }}
-                    exit={{
-                        opacity: 0,
-                    }}
-                    className={style.backdrop}
-                    onClick={() => {
-                        setVisible(false);
-                        window.history.back();
-                    }}
-                />
-            )}
-            {visible && (
-                <motion.div
-                    initial={{
-                        x: '0',
-                    }}
-                    animate={{
-                        x: '-100%',
-                        transition: {
-                            duration: 0.4,
-                            ease: 'easeOut',
-                        },
-                    }}
-                    exit={{
-                        x: '0',
-                    }}
-                    className={style.drawerContainer}
-                >
-                    <Button
+        <>
+            {' '}
+            <AnimatePresence>
+                {visible && (
+                    <motion.div
+                        initial={{
+                            opacity: 0,
+                        }}
+                        animate={{
+                            opacity: 0.6,
+                            transition: {
+                                duration: 0.35,
+                            },
+                        }}
+                        exit={{
+                            opacity: 0,
+                        }}
+                        className={style.backdrop}
                         onClick={() => {
                             setVisible(false);
                             window.history.back();
                         }}
+                    />
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {visible && (
+                    <motion.div
+                        initial={{
+                            x: '0',
+                        }}
+                        animate={{
+                            x: '-100%',
+                            transition: {
+                                duration: 0.35,
+                            },
+                        }}
+                        exit={{
+                            x: '0',
+                        }}
+                        className={style.drawerContainer}
                     >
-                        <ChevronRightIcon style={{ width: '20px' }} />
-                        <span>Back</span>
-                    </Button>
-                    {children}
-                </motion.div>
-            )}
-        </AnimatePresence>
+                        <Button
+                            onClick={() => {
+                                setVisible(false);
+                                window.history.back();
+                            }}
+                            style={{ alignSelf: 'flex-start', paddingLeft: 0 }}
+                        >
+                            <div style={{ display: 'flex' }}>
+                                <ChevronLeftIcon style={{ width: '20px' }} />
+                                <span>Back</span>
+                            </div>
+                        </Button>
+                        {children}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </>
     );
 }

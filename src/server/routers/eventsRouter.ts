@@ -26,6 +26,7 @@ export interface CalendarEvent {
     color: string;
     location: string;
     description: string | null;
+    checkInTime: string | null;
 }
 
 export const eventsRouter = router({
@@ -41,7 +42,6 @@ export const eventsRouter = router({
                     role: user?.userRole,
                 });
             }
-
             console.log(`Inserting ${JSON.stringify(input)}`);
 
             const [event] = await databaseClient
@@ -126,7 +126,7 @@ export const eventsRouter = router({
                 .where(eq(eventsTable.id, input.eventId))
                 .limit(1);
 
-            return event;
+            return event ?? {};
         }),
 
     updateEvent: publicProcedure

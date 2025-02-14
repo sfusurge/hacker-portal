@@ -30,7 +30,7 @@ export const FormTextInput = forwardRef<
     ComponentProps<'input'> & {
         lazy?: boolean;
         timeOut?: number;
-        type: 'text' | 'number' | 'search' | string;
+        type: 'text' | 'number' | 'search' | 'datetime-local' | string;
         hideBackground?: boolean;
         errorMsg?: string;
         onLazyChange?: (value: string | number) => void;
