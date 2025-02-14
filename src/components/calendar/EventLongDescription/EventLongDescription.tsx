@@ -6,9 +6,10 @@ import {
     InternalCalendarEventType,
 } from '../MonthCalendarShared';
 import { ClockIcon, MapPinIcon, XMarkIcon } from '@heroicons/react/24/solid';
-import { trpc } from '@/trpc/client';
+
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { trpc } from '@/trpc/client';
 
 function MarkdownDisplay({ content }: { content: string }) {
     const markdownContent = useRemarkSync(content);
@@ -23,12 +24,9 @@ export function LongDescriptionModal({
     event: InternalCalendarEventType;
     onClose: () => void;
 }) {
-    // const longDescription = trpc.events.getEventLongDescription.useQuery({
-    //     eventId: event.id,
-    // });
-    let longDescription = {
-        data: { longDescription: getDebugLongDescription('') },
-    };
+    const longDescription = trpc.events.getEventLongDescription.useQuery({
+        eventId: event.id,
+    });
 
     function closeModal() {
         onClose();

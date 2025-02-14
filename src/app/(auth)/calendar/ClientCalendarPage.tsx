@@ -18,7 +18,14 @@ import {
     editModeAtom,
     EventAdmin,
 } from '@/components/calendar/EventAdmin/EventAdmin';
-import { PencilIcon, PlusIcon } from '@heroicons/react/24/solid';
+import {
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    PencilIcon,
+    PlusIcon,
+} from '@heroicons/react/24/solid';
+import { useWindowSize } from '@/lib/utils';
+import { MobileMonthCalendar } from '@/components/calendar/MobileMonthCalendar/MobileMonthCalendar';
 
 export function ClientCalendarPage({
     events: _events,
@@ -46,6 +53,8 @@ export function ClientCalendarPage({
     const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
     const [editMode, setEditMode] = useAtom(editModeAtom);
 
+    const [width, height] = useWindowSize();
+
     // TODO Mobile mode
 
     return (
@@ -53,37 +62,60 @@ export function ClientCalendarPage({
             {isAdmin && <EventAdmin eventsAtom={eventsAtom} />}
 
             <div className="flex flex-col" style={{ height: '100%' }}>
-                <div className="flex" style={{ alignItems: 'center' }}>
+                <div
+                    className="flex"
+                    style={{
+                        alignItems: 'center',
+                        padding: '0.5rem',
+                        flexFlow: 'wrap',
+                        gap: '0.25rem',
+                    }}
+                >
                     {/* header */}
-                    <span>{monthObj.format('YYYY-MMM')}</span>
-                    <Button
-                        onClick={() => {
-                            updateYearMonth('-1 month');
-                        }}
-                    >
-                        Prev
-                    </Button>
-                    <Button
-                        variant="brand"
-                        onClick={() => {
-                            updateYearMonth('set', {
-                                year: dayjs().year(),
-                                month: dayjs().month(),
-                            });
-                        }}
-                    >
-                        Current
-                    </Button>
-                    <Button
-                        size="compact"
-                        hierarchy="primary"
-                        variant="brand"
-                        onClick={() => {
-                            updateYearMonth('+1 month');
-                        }}
-                    >
-                        Next
-                    </Button>
+                    {showCalendar && (
+                        <>
+                            <span style={{ fontSize: 'large' }}>
+                                {monthObj.format('MMMM YYYY')}
+                            </span>
+                            <Button
+                                size="compact"
+                                hierarchy="secondary"
+                                variant="default"
+                                onClick={() => {
+                                    updateYearMonth('-1 month');
+                                }}
+                            >
+                                <ChevronLeftIcon
+                                    style={{ display: 'block', width: '16px' }}
+                                />
+                            </Button>
+                            <Button
+                                size="compact"
+                                hierarchy="secondary"
+                                variant="default"
+                                onClick={() => {
+                                    updateYearMonth('set', {
+                                        year: dayjs().year(),
+                                        month: dayjs().month(),
+                                    });
+                                }}
+                            >
+                                Today
+                            </Button>
+                            <Button
+                                size="compact"
+                                hierarchy="secondary"
+                                variant="default"
+                                onClick={() => {
+                                    updateYearMonth('+1 month');
+                                }}
+                            >
+                                <ChevronRightIcon
+                                    style={{ display: 'block', width: '16px' }}
+                                />
+                            </Button>
+                        </>
+                    )}
 
                     <ToggleButton
                         A="Day"
@@ -140,7 +172,12 @@ export function ClientCalendarPage({
                         />
                     )}
 
-                    {showCalendar && <MonthCalendar events={events} />}
+                    {showCalendar && width > 768 && (
+                        <MonthCalendar events={events} />
+                    )}
+                    {showCalendar && width <= 768 && (
+                        <MobileMonthCalendar events={events} />
+                    )}
                 </div>
             </div>
         </>

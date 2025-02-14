@@ -12,6 +12,7 @@ import { ColorPicker } from '@/components/ui/ColorPicker/ColorPicker';
 import { trpc } from '@/trpc/client';
 import { FormTextArea } from '@/components/ui/formTextArea/FormTextArea';
 import { Button } from '@/components/ui/button';
+import dayjs from 'dayjs';
 
 export interface EventAdminProps {
     eventsAtom: PrimitiveAtom<CalendarEvent[]>;
@@ -94,6 +95,11 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
         setEditMode(false);
     }
 
+    const [now, later] = [
+        new Date().toISOString().slice(0, -8),
+        dayjs().add(2, 'hour').toDate().toISOString().slice(0, -8),
+    ];
+
     return (
         <>
             <SideDrawer visibleAtom={editModeAtom}>
@@ -103,6 +109,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                     <div>
                         <Label>Event Name</Label>
                         <FormTextInput
+                            placeholder=" "
                             type="text"
                             defaultValue={event.title ?? ''}
                             required
@@ -135,6 +142,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                     <div>
                         <Label>Description</Label>
                         <FormTextInput
+                            placeholder=" "
                             type="text"
                             required
                             lazy
@@ -147,6 +155,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                     <div>
                         <Label>Location</Label>
                         <FormTextInput
+                            placeholder=" "
                             defaultValue={event.location}
                             type="text"
                             required
@@ -159,6 +168,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                     <div>
                         <Label>Start Time</Label>
                         <FormTextInput
+                            placeholder={now}
                             defaultValue={event.startDate
                                 ?.toISOString()
                                 .slice(0, -8)}
@@ -174,6 +184,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                     <div>
                         <Label>End Time</Label>
                         <FormTextInput
+                            placeholder={later}
                             defaultValue={event.endDate
                                 ?.toISOString()
                                 .slice(0, -8)}
@@ -189,6 +200,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                     <div>
                         <Label>Long Description (Markdown)</Label>
                         <FormTextArea
+                            placeholder=" "
                             defaultValue={longDescription}
                             lazy
                             onLazyChange={(t) => {
