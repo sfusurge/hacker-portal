@@ -1,17 +1,6 @@
 import { InferSelectModel } from 'drizzle-orm';
-import {
-    boolean,
-    index,
-    integer,
-    pgEnum,
-    pgTable,
-    varchar,
-} from 'drizzle-orm/pg-core';
-import {
-    createInsertSchema,
-    createSelectSchema,
-    createUpdateSchema,
-} from 'drizzle-zod';
+import { index, integer, pgEnum, pgTable, varchar } from 'drizzle-orm/pg-core';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { databaseClient } from '../client';
 import { userDisplayIds } from './userDisplayId';
@@ -39,9 +28,9 @@ const users = pgTable(
         email: varchar('email', { length: 255 }).unique().notNull(),
         userRole: userRoleDbEnum('user_role').default('user').notNull(),
     },
-    (table) => ({
-        emailIndex: index('email_index').on(table.email),
-    })
+    (table) => {
+        return [index('email_index').on(table.email)];
+    }
 );
 
 const selectUserSchema = createSelectSchema(users); // select a user by either their primary key id or their display id.

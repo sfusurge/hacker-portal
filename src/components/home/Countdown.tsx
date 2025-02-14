@@ -8,14 +8,17 @@ interface TimeLeft {
 }
 
 interface CountdownTimerProps {
-    targetDate: string; // ISO string for the target date
+    targetDate: Date; // ISO string for the target date
 }
 
 const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetDate }) => {
     const calculateTimeLeft = (): TimeLeft | null => {
-        const difference =
-            new Date(targetDate).getTime() - new Date().getTime();
-        if (difference > 0) {
+        const difference = Math.max(
+            0,
+            new Date(targetDate).getTime() - new Date().getTime()
+        );
+
+        if (difference >= 0) {
             return {
                 days: Math.floor(difference / (1000 * 60 * 60 * 24)),
                 hours: Math.floor((difference / (1000 * 60 * 60)) % 24),

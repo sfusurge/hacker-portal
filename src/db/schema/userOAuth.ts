@@ -25,14 +25,19 @@ export const providerDbEnum = pgEnum('oauth_provider', [
 export const userOAuth = pgTable(
     'user_oauth',
     {
-        userId: integer('user_id').references(() => users.id, {
-            onDelete: 'cascade',
-        }),
+        userId: integer('user_id')
+            .notNull()
+            .references(() => users.id, {
+                onDelete: 'cascade',
+            }),
         provider: providerDbEnum('provider').default('n/a').notNull(),
     },
-    (table) => ({
-        primaryKey: primaryKey({
-            columns: [table.userId, table.provider],
-        }),
-    })
+    (table) => {
+        return [
+            // https://github.com/drizzle-team/drizzle-orm/issues/3596
+            primaryKey({
+                columns: [table.userId, table.provider],
+            }),
+        ];
+    }
 );

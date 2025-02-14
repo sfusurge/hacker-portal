@@ -8,19 +8,47 @@ import { redirect } from 'next/navigation';
 import CountdownTimer from './Countdown';
 import { trpc } from '@/trpc/client';
 import { useEffect, useState } from 'react';
+import QRTicket from '@/app/(auth)/admin/qr/checkin_components/QRTicket';
+import QRCard from '@/components/home/QRCard';
+import WithdrawCard from '@/components/home/WithdrawCard';
 
 export type AppStatus =
     | 'Not Yet Started'
     | 'In Progress'
-    | 'Submitted – Under Review'
+    | 'Awaiting Review'
     | 'Accepted – Awaiting RSVP'
     | "Accepted and RSVP'd"
     | 'Rejected'
     | 'Waitlisted';
 
-export default function ApplicationCard() {
-    let status: AppStatus;
+type ApplicationCardProps = {
+    userData:
+        | {
+              displayId: string;
+              userId: number;
+              id: number;
+              firstName: string | null;
+              lastName: string | null;
+              phoneNumber: string | null;
+              email: string;
+              userRole: string;
+          }
+        | undefined;
+    image: string;
+};
+
+export default function ApplicationCard({
+    userData,
+    image,
+}: ApplicationCardProps) {
+    let status;
     const [questionSetExists, setQuestionSetExists] = useState(false);
+
+    const getApplicationStatus =
+        trpc.applications.getApplicationStatus.useQuery({
+            hackathonId: 1,
+            userId: userData.userId,
+        });
 
     const applicationSubmitted =
         trpc.applications.userAlreadySubmitted.useQuery({});
@@ -34,7 +62,8 @@ export default function ApplicationCard() {
     }, []);
 
     if (applicationSubmitted.data) {
-        status = 'Submitted – Under Review';
+        //console.log( getApplicationStatus.data)
+        status = getApplicationStatus.data.currentStatus;
     } else if (questionSetExists) {
         status = 'In Progress';
     } else {
@@ -44,12 +73,18 @@ export default function ApplicationCard() {
     const leadingIconStyles = cn({
         'text-white': status === 'Not Yet Started',
         'text-caution-500': status === 'In Progress',
-        'text-yellow-500': status === 'Submitted – Under Review',
+        'text-yellow-500': status === 'Awaiting Review',
     });
 
     const handleClick = () => {
         redirect('/application');
     };
+
+    if (status === 'Accepted') {
+        return <QRCard userData={userData} image={image} />;
+    } else if (status === 'Withdrawn') {
+        return <WithdrawCard />;
+    }
 
     return (
         <div className="bg-neutral-900 flex flex-col rounded-xl border border-neutral-600/30">
@@ -69,8 +104,7 @@ export default function ApplicationCard() {
                 </div>
                 <Conditional
                     showWhen={
-                        status !== 'Submitted – Under Review' &&
-                        status !== 'Rejected'
+                        status !== 'Awaiting Review' && status !== 'Rejected'
                     }
                 >
                     <Conditional showWhen={status === 'Not Yet Started'}>
@@ -80,6 +114,7 @@ export default function ApplicationCard() {
                             hierarchy="primary"
                             className="hidden md:block"
                             onClick={handleClick}
+                            disabled
                         >
                             Apply
                         </Button>
@@ -91,12 +126,14 @@ export default function ApplicationCard() {
                             hierarchy="primary"
                             className="hidden md:block"
                             onClick={handleClick}
+                            disabled
                         >
                             Continue
                         </Button>
                     </Conditional>
                 </Conditional>
             </div>
+
             <div className="text-center p-5 lg:p-8 flex flex-col gap-6 items-center flex-1 justify-center">
                 <Conditional
                     showWhen={
@@ -111,9 +148,11 @@ export default function ApplicationCard() {
                             Hacker registration closes in...
                         </p>
                     </div>
-                    <CountdownTimer targetDate="2025-02-11T07:59:00.000Z" />
+                    <CountdownTimer
+                        targetDate={new Date(2025, 1, 11, 23, 59, 59)}
+                    />
                 </Conditional>
-                <Conditional showWhen={status === 'Submitted – Under Review'}>
+                <Conditional showWhen={status === 'Awaiting Review'}>
                     <Image
                         src="/login/application-review.webp"
                         width={1537}
@@ -127,17 +166,14 @@ export default function ApplicationCard() {
                         </h2>
                         <p className="text-white/60 md:text-balance">
                             Your application has been submitted and is being
-                            reviewed by the StormHacks team.
+                            reviewed by the Surge team.
                         </p>
                     </div>
                 </Conditional>
             </div>
 
             <Conditional
-                showWhen={
-                    status !== 'Submitted – Under Review' &&
-                    status !== 'Rejected'
-                }
+                showWhen={status !== 'Awaiting Review' && status !== 'Rejected'}
             >
                 <div className="p-5 border-t border-t-neutral-600/30 md:hidden *:w-full">
                     <Conditional showWhen={status === 'Not Yet Started'}>
@@ -146,6 +182,7 @@ export default function ApplicationCard() {
                             variant="brand"
                             hierarchy="primary"
                             onClick={() => redirect('/application')}
+                            disabled
                         >
                             Begin application
                         </Button>
@@ -156,6 +193,7 @@ export default function ApplicationCard() {
                             variant="caution"
                             hierarchy="primary"
                             onClick={() => redirect('/application')}
+                            disabled
                         >
                             Continue application
                         </Button>
@@ -164,7 +202,7 @@ export default function ApplicationCard() {
                         showWhen={status === 'Accepted – Awaiting RSVP'}
                     >
                         <Button size="cozy" variant="brand" hierarchy="primary">
-                            RSVP to StormHacks 2024
+                            RSVP to JourneyHacks 2025
                         </Button>
                     </Conditional>
                     <Conditional showWhen={status === "Accepted and RSVP'd"}>

@@ -1,18 +1,25 @@
 'use client';
 
 import { CalendarEventType } from '@/components/calendar/types';
-import { MonthCalendar } from '@/components/calendar/MonthCalendar';
-import { LinearTimeline } from '@/components/calendar/LinearTimeline';
-import { Provider } from 'jotai';
+import { MonthCalendar } from '@/components/calendar/MonthCalendar/MonthCalendar';
+import { LinearTimeline } from '@/components/calendar/LinearTimeLine/LinearTimeline';
+import { Provider, useAtom, useSetAtom } from 'jotai';
+import { useMemo } from 'react';
+import {
+    currentYearMonthAtom,
+    DayjsifyEvents,
+} from '@/components/calendar/MonthCalendarShared';
+import { Button } from '@/components/ui/button';
+import dayjs from 'dayjs';
 
 export default function Calendar() {
-    const events: CalendarEventType[] = [
+    const _events: CalendarEventType[] = [
         {
             id: 1,
             title: 'Initial Planning Meeting',
             description:
                 'Discuss overall goals, timeline, and roles for the hackathon.',
-            startTime: new Date('2024-11-01T10:00:00'),
+            startTime: new Date('2025-01-31T10:00:00'),
             duration: 90,
             color: '#FF5733',
         },
@@ -21,7 +28,7 @@ export default function Calendar() {
             title: 'Budget Review',
             description:
                 'Finalize budget allocation for venue, catering, prizes, and swag.',
-            startTime: new Date('2024-11-02T14:00:00'),
+            startTime: new Date('2025-02-05T14:00:00'),
             duration: 60,
             color: '#33A8FF',
         },
@@ -30,7 +37,7 @@ export default function Calendar() {
             title: 'Sponsor Outreach',
             description:
                 'Follow up with potential sponsors and confirm commitments.',
-            startTime: new Date('2024-11-04T10:00:00'),
+            startTime: new Date('2025-02-05T12:00:00'),
             duration: 120,
             color: '#A833FF',
         },
@@ -38,7 +45,7 @@ export default function Calendar() {
             id: 4,
             title: 'Volunteer Recruitment',
             description: 'Organize volunteer applications and assign roles.',
-            startTime: new Date('2024-11-05T09:00:00'),
+            startTime: new Date('2025-02-05T09:00:00'),
             duration: 120,
             color: '#F2A233',
         },
@@ -47,7 +54,7 @@ export default function Calendar() {
             title: 'Venue Walkthrough',
             description:
                 'Inspect the venue and confirm logistics for the event day.',
-            startTime: new Date('2024-11-05T10:00:00'),
+            startTime: new Date('2025-02-05T10:00:00'),
             duration: 120,
             color: '#33FF57',
         },
@@ -183,28 +190,60 @@ export default function Calendar() {
             color: '#A833FF',
         },
     ];
+
+    const events = useMemo(() => DayjsifyEvents(_events), [_events]);
+    const [{ year, month }, updateMonth] = useAtom(currentYearMonthAtom);
     return (
         // Provider provides context for this page, so that calendar variables is only shared within this page, not truely global.
-        <Provider>
-            <div>
-                <h1>Calendar Test page</h1>
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        height: 'min-content',
+
+        <div>
+            <h1>Calendar Test page</h1>
+            <div className="flex">
+                <Button
+                    onClick={() => {
+                        updateMonth('-1 month');
                     }}
                 >
-                    <MonthCalendar events={events}></MonthCalendar>
+                    Prev
+                </Button>
+                <Button
+                    onClick={() => {
+                        updateMonth('set', {
+                            year: dayjs().year(),
+                            month: dayjs().month(),
+                        });
+                    }}
+                >
+                    Current
+                </Button>
+                <Button
+                    onClick={() => {
+                        updateMonth('+1 month');
+                    }}
+                >
+                    Next
+                </Button>
+                <span>
+                    Year {year}, Month: {month}
+                </span>
+            </div>
 
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    height: 'min-content',
+                }}
+            >
+                <MonthCalendar events={events}></MonthCalendar>
+                {/* 
                     <LinearTimeline
                         events={events}
                         styles={{
                             maxHeight: '600px',
                         }}
-                    ></LinearTimeline>
-                </div>
+                    ></LinearTimeline> */}
             </div>
-        </Provider>
+        </div>
     );
 }

@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { getUserData } from '../layout';
+import { getUserData } from '../home/layout';
 import { notFound } from 'next/navigation';
 
 export default async function Layout({ children }: { children: ReactNode }) {

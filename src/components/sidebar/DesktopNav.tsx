@@ -7,12 +7,22 @@ import { HomeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
+import { QrCodeIcon } from '@heroicons/react/24/solid';
 import {
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
 } from '@heroicons/react/24/outline';
 import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
-import { MergedUserData } from '@/app/(auth)/layout';
+import { EnvelopeIcon } from '@heroicons/react/24/outline';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+
+import * as PopoverPrimitive from '@radix-ui/react-popover';
+import { MergedUserData } from '@/app/(auth)/home/layout';
+
 import { signOut } from 'next-auth/react';
 import { redirect, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -209,6 +219,17 @@ export default function DesktopNav({
                                         'justify-center': collapsed,
                                     })}
                                 />
+                            )}
+                            {initialData?.userRole === 'admin' && (
+                                <NavLink
+                                    href="/admin/qr/hackathon/"
+                                    label="Hacker Checkin (Admin)"
+                                    icon={<QrCodeIcon></QrCodeIcon>}
+                                    iconAlt="QR logo"
+                                    platform="desktop"
+                                    active={false}
+                                    disabled={false}
+                                ></NavLink>
                             )}
                         </div>
                     </div>
