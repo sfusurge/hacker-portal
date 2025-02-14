@@ -17,7 +17,6 @@ const backendStatusToClientStatus: Record<string, AppStatus> = {
 
 export default async function Home() {
     const data = await getUserData();
-    //console.log(data);
 
     const opts: QROptions = {
         margin: 1,

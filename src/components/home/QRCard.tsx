@@ -31,7 +31,6 @@ type QRCardProps = {
 export default function QRCard({ userData, image }: QRCardProps) {
     const [isTicketOpen, setIsTicketOpen] = useState(false);
     const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
-    // console.log(userData);
     const userId = userData.id;
     const handleOpenTicket = () => {
         setIsTicketOpen(true);

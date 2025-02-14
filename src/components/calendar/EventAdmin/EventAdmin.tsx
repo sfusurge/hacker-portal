@@ -49,7 +49,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
     const [longDescription, setLongDescription] = useState('');
     useEffect(() => {
         setLongDescription(longDescriptionFetch.data?.longDescription ?? '');
-    }, [longDescriptionFetch]);
+    }, [longDescriptionFetch.data]);
 
     const updateEventapi = trpc.events.updateEvent.useMutation();
     const createEventApi = trpc.events.createEvent.useMutation();
@@ -59,12 +59,12 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
             enabled: false,
         }
     );
-    console.log(event.endDate?.toISOString().slice(0, -8));
+
+    const deleteApi = trpc.events.deleteEvent.useMutation();
 
     async function saveEvent(e: SubmitEvent) {
         e.preventDefault();
         if (!_selectedEvent) {
-            console.log({ ...event, eventId: event.id });
             createEventApi.mutate({
                 ...event,
                 startDate: event.startDate.getTime(),
@@ -95,11 +95,9 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
         setEditMode(false);
     }
 
-    const [now, later] = [
-        new Date().toISOString().slice(0, -8),
-        dayjs().add(2, 'hour').toDate().toISOString().slice(0, -8),
-    ];
-
+    function deleteEvent() {
+        deleteApi.mutate({ eventId: event.id });
+    }
     return (
         <>
             <SideDrawer visibleAtom={editModeAtom}>
@@ -168,15 +166,21 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                     <div>
                         <Label>Start Time</Label>
                         <FormTextInput
-                            placeholder={now}
-                            defaultValue={event.startDate
-                                ?.toISOString()
-                                .slice(0, -8)}
+                            defaultValue={
+                                event.startDate
+                                    ? dayjs(event.startDate)
+                                          .toISOString()
+                                          .slice(0, -8)
+                                    : ''
+                            }
                             type="datetime-local"
                             lazy
                             required
                             onLazyChange={(t) => {
-                                setEvent({ ...event, startDate: new Date(t) });
+                                setEvent({
+                                    ...event,
+                                    startDate: dayjs(new Date(t)).toDate(),
+                                });
                             }}
                         />
                     </div>
@@ -184,15 +188,21 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                     <div>
                         <Label>End Time</Label>
                         <FormTextInput
-                            placeholder={later}
-                            defaultValue={event.endDate
-                                ?.toISOString()
-                                .slice(0, -8)}
+                            defaultValue={
+                                event.endDate
+                                    ? dayjs(event.endDate)
+                                          .toISOString()
+                                          .slice(0, -8)
+                                    : ''
+                            }
                             type="datetime-local"
                             lazy
                             required
                             onLazyChange={(t) => {
-                                setEvent({ ...event, endDate: new Date(t) });
+                                setEvent({
+                                    ...event,
+                                    endDate: dayjs(new Date(t)).toDate(),
+                                });
                             }}
                         />
                     </div>
@@ -205,6 +215,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                             lazy
                             onLazyChange={(t) => {
                                 setLongDescription(t);
+                                console.log('in change', t);
                             }}
                         />
                     </div>
@@ -218,6 +229,16 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                     >
                         {_selectedEvent ? 'Save Edit' : 'Create new event'}
                     </Button>
+                    {_selectedEvent && (
+                        <Button
+                            onClick={deleteEvent}
+                            size={'compact'}
+                            hierarchy={'primary'}
+                            variant={'caution'}
+                        >
+                            Delete
+                        </Button>
+                    )}
                 </form>
             </SideDrawer>
         </>

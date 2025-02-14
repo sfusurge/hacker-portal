@@ -10,7 +10,7 @@ import { ToggleButton } from '@/components/ui/ToggleButton/ToggleButton';
 import { CalendarEvent } from '@/server/routers/eventsRouter';
 import dayjs from 'dayjs';
 import { atom, useAtom, useAtomValue } from 'jotai';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { L } from 'vitest/dist/chunks/reporters.D7Jzd9GS.js';
 import { userInfoAtom } from '../ClientAuthContext';
 import { MonthCalendar } from '@/components/calendar/MonthCalendar/MonthCalendar';
@@ -26,6 +26,7 @@ import {
 } from '@heroicons/react/24/solid';
 import { useWindowSize } from '@/lib/utils';
 import { MobileMonthCalendar } from '@/components/calendar/MobileMonthCalendar/MobileMonthCalendar';
+import { trpc } from '@/trpc/client';
 
 export function ClientCalendarPage({
     events: _events,
@@ -54,6 +55,29 @@ export function ClientCalendarPage({
     const [editMode, setEditMode] = useAtom(editModeAtom);
 
     const [width, height] = useWindowSize();
+
+    const fetchEvents = trpc.events.getEvents.useQuery(
+        { hackathonId: 1 },
+        { enabled: false }
+    );
+    useEffect(() => {
+        async function updateEvents() {
+            const res = await fetchEvents.refetch();
+            setEvents(
+                res.data?.map((item) => {
+                    return {
+                        ...item,
+                        startDate: new Date(item.startDate),
+                        endDate: new Date(item.endDate),
+                    };
+                }) ?? []
+            );
+        }
+        const interval = setInterval(updateEvents, 30000); // 5 mins
+        return () => {
+            clearInterval(interval);
+        };
+    }, []);
 
     // TODO Mobile mode
 

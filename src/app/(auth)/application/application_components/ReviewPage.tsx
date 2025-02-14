@@ -33,7 +33,6 @@ export function ReviewPage({
                 break;
 
             case 'multiple-checkbox':
-                console.log;
                 res = question.choices
                     .filter((item) => item.value)
                     .map((item) => item.name)
