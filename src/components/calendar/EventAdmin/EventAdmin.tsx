@@ -168,9 +168,9 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                         <FormTextInput
                             defaultValue={
                                 event.startDate
-                                    ? dayjs(event.startDate)
-                                          .toISOString()
-                                          .slice(0, -8)
+                                    ? dayjs(event.startDate).format(
+                                          'YYYY-MM-DDTHH:mm:ss'
+                                      )
                                     : ''
                             }
                             type="datetime-local"
@@ -190,9 +190,9 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                         <FormTextInput
                             defaultValue={
                                 event.endDate
-                                    ? dayjs(event.endDate)
-                                          .toISOString()
-                                          .slice(0, -8)
+                                    ? dayjs(event.endDate).format(
+                                          'YYYY-MM-DDTHH:mm:ss'
+                                      )
                                     : ''
                             }
                             type="datetime-local"
