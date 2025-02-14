@@ -170,7 +170,17 @@ export default function ScanPage({
 
     return (
         <div className="flex flex-col items-center justify-between min-h-screen bg-neutral-900">
-            <div className="relative w-full aspect-[3/4] min-h-screen md:max-w-sm">
+            {/* HACK */}
+            <div
+                style={{
+                    position: 'fixed',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 10000,
+                }}
+                className="relative w-full aspect-[3/4] min-h-screen md:max-w-sm"
+            >
                 <div className="absolute inset-0 overflow-hidden">
                     <Scanner
                         onScan={(result) => submitId(result[0].rawValue, false)}
