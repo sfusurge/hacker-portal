@@ -3,6 +3,7 @@
 .hasEvent {
     position: relative;
     overflow: hidden;
+    background-color: red;
 }
 
 .hasEvent::after {

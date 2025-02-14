@@ -40,7 +40,7 @@ export function MobileMonthCalendar({
     const [maxHeight, setMaxHeight] = useState(0);
 
     const filteredEvents = useMemo(
-        () => getEventsOfMonth(events, month, year),
+        () => getEventsOfMonth(events, month, year, false),
         [year, month]
     );
 

@@ -84,15 +84,20 @@ export function groupEventsByDay(
 export function getEventsOfMonth(
     events: InternalCalendarEventType[],
     month: number,
-    year: number
+    year: number,
+    inclusive: boolean = true
 ) {
     const filtered = events.filter((item) => {
         const start = item.startTime;
-        return (
-            (Math.abs(month - item.startTime.month()) <= 1 ||
-                month - item.startTime.month() === 11) &&
-            Math.abs(year - start.year()) <= 1
-        );
+        if (inclusive) {
+            return (
+                (Math.abs(month - item.startTime.month()) <= 1 ||
+                    month - item.startTime.month() === 11) &&
+                Math.abs(year - start.year()) <= 1
+            );
+        } else {
+            return item.startTime.month() === month;
+        }
     });
     return filtered;
 }
