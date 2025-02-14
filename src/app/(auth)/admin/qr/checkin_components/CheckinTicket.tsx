@@ -9,7 +9,7 @@ import { GetUsersOutput, trpc } from '@/trpc/client';
 
 type CheckInTicketProps = {
     currentHacker: GetUsersOutput[0];
-    checkInType: 'Event Check-in' | 'Meal Check-in' | 'Workshop Check-in';
+    checkInType: 'Event Check-in' | 'Lunch Check-in' | 'Workshop Check-in';
     specificMeal: string;
     specificWorkshop: string;
 };
@@ -21,8 +21,10 @@ export default function CheckinTicket({
     const typeConverter = (checkInType: string) => {
         if (checkInType === 'Event Check-in') {
             return 4;
-        } else if (checkInType === 'Meal Check-in') {
-            return 2;
+        } else if (checkInType === 'Lunch Check-in') {
+            return 6;
+        } else if (checkInType === 'Dinner Check-in') {
+            return 8;
         } else {
             return 0;
         }

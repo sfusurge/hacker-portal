@@ -7,7 +7,8 @@ import {
 
 export const buttonConfig = {
     'Event Check-in': { icon: TicketIcon, label: 'Check in to hackathon' },
-    'Meal Check-in': { icon: FireIcon, label: 'Check in to meal' },
+    'Lunch Check-in': { icon: FireIcon, label: 'Check in to Lunch' },
+    'Dinner Check-in': { icon: FireIcon, label: 'Check in to Dinner' },
     'Workshop Check-in': {
         icon: WrenchScrewdriverIcon,
         label: 'Check in to Workshop',
