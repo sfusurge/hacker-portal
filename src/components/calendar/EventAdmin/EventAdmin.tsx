@@ -60,6 +60,8 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
         }
     );
 
+    const deleteApi = trpc.events.deleteEvent.useMutation();
+
     async function saveEvent(e: SubmitEvent) {
         e.preventDefault();
         if (!_selectedEvent) {
@@ -93,11 +95,9 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
         setEditMode(false);
     }
 
-    const [now, later] = [
-        new Date().toISOString().slice(0, -8),
-        dayjs().add(2, 'hour').toDate().toISOString().slice(0, -8),
-    ];
-
+    function deleteEvent() {
+        deleteApi.mutate({ eventId: event.id });
+    }
     return (
         <>
             <SideDrawer visibleAtom={editModeAtom}>
@@ -229,6 +229,16 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                     >
                         {_selectedEvent ? 'Save Edit' : 'Create new event'}
                     </Button>
+                    {_selectedEvent && (
+                        <Button
+                            onClick={deleteEvent}
+                            size={'compact'}
+                            hierarchy={'primary'}
+                            variant={'caution'}
+                        >
+                            Delete
+                        </Button>
+                    )}
                 </form>
             </SideDrawer>
         </>
