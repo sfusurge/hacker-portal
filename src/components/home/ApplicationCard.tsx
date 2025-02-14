@@ -52,7 +52,6 @@ export default function ApplicationCard({
     }, []);
 
     if (applicationSubmitted.data) {
-        //console.log( getApplicationStatus.data)
         status = getApplicationStatus.data.currentStatus;
     } else if (questionSetExists) {
         status = 'In Progress';

@@ -136,7 +136,6 @@ export function DaySchedule({
                 <div className={style.scheduleRoot}>
                     <div
                         ref={(ref) => {
-                            console.log(ref?.scrollHeight!, headerHeight);
                             setContainerHeight(
                                 ref?.scrollHeight! - headerHeight
                             );
