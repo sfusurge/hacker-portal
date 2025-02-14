@@ -13,21 +13,13 @@ import {
     ChevronDoubleRightIcon,
 } from '@heroicons/react/24/outline';
 import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
-import { EnvelopeIcon } from '@heroicons/react/24/outline';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
-
-import * as PopoverPrimitive from '@radix-ui/react-popover';
-import { MergedUserData } from '@/app/(auth)/home/layout';
 
 import { signOut } from 'next-auth/react';
 import { redirect, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import React from 'react';
-import { CSSTransition, SwitchTransition } from 'react-transition-group';
+import { MergedUserData } from '@/app/(auth)/layout';
+import { SwitchTransition } from 'react-transition-group';
 
 interface DesktopNavProps {
     className?: string;
@@ -108,6 +100,7 @@ export default function DesktopNav({
 
                             <div className="absolute inset-0">
                                 <SwitchTransition mode="out-in">
+                                    {/* @ts-ignore */}
                                     <CSSTransition
                                         key={
                                             collapsed ? 'collapsed' : 'expanded'
@@ -157,47 +150,7 @@ export default function DesktopNav({
                             </div>
                         </div>
 
-                    <div className="links flex-1 flex flex-col gap-1">
-                        <NavLink
-                            href="#"
-                            label="Home"
-                            icon={<HomeIcon></HomeIcon>}
-                            iconAlt="Home logo"
-                            platform="desktop"
-                            active={url.startsWith('/home')}
-                            onClick={returnHome}
-                        ></NavLink>
-                        <NavLink
-                            href="#"
-                            label="Team"
-                            icon={<UserGroupIcon></UserGroupIcon>}
-                            iconAlt="Team logo"
-                            platform="desktop"
-                            active={false}
-                            disabled={true}
-                        ></NavLink>
-
-                        <NavLink
-                            href="/calendar"
-                            label="Schedule"
-                            icon={<CalendarDaysIcon></CalendarDaysIcon>}
-                            iconAlt="Schedule logo"
-                            platform="desktop"
-                            active={false}
-                            disabled={false}
-                        ></NavLink>
-
-                        <NavLink
-                            href="#"
-                            label="Alerts"
-                            icon={<BellAlertIcon></BellAlertIcon>}
-                            iconAlt="Alerts logo"
-                            platform="desktop"
-                            active={false}
-                            disabled={true}
-                        ></NavLink>
-
-                        {initialData?.userRole === 'admin' && (
+                        <div className="links flex-1 flex flex-col gap-1">
                             <NavLink
                                 href="/home"
                                 label="Home"
@@ -228,7 +181,6 @@ export default function DesktopNav({
                                 iconAlt="Schedule logo"
                                 platform="desktop"
                                 active={url.startsWith('/schedule')}
-                                disabled={true}
                                 className={clsx({
                                     'justify-center': collapsed,
                                 })}

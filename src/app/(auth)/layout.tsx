@@ -78,7 +78,10 @@ export default async function Layout({ children }: { children: ReactNode }) {
                     initialData={initialUserData}
                     className="hidden md:block"
                 ></DesktopNav>
-                <main className="mt-20 pb-20 md:max-h-screen md:flex-1 md:bg-neutral-925 md:my-5 md:p-10 md:rounded-2xl md:border md:border-neutral-600/30 md:overflow-y-auto">
+                <main
+                    style={{ marginTop: '4rem' }}
+                    className="mt-20 pb-20 md:max-h-screen md:flex-1 md:bg-neutral-925 md:my-5 md:p-10 md:rounded-2xl md:border md:border-neutral-600/30 md:overflow-y-auto"
+                >
                     {children}
                 </main>
             </div>
