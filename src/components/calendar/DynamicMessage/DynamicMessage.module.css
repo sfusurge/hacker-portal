@@ -1,3 +1,14 @@
+.backdrop {
+    position: fixed;
+    z-index: 100;
+    top: 0;
+    left: 0;
+    width: 100dvw;
+    height: 100dvh;
+
+    background-color: black;
+    opacity: 0.05;
+}
 .labelChildrenContainer {
     width: min-content;
 

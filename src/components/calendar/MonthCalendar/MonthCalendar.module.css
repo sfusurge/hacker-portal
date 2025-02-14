@@ -2,13 +2,14 @@
     /* to provide positioning reference for all children */
     position: relative;
 
-    width: 100%;
-    min-width: 800px;
-    min-height: 800px;
+    width: auto;
+    min-width: 700px;
+    min-height: 600px;
     height: 100%;
-    display: flex;
 
     color: var(--text-regular);
+    display: flex;
+    flex-direction: column;
 }
 
 .calendarContainer {
@@ -169,6 +170,8 @@
     transition:
         scale 250ms ease-out,
         filter 250ms ease-out;
+
+    background-color: black;
 }
 
 .monthEventItem::before {

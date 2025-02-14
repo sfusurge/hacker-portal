@@ -1,7 +1,8 @@
 import { Suspense } from 'react';
 import UserInfoForm from './UserInfoForm';
-import { getUserData } from '@/app/(auth)/home/layout';
+
 import { redirect } from 'next/navigation';
+import { getUserData } from '@/app/(auth)/layout';
 
 export default async function UserInfoPage() {
     const data = await getUserData();

@@ -1,5 +1,3 @@
-import { CalendarEventType } from '../types';
-
 import style from './LinearTimeline.module.css';
 import { CSSProperties, useEffect, useRef, useState } from 'react';
 import {

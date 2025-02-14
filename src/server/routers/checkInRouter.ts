@@ -1,4 +1,3 @@
-import { getUserData } from '@/app/(auth)/home/layout';
 import { databaseClient } from '@/db/client';
 import {
     checkIns,
@@ -10,6 +9,7 @@ import { InternalServerError, UnauthorizedError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
 import { and, asc, eq, getTableColumns } from 'drizzle-orm';
 import { events as eventsTable } from '@/db/schema/events';
+import { getUserData } from '@/app/(auth)/layout';
 
 export const checkInRouter = router({
     checkIn: publicProcedure

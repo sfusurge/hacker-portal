@@ -1,0 +1,36 @@
+.colorItem {
+    width: 2rem;
+    height: 2rem;
+    box-sizing: border-box;
+
+    background-color: var(--color);
+    border-radius: 50%;
+    position: relative;
+}
+
+.selected::before {
+    position: absolute;
+    content: '';
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 50%;
+    border: 2px solid var(--neutral-800);
+
+    background-image: url('/icons/check.svg');
+    background-size: 65%;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    margin: 0.75rem;
+    flex-flow: wrap;
+    width: max-content;
+    max-width: 100%;
+}

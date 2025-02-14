@@ -40,9 +40,9 @@ export const FormTextArea = forwardRef<
         const length = useMemo(() => (value as string).length, [value]);
         const timer = useRef<ReturnType<typeof setTimeout> | undefined>();
 
-        useEffect(() => {
-            setValue(defaultValue);
-        }, [defaultValue]);
+        // useEffect(() => {
+        //     setValue(defaultValue);
+        // }, [defaultValue]);
 
         function change() {
             if (!lazy || !textRef.current) {

@@ -1,0 +1,131 @@
+.longDescriptionContainer {
+    /* desktop styles */
+
+    position: fixed;
+    top: 50%;
+    left: 50%; /*
+    transform: translate(-50%, -50%); */
+    z-index: 1000;
+
+    width: 80dvw;
+    height: 90dvh;
+    max-height: 90dvh;
+    max-width: 1200px;
+
+    overflow: hidden;
+
+    background-color: var(--background-neutral-secondary);
+    border: 1px solid var(--border-neutral-tertiary);
+    border-radius: 10px;
+
+    backdrop-filter: blur(10px);
+}
+
+@media only screen and (max-width: 768px) {
+    .longDescriptionContainer {
+        border: none;
+        border-radius: 0;
+
+        top: 50%;
+        left: 50%;
+
+        width: 100dvw;
+        height: 100dvh;
+        max-height: 100dvh;
+    }
+}
+
+.contentHolder {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    min-height: 500px;
+    height: 100%;
+
+    padding: 1.5rem;
+
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100dvw;
+    height: 100dvh;
+
+    background-color: black;
+    z-index: 999;
+}
+
+.title {
+    font-size: 24px;
+    font-weight: bold;
+
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.line {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* Markdown hmtl styles */
+
+.md {
+    display: flex;
+    flex-direction: column;
+}
+/* use nested selectors to style html elements */
+
+.md > h1,
+.md > h2,
+.md > h3,
+.md > h4 {
+    margin: 1.25rem 0;
+}
+
+.md > h1 {
+    font-size: 36px;
+    color: var(--brand-500);
+    font-weight: bold;
+}
+
+.md > h2 {
+    font-size: 26px;
+    color: var(--brand-500);
+}
+
+.md > ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.md > * > li {
+    display: flex;
+    align-items: center;
+}
+
+.md > * > li::before {
+    content: '';
+    display: inline-block;
+
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-right: 0.75rem;
+
+    border-radius: 50%;
+    background-color: var(--brand-500);
+}
+
+.md > hr {
+    margin: 2rem;
+    border-color: var(--border-neutral-secondary);
+}

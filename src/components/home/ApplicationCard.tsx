@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import QRTicket from '@/app/(auth)/admin/qr/checkin_components/QRTicket';
 import QRCard from '@/components/home/QRCard';
 import WithdrawCard from '@/components/home/WithdrawCard';
+import { MergedUserData } from '@/app/(auth)/layout';
 
 export type AppStatus =
     | 'Not Yet Started'
@@ -22,18 +23,7 @@ export type AppStatus =
     | 'Waitlisted';
 
 type ApplicationCardProps = {
-    userData:
-        | {
-              displayId: string;
-              userId: number;
-              id: number;
-              firstName: string | null;
-              lastName: string | null;
-              phoneNumber: string | null;
-              email: string;
-              userRole: string;
-          }
-        | undefined;
+    userData: MergedUserData;
     image: string;
 };
 
@@ -47,7 +37,7 @@ export default function ApplicationCard({
     const getApplicationStatus =
         trpc.applications.getApplicationStatus.useQuery({
             hackathonId: 1,
-            userId: userData.userId,
+            userId: userData!.id,
         });
 
     const applicationSubmitted =

@@ -157,7 +157,47 @@ export default function DesktopNav({
                             </div>
                         </div>
 
-                        <div className="links flex-1 flex flex-col gap-1">
+                    <div className="links flex-1 flex flex-col gap-1">
+                        <NavLink
+                            href="#"
+                            label="Home"
+                            icon={<HomeIcon></HomeIcon>}
+                            iconAlt="Home logo"
+                            platform="desktop"
+                            active={url.startsWith('/home')}
+                            onClick={returnHome}
+                        ></NavLink>
+                        <NavLink
+                            href="#"
+                            label="Team"
+                            icon={<UserGroupIcon></UserGroupIcon>}
+                            iconAlt="Team logo"
+                            platform="desktop"
+                            active={false}
+                            disabled={true}
+                        ></NavLink>
+
+                        <NavLink
+                            href="/calendar"
+                            label="Schedule"
+                            icon={<CalendarDaysIcon></CalendarDaysIcon>}
+                            iconAlt="Schedule logo"
+                            platform="desktop"
+                            active={false}
+                            disabled={false}
+                        ></NavLink>
+
+                        <NavLink
+                            href="#"
+                            label="Alerts"
+                            icon={<BellAlertIcon></BellAlertIcon>}
+                            iconAlt="Alerts logo"
+                            platform="desktop"
+                            active={false}
+                            disabled={true}
+                        ></NavLink>
+
+                        {initialData?.userRole === 'admin' && (
                             <NavLink
                                 href="/home"
                                 label="Home"

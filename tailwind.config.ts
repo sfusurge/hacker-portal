@@ -166,6 +166,9 @@ const config: Config = {
         },
     },
     plugins: [require('tailwindcss-animate')],
+    corePlugins: {
+        container: false,
+    },
 };
 
 export default config;

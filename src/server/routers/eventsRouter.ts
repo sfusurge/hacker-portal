@@ -8,11 +8,26 @@ import {
 } from '@/db/schema/events';
 import { publicProcedure, router } from '../trpc';
 import { InternalServerError, UnauthorizedError } from '../exceptions';
-import { getUserData } from '@/app/(auth)/home/layout';
+
 import { UserRoleEnum } from '@/db/schema/users';
 import { databaseClient } from '@/db/client';
 import { and, asc, eq, getTableColumns } from 'drizzle-orm';
 import { checkIns } from '@/db/schema/checkIn';
+import { getUserData } from '@/app/(auth)/layout';
+
+export interface CalendarEvent {
+    id: number;
+    checkedIn: boolean;
+    hasLongDescription: boolean;
+    startDate: Date;
+    endDate: Date;
+    hackathonId: number;
+    title: string;
+    color: string;
+    location: string;
+    description?: string | undefined;
+    checkInTime?: string | undefined;
+}
 
 export const eventsRouter = router({
     createEvent: publicProcedure
@@ -27,7 +42,6 @@ export const eventsRouter = router({
                     role: user?.userRole,
                 });
             }
-
             console.log(`Inserting ${JSON.stringify(input)}`);
 
             const [event] = await databaseClient
@@ -44,7 +58,7 @@ export const eventsRouter = router({
                 })
                 .returning();
 
-            return event;
+            // return event;
         }),
 
     getEvents: publicProcedure
@@ -66,7 +80,7 @@ export const eventsRouter = router({
                         userId: checkIns.userId,
                         checkInTime: checkIns.checkInTime,
                     },
-                    event: rest,
+                    event: eventsTable,
                 })
                 .from(eventsTable)
                 .leftJoin(
@@ -84,15 +98,21 @@ export const eventsRouter = router({
 
             console.log(`Returned rows: ${JSON.stringify(rows)}`);
 
-            const events = rows.map(({ checkIn, event }) => {
+            const events = rows.map(({ checkIn, event: _event }) => {
+                const { longDescription, ...event } = { ..._event };
                 return {
                     ...event,
                     checkedIn: checkIn != null,
-                    checkInTime: checkIn?.checkInTime ?? null,
+                    description: event.description ?? undefined,
+                    hasLongDescription:
+                        longDescription !== undefined &&
+                        longDescription !== null &&
+                        longDescription.length > 0,
+                    checkInTime: checkIn?.checkInTime ?? undefined,
                 };
             });
 
-            return events;
+            return events as CalendarEvent[];
         }),
 
     getEventLongDescription: publicProcedure
@@ -107,7 +127,7 @@ export const eventsRouter = router({
                 .where(eq(eventsTable.id, input.eventId))
                 .limit(1);
 
-            return event;
+            return event ?? {};
         }),
 
     updateEvent: publicProcedure
@@ -118,8 +138,8 @@ export const eventsRouter = router({
                 .set({
                     title: input.title,
                     color: input.color,
-                    startDate: input.startDate,
-                    endDate: input.endDate,
+                    startDate: new Date(input.startDate),
+                    endDate: new Date(input.endDate),
                     location: input.location,
                     description: input.description,
                     longDescription: input.longDescription,

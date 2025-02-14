@@ -1,7 +1,7 @@
 'use client';
 
 import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
-import { CalendarEventType, MonthInfoType } from '../types';
+import { MonthInfoType } from '../types';
 import dayjs, { Dayjs } from 'dayjs';
 import style from './MonthCalendar.module.css';
 import { atom, Provider, useAtom, useAtomValue, useSetAtom } from 'jotai';
@@ -17,12 +17,14 @@ import {
     weeksInMonth,
 } from '../MonthCalendarShared';
 import { DynamicMessage } from '../DynamicMessage/DynamicMessage';
-import { Card, CardContent, CardHeader } from '../../ui/card';
+
 import { AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { EventCard } from '../EventCard/EventCard';
-import { Button } from '@/components/ui/button';
+
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
+import { LongDescriptionModal } from '../EventLongDescription/EventLongDescription';
+import { CalendarEvent } from '@/server/routers/eventsRouter';
 
 function getMonthInfo(year: number, month: number): MonthInfoType {
     const target = dayjs(new Date(year, month, 1));
@@ -57,23 +59,14 @@ function range(count: number) {
     return out;
 }
 
-/**
- * TODOs
- * * Add handles/atoms to select current month, and starting month
- * * Add callbacks or atom for currently selected day, selected event
- *
- */
-export function MonthCalendar(props: { events: InternalCalendarEventType[] }) {
-    // just a wrapper to provide Provider for context.
-    return <MonthCalendarContent {...props}></MonthCalendarContent>;
-}
-
 const rowHeightAtom = atom(170);
-export function MonthCalendarContent({
-    events,
+export function MonthCalendar({
+    events: _events,
 }: {
-    events: InternalCalendarEventType[];
+    events: CalendarEvent[];
 }) {
+    const events = useMemo(() => DayjsifyEvents(_events), [_events]);
+
     const [{ year, month }, updateYearMonth] = useAtom(currentYearMonthAtom);
 
     const monthInfo = useMemo(() => {
@@ -115,27 +108,41 @@ export function MonthCalendarContent({
         return () => resizeObserver.disconnect();
     }, []);
 
+    // full details display
+    const [showMoreInfo, setShowMore] = useState(false);
+
     return (
-        <div>
+        <div style={{ height: '100%', width: '100%' }}>
+            <AnimatePresence>
+                {selectedEvent && selectedEvent.element && showMoreInfo && (
+                    <LongDescriptionModal
+                        event={selectedEvent.event}
+                        onClose={() => {
+                            setShowMore(false);
+                        }}
+                    />
+                )}
+            </AnimatePresence>
             {/* Week day name row, such as Sun, Mon, Tues, ... */}
-            <div className={style.weekdayNameRow}>
-                {monthInfo.weekdayNames.map((item, index) => (
-                    <span key={item} className={style.weekdayName}>
-                        {item}
-                    </span>
-                ))}
-            </div>
+
             <div ref={renderRootRef} className={style.calendarRenderRoot}>
                 {/* AnimatePresence needed for framer motion, needs to always exist and wrap content. 
                 (As in, content is toggling within AnimatePresence. TODO: Refactor into it's own component)
                 */}
+                <div className={style.weekdayNameRow}>
+                    {monthInfo.weekdayNames.map((item, index) => (
+                        <span key={item} className={style.weekdayName}>
+                            {item}
+                        </span>
+                    ))}
+                </div>
 
                 <AnimatePresence>
                     {selectedEvent && selectedEvent.element && (
                         <DynamicMessage
                             rootRef={renderRootRef.current!}
                             parentRef={selectedEvent.element}
-                            closeLabel={() => {
+                            onClose={() => {
                                 // disable prompt
                                 setSelectedEvent(undefined);
                             }}
@@ -144,6 +151,9 @@ export function MonthCalendarContent({
                                 <SkewmorphicButton
                                     style={{
                                         backgroundColor: 'var(--brand-700)',
+                                    }}
+                                    onClick={() => {
+                                        setShowMore(true);
                                     }}
                                 >
                                     More Info
@@ -272,7 +282,11 @@ function MonthDay({
                 )}
             >
                 {events.map((item, index) => {
-                    if (index <= maxItems || viewAll) {
+                    if (
+                        index < maxItems ||
+                        maxItems == events.length - 1 ||
+                        viewAll
+                    ) {
                         return (
                             <MonthDayEvent
                                 key={item.id}
