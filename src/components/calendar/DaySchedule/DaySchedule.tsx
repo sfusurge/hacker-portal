@@ -1,15 +1,25 @@
 'use client';
 
-import { CSSProperties, useMemo, useRef, useState } from 'react';
+import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import style from './DaySchedule.module.css';
 import {
     currentTimeAtom,
+    DayjsifyEvents,
     groupEventsByDay,
     InternalCalendarEventType,
     selectedEventAtom,
 } from '../MonthCalendarShared';
 import dayjs, { Dayjs } from 'dayjs';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { DynamicMessage } from '../DynamicMessage/DynamicMessage';
+import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
+import { EventCard } from '../EventCard/EventCard';
+import { AnimatePresence } from 'motion/react';
+import { LongDescriptionModal } from '../EventLongDescription/EventLongDescription';
+import { CalendarEvent } from '@/server/routers/eventsRouter';
+
+// size of UI, shared
+const [rowHeight, headerHeight] = [90, 30];
 
 /**
  * TODO
@@ -18,17 +28,22 @@ import { useAtomValue, useSetAtom } from 'jotai';
  * @returns
  */
 export function DaySchedule({
-    events,
+    events: _events,
     startDate,
     days,
     minColumnWidth,
 }: {
-    events: InternalCalendarEventType[];
+    events: CalendarEvent[];
     startDate: Dayjs;
     days: number;
     minColumnWidth: number;
 }) {
-    const endDate = startDate.clone().add(days, 'day').endOf('day');
+    const endDate = startDate
+        .clone()
+        .add(Math.max(0, days - 1), 'day')
+        .endOf('day');
+
+    const events = useMemo(() => DayjsifyEvents(_events), [_events]);
 
     const processedEvents = useMemo(() => {
         return ProcessEventsForSchedule(
@@ -40,34 +55,88 @@ export function DaySchedule({
                         startTime.isBefore(endDate)
                     );
                 }),
-                'timestamp'
+                dayjs(new Date(startDate.year(), startDate.month(), 1))
             )
         );
     }, [events]);
 
-    const selectedEvent = useAtomValue(selectedEventAtom);
-
-    const [rowHeight, headerHeight] = [60, 24];
+    const rootRef = useRef<HTMLDivElement>(null);
+    const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
 
     const [containerHeight, setContainerHeight] = useState(0);
     const currentTime = useAtomValue(currentTimeAtom);
 
+    const [showMore, setShowMore] = useState(false);
+
     let zero = dayjs().hour(0);
     return (
-        <>
-            <h1>Selected event: {selectedEvent?.event.title}</h1>
+        <div
+            style={{
+                height: '100%',
+            }}
+        >
+            <div
+                ref={rootRef}
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: 0,
+                    height: `${headerHeight}px`,
+                }}
+            >
+                {/* spacer to provide reference position for dynamic message*/}
+            </div>
+            <AnimatePresence>
+                {selectedEvent && selectedEvent.element && (
+                    <DynamicMessage
+                        rootRef={rootRef.current!}
+                        parentRef={selectedEvent.element}
+                        onClose={() => {
+                            setSelectedEvent(undefined);
+                        }}
+                    >
+                        <EventCard event={selectedEvent.event}>
+                            <SkewmorphicButton
+                                style={{
+                                    backgroundColor: 'var(--brand-700)',
+                                }}
+                                onClick={() => {
+                                    setShowMore(true);
+                                }}
+                            >
+                                More Info
+                            </SkewmorphicButton>
+                        </EventCard>
+                    </DynamicMessage>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {selectedEvent && selectedEvent.element && showMore && (
+                    <LongDescriptionModal
+                        event={selectedEvent.event}
+                        onClose={() => {
+                            setShowMore(false);
+                        }}
+                    />
+                )}
+            </AnimatePresence>
+
             <div
                 className={style.scheduleRootWrapper}
                 style={
                     {
                         '--rowHeight': `${rowHeight}px`,
                         '--minColWidth': `${minColumnWidth}px`,
+                        '--headerHeight': `${headerHeight}px`,
                     } as CSSProperties
                 }
             >
                 <div className={style.scheduleRoot}>
                     <div
                         ref={(ref) => {
+                            console.log(ref?.scrollHeight!, headerHeight);
                             setContainerHeight(
                                 ref?.scrollHeight! - headerHeight
                             );
@@ -75,7 +144,14 @@ export function DaySchedule({
                         className={style.scheduleContainer}
                     >
                         <div className={style.timeColumn}>
-                            <div className={style.header} />
+                            <div
+                                className={style.header}
+                                style={
+                                    {
+                                        '--headerHeight': `${headerHeight}px`,
+                                    } as CSSProperties
+                                }
+                            />
                             {[...Array(24).keys()].map((idx) => {
                                 const timeLabel = zero.format('h a'); //5 am
                                 zero = zero.add(1, 'hour');
@@ -89,18 +165,29 @@ export function DaySchedule({
 
                         {Object.entries(processedEvents).map((item, index) => {
                             const [epochTimeString, columnsOfDay] = item;
-                            const day = dayjs(parseInt(epochTimeString));
+                            const day = startDate.add(index, 'day');
                             return (
                                 <div
                                     key={`${epochTimeString}_${index}`}
                                     className={style.dayColumn}
                                 >
-                                    <div className={style.header}>
+                                    <div
+                                        className={style.header}
+                                        style={
+                                            {
+                                                '--headerHeight': `${headerHeight}px`,
+                                            } as CSSProperties
+                                        }
+                                    >
                                         {day.format('MMM D, ddd')}
                                     </div>
                                     <div className={style.dayColumnContent}>
                                         {containerHeight > 0 &&
-                                            day.isSame(currentTime, 'day') && (
+                                            (true ||
+                                                day.isSame(
+                                                    currentTime,
+                                                    'day'
+                                                )) && (
                                                 <TimelineMarker
                                                     parentHeight={
                                                         containerHeight
@@ -134,7 +221,7 @@ export function DaySchedule({
                     </div>
                 </div>
             </div>
-        </>
+        </div>
     );
 }
 
@@ -216,6 +303,10 @@ function ProcessEventsForSchedule(eventsMaps: {
         }
         out[eventTimes[i]] = columns;
     }
+    // no empty returns
+    if (Object.keys(out).length === 0) {
+        return { 0: [[]] };
+    }
 
     return out;
 }
@@ -262,17 +353,21 @@ function DayEventItem({
                 } as CSSProperties
             }
         >
-            <span>{event.title}</span>
-            <span>
-                {eventTime.format('h:mm A')} -{' '}
-                {eventTime.add(event.duration, 'minutes').format('h:mm A')}
-            </span>
+            <div className={style.dayEventContent}>
+                <span className={style.dayEventLine}>{event.title}</span>
+                <span className={style.dayEventLine}>
+                    {`${eventTime.format('h:mm A')} - ${eventTime.add(event.duration, 'minutes').format('h:mm A')}`}
+                </span>
+                {event.location && (
+                    <span className={style.dayEventLine}>{event.location}</span>
+                )}
+            </div>
         </div>
     );
 }
 
 function TimelineMarker({ parentHeight }: { parentHeight: number }) {
-    const currentTime = useAtomValue(currentTimeAtom);
+    const [currentTime, setCurrentTime] = useAtom(currentTimeAtom);
 
     const minutesInDay = 1440;
     const top = useMemo(() => {
@@ -282,14 +377,34 @@ function TimelineMarker({ parentHeight }: { parentHeight: number }) {
         );
     }, [currentTime]);
 
+    const markerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentTime(dayjs());
+        }, 60000);
+        setCurrentTime(dayjs());
+        markerRef.current!.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+            inline: 'center',
+        });
+        return () => {
+            clearInterval(interval);
+        };
+    }, []);
+
     return (
         <div
+            ref={markerRef}
             style={
                 {
                     '--top': `${Math.round(top)}px`,
                 } as CSSProperties
             }
             className={style.timeMarker}
-        ></div>
+        >
+            <div className={style.timeText}>{currentTime.format('hh:mm')}</div>
+        </div>
     );
 }

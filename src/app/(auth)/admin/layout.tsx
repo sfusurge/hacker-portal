@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
-import { getUserData } from '../home/layout';
+
 import { notFound } from 'next/navigation';
+import { getUserData } from '../layout';
 
 export default async function Layout({ children }: { children: ReactNode }) {
     const userData = await getUserData();

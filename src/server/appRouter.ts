@@ -14,7 +14,6 @@ export const appRouter = router({
 
     users: usersRouter,
     hackathons: hackathonsRouter,
-
     applications: applicationsRouter,
     emails: sendEmailRouter,
 

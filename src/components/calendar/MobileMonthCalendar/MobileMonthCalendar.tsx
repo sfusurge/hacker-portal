@@ -1,6 +1,6 @@
 'use client';
 
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { useAtom } from 'jotai';
 
 import { useState, useMemo, useRef, useEffect, CSSProperties } from 'react';
@@ -12,17 +12,22 @@ import {
     yearMonthDay,
     InternalCalendarEventType,
     currentYearMonthAtom,
+    DayjsifyEvents,
 } from '../MonthCalendarShared';
-import { CalendarEventType } from '../types';
+
 import { Calendar } from '@/components/ui/calendar';
+import { CalendarEvent } from '@/server/routers/eventsRouter';
 
 export function MobileMonthCalendar({
-    events,
+    events: _events,
 }: {
-    events: InternalCalendarEventType[];
+    events: CalendarEvent[];
 }) {
-    const [{ year, month }, updateYearMonth] = useAtom(currentYearMonthAtom);
+    const events = useMemo(() => {
+        return DayjsifyEvents(_events);
+    }, []);
 
+    const [{ year, month }, updateYearMonth] = useAtom(currentYearMonthAtom);
     const [currMonth] = useMemo(
         () => [dayjs(new Date(year, month, 1))],
         [year, month]

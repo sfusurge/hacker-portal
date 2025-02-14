@@ -30,8 +30,19 @@ export const events = pgTable(
     }
 );
 
-export const insertEventSchema = createInsertSchema(events);
+// export const insertEventSchema = createInsertSchema(events);
 
+export const insertEventSchema = z.object({
+    hackathonId: z.number().int(),
+    title: z.string(),
+    color: z.string(),
+    startDate: z.number(),
+    endDate: z.number(),
+    location: z.string(),
+    description: z.string().optional(),
+    longDescription: z.string().optional(),
+});
+//
 export const getEventsSchema = z.object({
     hackathonId: z.number().int(),
 });
@@ -46,6 +57,8 @@ export const updateEventSchema = createUpdateSchema(events)
     })
     .extend({
         eventId: z.number().int(),
+        startDate: z.number().int(),
+        endDate: z.number().int(),
     });
 
 export const deleteEventSchema = z.object({
