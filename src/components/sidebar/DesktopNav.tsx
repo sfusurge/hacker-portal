@@ -224,11 +224,17 @@ export default function DesktopNav({
                                 <NavLink
                                     href="/admin/qr/hackathon/"
                                     label="Hacker Checkin (Admin)"
-                                    icon={<QrCodeIcon></QrCodeIcon>}
+                                    icon={
+                                        <QrCodeIcon className="w-6 h-6"></QrCodeIcon>
+                                    }
                                     iconAlt="QR logo"
                                     platform="desktop"
-                                    active={false}
-                                    disabled={false}
+                                    active={url.startsWith(
+                                        '/admin/qr/hackathon/'
+                                    )}
+                                    className={clsx({
+                                        'justify-center': collapsed,
+                                    })}
                                 ></NavLink>
                             )}
                         </div>
