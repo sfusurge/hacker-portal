@@ -1,9 +1,0 @@
-.calendarContainer {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-    max-height: var(--maxHeight);
-    justify-content: center;
-    align-items: center;
-}
