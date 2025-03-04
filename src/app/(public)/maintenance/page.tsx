@@ -17,7 +17,7 @@ export default function Maintenance() {
                 border border-neutral-600/30 bg-neutral-900 min-w-96 max-w-96"
                 >
                     <Image
-                        src={'/login/application-review.webp'}
+                        src={'/cooking.webp'}
                         alt={'Cooking'}
                         width="244"
                         height="180"
