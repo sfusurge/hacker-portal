@@ -50,27 +50,27 @@ export default function WithdrawPrompt({
     }, [verifyText]);
 
     return (
-        <div className="fixed inset-0 flex md:items-center items-end justify-center bg-black bg-opacity-80 z-[150]">
-            <div className="relative bg-neutral-900 border border-neutral-750 rounded-xl shadow-lg animate-fadeIn w-96">
-                <div className="pt-8 pl-8 pr-8 pb-1">
+        <div className="bg-opacity-80 fixed inset-0 z-150 flex items-end justify-center bg-black md:items-center">
+            <div className="border-neutral-750 animate-fadeIn relative w-96 rounded-xl border bg-neutral-900 shadow-lg">
+                <div className="pt-8 pr-8 pb-1 pl-8">
                     <Conditional showWhen={!withdrawn}>
                         <button
-                            className="absolute top-2 right-2 p-1 rounded-full md:hover:bg-neutral-800 transition-colors duration-200"
+                            className="absolute top-2 right-2 rounded-full p-1 transition-colors duration-200 md:hover:bg-neutral-800"
                             onClick={closePrompt}
                         >
-                            <X className="w-5 h-5 text-neutral-400" />
+                            <X className="h-5 w-5 text-neutral-400" />
                         </button>
                     </Conditional>
                     <Conditional showWhen={withdrawn}>
                         <a
-                            className="absolute top-2 right-2 p-1 rounded-full md:hover:bg-neutral-800 transition-colors duration-200"
+                            className="absolute top-2 right-2 rounded-full p-1 transition-colors duration-200 md:hover:bg-neutral-800"
                             href={'/home'}
                         >
-                            <X className="w-5 h-5 text-neutral-400" />
+                            <X className="h-5 w-5 text-neutral-400" />
                         </a>
                     </Conditional>
 
-                    <div className="flex flex-col justify-center items-center text-center gap-5 self-stretch font-sans">
+                    <div className="flex flex-col items-center justify-center gap-5 self-stretch text-center font-sans">
                         <Image
                             src={pfp}
                             alt="Profile Picture"
@@ -81,7 +81,7 @@ export default function WithdrawPrompt({
 
                         <Conditional showWhen={!withdrawn}>
                             <div className="flex flex-col gap-5">
-                                <h3 className="justify-center items-center font-bold text-lg">
+                                <h3 className="items-center justify-center text-lg font-bold">
                                     Are you sure you want to withdraw your
                                     application?
                                 </h3>
@@ -110,7 +110,7 @@ export default function WithdrawPrompt({
 
                         <Conditional showWhen={withdrawn}>
                             <div className="flex flex-col gap-5 pb-5">
-                                <h3 className="justify-center items-center text-bold">
+                                <h3 className="text-bold items-center justify-center">
                                     Your application has been withdrawn.
                                 </h3>
                                 <h3 className="text-white/70">
@@ -123,13 +123,10 @@ export default function WithdrawPrompt({
                 </div>
 
                 <Conditional showWhen={!withdrawn}>
-                    <div className="flex flex-row gap-2 justify-between border-t border-neutral-750 w-full pt-4 pb-4 pl-10 pr-10">
+                    <div className="border-neutral-750 flex w-full flex-row justify-between gap-2 border-t pt-4 pr-10 pb-4 pl-10">
                         <button
                             onClick={closePrompt}
-                            className="h-9 py-2 px-12 bg-neutral-800/60
-                            rounded-lg border border-neutral-600/60
-                            justify-center items-center inline-flex overflow-hidden
-                            text-white text-sm font-medium"
+                            className="inline-flex h-9 items-center justify-center overflow-hidden rounded-lg border border-neutral-600/60 bg-neutral-800/60 px-12 py-2 text-sm font-medium text-white"
                         >
                             Cancel
                         </button>
@@ -137,10 +134,7 @@ export default function WithdrawPrompt({
                         <button
                             disabled={notSubmittable}
                             onClick={handleWithdraw}
-                            className={`h-9 py-2 px-12 rounded-lg
-                            justify-center items-center inline-flex 
-                            overflow-hidden text-white text-sm font-medium
-                            ${notSubmittable ? 'bg-indigo-900 opacity-50 cursor-not-allowed' : 'bg-indigo-700'}`}
+                            className={`inline-flex h-9 items-center justify-center overflow-hidden rounded-lg px-12 py-2 text-sm font-medium text-white ${notSubmittable ? 'cursor-not-allowed bg-indigo-900 opacity-50' : 'bg-indigo-700'}`}
                         >
                             Withdraw
                         </button>
@@ -148,11 +142,11 @@ export default function WithdrawPrompt({
                 </Conditional>
 
                 <Conditional showWhen={withdrawn}>
-                    <div className="flex flex-row gap-2 justify-center items-center border-t border-neutral-750 w-full pt-4 pb-4 pl-10 pr-10">
+                    <div className="border-neutral-750 flex w-full flex-row items-center justify-center gap-2 border-t pt-4 pr-10 pb-4 pl-10">
                         <a href={'/home'}>
-                            <div className="h-9 py-2 bg-indigo-700 rounded-lg shadow-md justify-center items-center inline-flex overflow-hidden">
-                                <div className="px-24 justify-center items-center flex">
-                                    <div className="text-white text-sm font-medium">
+                            <div className="inline-flex h-9 items-center justify-center overflow-hidden rounded-lg bg-indigo-700 py-2 shadow-md">
+                                <div className="flex items-center justify-center px-24">
+                                    <div className="text-sm font-medium text-white">
                                         Return to home
                                     </div>
                                 </div>

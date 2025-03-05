@@ -53,25 +53,25 @@ export default function MobileTopNav({
             {!hideTopNav && (
                 <div
                     className={clsx(
-                        'w-screen bg-neutral-900/60 border-b border-b-neutral-600/30 px-4 py-5 h-20 backdrop-blur-xl',
+                        'h-20 w-screen border-b border-b-neutral-600/30 bg-neutral-900/60 px-4 py-5 backdrop-blur-xl',
                         className
                     )}
                 >
-                    <div className="flex flex-row items-center w-full justify-between">
-                        <div className="flex flex-row gap-3 my-auto">
+                    <div className="flex w-full flex-row items-center justify-between">
+                        <div className="my-auto flex flex-row gap-3">
                             <Image
                                 src="/login/sparkcheffrizz.webp"
                                 alt="Sparky wearing a chef\'s hat"
                                 width={36}
                                 height={36}
-                                className="rounded-lg w-9 h-9"
+                                className="h-9 w-9 rounded-lg"
                             ></Image>
 
                             <div className="flex flex-col gap-2">
-                                <span className="text-sm font-medium line-clamp-1 leading-none text-white">
+                                <span className="line-clamp-1 text-sm leading-none font-medium text-white">
                                     JourneyHacks 2025
                                 </span>
-                                <span className="text-sm leading-none line-clamp-1 text-white/60">
+                                <span className="line-clamp-1 text-sm leading-none text-white/60">
                                     February 14, 2025
                                 </span>
                             </div>
@@ -87,13 +87,13 @@ export default function MobileTopNav({
                                         initialData?.image ??
                                         '/sidebar/default-avatar.webp'
                                     }
-                                    className="w-10 h-10 aspect-square rounded-full"
+                                    className="aspect-square h-10 w-10 rounded-full"
                                 ></img>
                             </PopoverTrigger>
                             <PopoverContent
                                 sideOffset={8}
                                 side="bottom"
-                                className="z-[200]"
+                                className="z-200"
                             >
                                 <NavLink
                                     href="#"
@@ -111,7 +111,7 @@ export default function MobileTopNav({
                                         });
                                     }}
                                 ></NavLink>
-                                <PopoverPrimitive.Arrow className="mr-4 fill-neutral-850 shadow-lg" />
+                                <PopoverPrimitive.Arrow className="fill-neutral-850 mr-4 shadow-lg" />
                             </PopoverContent>
                         </Popover>
                     </div>
