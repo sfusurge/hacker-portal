@@ -190,7 +190,7 @@ export default function ScanPage({
                     transform: 'translate(-50%, -50%)',
                     zIndex: 10,
                 }}
-                className="relative w-full aspect-[3/4] min-h-screen md:max-w-sm"
+                className="relative w-full aspect-[3/4] min-h-screen md:max-w-sm z-[10]"
             >
                 <div className="absolute inset-0 overflow-hidden">
                     <Scanner
