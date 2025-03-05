@@ -49,13 +49,13 @@ export default function SelectOptionPage() {
 
     return (
         // <div className="flex flex-col items-center justify-between min-h-screen bg-neutral-900 p-4">
-        <div className="relative w-full aspect-[3/4] max-w-sm min-h-screen">
+        <div className="relative aspect-3/4 min-h-screen w-full max-w-sm">
             <div
-                className={`fixed inset-0 z-50 bg-black bg-opacity-50 transition-opacity duration-300 ${isOptionsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                className={`bg-opacity-50 fixed inset-0 z-50 bg-black transition-opacity duration-300 ${isOptionsOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
                 onClick={toggleOptions}
             >
                 <div
-                    className={`fixed bottom-0 left-0 right-0 transition-transform duration-300 ease-in-out transform ${isOptionsOpen ? 'translate-y-0' : 'translate-y-full'}`}
+                    className={`fixed right-0 bottom-0 left-0 transform transition-transform duration-300 ease-in-out ${isOptionsOpen ? 'translate-y-0' : 'translate-y-full'}`}
                     onClick={(e) => e.stopPropagation()}
                 >
                     <SelectOption setCheckInType={setCheckInType} />
@@ -63,11 +63,11 @@ export default function SelectOptionPage() {
             </div>
 
             <div
-                className={`fixed inset-0 z-50 bg-black bg-opacity-50 transition-opacity duration-300 ${isMealsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                className={`bg-opacity-50 fixed inset-0 z-50 bg-black transition-opacity duration-300 ${isMealsOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
                 onClick={closeMeals}
             >
                 <div
-                    className={`fixed bottom-0 left-0 right-0 transition-transform duration-300 ease-in-out transform ${isMealsOpen ? 'translate-y-0' : 'translate-y-full'}`}
+                    className={`fixed right-0 bottom-0 left-0 transform transition-transform duration-300 ease-in-out ${isMealsOpen ? 'translate-y-0' : 'translate-y-full'}`}
                     onClick={(e) => e.stopPropagation()}
                 >
                     <SelectMeal />
