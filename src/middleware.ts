@@ -37,6 +37,5 @@ export const middleware = auth(async (req) => {
 // };
 
 export const config = {
-    //this matcher avoids static files, so the styling doesnt get messed up
-    matcher: '/((?!.*\\.).*)',
+    matcher: ['/((?!_next/|.*\\..*).*)'],
 };
