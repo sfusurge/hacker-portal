@@ -93,7 +93,7 @@ export default function MobileBottomNav({
                     )}
                 >
                     <NavLink
-                        href="#"
+                        href="/home"
                         label="Home"
                         icon={<HomeIcon></HomeIcon>}
                         iconAlt="Home logo"
@@ -102,13 +102,12 @@ export default function MobileBottomNav({
                     ></NavLink>
 
                     <NavLink
-                        href="#"
+                        href="/team"
                         label="Team"
                         icon={<UserGroupIcon></UserGroupIcon>}
                         iconAlt="Team logo"
                         platform="mobile"
-                        active={false}
-                        disabled={true}
+                        active={url.startsWith('/team')}
                     ></NavLink>
 
                     <NavLink
