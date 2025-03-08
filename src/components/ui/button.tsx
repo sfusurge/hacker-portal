@@ -7,12 +7,15 @@ import Image from 'next/image';
 interface ButtonProps {
     leadingIcon?: string;
     leadingIconAlt?: string;
+    leadingIconChild?: React.ReactElement;
     trailingIcon?: string;
     trailingIconAlt?: string;
+    trailingIconChild?: React.ReactElement;
+    type?: 'button' | 'submit' | 'reset';
 }
 
 const buttonVariants = cva(
-    'text-white font-medium text-center flex items-center justify-center transition-colors',
+    'text-white font-medium text-center flex items-center justify-center transition-colors cursor-pointer',
     {
         variants: {
             variant: {
@@ -66,6 +69,12 @@ const buttonVariants = cva(
                 hierarchy: 'primary',
                 className: 'bg-caution-700 hover:bg-caution-600',
             },
+            {
+                variant: 'caution',
+                hierarchy: 'secondary',
+                className:
+                    'bg-neutral-850 text-danger-400 hover:bg-neutral-750 border-neutral-600/60 font-medium',
+            },
         ],
     }
 );
@@ -83,20 +92,23 @@ const Button = forwardRef<
             disabled,
             leadingIcon,
             leadingIconAlt,
+            leadingIconChild,
             trailingIcon,
             trailingIconAlt,
+            trailingIconChild,
+            type,
             ...props
         },
         ref
     ) => {
         const leadingIconStyles = cn({
-            'ml-1': size === 'compact' && leadingIcon,
-            'ml-2': size === 'cozy' && leadingIcon,
+            'ml-2': size === 'compact' && leadingIcon,
+            'ml-3': size === 'cozy' && leadingIcon,
         });
 
         const trailingIconStyles = cn({
-            'mr-1': size === 'compact' && leadingIcon,
-            'mr-2': size === 'cozy' && leadingIcon,
+            'mr-2': size === 'compact' && leadingIcon,
+            'mr-3': size === 'cozy' && leadingIcon,
         });
 
         return (
@@ -113,6 +125,7 @@ const Button = forwardRef<
                         hierarchy,
                     })
                 )}
+                type={type}
             >
                 {leadingIcon && leadingIconAlt && (
                     <Image
@@ -122,6 +135,16 @@ const Button = forwardRef<
                         height={20}
                         className={leadingIconStyles}
                     ></Image>
+                )}
+
+                {leadingIcon && leadingIconChild && (
+                    <span
+                        className={cn('ml-2', {
+                            '-mr-1': size === 'compact' || size === 'cozy',
+                        })}
+                    >
+                        {leadingIconChild}
+                    </span>
                 )}
 
                 <span className="p-3">{props.children}</span>
