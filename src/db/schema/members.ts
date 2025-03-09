@@ -36,10 +36,6 @@ export const joinTeamSchema = createInsertSchema(members).pick({
     teamId: true,
 });
 
-export const getCurrentTeam = z.object({
-    hackathonId: z.number().int(),
-});
-
 export const leaveTeamSchema = z.object({
     teamId: z.number(),
 });

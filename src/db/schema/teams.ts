@@ -38,10 +38,11 @@ export const createTeamSchema = createInsertSchema(teams).pick({
     // TODO: maybe maxMembersCount
 });
 
+// Return the team that user is currently in for the provided hackathonId
 export const getCurrentTeamSchema = z.object({
     hackathonId: z.number().int(),
 });
 
-export const deleteTeamSchema = z.object({
-    id: z.number().int(),
-});
+// export const deleteTeamSchema = z.object({
+//     id: z.number().int(),
+// });
