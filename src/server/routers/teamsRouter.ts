@@ -1,23 +1,48 @@
 import { getUserData } from '@/app/(auth)/layout';
 import { databaseClient } from '@/db/client';
-import { joinTeamSchema, members } from '@/db/schema/members';
-import { createTeamSchema, teams } from '@/db/schema/teams';
-import { eq, sql, and } from 'drizzle-orm';
+import {
+    joinTeamSchema,
+    leaveTeamSchema,
+    members as membersTable,
+} from '@/db/schema/members';
+import {
+    createTeamSchema,
+    getCurrentTeamSchema,
+    teams,
+} from '@/db/schema/teams';
+import { eq, sql, and, getTableColumns } from 'drizzle-orm';
 import { InternalServerError, ResourceNotFoundError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
+import { users } from '@/db/schema/users';
 
 export const teamsRouter = router({
     createTeam: publicProcedure
         .input(createTeamSchema)
         .mutation(async ({ input }) => {
-            const [team] = await databaseClient
-                .insert(teams)
-                .values({
-                    hackathonId: input.hackathonId,
-                    name: input.name,
-                    teamPictureUrl: input.teamPictureUrl,
-                })
-                .returning();
+            const user = await getUserData();
+
+            if (user == null) {
+                throw new InternalServerError(`Can't find user data`);
+            }
+
+            const team = await databaseClient.transaction(async (tx) => {
+                const [team] = await tx
+                    .insert(teams)
+                    .values({
+                        hackathonId: input.hackathonId,
+                        name: input.name,
+                        teamPictureUrl: input.teamPictureUrl,
+                    })
+                    .returning();
+
+                // team creator join their new team
+                await tx.insert(membersTable).values({
+                    teamId: team.id,
+                    userId: user.id,
+                });
+
+                return team;
+            });
 
             return team;
         }),
@@ -57,8 +82,8 @@ export const teamsRouter = router({
                     .select({
                         memberCount: sql<number>`count(*)`.as('member_count'),
                     })
-                    .from(members)
-                    .where(eq(members.teamId, teamId))
+                    .from(membersTable)
+                    .where(eq(membersTable.teamId, teamId))
             );
 
             const userTeamCountQuery = databaseClient
@@ -70,10 +95,10 @@ export const teamsRouter = router({
                         })
                         .from(teams)
                         .innerJoin(
-                            members,
+                            membersTable,
                             and(
-                                eq(members.teamId, teams.id),
-                                eq(members.userId, userId)
+                                eq(membersTable.teamId, teams.id),
+                                eq(membersTable.userId, userId)
                             )
                         )
                         .where(eq(teams.hackathonId, hackathonId!))
@@ -81,7 +106,7 @@ export const teamsRouter = router({
 
             await databaseClient
                 .with(memberCountQuery, userTeamCountQuery)
-                .insert(members)
+                .insert(membersTable)
                 .select(
                     databaseClient
                         .select({
@@ -98,5 +123,67 @@ export const teamsRouter = router({
                             )
                         )
                 );
+        }),
+
+    getCurrentTeam: publicProcedure
+        .input(getCurrentTeamSchema)
+        .query(async ({ input }) => {
+            const user = await getUserData();
+
+            if (user == null) {
+                throw new InternalServerError('');
+            }
+
+            const [team] = await databaseClient
+                .select(getTableColumns(teams))
+                .from(teams)
+                .innerJoin(
+                    membersTable,
+                    and(
+                        eq(membersTable.teamId, teams.id),
+                        eq(membersTable.userId, user.id)
+                    )
+                )
+                .where(eq(teams.hackathonId, input.hackathonId));
+
+            if (team == null) {
+                return null;
+            }
+
+            const members = await databaseClient
+                .select({
+                    userId: membersTable.userId,
+                    firstName: users.firstName,
+                    lastName: users.lastName,
+                })
+                .from(membersTable)
+                .innerJoin(users, eq(users.id, membersTable.userId))
+                .where(eq(membersTable.teamId, team.id));
+
+            return {
+                ...team,
+                members,
+            };
+        }),
+
+    leaveTeam: publicProcedure
+        .input(leaveTeamSchema)
+        .mutation(async ({ input }) => {
+            const user = await getUserData();
+
+            if (user == null) {
+                throw new InternalServerError(`Can't find user data`);
+            }
+
+            await databaseClient
+                .delete(membersTable)
+                .where(
+                    and(
+                        eq(membersTable.teamId, input.teamId),
+                        eq(membersTable.userId, user.id)
+                    )
+                );
+
+            return true;
         }),
 });
