@@ -10,8 +10,12 @@ import {
     getCurrentTeamSchema,
     teams,
 } from '@/db/schema/teams';
-import { eq, sql, and, getTableColumns } from 'drizzle-orm';
-import { InternalServerError, ResourceNotFoundError } from '../exceptions';
+import { eq, and, getTableColumns, asc } from 'drizzle-orm';
+import {
+    BadRequestError,
+    InternalServerError,
+    ResourceNotFoundError,
+} from '../exceptions';
 import { publicProcedure, router } from '../trpc';
 import { users } from '@/db/schema/users';
 
@@ -58,72 +62,67 @@ export const teamsRouter = router({
             const userId = user?.id;
 
             if (userId == null) {
-                throw new InternalServerError(`Can't find user data`);
+                throw new InternalServerError('Cannot find user data');
             }
 
-            const [team] = await databaseClient
-                .select({
-                    hackathonId: teams.hackathonId,
-                    maxMembersCount: teams.maxMembersCount,
-                })
-                .from(teams)
-                .where(eq(teams.id, teamId));
-
-            if (team == null) {
-                throw new ResourceNotFoundError({
-                    id: teamId,
-                    resourceType: 'team',
-                });
-            }
-
-            const { hackathonId, maxMembersCount } = team;
-
-            const memberCountQuery = databaseClient.$with('member_count').as(
-                databaseClient
+            await databaseClient.transaction(async (tx) => {
+                const [team] = await tx
                     .select({
-                        memberCount: sql<number>`count(*)`.as('member_count'),
+                        hackathonId: teams.hackathonId,
+                        maxMembersCount: teams.maxMembersCount,
                     })
+                    .from(teams)
+                    .where(eq(teams.id, teamId));
+
+                if (team == null) {
+                    throw new ResourceNotFoundError({
+                        id: teamId,
+                        resourceType: 'team',
+                    });
+                }
+
+                const { hackathonId, maxMembersCount } = team;
+
+                const members = await tx
+                    .select({ userId: membersTable.userId })
                     .from(membersTable)
                     .where(eq(membersTable.teamId, teamId))
-            );
+                    .for('update');
 
-            const userTeamCountQuery = databaseClient
-                .$with('user_team_count')
-                .as(
-                    databaseClient
-                        .select({
-                            teamCount: sql<number>`count(*)`.as('team_count'),
-                        })
-                        .from(teams)
-                        .innerJoin(
-                            membersTable,
-                            and(
-                                eq(membersTable.teamId, teams.id),
-                                eq(membersTable.userId, userId)
-                            )
-                        )
-                        .where(eq(teams.hackathonId, hackathonId!))
-                );
+                if (members.length >= maxMembersCount) {
+                    throw new BadRequestError(
+                        `team ${teamId} already had ${members.length} members`
+                    );
+                }
 
-            await databaseClient
-                .with(memberCountQuery, userTeamCountQuery)
-                .insert(membersTable)
-                .select(
-                    databaseClient
-                        .select({
-                            teamId: sql<string>`${teamId}`.as('team_id'),
-                            userId: sql<string>`${userId}`.as('user_id'),
-                        })
-                        .from(teams)
-                        .where(
-                            and(
-                                // Team hasn't reached max member size
-                                sql`((select ${memberCountQuery.memberCount} from ${memberCountQuery}) < ${maxMembersCount})`,
-                                // User hasn't joined any other team
-                                sql`((select ${userTeamCountQuery.teamCount} from ${userTeamCountQuery}) = 0)`
-                            )
+                const userTeams = await tx
+                    .select({ teamId: teams.id })
+                    .from(teams)
+                    .innerJoin(
+                        membersTable,
+                        and(
+                            eq(membersTable.teamId, teams.id),
+                            eq(membersTable.userId, userId)
                         )
-                );
+                    )
+                    .where(eq(teams.hackathonId, hackathonId!))
+                    .for('update');
+
+                if (userTeams.length >= 1) {
+                    const [existingTeam] = userTeams;
+
+                    throw new BadRequestError(
+                        `user ${userId} has already joined another team ${existingTeam.teamId}`
+                    );
+                }
+
+                await tx.insert(membersTable).values({
+                    teamId: teamId,
+                    userId: userId,
+                });
+            });
+
+            return true;
         }),
 
     getCurrentTeam: publicProcedure
@@ -132,7 +131,7 @@ export const teamsRouter = router({
             const user = await getUserData();
 
             if (user == null) {
-                throw new InternalServerError('');
+                throw new InternalServerError('Cannot find user data');
             }
 
             const [team] = await databaseClient
@@ -145,7 +144,9 @@ export const teamsRouter = router({
                         eq(membersTable.userId, user.id)
                     )
                 )
-                .where(eq(teams.hackathonId, input.hackathonId));
+                .where(eq(teams.hackathonId, input.hackathonId))
+                // Order by joined date
+                .orderBy(asc(membersTable.createdAt));
 
             if (team == null) {
                 return null;
@@ -173,7 +174,7 @@ export const teamsRouter = router({
             const user = await getUserData();
 
             if (user == null) {
-                throw new InternalServerError(`Can't find user data`);
+                throw new InternalServerError('Cannot find user data');
             }
 
             await databaseClient

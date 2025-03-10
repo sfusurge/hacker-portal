@@ -38,3 +38,9 @@ export class ResourceNotFoundError extends Error {
         this.resourceType = resourceType;
     }
 }
+
+export class BadRequestError extends Error {
+    constructor(message: string, cause?: Error) {
+        super(message, { cause });
+    }
+}
