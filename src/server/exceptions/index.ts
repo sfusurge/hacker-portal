@@ -46,6 +46,7 @@ export class ResourceNotFoundError extends TRPCError {
         this.resourceType = resourceType;
     }
 }
+
 export class BadRequestError extends TRPCError {
     constructor(message: string, cause?: Error) {
         super({ message, cause, code: 'BAD_REQUEST' });
