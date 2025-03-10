@@ -9,6 +9,7 @@ import {
 import { hackathons } from './hackathons';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
+import { users } from './users';
 
 const DEFAULT_MAX_MEMBERS_COUNT = 4;
 
@@ -16,13 +17,18 @@ export const teams = pgTable(
     'teams',
     {
         id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
-        hackathonId: integer('hackathon_id').references(() => hackathons.id),
+        hackathonId: integer('hackathon_id')
+            .notNull()
+            .references(() => hackathons.id),
         name: varchar('name', { length: 256 }).notNull(),
         // Link to team photo
         teamPictureUrl: text('team_picture_url'),
         maxMembersCount: integer('max_members_count')
             .notNull()
             .default(DEFAULT_MAX_MEMBERS_COUNT),
+        createdBy: integer('created_by')
+            .notNull()
+            .references(() => users.id),
         createdAt: timestamp('created_at').notNull().defaultNow(),
     },
     (table) => {

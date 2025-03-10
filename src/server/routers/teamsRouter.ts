@@ -22,7 +22,7 @@ export const teamsRouter = router({
             const user = await getUserData();
 
             if (user == null) {
-                throw new InternalServerError(`Can't find user data`);
+                throw new InternalServerError('Cannot find user data');
             }
 
             const team = await databaseClient.transaction(async (tx) => {
@@ -32,6 +32,7 @@ export const teamsRouter = router({
                         hackathonId: input.hackathonId,
                         name: input.name,
                         teamPictureUrl: input.teamPictureUrl,
+                        createdBy: user.id,
                     })
                     .returning();
 
