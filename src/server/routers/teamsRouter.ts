@@ -105,7 +105,7 @@ export const teamsRouter = router({
                             eq(membersTable.userId, userId)
                         )
                     )
-                    .where(eq(teams.hackathonId, hackathonId!))
+                    .where(eq(teams.hackathonId, hackathonId))
                     .for('update');
 
                 if (userTeams.length >= 1) {
