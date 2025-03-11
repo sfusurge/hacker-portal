@@ -26,7 +26,7 @@ export default async function Teams({
             name: data?.firstName + ' ' + data?.lastName,
             email: data?.email || '',
             image: data?.image,
-            submitted: 'Submitted',
+            submitted: 'Not Submitted',
         },
         {
             firstName: 'John',
@@ -55,10 +55,12 @@ export default async function Teams({
     ];
 
     const teamInfo = {
-        teamName: 'Segfault Squad',
+        name: 'Segfault Squad',
         teamMembers: teammates,
-        image: '/teams/default.webp',
-        id: 'abcdef',
+        teamPictureUrl: '/teams/default.webp',
+        id: '123456',
+        hackathonId: 1,
+        maxMembersCount: 4,
     };
 
     return (
@@ -66,8 +68,8 @@ export default async function Teams({
             <div className="flex gap-6">
                 {/* Team Logo */}
                 <Image
-                    src={teamInfo.image}
-                    alt={`${teamInfo.teamName} logo`}
+                    src={teamInfo.teamPictureUrl}
+                    alt={`${teamInfo.name} logo`}
                     width={64}
                     height={64}
                     className="inline-block h-16 w-16 rounded-xl"
@@ -78,7 +80,7 @@ export default async function Teams({
                         Your team ({teamInfo.teamMembers.length}/4) members
                     </p>
                     <h1 className="text-3xl font-semibold text-white">
-                        {teamInfo.teamName}
+                        {teamInfo.name}
                     </h1>
                 </div>
             </div>

@@ -45,7 +45,7 @@ export default function JoinTeam() {
 
             <div className="relative my-2 block lg:hidden">
                 <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-neutral-600/30"></div>
+                    <div className="w-full rounded border-t border-neutral-600/30"></div>
                 </div>
                 <div className="relative flex justify-center text-xs">
                     <span className="bg-neutral-950 px-2 text-white/30">
