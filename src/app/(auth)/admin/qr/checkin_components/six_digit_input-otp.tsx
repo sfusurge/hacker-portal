@@ -35,30 +35,15 @@ function InputOTPItemSlot({
 }
 
 export default function InputOtp({ input, setInput, onSubmit }: InputOtpProps) {
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Enter' && input.length === 6 && onSubmit) {
-                e.preventDefault();
-                onSubmit();
-            }
-        };
-
-        const container = containerRef.current;
-        if (container) {
-            container.addEventListener('keydown', handleKeyDown);
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && input.length === 6 && onSubmit) {
+            e.preventDefault();
+            onSubmit();
         }
-
-        return () => {
-            if (container) {
-                container.removeEventListener('keydown', handleKeyDown);
-            }
-        };
-    }, [input, onSubmit]);
+    };
 
     return (
-        <div ref={containerRef}>
+        <div onKeyDown={handleKeyDown} className="w-full">
             <InputOTP
                 maxLength={6}
                 value={input}

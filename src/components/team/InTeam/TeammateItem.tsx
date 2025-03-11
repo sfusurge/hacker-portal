@@ -62,7 +62,7 @@ export default function TeammateItem({
                 <div className="flex flex-1 gap-4 overflow-hidden">
                     <img
                         alt="Default avatar for the user"
-                        src={image ?? '/sidebar/default-avatar.webp'}
+                        src={image ?? '/teams/default.webp'}
                         width={32}
                         height={32}
                         className="h-11 w-11 rounded-full object-cover"

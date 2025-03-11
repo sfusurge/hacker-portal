@@ -19,7 +19,10 @@ export default function CreateTeamForm({
     const [teamInfo, setTeamInfo] = useState({
         teamName: '',
         teamPicture: '',
+        _isDirty: false,
     });
+    const isTeamNameError = teamInfo.teamName === '' && teamInfo._isDirty;
+    const errorMsg = isTeamNameError ? 'Team name is required.' : undefined;
     const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [disabled, setDisabled] = useState(true);
@@ -31,6 +34,14 @@ export default function CreateTeamForm({
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+
+        // Validate file type
+        if (!['image/png', 'image/jpeg'].includes(file.type)) {
+            setError(
+                'Invalid file type. Only .png and .jpeg files are allowed.'
+            );
+            return;
+        }
 
         // Validate file size (max 2MB)
         if (file.size > 2 * 1024 * 1024) {
@@ -66,12 +77,11 @@ export default function CreateTeamForm({
     };
 
     const handleTeamNameChange = (value: string | number) => {
-        const newTeamName = value as string;
         setTeamInfo((prevState) => ({
             ...prevState,
-            teamName: newTeamName,
+            teamName: value as string,
+            _isDirty: true,
         }));
-        updateDisabledState(newTeamName, teamInfo.teamPicture);
     };
 
     const updateDisabledState = (teamName: string, teamPicture: string) => {
@@ -161,9 +171,15 @@ export default function CreateTeamForm({
                                 .png, jpeg files up to 2 MB <br /> At least
                                 200px x 200px
                             </p>
+                            {error && (
+                                <div className="text-danger-400 -mt-2 text-sm">
+                                    {error}
+                                </div>
+                            )}
                         </div>
                     </div>
-                    <div className="relative flex flex-col gap-3">
+
+                    <div className="flex flex-col gap-3">
                         <label
                             htmlFor="teamName"
                             className="text-sm font-medium text-white/60"
@@ -173,22 +189,14 @@ export default function CreateTeamForm({
                         <FormTextInput
                             type="text"
                             name="teamName"
+                            lazy
                             defaultValue={teamInfo.teamName}
                             onLazyChange={handleTeamNameChange}
-                            className="border border-neutral-600/60 bg-neutral-800/60"
-                            maxLength={25}
                             required
-                            lazy={true}
-                            errorMsg={
-                                teamInfo.teamName === '' &&
-                                'Team name already taken. Please choose another name.'
-                                    ? 'Team name is required.'
-                                    : undefined
-                            }
+                            maxLength={25}
+                            placeholder="Enter team name"
+                            errorMsg={errorMsg}
                         />
-                        <p className="text-danger-400 absolute -bottom-6 text-xs">
-                            {error}
-                        </p>
                     </div>
                 </div>
                 <DialogFooter className="grid grid-cols-2 gap-3 text-base">
