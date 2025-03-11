@@ -15,6 +15,7 @@
         "test:e2e": "vitest run --project e2e"
     },
     "dependencies": {
+        "@aws-sdk/client-s3": "^3.758.0",
         "@faker-js/faker": "^9.3.0",
         "@heroicons/react": "^2.2.0",
         "@hookform/resolvers": "^3.9.1",
@@ -42,10 +43,12 @@
         "dayjs": "^1.11.13",
         "drizzle-orm": "^0.38.4",
         "drizzle-zod": "^0.6.0",
+        "file-type": "^20.4.0",
         "google": "link:@next/third-parties/google",
         "input-otp": "^1.4.2",
         "jotai": "^2.11.0",
         "lucide-react": "^0.460.0",
+        "mime-types": "^2.1.35",
         "motion": "^12.1.0",
         "net": "^1.0.2",
         "next": "15.0.3",
