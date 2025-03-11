@@ -1,4 +1,5 @@
 'use client';
+import { useRouter } from 'next/navigation';
 import { Button } from '../../ui/button';
 import {
     DialogContent,
@@ -10,11 +11,16 @@ import {
 } from '@/components/ui/dialog';
 
 export default function LeaveTeamForm() {
+    const router = useRouter();
     const onLeaveTeam = () => {
-        alert('Leave team');
+        alert('team was left');
+
+        // insert logic to leave team
+
+        router.push('/team');
     };
     return (
-        <DialogContent className="max-w-sm gap-6 sm:max-w-sm">
+        <DialogContent className="max-w-sm gap-6 sm:max-w-[420px]">
             <DialogHeader>
                 <DialogTitle>Leave team</DialogTitle>
                 <DialogDescription>

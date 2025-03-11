@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FormTextInput, Input } from '@/components/ui/input/input';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export default function CreateTeamForm({
     onSubmit,
@@ -27,10 +27,15 @@ export default function CreateTeamForm({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [disabled, setDisabled] = useState(true);
 
+    useEffect(() => {
+        setDisabled(!teamInfo.teamName || !teamInfo.teamPicture);
+    }, [teamInfo.teamName, teamInfo.teamPicture]);
+
     const handleButtonClick = () => {
         fileInputRef.current?.click();
     };
 
+    // basic verification of the file type, size, and dimensions on client side
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -66,7 +71,6 @@ export default function CreateTeamForm({
                     teamPicture: reader.result as string,
                 }));
                 setError(null);
-                updateDisabledState(teamInfo.teamName, reader.result as string);
             };
             reader.readAsDataURL(file);
         };
@@ -82,10 +86,6 @@ export default function CreateTeamForm({
             teamName: value as string,
             _isDirty: true,
         }));
-    };
-
-    const updateDisabledState = (teamName: string, teamPicture: string) => {
-        setDisabled(!teamName || !teamPicture);
     };
 
     const handleFormSubmit = (e: React.FormEvent) => {
@@ -156,10 +156,6 @@ export default function CreateTeamForm({
                                                 ...prevState,
                                                 teamPicture: '',
                                             }));
-                                            updateDisabledState(
-                                                teamInfo.teamName,
-                                                ''
-                                            );
                                         }}
                                         type="button"
                                     >
@@ -216,7 +212,7 @@ export default function CreateTeamForm({
                         size="cozy"
                         hierarchy="primary"
                         disabled={disabled}
-                        onClick={(event) => handleFormSubmit(event)}
+                        onClick={handleFormSubmit}
                     >
                         Create team
                     </Button>

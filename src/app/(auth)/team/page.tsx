@@ -4,7 +4,8 @@ import JoinTeam from '@/components/team/NoTeam/TeamOption';
 export default async function Team() {
     const data = await getUserData();
 
-    // protect route to only users accepted to the hackathon...
+    // protect route to only users who are not in a team...
+
     // route to [id] page if they are already in a team...
 
     return (

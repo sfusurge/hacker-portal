@@ -4,13 +4,16 @@ import { Button } from '../../ui/button';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import JoinTeamForm from './JoinTeamForm';
 import CreateTeamForm from './CreateTeamForm';
+import { useRouter } from 'next/navigation';
 
 export default function JoinTeam() {
     const [input, setInput] = useState<string>('');
     const isInputComplete = input.length === 6;
+    const router = useRouter();
 
     const handleJoinTeam = () => {
         alert(`joining team with code: ${input}`);
+        router.push(`/team/${input}`);
     };
 
     const handleCreateTeam = (teamInfo: {
@@ -20,6 +23,9 @@ export default function JoinTeam() {
         alert(
             `Creating team with name: ${teamInfo.teamName} and picture: ${teamInfo.teamPicture}`
         );
+
+        // insert logic to create team
+        router.push('/team/123456');
     };
 
     return (
@@ -30,7 +36,7 @@ export default function JoinTeam() {
                         size="cozy"
                         variant="default"
                         hierarchy="secondary"
-                        className="w-full px-5"
+                        className="w-full px-5 text-sm"
                     >
                         Join existing team
                     </Button>
@@ -60,7 +66,7 @@ export default function JoinTeam() {
                         size="cozy"
                         variant="default"
                         hierarchy="secondary"
-                        className="w-full px-5"
+                        className="w-full px-5 text-sm"
                     >
                         Create new team
                     </Button>
