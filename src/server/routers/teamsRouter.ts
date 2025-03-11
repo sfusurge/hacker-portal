@@ -10,7 +10,13 @@ import {
     getCurrentTeamSchema,
     teams,
 } from '@/db/schema/teams';
-import { eq, and, getTableColumns, asc } from 'drizzle-orm';
+import {
+    eq,
+    and,
+    getTableColumns,
+    asc,
+    TablesRelationalConfig,
+} from 'drizzle-orm';
 import {
     BadRequestError,
     InternalServerError,
@@ -18,6 +24,7 @@ import {
 } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
 import { users } from '@/db/schema/users';
+import { PgQueryResultHKT, PgTransaction } from 'drizzle-orm/pg-core';
 
 export const teamsRouter = router({
     createTeam: publicProcedure
@@ -30,6 +37,8 @@ export const teamsRouter = router({
             }
 
             const team = await databaseClient.transaction(async (tx) => {
+                checkIfUserInExistingTeam(tx, user.id, input.hackathonId);
+
                 const [team] = await tx
                     .insert(teams)
                     .values({
@@ -95,26 +104,7 @@ export const teamsRouter = router({
                     );
                 }
 
-                const userTeams = await tx
-                    .select({ teamId: teams.id })
-                    .from(teams)
-                    .innerJoin(
-                        membersTable,
-                        and(
-                            eq(membersTable.teamId, teams.id),
-                            eq(membersTable.userId, userId)
-                        )
-                    )
-                    .where(eq(teams.hackathonId, hackathonId))
-                    .for('update');
-
-                if (userTeams.length >= 1) {
-                    const [existingTeam] = userTeams;
-
-                    throw new BadRequestError(
-                        `user ${userId} has already joined another team ${existingTeam.teamId}`
-                    );
-                }
+                checkIfUserInExistingTeam(tx, userId, hackathonId);
 
                 await tx.insert(membersTable).values({
                     teamId: teamId,
@@ -189,3 +179,33 @@ export const teamsRouter = router({
             return true;
         }),
 });
+
+async function checkIfUserInExistingTeam<
+    T extends PgQueryResultHKT,
+    V extends TablesRelationalConfig,
+>(
+    tx: PgTransaction<T, Record<string, unknown>, V>,
+    userId: number,
+    hackathonId: number
+): Promise<void> {
+    const userTeams = await tx
+        .select({ teamId: teams.id })
+        .from(teams)
+        .innerJoin(
+            membersTable,
+            and(
+                eq(membersTable.teamId, teams.id),
+                eq(membersTable.userId, userId)
+            )
+        )
+        .where(eq(teams.hackathonId, hackathonId))
+        .for('update');
+
+    if (userTeams.length >= 1) {
+        const [existingTeam] = userTeams;
+
+        throw new BadRequestError(
+            `user ${userId} has already joined another team ${existingTeam.teamId}`
+        );
+    }
+}
