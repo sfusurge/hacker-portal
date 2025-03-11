@@ -18,6 +18,7 @@ export default async function Teams({
     // reroute if no space is available
 
     const data = await getUserData();
+
     // placeholder team data
     const teammates = [
         {
@@ -72,11 +73,11 @@ export default async function Teams({
                     alt={`${teamInfo.name} logo`}
                     width={64}
                     height={64}
-                    className="inline-block h-16 w-16 rounded-xl"
+                    className="inline-block h-11 w-11 rounded-xl md:h-16 md:w-16"
                 />
                 {/* Team Details */}
-                <div className="flex flex-col justify-between gap-2">
-                    <p className="text-white/60">
+                <div className="flex flex-col justify-between gap-1">
+                    <p className="text-sm text-white/60">
                         Your team ({teamInfo.teamMembers.length}/4) members
                     </p>
                     <h1 className="text-3xl font-semibold text-white">

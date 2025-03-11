@@ -12,6 +12,8 @@ interface ButtonProps {
     trailingIconAlt?: string;
     trailingIconChild?: React.ReactElement;
     type?: 'button' | 'submit' | 'reset';
+    size?: 'compact' | 'cozy';
+    mobileSize?: 'compact' | 'cozy';
 }
 
 const buttonVariants = cva(
@@ -87,7 +89,8 @@ const Button = forwardRef<
         {
             className,
             variant,
-            size,
+            size = 'compact',
+            mobileSize,
             hierarchy,
             disabled,
             leadingIcon,
@@ -101,14 +104,39 @@ const Button = forwardRef<
         },
         ref
     ) => {
+        const sizeClasses = cn(
+            size === 'compact'
+                ? 'h-9 rounded-md text-sm'
+                : 'h-11 rounded-lg text-md',
+            mobileSize === 'compact'
+                ? 'md:h-9 md:rounded-md md:text-sm'
+                : 'md:h-11 md:rounded-lg md:text-md'
+        );
+
         const leadingIconStyles = cn({
-            'ml-2': size === 'compact' && leadingIcon,
-            'ml-3': size === 'cozy' && leadingIcon,
+            'ml-2': size === 'compact' && (leadingIcon || leadingIconChild),
+            'ml-3': size === 'cozy' && (leadingIcon || leadingIconChild),
+            'md:ml-2':
+                mobileSize === 'compact' && (leadingIcon || leadingIconChild),
+            'md:ml-3':
+                mobileSize === 'cozy' && (leadingIcon || leadingIconChild),
         });
 
         const trailingIconStyles = cn({
-            'mr-2': size === 'compact' && leadingIcon,
-            'mr-3': size === 'cozy' && leadingIcon,
+            'mr-2': size === 'compact' && (trailingIcon || trailingIconChild),
+            'mr-3': size === 'cozy' && (trailingIcon || trailingIconChild),
+            'md:mr-2':
+                mobileSize === 'compact' && (trailingIcon || trailingIconChild),
+            'md:mr-3':
+                mobileSize === 'cozy' && (trailingIcon || trailingIconChild),
+        });
+
+        // Handle padding for text content
+        const contentStyles = cn({
+            'p-2': size === 'compact',
+            'p-3': size === 'cozy',
+            'md:p-2': mobileSize === 'compact',
+            'md:p-3': mobileSize === 'cozy',
         });
 
         return (
@@ -121,9 +149,9 @@ const Button = forwardRef<
                         className,
                         disabled,
                         variant,
-                        size,
                         hierarchy,
-                    })
+                    }),
+                    sizeClasses
                 )}
                 type={type}
             >
@@ -134,20 +162,16 @@ const Button = forwardRef<
                         width={20}
                         height={20}
                         className={leadingIconStyles}
-                    ></Image>
+                    />
                 )}
 
-                {leadingIcon && leadingIconChild && (
-                    <span
-                        className={cn('ml-2', {
-                            '-mr-1': size === 'compact' || size === 'cozy',
-                        })}
-                    >
+                {leadingIconChild && (
+                    <span className={leadingIconStyles}>
                         {leadingIconChild}
                     </span>
                 )}
 
-                <span className="p-3">{props.children}</span>
+                <span className={contentStyles}>{props.children}</span>
 
                 {trailingIcon && trailingIconAlt && (
                     <Image
@@ -156,11 +180,19 @@ const Button = forwardRef<
                         width={20}
                         height={20}
                         className={trailingIconStyles}
-                    ></Image>
+                    />
+                )}
+
+                {trailingIconChild && (
+                    <span className={trailingIconStyles}>
+                        {trailingIconChild}
+                    </span>
                 )}
             </button>
         );
     }
 );
+
+Button.displayName = 'Button';
 
 export { Button, buttonVariants };

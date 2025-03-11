@@ -46,13 +46,14 @@ export default function InviteCard({ teamInfo }: InviteCardProps) {
                     <Input
                         value={teamLink}
                         type="text"
-                        className="h-full border border-neutral-700/18 bg-neutral-800 text-white/60"
+                        className="flex-shrink flex-grow border border-neutral-700/18 bg-neutral-800 text-white/60"
                         readOnly
                         onClick={handleCopy}
                     />
                     <Button
                         variant="default"
-                        size="compact"
+                        size={'cozy'}
+                        mobileSize={'compact'}
                         hierarchy={'secondary'}
                         className="text-nowrap"
                         onClick={handleCopy}

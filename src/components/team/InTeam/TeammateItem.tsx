@@ -59,16 +59,16 @@ export default function TeammateItem({
     return (
         <>
             <li className="flex justify-between gap-4">
-                <div className="flex flex-1 gap-4 overflow-hidden">
+                <div className="flex flex-1 items-center gap-3 overflow-hidden md:gap-4">
                     <img
                         alt="Default avatar for the user"
                         src={image ?? '/teams/default.webp'}
                         width={32}
                         height={32}
-                        className="h-11 w-11 rounded-full object-cover"
+                        className="h-8 w-8 rounded-full object-cover md:h-11 md:w-11"
                     />
-                    <div className="flex flex-1 flex-col overflow-hidden">
-                        <p className="truncate font-medium">
+                    <div className="flex flex-1 flex-col justify-around gap-1 overflow-hidden md:gap-2">
+                        <p className="truncate text-sm font-medium md:text-base">
                             {isMobile ? firstName : name}{' '}
                             {currentUser && (
                                 <span className="font-normal text-white/60">
@@ -76,7 +76,9 @@ export default function TeammateItem({
                                 </span>
                             )}
                         </p>
-                        <p className="truncate text-sm font-normal">{email}</p>
+                        <p className="truncate text-xs font-normal md:text-sm">
+                            {email}
+                        </p>
                     </div>
                 </div>
                 <div className="flex items-center justify-center gap-4">

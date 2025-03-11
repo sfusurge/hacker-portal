@@ -35,7 +35,7 @@ export default function TeamList({
         <Dialog>
             <Card>
                 <CardContent footer={true} className="">
-                    <span className="text-left text-sm font-normal text-white/60">
+                    <span className="text-left text-xs font-normal text-white/60 md:text-sm">
                         Your Teammates
                     </span>
                     <ul className="flex w-full flex-col gap-4">
