@@ -10,13 +10,13 @@ import { DialogTrigger, Dialog } from '@/components/ui/dialog';
 interface TeamListProps {
     teammates: Array<{ email: string; [key: string]: any }>;
     currentUserEmail: string;
-    totalItems: number;
+    maxMembersCount: number;
 }
 
 export default function TeamList({
     teammates,
     currentUserEmail,
-    totalItems,
+    maxMembersCount,
 }: TeamListProps) {
     const paddedTeammates = React.useMemo(() => {
         const placeholder = {
@@ -48,7 +48,7 @@ export default function TeamList({
                                     teammate.email === currentUserEmail
                                 }
                                 isPlaceholder={teammate.placeholder}
-                                totalItems={totalItems}
+                                maxMembersCount={maxMembersCount}
                             />
                         ))}
                     </ul>

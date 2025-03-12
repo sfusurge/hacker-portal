@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { useState, useEffect } from 'react';
 interface TeammateItemProps {
     firstName?: string;
     lastName?: string;
@@ -10,7 +10,7 @@ interface TeammateItemProps {
     currentUser?: boolean;
     index?: number;
     isPlaceholder?: boolean;
-    totalItems?: number;
+    maxMembersCount?: number;
 }
 
 export default function TeammateItem({
@@ -23,11 +23,11 @@ export default function TeammateItem({
     currentUser = false,
     index = 0,
     isPlaceholder = false,
-    totalItems = 4,
+    maxMembersCount = 4,
 }: TeammateItemProps) {
-    const [isMobile, setIsMobile] = React.useState(false);
+    const [isMobile, setIsMobile] = useState(false);
 
-    React.useEffect(() => {
+    useEffect(() => {
         const checkScreenSize = () => {
             const width = window.innerWidth;
             setIsMobile(width < 768);
@@ -49,7 +49,7 @@ export default function TeammateItem({
             <>
                 <li className="h-11"></li>
                 {index == 3 ||
-                    (index !== totalItems - 1 && !isMobile && (
+                    (index !== maxMembersCount - 1 && !isMobile && (
                         <hr className="border-neutral-700/20" />
                     ))}
             </>
@@ -67,7 +67,7 @@ export default function TeammateItem({
                         height={32}
                         className="h-8 w-8 rounded-full object-cover md:h-11 md:w-11"
                     />
-                    <div className="flex flex-1 flex-col justify-around gap-1 overflow-hidden md:gap-2">
+                    <div className="flex flex-1 flex-col justify-around gap-1 overflow-hidden">
                         <p className="truncate text-sm font-medium md:text-base">
                             {isMobile ? firstName : name}{' '}
                             {currentUser && (
@@ -93,7 +93,7 @@ export default function TeammateItem({
                     </span>
                 </div>
             </li>
-            {index !== totalItems - 1 && isMobile && (
+            {index !== maxMembersCount - 1 && isMobile && (
                 <hr className="border-neutral-700/20" />
             )}
             {index !== 3 && !isMobile && (

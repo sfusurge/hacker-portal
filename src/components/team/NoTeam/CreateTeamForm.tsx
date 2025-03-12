@@ -183,7 +183,7 @@ export default function CreateTeamForm({
                             Team name *
                         </label>
                         <FormTextInput
-                            type="text"
+                            type="search"
                             name="teamName"
                             lazy
                             defaultValue={teamInfo.teamName}

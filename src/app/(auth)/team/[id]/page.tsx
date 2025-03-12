@@ -78,7 +78,8 @@ export default async function Teams({
                 {/* Team Details */}
                 <div className="flex flex-col justify-between gap-1">
                     <p className="text-sm text-white/60">
-                        Your team ({teamInfo.teamMembers.length}/4) members
+                        Your team ({teamInfo.teamMembers.length}/
+                        {teamInfo.maxMembersCount}) members
                     </p>
                     <h1 className="text-3xl font-semibold text-white">
                         {teamInfo.name}
@@ -91,7 +92,7 @@ export default async function Teams({
                     <TeamList
                         teammates={teamInfo.teamMembers}
                         currentUserEmail={data.email}
-                        totalItems={teamInfo.teamMembers.length}
+                        maxMembersCount={teamInfo.maxMembersCount}
                     />
                     <InviteCard teamInfo={teamInfo} />
                 </div>
