@@ -21,7 +21,7 @@ export default async function Team() {
                     />
                 </div>
 
-                <div className="flex w-full max-w-[365px] flex-col items-center gap-2">
+                <div className="flex w-full max-w-[23rem] flex-col items-center gap-2">
                     <h1 className="text-xl font-semibold">
                         You&apos;re not in a team yet! 🥺
                     </h1>

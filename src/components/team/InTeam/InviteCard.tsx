@@ -37,7 +37,7 @@ export default function InviteCard({ teamInfo }: InviteCardProps) {
                     <h2 className="text-lg font-semibold">
                         Invite Your Teammates 🦦
                     </h2>
-                    <p className="text-sm font-normal">
+                    <p className="text-sm font-normal text-pretty">
                         Share this link with people you&apos;d like to have on
                         your team.
                     </p>

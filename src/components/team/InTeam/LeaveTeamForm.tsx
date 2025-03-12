@@ -20,7 +20,7 @@ export default function LeaveTeamForm() {
         router.push('/team');
     };
     return (
-        <DialogContent className="max-w-sm gap-6 sm:max-w-[420px]">
+        <DialogContent className="max-w-sm gap-6 sm:max-w-[26rem]">
             <DialogHeader>
                 <DialogTitle>Leave team</DialogTitle>
                 <DialogDescription>

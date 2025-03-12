@@ -40,8 +40,8 @@ export default function JoinTeamForm({
                     onSubmit={isInputComplete ? onJoinTeam : undefined}
                 />
             </div>
-            <DialogFooter className="grid grid-cols-2 gap-3 text-base">
-                <DialogTrigger asChild className="w-full">
+            <DialogFooter className="grid gap-3 text-base md:grid-cols-2">
+                <DialogTrigger asChild className="hidden w-full md:block">
                     <Button
                         variant={'default'}
                         size={'cozy'}
