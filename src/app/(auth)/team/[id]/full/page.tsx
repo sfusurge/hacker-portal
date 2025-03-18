@@ -5,19 +5,24 @@ import { members as membersTable } from '@/db/schema/members';
 import { teams } from '@/db/schema/teams';
 import { eq, and } from 'drizzle-orm';
 import CurrentStateUI from '@/components/team/NoTeam/CurrentState';
+import { createCaller } from '@/server/appRouter';
 
 export default async function TeamFull({
     params,
 }: {
-    params: Promise<{ teamId: number }>;
+    params: Promise<{ id: string }>;
 }) {
-    const { teamId } = await params;
+    const { id } = await params;
+    const teamId = parseInt(id, 10);
     const user = await getUserData();
 
     if (!user) {
         redirect('/login');
     }
 
+    const trpcClient = createCaller({});
+
+    // Fetch the team details
     const [team] = await databaseClient
         .select()
         .from(teams)
@@ -27,6 +32,7 @@ export default async function TeamFull({
         redirect('/not-found');
     }
 
+    // Check if the user is already in the team
     const [userMembership] = await databaseClient
         .select()
         .from(membersTable)

@@ -7,8 +7,9 @@ import { members as membersTable } from '@/db/schema/members';
 import { teams } from '@/db/schema/teams';
 import { eq, and } from 'drizzle-orm';
 import { users } from '@/db/schema/users';
+import { createCaller } from '@/server/appRouter';
 
-export default async function Teams({
+export default async function TeamPage({
     params,
 }: {
     params: Promise<{ id: number }>;
@@ -20,7 +21,7 @@ export default async function Teams({
         redirect('/login');
     }
 
-    const userId = user.id;
+    const trpcClient = createCaller({});
 
     // Fetch the team details
     const [team] = await databaseClient
@@ -28,6 +29,7 @@ export default async function Teams({
         .from(teams)
         .where(eq(teams.id, id));
 
+    // if team DNE, display no team found
     if (!team) {
         redirect('/not-found');
     }
@@ -37,29 +39,21 @@ export default async function Teams({
         .select()
         .from(membersTable)
         .where(
-            and(eq(membersTable.teamId, id), eq(membersTable.userId, userId))
+            and(eq(membersTable.teamId, id), eq(membersTable.userId, user.id))
         );
 
+    // If user not in the team, join it
     if (!userMembership) {
-        // User is not in the team, check if there's space to join
-        const members = await databaseClient
-            .select()
-            .from(membersTable)
-            .where(eq(membersTable.teamId, id));
-
-        // Check if the team is full, if full redirect to full page, will swap to returning a component when team is full flow is done
-        if (members.length >= team.maxMembersCount) {
+        try {
+            await trpcClient.teams.joinTeam({
+                teamId: id,
+            });
+        } catch (error) {
             redirect(`/team/${id}/full`);
         }
-
-        // Add the user to the team
-        await databaseClient.insert(membersTable).values({
-            teamId: id,
-            userId,
-        });
     }
 
-    // Fetch team members to display
+    // Fetch team members to display, not finished yet, need r2 bucket + avatar workflow
     const teamMembers = await databaseClient
         .select({
             userId: membersTable.userId,
