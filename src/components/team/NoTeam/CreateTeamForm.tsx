@@ -14,7 +14,10 @@ import { useState, useRef, useEffect } from 'react';
 export default function CreateTeamForm({
     onSubmit,
 }: {
-    onSubmit: (teamInfo: { teamName: string; teamPicture: string }) => void;
+    onSubmit: (teamInfo: {
+        teamName: string;
+        teamPicture: string;
+    }) => Promise<void>;
 }) {
     const [teamInfo, setTeamInfo] = useState({
         teamName: '',
@@ -25,17 +28,18 @@ export default function CreateTeamForm({
     const errorMsg = isTeamNameError ? 'Team name is required.' : undefined;
     const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [disabled, setDisabled] = useState(true);
+    const [disabled, setDisabled] = useState<boolean>(true);
+    const [isCreating, setIsCreating] = useState<boolean>(false);
 
     useEffect(() => {
-        setDisabled(!teamInfo.teamName || !teamInfo.teamPicture);
-    }, [teamInfo.teamName, teamInfo.teamPicture]);
+        setDisabled(!teamInfo.teamName || !teamInfo.teamPicture || isCreating);
+    }, [teamInfo.teamName, teamInfo.teamPicture, isCreating]);
 
     const handleButtonClick = () => {
         fileInputRef.current?.click();
     };
 
-    // basic verification of the file type, size, and dimensions on client side
+    // Basic verification of the file type, size, and dimensions on client side
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -88,13 +92,23 @@ export default function CreateTeamForm({
         }));
     };
 
-    const handleFormSubmit = (e: React.FormEvent) => {
+    const handleFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!teamInfo.teamName || !teamInfo.teamPicture) {
             setError('Please fill out all required fields.');
             return;
         }
-        onSubmit(teamInfo);
+
+        setIsCreating(true);
+        setError(null);
+
+        try {
+            await onSubmit(teamInfo);
+        } catch (err) {
+            setError('Failed to create team. Please try again.');
+        } finally {
+            setIsCreating(false);
+        }
     };
 
     return (
@@ -128,6 +142,7 @@ export default function CreateTeamForm({
                                 ref={fileInputRef}
                                 onChange={handleFileChange}
                                 required
+                                disabled={isCreating}
                             />
                             <div className="flex gap-1">
                                 <label
@@ -141,6 +156,7 @@ export default function CreateTeamForm({
                                         className="w-max"
                                         onClick={handleButtonClick}
                                         type="button"
+                                        disabled={isCreating}
                                     >
                                         Upload
                                     </Button>
@@ -158,6 +174,7 @@ export default function CreateTeamForm({
                                             }));
                                         }}
                                         type="button"
+                                        disabled={isCreating}
                                     >
                                         Clear
                                     </Button>
@@ -192,6 +209,7 @@ export default function CreateTeamForm({
                             maxLength={25}
                             placeholder="Enter team name"
                             errorMsg={errorMsg}
+                            disabled={isCreating}
                         />
                     </div>
                 </div>
@@ -202,6 +220,7 @@ export default function CreateTeamForm({
                             size={'cozy'}
                             hierarchy={'secondary'}
                             type="button"
+                            disabled={isCreating}
                         >
                             Cancel
                         </Button>
@@ -211,10 +230,10 @@ export default function CreateTeamForm({
                         variant="brand"
                         size="cozy"
                         hierarchy="primary"
-                        disabled={disabled}
+                        disabled={disabled || isCreating}
                         onClick={handleFormSubmit}
                     >
-                        Create team
+                        {isCreating ? 'Creating...' : 'Create team'}
                     </Button>
                 </DialogFooter>
             </DialogContent>

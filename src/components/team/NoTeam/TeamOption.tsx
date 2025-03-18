@@ -1,12 +1,14 @@
 'use client';
 import { useState } from 'react';
-import { Button } from '../../ui/button';
+import { Button } from '@/components/ui/button';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import JoinTeamForm from './JoinTeamForm';
 import CreateTeamForm from './CreateTeamForm';
 import { useRouter } from 'next/navigation';
+import { trpc } from '@/trpc/client';
+export default function JoinTeam({ hackathonId }: { hackathonId: number }) {
+    const createTeam = trpc.teams.createTeam.useMutation();
 
-export default function JoinTeam() {
     const [input, setInput] = useState<string>('');
     const isInputComplete = input.length === 6;
     const router = useRouter();
@@ -16,16 +18,20 @@ export default function JoinTeam() {
         router.push(`/team/${input}`);
     };
 
-    const handleCreateTeam = (teamInfo: {
+    const handleCreateTeam = async (teamInfo: {
         teamName: string;
         teamPicture: string;
     }) => {
-        alert(
-            `Creating team with name: ${teamInfo.teamName} and picture: ${teamInfo.teamPicture}`
-        );
-
-        // insert logic to create team
-        router.push('/team/123456');
+        try {
+            const newTeam = await createTeam.mutateAsync({
+                hackathonId,
+                name: teamInfo.teamName,
+                teamPictureUrl: teamInfo.teamPicture,
+            });
+            router.push(`/team/${newTeam.id}`);
+        } catch (error) {
+            console.log(error);
+        }
     };
 
     return (

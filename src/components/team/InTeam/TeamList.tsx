@@ -11,12 +11,14 @@ interface TeamListProps {
     teammates: Array<{ email: string; [key: string]: any }>;
     currentUserEmail: string;
     maxMembersCount: number;
+    teamId: number;
 }
 
 export default function TeamList({
     teammates,
     currentUserEmail,
     maxMembersCount,
+    teamId,
 }: TeamListProps) {
     const paddedTeammates = React.useMemo(() => {
         const placeholder = {
@@ -86,7 +88,7 @@ export default function TeamList({
                     </Button>
                 </DialogTrigger>
             </div>
-            <LeaveTeamForm />
+            <LeaveTeamForm teamId={teamId} />
         </Dialog>
     );
 }

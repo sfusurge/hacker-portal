@@ -1,54 +1,60 @@
-import { getUserData } from '../layout';
+import { getUserData } from '../../../layout';
 import { redirect } from 'next/navigation';
 import { databaseClient } from '@/db/client';
 import { members as membersTable } from '@/db/schema/members';
 import { teams } from '@/db/schema/teams';
 import { eq, and } from 'drizzle-orm';
 import CurrentStateUI from '@/components/team/NoTeam/CurrentState';
-import { createCaller } from '@/server/appRouter';
 
-export default async function Team() {
+export default async function TeamFull({
+    params,
+}: {
+    params: Promise<{ teamId: number }>;
+}) {
+    const { teamId } = await params;
     const user = await getUserData();
 
-    // Handle unauthenticated users - redirect to login or show message
     if (!user) {
         redirect('/login');
     }
 
-    const currentHackathon = await getCurrentHackathon();
-
-    // Check if user is already in a team for this hackathon
     const [team] = await databaseClient
-        .select({ id: teams.id })
+        .select()
         .from(teams)
-        .innerJoin(
-            membersTable,
-            and(
-                eq(membersTable.teamId, teams.id),
-                eq(membersTable.userId, user.id)
-            )
-        )
-        .where(eq(teams.hackathonId, currentHackathon.id));
+        .where(eq(teams.id, teamId));
 
-    // If user is in a team, redirect to their team page
-    if (team) {
-        redirect(`/team/${team.id}`);
+    if (!team) {
+        redirect('/not-found');
     }
 
-    // Otherwise, show the "not in a team" UI
+    const [userMembership] = await databaseClient
+        .select()
+        .from(membersTable)
+        .where(
+            and(
+                eq(membersTable.teamId, teamId),
+                eq(membersTable.userId, user.id)
+            )
+        );
+
+    if (userMembership) {
+        redirect(`/team/${teamId}`);
+    }
+
+    const currentHackathon = await getCurrentHackathon();
+
     return (
         <div className="flex h-full w-full items-center justify-center">
             <CurrentStateUI
-                hackathonId={currentHackathon.id}
-                title="You're not in a team yet! 🥺"
-                description="Join an existing team or create a new one to view your team's information here."
+                title="This team is currently full! 🥺"
+                description="Join a different team or create a new one to view your team's information here."
                 imageSrc="/cooking.webp"
+                hackathonId={currentHackathon.id}
             />
         </div>
     );
 }
 
-// temp function to get the current hackathon
 async function getCurrentHackathon() {
     const trpcClient = createCaller({});
     const hackathons = await trpcClient.hackathons.getHackathons();
