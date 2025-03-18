@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, describe } from 'vitest';
-import { e2eTest } from '../utils';
 import { Browser, chromium, expect, Page } from '@playwright/test';
 
 describe('basic e2e tests', () => {
@@ -16,10 +15,10 @@ describe('basic e2e tests', () => {
         await browser.close();
     });
 
-    e2eTest('basic', async () => {
+    it('basic', async () => {
         await page.goto('http://localhost:3000/');
 
         // Expect a title "to contain" a substring.
-        await expect(page).toHaveTitle('Hacker Portal');
+        await expect(page).toHaveTitle('SFU Surge Portal');
     });
 });

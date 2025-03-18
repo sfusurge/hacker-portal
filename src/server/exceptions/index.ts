@@ -1,6 +1,8 @@
-export class InternalServerError extends Error {
+import { TRPCError } from '@trpc/server';
+
+export class InternalServerError extends TRPCError {
     constructor(message: string, cause?: Error) {
-        super(message, { cause: cause });
+        super({ message, cause, code: 'INTERNAL_SERVER_ERROR' });
     }
 }
 
@@ -9,12 +11,15 @@ export interface UnauthorizedErrorProps {
     role?: string;
 }
 
-export class UnauthorizedError extends Error {
+export class UnauthorizedError extends TRPCError {
     public readonly email?: string;
     public readonly role?: string;
 
     constructor({ email, role }: UnauthorizedErrorProps = {}) {
-        super(`${email} with ${role} trying to access admin route`);
+        super({
+            message: `${email} with ${role} trying to access admin route`,
+            code: 'UNAUTHORIZED',
+        });
         this.email = email;
         this.role = role;
     }
@@ -28,13 +33,21 @@ export interface ResourceNotFoundErrorProps {
     resourceType: ResourceType;
 }
 
-export class ResourceNotFoundError extends Error {
+export class ResourceNotFoundError extends TRPCError {
     public readonly id: Id;
     public readonly resourceType: ResourceType;
 
     constructor({ id, resourceType }: ResourceNotFoundErrorProps) {
-        super(`Cannot find ${resourceType} with id ${id}`);
+        super({
+            message: `Cannot find ${resourceType} with id ${id}`,
+            code: 'NOT_FOUND',
+        });
         this.id = id;
         this.resourceType = resourceType;
+    }
+}
+export class BadRequestError extends TRPCError {
+    constructor(message: string, cause?: Error) {
+        super({ message, cause, code: 'BAD_REQUEST' });
     }
 }

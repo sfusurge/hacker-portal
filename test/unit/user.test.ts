@@ -1,7 +1,5 @@
 import { createCaller } from '@/server/appRouter';
-import { assert, describe, expect, it } from 'vitest';
 import {
-    itSkipDbCleanUp,
     TEST_FIRST_NAME,
     TEST_LAST_NAME,
     TEST_EMAIL,
@@ -28,7 +26,6 @@ describe('User CRUDL tests', () => {
         assert.equal(user.firstName, TEST_FIRST_NAME);
         assert.equal(user.lastName, TEST_LAST_NAME);
         assert.equal(user.email, TEST_EMAIL);
-        // Assert password is hashed
     });
 
     it("when user is deleted, getUsers doesn't return it", async () => {
@@ -51,18 +48,15 @@ describe('User CRUDL tests', () => {
         assert.isEmpty(userssAfterDelete);
     });
 
-    itSkipDbCleanUp(
-        'when user id is not found, delete still succeeds',
-        async () => {
-            assert.doesNotThrow(async () => {
-                await trpcClient.users.deleteUser({
-                    id: crypto.randomUUID(),
-                });
+    it('when user id is not found, delete still succeeds', async () => {
+        assert.doesNotThrow(async () => {
+            await trpcClient.users.deleteUser({
+                id: 90,
             });
-        }
-    );
+        });
+    });
 
-    itSkipDbCleanUp.for([
+    it.for([
         {
             scenario: 'invalid email',
             input: {

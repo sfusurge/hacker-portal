@@ -11,8 +11,14 @@
         "drizzle:push": "drizzle-kit push",
         "format:all": "prettier --write .",
         "prepare": "husky",
+        "prepare-test-db": "mkdir -p vitest-db",
+        "clean-test-db": "rm -rf vitest-db",
+        "pretest:unit": "npm run prepare-test-db",
         "test:unit": "vitest run --project unit",
-        "test:e2e": "vitest run --project e2e"
+        "posttest:unit": "npm run clean-test-db",
+        "pretest:e2e": "npm run prepare-test-db",
+        "test:e2e": "vitest run --project e2e",
+        "posttest:e2e": "npm run clean-test-db"
     },
     "dependencies": {
         "@faker-js/faker": "^9.3.0",
