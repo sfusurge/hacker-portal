@@ -69,7 +69,7 @@ const buttonVariants = cva(
             {
                 variant: 'caution',
                 hierarchy: 'primary',
-                className: 'bg-caution-700 hover:bg-caution-600',
+                className: 'bg-danger-700 hover:bg-danger-600',
             },
             {
                 variant: 'caution',

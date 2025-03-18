@@ -3,16 +3,10 @@ import React, { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/dashboard-card';
 import { ExclamationTriangleIcon, LinkIcon } from '@heroicons/react/16/solid';
-import { Button } from '../../ui/button';
+import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 
-interface InviteCardProps {
-    teamInfo: {
-        id: string;
-    };
-}
-
-export default function InviteCard({ teamInfo }: InviteCardProps) {
+export default function InviteCard() {
     const pathname = usePathname();
     const [teamLink, setTeamLink] = useState('');
     const [isCopied, setIsCopied] = useState(false);

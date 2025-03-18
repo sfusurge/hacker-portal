@@ -1,7 +1,7 @@
 'use client';
 
 import InputOtp from '@/app/(auth)/admin/qr/checkin_components/six_digit_input-otp';
-import { Button } from '../../ui/button';
+import { Button } from '@/components/ui/button';
 import {
     DialogContent,
     DialogHeader,

@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { Button } from '../../ui/button';
+import { Button } from '@/components/ui/button';
 import {
     DialogContent,
     DialogHeader,
@@ -9,13 +9,21 @@ import {
     DialogFooter,
     DialogTrigger,
 } from '@/components/ui/dialog';
-
-export default function LeaveTeamForm() {
+import { trpc } from '@/trpc/client';
+export default function LeaveTeamForm({ teamId }: { teamId: number | string }) {
     const router = useRouter();
-    const onLeaveTeam = () => {
-        alert('team was left');
+    const leaveTeam = trpc.teams.leaveTeam.useMutation();
+    const onLeaveTeam = async () => {
+        try {
+            const parsedTeamId =
+                typeof teamId === 'string' ? parseInt(teamId, 10) : teamId;
 
-        // insert logic to leave team
+            await leaveTeam.mutateAsync({
+                teamId: parsedTeamId,
+            });
+        } catch (error) {
+            console.log(error);
+        }
 
         router.push('/team');
     };
@@ -28,15 +36,15 @@ export default function LeaveTeamForm() {
                     team before the submission deadline.
                 </DialogDescription>
             </DialogHeader>
-            <DialogFooter className="grid grid-cols-2 gap-3 text-base">
-                <DialogTrigger asChild className="w-full">
+            <DialogFooter className="grid gap-3 text-base md:grid-cols-2">
+                <DialogTrigger asChild className="order-2 w-full md:order-0">
                     <Button
                         variant={'default'}
                         size={'cozy'}
                         hierarchy={'secondary'}
                         type="button"
                     >
-                        Cancel
+                        No, cancel
                     </Button>
                 </DialogTrigger>
                 <Button
@@ -46,7 +54,7 @@ export default function LeaveTeamForm() {
                     hierarchy="primary"
                     onClick={onLeaveTeam}
                 >
-                    Leave team
+                    Yes, leave team
                 </Button>
             </DialogFooter>
         </DialogContent>
