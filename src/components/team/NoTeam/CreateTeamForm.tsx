@@ -39,7 +39,7 @@ export default function CreateTeamForm({
         fileInputRef.current?.click();
     };
 
-    // Basic verification of the file type, size, and dimensions on client side
+    // Basic verification of the file type, size, and dimensions on client side, with temporary creation of a URL for the image, swap to R2 when ready
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -122,6 +122,9 @@ export default function CreateTeamForm({
                     </DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col gap-8">
+                    {error && (
+                        <div className="text-danger-400 text-sm">{error}</div>
+                    )}
                     <div className="flex gap-6 text-white/60">
                         <Image
                             src={teamInfo.teamPicture || '/teams/default.webp'}
@@ -184,11 +187,6 @@ export default function CreateTeamForm({
                                 .png, jpeg files up to 2 MB <br /> At least
                                 200px x 200px
                             </p>
-                            {error && (
-                                <div className="text-danger-400 -mt-2 text-sm">
-                                    {error}
-                                </div>
-                            )}
                         </div>
                     </div>
 

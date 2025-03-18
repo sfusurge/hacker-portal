@@ -15,6 +15,7 @@ export default async function TeamPage({
     params: Promise<{ id: number }>;
 }) {
     const { id } = await params;
+    const teamId = parseInt(id.toString(), 10);
     const user = await getUserData();
 
     if (!user) {
@@ -46,9 +47,10 @@ export default async function TeamPage({
     if (!userMembership) {
         try {
             await trpcClient.teams.joinTeam({
-                teamId: id,
+                teamId: teamId,
             });
         } catch (error) {
+            console.log(error);
             redirect(`/team/${id}/full`);
         }
     }
