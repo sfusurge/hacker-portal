@@ -20,8 +20,6 @@ export default async function TeamFull({
         redirect('/login');
     }
 
-    const trpcClient = createCaller({});
-
     // Fetch the team details
     const [team] = await databaseClient
         .select()

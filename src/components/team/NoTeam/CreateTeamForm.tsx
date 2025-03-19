@@ -10,15 +10,17 @@ import {
 import { Button } from '@/components/ui/button';
 import { FormTextInput, Input } from '@/components/ui/input/input';
 import { useState, useRef, useEffect } from 'react';
+import { trpc } from '@/trpc/client';
+import { useRouter } from 'next/navigation';
 
 export default function CreateTeamForm({
-    onSubmit,
+    hackathonId,
 }: {
-    onSubmit: (teamInfo: {
-        teamName: string;
-        teamPicture: string;
-    }) => Promise<void>;
+    hackathonId: number;
 }) {
+    const router = useRouter();
+    const createTeam = trpc.teams.createTeam.useMutation();
+
     const [teamInfo, setTeamInfo] = useState({
         teamName: '',
         teamPicture: '',
@@ -98,12 +100,16 @@ export default function CreateTeamForm({
             setError('Please fill out all required fields.');
             return;
         }
-
         setIsCreating(true);
         setError(null);
 
         try {
-            await onSubmit(teamInfo);
+            const newTeam = await createTeam.mutateAsync({
+                hackathonId,
+                name: teamInfo.teamName,
+                teamPictureUrl: teamInfo.teamPicture,
+            });
+            router.push(`/team/${newTeam.id}`);
         } catch (err) {
             setError('Failed to create team. Please try again.');
         } finally {

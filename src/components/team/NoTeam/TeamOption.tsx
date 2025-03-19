@@ -5,33 +5,16 @@ import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import JoinTeamForm from './JoinTeamForm';
 import CreateTeamForm from './CreateTeamForm';
 import { useRouter } from 'next/navigation';
-import { trpc } from '@/trpc/client';
-export default function JoinTeam({ hackathonId }: { hackathonId: number }) {
-    const createTeam = trpc.teams.createTeam.useMutation();
 
+export default function JoinTeam({ hackathonId }: { hackathonId: number }) {
     const [input, setInput] = useState<string>('');
     const isInputComplete = input.length === 6;
     const router = useRouter();
 
+    // temp join team functiion
     const handleJoinTeam = () => {
         alert(`joining team with code: ${input}`);
         router.push(`/team/${input}`);
-    };
-
-    const handleCreateTeam = async (teamInfo: {
-        teamName: string;
-        teamPicture: string;
-    }) => {
-        try {
-            const newTeam = await createTeam.mutateAsync({
-                hackathonId,
-                name: teamInfo.teamName,
-                teamPictureUrl: teamInfo.teamPicture,
-            });
-            router.push(`/team/${newTeam.id}`);
-        } catch (error) {
-            console.log(error);
-        }
     };
 
     return (
@@ -77,7 +60,7 @@ export default function JoinTeam({ hackathonId }: { hackathonId: number }) {
                         Create new team
                     </Button>
                 </DialogTrigger>
-                <CreateTeamForm onSubmit={handleCreateTeam} />
+                <CreateTeamForm hackathonId={hackathonId} />
             </Dialog>
         </div>
     );

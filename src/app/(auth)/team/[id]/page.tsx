@@ -30,6 +30,21 @@ export default async function TeamPage({
         .from(teams)
         .where(eq(teams.id, id));
 
+    // Check if the user is in another team, and if they are redirect them to correct team
+    const existingTeamMembership = await databaseClient
+        .select({
+            teamId: membersTable.teamId,
+        })
+        .from(membersTable)
+        .where(eq(membersTable.userId, user.id))
+        .limit(1);
+    if (
+        existingTeamMembership.length > 0 &&
+        existingTeamMembership[0].teamId !== teamId
+    ) {
+        redirect(`/team/${existingTeamMembership[0].teamId}`);
+    }
+
     // if team DNE, display no team found
     if (!team) {
         redirect('/not-found');
