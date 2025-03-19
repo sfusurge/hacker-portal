@@ -22,27 +22,27 @@ export default function InputOtp({ input, setInput }: InputOtpProps) {
             <InputOTPGroup className="flex">
                 <InputOTPSlot
                     index={0}
-                    className="relative w-14 h-14 my-3 ml-3 bg-neutral-900 text-white text-center border border-neutral-600 focus:outline-none focus:border-2 focus:border-blue-500 rounded-l-lg"
+                    className="relative my-3 ml-3 h-14 w-14 rounded-l-lg border border-neutral-600 bg-neutral-900 text-center text-white focus:border-2 focus:border-blue-500 focus:outline-hidden"
                 />
                 <InputOTPSlot
                     index={1}
-                    className="relative w-14 h-14 my-3 bg-neutral-900 text-white text-center border border-neutral-600 focus:border-2 focus:border-blue-500"
+                    className="relative my-3 h-14 w-14 border border-neutral-600 bg-neutral-900 text-center text-white focus:border-2 focus:border-blue-500"
                 />
                 <InputOTPSlot
                     index={2}
-                    className="relative w-14 h-14 my-3 bg-neutral-900 text-white text-center border border-neutral-600 focus:border-2 focus:border-blue-500"
+                    className="relative my-3 h-14 w-14 border border-neutral-600 bg-neutral-900 text-center text-white focus:border-2 focus:border-blue-500"
                 />
                 <InputOTPSlot
                     index={3}
-                    className="relative w-14 h-14 my-3 bg-neutral-900 text-white text-center border border-neutral-600 focus:border-2 focus:border-blue-500"
+                    className="relative my-3 h-14 w-14 border border-neutral-600 bg-neutral-900 text-center text-white focus:border-2 focus:border-blue-500"
                 />
                 <InputOTPSlot
                     index={4}
-                    className="relative w-14 h-14 my-3 bg-neutral-900 text-white text-center border border-neutral-600 focus:border-2 focus:border-blue-500"
+                    className="relative my-3 h-14 w-14 border border-neutral-600 bg-neutral-900 text-center text-white focus:border-2 focus:border-blue-500"
                 />
                 <InputOTPSlot
                     index={5}
-                    className="relative w-14 h-14 my-3 mr-3 bg-neutral-900 text-white text-center border border-neutral-600 focus:border-2 focus:border-blue-500 rounded-r-lg"
+                    className="relative my-3 mr-3 h-14 w-14 rounded-r-lg border border-neutral-600 bg-neutral-900 text-center text-white focus:border-2 focus:border-blue-500"
                 />
             </InputOTPGroup>
         </InputOTP>

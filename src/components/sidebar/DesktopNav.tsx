@@ -64,15 +64,15 @@ export default function DesktopNav({
     };
 
     return (
-        <div className={clsx('flex flex-col h-full', className)}>
+        <div className={clsx('flex h-full flex-col', className)}>
             {/* side part */}
             <div
                 className={clsx(
-                    'h-full bg-neutral-950 p-5 transition-all duration-200 relative',
+                    'relative h-full bg-neutral-950 p-5 transition-all duration-200',
                     collapsed ? 'w-[80px]' : 'w-[300px]'
                 )}
             >
-                <div className="flex flex-col h-full justify-between">
+                <div className="flex h-full flex-col justify-between">
                     <div className="flex flex-col gap-5">
                         <div
                             className={clsx(
@@ -82,10 +82,10 @@ export default function DesktopNav({
                         >
                             <div
                                 className={clsx(
-                                    'absolute w-9 h-9 flex-shrink-0 flex items-center justify-center z-10',
+                                    'absolute z-10 flex h-9 w-9 shrink-0 items-center justify-center',
                                     collapsed
-                                        ? 'left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2'
-                                        : 'left-3 top-3'
+                                        ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
+                                        : 'top-3 left-3'
                                 )}
                             >
                                 <Image
@@ -93,7 +93,7 @@ export default function DesktopNav({
                                     alt="Sparky wearing a chef's hat"
                                     width={36}
                                     height={36}
-                                    className="rounded-lg w-full h-full object-cover pointer-events-none"
+                                    className="pointer-events-none h-full w-full rounded-lg object-cover"
                                     onClick={returnHome}
                                 />
                             </div>
@@ -120,15 +120,15 @@ export default function DesktopNav({
                                             className="conditional-wrapper"
                                         >
                                             {!collapsed && (
-                                                <div className="relative aspect-[5/3] rounded-2xl overflow-hidden border border-neutral-800">
-                                                    <div className="absolute top-0 bg-neutral-900/50 backdrop-blur-lg flex flex-row gap-3 w-full p-3 items-center">
-                                                        <div className="w-9 h-9 flex-shrink-0 opacity-0" />
-                                                        <div className="flex flex-col gap-2 overflow-hidden mt-1">
-                                                            <span className="text-sm font-medium leading-none text-white line-clamp-1 whitespace-nowrap">
+                                                <div className="relative aspect-5/3 overflow-hidden rounded-2xl border border-neutral-800">
+                                                    <div className="absolute top-0 flex w-full flex-row items-center gap-3 bg-neutral-900/50 p-3 backdrop-blur-lg">
+                                                        <div className="h-9 w-9 shrink-0 opacity-0" />
+                                                        <div className="mt-1 flex flex-col gap-2 overflow-hidden">
+                                                            <span className="line-clamp-1 text-sm leading-none font-medium whitespace-nowrap text-white">
                                                                 JourneyHacks
                                                                 2025
                                                             </span>
-                                                            <span className="text-sm leading-none text-white/60 line-clamp-1 whitespace-nowrap">
+                                                            <span className="line-clamp-1 text-sm leading-none whitespace-nowrap text-white/60">
                                                                 February 14,
                                                                 2025
                                                             </span>
@@ -139,7 +139,7 @@ export default function DesktopNav({
                                                         alt="Stormy and Sparky cooking"
                                                         width={200}
                                                         height={200}
-                                                        className="w-full h-full object-cover"
+                                                        className="h-full w-full object-cover"
                                                     />
                                                 </div>
                                             )}
@@ -149,11 +149,11 @@ export default function DesktopNav({
                             </div>
                         </div>
 
-                        <div className="links flex-1 flex flex-col gap-1">
+                        <div className="links flex flex-1 flex-col gap-1">
                             <NavLink
                                 href="/home"
                                 label="Home"
-                                icon={<HomeIcon className="w-6 h-6" />}
+                                icon={<HomeIcon className="h-6 w-6" />}
                                 iconAlt="Home logo"
                                 platform="desktop"
                                 active={url.startsWith('/home')}
@@ -164,7 +164,7 @@ export default function DesktopNav({
                             <NavLink
                                 href="/teams"
                                 label="Teams"
-                                icon={<UserGroupIcon className="w-6 h-6" />}
+                                icon={<UserGroupIcon className="h-6 w-6" />}
                                 iconAlt="Teams logo"
                                 platform="desktop"
                                 active={url.startsWith('/teams')}
@@ -176,7 +176,7 @@ export default function DesktopNav({
                             <NavLink
                                 href="/schedule"
                                 label="Schedule"
-                                icon={<CalendarDaysIcon className="w-6 h-6" />}
+                                icon={<CalendarDaysIcon className="h-6 w-6" />}
                                 iconAlt="Schedule logo"
                                 platform="desktop"
                                 active={url.startsWith('/schedule')}
@@ -187,7 +187,7 @@ export default function DesktopNav({
                             <NavLink
                                 href="/notifications"
                                 label="Notifications"
-                                icon={<BellAlertIcon className="w-6 h-6" />}
+                                icon={<BellAlertIcon className="h-6 w-6" />}
                                 iconAlt="Notifications logo"
                                 platform="desktop"
                                 active={url.startsWith('/notifications')}
@@ -200,7 +200,7 @@ export default function DesktopNav({
                                 <NavLink
                                     href="/admin/reviewapplications"
                                     label="Review Applications"
-                                    icon={<BellAlertIcon className="w-6 h-6" />}
+                                    icon={<BellAlertIcon className="h-6 w-6" />}
                                     iconAlt="Review Applications logo"
                                     platform="desktop"
                                     active={url.startsWith(
@@ -216,7 +216,7 @@ export default function DesktopNav({
                                     href="/admin/qr/hackathon/"
                                     label="Hacker Checkin (Admin)"
                                     icon={
-                                        <QrCodeIcon className="w-6 h-6"></QrCodeIcon>
+                                        <QrCodeIcon className="h-6 w-6"></QrCodeIcon>
                                     }
                                     iconAlt="QR logo"
                                     platform="desktop"
@@ -236,13 +236,13 @@ export default function DesktopNav({
                                 });
                             }}
                             className={clsx(
-                                'w-full flex items-center gap-3 rounded-lg h-11 px-3 text-red-400 hover:text-red-300 hover:bg-red-950/30 transition-colors',
+                                'flex h-11 w-full items-center gap-3 rounded-lg px-3 text-red-400 transition-colors hover:bg-red-950/30 hover:text-red-300',
                                 collapsed ? 'justify-center' : 'justify-start'
                             )}
                             aria-label="Sign out"
                         >
-                            <div className="w-6 h-6 flex items-center justify-center">
-                                <ArrowLeftEndOnRectangleIcon className="w-6 h-6" />
+                            <div className="flex h-6 w-6 items-center justify-center">
+                                <ArrowLeftEndOnRectangleIcon className="h-6 w-6" />
                             </div>
                             {!collapsed && (
                                 <span className="text-sm font-medium">
@@ -256,7 +256,7 @@ export default function DesktopNav({
             {/* top part */}
             <div
                 className={clsx(
-                    'fixed top-0 h-16 bg-neutral-950 border-b border-neutral-950 flex items-center justify-between px-5 z-50 transition-all duration-200',
+                    'fixed top-0 z-50 flex h-16 items-center justify-between border-b border-neutral-950 bg-neutral-950 px-5 transition-all duration-200',
                     collapsed ? 'left-[80px]' : 'left-[300px]',
                     'right-0'
                 )}
@@ -265,7 +265,7 @@ export default function DesktopNav({
                     {isLargeScreen && (
                         <button
                             onClick={() => setCollapsed(!collapsed)}
-                            className="flex bg-neutral-950 rounded-lg p-1.5 hover:bg-neutral-900 transition-colors"
+                            className="flex rounded-lg bg-neutral-950 p-1.5 transition-colors hover:bg-neutral-900"
                             aria-label={
                                 collapsed
                                     ? 'Expand sidebar'
@@ -273,15 +273,15 @@ export default function DesktopNav({
                             }
                         >
                             {collapsed ? (
-                                <ChevronDoubleRightIcon className="w-5 h-5 text-white/60 hover:text-white" />
+                                <ChevronDoubleRightIcon className="h-5 w-5 text-white/60 hover:text-white" />
                             ) : (
-                                <ChevronDoubleLeftIcon className="w-5 h-5 text-white/60 hover:text-white" />
+                                <ChevronDoubleLeftIcon className="h-5 w-5 text-white/60 hover:text-white" />
                             )}
                         </button>
                     )}
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 flex-shrink-0">
+                    <div className="h-8 w-8 shrink-0">
                         <img
                             alt="Default avatar for the user"
                             src={
@@ -290,7 +290,7 @@ export default function DesktopNav({
                             }
                             width={32}
                             height={32}
-                            className="rounded-full w-full h-full object-cover"
+                            className="h-full w-full rounded-full object-cover"
                         />
                     </div>
                 </div>

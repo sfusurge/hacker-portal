@@ -180,7 +180,7 @@ export default function ScanPage({
     }, [isCheckInPrompt]);
 
     return (
-        <div className="flex flex-col items-center justify-between min-h-screen bg-neutral-900">
+        <div className="flex min-h-screen flex-col items-center justify-between bg-neutral-900">
             {/* HACK */}
             <div
                 style={{
@@ -190,7 +190,7 @@ export default function ScanPage({
                     transform: 'translate(-50%, -50%)',
                     zIndex: 10,
                 }}
-                className="relative w-full aspect-[3/4] min-h-screen md:max-w-sm"
+                className="relative aspect-3/4 min-h-screen w-full md:max-w-sm"
             >
                 <div className="absolute inset-0 overflow-hidden">
                     <Scanner
@@ -220,7 +220,7 @@ export default function ScanPage({
 
                 <div className="absolute top-4 left-4">
                     <Link href="/home">
-                        <button className="text-white flex flex-row gap-x-2 hover:shadow-lg transition-shadow duration-300">
+                        <button className="flex flex-row gap-x-2 text-white transition-shadow duration-300 hover:shadow-lg">
                             <ChevronLeftIcon className="size-6" />
                             <p className="">Back</p>
                         </button>
@@ -228,14 +228,10 @@ export default function ScanPage({
                 </div>
 
                 {/*Shadcn dropdown*/}
-                <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-[1000]">
+                <div className="absolute top-20 left-1/2 z-1000 -translate-x-1/2 transform">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button
-                                className="flexhover:shadow-lg hover:bg-neutral-900 hover:text-white/80
-                                bg-neutral-900/50 items-center justify-center border border-neutral-750 pl-0.5 pr-0.5
-                                rounded-full transition-shadow duration-300"
-                            >
+                            <Button className="flexhover:shadow-lg border-neutral-750 items-center justify-center rounded-full border bg-neutral-900/50 pr-0.5 pl-0.5 transition-shadow duration-300 hover:bg-neutral-900 hover:text-white/80">
                                 <div className="flex flex-row gap-x-2">
                                     {checkInType}
                                     <ChevronDownIcon className="size-6" />
@@ -243,7 +239,7 @@ export default function ScanPage({
                             </Button>
                         </DropdownMenuTrigger>
 
-                        <DropdownMenuContent className="w-56 bg-neutral-900/80 border-neutral-750 text-white/80">
+                        <DropdownMenuContent className="border-neutral-750 w-56 bg-neutral-900/80 text-white/80">
                             <DropdownMenuRadioGroup
                                 value={checkInType}
                                 onValueChange={setDropdownOption}
@@ -282,10 +278,10 @@ export default function ScanPage({
                     </DropdownMenu>
                 </div>
 
-                <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
+                <div className="absolute bottom-20 left-1/2 -translate-x-1/2 transform">
                     <button
                         onClick={toggleManualCheckIn}
-                        className="text-white bg-neutral-900/50 justify-center min-w-64 border border-neutral-750 items-center pr-7 pl-7 pt-2 pb-2 rounded-lg flex flex-row gap-x-2 hover:shadow-lg transition-shadow duration-300"
+                        className="border-neutral-750 flex min-w-64 flex-row items-center justify-center gap-x-2 rounded-lg border bg-neutral-900/50 pt-2 pr-7 pb-2 pl-7 text-white transition-shadow duration-300 hover:shadow-lg"
                     >
                         <QrCodeIcon className="size-6" />
                         <p className="font-light">Input code manually</p>
@@ -293,11 +289,11 @@ export default function ScanPage({
                 </div>
 
                 <div
-                    className={`fixed inset-0 z-50 bg-black bg-opacity-50 transition-opacity duration-300 ${isManualCheckInOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    className={`bg-opacity-50 fixed inset-0 z-50 bg-black transition-opacity duration-300 ${isManualCheckInOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
                     onClick={toggleManualCheckIn}
                 >
                     <div
-                        className={`fixed bottom-0 left-0 right-0 transition-transform duration-300 ease-in-out transform ${isManualCheckInOpen ? 'translate-y-0' : 'translate-y-full'}`}
+                        className={`fixed right-0 bottom-0 left-0 transform transition-transform duration-300 ease-in-out ${isManualCheckInOpen ? 'translate-y-0' : 'translate-y-full'}`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <ManualCheckIn
@@ -308,11 +304,11 @@ export default function ScanPage({
                 </div>
 
                 <div
-                    className={`fixed inset-0 z-50 bg-black bg-opacity-50 transition-opacity duration-300 ${isInvalidUser ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    className={`bg-opacity-50 fixed inset-0 z-50 bg-black transition-opacity duration-300 ${isInvalidUser ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
                     onClick={handleCloseAll}
                 >
                     <div
-                        className={`fixed bottom-0 left-0 right-0 transition-transform duration-300 ease-in-out transform ${isInvalidUser ? 'translate-y-0' : 'translate-y-full'}`}
+                        className={`fixed right-0 bottom-0 left-0 transform transition-transform duration-300 ease-in-out ${isInvalidUser ? 'translate-y-0' : 'translate-y-full'}`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <UserNotFound
@@ -324,11 +320,11 @@ export default function ScanPage({
                 </div>
 
                 <div
-                    className={`fixed inset-0 z-50 bg-black bg-opacity-50 transition-opacity duration-300 ${isCheckInPrompt ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    className={`bg-opacity-50 fixed inset-0 z-50 bg-black transition-opacity duration-300 ${isCheckInPrompt ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
                     onClick={closeCheckInPrompt}
                 >
                     <div
-                        className={`fixed bottom-0 left-0 right-0 transition-transform duration-300 ease-in-out transform ${isCheckInPrompt ? 'translate-y-0' : 'translate-y-full'}`}
+                        className={`fixed right-0 bottom-0 left-0 transform transition-transform duration-300 ease-in-out ${isCheckInPrompt ? 'translate-y-0' : 'translate-y-full'}`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         {secondState && (
@@ -345,11 +341,11 @@ export default function ScanPage({
                 </div>
 
                 <div
-                    className={`fixed inset-0 z-50 bg-black bg-opacity-50 transition-opacity duration-300 ${isMealsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    className={`bg-opacity-50 fixed inset-0 z-50 bg-black transition-opacity duration-300 ${isMealsOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
                     onClick={closeMeals}
                 >
                     <div
-                        className={`fixed bottom-0 left-0 right-0 transition-transform duration-300 ease-in-out transform ${isMealsOpen ? 'translate-y-0' : 'translate-y-full'}`}
+                        className={`fixed right-0 bottom-0 left-0 transform transition-transform duration-300 ease-in-out ${isMealsOpen ? 'translate-y-0' : 'translate-y-full'}`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <SelectMeal />
@@ -357,11 +353,11 @@ export default function ScanPage({
                 </div>
 
                 <div
-                    className={`fixed inset-0 z-50 bg-black bg-opacity-50 transition-opacity duration-300 ${isWorkshopsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    className={`bg-opacity-50 fixed inset-0 z-50 bg-black transition-opacity duration-300 ${isWorkshopsOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
                     onClick={closeWorkshops}
                 >
                     <div
-                        className={`fixed bottom-0 left-0 right-0 transition-transform duration-300 ease-in-out transform ${isWorkshopsOpen ? 'translate-y-0' : 'translate-y-full'}`}
+                        className={`fixed right-0 bottom-0 left-0 transform transition-transform duration-300 ease-in-out ${isWorkshopsOpen ? 'translate-y-0' : 'translate-y-full'}`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <SelectWorkshop />

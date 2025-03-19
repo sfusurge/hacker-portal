@@ -88,7 +88,7 @@ export default function MobileBottomNav({
             {!hideBottomNav && (
                 <div
                     className={clsx(
-                        'w-screen *:flex-1 flex flex-row gap-2 bg-neutral-900/60 border-t border-t-neutral-600/30 px-2 py-2 h-20 backdrop-blur-xl',
+                        'flex h-20 w-screen flex-row gap-2 border-t border-t-neutral-600/30 bg-neutral-900/60 px-2 py-2 backdrop-blur-xl *:flex-1',
                         className
                     )}
                 >
@@ -147,11 +147,11 @@ export default function MobileBottomNav({
             )}
             <div>
                 <div
-                    className={`fixed w-full inset-0 z-[200] bg-black bg-opacity-50 transition-opacity duration-300 ${isOptionsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    className={`bg-opacity-50 fixed inset-0 z-200 w-full bg-black transition-opacity duration-300 ${isOptionsOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
                     onClick={toggleOptions}
                 >
                     <div
-                        className={`fixed bottom-0 left-0 right-0 transition-transform duration-300 ease-in-out transform ${isOptionsOpen ? 'translate-y-0' : 'translate-y-full'}`}
+                        className={`fixed right-0 bottom-0 left-0 transform transition-transform duration-300 ease-in-out ${isOptionsOpen ? 'translate-y-0' : 'translate-y-full'}`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <SelectOption setCheckInType={setCheckInType} />
@@ -159,7 +159,7 @@ export default function MobileBottomNav({
                 </div>
 
                 {/*<div*/}
-                {/*    className={`fixed inset-0 z-[200] bg-black bg-opacity-50 transition-opacity duration-300 ${isMealsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}*/}
+                {/*    className={`fixed inset-0 z-200 bg-black bg-opacity-50 transition-opacity duration-300 ${isMealsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}*/}
                 {/*    onClick={closeMeals}*/}
                 {/*>*/}
                 {/*    <div*/}
