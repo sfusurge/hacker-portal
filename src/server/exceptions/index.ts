@@ -1,6 +1,8 @@
-export class InternalServerError extends Error {
+import { TRPCError } from '@trpc/server';
+
+export class InternalServerError extends TRPCError {
     constructor(message: string, cause?: Error) {
-        super(message, { cause: cause });
+        super({ message, cause, code: 'INTERNAL_SERVER_ERROR' });
     }
 }
 
@@ -20,6 +22,7 @@ export class UnauthorizedError extends Error {
     }
 }
 
+
 export type Id = string | number;
 export type ResourceType = 'user' | 'team' | 'hackathon' | 'application';
 
@@ -29,6 +32,7 @@ export interface ResourceNotFoundErrorProps {
 }
 
 export class ResourceNotFoundError extends Error {
+
     public readonly id: Id;
     public readonly resourceType: ResourceType;
 
@@ -42,5 +46,6 @@ export class ResourceNotFoundError extends Error {
 export class BadRequestError extends Error {
     constructor(message: string, cause?: Error) {
         super(message, { cause });
+
     }
 }
