@@ -11,7 +11,9 @@ export interface UnauthorizedErrorProps {
     role?: string;
 }
 
+
 export class UnauthorizedError extends TRPCError {
+
     public readonly email?: string;
     public readonly role?: string;
 
@@ -25,6 +27,7 @@ export class UnauthorizedError extends TRPCError {
     }
 }
 
+
 export type Id = string | number;
 export type ResourceType = 'user' | 'team' | 'hackathon' | 'application';
 
@@ -34,14 +37,17 @@ export interface ResourceNotFoundErrorProps {
 }
 
 export class ResourceNotFoundError extends TRPCError {
+
     public readonly id: Id;
     public readonly resourceType: ResourceType;
 
     constructor({ id, resourceType }: ResourceNotFoundErrorProps) {
+
         super({
             message: `Cannot find ${resourceType} with id ${id}`,
             code: 'NOT_FOUND',
         });
+
         this.id = id;
         this.resourceType = resourceType;
     }

@@ -57,19 +57,36 @@ export const currentTimeAtom = atom<Dayjs>(
 // ===== end atoms =====
 
 // ===== utils =====
+function groupBy<K extends PropertyKey, T>(
+    items: Iterable<T>,
+    keySelector: (item: T) => K
+): Record<K, T[]> | {} {
+    const out: Partial<Record<K, T[]>> = {};
+
+    for (const item of items) {
+        const id = keySelector(item);
+        if (!out[id]) {
+            out[id] = [item];
+        } else {
+            out[id].push(item);
+        }
+    }
+
+    return out;
+}
 
 export function groupEventsByDay(
     events: InternalCalendarEventType[],
     firstDayOfMonth: Dayjs
 ) {
     const grouped = {
-        ...Object.groupBy(events, (item) => {
-            return (
+        ...groupBy(
+            events,
+            (item) =>
                 Math.floor(item.startTime.diff(firstDayOfMonth, 'hour') / 24) +
                 1
-            );
-        }),
-    } as { [dayOfMonth: number]: InternalCalendarEventType[] };
+        ),
+    };
 
     for (const [key, val] of Object.entries(grouped)) {
         val.sort((a, b) => {
