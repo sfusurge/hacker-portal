@@ -37,7 +37,9 @@ export const teamsRouter = router({
             }
 
             const team = await databaseClient.transaction(async (tx) => {
-                checkIfUserInExistingTeam(tx, user.id, input.hackathonId);
+
+                await checkIfUserInExistingTeam(tx, user.id, input.hackathonId);
+
 
                 const [team] = await tx
                     .insert(teams)
@@ -104,7 +106,9 @@ export const teamsRouter = router({
                     );
                 }
 
-                checkIfUserInExistingTeam(tx, userId, hackathonId);
+
+                await checkIfUserInExistingTeam(tx, userId, hackathonId);
+
 
                 await tx.insert(membersTable).values({
                     teamId: teamId,
