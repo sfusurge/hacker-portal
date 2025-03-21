@@ -162,13 +162,12 @@ export default function DesktopNav({
                                 })}
                             />
                             <NavLink
-                                href="/teams"
-                                label="Teams"
+                                href="/team"
+                                label="Team"
                                 icon={<UserGroupIcon className="h-6 w-6" />}
                                 iconAlt="Teams logo"
                                 platform="desktop"
-                                active={url.startsWith('/teams')}
-                                disabled={true}
+                                active={url.startsWith('/team')}
                                 className={clsx({
                                     'justify-center': collapsed,
                                 })}

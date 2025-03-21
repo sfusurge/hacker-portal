@@ -44,7 +44,7 @@ export default function MobileTopNav({
                 return setHideTopNav(true);
             }
             setHideTopNav(false);
-            document.body.style.setProperty('--paddingTop', '4rem');
+            document.body.style.setProperty('--paddingTop', '5rem');
         }
     }, [url]);
 

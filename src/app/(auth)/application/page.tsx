@@ -60,7 +60,7 @@ export default function Application() {
     }, [session]);
 
     useEffect(() => {
-        document.body.style.setProperty('--paddingTop', '4rem');
+        document.body.style.setProperty('--paddingTop', '5rem');
     }, []);
 
     return (
