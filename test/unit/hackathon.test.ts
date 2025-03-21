@@ -1,7 +1,5 @@
 import { createCaller } from '@/server/appRouter';
-import { assert, describe, expect, it } from 'vitest';
 import {
-    itSkipDbCleanUp,
     TEST_HACKATHON_END_DATE,
     TEST_HACKATHON_NAME,
     TEST_HACKATHON_START_DATE,
@@ -50,18 +48,15 @@ describe('Hackathon CRUDL tests', () => {
         assert.isEmpty(hackathonsAfterDelete);
     });
 
-    itSkipDbCleanUp(
-        'when hackathon id is not found, delete still succeeds',
-        async () => {
-            assert.doesNotThrow(async () => {
-                await trpcClient.hackathons.deleteHackathon({
-                    id: 1,
-                });
+    it('when hackathon id is not found, delete still succeeds', async () => {
+        assert.doesNotThrow(async () => {
+            await trpcClient.hackathons.deleteHackathon({
+                id: 1,
             });
-        }
-    );
+        });
+    });
 
-    itSkipDbCleanUp.for([
+    it.for([
         {
             scenario: 'long hackathon name',
             input: {

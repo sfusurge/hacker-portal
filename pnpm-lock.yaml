@@ -85,10 +85,10 @@ importers:
         version: 1.11.13
       drizzle-orm:
         specifier: ^0.38.4
-        version: 0.38.4(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1)
+        version: 0.38.4(@electric-sql/pglite@0.2.17)(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1)
       drizzle-zod:
         specifier: ^0.6.0
-        version: 0.6.0(drizzle-orm@0.38.4(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1))(zod@3.23.8)
+        version: 0.6.0(drizzle-orm@0.38.4(@electric-sql/pglite@0.2.17)(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1))(zod@3.23.8)
       google:
         specifier: link:@next/third-parties/google
         version: link:@next/third-parties/google
@@ -153,6 +153,9 @@ importers:
         specifier: ^3.23.8
         version: 3.23.8
     devDependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.2.17
+        version: 0.2.17
       '@playwright/test':
         specifier: ^1.48.2
         version: 1.48.2
@@ -258,6 +261,9 @@ packages:
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
+
+  '@electric-sql/pglite@0.2.17':
+    resolution: {integrity: sha512-qEpKRT2oUaWDH6tjRxLHjdzMqRUGYDnGZlKrnL4dJ77JVMcP2Hpo3NYnOSPKdZdeec57B6QPprCUFg0picx5Pw==}
 
   '@emnapi/runtime@1.3.1':
     resolution: {integrity: sha512-kEBmG8KyqtxJZv+ygbEim+KCGtIq1fC22Ms3S4ziXmYKm8uyoLX0MHONVKwp+9opg390VaKRNt4a7A9NwmpNhw==}
@@ -4094,6 +4100,8 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
+  '@electric-sql/pglite@0.2.17': {}
+
   '@emnapi/runtime@1.3.1':
     dependencies:
       tslib: 2.6.3
@@ -5688,8 +5696,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.38.4(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1):
+  drizzle-orm@0.38.4(@electric-sql/pglite@0.2.17)(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1):
     optionalDependencies:
+      '@electric-sql/pglite': 0.2.17
       '@types/pg': 8.11.10
       '@types/react': 18.3.3
       mysql2: 3.10.1
@@ -5697,9 +5706,9 @@ snapshots:
       postgres: 3.4.5
       react: 18.3.1
 
-  drizzle-zod@0.6.0(drizzle-orm@0.38.4(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1))(zod@3.23.8):
+  drizzle-zod@0.6.0(drizzle-orm@0.38.4(@electric-sql/pglite@0.2.17)(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1))(zod@3.23.8):
     dependencies:
-      drizzle-orm: 0.38.4(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1)
+      drizzle-orm: 0.38.4(@electric-sql/pglite@0.2.17)(@types/pg@8.11.10)(@types/react@18.3.3)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5)(react@18.3.1)
       zod: 3.23.8
 
   emoji-regex@8.0.0: {}
@@ -5933,7 +5942,7 @@ snapshots:
       debug: 4.3.5
       enhanced-resolve: 5.17.0
       eslint: 8.57.0
-      eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@8.57.0))(eslint@8.57.0)
+      eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0)
       eslint-plugin-import: 2.31.0(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0)
       fast-glob: 3.3.2
       get-tsconfig: 4.7.5
@@ -5945,7 +5954,7 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-module-utils@2.12.0(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@8.57.0))(eslint@8.57.0):
+  eslint-module-utils@2.12.0(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -5956,7 +5965,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.8.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@8.57.0))(eslint@8.57.0):
+  eslint-module-utils@2.8.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -5978,7 +5987,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.0
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.0(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-plugin-import@2.31.0)(eslint@8.57.0))(eslint@8.57.0)
+      eslint-module-utils: 2.12.0(@typescript-eslint/parser@7.2.0(eslint@8.57.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0)
       hasown: 2.0.2
       is-core-module: 2.15.1
       is-glob: 4.0.3
