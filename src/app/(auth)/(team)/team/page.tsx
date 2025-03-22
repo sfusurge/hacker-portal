@@ -1,4 +1,4 @@
-import { getUserData } from '../layout';
+import { getUserData } from '../../layout';
 import { redirect } from 'next/navigation';
 import CurrentStateUI from '@/components/team/NoTeam/CurrentState';
 import { createCaller } from '@/server/appRouter';

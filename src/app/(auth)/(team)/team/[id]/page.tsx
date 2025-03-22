@@ -1,4 +1,4 @@
-import { getUserData } from '../../layout';
+import { getUserData } from '../../../layout';
 import { redirect } from 'next/navigation';
 import TeamList from '@/components/team/InTeam/TeamList';
 import InviteCard from '@/components/team/InTeam/InviteCard';

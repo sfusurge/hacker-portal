@@ -20,13 +20,12 @@ export default function InviteCard() {
     const [isCodeCopied, setIsCodeCopied] = useState(false);
     const [teamCode, setTeamCode] = useState('');
 
-    // fetch url in the client
-    // TEMP fetch TeamCode, replace it with team id
+    // temp fetch url function rendered on the client
     useEffect(() => {
         const origin = window.location.origin;
-        setTeamLink(`${origin}${pathname}`);
-
-        setTeamCode(pathname.split('/team/')[1]);
+        const teamId = pathname.split('/team/')[1];
+        setTeamLink(`${origin}/invite/${teamId}`);
+        setTeamCode(teamId);
     }, [pathname]);
 
     const handleCopy = async (textToCopy: string, type: 'link' | 'code') => {

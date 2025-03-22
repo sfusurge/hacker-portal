@@ -1,4 +1,4 @@
-import { getUserData } from '../../../layout';
+import { getUserData } from '../../../../layout';
 import { redirect } from 'next/navigation';
 import { databaseClient } from '@/db/client';
 import { members as membersTable } from '@/db/schema/members';
