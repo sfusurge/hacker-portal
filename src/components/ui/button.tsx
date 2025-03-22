@@ -7,12 +7,17 @@ import Image from 'next/image';
 interface ButtonProps {
     leadingIcon?: string;
     leadingIconAlt?: string;
+    leadingIconChild?: React.ReactElement;
     trailingIcon?: string;
     trailingIconAlt?: string;
+    trailingIconChild?: React.ReactElement;
+    type?: 'button' | 'submit' | 'reset';
+    size?: 'compact' | 'cozy';
+    mobileSize?: 'compact' | 'cozy';
 }
 
 const buttonVariants = cva(
-    'text-white font-medium text-center flex items-center justify-center transition-colors',
+    'text-white font-medium text-center flex items-center justify-center transition-colors cursor-pointer',
     {
         variants: {
             variant: {
@@ -64,7 +69,13 @@ const buttonVariants = cva(
             {
                 variant: 'caution',
                 hierarchy: 'primary',
-                className: 'bg-caution-700 hover:bg-caution-600',
+                className: 'bg-danger-700 hover:bg-danger-600',
+            },
+            {
+                variant: 'caution',
+                hierarchy: 'secondary',
+                className:
+                    'bg-neutral-850 text-danger-400 hover:bg-neutral-750 border-neutral-600/60 font-medium',
             },
         ],
     }
@@ -78,25 +89,54 @@ const Button = forwardRef<
         {
             className,
             variant,
-            size,
+            size = 'compact',
+            mobileSize,
             hierarchy,
             disabled,
             leadingIcon,
             leadingIconAlt,
+            leadingIconChild,
             trailingIcon,
             trailingIconAlt,
+            trailingIconChild,
+            type,
             ...props
         },
         ref
     ) => {
+        const sizeClasses = cn(
+            size === 'compact'
+                ? 'h-9 rounded-md text-sm'
+                : 'h-11 rounded-lg text-md',
+            mobileSize === 'compact'
+                ? 'md:h-9 md:rounded-md md:text-sm'
+                : 'md:h-11 md:rounded-lg md:text-md'
+        );
+
         const leadingIconStyles = cn({
-            'ml-1': size === 'compact' && leadingIcon,
-            'ml-2': size === 'cozy' && leadingIcon,
+            'ml-2': size === 'compact' && (leadingIcon || leadingIconChild),
+            'ml-3': size === 'cozy' && (leadingIcon || leadingIconChild),
+            'md:ml-2':
+                mobileSize === 'compact' && (leadingIcon || leadingIconChild),
+            'md:ml-3':
+                mobileSize === 'cozy' && (leadingIcon || leadingIconChild),
         });
 
         const trailingIconStyles = cn({
-            'mr-1': size === 'compact' && leadingIcon,
-            'mr-2': size === 'cozy' && leadingIcon,
+            'mr-2': size === 'compact' && (trailingIcon || trailingIconChild),
+            'mr-3': size === 'cozy' && (trailingIcon || trailingIconChild),
+            'md:mr-2':
+                mobileSize === 'compact' && (trailingIcon || trailingIconChild),
+            'md:mr-3':
+                mobileSize === 'cozy' && (trailingIcon || trailingIconChild),
+        });
+
+        // Handle padding for text content
+        const contentStyles = cn({
+            'p-2': size === 'compact',
+            'p-3': size === 'cozy',
+            'md:p-2': mobileSize === 'compact',
+            'md:p-3': mobileSize === 'cozy',
         });
 
         return (
@@ -109,10 +149,11 @@ const Button = forwardRef<
                         className,
                         disabled,
                         variant,
-                        size,
                         hierarchy,
-                    })
+                    }),
+                    sizeClasses
                 )}
+                type={type}
             >
                 {leadingIcon && leadingIconAlt && (
                     <Image
@@ -121,10 +162,16 @@ const Button = forwardRef<
                         width={20}
                         height={20}
                         className={leadingIconStyles}
-                    ></Image>
+                    />
                 )}
 
-                <span className="p-3">{props.children}</span>
+                {leadingIconChild && (
+                    <span className={leadingIconStyles}>
+                        {leadingIconChild}
+                    </span>
+                )}
+
+                <span className={contentStyles}>{props.children}</span>
 
                 {trailingIcon && trailingIconAlt && (
                     <Image
@@ -133,11 +180,19 @@ const Button = forwardRef<
                         width={20}
                         height={20}
                         className={trailingIconStyles}
-                    ></Image>
+                    />
+                )}
+
+                {trailingIconChild && (
+                    <span className={trailingIconStyles}>
+                        {trailingIconChild}
+                    </span>
                 )}
             </button>
         );
     }
 );
+
+Button.displayName = 'Button';
 
 export { Button, buttonVariants };

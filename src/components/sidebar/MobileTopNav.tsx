@@ -44,7 +44,7 @@ export default function MobileTopNav({
                 return setHideTopNav(true);
             }
             setHideTopNav(false);
-            document.body.style.setProperty('--paddingTop', '4rem');
+            document.body.style.setProperty('--paddingTop', '5rem');
         }
     }, [url]);
 
@@ -68,7 +68,7 @@ export default function MobileTopNav({
                             ></Image>
 
                             <div className="flex flex-col gap-2">
-                                <span className="line-clamp-1 text-sm leading-none font-medium text-white">
+                                <span className="line-clamp-1 text-sm font-medium leading-none text-white">
                                     JourneyHacks 2025
                                 </span>
                                 <span className="line-clamp-1 text-sm leading-none text-white/60">

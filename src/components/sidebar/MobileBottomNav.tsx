@@ -93,7 +93,7 @@ export default function MobileBottomNav({
                     )}
                 >
                     <NavLink
-                        href="#"
+                        href="/home"
                         label="Home"
                         icon={<HomeIcon></HomeIcon>}
                         iconAlt="Home logo"
@@ -102,13 +102,12 @@ export default function MobileBottomNav({
                     ></NavLink>
 
                     <NavLink
-                        href="#"
+                        href="/team"
                         label="Team"
                         icon={<UserGroupIcon></UserGroupIcon>}
                         iconAlt="Team logo"
                         platform="mobile"
-                        active={false}
-                        disabled={true}
+                        active={url.startsWith('/team')}
                     ></NavLink>
 
                     <NavLink
@@ -147,11 +146,11 @@ export default function MobileBottomNav({
             )}
             <div>
                 <div
-                    className={`bg-opacity-50 fixed inset-0 z-200 w-full bg-black transition-opacity duration-300 ${isOptionsOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+                    className={`z-200 fixed inset-0 w-full bg-black bg-opacity-50 transition-opacity duration-300 ${isOptionsOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
                     onClick={toggleOptions}
                 >
                     <div
-                        className={`fixed right-0 bottom-0 left-0 transform transition-transform duration-300 ease-in-out ${isOptionsOpen ? 'translate-y-0' : 'translate-y-full'}`}
+                        className={`fixed bottom-0 left-0 right-0 transform transition-transform duration-300 ease-in-out ${isOptionsOpen ? 'translate-y-0' : 'translate-y-full'}`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <SelectOption setCheckInType={setCheckInType} />

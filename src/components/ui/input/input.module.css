@@ -1,5 +1,5 @@
 .hasLength:not(:has(.textinput:user-invalid)) {
-    padding-bottom: 1.5rem;
+    /* padding-bottom: 1.5rem; */
 }
 
 .hasLength {
@@ -34,13 +34,13 @@
 
 .textinput:user-invalid,
 .textinput:invalid:not(:placeholder-shown) {
-    border-color: var(--danger-500) !important;
+    border-color: var(--color-danger-400) !important;
 }
 
 .inputHolder:has(.textinput:user-invalid)::after,
 .inputHolder:has(.textinput:invalid:not(:placeholder-shown))::after {
     content: var(--errMsg);
-    color: var(--danger-500);
+    color: var(--color-danger-400);
     font-size: smaller;
     max-width: calc(100% - 2rem);
     line-height: 1rem;
@@ -54,7 +54,7 @@
     line-height: 1rem;
     display: block;
     padding-top: 0.2rem;
-    height: 20px;
+    /* height: 20px; */
     color: transparent;
 }
 
