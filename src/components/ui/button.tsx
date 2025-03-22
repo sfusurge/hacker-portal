@@ -108,9 +108,13 @@ const Button = forwardRef<
             size === 'compact'
                 ? 'h-9 rounded-md text-sm'
                 : 'h-11 rounded-lg text-md',
-            mobileSize === 'compact'
-                ? 'md:h-9 md:rounded-md md:text-sm'
-                : 'md:h-11 md:rounded-lg md:text-md'
+            mobileSize
+                ? mobileSize === 'compact'
+                    ? 'md:h-9 md:rounded-md md:text-sm'
+                    : 'md:h-11 md:rounded-lg md:text-md'
+                : size === 'compact'
+                  ? 'md:h-9 md:rounded-md md:text-sm'
+                  : 'md:h-11 md:rounded-lg md:text-md'
         );
 
         const leadingIconStyles = cn({

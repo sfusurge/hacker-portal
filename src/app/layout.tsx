@@ -4,6 +4,7 @@ import './globals.css';
 import Provider from '@/trpc/Provider';
 import { SessionProvider } from 'next-auth/react';
 import { GoogleAnalytics } from '@next/third-parties/google';
+import { Toaster } from '@/components/ui/toaster';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -32,7 +33,10 @@ export default function RootLayout({
             <link rel="icon" href="/favicon.png" sizes="any" />
             <body className={inter.className}>
                 <SessionProvider>
-                    <Provider>{children}</Provider>
+                    <Provider>
+                        {children}
+                        <Toaster />
+                    </Provider>
                 </SessionProvider>
             </body>
             <GoogleAnalytics gaId="G-99DQSJDLRK" />

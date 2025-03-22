@@ -13,6 +13,7 @@ type ToasterToast = ToastProps & {
     title?: React.ReactNode;
     description?: React.ReactNode;
     action?: ToastActionElement;
+    icon?: React.ReactNode;
 };
 
 const actionTypes = {
@@ -139,7 +140,15 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, 'id'>;
 
-function toast({ ...props }: Toast) {
+export type ToastActionType = {
+    title?: string;
+    description?: string;
+    action?: ToastActionElement;
+    variant?: 'default' | 'success' | 'error' | 'warning' | 'info';
+    icon?: React.ReactNode;
+};
+
+function toast({ ...props }: Toast & ToastActionType) {
     const id = genId();
 
     const update = (props: ToasterToast) =>
@@ -162,7 +171,7 @@ function toast({ ...props }: Toast) {
     });
 
     return {
-        id: id,
+        id,
         dismiss,
         update,
     };
@@ -190,3 +199,5 @@ function useToast() {
 }
 
 export { useToast, toast };
+
+// Remove the duplicate toast function at the end of the file
