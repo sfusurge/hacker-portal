@@ -1,26 +1,36 @@
 'use client';
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
+import { Drawer, DrawerTrigger } from '@/components/ui/drawer';
 import JoinTeamForm from './JoinTeamForm';
 import CreateTeamForm from './CreateTeamForm';
-import { useRouter } from 'next/navigation';
+import { FormSeparator } from '@/components/ui/form-separator';
+import { useEffect, useState } from 'react';
 
 export default function JoinTeam({ hackathonId }: { hackathonId: number }) {
-    const [input, setInput] = useState<string>('');
-    const isInputComplete = input.length === 6;
-    const router = useRouter();
+    const [isDesktop, setIsDesktop] = useState(false);
 
-    // temp join team functiion
-    const handleJoinTeam = () => {
-        alert(`joining team with code: ${input}`);
-        router.push(`/team/${input}`);
-    };
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            setIsDesktop(window.innerWidth >= 768);
+
+            const handleResize = () => {
+                setIsDesktop(window.innerWidth >= 768);
+            };
+
+            window.addEventListener('resize', handleResize);
+
+            return () => window.removeEventListener('resize', handleResize);
+        }
+    }, []);
+
+    const Container = isDesktop ? Dialog : Drawer;
+    const Trigger = isDesktop ? DialogTrigger : DrawerTrigger;
 
     return (
         <div className="grid w-full gap-3 lg:grid-cols-2">
-            <Dialog>
-                <DialogTrigger asChild>
+            <Container>
+                <Trigger asChild>
                     <Button
                         size="cozy"
                         variant="default"
@@ -29,28 +39,16 @@ export default function JoinTeam({ hackathonId }: { hackathonId: number }) {
                     >
                         Join existing team
                     </Button>
-                </DialogTrigger>
-                <JoinTeamForm
-                    input={input}
-                    setInput={setInput}
-                    isInputComplete={isInputComplete}
-                    onJoinTeam={handleJoinTeam}
-                />
-            </Dialog>
+                </Trigger>
+                <JoinTeamForm isDesktop={isDesktop} />
+            </Container>
 
-            <div className="relative my-2 block lg:hidden">
-                <div className="absolute inset-0 flex items-center">
-                    <div className="w-full rounded border-t border-neutral-600/30"></div>
-                </div>
-                <div className="relative flex justify-center text-xs">
-                    <span className="bg-neutral-950 px-2 text-white/30">
-                        OR
-                    </span>
-                </div>
+            <div className="lg:hidden">
+                <FormSeparator separatorText="OR" />
             </div>
 
-            <Dialog>
-                <DialogTrigger asChild>
+            <Container>
+                <Trigger asChild>
                     <Button
                         size="cozy"
                         variant="default"
@@ -59,9 +57,12 @@ export default function JoinTeam({ hackathonId }: { hackathonId: number }) {
                     >
                         Create new team
                     </Button>
-                </DialogTrigger>
-                <CreateTeamForm hackathonId={hackathonId} />
-            </Dialog>
+                </Trigger>
+                <CreateTeamForm
+                    hackathonId={hackathonId}
+                    isDesktop={isDesktop}
+                />
+            </Container>
         </div>
     );
 }

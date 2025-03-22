@@ -43,12 +43,12 @@ const DrawerContent = React.forwardRef<
         <DrawerPrimitive.Content
             ref={ref}
             className={cn(
-                'fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950',
+                'fixed inset-x-0 bottom-0 z-250 mt-24 flex h-auto flex-col rounded-t-[10px] border border-neutral-700/30 bg-neutral-900 text-white',
                 className
             )}
             {...props}
         >
-            <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-neutral-100 dark:bg-neutral-800" />
+            <div className="bg-neutral-750 mx-auto mt-4 h-2 w-9 rounded-full" />
             {children}
         </DrawerPrimitive.Content>
     </DrawerPortal>
@@ -59,10 +59,7 @@ const DrawerHeader = ({
     className,
     ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
-    <div
-        className={cn('grid gap-1.5 p-4 text-center sm:text-left', className)}
-        {...props}
-    />
+    <div className={cn('grid gap-1.5 p-6 text-left', className)} {...props} />
 );
 DrawerHeader.displayName = 'DrawerHeader';
 
@@ -71,7 +68,7 @@ const DrawerFooter = ({
     ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
     <div
-        className={cn('mt-auto flex flex-col gap-2 p-4', className)}
+        className={cn('mt-auto flex flex-col gap-2 p-6', className)}
         {...props}
     />
 );
@@ -84,7 +81,7 @@ const DrawerTitle = React.forwardRef<
     <DrawerPrimitive.Title
         ref={ref}
         className={cn(
-            'text-lg font-semibold leading-none tracking-tight',
+            'text-lg leading-none font-semibold tracking-tight',
             className
         )}
         {...props}
@@ -98,10 +95,7 @@ const DrawerDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
     <DrawerPrimitive.Description
         ref={ref}
-        className={cn(
-            'text-sm text-neutral-500 dark:text-neutral-400',
-            className
-        )}
+        className={cn('text-sm text-white/60', className)}
         {...props}
     />
 ));

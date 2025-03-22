@@ -1,5 +1,6 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
+import { Chip } from '@/components/ui/chip';
 interface TeammateItemProps {
     firstName?: string;
     lastName?: string;
@@ -11,6 +12,7 @@ interface TeammateItemProps {
     index?: number;
     isPlaceholder?: boolean;
     maxMembersCount?: number;
+    isLastItem?: boolean;
 }
 
 export default function TeammateItem({
@@ -24,6 +26,7 @@ export default function TeammateItem({
     index = 0,
     isPlaceholder = false,
     maxMembersCount = 4,
+    isLastItem = false,
 }: TeammateItemProps) {
     const [isMobile, setIsMobile] = useState(false);
 
@@ -82,18 +85,16 @@ export default function TeammateItem({
                     </div>
                 </div>
                 <div className="flex items-center justify-center gap-4">
-                    <span
-                        className={`rounded-lg px-3 py-1 text-sm font-medium ${
-                            submitted === 'Submitted'
-                                ? 'bg-success-950 text-success-300'
-                                : 'bg-neutral-800/90 text-white/60'
-                        }`}
+                    <Chip
+                        variant={
+                            submitted === 'Submitted' ? 'success' : 'default'
+                        }
                     >
                         {submitted}
-                    </span>
+                    </Chip>
                 </div>
             </li>
-            {index !== maxMembersCount - 1 && isMobile && (
+            {!isLastItem && isMobile && (
                 <hr className="border-neutral-700/20" />
             )}
             {index !== 3 && !isMobile && (

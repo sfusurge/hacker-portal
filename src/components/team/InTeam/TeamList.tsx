@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeftStartOnRectangleIcon } from '@heroicons/react/16/solid';
 import TeammateItem from './TeammateItem';
@@ -20,7 +20,7 @@ export default function TeamList({
     maxMembersCount,
     teamId,
 }: TeamListProps) {
-    const paddedTeammates = React.useMemo(() => {
+    const paddedTeammates = useMemo(() => {
         const placeholder = {
             email: '',
             name: 'Empty Slot',
@@ -32,6 +32,12 @@ export default function TeamList({
         }
         return padded;
     }, [teammates]);
+
+    const lastVisibleIndex = useMemo(() => {
+        return paddedTeammates.reduce((lastIndex, teammate, index) => {
+            return !teammate.placeholder ? index : lastIndex;
+        }, 0);
+    }, [paddedTeammates]);
 
     return (
         <Dialog>
@@ -51,6 +57,7 @@ export default function TeamList({
                                 }
                                 isPlaceholder={teammate.placeholder}
                                 maxMembersCount={maxMembersCount}
+                                isLastItem={i === lastVisibleIndex}
                             />
                         ))}
                     </ul>

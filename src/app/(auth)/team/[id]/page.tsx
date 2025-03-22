@@ -107,7 +107,7 @@ export default async function TeamPage({
             </div>
 
             <div className="flex flex-col gap-4">
-                <div className="grid grid-cols-1 gap-6 pb-24 sm:pb-0 xl:grid-cols-[calc(66%-calc(var(--spacing)*3))_calc(33%-calc(var(--spacing)*3))]">
+                <div className="grid grid-cols-1 gap-6 pb-24 sm:pb-0 xl:grid-cols-[1fr_minmax(0,31rem)]">
                     <TeamList
                         teammates={teamMembers}
                         currentUserEmail={user.email}
