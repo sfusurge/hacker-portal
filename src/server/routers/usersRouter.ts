@@ -27,21 +27,19 @@ export const usersRouter = router({
     }),
     addUser: publicProcedure.input(insertUserSchema).mutation(async (opts) => {
         // create the user, and catch their id
-        const res = await databaseClient
+        const [user] = await databaseClient
             .insert(users)
             .values({
                 ...opts.input,
             })
             .returning({ userId: users.id });
-        if (res.length !== 1) {
-            return; // insertion has failed if no return
-        }
+
         // create display id
         return await databaseClient
             .insert(userDisplayIds)
             .values({
-                userId: res[0].userId,
-                displayId: getSixDigitId(res[0].userId),
+                userId: user.userId,
+                displayId: getSixDigitId(user.userId),
             })
             .returning();
     }),

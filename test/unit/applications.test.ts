@@ -1,52 +1,47 @@
 import { createCaller } from '@/server/appRouter';
-import { beforeEach } from 'node:test';
-import { assert, describe, it, vi } from 'vitest';
-
-import { getServerSession } from 'next-auth';
 import {
     TEST_HACKATHON_NAME,
     TEST_HACKATHON_START_DATE,
     TEST_HACKATHON_END_DATE,
 } from '../utils';
+import { mockCaller } from '../utils/mocks';
 
 describe('applications routes tests', () => {
-    vi.mock('next-auth');
-
     const trpcClient = createCaller({});
 
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
+    vi.mock('@/app/(auth)/layout');
 
-    it('when submiting new application, write to database', async () => {
-        vi.mocked(getServerSession).mockResolvedValue({
-            user: {
-                email: 'foo@sfusurge.com',
-            },
-        });
+    let hackathon: Awaited<
+        ReturnType<typeof trpcClient.hackathons.addHackathon>
+    >;
 
-        const user = await trpcClient.users.addUser({
-            email: 'foo@sfusurge.com',
-            firstName: 'foo',
-            lastName: 'bar',
-            provider: 'GOOGLE',
-        });
+    beforeEach(async () => {
+        await mockCaller(trpcClient);
 
-        const hackathon = await trpcClient.hackathons.addHackathon({
+        hackathon = await trpcClient.hackathons.addHackathon({
             name: TEST_HACKATHON_NAME,
             startDate: TEST_HACKATHON_START_DATE,
             endDate: TEST_HACKATHON_END_DATE,
         });
+    });
+
+    afterEach(async () => {
+        vi.clearAllMocks();
+    });
+
+    it('when submiting new application, write to database', async () => {
+        const response = {
+            '1': 'foo bar',
+            '2': 'foo@sfusruge.com',
+        };
 
         const application = await trpcClient.applications.submitApplication({
             hackathonId: hackathon.id,
-            response: {
-                foo: 'bar',
-            },
+            response,
         });
 
         assert.isNotNull(application.createdDate);
         assert.equal(application.hackathonId, hackathon.id);
-        assert.deepEqual(application.response, { foo: 'bar' });
+        assert.deepEqual(application.response, response);
     });
 });

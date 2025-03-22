@@ -8,6 +8,7 @@ import { eq } from 'drizzle-orm';
 import { userOAuth } from '@/db/schema/userOAuth';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+    trustHost: true,
     secret: process.env.NEXTAUTH_SECRET,
     providers: [
         GoogleProvider({

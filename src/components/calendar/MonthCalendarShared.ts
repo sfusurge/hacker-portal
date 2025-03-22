@@ -57,26 +57,37 @@ export const currentTimeAtom = atom<Dayjs>(
 // ===== end atoms =====
 
 // ===== utils =====
+function groupBy<K extends PropertyKey, T>(
+    items: Iterable<T>,
+    keySelector: (item: T) => K
+): Record<K, T[]> | {} {
+    const out: Partial<Record<K, T[]>> = {};
+
+    for (const item of items) {
+        const id = keySelector(item);
+        if (!out[id]) {
+            out[id] = [item];
+        } else {
+            out[id].push(item);
+        }
+    }
+
+    return out;
+}
 
 export function groupEventsByDay(
     events: InternalCalendarEventType[],
     firstDayOfMonth: Dayjs
 ) {
-    // Replace Object.groupBy with a polyfill or alternative
-    const grouped = events.reduce(
-        (acc, item) => {
-            const dayOfMonth = Math.floor(
-                item.startTime.diff(firstDayOfMonth, 'hour') / 24 + 1
-            );
-            const key = Math.floor(dayOfMonth);
-            acc[key] = acc[key] || [];
-            acc[key].push(item);
-            return acc;
-        },
-        {} as { [dayOfMonth: number]: InternalCalendarEventType[] }
-    );
+    const grouped = {
+        ...groupBy(
+            events,
+            (item) =>
+                Math.floor(item.startTime.diff(firstDayOfMonth, 'hour') / 24) +
+                1
+        ),
+    };
 
-    // The rest of your sorting logic can stay the same
     for (const [key, val] of Object.entries(grouped)) {
         val.sort((a, b) => a.startTime.unix() - b.startTime.unix());
         grouped[parseInt(key)] = val;

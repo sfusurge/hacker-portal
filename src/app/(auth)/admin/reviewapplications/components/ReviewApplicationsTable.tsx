@@ -268,7 +268,7 @@ export default function ReviewApplicationsTable({
                 const value = info.getValue<string>();
                 return (
                     <span
-                        className={`px-3 py-0.5 text-xs rounded-md ${
+                        className={`rounded-md px-3 py-0.5 text-xs ${
                             value === 'Accepted'
                                 ? 'bg-success-950 text-success-300'
                                 : value === 'Wait List'
@@ -292,7 +292,7 @@ export default function ReviewApplicationsTable({
                 const value = info.getValue<string>();
                 return (
                     <span
-                        className={`px-3 py-0.5 text-xs rounded-md ${
+                        className={`rounded-md px-3 py-0.5 text-xs ${
                             value === 'Accepted'
                                 ? 'bg-success-950 text-success-300'
                                 : value === 'Wait List'
@@ -434,7 +434,7 @@ export default function ReviewApplicationsTable({
 
     if (applicationData.isLoading) {
         return (
-            <div className="flex justify-center items-center h-full">
+            <div className="flex h-full items-center justify-center">
                 <p>Loading data...</p>
             </div>
         );
@@ -442,7 +442,7 @@ export default function ReviewApplicationsTable({
 
     if (applicationData.isError) {
         return (
-            <div className="flex justify-center items-center h-full">
+            <div className="flex h-full items-center justify-center">
                 <p>Error fetching data: {applicationData.error.message}</p>
             </div>
         );
@@ -451,24 +451,24 @@ export default function ReviewApplicationsTable({
     return (
         <div className="overflow-hidden">
             {/* Global Search */}
-            <div className="flex p-4 gap-3 justify-center">
+            <div className="flex justify-center gap-3 p-4">
                 <Input
                     type="text"
                     placeholder="Global Search..."
                     value={globalFilter ?? ''}
                     onChange={(e) => setGlobalFilter(e.target.value)}
-                    className="bg-neutral-800 text-white border border-neutral-700/18 w-full"
+                    className="w-full border border-neutral-700/18 bg-neutral-800 text-white"
                 />
             </div>
 
             {/* Scrollable table */}
-            <div className="bg-neutral-900 rounded-xl p-1 w-full">
+            <div className="w-full rounded-xl bg-neutral-900 p-1">
                 <div className="overflow-x-auto">
                     <table
-                        className="text-left w-full"
+                        className="w-full text-left"
                         style={{ tableLayout: 'fixed', width: '100%' }}
                     >
-                        <thead className="bg-neutral-900 text-gray-200 whitespace-nowrap">
+                        <thead className="bg-neutral-900 whitespace-nowrap text-gray-200">
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <tr key={headerGroup.id}>
                                     {headerGroup.headers.map(
@@ -501,7 +501,7 @@ export default function ReviewApplicationsTable({
                                                     <div
                                                         onMouseDown={header.getResizeHandler()}
                                                         onTouchStart={header.getResizeHandler()}
-                                                        className={`absolute right-0 top-0 bottom-0 w-2 cursor-col-resize ${
+                                                        className={`absolute top-0 right-0 bottom-0 w-2 cursor-col-resize ${
                                                             header.column.getIsResizing()
                                                                 ? 'bg-gray-500'
                                                                 : ''
@@ -539,7 +539,7 @@ export default function ReviewApplicationsTable({
                                                                 .columnDef
                                                                 .minSize,
                                                     }}
-                                                    className={`border-b border-neutral-600/30 text-sm px-4 py-4 bg-neutral-800 ${
+                                                    className={`border-b border-neutral-600/30 bg-neutral-800 px-4 py-4 text-sm ${
                                                         index === 0
                                                             ? 'sticky left-0 z-10 bg-neutral-800' // First column
                                                             : index === 1
@@ -573,8 +573,8 @@ export default function ReviewApplicationsTable({
                 </div>
 
                 {/*Footer*/}
-                <div className="flex flex-col gap-4 px-4 py-4 bg-neutral-900">
-                    <div className="flex justify-between items-center gap-2">
+                <div className="flex flex-col gap-4 bg-neutral-900 px-4 py-4">
+                    <div className="flex items-center justify-between gap-2">
                         <div className="text-sm text-white">
                             {Object.keys(rowSelection).length} of{' '}
                             {table.getPreFilteredRowModel().rows.length} Rows
@@ -588,7 +588,7 @@ export default function ReviewApplicationsTable({
                                 onChange={(e) => {
                                     table.setPageSize(Number(e.target.value));
                                 }}
-                                className="px-4 py-2 text-sm bg-neutral-800/60 text-white rounded-md"
+                                className="rounded-md bg-neutral-800/60 px-4 py-2 text-sm text-white"
                             >
                                 {[10, 20, 30, 40, 50].map((pageSize) => (
                                     <option key={pageSize} value={pageSize}>
@@ -599,7 +599,7 @@ export default function ReviewApplicationsTable({
                         </div>
 
                         <div className="flex flex-row items-center gap-5">
-                            <div className="flex  items-center gap-1">
+                            <div className="flex items-center gap-1">
                                 <div className="flex items-center gap-1">
                                     Page:
                                     <input
@@ -616,7 +616,7 @@ export default function ReviewApplicationsTable({
                                                 : 0;
                                             table.setPageIndex(page);
                                         }}
-                                        className="text-center pl-3 py-2 text-sm bg-neutral-800/60 text-white rounded-md"
+                                        className="rounded-md bg-neutral-800/60 py-2 pl-3 text-center text-sm text-white"
                                     />
                                 </div>
                                 <span className="flex items-center gap-1">
@@ -663,11 +663,11 @@ export default function ReviewApplicationsTable({
                 </div>
             </div>
 
-            <div className="flex p-4 gap-3 justify-end">
+            <div className="flex justify-end gap-3 p-4">
                 <button
-                    className={`px-4 py-2 text-sm rounded-md whitespace-nowrap flex flex-row items-center justify-center gap-2 ${
+                    className={`flex flex-row items-center justify-center gap-2 rounded-md px-4 py-2 text-sm whitespace-nowrap ${
                         Object.keys(rowSelection).length === 0
-                            ? 'bg-neutral-500/18 text-white/18 cursor-not-allowed'
+                            ? 'cursor-not-allowed bg-neutral-500/18 text-white/18'
                             : 'bg-neutral-700 text-white'
                     }`}
                     type="button"
@@ -679,9 +679,9 @@ export default function ReviewApplicationsTable({
                 </button>
 
                 <button
-                    className={`px-3 py-2 text-sm rounded-md whitespace-nowrap flex flex-row items-center justify-center gap-2 ${
+                    className={`flex flex-row items-center justify-center gap-2 rounded-md px-3 py-2 text-sm whitespace-nowrap ${
                         Object.keys(rowSelection).length === 0
-                            ? 'bg-neutral-500/18 text-white/18 cursor-not-allowed'
+                            ? 'cursor-not-allowed bg-neutral-500/18 text-white/18'
                             : 'bg-neutral-700 text-white'
                     }`}
                     type="button"
@@ -696,27 +696,27 @@ export default function ReviewApplicationsTable({
             {/*Send Email Popup*/}
             {isEmailPopupOpen && (
                 <div
-                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs"
                     onClick={() => setIsEmailPopupOpen(false)}
                 >
                     <div
-                        className="flex flex-col rounded-xl bg-neutral-900 text-white p-10 gap-4 shadow-lg"
+                        className="flex flex-col gap-4 rounded-xl bg-neutral-900 p-10 text-white shadow-lg"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <RadioGroup
                             value={emailType}
                             onValueChange={setEmailType}
                         >
-                            <Label className="text-white/60 mb-2">
+                            <Label className="mb-2 text-white/60">
                                 Which template do you want to use?
                             </Label>
-                            <div className="flex flex-col gap-2 w-full">
+                            <div className="flex w-full flex-col gap-2">
                                 {validEmailTypes.map((type) => (
                                     <div
-                                        className={`flex items-center space-x-2 px-4 py-3 rounded-lg cursor-pointer border ${
+                                        className={`flex cursor-pointer items-center space-x-2 rounded-lg border px-4 py-3 ${
                                             emailType === type
                                                 ? 'bg-brand-950/60 border-brand-900'
-                                                : 'bg-neutral-800/60 border-neutral-600/60'
+                                                : 'border-neutral-600/60 bg-neutral-800/60'
                                         }`}
                                         key={type}
                                         onClick={() => setEmailType(type)}
@@ -725,15 +725,15 @@ export default function ReviewApplicationsTable({
                                             value={type}
                                             id={type}
                                             onChange={() => setEmailType(type)}
-                                            className={`appearance-none w-5 h-5 rounded-full border ${
+                                            className={`h-5 w-5 appearance-none rounded-full border ${
                                                 emailType === type
                                                     ? 'bg-brand-500 border-blue-800'
-                                                    : 'bg-neutral-700 border-neutral-500'
+                                                    : 'border-neutral-500 bg-neutral-700'
                                             }`}
                                         />
                                         <Label
                                             htmlFor={type}
-                                            className="cursor-pointer text-white font-light"
+                                            className="cursor-pointer font-light text-white"
                                         >
                                             {type}
                                         </Label>
@@ -742,7 +742,7 @@ export default function ReviewApplicationsTable({
                             </div>
                         </RadioGroup>
                         <button
-                            className="px-4 py-2 text-sm bg-neutral-800/60 text-white rounded-md whitespace-nowrap hover:bg-neutral-700/60"
+                            className="rounded-md bg-neutral-800/60 px-4 py-2 text-sm whitespace-nowrap text-white hover:bg-neutral-700/60"
                             type="button"
                             onClick={() =>
                                 handleSendingEmails(

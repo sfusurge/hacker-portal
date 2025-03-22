@@ -52,15 +52,15 @@ export default function QRCard({ userData, image }: QRCardProps) {
 
     return (
         <>
-            <div className="bg-neutral-900 flex flex-col rounded-xl border border-neutral-600/30 z-10">
-                <div className="p-5 flex flex-row items-center justify-between w-full border-b border-b-neutral-600/30">
+            <div className="z-10 flex flex-col rounded-xl border border-neutral-600/30 bg-neutral-900">
+                <div className="flex w-full flex-row items-center justify-between border-b border-b-neutral-600/30 p-5">
                     <div className="flex flex-col gap-2">
-                        <span className="text-sm text-white/60 font-medium leading-none">
+                        <span className="text-sm leading-none font-medium text-white/60">
                             Your Application Status
                         </span>
                         <h2
                             className={cn(
-                                'text-xl font-semibold text-left text-brand-400'
+                                'text-brand-400 text-left text-xl font-semibold'
                             )}
                         >
                             Accepted
@@ -74,9 +74,9 @@ export default function QRCard({ userData, image }: QRCardProps) {
                     </SkewmorphicButton>
                 </div>
 
-                <div className="text-center flex md:flex-row flex-col gap-6 items-center flex-1 justify-between">
-                    <div className="flex flex-col gap-2 text-start max-w-full md:pl-5 md:pr-0 p-5">
-                        <h2 className="text-white text-lg font-semibold">
+                <div className="flex flex-1 flex-col items-center justify-between gap-6 text-center md:flex-row">
+                    <div className="flex max-w-full flex-col gap-2 p-5 text-start md:pr-0 md:pl-5">
+                        <h2 className="text-lg font-semibold text-white">
                             You&#39;ve been accepted into JourneyHacks 2025!
                         </h2>
                         <h3 className="text-white/70">
@@ -101,8 +101,8 @@ export default function QRCard({ userData, image }: QRCardProps) {
 
                     <section className="hidden md:block">
                         <div className="flex flex-row rounded-l-xl bg-neutral-800">
-                            <div className="flex flex-1 p-4 items-center justify-center ">
-                                <div className="flex h-48 w-48 aspect-square">
+                            <div className="flex flex-1 items-center justify-center p-4">
+                                <div className="flex aspect-square h-48 w-48">
                                     <Image
                                         src={image}
                                         alt="QR Code"
@@ -113,22 +113,22 @@ export default function QRCard({ userData, image }: QRCardProps) {
                                 </div>
                             </div>
 
-                            <div className="w-0 border-neutral-200 relative large-dashes-vertical">
-                                <div className="absolute w-5 h-5 bg-neutral-900 rounded-full -left-2.5 -top-2.5"></div>
-                                <div className="absolute w-5 h-5 bg-neutral-900 rounded-full -left-2.5 -bottom-2.5"></div>
+                            <div className="large-dashes-vertical relative w-0 border-neutral-200">
+                                <div className="absolute -top-2.5 -left-2.5 h-5 w-5 rounded-full bg-neutral-900"></div>
+                                <div className="absolute -bottom-2.5 -left-2.5 h-5 w-5 rounded-full bg-neutral-900"></div>
                             </div>
 
-                            <section className="flex flex-1 w-8" />
+                            <section className="flex w-8 flex-1" />
                         </div>
                     </section>
                 </div>
             </div>
 
             <div
-                className={`fixed w-full inset-0 z-[200] bg-black bg-opacity-80 transition-opacity duration-300 ${isTicketOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                className={`bg-opacity-80 fixed inset-0 z-200 w-full bg-black transition-opacity duration-300 ${isTicketOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
             >
                 <div
-                    className={`fixed bottom-0 left-0 right-0 h-[100vh] transition-transform duration-300 transform ${isTicketOpen ? 'translate-y-0' : 'translate-y-full'}`}
+                    className={`fixed right-0 bottom-0 left-0 h-[100vh] transform transition-transform duration-300 ${isTicketOpen ? 'translate-y-0' : 'translate-y-full'}`}
                     onClick={(e) => e.stopPropagation()}
                 >
                     <QRTicket

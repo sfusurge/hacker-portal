@@ -11,8 +11,14 @@
         "drizzle:push": "drizzle-kit push",
         "format:all": "prettier --write .",
         "prepare": "husky",
+        "prepare-test-db": "mkdir -p vitest-db",
+        "clean-test-db": "rm -rf vitest-db",
+        "pretest:unit": "npm run prepare-test-db",
         "test:unit": "vitest run --project unit",
-        "test:e2e": "vitest run --project e2e"
+        "posttest:unit": "npm run clean-test-db",
+        "pretest:e2e": "npm run prepare-test-db",
+        "test:e2e": "vitest run --project e2e",
+        "posttest:e2e": "npm run clean-test-db"
     },
     "dependencies": {
         "@faker-js/faker": "^9.3.0",
@@ -65,7 +71,9 @@
         "zod": "^3.23.8"
     },
     "devDependencies": {
+        "@electric-sql/pglite": "^0.2.17",
         "@playwright/test": "^1.48.2",
+        "@tailwindcss/postcss": "^4.0.0",
         "@types/node": "^20",
         "@types/nodemailer": "^6.4.17",
         "@types/qrcode": "^1.5.5",
@@ -83,9 +91,10 @@
         "nodemailer": "^6.9.16",
         "postcss": "^8",
         "prettier": "^3.3.3",
+        "prettier-plugin-tailwindcss": "^0.6.11",
         "qrcode": "^1.5.4",
         "superjson": "^2.2.1",
-        "tailwindcss": "^3.4.1",
+        "tailwindcss": "^4.0.0",
         "typescript": "^5",
         "vitest": "^2.1.5"
     },

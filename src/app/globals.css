@@ -1,6 +1,188 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+    /* Border width for elements */
+    --border-width-1: 1px;
+
+    /* Small inset shadow for skeuomorphic effect */
+    --shadow-skeumorphic-sm: 0px 1px 0px 0px rgba(255, 255, 255, 0.24) inset,
+        0px 0px 0px 1px rgba(255, 255, 255, 0.12) inset;
+
+    /* Animation for caret blinking */
+    --animate-caret-blink: caret-blink 1.25s ease-out infinite;
+
+    /* Radial gradient background */
+    --background-image-gradient-radial: radial-gradient(
+        var(--tw-gradient-stops)
+    );
+    /* Conic gradient background */
+    --background-image-gradient-conic: conic-gradient(
+        from 180deg at 50% 50%,
+        var(--tw-gradient-stops)
+    );
+
+    /* Border radius */
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+
+    /* Brand color palette */
+    --color-brand-50: #eef2ff;
+    --color-brand-100: #e0e7ff;
+    --color-brand-200: #c7d2fe;
+    --color-brand-300: #a5b4fb;
+    --color-brand-400: #818cf8;
+    --color-brand-500: #6466f1;
+    --color-brand-600: #5046e5;
+    --color-brand-700: #4338ca;
+    --color-brand-800: #3730a3;
+    --color-brand-900: #302e81;
+    --color-brand-950: #1d1b4b;
+
+    /* Neutral color palette */
+    --color-neutral-50: #fafafa;
+    --color-neutral-100: #f5f5f5;
+    --color-neutral-200: #e5e5e5;
+    --color-neutral-300: #d4d4d4;
+    --color-neutral-400: #a3a3a3;
+    --color-neutral-500: #737373;
+    --color-neutral-600: #525252;
+    --color-neutral-700: #404040;
+    --color-neutral-750: #333333;
+    --color-neutral-800: #262626;
+    --color-neutral-850: #1f1f1f;
+    --color-neutral-900: #171717;
+    --color-neutral-925: #111111;
+    --color-neutral-950: #0a0a0a;
+
+    /* Success color palette */
+    --color-success-50: #f0fdf4;
+    --color-success-100: #dcfce7;
+    --color-success-200: #bbf7d0;
+    --color-success-300: #87efac;
+    --color-success-400: #49de80;
+    --color-success-500: #22c55d;
+    --color-success-600: #17a34a;
+    --color-success-700: #17803d;
+    --color-success-800: #166434;
+    --color-success-900: #14532d;
+    --color-success-950: #052e16;
+
+    /* Caution color palette */
+    --color-caution-50: #fff7ed;
+    --color-caution-100: #ffedd5;
+    --color-caution-200: #fed7aa;
+    --color-caution-300: #fdba74;
+    --color-caution-400: #fb923c;
+    --color-caution-500: #f97316;
+    --color-caution-600: #d97708;
+    --color-caution-700: #c2410c;
+    --color-caution-800: #9a3412;
+    --color-caution-900: #7c2d12;
+    --color-caution-950: #431407;
+
+    /* Danger color palette */
+    --color-danger-50: #fef2f2;
+    --color-danger-100: #fee2e2;
+    --color-danger-200: #fecaca;
+    --color-danger-300: #fda5a5;
+    --color-danger-400: #f87171;
+    --color-danger-500: #ef4444;
+    --color-danger-600: #dc2625;
+    --color-danger-700: #b91c1b;
+    --color-danger-800: #991b1b;
+    --color-danger-900: #7f1c1d;
+    --color-danger-950: #45090a;
+
+    /* White color */
+    --color-white: #ffffff;
+    /* Black color */
+    --color-black: #000000;
+
+    /* Text size variables */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.813rem;
+    --text-4xl: 2.188rem;
+
+    /* Font weight variables */
+    --font-weight-thin: 100;
+    --font-weight-extralight: 200;
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-extrabold: 800;
+    --font-weight-black: 900;
+
+    /* Font family variables */
+    --font-sans-0:
+    /* Primary sans-serif font stack */ Inter, ui-sans-serif,
+        system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --font-sans--font-feature-settings:
+    /* Font feature settings for sans-serif */ 'cv01'
+            on,
+        'cv03' on, 'cv04' on, 'cv05' on, 'cv08' on, 'cv10' on, 'cv11' on;
+
+    /* Length for font-sans settings */
+    --font-sans-length: 2;
+
+    /* Monospace font stack */
+    --font-mono: DM Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        'Liberation Mono', 'Courier New', monospace;
+
+    /* Line height variables */
+    --leading-none: 1;
+    --leading-tighter: 1.125;
+    --leading-tight: 1.25;
+    --leading-snug: 1.375;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.625;
+    --leading-loose: 2;
+
+    /* Letter spacing variables */
+    --tracking-tightest: -0.015em;
+    --tracking-tighter: -0.01em;
+    --tracking-tight: -0.0075em;
+    --tracking-normal: 0em;
+    --tracking-wide: 0.0075em;
+    --tracking-wider: 0.01em;
+    --tracking-widest: 0.015em;
+
+    /* Keyframes for caret blinking animation */
+    @keyframes caret-blink {
+        0%,
+        70%,
+        100% {
+            opacity: 1;
+        }
+
+        20%,
+        50% {
+            opacity: 0;
+        }
+    }
+}
+
+@layer base {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+}
+
 @layer base {
     :root {
         --radius: 0.5rem;
@@ -26,7 +208,8 @@
 .large-dashes-vertical {
     border-left-width: 2px;
     border-left-style: dashed;
-    border-color: rgba(75, 85, 99, 0.5); /* rgba value for opacity */
+    border-color: rgba(75, 85, 99, 0.5);
+    /* rgba value for opacity */
     border-image: repeating-linear-gradient(
             to bottom,
             rgba(75, 85, 99, 0.5) 0,

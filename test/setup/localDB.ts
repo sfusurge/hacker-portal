@@ -1,116 +1,85 @@
-import dotenv from 'dotenv';
-import postgres from 'postgres';
+import { databaseClient, db } from '@/db/client';
+import { PGlite } from '@electric-sql/pglite';
+import { sql } from 'drizzle-orm';
 
-import { exec } from 'child_process';
-import { resolve } from 'path';
-import { promisify } from 'util';
+const { pushSchema } = await vi.hoisted(async () => {
+    const { exec } =
+        await vi.importActual<typeof import('child_process')>('child_process');
 
-const execPromise = promisify(exec);
+    const { resolve } = await vi.importActual<typeof import('path')>('path');
 
-const drizzleKit = resolve('./node_modules/.bin/drizzle-kit');
+    const { promisify } = await vi.importActual<typeof import('util')>('util');
 
-// https://vitest.dev/config/#globalsetup
-export default async function setup() {
-    // Throw error if using development or production env for testing
-    console.log(`Setting up test database`);
+    const execPromise = promisify(exec);
 
-    const config = loadEnvAndValidate();
+    const drizzleKit = resolve('./node_modules/.bin/drizzle-kit');
 
-    const sql = await createDatabase(config);
+    const crypto = await vi.importActual<typeof import('crypto')>('crypto');
 
-    await populateTables();
+    const pushSchema = async () => {
+        const dbFolder = `vitest-db/test-${crypto.randomBytes(8).toString('hex')}`;
 
-    return async () => {
-        const { database } = config;
+        const command = `${drizzleKit} push --schema "./src/db/schema/*" --dialect postgresql --driver pglite --url ${dbFolder}`;
 
-        await dropDatabase(sql, database);
+        try {
+            console.log(`Running ${command}`);
+            const output = await execPromise(command);
+            console.log(`stdout: ${output.stdout || 'no stdout'}`);
+            console.log(`stderr: ${output.stderr || 'no stderr'}`);
+        } catch (e) {
+            console.error(e);
+            throw e;
+        }
 
-        await sql.end();
-    };
-}
-
-function loadEnvAndValidate(): DatabaseConfig {
-    dotenv.config({ debug: true, override: true });
-
-    const {
-        DATABASE_HOST,
-        DATABASE_PORT,
-        DATABASE_USER,
-        DATABASE_PASSWORD,
-        DATABASE_NAME,
-    } = process.env;
-
-    if (!DATABASE_HOST) {
-        throw new Error(`env missing DATABASE_HOST`);
-    }
-
-    if (!DATABASE_PORT) {
-        throw new Error(`env missing DATABASE_PORT`);
-    }
-
-    if (!DATABASE_USER) {
-        throw new Error(`env missing DATABASE_USER`);
-    }
-
-    if (!DATABASE_PASSWORD) {
-        throw new Error(`env missing DATABASE_PASSWORD`);
-    }
-    if (!DATABASE_NAME) {
-        throw new Error(`env missing DATABASE_NAME`);
-    }
-
-    const config: DatabaseConfig = {
-        host: DATABASE_HOST,
-        port: Number(DATABASE_PORT),
-        user: DATABASE_USER,
-        password: DATABASE_PASSWORD,
-        database: `${DATABASE_NAME}_test`,
+        return dbFolder;
     };
 
-    // Override variables so that drizzle.config.ts use the test database instead
-    process.env.DATABASE_NAME = config.database;
+    return { pushSchema };
+});
 
-    console.debug(
-        'Loaded config',
-        JSON.stringify(
-            config,
-            (key, value) => (key === 'password' ? '<redacted>' : value),
-            4
-        )
-    );
+vi.mock('@/db/client', async () => {
+    const { PGlite } = await vi.importActual<
+        typeof import('@electric-sql/pglite')
+    >('@electric-sql/pglite');
 
-    return config;
-}
+    const { drizzle } =
+        await vi.importActual<typeof import('drizzle-orm/pglite')>(
+            'drizzle-orm/pglite'
+        );
 
-async function createDatabase(config: DatabaseConfig): Promise<postgres.Sql> {
-    const sql = postgres({
-        host: config.host,
-        user: config.user,
-        password: config.password,
-        database: 'postgres',
+    const dbFolder = await pushSchema();
+
+    const db = new PGlite(dbFolder);
+
+    const databaseClient = drizzle(db);
+
+    return {
+        db,
+        databaseClient,
+    };
+});
+
+beforeEach(async () => {
+    // clean db data for each test
+    await databaseClient.transaction(async (tx) => {
+        const result = (await tx.execute(
+            sql`SELECT * FROM information_schema.tables WHERE table_schema = 'public'`
+        )) as Record<string, any>;
+
+        const rows = result.rows;
+
+        const tables = rows
+            .map((row: Record<string, any>) => row['table_name'])
+            ?.join(', ');
+
+        console.debug('truncating tables', tables);
+
+        await tx.execute(sql.raw(`TRUNCATE TABLE ${tables}`));
     });
+});
 
-    await dropDatabase(sql, config.database);
-    await sql`CREATE DATABASE ${sql(config.database)}`;
-
-    return sql;
-}
-
-async function dropDatabase(sql: postgres.Sql, databaseName: string) {
-    await sql`DROP DATABASE IF EXISTS ${sql(databaseName)}`;
-
-    console.debug(`Dropped database ${databaseName}`);
-}
-
-async function populateTables(): Promise<void> {
-    await execPromise(`${drizzleKit} push`);
-    console.log('> drizzle-kit push');
-}
-
-interface DatabaseConfig {
-    host: string;
-    port: number;
-    user: string;
-    password: string;
-    database: string;
-}
+afterAll(async () => {
+    // cast to PGlite
+    await (db as unknown as PGlite).close();
+    console.log('Closed database connection successfully');
+});
