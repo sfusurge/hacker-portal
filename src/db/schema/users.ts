@@ -4,7 +4,7 @@ import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { databaseClient } from '../client';
 import { userDisplayIds } from './userDisplayId';
-import { getSixDigitId } from '@/lib/PRNG/LCG';
+import { getSixDigitId, userParams } from '@/lib/PRNG/LCG';
 
 export const UserRoleEnum = {
     user: 'user',
@@ -90,7 +90,7 @@ export async function addUser(vals: z.infer<typeof insertUserSchema>) {
     // create display id
     const displayRes = await databaseClient.insert(userDisplayIds).values({
         userId: res.id,
-        displayId: getSixDigitId(res.id),
+        displayId: getSixDigitId(res.id, userParams),
     });
 
     return res;

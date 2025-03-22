@@ -7,7 +7,7 @@ import {
     updateUserSchema,
     users,
 } from '@/db/schema/users';
-import { getSixDigitId } from '@/lib/PRNG/LCG';
+import { getSixDigitId, userParams } from '@/lib/PRNG/LCG';
 import { eq } from 'drizzle-orm';
 
 export const usersRouter = router({
@@ -41,7 +41,7 @@ export const usersRouter = router({
             .insert(userDisplayIds)
             .values({
                 userId: res[0].userId,
-                displayId: getSixDigitId(res[0].userId),
+                displayId: getSixDigitId(res[0].userId, userParams),
             })
             .returning();
     }),
