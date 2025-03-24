@@ -1,12 +1,9 @@
 import { getUserData } from '../../../../layout';
 import { redirect } from 'next/navigation';
-import { databaseClient } from '@/db/client';
-import { members as membersTable } from '@/db/schema/members';
-import { teams } from '@/db/schema/teams';
-import { eq, and } from 'drizzle-orm';
 import CurrentStateUI from '@/components/team/NoTeam/CurrentState';
 import { createCaller } from '@/server/appRouter';
 
+// probably a temp /teamfull page
 export default async function TeamFull({
     params,
 }: {
@@ -20,45 +17,47 @@ export default async function TeamFull({
         redirect('/login');
     }
 
-    // Fetch the team details
-    const [team] = await databaseClient
-        .select()
-        .from(teams)
-        .where(eq(teams.id, teamId));
+    const trpcClient = createCaller({});
 
-    if (!team) {
-        redirect('/not-found');
-    }
+    try {
+        // Get current hackathon
+        const currentHackathon = await getCurrentHackathon();
 
-    // Check if the user is already in the team
-    const [userMembership] = await databaseClient
-        .select()
-        .from(membersTable)
-        .where(
-            and(
-                eq(membersTable.teamId, teamId),
-                eq(membersTable.userId, user.id)
-            )
+        // Get user's current team (if any)
+        const currentTeam = await trpcClient.teams.getCurrentTeam({
+            hackathonId: currentHackathon.id,
+        });
+
+        // If user is already in this team, redirect to team page
+        if (currentTeam && currentTeam.id === teamId) {
+            redirect(`/team/${teamId}`);
+        }
+
+        // If user is in a different team, redirect to that team
+        if (currentTeam && currentTeam.id !== teamId) {
+            redirect(`/team/${currentTeam.id}`);
+        }
+
+        // At this point, user is not in any team
+        // We can assume the team is full since they're on the /full page
+
+        return (
+            <div className="flex h-full w-full items-center justify-center">
+                <CurrentStateUI
+                    hackathonId={currentHackathon.id}
+                    title="This team is currently full! 🥺"
+                    description="Join a different team or create a new one to view your team's information here."
+                    imageSrc="/teams/alone_otter.webp"
+                />
+            </div>
         );
-
-    if (userMembership) {
-        redirect(`/team/${teamId}`);
+    } catch (error) {
+        console.error('Error in TeamFull page:', error);
+        redirect('/team');
     }
-
-    const currentHackathon = await getCurrentHackathon();
-
-    return (
-        <div className="flex h-full w-full items-center justify-center">
-            <CurrentStateUI
-                hackathonId={currentHackathon.id}
-                title="This team is currently full! 🥺"
-                description="Join a different team or create a new one to view your team's information here."
-                imageSrc="/teams/alone_otter.webp"
-            />
-        </div>
-    );
 }
 
+// Get the current hackathon
 async function getCurrentHackathon() {
     const trpcClient = createCaller({});
     const hackathons = await trpcClient.hackathons.getHackathons();
