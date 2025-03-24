@@ -39,7 +39,7 @@ export default function JoinTeamForm() {
                 title: 'Success!',
                 description: `You've successfully joined the team ${data.name}.`,
                 variant: 'default',
-                icon: <UserGroupIcon className="h-5 w-5" />,
+                icon: <UserGroupIcon />,
             });
             router.push(`/team/`);
         },

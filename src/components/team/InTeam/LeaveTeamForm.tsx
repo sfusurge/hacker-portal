@@ -35,7 +35,7 @@ export default function LeaveTeamForm({ teamId }: { teamId: number | string }) {
                 title: 'Team left!',
                 description: 'You have successfully left the team.',
                 variant: 'default',
-                icon: <UserGroupIcon className="h-5 w-5" />,
+                icon: <UserGroupIcon />,
             });
 
             router.push('/team');
