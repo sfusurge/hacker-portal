@@ -5,7 +5,6 @@ import {
     InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { cn } from '@/lib/utils';
-import { useRef, useEffect } from 'react';
 
 type InputOtpProps = {
     input: string;
@@ -62,23 +61,9 @@ export default function InputOtp({
         }
     };
 
-    const inputRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (!readOnly && !disabled && inputRef.current) {
-            const emptySlotIndex = input.length < 6 ? input.length : 5;
-            const slots = inputRef.current.querySelectorAll('input');
-            if (slots && slots[emptySlotIndex]) {
-                setTimeout(() => {
-                    slots[emptySlotIndex].focus();
-                }, 0);
-            }
-        }
-    }, [disabled, error, input.length, readOnly]);
-
     return (
         <div className={cn('w-full', className)}>
-            <div onKeyDown={handleKeyDown} ref={inputRef}>
+            <div onKeyDown={handleKeyDown}>
                 <InputOTP
                     maxLength={6}
                     value={input}

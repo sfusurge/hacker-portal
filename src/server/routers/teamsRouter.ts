@@ -37,9 +37,7 @@ export const teamsRouter = router({
             }
 
             const team = await databaseClient.transaction(async (tx) => {
-
                 await checkIfUserInExistingTeam(tx, user.id, input.hackathonId);
-
 
                 const [team] = await tx
                     .insert(teams)
@@ -76,9 +74,11 @@ export const teamsRouter = router({
                 throw new InternalServerError('Cannot find user data');
             }
 
-            await databaseClient.transaction(async (tx) => {
+            const team = await databaseClient.transaction(async (tx) => {
                 const [team] = await tx
                     .select({
+                        id: teams.id,
+                        name: teams.name,
                         hackathonId: teams.hackathonId,
                         maxMembersCount: teams.maxMembersCount,
                     })
@@ -106,17 +106,17 @@ export const teamsRouter = router({
                     );
                 }
 
-
                 await checkIfUserInExistingTeam(tx, userId, hackathonId);
-
 
                 await tx.insert(membersTable).values({
                     teamId: teamId,
                     userId: userId,
                 });
+
+                return team;
             });
 
-            return true;
+            return team;
         }),
 
     getCurrentTeam: publicProcedure

@@ -50,10 +50,10 @@ export default async function TeamFull({
     return (
         <div className="flex h-full w-full items-center justify-center">
             <CurrentStateUI
+                hackathonId={currentHackathon.id}
                 title="This team is currently full! 🥺"
                 description="Join a different team or create a new one to view your team's information here."
-                imageSrc="/cooking.webp"
-                hackathonId={currentHackathon.id}
+                imageSrc="/teams/alone_otter.webp"
             />
         </div>
     );

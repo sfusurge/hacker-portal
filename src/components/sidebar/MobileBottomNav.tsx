@@ -107,7 +107,6 @@ export default function MobileBottomNav({
                         icon={<UserGroupIcon></UserGroupIcon>}
                         iconAlt="Team logo"
                         platform="mobile"
-                        active={url.startsWith('/team')}
                     ></NavLink>
 
                     <NavLink

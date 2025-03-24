@@ -30,13 +30,12 @@ export default async function Team() {
                 hackathonId={currentHackathon.id}
                 title="You're not in a team yet! 🥺"
                 description="Join an existing team or create a new one to view your team's information here."
-                imageSrc="/cooking.webp"
             />
         </div>
     );
 }
 
-// temp function to get current hackathon
+// temp function to get most recent hackathon
 async function getCurrentHackathon() {
     const trpcClient = createCaller({});
     const hackathons = await trpcClient.hackathons.getHackathons();

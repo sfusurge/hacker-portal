@@ -9,6 +9,7 @@ import { eq, and } from 'drizzle-orm';
 import { users } from '@/db/schema/users';
 import { createCaller } from '@/server/appRouter';
 
+// maybe temp id page, maybe can just handle all the team functions on /team page
 export default async function TeamPage({
     params,
 }: {
@@ -30,47 +31,57 @@ export default async function TeamPage({
         .from(teams)
         .where(eq(teams.id, id));
 
-    // Check if the user is in another team, and if they are redirect them to correct team
-    const existingTeamMembership = await databaseClient
-        .select({
-            teamId: membersTable.teamId,
-        })
-        .from(membersTable)
-        .where(eq(membersTable.userId, user.id))
-        .limit(1);
-    if (
-        existingTeamMembership.length > 0 &&
-        existingTeamMembership[0].teamId !== teamId
-    ) {
-        redirect(`/team/${existingTeamMembership[0].teamId}`);
-    }
-
     // if team DNE, display no team found
     if (!team) {
         redirect('/not-found');
     }
 
-    // Check if the user is already in the team
-    const [userMembership] = await databaseClient
-        .select()
-        .from(membersTable)
-        .where(
-            and(eq(membersTable.teamId, id), eq(membersTable.userId, user.id))
-        );
+    try {
+        // Check if the user is in another team, and if they are redirect them to correct team
+        const existingTeamMembership = await databaseClient
+            .select({
+                teamId: membersTable.teamId,
+            })
+            .from(membersTable)
+            .where(eq(membersTable.userId, user.id))
+            .limit(1);
 
-    // If user not in the team, join it
-    if (!userMembership) {
-        try {
-            await trpcClient.teams.joinTeam({
-                teamId: teamId,
-            });
-        } catch (error) {
-            console.log(error);
-            redirect(`/team/${id}/full`);
+        if (
+            existingTeamMembership.length > 0 &&
+            existingTeamMembership[0].teamId !== teamId
+        ) {
+            redirect(`/team/${existingTeamMembership[0].teamId}`);
         }
+
+        // Check if the user is already in the team
+        const [userMembership] = await databaseClient
+            .select()
+            .from(membersTable)
+            .where(
+                and(
+                    eq(membersTable.teamId, id),
+                    eq(membersTable.userId, user.id)
+                )
+            );
+
+        // If user not in the team, join it using trpc
+        if (!userMembership) {
+            try {
+                await trpcClient.teams.joinTeam({
+                    teamId: teamId,
+                });
+            } catch (error) {
+                console.log(error);
+                redirect(`/team/${id}/full`);
+            }
+        }
+    } catch (error) {
+        console.error('Error handling team membership:', error);
+        // If there's any other error, redirect to the team page
+        redirect(`/team`);
     }
 
-    // Fetch team members to display, not finished yet, need r2 bucket + avatar workflow
+    // Fetch team members to display using database query
     const teamMembers = await databaseClient
         .select({
             userId: membersTable.userId,
