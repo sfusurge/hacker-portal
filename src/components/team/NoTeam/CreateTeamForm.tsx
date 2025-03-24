@@ -1,34 +1,26 @@
 'use client';
 import Image from 'next/image';
-import {
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter,
-    DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-    DrawerContent,
-    DrawerHeader,
-    DrawerTitle,
-    DrawerDescription,
-    DrawerFooter,
-    DrawerClose,
-} from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { FormTextInput, Input } from '@/components/ui/input/input';
 import { useState, useRef, useEffect } from 'react';
 import { trpc } from '@/trpc/client';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+    ResponsiveDialogContent,
+    ResponsiveDialogHeader,
+    ResponsiveDialogTitle,
+    ResponsiveDialogDescription,
+    ResponsiveDialogFooter,
+    ResponsiveDialogClose,
+} from '@/components/ui/responsive-dialog';
+import { toast } from '@/hooks/use-toast';
+import { UserGroupIcon } from '@heroicons/react/24/solid';
 
 export default function CreateTeamForm({
     hackathonId,
-    isDesktop = true,
 }: {
     hackathonId: number;
-    isDesktop?: boolean;
 }) {
     const router = useRouter();
     const createTeam = trpc.teams.createTeam.useMutation();
@@ -121,6 +113,12 @@ export default function CreateTeamForm({
                 name: teamInfo.teamName,
                 teamPictureUrl: teamInfo.teamPicture,
             });
+            toast({
+                title: 'Team created!',
+                description: `Your team ${newTeam.name} was successfuly created.`,
+                variant: 'default',
+                icon: <UserGroupIcon />,
+            });
             router.push(`/team/${newTeam.id}`);
         } catch (err) {
             setError('Failed to create team. Please try again.');
@@ -131,7 +129,7 @@ export default function CreateTeamForm({
 
     // Form shared between Dialog and Drawer
     const FormContent = (
-        <div className="flex flex-col gap-8">
+        <form className="flex flex-col gap-8">
             {error && (
                 <Alert variant={'warning'}>
                     <AlertTitle>Image upload failed</AlertTitle>
@@ -220,51 +218,44 @@ export default function CreateTeamForm({
                     disabled={isCreating}
                 />
             </div>
-        </div>
+        </form>
     );
 
-    const Container = isDesktop ? DialogContent : DrawerContent;
-    const Header = isDesktop ? DialogHeader : DrawerHeader;
-    const Title = isDesktop ? DialogTitle : DrawerTitle;
-    const Description = isDesktop ? DialogDescription : DrawerDescription;
-    const Footer = isDesktop ? DialogFooter : DrawerFooter;
-    const CloseButton = isDesktop ? DialogTrigger : DrawerClose;
-
     return (
-        <form onSubmit={handleFormSubmit}>
-            <Container>
-                <Header>
-                    <Title>Create new team</Title>
-                    <Description>
-                        Help organizers identify your team with a name and icon.
-                        Be warned – this information can&apos;t be changed.
-                    </Description>
-                </Header>
-                <div className={isDesktop ? '' : 'px-6'}>{FormContent}</div>
-                <Footer className="grid grid-cols-2 gap-3 text-base">
-                    <CloseButton asChild className="w-full">
-                        <Button
-                            variant={'default'}
-                            size={'cozy'}
-                            hierarchy={'secondary'}
-                            type="button"
-                            disabled={isCreating}
-                        >
-                            Cancel
-                        </Button>
-                    </CloseButton>
+        <ResponsiveDialogContent>
+            <ResponsiveDialogHeader>
+                <ResponsiveDialogTitle>Create new team</ResponsiveDialogTitle>
+                <ResponsiveDialogDescription>
+                    Help organizers identify your team with a name and icon. Be
+                    warned – this information can&apos;t be changed.
+                </ResponsiveDialogDescription>
+            </ResponsiveDialogHeader>
+
+            {FormContent}
+
+            <ResponsiveDialogFooter className="grid grid-cols-2 gap-3">
+                <ResponsiveDialogClose asChild>
                     <Button
-                        type="submit"
-                        variant="brand"
+                        variant="default"
                         size="cozy"
-                        hierarchy="primary"
-                        disabled={disabled || isCreating}
-                        onClick={handleFormSubmit}
+                        hierarchy="secondary"
+                        type="button"
+                        disabled={isCreating}
                     >
-                        {isCreating ? 'Creating...' : 'Create team'}
+                        Cancel
                     </Button>
-                </Footer>
-            </Container>
-        </form>
+                </ResponsiveDialogClose>
+                <Button
+                    type="submit"
+                    variant="brand"
+                    size="cozy"
+                    hierarchy="primary"
+                    disabled={disabled || isCreating}
+                    onClick={handleFormSubmit}
+                >
+                    {isCreating ? 'Creating...' : 'Create team'}
+                </Button>
+            </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
     );
 }

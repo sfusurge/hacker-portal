@@ -1,36 +1,18 @@
 'use client';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogTrigger } from '@/components/ui/dialog';
-import { Drawer, DrawerTrigger } from '@/components/ui/drawer';
+import { FormSeparator } from '@/components/ui/form-separator';
+import {
+    ResponsiveDialog,
+    ResponsiveDialogTrigger,
+} from '@/components/ui/responsive-dialog';
 import JoinTeamForm from './JoinTeamForm';
 import CreateTeamForm from './CreateTeamForm';
-import { FormSeparator } from '@/components/ui/form-separator';
-import { useEffect, useState } from 'react';
 
 export default function JoinTeam({ hackathonId }: { hackathonId: number }) {
-    const [isDesktop, setIsDesktop] = useState(false);
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            setIsDesktop(window.innerWidth >= 768);
-
-            const handleResize = () => {
-                setIsDesktop(window.innerWidth >= 768);
-            };
-
-            window.addEventListener('resize', handleResize);
-
-            return () => window.removeEventListener('resize', handleResize);
-        }
-    }, []);
-
-    const Container = isDesktop ? Dialog : Drawer;
-    const Trigger = isDesktop ? DialogTrigger : DrawerTrigger;
-
     return (
         <div className="grid w-full gap-3 lg:grid-cols-2">
-            <Container>
-                <Trigger asChild>
+            <ResponsiveDialog>
+                <ResponsiveDialogTrigger asChild>
                     <Button
                         size="cozy"
                         variant="default"
@@ -39,16 +21,16 @@ export default function JoinTeam({ hackathonId }: { hackathonId: number }) {
                     >
                         Join existing team
                     </Button>
-                </Trigger>
-                <JoinTeamForm isDesktop={isDesktop} />
-            </Container>
+                </ResponsiveDialogTrigger>
+                <JoinTeamForm />
+            </ResponsiveDialog>
 
             <div className="lg:hidden">
                 <FormSeparator separatorText="OR" />
             </div>
 
-            <Container>
-                <Trigger asChild>
+            <ResponsiveDialog>
+                <ResponsiveDialogTrigger asChild>
                     <Button
                         size="cozy"
                         variant="default"
@@ -57,12 +39,9 @@ export default function JoinTeam({ hackathonId }: { hackathonId: number }) {
                     >
                         Create new team
                     </Button>
-                </Trigger>
-                <CreateTeamForm
-                    hackathonId={hackathonId}
-                    isDesktop={isDesktop}
-                />
-            </Container>
+                </ResponsiveDialogTrigger>
+                <CreateTeamForm hackathonId={hackathonId} />
+            </ResponsiveDialog>
         </div>
     );
 }

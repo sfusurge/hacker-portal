@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { Drawer as DrawerPrimitive } from 'vaul';
+import { XCircleIcon } from '@heroicons/react/24/solid';
 
 import { cn } from '@/lib/utils';
 
@@ -42,14 +43,22 @@ const DrawerContent = React.forwardRef<
         <DrawerOverlay />
         <DrawerPrimitive.Content
             ref={ref}
-            className={cn(
-                'fixed inset-x-0 bottom-0 z-250 mt-24 flex h-auto flex-col rounded-t-[10px] border border-neutral-700/30 bg-neutral-900 text-white',
-                className
-            )}
+            className="fixed inset-x-0 bottom-0 z-250 mt-24 flex h-auto flex-col gap-6 rounded-t-[10px] border border-neutral-700/30 bg-neutral-900 text-white"
             {...props}
         >
             <div className="bg-neutral-750 mx-auto mt-4 h-2 w-9 rounded-full" />
-            {children}
+            <div
+                className={cn(
+                    'relative z-250 flex flex-col gap-6 p-6 pt-0',
+                    className
+                )}
+            >
+                <DrawerClose className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute -top-8 right-4 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-white/30 opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none">
+                    <XCircleIcon className="h-6 w-6" />
+                    <span className="sr-only">Close</span>
+                </DrawerClose>
+                {children}
+            </div>
         </DrawerPrimitive.Content>
     </DrawerPortal>
 ));
@@ -59,7 +68,7 @@ const DrawerHeader = ({
     className,
     ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
-    <div className={cn('grid gap-1.5 p-6 text-left', className)} {...props} />
+    <div className={cn('grid gap-2 text-left', className)} {...props} />
 );
 DrawerHeader.displayName = 'DrawerHeader';
 
@@ -67,10 +76,7 @@ const DrawerFooter = ({
     className,
     ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
-    <div
-        className={cn('mt-auto flex flex-col gap-2 p-6', className)}
-        {...props}
-    />
+    <div className={cn('mt-auto flex flex-col gap-2', className)} {...props} />
 );
 DrawerFooter.displayName = 'DrawerFooter';
 
@@ -81,7 +87,7 @@ const DrawerTitle = React.forwardRef<
     <DrawerPrimitive.Title
         ref={ref}
         className={cn(
-            'text-lg leading-none font-semibold tracking-tight',
+            'text-base leading-none font-semibold tracking-tight',
             className
         )}
         {...props}

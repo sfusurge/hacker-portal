@@ -73,9 +73,23 @@ const buttonVariants = cva(
             },
             {
                 variant: 'caution',
+                hierarchy: 'primary',
+                disabled: true,
+                className:
+                    'shadow-none bg-danger-900/60 text-danger-400/40 pointer-events-none',
+            },
+            {
+                variant: 'caution',
                 hierarchy: 'secondary',
                 className:
                     'bg-neutral-850 text-danger-400 hover:bg-neutral-750 border-neutral-600/60 font-medium',
+            },
+            {
+                variant: 'caution',
+                hierarchy: 'secondary',
+                disabled: true,
+                className:
+                    'bg-neutral-900 text-danger-400/30 border-neutral-700/30 pointer-events-none',
             },
         ],
     }
