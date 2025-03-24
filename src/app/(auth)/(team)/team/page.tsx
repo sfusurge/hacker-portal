@@ -36,7 +36,7 @@ export default async function Team() {
 }
 
 // temp function to get most recent hackathon
-async function getCurrentHackathon() {
+export async function getCurrentHackathon() {
     const trpcClient = createCaller({});
     const hackathons = await trpcClient.hackathons.getHackathons();
 

@@ -47,7 +47,7 @@ export default function LeaveTeamForm({ teamId }: { teamId: number | string }) {
                 variant: 'error',
             });
         } finally {
-            setIsLeaving(false);
+            // setIsLeaving(false);
         }
     };
 

@@ -1,11 +1,13 @@
 import React from 'react';
-import { useState, useEffect } from 'react';
 import { Chip } from '@/components/ui/chip';
-interface TeammateItemProps {
-    firstName?: string;
-    lastName?: string;
+import { users } from '@/db/schema/users';
+import { InferSelectModel } from 'drizzle-orm';
+import { useMediaQuery } from '@uidotdev/usehooks';
+type UserType = InferSelectModel<typeof users>;
+
+// Extended props for the component placeholders
+interface TeammateItemProps extends Partial<UserType> {
     name?: string;
-    email?: string;
     submitted?: string;
     image?: string;
     currentUser?: boolean;
@@ -16,10 +18,10 @@ interface TeammateItemProps {
 }
 
 export default function TeammateItem({
-    firstName = 'Mia',
-    lastName = 'Lancaster',
-    name = firstName + ' ' + lastName,
-    email = 'ml54@sfu.ca',
+    firstName = null,
+    lastName = null,
+    name,
+    email = '',
     submitted = 'Not Submitted',
     image = '/pfp_placeholder.png',
     currentUser = false,
@@ -28,20 +30,13 @@ export default function TeammateItem({
     maxMembersCount = 4,
     isLastItem = false,
 }: TeammateItemProps) {
-    const [isMobile, setIsMobile] = useState(false);
+    const isMobile = useMediaQuery('(max-width: 767px)');
 
-    useEffect(() => {
-        const checkScreenSize = () => {
-            const width = window.innerWidth;
-            setIsMobile(width < 768);
-        };
-
-        checkScreenSize();
-
-        window.addEventListener('resize', checkScreenSize);
-
-        return () => window.removeEventListener('resize', checkScreenSize);
-    }, []);
+    // Calculate display name
+    const displayName =
+        name ||
+        ((firstName || '') + ' ' + (lastName || '')).trim() ||
+        'Unknown User';
 
     if (isPlaceholder && isMobile) {
         return null;
@@ -72,7 +67,9 @@ export default function TeammateItem({
                     />
                     <div className="flex flex-1 flex-col justify-around gap-1 overflow-hidden">
                         <p className="truncate text-sm font-medium md:text-base">
-                            {isMobile ? firstName : name}{' '}
+                            {isMobile
+                                ? firstName || displayName.split(' ')[0]
+                                : displayName}{' '}
                             {currentUser && (
                                 <span className="font-normal text-white/60">
                                     (You)

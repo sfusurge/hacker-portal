@@ -151,6 +151,7 @@ export const teamsRouter = router({
                     userId: membersTable.userId,
                     firstName: users.firstName,
                     lastName: users.lastName,
+                    email: users.email,
                 })
                 .from(membersTable)
                 .innerJoin(users, eq(users.id, membersTable.userId))
