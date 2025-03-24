@@ -9,7 +9,7 @@ import {
     createTeamSchema,
     getCurrentTeamSchema,
     teams,
-} from '@/db/schema/teams';
+} from '@/db/schema/teams/teams';
 import {
     eq,
     and,
@@ -23,8 +23,10 @@ import {
     ResourceNotFoundError,
 } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
-import { users } from '@/db/schema/users';
+import { users } from '@/db/schema/users/users';
 import { PgQueryResultHKT, PgTransaction } from 'drizzle-orm/pg-core';
+import { teamDisplayIds } from '@/db/schema/teams/teamDisplayId';
+import { getSixDigitId, teamRNGParams } from '@/lib/PRNG/LCG';
 
 export const teamsRouter = router({
     createTeam: publicProcedure
@@ -49,6 +51,11 @@ export const teamsRouter = router({
                     })
                     .returning();
 
+                await tx.insert(teamDisplayIds).values({
+                    displayId: getSixDigitId(team.id, teamRNGParams),
+                    teamId: team.id,
+                });
+
                 // team creator join their new team
                 await tx.insert(membersTable).values({
                     teamId: team.id,
@@ -61,10 +68,14 @@ export const teamsRouter = router({
             return team;
         }),
 
+    /**
+     * Join team via the 6 digit display id of the team.
+     * Display id is a string of 6 characters.
+     */
     joinTeam: publicProcedure
         .input(joinTeamSchema)
         .mutation(async ({ input }) => {
-            const { teamId } = input;
+            const { teamDisplayId: _teamDisplayId } = input;
 
             const user = await getUserData();
 
@@ -77,23 +88,28 @@ export const teamsRouter = router({
             await databaseClient.transaction(async (tx) => {
                 const [team] = await tx
                     .select({
+                        teamId: teams.id,
                         hackathonId: teams.hackathonId,
                         maxMembersCount: teams.maxMembersCount,
                     })
                     .from(teams)
-                    .where(eq(teams.id, teamId));
+                    .innerJoin(
+                        teamDisplayIds,
+                        eq(teams.id, teamDisplayIds.teamId)
+                    )
+                    .where(eq(teamDisplayIds.displayId, _teamDisplayId));
 
                 if (team == null) {
                     throw new ResourceNotFoundError({
-                        id: teamId,
+                        id: _teamDisplayId,
                         resourceType: 'team',
                     });
                 }
 
-                const { hackathonId, maxMembersCount } = team;
+                const { hackathonId, maxMembersCount, teamId } = team;
 
                 const members = await tx
-                    .select({ userId: membersTable.userId })
+                    .select({ count: membersTable.userId })
                     .from(membersTable)
                     .where(eq(membersTable.teamId, teamId))
                     .for('update');
@@ -115,6 +131,13 @@ export const teamsRouter = router({
             return true;
         }),
 
+    /**
+     * returns the team the current login user belongs to.
+     *
+     * returns null the user is not in a team yet.
+     *
+     * return includes team info, team members, and team display id(6 digits)
+     */
     getCurrentTeam: publicProcedure
         .input(getCurrentTeamSchema)
         .query(async ({ input }) => {
@@ -125,8 +148,12 @@ export const teamsRouter = router({
             }
 
             const [team] = await databaseClient
-                .select(getTableColumns(teams))
+                .select({
+                    ...getTableColumns(teams),
+                    displayId: teamDisplayIds.displayId,
+                })
                 .from(teams)
+                .innerJoin(teamDisplayIds, eq(teamDisplayIds.teamId, teams.id))
                 .innerJoin(
                     membersTable,
                     and(
@@ -136,7 +163,8 @@ export const teamsRouter = router({
                 )
                 .where(eq(teams.hackathonId, input.hackathonId))
                 // Order by joined date
-                .orderBy(asc(membersTable.createdAt));
+                .orderBy(asc(membersTable.createdAt))
+                .limit(1);
 
             if (team == null) {
                 return null;
@@ -158,13 +186,19 @@ export const teamsRouter = router({
             };
         }),
 
+    /**
+     * Leave the team user is currently in, using the internal team id. (NOT, the 6 digit id.)
+     */
     leaveTeam: publicProcedure
         .input(leaveTeamSchema)
         .mutation(async ({ input }) => {
             const user = await getUserData();
 
             if (user == null) {
-                throw new InternalServerError('Cannot find user data');
+                throw new ResourceNotFoundError({
+                    id: -1,
+                    resourceType: 'user',
+                });
             }
 
             await databaseClient
@@ -178,6 +212,8 @@ export const teamsRouter = router({
 
             return true;
         }),
+
+    getTeamByDisplayId: publicProcedureweeken,
 });
 
 async function checkIfUserInExistingTeam<

@@ -1,12 +1,12 @@
 import { publicProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
-import { userDisplayIds } from '@/db/schema/userDisplayId';
+import { userDisplayIds } from '@/db/schema/users/userDisplayId';
 import {
     insertUserSchema,
     deleteUserSchema,
     updateUserSchema,
     users,
-} from '@/db/schema/users';
+} from '@/db/schema/users/users';
 import { getSixDigitId, userRNGParams } from '@/lib/PRNG/LCG';
 import { eq } from 'drizzle-orm';
 

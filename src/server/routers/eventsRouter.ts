@@ -9,7 +9,7 @@ import {
 import { publicProcedure, router } from '../trpc';
 import { InternalServerError, UnauthorizedError } from '../exceptions';
 
-import { UserRoleEnum } from '@/db/schema/users';
+import { UserRoleEnum } from '@/db/schema/users/users';
 import { databaseClient } from '@/db/client';
 import { and, asc, eq, getTableColumns } from 'drizzle-orm';
 import { checkIns } from '@/db/schema/checkIn';

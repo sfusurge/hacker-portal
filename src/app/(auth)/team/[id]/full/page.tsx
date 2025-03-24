@@ -2,7 +2,7 @@ import { getUserData } from '../../../layout';
 import { redirect } from 'next/navigation';
 import { databaseClient } from '@/db/client';
 import { members as membersTable } from '@/db/schema/members';
-import { teams } from '@/db/schema/teams';
+import { teams } from '@/db/schema/teams/teams';
 import { eq, and } from 'drizzle-orm';
 import CurrentStateUI from '@/components/team/NoTeam/CurrentState';
 import { createCaller } from '@/server/appRouter';

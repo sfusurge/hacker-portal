@@ -37,17 +37,17 @@ function LCG_at_N(n: number, a: number, b: number, m: number, seed: number) {
  * 2. a - 1 is divisible by all prime factors of m
  * 3. a - 1 is divisible by 4 if m is divisible by 4.
  */
-export const userParams = Object.freeze({
+export const userRNGParams = Object.freeze({
     a: 29, // (4 * 7 + 1) -> a - 1 is disible by 2 and 7
     b: 97, // co prime with m since 97 is prime
     m: 917504, // 2^17 * 7, a large 6 digit number that has lots of repeated factors
     seed: 173429, // any starting seed works
 });
 
-export const teamParams = Object.freeze({
-    a: 29,
-    b: 97,
-    m: 786432, // 2 ^ 18 * 3
+export const teamRNGParams = Object.freeze({
+    a: 57, // 8 * 7 + 1 (divisible by all prime factors of m, and is divisible by 4 since m is divisible by 4)
+    b: 59,
+    m: 917504, // 2^17 * 7
     seed: 295219,
 });
 

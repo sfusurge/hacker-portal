@@ -2,9 +2,9 @@ import { InferSelectModel } from 'drizzle-orm';
 import { index, integer, pgEnum, pgTable, varchar } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import { databaseClient } from '../client';
+import { databaseClient } from '../../client';
 import { userDisplayIds } from './userDisplayId';
-import { getSixDigitId, userParams } from '@/lib/PRNG/LCG';
+import { getSixDigitId, userRNGParams } from '@/lib/PRNG/LCG';
 
 export const UserRoleEnum = {
     user: 'user',
@@ -90,7 +90,7 @@ export async function addUser(vals: z.infer<typeof insertUserSchema>) {
     // create display id
     const displayRes = await databaseClient.insert(userDisplayIds).values({
         userId: res.id,
-        displayId: getSixDigitId(res.id, userParams),
+        displayId: getSixDigitId(res.id, userRNGParams),
     });
 
     return res;

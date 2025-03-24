@@ -4,9 +4,9 @@ import TeamList from '@/components/team/InTeam/TeamList';
 import InviteCard from '@/components/team/InTeam/InviteCard';
 import { databaseClient } from '@/db/client';
 import { members as membersTable } from '@/db/schema/members';
-import { teams } from '@/db/schema/teams';
+import { teams } from '@/db/schema/teams/teams';
 import { eq, and } from 'drizzle-orm';
-import { users } from '@/db/schema/users';
+import { users } from '@/db/schema/users/users';
 import { createCaller } from '@/server/appRouter';
 
 export default async function TeamPage({

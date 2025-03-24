@@ -5,5 +5,6 @@ export const userDisplayIds = pgTable('user_display_id', {
     displayId: varchar('display_id', { length: 6 }).notNull().primaryKey(),
     userId: integer('user_id')
         .references(() => users.id, { onDelete: 'cascade' })
-        .notNull(),
+        .notNull()
+        .unique(),
 });

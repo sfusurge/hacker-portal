@@ -7,9 +7,9 @@ import { ReactNode } from 'react';
 
 import { auth } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
-import { users } from '@/db/schema/users';
+import { users } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
-import { userDisplayIds } from '@/db/schema/userDisplayId';
+import { userDisplayIds } from '@/db/schema/users/userDisplayId';
 import { CacheClearer } from '@/app/(auth)/CacheClear';
 import { redirect } from 'next/navigation';
 import { ClientAuthContext } from './ClientAuthContext';
@@ -68,11 +68,11 @@ export default async function Layout({ children }: { children: ReactNode }) {
                 <CacheClearer initialData={initialUserData}></CacheClearer>
                 <MobileTopNav
                     initialData={initialUserData}
-                    className="fixed top-0 left-0 z-100 md:hidden"
+                    className="z-100 fixed left-0 top-0 md:hidden"
                 ></MobileTopNav>
                 <MobileBottomNav
                     initialData={initialUserData}
-                    className="fixed bottom-0 left-0 z-100 md:hidden"
+                    className="z-100 fixed bottom-0 left-0 md:hidden"
                 ></MobileBottomNav>
                 <DesktopNav
                     initialData={initialUserData}

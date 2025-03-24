@@ -6,10 +6,10 @@ import {
     timestamp,
     varchar,
 } from 'drizzle-orm/pg-core';
-import { hackathons } from './hackathons';
+import { hackathons } from '../hackathons';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import { users } from './users';
+import { users } from '../users/users';
 
 const DEFAULT_MAX_MEMBERS_COUNT = 4;
 
