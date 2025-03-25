@@ -34,7 +34,7 @@
 
 .textinput:user-invalid,
 .textinput:invalid:not(:placeholder-shown) {
-    border-color: var(--color-danger-400) !important;
+    border-color: var(--danger-500) !important;
 }
 
 .inputHolder:has(.textinput:user-invalid)::after,

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { X } from 'lucide-react';
+import { XCircleIcon } from '@heroicons/react/24/solid';
 
 import { cn } from '@/lib/utils';
 
@@ -10,8 +10,6 @@ const Dialog = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Root>,
     React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>
 >((props, ref) => <DialogPrimitive.Root {...props} />);
-Dialog.displayName = DialogPrimitive.Root.displayName;
-
 Dialog.displayName = DialogPrimitive.Root.displayName;
 
 const DialogTrigger = DialogPrimitive.Trigger;
@@ -40,18 +38,21 @@ const DialogContent = React.forwardRef<
     React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
     <DialogPortal>
-        <DialogOverlay />
+        <DialogOverlay className="data-[state=open]:duration-500" />
         <DialogPrimitive.Content
             ref={ref}
             className={cn(
-                'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] bg-neutral-850 fixed left-[50%] top-[50%] z-50 grid w-[calc(100%-3rem)] translate-x-[-50%] translate-y-[-50%] gap-8 rounded-xl border border-neutral-600/60 p-8 shadow-lg duration-200 sm:max-w-md sm:rounded-lg',
+                'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-bottom-[48px] data-[state=open]:slide-in-from-bottom-[48px] bg-neutral-850 fixed top-[50%] left-[50%] z-50 grid w-[calc(100%-3rem)] translate-x-[-50%] translate-y-[-50%] gap-8 rounded-xl border border-neutral-600/60 p-8 shadow-lg duration-300 motion-safe:backdrop-blur-[2px] motion-reduce:transition-none sm:max-w-md sm:rounded-lg',
                 className
             )}
             {...props}
         >
             {children}
-            <DialogPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute right-4 top-4 cursor-pointer rounded-full p-1 text-white/60 opacity-70 transition-opacity hover:bg-neutral-800 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none">
-                <X className="h-6 w-6" />
+            <DialogPrimitive.Close
+                tabIndex={-1}
+                className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-2 right-2 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-white/30 opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none"
+            >
+                <XCircleIcon className="h-6 w-6" />
                 <span className="sr-only">Close</span>
             </DialogPrimitive.Close>
         </DialogPrimitive.Content>
@@ -75,7 +76,10 @@ const DialogFooter = ({
     ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
     <div
-        className={cn('flex flex-col-reverse text-xl font-semibold', className)}
+        className={cn(
+            'flex w-full flex-col-reverse text-base font-medium',
+            className
+        )}
         {...props}
     />
 );
@@ -88,7 +92,7 @@ const DialogTitle = React.forwardRef<
     <DialogPrimitive.Title
         ref={ref}
         className={cn(
-            'text-xl font-semibold leading-none tracking-tight',
+            'text-xl leading-none font-semibold tracking-tight',
             className
         )}
         {...props}
@@ -103,7 +107,7 @@ const DialogDescription = React.forwardRef<
     <DialogPrimitive.Description
         ref={ref}
         className={cn(
-            'text-muted-foreground text-pretty text-sm text-white/60',
+            'text-muted-foreground text-sm text-pretty text-white/60',
             className
         )}
         {...props}

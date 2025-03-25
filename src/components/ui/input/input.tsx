@@ -35,6 +35,7 @@ export const FormTextInput = forwardRef<
         errorMsg?: string;
         onLazyChange?: (value: string | number) => void;
         className?: string;
+        icon?: React.ReactNode;
     }
 >(
     (
@@ -48,6 +49,7 @@ export const FormTextInput = forwardRef<
             onLazyChange,
             style: externalStyle,
             className,
+            icon,
             ...props
         },
         ref
@@ -94,44 +96,53 @@ export const FormTextInput = forwardRef<
                         props.required || props.pattern !== undefined,
                 })}
             >
-                <Input
-                    {...props}
-                    type={type}
-                    defaultValue={defaultValue}
-                    className={cn(
-                        { [style.hideBackground]: hideBackground },
-                        style.textinput,
-                        className
+                <div className="relative flex items-center">
+                    {icon && (
+                        <div className="pointer-events-none absolute left-3 flex items-center">
+                            {icon}
+                        </div>
                     )}
-                    ref={inputRef}
-                    onKeyDown={(e) => {
-                        if (!lazy) {
-                            return;
-                        }
+                    <Input
+                        {...props}
+                        type={type}
+                        defaultValue={defaultValue}
+                        className={cn(
+                            { [style.hideBackground]: hideBackground },
+                            { 'pl-10': icon },
+                            style.textinput,
+                            'truncate',
+                            className
+                        )}
+                        ref={inputRef}
+                        onKeyDown={(e) => {
+                            if (!lazy) {
+                                return;
+                            }
 
-                        if (e.key === 'enter') {
+                            if (e.key === 'enter') {
+                                change();
+                            }
+                        }}
+                        onBlur={() => {
+                            if (!lazy) {
+                                return;
+                            }
                             change();
-                        }
-                    }}
-                    onBlur={() => {
-                        if (!lazy) {
-                            return;
-                        }
-                        change();
-                    }}
-                    onChange={() => {
-                        if (!lazy) {
-                            return;
-                        }
-                        if (timer.current !== undefined) {
-                            clearTimeout(timer.current);
-                        }
-                        timer.current = setTimeout(() => {
-                            change();
-                            timer.current = undefined;
-                        }, timeOut);
-                    }}
-                ></Input>
+                        }}
+                        onChange={() => {
+                            if (!lazy) {
+                                return;
+                            }
+                            if (timer.current !== undefined) {
+                                clearTimeout(timer.current);
+                            }
+                            timer.current = setTimeout(() => {
+                                change();
+                                timer.current = undefined;
+                            }, timeOut);
+                        }}
+                    ></Input>
+                </div>
             </div>
         );
     }

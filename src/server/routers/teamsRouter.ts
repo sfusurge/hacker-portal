@@ -86,10 +86,11 @@ export const teamsRouter = router({
                 throw new InternalServerError('Cannot find user data');
             }
 
-            await databaseClient.transaction(async (tx) => {
+            const team = await databaseClient.transaction(async (tx) => {
                 const [team] = await tx
                     .select({
-                        teamId: teams.id,
+                        id: teams.id,
+                        name: teams.name,
                         hackathonId: teams.hackathonId,
                         maxMembersCount: teams.maxMembersCount,
                     })
@@ -127,9 +128,11 @@ export const teamsRouter = router({
                     teamId: teamId,
                     userId: userId,
                 });
+
+                return team;
             });
 
-            return true;
+            return team;
         }),
 
     /**
@@ -176,6 +179,7 @@ export const teamsRouter = router({
                     userId: membersTable.userId,
                     firstName: users.firstName,
                     lastName: users.lastName,
+                    email: users.email,
                 })
                 .from(membersTable)
                 .innerJoin(users, eq(users.id, membersTable.userId))
