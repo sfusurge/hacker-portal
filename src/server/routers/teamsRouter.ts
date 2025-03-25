@@ -27,6 +27,7 @@ import { users } from '@/db/schema/users/users';
 import { PgQueryResultHKT, PgTransaction } from 'drizzle-orm/pg-core';
 import { teamDisplayIds } from '@/db/schema/teams/teamDisplayId';
 import { getSixDigitId, teamRNGParams } from '@/lib/PRNG/LCG';
+import { z } from 'zod';
 
 export const teamsRouter = router({
     createTeam: publicProcedure
@@ -213,7 +214,48 @@ export const teamsRouter = router({
             return true;
         }),
 
-    getTeamByDisplayId: publicProcedureweeken,
+    getTeamByDisplayId: publicProcedure
+        .input(
+            z.object({
+                teamDisplayId: z.string().length(6),
+            })
+        )
+        .query(async ({ input }) => {
+            const _team = await databaseClient
+                .select({
+                    ...getTableColumns(teams),
+                    displayId: teamDisplayIds.displayId,
+                })
+                .from(teams)
+                .innerJoin(teamDisplayIds, eq(teams.id, teamDisplayIds.teamId))
+                .where(eq(teamDisplayIds.displayId, input.teamDisplayId))
+                .limit(1);
+
+            if (_team.length !== 0) {
+                // team with this display id is not found
+                throw new ResourceNotFoundError({
+                    id: input.teamDisplayId,
+                    resourceType: 'team',
+                });
+            }
+
+            const team = _team[0];
+
+            const members = await databaseClient
+                .select({
+                    userId: membersTable.userId,
+                    firstName: users.firstName,
+                    lastName: users.lastName,
+                })
+                .from(membersTable)
+                .innerJoin(users, eq(users.id, membersTable.userId))
+                .where(eq(membersTable.teamId, team.id));
+
+            return {
+                ...team,
+                members,
+            };
+        }),
 });
 
 async function checkIfUserInExistingTeam<
