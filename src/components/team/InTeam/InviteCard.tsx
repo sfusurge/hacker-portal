@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/dashboard-card';
 import {
     ExclamationTriangleIcon,
@@ -7,26 +7,16 @@ import {
     DocumentDuplicateIcon,
 } from '@heroicons/react/16/solid';
 import { Button } from '@/components/ui/button';
-import { usePathname } from 'next/navigation';
 import { toast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { FormSeparator } from '@/components/ui/form-separator';
 import InputOtp from '@/app/(auth)/admin/qr/checkin_components/six_digit_input-otp';
 
-export default function InviteCard() {
-    const pathname = usePathname();
-    const [teamLink, setTeamLink] = useState('');
+export default function InviteCard({ teamId }: { teamId: string }) {
+    const teamLink = `https://portal.sfusurge.com/invite/${teamId}`;
     const [isCopied, setIsCopied] = useState(false);
     const [isCodeCopied, setIsCodeCopied] = useState(false);
-    const [teamCode, setTeamCode] = useState('');
-
-    // temp fetch url function rendered on the client
-    useEffect(() => {
-        const origin = window.location.origin;
-        const teamId = pathname.split('/team/')[1];
-        setTeamLink(`${origin}/invite/${teamId}`);
-        setTeamCode(teamId);
-    }, [pathname]);
+    const [teamCode, setTeamCode] = useState(teamId);
 
     const handleCopy = async (textToCopy: string, type: 'link' | 'code') => {
         try {
@@ -103,7 +93,7 @@ export default function InviteCard() {
                     bottomSection={
                         <div className="grid gap-3 md:grid-cols-[calc(60%-calc(var(--spacing)*3))_calc(40%-calc(var(--spacing)*3))]">
                             <InputOtp
-                                input={teamCode}
+                                input={teamId}
                                 setInput={setTeamCode}
                                 textColor={
                                     isCodeCopied

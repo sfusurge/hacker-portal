@@ -131,7 +131,7 @@ export const teamsRouter = router({
 
                 if (members.length >= maxMembersCount) {
                     throw new BadRequestError(
-                        `team ${teamId} already had ${members.length} members`
+                        `Team ${_teamDisplayId} already has ${members.length} members`
                     );
                 }
 
@@ -248,7 +248,7 @@ export const teamsRouter = router({
                 .where(eq(teamDisplayIds.displayId, input.teamDisplayId))
                 .limit(1);
 
-            if (_team.length !== 0) {
+            if (_team.length === 0) {
                 // team with this display id is not found
                 throw new ResourceNotFoundError({
                     id: input.teamDisplayId,

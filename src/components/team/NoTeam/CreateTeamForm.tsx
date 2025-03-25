@@ -124,10 +124,9 @@ export default function CreateTeamForm({
                 variant: 'default',
                 icon: <UserGroupIcon />,
             });
-            router.push(`/team/${newTeam.displayId}`);
+            router.push(`/team`);
         } catch (err) {
             setError('Failed to create team. Please try again.');
-        } finally {
             setIsCreating(false);
         }
     };

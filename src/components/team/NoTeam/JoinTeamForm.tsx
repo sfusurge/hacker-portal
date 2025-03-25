@@ -7,7 +7,6 @@ import { FormSeparator } from '@/components/ui/form-separator';
 import { useState } from 'react';
 import { LinkIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
-import { trpc } from '@/trpc/client';
 import { useMediaQuery } from '@uidotdev/usehooks';
 import {
     ResponsiveDialogContent,
@@ -17,12 +16,10 @@ import {
     ResponsiveDialogFooter,
 } from '@/components/ui/responsive-dialog';
 import { DialogClose } from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
-import { UserGroupIcon } from '@heroicons/react/24/solid';
+import JoinTeamButton from './JoinTeamButton';
 
 export default function JoinTeamForm() {
     const router = useRouter();
-    const { toast } = useToast();
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const [input, setInput] = useState<string>('');
     const [teamLink, setTeamLink] = useState<string>('');
@@ -32,38 +29,6 @@ export default function JoinTeamForm() {
     const isInputComplete = input.length === 6;
     const [errorMsg, setErrorMsg] = useState<string>('');
     const [activeInput, setActiveInput] = useState<'link' | 'code'>('code');
-
-    const joinTeamMutation = trpc.teams.joinTeam.useMutation({
-        onSuccess: (data) => {
-            toast({
-                title: 'Success!',
-                description: `You've successfully joined the team ${data.name}.`,
-                variant: 'default',
-                icon: <UserGroupIcon />,
-            });
-            router.push(`/team/`);
-        },
-        onError: (error) => {
-            setErrorMsg(error.message);
-            setIsJoining(false);
-        },
-    });
-
-    const handleJoinTeam = () => {
-        if (isJoining) return;
-
-        setIsJoining(true);
-        setErrorMsg('');
-
-        if (isInputComplete) {
-            setActiveInput('code');
-            joinTeamMutation.mutate({ teamDisplayId: input });
-        } else if (teamLink) {
-            setActiveInput('link');
-            const code = extractCodeFromLink(teamLink);
-            joinTeamMutation.mutate({ teamDisplayId: code });
-        }
-    };
 
     // Helper function to extract code from link
     const extractCodeFromLink = (link: string): string => {
@@ -98,6 +63,16 @@ export default function JoinTeamForm() {
         setErrorMsg('');
     };
 
+    // Get the current team display ID based on active input
+    const getCurrentTeamDisplayId = () => {
+        if (activeInput === 'code' && isInputComplete) {
+            return input;
+        } else if (activeInput === 'link' && isUsingLink) {
+            return extractCodeFromLink(teamLink);
+        }
+        return '';
+    };
+
     const FormContent = (
         <form className="flex flex-col-reverse md:flex-col">
             <div className="flex flex-col gap-2">
@@ -123,14 +98,6 @@ export default function JoinTeamForm() {
                         activeInput === 'link' && errorMsg ? 'invalid' : '.*'
                     }
                     required
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            if (isUsingLink && !isJoining) {
-                                handleJoinTeam();
-                            }
-                        }
-                    }}
                 />
             </div>
             <FormSeparator flipSections={!isDesktop} />
@@ -145,7 +112,6 @@ export default function JoinTeamForm() {
                     <InputOtp
                         input={input}
                         setInput={(value) => handleCodeChange(value.toString())}
-                        onSubmit={isInputComplete ? handleJoinTeam : undefined}
                         disabled={!!teamLink || isJoining}
                         error={activeInput === 'code' ? errorMsg : undefined}
                     />
@@ -181,20 +147,19 @@ export default function JoinTeamForm() {
                         Cancel
                     </Button>
                 </DialogClose>
-                <Button
-                    type="button"
-                    variant="brand"
-                    size="cozy"
-                    hierarchy="primary"
-                    className="order-1 w-full md:order-2 md:w-auto"
+
+                <JoinTeamButton
+                    teamDisplayId={getCurrentTeamDisplayId()}
                     disabled={
                         (teamLink ? !isUsingLink : !isInputComplete) ||
                         isJoining
                     }
-                    onClick={handleJoinTeam}
-                >
-                    {isJoining ? 'Joining...' : 'Join team'}
-                </Button>
+                    className="order-1 w-full md:order-2 md:w-auto"
+                    onError={(error) => {
+                        setErrorMsg(error.message);
+                        setIsJoining(false);
+                    }}
+                />
             </ResponsiveDialogFooter>
         </ResponsiveDialogContent>
     );
