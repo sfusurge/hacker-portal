@@ -43,11 +43,11 @@ export default async function Home() {
 
     return (
         <div className="flex flex-col gap-6 md:gap-8">
-            <h1 className="text-3xl text-white font-semibold">
+            <h1 className="text-3xl font-semibold text-white">
                 Hi, {data?.firstName} {data?.lastName}!
             </h1>
 
-            <div className="grid gap-6 md:gap-8 pb-6 md:pb-0 xl:grid-cols-2">
+            <div className="grid gap-6 pb-6 md:gap-8 md:pb-0 xl:grid-cols-2">
                 <ApplicationCard userData={data} image={userQR} />
                 <DiscordCard />
             </div>

@@ -52,18 +52,30 @@ export const teamsRouter = router({
                     })
                     .returning();
 
-                await tx.insert(teamDisplayIds).values({
-                    displayId: getSixDigitId(team.id, teamRNGParams),
-                    teamId: team.id,
-                });
+                const displayId = (
+                    await tx
+                        .insert(teamDisplayIds)
+                        .values({
+                            displayId: getSixDigitId(team.id, teamRNGParams),
+                            teamId: team.id,
+                        })
+                        .returning()
+                )[0].displayId;
 
                 // team creator join their new team
-                await tx.insert(membersTable).values({
-                    teamId: team.id,
-                    userId: user.id,
-                });
+                const members = await tx
+                    .insert(membersTable)
+                    .values({
+                        teamId: team.id,
+                        userId: user.id,
+                    })
+                    .returning();
 
-                return team;
+                return {
+                    ...team,
+                    displayId,
+                    members,
+                };
             });
 
             return team;
@@ -80,19 +92,20 @@ export const teamsRouter = router({
 
             const user = await getUserData();
 
-            const userId = user?.id;
-
-            if (userId == null) {
+            if (user == null) {
                 throw new InternalServerError('Cannot find user data');
             }
+
+            const userId = user?.id;
 
             const team = await databaseClient.transaction(async (tx) => {
                 const [team] = await tx
                     .select({
-                        id: teams.id,
+                        teamId: teams.id,
                         name: teams.name,
                         hackathonId: teams.hackathonId,
                         maxMembersCount: teams.maxMembersCount,
+                        teamDisplayId: teamDisplayIds.displayId,
                     })
                     .from(teams)
                     .innerJoin(

@@ -6,7 +6,6 @@ import { trpc } from '@/trpc/client';
 import { toast } from '@/hooks/use-toast';
 import { use } from 'react';
 import { UserGroupIcon } from '@heroicons/react/24/solid';
-import CurrentStateUI from '@/components/team/NoTeam/CurrentState';
 
 export default function InvitePage({
     params,
@@ -15,7 +14,11 @@ export default function InvitePage({
 }) {
     const router = useRouter();
     const resolvedParams = use(params);
-    const teamId = parseInt(resolvedParams.id, 10);
+    const displayId = resolvedParams.id;
+    if (!displayId || displayId.length !== 6) {
+        return router.push('/team'); // input team id is invalid, redirect to team id input screen.
+    }
+
     const [isLoading, setIsLoading] = useState(false);
     const [hasAttempted, setHasAttempted] = useState(false);
 
@@ -27,7 +30,7 @@ export default function InvitePage({
                 variant: 'default',
                 icon: <UserGroupIcon />,
             });
-            router.push(`/team/${data.id}`);
+            router.push(`/team/${data.teamDisplayId}`);
         },
         onError: (error) => {
             toast({
@@ -36,7 +39,8 @@ export default function InvitePage({
                 variant: 'default',
                 icon: <UserGroupIcon />,
             });
-            router.push(`/team/${resolvedParams.id}/full`);
+            // FIXME: this api could fail for reasons other than team is full.
+            router.push(`/team/${displayId}/full`);
         },
         onSettled: () => {
             setIsLoading(false);
@@ -47,9 +51,9 @@ export default function InvitePage({
         if (!hasAttempted && !isLoading) {
             setIsLoading(true);
             setHasAttempted(true);
-            joinTeamMutation.mutate({ teamId });
+            joinTeamMutation.mutate({ teamDisplayId: displayId });
         }
-    }, [joinTeamMutation, teamId, hasAttempted, isLoading]);
+    }, [hasAttempted, isLoading]);
 
     return (
         <></>

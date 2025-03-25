@@ -57,11 +57,11 @@ export default function JoinTeamForm() {
 
         if (isInputComplete) {
             setActiveInput('code');
-            joinTeamMutation.mutate({ teamId: parseInt(input) });
+            joinTeamMutation.mutate({ teamDisplayId: input });
         } else if (teamLink) {
             setActiveInput('link');
             const code = extractCodeFromLink(teamLink);
-            joinTeamMutation.mutate({ teamId: parseInt(code) });
+            joinTeamMutation.mutate({ teamDisplayId: code });
         }
     };
 

@@ -16,6 +16,7 @@ import { ClientAuthContext } from './ClientAuthContext';
 
 export async function getUserData() {
     const session = await auth();
+
     if (!session || !session.user || !session.user.email) {
         return undefined;
     }
@@ -39,6 +40,7 @@ export async function getUserData() {
             .where(eq(userDisplayIds.userId, dbUser.id))
     )[0];
 
+    // FIXME: handle case when user exist but not display id -> bad database consistency
     if (!displayId) {
         return undefined;
     }
@@ -68,11 +70,11 @@ export default async function Layout({ children }: { children: ReactNode }) {
                 <CacheClearer initialData={initialUserData}></CacheClearer>
                 <MobileTopNav
                     initialData={initialUserData}
-                    className="z-100 fixed left-0 top-0 md:hidden"
+                    className="fixed top-0 left-0 z-100 md:hidden"
                 ></MobileTopNav>
                 <MobileBottomNav
                     initialData={initialUserData}
-                    className="z-100 fixed bottom-0 left-0 md:hidden"
+                    className="fixed bottom-0 left-0 z-100 md:hidden"
                 ></MobileBottomNav>
                 <DesktopNav
                     initialData={initialUserData}

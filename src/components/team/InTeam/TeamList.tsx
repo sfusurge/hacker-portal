@@ -6,7 +6,7 @@ import TeammateItem from './TeammateItem';
 import { Card, CardFooter, CardContent } from '@/components/ui/dashboard-card';
 import LeaveTeamForm from './LeaveTeamForm';
 import { DialogTrigger, Dialog } from '@/components/ui/dialog';
-import { users } from '@/db/schema/users';
+import { users } from '@/db/schema/users/users';
 import { InferSelectModel } from 'drizzle-orm';
 
 type UserType = InferSelectModel<typeof users>;

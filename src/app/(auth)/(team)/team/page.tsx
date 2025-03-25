@@ -1,15 +1,8 @@
-import { getUserData } from '../../layout';
 import { redirect } from 'next/navigation';
 import CurrentStateUI from '@/components/team/NoTeam/CurrentState';
 import { createCaller } from '@/server/appRouter';
 
 export default async function Team() {
-    const user = await getUserData();
-
-    if (!user) {
-        redirect('/login');
-    }
-
     const trpcClient = createCaller({});
     const currentHackathon = await getCurrentHackathon();
 
@@ -20,7 +13,7 @@ export default async function Team() {
 
     // If user is in a team, redirect to their team page
     if (currentTeam) {
-        redirect(`/team/${currentTeam.id}`);
+        redirect(`/team/${currentTeam.displayId}`);
     }
 
     // Else, show join team UI
