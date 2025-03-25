@@ -1,5 +1,6 @@
 import { createCaller } from '@/server/appRouter';
 import {
+    itSkipDbCleanUp,
     TEST_HACKATHON_END_DATE,
     TEST_HACKATHON_NAME,
     TEST_HACKATHON_START_DATE,
@@ -56,7 +57,7 @@ describe('Hackathon CRUDL tests', () => {
         });
     });
 
-    it.for([
+    itSkipDbCleanUp.for([
         {
             scenario: 'long hackathon name',
             input: {

@@ -13,6 +13,6 @@ export interface SkipDbCleanUp {
     skipDbCleanUp: boolean;
 }
 
-export interface E2ETestFixture {
-    e2e: boolean;
-}
+export const itSkipDbCleanUp = it.extend<SkipDbCleanUp>({
+    skipDbCleanUp: true,
+});

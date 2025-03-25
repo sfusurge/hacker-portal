@@ -156,9 +156,6 @@ importers:
       '@electric-sql/pglite':
         specifier: ^0.2.17
         version: 0.2.17
-      '@playwright/test':
-        specifier: ^1.48.2
-        version: 1.48.2
       '@tailwindcss/postcss':
         specifier: ^4.0.0
         version: 4.0.0
@@ -4556,6 +4553,7 @@ snapshots:
   '@playwright/test@1.48.2':
     dependencies:
       playwright: 1.48.2
+    optional: true
 
   '@polka/url@1.0.0-next.28':
     optional: true
@@ -7021,13 +7019,15 @@ snapshots:
   picomatch@4.0.2:
     optional: true
 
-  playwright-core@1.48.2: {}
+  playwright-core@1.48.2:
+    optional: true
 
   playwright@1.48.2:
     dependencies:
       playwright-core: 1.48.2
     optionalDependencies:
       fsevents: 2.3.2
+    optional: true
 
   pngjs@5.0.0: {}
 

@@ -1,6 +1,7 @@
 import { databaseClient, db } from '@/db/client';
 import { PGlite } from '@electric-sql/pglite';
 import { sql } from 'drizzle-orm';
+import { SkipDbCleanUp } from '../utils';
 
 const { pushSchema } = await vi.hoisted(async () => {
     const { exec } =
@@ -59,14 +60,21 @@ vi.mock('@/db/client', async () => {
     };
 });
 
-beforeEach(async () => {
+beforeEach<SkipDbCleanUp>(async ({ skipDbCleanUp }) => {
+    if (skipDbCleanUp) {
+        console.debug('Skipped cleaning up DB');
+        return;
+    }
+
     // clean db data for each test
     await databaseClient.transaction(async (tx) => {
         const result = (await tx.execute(
             sql`SELECT * FROM information_schema.tables WHERE table_schema = 'public'`
         )) as Record<string, any>;
 
-        const rows = result.rows;
+        // Bug with PGlite about return type
+        // https://github.com/drizzle-team/drizzle-orm/issues/3975
+        const rows = Array.isArray(result) ? result : result.rows;
 
         const tables = rows
             .map((row: Record<string, any>) => row['table_name'])
