@@ -167,7 +167,6 @@ export default function DesktopNav({
                                 icon={<UserGroupIcon className="h-6 w-6" />}
                                 iconAlt="Teams logo"
                                 platform="desktop"
-                                active={url.startsWith('/team')}
                                 className={clsx({
                                     'justify-center': collapsed,
                                 })}

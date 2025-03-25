@@ -13,10 +13,10 @@ const InputOTP = React.forwardRef<
     <OTPInput
         ref={ref}
         containerClassName={cn(
-            'w-full flex items-center gap-2 has-disabled:opacity-50',
+            'w-full flex items-center max-h-14 sm:max-h-11 justify-center has-disabled:opacity-50',
             containerClassName
         )}
-        className={cn('disabled:cursor-not-allowed', className)}
+        className={cn('h-full w-full disabled:cursor-not-allowed', className)}
         {...props}
     />
 ));
@@ -28,7 +28,7 @@ const InputOTPGroup = React.forwardRef<
 >(({ className, ...props }, ref) => (
     <div
         ref={ref}
-        className={cn('grid w-full grid-cols-6 items-center', className)}
+        className={cn('grid w-full grid-cols-6', className)}
         {...props}
     />
 ));
@@ -36,8 +36,11 @@ InputOTPGroup.displayName = 'InputOTPGroup';
 
 const InputOTPSlot = React.forwardRef<
     React.ElementRef<'div'>,
-    React.ComponentPropsWithoutRef<'div'> & { index: number }
->(({ index, className, ...props }, ref) => {
+    React.ComponentPropsWithoutRef<'div'> & {
+        index: number;
+        textColor?: string;
+    }
+>(({ index, className, textColor, ...props }, ref) => {
     const inputOTPContext = React.useContext(OTPInputContext);
     const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index];
 
@@ -45,7 +48,10 @@ const InputOTPSlot = React.forwardRef<
         <div
             ref={ref}
             className={cn(
-                'relative flex h-14 w-full max-w-14 items-center justify-center border-y border-r border-neutral-200 text-sm transition-all first:rounded-l-md first:border-l last:rounded-r-md dark:border-neutral-800',
+                'relative flex aspect-square max-h-14 min-h-9 w-full min-w-9 items-center justify-center border-y border-r border-neutral-700/30 bg-neutral-800 text-sm transition-all sm:max-h-12',
+                textColor ? `${textColor}` : 'text-white/60',
+                index === 0 ? 'rounded-l-md border-l' : '',
+                index === 5 ? 'rounded-r-md' : '',
                 isActive &&
                     'z-10 ring-2 ring-neutral-950 ring-offset-white dark:ring-neutral-300 dark:ring-offset-neutral-950',
                 className

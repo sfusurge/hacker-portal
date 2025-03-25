@@ -1,44 +1,42 @@
 import React from 'react';
-import { useState, useEffect } from 'react';
-interface TeammateItemProps {
-    firstName?: string;
-    lastName?: string;
+import { Chip } from '@/components/ui/chip';
+import { users } from '@/db/schema/users';
+import { InferSelectModel } from 'drizzle-orm';
+import { useMediaQuery } from '@uidotdev/usehooks';
+type UserType = InferSelectModel<typeof users>;
+
+// Extended props for the component placeholders
+interface TeammateItemProps extends Partial<UserType> {
     name?: string;
-    email?: string;
     submitted?: string;
     image?: string;
     currentUser?: boolean;
     index?: number;
     isPlaceholder?: boolean;
     maxMembersCount?: number;
+    isLastItem?: boolean;
 }
 
 export default function TeammateItem({
-    firstName = 'Mia',
-    lastName = 'Lancaster',
-    name = firstName + ' ' + lastName,
-    email = 'ml54@sfu.ca',
+    firstName = null,
+    lastName = null,
+    name,
+    email = '',
     submitted = 'Not Submitted',
     image = '/pfp_placeholder.png',
     currentUser = false,
     index = 0,
     isPlaceholder = false,
     maxMembersCount = 4,
+    isLastItem = false,
 }: TeammateItemProps) {
-    const [isMobile, setIsMobile] = useState(false);
+    const isMobile = useMediaQuery('(max-width: 767px)');
 
-    useEffect(() => {
-        const checkScreenSize = () => {
-            const width = window.innerWidth;
-            setIsMobile(width < 768);
-        };
-
-        checkScreenSize();
-
-        window.addEventListener('resize', checkScreenSize);
-
-        return () => window.removeEventListener('resize', checkScreenSize);
-    }, []);
+    // Calculate display name
+    const displayName =
+        name ||
+        ((firstName || '') + ' ' + (lastName || '')).trim() ||
+        'Unknown User';
 
     if (isPlaceholder && isMobile) {
         return null;
@@ -69,7 +67,9 @@ export default function TeammateItem({
                     />
                     <div className="flex flex-1 flex-col justify-around gap-1 overflow-hidden">
                         <p className="truncate text-sm font-medium md:text-base">
-                            {isMobile ? firstName : name}{' '}
+                            {isMobile
+                                ? firstName || displayName.split(' ')[0]
+                                : displayName}{' '}
                             {currentUser && (
                                 <span className="font-normal text-white/60">
                                     (You)
@@ -82,18 +82,16 @@ export default function TeammateItem({
                     </div>
                 </div>
                 <div className="flex items-center justify-center gap-4">
-                    <span
-                        className={`rounded-lg px-3 py-1 text-sm font-medium ${
-                            submitted === 'Submitted'
-                                ? 'bg-success-950 text-success-300'
-                                : 'bg-neutral-800/90 text-white/60'
-                        }`}
+                    <Chip
+                        variant={
+                            submitted === 'Submitted' ? 'success' : 'default'
+                        }
                     >
                         {submitted}
-                    </span>
+                    </Chip>
                 </div>
             </li>
-            {index !== maxMembersCount - 1 && isMobile && (
+            {!isLastItem && isMobile && (
                 <hr className="border-neutral-700/20" />
             )}
             {index !== 3 && !isMobile && (

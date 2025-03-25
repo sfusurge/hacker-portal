@@ -2,66 +2,200 @@
 
 import InputOtp from '@/app/(auth)/admin/qr/checkin_components/six_digit_input-otp';
 import { Button } from '@/components/ui/button';
+import { FormTextInput } from '@/components/ui/input/input';
+import { FormSeparator } from '@/components/ui/form-separator';
+import { useState } from 'react';
+import { LinkIcon } from '@heroicons/react/24/outline';
+import { useRouter } from 'next/navigation';
+import { trpc } from '@/trpc/client';
+import { useMediaQuery } from '@uidotdev/usehooks';
 import {
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter,
-    DialogTrigger,
-} from '@/components/ui/dialog';
+    ResponsiveDialogContent,
+    ResponsiveDialogHeader,
+    ResponsiveDialogTitle,
+    ResponsiveDialogDescription,
+    ResponsiveDialogFooter,
+} from '@/components/ui/responsive-dialog';
+import { DialogClose } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import { UserGroupIcon } from '@heroicons/react/24/solid';
 
-type JoinTeamFormProps = {
-    input: string;
-    setInput: React.Dispatch<React.SetStateAction<string>>;
-    isInputComplete: boolean;
-    onJoinTeam: () => void;
-};
+export default function JoinTeamForm() {
+    const router = useRouter();
+    const { toast } = useToast();
+    const isDesktop = useMediaQuery('(min-width: 768px)');
+    const [input, setInput] = useState<string>('');
+    const [teamLink, setTeamLink] = useState<string>('');
+    const [isUsingLink, setIsUsingLink] = useState<boolean>(false);
+    const [isJoining, setIsJoining] = useState<boolean>(false);
 
-export default function JoinTeamForm({
-    input,
-    setInput,
-    isInputComplete,
-    onJoinTeam,
-}: JoinTeamFormProps) {
-    return (
-        <DialogContent className="sm:max-w-sm">
-            <DialogHeader>
-                <DialogTitle>Join a team</DialogTitle>
-                <DialogDescription>
-                    Enter the 6-digit code to join your team.
-                </DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col gap-1 text-white/60">
-                <label htmlFor="team-code">Team code *</label>
-                <InputOtp
-                    input={input}
-                    setInput={setInput}
-                    onSubmit={isInputComplete ? onJoinTeam : undefined}
+    const isInputComplete = input.length === 6;
+    const [errorMsg, setErrorMsg] = useState<string>('');
+    const [activeInput, setActiveInput] = useState<'link' | 'code'>('code');
+
+    const joinTeamMutation = trpc.teams.joinTeam.useMutation({
+        onSuccess: (data) => {
+            toast({
+                title: 'Success!',
+                description: `You've successfully joined the team ${data.name}.`,
+                variant: 'default',
+                icon: <UserGroupIcon />,
+            });
+            router.push(`/team/`);
+        },
+        onError: (error) => {
+            setErrorMsg(error.message);
+            setIsJoining(false);
+        },
+    });
+
+    const handleJoinTeam = () => {
+        if (isJoining) return;
+
+        setIsJoining(true);
+        setErrorMsg('');
+
+        if (isInputComplete) {
+            setActiveInput('code');
+            joinTeamMutation.mutate({ teamId: parseInt(input) });
+        } else if (teamLink) {
+            setActiveInput('link');
+            const code = extractCodeFromLink(teamLink);
+            joinTeamMutation.mutate({ teamId: parseInt(code) });
+        }
+    };
+
+    // Helper function to extract code from link
+    const extractCodeFromLink = (link: string): string => {
+        const segments = link.split('/');
+        return segments[segments.length - 1];
+    };
+
+    const handleTeamLinkChange = (value: string | number) => {
+        const linkValue = value as string;
+        setTeamLink(linkValue);
+        setActiveInput('link');
+        setInput('');
+
+        // Validate URL format - must be portal.sfusurge.com/invite/ followed by numbers
+        const urlRegex = /^(https?:\/\/)?(portal\.sfusurge\.com\/invite\/\d+)$/;
+        const isValidUrl = urlRegex.test(linkValue);
+
+        setIsUsingLink(!!linkValue && isValidUrl);
+
+        if (!linkValue || isValidUrl) {
+            setErrorMsg('');
+        } else if (linkValue.trim() !== '') {
+            setErrorMsg('Please enter a valid team invite URL');
+        }
+    };
+
+    const handleCodeChange = (newValue: string) => {
+        setInput(newValue);
+        setActiveInput('code');
+        setTeamLink('');
+        setIsUsingLink(false);
+        setErrorMsg('');
+    };
+
+    const FormContent = (
+        <form className="flex flex-col-reverse md:flex-col">
+            <div className="flex flex-col gap-2">
+                <label
+                    htmlFor="team-link"
+                    className="text-sm font-medium text-white/60"
+                >
+                    Team link *
+                </label>
+                <FormTextInput
+                    type="search"
+                    name="team-link"
+                    lazy
+                    defaultValue={teamLink}
+                    onLazyChange={handleTeamLinkChange}
+                    placeholder="ex. https://portal.sfusurge/invite/123456"
+                    icon={<LinkIcon className="h-5 w-5 text-white/60" />}
+                    disabled={!!input || isJoining}
+                    errorMsg={
+                        activeInput === 'link' && errorMsg ? errorMsg : ''
+                    }
+                    pattern={
+                        activeInput === 'link' && errorMsg ? 'invalid' : '.*'
+                    }
+                    required
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (isUsingLink && !isJoining) {
+                                handleJoinTeam();
+                            }
+                        }
+                    }}
                 />
             </div>
-            <DialogFooter className="grid gap-3 text-base md:grid-cols-2">
-                <DialogTrigger asChild className="hidden w-full md:block">
+            <FormSeparator flipSections={!isDesktop} />
+            <div className="mb-2 flex flex-col gap-2 md:mt-3 md:mb-0">
+                <label
+                    htmlFor="team-code"
+                    className="text-sm font-medium text-white/60"
+                >
+                    Team code *
+                </label>
+                <div>
+                    <InputOtp
+                        input={input}
+                        setInput={(value) => handleCodeChange(value.toString())}
+                        onSubmit={isInputComplete ? handleJoinTeam : undefined}
+                        disabled={!!teamLink || isJoining}
+                        error={activeInput === 'code' ? errorMsg : undefined}
+                    />
+                </div>
+            </div>
+        </form>
+    );
+
+    return (
+        <ResponsiveDialogContent className="mb-4 gap-6 sm:max-w-[21rem] md:mb-0">
+            <ResponsiveDialogHeader>
+                <ResponsiveDialogTitle>Join team</ResponsiveDialogTitle>
+                <ResponsiveDialogDescription>
+                    Enter the team&apos;s 6-digit code or invitation link to
+                    join.
+                </ResponsiveDialogDescription>
+            </ResponsiveDialogHeader>
+
+            {FormContent}
+
+            <ResponsiveDialogFooter className="grid w-full gap-3 md:grid-cols-2">
+                <DialogClose
+                    asChild
+                    className="order-2 w-full md:order-1 md:w-auto"
+                >
                     <Button
-                        variant={'default'}
-                        size={'cozy'}
-                        hierarchy={'secondary'}
+                        variant="default"
+                        size="cozy"
+                        hierarchy="secondary"
                         type="button"
+                        className="hidden md:block"
                     >
                         Cancel
                     </Button>
-                </DialogTrigger>
+                </DialogClose>
                 <Button
-                    type="submit"
+                    type="button"
                     variant="brand"
                     size="cozy"
                     hierarchy="primary"
-                    disabled={!isInputComplete}
-                    onClick={onJoinTeam}
+                    className="order-1 w-full md:order-2 md:w-auto"
+                    disabled={
+                        (teamLink ? !isUsingLink : !isInputComplete) ||
+                        isJoining
+                    }
+                    onClick={handleJoinTeam}
                 >
-                    Join team
+                    {isJoining ? 'Joining...' : 'Join team'}
                 </Button>
-            </DialogFooter>
-        </DialogContent>
+            </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
     );
 }
