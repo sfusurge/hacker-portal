@@ -26,6 +26,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     callbacks: {
         signIn: async ({ user, profile, credentials, account }) => {
             if (!user.email) {
+                console.log(`bad login! signing out:  ${user}`);
+
                 // bad login, somehow
                 return await signOut({
                     redirectTo: '/login',

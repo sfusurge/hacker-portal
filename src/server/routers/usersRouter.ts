@@ -1,47 +1,26 @@
 import { publicProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
-import { userDisplayIds } from '@/db/schema/users/userDisplayId';
+
 import {
     insertUserSchema,
     deleteUserSchema,
     updateUserSchema,
     users,
+    addUser,
 } from '@/db/schema/users/users';
-import { getSixDigitId, userRNGParams } from '@/lib/PRNG/LCG';
 import { eq } from 'drizzle-orm';
 
 export const usersRouter = router({
+    /**
+     * get users along with their display id.
+     */
     getUsers: publicProcedure.query(async () => {
-        // get users along with their display id.
-        return (
-            await databaseClient
-                .select()
-                .from(users)
-                .innerJoin(userDisplayIds, eq(users.id, userDisplayIds.userId))
-        ).map((item) => {
-            return {
-                ...item.users,
-                ...item.user_display_id,
-            };
-        });
+        const res = await databaseClient.select().from(users);
+        return res;
     }),
     addUser: publicProcedure.input(insertUserSchema).mutation(async (opts) => {
-        // create the user, and catch their id
-        const [user] = await databaseClient
-            .insert(users)
-            .values({
-                ...opts.input,
-            })
-            .returning({ userId: users.id });
-
-        // create display id
-        return await databaseClient
-            .insert(userDisplayIds)
-            .values({
-                userId: user.userId,
-                displayId: getSixDigitId(user.userId, userRNGParams),
-            })
-            .returning();
+        const res = await addUser(opts.input);
+        return res;
     }),
     deleteUser: publicProcedure
         .input(deleteUserSchema)
@@ -54,7 +33,6 @@ export const usersRouter = router({
         .input(updateUserSchema)
         .mutation(async (opts) => {
             const { id, ...updateValues } = opts.input;
-
             await databaseClient
                 .update(users)
                 .set(updateValues)

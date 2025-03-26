@@ -6,10 +6,10 @@ import {
     timestamp,
     varchar,
 } from 'drizzle-orm/pg-core';
-import { hackathons } from '../hackathons';
+import { hackathons } from './hackathons';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import { users } from '../users/users';
+import { users } from './users/users';
 
 const DEFAULT_MAX_MEMBERS_COUNT = 4;
 
@@ -30,10 +30,11 @@ export const teams = pgTable(
             .notNull()
             .references(() => users.id),
         createdAt: timestamp('created_at').notNull().defaultNow(),
+        displayId: varchar('display_id', { length: 6 }).notNull().unique(),
     },
     (table) => {
         // to query all the teams a hackathon has
-        return [index().on(table.hackathonId)];
+        return [index().on(table.hackathonId), index().on(table.displayId)];
     }
 );
 
@@ -48,7 +49,3 @@ export const createTeamSchema = createInsertSchema(teams).pick({
 export const getCurrentTeamSchema = z.object({
     hackathonId: z.number().int(),
 });
-
-// export const deleteTeamSchema = z.object({
-//     id: z.number().int(),
-// });

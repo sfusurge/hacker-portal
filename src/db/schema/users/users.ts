@@ -1,9 +1,9 @@
-import { InferSelectModel } from 'drizzle-orm';
+import { getTableColumns, InferSelectModel, sql } from 'drizzle-orm';
 import { index, integer, pgEnum, pgTable, varchar } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { databaseClient } from '../../client';
-import { userDisplayIds } from './userDisplayId';
+
 import { getSixDigitId, userRNGParams } from '@/lib/PRNG/LCG';
 
 export const UserRoleEnum = {
@@ -27,9 +27,13 @@ const users = pgTable(
         phoneNumber: varchar('phone_number', { length: 15 }),
         email: varchar('email', { length: 255 }).unique().notNull(),
         userRole: userRoleDbEnum('user_role').default('user').notNull(),
+        displayId: varchar('display_id', { length: 6 }).notNull().unique(),
     },
     (table) => {
-        return [index('email_index').on(table.email)];
+        return [
+            index('email_index').on(table.email),
+            index('display_id_index').on(table.displayId),
+        ];
     }
 );
 
@@ -37,8 +41,7 @@ const selectUserSchema = createSelectSchema(users); // select a user by either t
 
 const insertUserSchema = createInsertSchema(users, {
     email: (email) => email.email(),
-});
-
+}).omit({ displayId: true });
 // zod createUpdateSchema is busted, using manual zod obj for now
 const updateUserSchema = z.object({
     id: z.number().int(),
@@ -70,28 +73,36 @@ export type { UserTableType };
 
 export async function addUser(vals: z.infer<typeof insertUserSchema>) {
     // create the user, and catch their id
-    const res = (
-        await databaseClient
-            .insert(users)
-            .values({
-                ...vals,
-            })
-            .returning({
-                id: users.id,
-                email: users.email,
-                userRole: users.userRole,
-            })
-    )[0];
+    const res = await databaseClient.transaction(async (tx) => {
+        const [_index] = await tx.execute(
+            sql`select (last_value + 1) as "last_value" from users_id_seq`
+        );
+        const index = parseInt(`${_index['last_value']}`, 10);
 
-    if (!res) {
-        return; // insertion has failed if no return
-    }
+        if (isNaN(index)) {
+            // update failed.
+            console.log(`Insert user failed, index fetch failed: ${index}`);
+            console.log(
+                await tx.execute(sql`select (last_value + 1) from users_id_seq`)
+            );
 
-    // create display id
-    const displayRes = await databaseClient.insert(userDisplayIds).values({
-        userId: res.id,
-        displayId: getSixDigitId(res.id, userRNGParams),
+            return undefined;
+        }
+
+        const displayId = getSixDigitId(index, userRNGParams);
+
+        const insertResult = (
+            await databaseClient
+                .insert(users)
+                .values({
+                    ...vals,
+                    displayId,
+                })
+                .returning({
+                    ...getTableColumns(users),
+                })
+        )[0];
+        return insertResult;
     });
-
     return res;
 }

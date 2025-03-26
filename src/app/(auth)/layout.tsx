@@ -9,7 +9,7 @@ import { auth } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
 import { users } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
-import { userDisplayIds } from '@/db/schema/users/userDisplayId';
+
 import { CacheClearer } from '@/app/(auth)/CacheClear';
 import { redirect } from 'next/navigation';
 import { ClientAuthContext } from './ClientAuthContext';
@@ -33,21 +33,8 @@ export async function getUserData() {
         return undefined;
     }
 
-    const displayId = (
-        await databaseClient
-            .select()
-            .from(userDisplayIds)
-            .where(eq(userDisplayIds.userId, dbUser.id))
-    )[0];
-
-    // FIXME: handle case when user exist but not display id -> bad database consistency
-    if (!displayId) {
-        return undefined;
-    }
-
     return {
         ...dbUser,
-        displayId: displayId.displayId,
         image: session.user.image,
     };
 }
