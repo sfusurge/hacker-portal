@@ -98,9 +98,7 @@ export async function addUser(vals: z.infer<typeof insertUserSchema>) {
                     ...vals,
                     displayId,
                 })
-                .returning({
-                    ...getTableColumns(users),
-                })
+                .returning()
         )[0];
         return insertResult;
     });
