@@ -2,7 +2,7 @@
 
 import { atom, PrimitiveAtom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
-    ApplicationData,
+    HackathonData,
     ApplicationPage,
     ApplicationQuestion,
     QuestionCheckBoxInput,
@@ -12,7 +12,7 @@ import {
     QuestionTextAreaInput,
     QuestionTextLineInput,
 } from './types';
-import { splitAtom } from 'jotai/utils';
+import { atomWithStorage, splitAtom } from 'jotai/utils';
 import style from './ApplicationForm.module.css';
 import { TextLineInput } from './application_question_fields/TextLineInput';
 import { ComponentProps, useEffect, useMemo, useRef, useState } from 'react';
@@ -35,6 +35,8 @@ import { redirect } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { useMediaQuery } from '@uidotdev/usehooks';
 import { cn } from '@/lib/utils';
+import { hackathonAtom, useHackathon } from '@/hooks/use-hackathon';
+import { an } from 'vitest/dist/chunks/reporters.D7Jzd9GS.js';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -55,48 +57,58 @@ function ClientOnly({ children, ...delegated }: ComponentProps<'div'>) {
 export const pageIndexAtom = atom(0); // defining the state
 export const finalErrCheckAtom = atom(false); // when the user clicks the review & submit for the first time,
 
+interface ApplicationFormProps {
+    appDataAtom: PrimitiveAtom<HackathonData | undefined>;
+    submitApplication: () => void;
+    pagesAtom: PrimitiveAtom<ApplicationPage[]>;
+}
+
+const RESPONSE_KEY = 'response_key';
+
+const responseAtom = atomWithStorage<ApplicationPage[]>(RESPONSE_KEY, []);
+
 /**
  *
  * appData can be locally cached or a new empty one.
  */
 export function ApplicationForm({
-    appDataAtom,
     submitApplication,
-}: {
-    appDataAtom: PrimitiveAtom<ApplicationData>;
-    submitApplication: () => void;
-}) {
+    pagesAtom,
+}: ApplicationFormProps) {
     'use client';
-    const appData = useAtomValue(appDataAtom);
+    const { hackathon } = useHackathon();
 
-    // useMemo to not recreate the atom each time.
-    const _pagesAtom = useMemo(() => {
-        return atom<ApplicationPage[], ApplicationPage[][], void>(
-            (get) => {
-                //getter
-                return get(appDataAtom).pages;
-            },
-            (get, set, val) => {
-                set(appDataAtom, (prev) => {
-                    prev.pages = val;
-                    return { ...prev };
-                });
-            }
+    const [response, setResponse] = useAtom(responseAtom);
+
+    const pagesData = useAtomValue(pagesAtom);
+
+    useEffect(() => {
+        if (!hackathon) {
+            return;
+        }
+
+        if (hackathon.pages.length !== response.length) {
+            setResponse(hackathon.pages);
+        }
+
+        const curQuestions = response.flatMap((page) => page.questions);
+        const hackahtonQuestions = hackathon.pages.flatMap(
+            (page) => page.questions
         );
-    }, []);
+    }, [hackathon]);
 
     // which page is currently displayed
-    const [currentPageIndex, setPageIndex] = useAtom(pageIndexAtom); // using the state to get the for reals value
+    const currentPageIndex = useAtomValue(pageIndexAtom); // using the state to get the for reals value
 
     // states of each page.
-    const pagesAtomsAtom = splitAtom(_pagesAtom); // create an atom containing a list of atoms, from a single atom containing a list
-    const [pagesAtoms] = useAtom(pagesAtomsAtom); // getting the list of atoms out of the previous ato
+    const pagesAtomsAtom = splitAtom(pagesAtom); // create an atom containing a list of atoms, from a single atom containing a list
+    const pagesAtoms = useAtomValue(pagesAtomsAtom); // getting the list of atoms out of the previous ato
 
     // page validations
     const pageStatesAtom = useMemo(
         () =>
             atom(
-                appData.pages.map(
+                pagesData.map(
                     (item) =>
                         ({
                             title: item.title!,
@@ -162,7 +174,7 @@ export function ApplicationForm({
                     <div className={style.formContainer}>
                         {currentPageIndex === pagesAtoms.length && (
                             <ReviewPage
-                                application={appData}
+                                response={pagesData}
                                 submit={() => {
                                     submitApplication();
                                 }}
@@ -476,4 +488,19 @@ function PageButtons({
             )}
         </div>
     );
+}
+
+function shouldUpdateLocalQuestions(
+    upstream: ApplicationQuestion[],
+    local: ApplicationQuestion[]
+): boolean {
+    if (upstream.length !== local.length) {
+        return true;
+    }
+
+    const zipped = upstream.map((question, i) => [question, local[i]]);
+
+    return zipped.every(([upstreamQuestion, localQuestion]) => {
+        return upstreamQuestion.title !== localQuestion.title;
+    });
 }

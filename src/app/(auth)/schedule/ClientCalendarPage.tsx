@@ -27,6 +27,7 @@ import {
 import { useWindowSize } from '@/lib/utils';
 import { MobileMonthCalendar } from '@/components/calendar/MobileMonthCalendar/MobileMonthCalendar';
 import { trpc } from '@/trpc/client';
+import { useHackathon } from '@/hooks/use-hackathon';
 
 export function ClientCalendarPage({
     events: _events,
@@ -56,10 +57,13 @@ export function ClientCalendarPage({
 
     const [width, height] = useWindowSize();
 
+    const { hackathon } = useHackathon();
+
     const fetchEvents = trpc.events.getEvents.useQuery(
-        { hackathonId: 1 },
+        { hackathonId: hackathon.id },
         { enabled: false }
     );
+
     useEffect(() => {
         async function updateEvents() {
             const res = await fetchEvents.refetch();

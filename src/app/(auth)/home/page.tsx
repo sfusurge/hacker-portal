@@ -19,17 +19,6 @@ export default async function Home() {
     const displayId = data!.id;
     const userQR: string = await generateQRCode(displayId.toString(), opts);
 
-    // const trpcClient = createCaller({});
-
-    // const application = await trpcClient.applications.getApplications({
-    //     hackathonId: 1,
-    //     userId: data?.id,
-    // });
-
-    // let status =
-    //     backendStatusToClientStatus[application[0]?.currentStatus] ??
-    //     'In Progress';
-
     return (
         <div className="flex flex-col gap-6 md:gap-8">
             <h1 className="text-3xl font-semibold text-white">

@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { HTMLInputAutoCompleteAttribute } from 'react';
 
 interface Entry {
@@ -17,29 +18,23 @@ type ChoiceOption = {
  * It's the client's responsibility to send an ApplicationData that makes sense, complete and up to date.
  * The server api can reject the request for any reason, so client modifying the question set is not a concern.
  */
-export interface ApplicationData {
+export interface HackathonData {
+    id: number;
     title?: string;
     version: number; // version must match, discard the application otherwise. Increment version with every change please.
 
     hackathonName: string; // should this be hackathon id in table instead?
     submissionTime?: string;
 
+    submissionDeadline: dayjs.Dayjs;
+    startDate: dayjs.Dayjs;
+    endDate: dayjs.Dayjs;
+
     pages: ApplicationPage[];
 }
 
-/**
- * Same info as application, except pages are destructured.
- */
-export interface FlatApplication extends Entry {
-    version: number; // version must match, discard the application otherwise. Increment version with every change please.
-
-    hackathonName: string; // should this be hackathon id in table instead?
-    submissionTime: string;
-
-    questions: ApplicationQuestion[];
-}
-
 export interface ApplicationPage extends Entry {
+    version: number;
     questions: ApplicationQuestion[];
 }
 

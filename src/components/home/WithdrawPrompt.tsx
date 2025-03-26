@@ -9,6 +9,7 @@ import style from '@/app/(auth)/application/application_components/ApplicationFo
 import { trpc } from '@/trpc/client';
 import { redirect } from 'next/navigation';
 import { Conditional } from '@/lib/Conditional';
+import { useHackathon } from '@/hooks/use-hackathon';
 
 export type WithdrawPromptProps = {
     userId: number;
@@ -27,11 +28,13 @@ export default function WithdrawPrompt({
     const updateApplication =
         trpc.applications.updateApplicationStatus.useMutation();
 
+    const { hackathon } = useHackathon();
+
     const handleWithdraw = () => {
         setWithdrawn(true);
         try {
             updateApplication.mutate({
-                hackathonId: 1,
+                hackathonId: hackathon!.id,
                 userId: userId,
                 status: 'Withdrawn',
             });

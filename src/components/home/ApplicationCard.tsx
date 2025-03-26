@@ -33,26 +33,26 @@ export default function ApplicationCard({
     let status;
     const [questionSetExists, setQuestionSetExists] = useState(false);
 
-    const getApplicationStatus =
-        trpc.applications.getApplicationStatus.useQuery({
-            hackathonId: 1,
-            userId: userData!.id,
-        });
+    const { hackathon, hackathonLoaded } = useHackathon();
 
-    const applicationSubmitted =
-        trpc.applications.userAlreadySubmitted.useQuery({});
+    const getApplicationStatus =
+        trpc.applications.getApplicationStatus.useQuery(
+            {
+                hackathonId: hackathon!.id,
+                userId: userData!.id,
+            },
+            { enabled: hackathonLoaded }
+        );
 
     useEffect(() => {
         const questionSet = localStorage.getItem('question set');
-
         if (questionSet !== null) {
             setQuestionSetExists(true);
         }
     }, []);
 
-    if (applicationSubmitted.data) {
-        // if user already submitted, its safe to assume that applicationStatus is a valid value.
-        status = getApplicationStatus.data!.currentStatus;
+    if (getApplicationStatus.data) {
+        status = getApplicationStatus.data.currentStatus;
     } else if (questionSetExists) {
         status = 'In Progress';
     } else {
@@ -79,7 +79,7 @@ export default function ApplicationCard({
         <div className="flex flex-col rounded-xl border border-neutral-600/30 bg-neutral-900">
             <div className="flex w-full flex-row items-center justify-between border-b border-b-neutral-600/30 p-5">
                 <div className="flex flex-col gap-2">
-                    <span className="text-sm font-medium leading-none text-white/60">
+                    <span className="text-sm leading-none font-medium text-white/60">
                         Your Application Status
                     </span>
                     <h2
@@ -129,7 +129,7 @@ export default function ApplicationCard({
                 >
                     <div>
                         <h2 className="mb-1 text-lg font-medium text-white">
-                            Don't miss out!
+                            Don&apos;t miss out!
                         </h2>
                         <p className="text-sm text-white/60">
                             Hacker registration closes in...
@@ -148,7 +148,7 @@ export default function ApplicationCard({
                         alt="Four otters are gathered around a table, reviewing application submissions."
                     ></Image>
                     <div className="text-left md:text-center">
-                        <h2 className="mb-2.5 text-balance text-xl font-medium text-white">
+                        <h2 className="mb-2.5 text-xl font-medium text-balance text-white">
                             We’re currently reviewing your application 📝
                         </h2>
                         <p className="text-white/60 md:text-balance">
