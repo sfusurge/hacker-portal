@@ -5,7 +5,7 @@ import {
     primaryKey,
     timestamp,
 } from 'drizzle-orm/pg-core';
-import { teams } from './teams/teams';
+import { teams } from './teams';
 import { users } from './users/users';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';

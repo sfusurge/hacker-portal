@@ -9,13 +9,14 @@ import {
     createTeamSchema,
     getCurrentTeamSchema,
     teams,
-} from '@/db/schema/teams/teams';
+} from '@/db/schema/teams';
 import {
     eq,
     and,
     getTableColumns,
     asc,
     TablesRelationalConfig,
+    sql,
 } from 'drizzle-orm';
 import {
     BadRequestError,
@@ -25,7 +26,7 @@ import {
 import { publicProcedure, router } from '../trpc';
 import { users } from '@/db/schema/users/users';
 import { PgQueryResultHKT, PgTransaction } from 'drizzle-orm/pg-core';
-import { teamDisplayIds } from '@/db/schema/teams/teamDisplayId';
+
 import { getSixDigitId, teamRNGParams } from '@/lib/PRNG/LCG';
 import { z } from 'zod';
 
@@ -42,6 +43,21 @@ export const teamsRouter = router({
             const team = await databaseClient.transaction(async (tx) => {
                 await checkIfUserInExistingTeam(tx, user.id, input.hackathonId);
 
+                // get next index in id sequence
+                const [_index] = await tx.execute(
+                    sql`select (last_value + 1) as "last_value" from teams_id_seq`
+                );
+                const index = parseInt(`${_index['last_value']}`, 10);
+
+                // fetch id failed
+                if (isNaN(index)) {
+                    throw new InternalServerError(
+                        `create team failed, fetch index failed: ${index}`
+                    );
+                }
+
+                const displayId = getSixDigitId(index, teamRNGParams);
+
                 const [team] = await tx
                     .insert(teams)
                     .values({
@@ -49,18 +65,9 @@ export const teamsRouter = router({
                         name: input.name,
                         teamPictureUrl: input.teamPictureUrl,
                         createdBy: user.id,
+                        displayId,
                     })
                     .returning();
-
-                const displayId = (
-                    await tx
-                        .insert(teamDisplayIds)
-                        .values({
-                            displayId: getSixDigitId(team.id, teamRNGParams),
-                            teamId: team.id,
-                        })
-                        .returning()
-                )[0].displayId;
 
                 // team creator join their new team
                 const members = await tx
@@ -73,7 +80,6 @@ export const teamsRouter = router({
 
                 return {
                     ...team,
-                    displayId,
                     members,
                 };
             });
@@ -99,22 +105,19 @@ export const teamsRouter = router({
             const userId = user?.id;
 
             const team = await databaseClient.transaction(async (tx) => {
+                // get team info
                 const [team] = await tx
                     .select({
                         teamId: teams.id,
                         name: teams.name,
                         hackathonId: teams.hackathonId,
                         maxMembersCount: teams.maxMembersCount,
-                        teamDisplayId: teamDisplayIds.displayId,
+                        displayId: teams.displayId,
                     })
                     .from(teams)
-                    .innerJoin(
-                        teamDisplayIds,
-                        eq(teams.id, teamDisplayIds.teamId)
-                    )
-                    .where(eq(teamDisplayIds.displayId, _teamDisplayId));
+                    .where(eq(teams.displayId, _teamDisplayId));
 
-                if (team == null) {
+                if (!team) {
                     throw new ResourceNotFoundError({
                         id: _teamDisplayId,
                         resourceType: 'team',
@@ -167,10 +170,8 @@ export const teamsRouter = router({
             const [team] = await databaseClient
                 .select({
                     ...getTableColumns(teams),
-                    displayId: teamDisplayIds.displayId,
                 })
                 .from(teams)
-                .innerJoin(teamDisplayIds, eq(teamDisplayIds.teamId, teams.id))
                 .innerJoin(
                     membersTable,
                     and(
@@ -183,7 +184,7 @@ export const teamsRouter = router({
                 .orderBy(asc(membersTable.createdAt))
                 .limit(1);
 
-            if (team == null) {
+            if (!team) {
                 return null;
             }
 
@@ -238,25 +239,21 @@ export const teamsRouter = router({
             })
         )
         .query(async ({ input }) => {
-            const _team = await databaseClient
+            const [team] = await databaseClient
                 .select({
                     ...getTableColumns(teams),
-                    displayId: teamDisplayIds.displayId,
                 })
                 .from(teams)
-                .innerJoin(teamDisplayIds, eq(teams.id, teamDisplayIds.teamId))
-                .where(eq(teamDisplayIds.displayId, input.teamDisplayId))
+                .where(eq(teams.displayId, input.teamDisplayId))
                 .limit(1);
 
-            if (_team.length === 0) {
+            if (!team) {
                 // team with this display id is not found
                 throw new ResourceNotFoundError({
                     id: input.teamDisplayId,
                     resourceType: 'team',
                 });
             }
-
-            const team = _team[0];
 
             const members = await databaseClient
                 .select({

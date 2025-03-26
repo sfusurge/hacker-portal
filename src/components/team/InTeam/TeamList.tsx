@@ -57,6 +57,7 @@ export default function TeamList({
             email: '',
             userRole: 'user',
             placeholder: true,
+            displayId: '000000',
         };
         const padded = [...mappedTeammates] as UserWithPlaceholder[];
         while (padded.length < maxMembersCount) {
