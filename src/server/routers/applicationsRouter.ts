@@ -6,7 +6,7 @@ import {
     StatusEnum,
     updateApplicationStatusSchema,
 } from '@/db/schema/applications';
-import { users } from '@/db/schema/users';
+import { users } from '@/db/schema/users/users';
 import { and, asc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { InternalServerError } from '../exceptions';

@@ -34,12 +34,12 @@ export default function ManualCheckIn({
 
                     <div className="flex h-28 flex-col items-start justify-start gap-2 self-stretch p-6">
                         <div className="inline-flex items-center justify-between self-stretch pr-2">
-                            <div className="text-center text-base leading-tight font-semibold text-white">
+                            <div className="text-center text-base font-semibold leading-tight text-white">
                                 Manual Check-In
                             </div>
                         </div>
 
-                        <div className="self-stretch text-sm leading-tight font-normal text-white/60">
+                        <div className="self-stretch text-sm font-normal leading-tight text-white/60">
                             Enter hacker’s 6-digit code to manually check them
                             into the hackathon.
                         </div>

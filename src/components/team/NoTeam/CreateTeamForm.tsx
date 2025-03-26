@@ -113,16 +113,20 @@ export default function CreateTeamForm({
                 name: teamInfo.teamName,
                 teamPictureUrl: teamInfo.teamPicture,
             });
+
+            if (!newTeam) {
+                setError('Failed to create team. Please try again.');
+            }
+
             toast({
                 title: 'Team created!',
                 description: `Your team ${newTeam.name} was successfuly created.`,
                 variant: 'default',
                 icon: <UserGroupIcon />,
             });
-            router.push(`/team/${newTeam.id}`);
+            router.push(`/team`);
         } catch (err) {
             setError('Failed to create team. Please try again.');
-        } finally {
             setIsCreating(false);
         }
     };

@@ -7,7 +7,7 @@ import {
     timestamp,
 } from 'drizzle-orm/pg-core';
 import { hackathons } from './hackathons';
-import { users } from './users';
+import { users } from './users/users';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 

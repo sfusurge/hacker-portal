@@ -2,7 +2,7 @@
 
 import { auth } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
-import { users } from '@/db/schema/users';
+import { users } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 

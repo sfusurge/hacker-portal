@@ -8,7 +8,7 @@ import {
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { events } from './events';
-import { users } from './users';
+import { users } from './users/users';
 
 export const checkIns = pgTable(
     'check_ins',

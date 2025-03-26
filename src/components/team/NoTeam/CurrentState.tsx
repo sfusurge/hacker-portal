@@ -1,10 +1,13 @@
 import Image from 'next/image';
 import JoinTeam from '@/components/team/NoTeam/TeamOption';
+import { ReactNode } from 'react';
+
 interface TeamFullUIProps {
     hackathonId?: number;
     title?: string;
     description?: string;
     imageSrc?: string;
+    buttons?: ReactNode;
 }
 
 export default function CurrentStateUI({
@@ -12,6 +15,7 @@ export default function CurrentStateUI({
     title = 'This team is currently full! 🥺',
     description = "Join a different team or create a new one to view your team's information here.",
     imageSrc = '/teams/alone_otter.webp',
+    buttons,
 }: TeamFullUIProps) {
     return (
         <div className="flex h-full w-full items-center justify-center">
@@ -19,9 +23,9 @@ export default function CurrentStateUI({
                 <div className="w-full max-w-auto">
                     <Image
                         src={imageSrc}
-                        alt="Otters at a table"
+                        alt="Sad otter alone in the grass"
                         width="365"
-                        height="280"
+                        height="144"
                         className="w-full px-10"
                     />
                 </div>
@@ -31,7 +35,9 @@ export default function CurrentStateUI({
                     <p className="font-light text-white/60">{description}</p>
                 </div>
 
-                {hackathonId && <JoinTeam hackathonId={hackathonId} />}
+                {buttons
+                    ? buttons
+                    : hackathonId && <JoinTeam hackathonId={hackathonId} />}
             </div>
         </div>
     );

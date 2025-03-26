@@ -2,7 +2,7 @@
 import { auth, signIn, signOut } from '@/auth/auth';
 import { Button } from '@/components/ui/button';
 import { databaseClient } from '@/db/client';
-import { users } from '@/db/schema/users';
+import { users } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
 import Image from 'next/image';
 import { notFound, redirect } from 'next/navigation';
@@ -68,26 +68,26 @@ export default async function Login({
 
     return (
         <div id="auth" className="md:grid md:grid-cols-2 2xl:grid-cols-3">
-            <div className="w-screen max-h-screen bg-neutral-925 h-screen p-6 flex flex-col gap-14 justify-center md:w-full 2xl:col-span-1">
-                <div className="flex flex-col gap-8 justify-center">
+            <div className="bg-neutral-925 flex h-screen max-h-screen w-screen flex-col justify-center gap-14 p-6 md:w-full 2xl:col-span-1">
+                <div className="flex flex-col justify-center gap-8">
                     <Image
                         src="/login/sparkcheffrizz.webp"
                         width={80}
                         height={80}
-                        className="rounded-lg mx-auto"
+                        className="mx-auto rounded-lg"
                         alt="Sparky wearing a chef\'s hat"
                     ></Image>
 
-                    <div className="text-center flex flex-col gap-4 *:max-w-96 items-center w-full">
-                        <p className="font-semibold text-sm text-brand-400 mb-2 text-center">
+                    <div className="flex w-full flex-col items-center gap-4 text-center *:max-w-96">
+                        <p className="text-brand-400 mb-2 text-center text-sm font-semibold">
                             Welcome
                         </p>
-                        <h1 className="text-3xl font-semibold text-white text-balance leading-tight text-center">
+                        <h1 className="text-balance text-center text-3xl font-semibold leading-tight text-white">
                             Sign in to the Surge Portal to apply to our events
                         </h1>
                     </div>
 
-                    <div className="flex flex-col gap-4 *:max-w-96 items-center w-full">
+                    <div className="flex w-full flex-col items-center gap-4 *:max-w-96">
                         <form action={loginWithGoogle} className="w-full">
                             <Button
                                 type="submit"
@@ -122,7 +122,7 @@ export default async function Login({
                 alt="Stormy and Sparky are cooking."
                 width={1920}
                 height={1080}
-                className="hidden md:block h-full object-cover 2xl:col-span-2"
+                className="hidden h-full object-cover md:block 2xl:col-span-2"
             ></Image>
         </div>
     );

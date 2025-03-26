@@ -5,8 +5,8 @@ import {
     primaryKey,
     timestamp,
 } from 'drizzle-orm/pg-core';
-import { teams } from './teams';
-import { users } from './users';
+import { teams } from './teams/teams';
+import { users } from './users/users';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
@@ -32,10 +32,9 @@ export const members = pgTable(
     }
 );
 
-export const joinTeamSchema = createInsertSchema(members).pick({
-    teamId: true,
+export const joinTeamSchema = z.object({
+    teamDisplayId: z.string().length(6),
 });
-
 export const leaveTeamSchema = z.object({
     teamId: z.number(),
 });

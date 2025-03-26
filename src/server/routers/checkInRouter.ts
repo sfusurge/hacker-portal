@@ -4,7 +4,7 @@ import {
     insertCheckInSchema,
     isCheckInSchema,
 } from '@/db/schema/checkIn';
-import { UserRoleEnum } from '@/db/schema/users';
+import { UserRoleEnum } from '@/db/schema/users/users';
 import { InternalServerError, UnauthorizedError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
 import { and, asc, eq, getTableColumns } from 'drizzle-orm';

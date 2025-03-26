@@ -1,62 +1,92 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { trpc } from '@/trpc/client';
-import { toast } from '@/hooks/use-toast';
-import { use } from 'react';
-import { UserGroupIcon } from '@heroicons/react/24/solid';
+import { getUserData } from '../../../layout';
+import { redirect } from 'next/navigation';
+import { createCaller } from '@/server/appRouter';
+import { Button } from '@/components/ui/button';
 import CurrentStateUI from '@/components/team/NoTeam/CurrentState';
+import Link from 'next/link';
+import JoinTeamButton from '@/components/team/NoTeam/JoinTeamButton';
 
-export default function InvitePage({
+export default async function InvitePage({
     params,
 }: {
     params: Promise<{ id: string }>;
 }) {
-    const router = useRouter();
-    const resolvedParams = use(params);
-    const teamId = parseInt(resolvedParams.id, 10);
-    const [isLoading, setIsLoading] = useState(false);
-    const [hasAttempted, setHasAttempted] = useState(false);
+    const { id } = await params;
+    const displayId = id;
 
-    const joinTeamMutation = trpc.teams.joinTeam.useMutation({
-        onSuccess: (data) => {
-            toast({
-                title: 'Team joined!',
-                description: `You successfully joined the team ${data.name}.`,
-                variant: 'default',
-                icon: <UserGroupIcon />,
-            });
-            router.push(`/team/${data.id}`);
-        },
-        onError: (error) => {
-            toast({
-                title: 'Failed to join team',
-                description: error.message,
-                variant: 'default',
-                icon: <UserGroupIcon />,
-            });
-            router.push(`/team/${resolvedParams.id}/full`);
-        },
-        onSettled: () => {
-            setIsLoading(false);
-        },
-    });
+    // Validate display ID
+    if (!displayId || displayId.length !== 6) {
+        redirect('/team');
+    }
 
-    useEffect(() => {
-        if (!hasAttempted && !isLoading) {
-            setIsLoading(true);
-            setHasAttempted(true);
-            joinTeamMutation.mutate({ teamId });
+    const user = await getUserData();
+
+    if (!user) {
+        redirect('/login');
+    }
+
+    const trpcClient = createCaller({});
+
+    try {
+        const team = await trpcClient.teams.getTeamByDisplayId({
+            teamDisplayId: displayId,
+        });
+
+        if (!team) {
+            return (
+                <CurrentStateUI
+                    title="Team Not Found"
+                    description="The team you're trying to join doesn't exist or the invite link is invalid."
+                />
+            );
         }
-    }, [joinTeamMutation, teamId, hasAttempted, isLoading]);
 
-    return (
-        <></>
-        // <CurrentStateUI
-        //     title="Joining team..."
-        //     description="Please wait while we process your request"
-        //     imageSrc="/login/application-review.webp"
-        // />
-    );
+        const actionButtons = (
+            <div className="grid w-full gap-3 sm:grid-cols-2">
+                <Link href="/team">
+                    <Button
+                        variant="default"
+                        size="cozy"
+                        hierarchy="secondary"
+                        className="w-full"
+                    >
+                        Cancel
+                    </Button>
+                </Link>
+
+                <JoinTeamButton teamDisplayId={displayId} className="w-full" />
+            </div>
+        );
+
+        return (
+            <CurrentStateUI
+                title="Team Invitation!"
+                description={`You've been invited to join the team, ${team.name}.`}
+                buttons={actionButtons}
+                imageSrc="/login/application-review.webp"
+            />
+        );
+    } catch (error) {
+        console.error('Error in invite page:', error);
+        return (
+            <CurrentStateUI
+                title="Team Not Found"
+                description="The team you're trying to join doesn't exist or the invite link is invalid."
+                buttons={
+                    <>
+                        <Link href="/team" className="w-full">
+                            <Button
+                                variant="default"
+                                size="cozy"
+                                hierarchy="secondary"
+                                className="w-full"
+                            >
+                                Go back home
+                            </Button>
+                        </Link>
+                    </>
+                }
+            />
+        );
+    }
 }
