@@ -10,6 +10,7 @@ import {
     getCurrentTeamSchema,
     teams,
 } from '@/db/schema/teams';
+import { applications } from '@/db/schema/applications';
 import {
     eq,
     and,
@@ -194,10 +195,18 @@ export const teamsRouter = router({
                     firstName: users.firstName,
                     lastName: users.lastName,
                     email: users.email,
+                    currentStatus: applications.currentStatus,
                 })
                 .from(membersTable)
                 .innerJoin(users, eq(users.id, membersTable.userId))
-                .where(eq(membersTable.teamId, team.id));
+                .where(eq(membersTable.teamId, team.id))
+                .leftJoin(
+                    applications,
+                    and(
+                        eq(applications.userId, users.id),
+                        eq(applications.hackathonId, input.hackathonId)
+                    )
+                );
 
             return {
                 ...team,

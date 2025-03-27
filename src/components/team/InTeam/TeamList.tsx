@@ -8,6 +8,7 @@ import LeaveTeamForm from './LeaveTeamForm';
 import { DialogTrigger, Dialog } from '@/components/ui/dialog';
 import { users } from '@/db/schema/users/users';
 import { InferSelectModel } from 'drizzle-orm';
+import { ApplicationStatus } from '@/lib/application-status';
 
 type UserType = InferSelectModel<typeof users>;
 
@@ -16,9 +17,13 @@ type TeamMember = {
     firstName: string | null;
     lastName: string | null;
     email: string;
+    currentStatus?: ApplicationStatus;
 };
 
-type UserWithPlaceholder = UserType & { placeholder?: boolean };
+type UserWithPlaceholder = UserType & {
+    placeholder?: boolean;
+    currentStatus?: ApplicationStatus;
+};
 
 interface TeamListProps {
     teammates: Array<TeamMember>;
@@ -42,9 +47,8 @@ export default function TeamList({
                     firstName: member.firstName,
                     lastName: member.lastName,
                     email: member.email,
-                    phoneNumber: null,
-                    userRole: 'user',
-                }) as UserType
+                    currentStatus: member.currentStatus,
+                }) as UserType & { currentStatus?: string | null }
         );
     }, [teammates]);
 
@@ -58,6 +62,7 @@ export default function TeamList({
             userRole: 'user',
             placeholder: true,
             displayId: '000000',
+            currentStatus: null,
         };
         const padded = [...mappedTeammates] as UserWithPlaceholder[];
         while (padded.length < maxMembersCount) {
@@ -112,7 +117,7 @@ export default function TeamList({
                 </CardFooter>
             </Card>
 
-            <div className="order-last w-full md:hidden">
+            <div className="order-last flex w-full md:hidden">
                 <DialogTrigger asChild>
                     <Button
                         variant="caution"

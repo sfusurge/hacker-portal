@@ -3,18 +3,20 @@ import { Chip } from '@/components/ui/chip';
 import { users } from '@/db/schema/users/users';
 import { InferSelectModel } from 'drizzle-orm';
 import { useMediaQuery } from '@uidotdev/usehooks';
+import { getStatusVariant, ApplicationStatus } from '@/lib/application-status';
+
 type UserType = InferSelectModel<typeof users>;
 
-// Extended props for the component placeholders
+// Extended props for the placeholder
 interface TeammateItemProps extends Partial<UserType> {
     name?: string;
-    submitted?: string;
     image?: string;
     currentUser?: boolean;
     index?: number;
     isPlaceholder?: boolean;
     maxMembersCount?: number;
     isLastItem?: boolean;
+    currentStatus?: ApplicationStatus;
 }
 
 export default function TeammateItem({
@@ -22,13 +24,13 @@ export default function TeammateItem({
     lastName = null,
     name,
     email = '',
-    submitted = 'Not Submitted',
-    image = '/pfp_placeholder.png',
+    image = '/teams/default.webp',
     currentUser = false,
     index = 0,
     isPlaceholder = false,
     maxMembersCount = 4,
     isLastItem = false,
+    currentStatus = null,
 }: TeammateItemProps) {
     const isMobile = useMediaQuery('(max-width: 767px)');
 
@@ -38,10 +40,14 @@ export default function TeammateItem({
         ((firstName || '') + ' ' + (lastName || '')).trim() ||
         'Unknown User';
 
+    const statusVariant = getStatusVariant(currentStatus);
+
+    // Placeholder is hidden on mobile
     if (isPlaceholder && isMobile) {
         return null;
     }
 
+    // Placeholder item on desktop
     if (isPlaceholder) {
         return (
             <>
@@ -59,7 +65,7 @@ export default function TeammateItem({
             <li className="flex justify-between gap-4">
                 <div className="flex flex-1 items-center gap-3 overflow-hidden md:gap-4">
                     <img
-                        alt="Default avatar for the user"
+                        alt={displayName + ' profile picture'}
                         src={image ?? '/teams/default.webp'}
                         width={32}
                         height={32}
@@ -82,12 +88,8 @@ export default function TeammateItem({
                     </div>
                 </div>
                 <div className="flex items-center justify-center gap-4">
-                    <Chip
-                        variant={
-                            submitted === 'Submitted' ? 'success' : 'default'
-                        }
-                    >
-                        {submitted}
+                    <Chip variant={statusVariant}>
+                        {currentStatus || 'Not Submitted'}
                     </Chip>
                 </div>
             </li>
