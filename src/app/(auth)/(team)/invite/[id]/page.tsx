@@ -1,4 +1,3 @@
-import { getUserData } from '../../../layout';
 import { redirect } from 'next/navigation';
 import { createCaller } from '@/server/appRouter';
 import { Button } from '@/components/ui/button';
@@ -19,14 +18,9 @@ export default async function InvitePage({
         redirect('/team');
     }
 
-    const user = await getUserData();
-
-    if (!user) {
-        redirect('/login');
-    }
-
     const trpcClient = createCaller({});
 
+    // TODO: Join Team, Team Full, already in a Team, Team not found (ex. Invite is referencing an inactive hackathon or id is invalid), Team joining is disabled,
     try {
         const team = await trpcClient.teams.getTeamByDisplayId({
             teamDisplayId: displayId,

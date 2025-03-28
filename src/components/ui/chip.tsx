@@ -10,6 +10,7 @@ const chipVariants = cva('rounded-lg px-3 py-1 text-sm font-medium', {
             danger: 'bg-danger-950/60 text-danger-400',
             brand: 'bg-brand-950/60 text-brand-400',
             caution: 'bg-caution-950/60 text-caution-400',
+            yellow: 'bg-yellow-950/60 text-yellow-400',
         },
     },
     defaultVariants: {

@@ -14,12 +14,12 @@ export default async function Team() {
     const trpcClient = createCaller({});
     const currentHackathon = await getCurrentHackathon();
 
-    // Get current team
+    // Get current team for newest hackathon
     const currentTeam = await trpcClient.teams.getCurrentTeam({
         hackathonId: currentHackathon.id,
     });
 
-    // If user is in not in a team, show join team UI
+    // If user is in not in a team for the current hackathon, show join team UI
     if (!currentTeam) {
         return (
             <div className="flex h-full w-full items-center justify-center">
@@ -32,7 +32,7 @@ export default async function Team() {
         );
     }
 
-    // Else, they are in a team, show join team UI
+    // Else, they are currently in a team, show join team UI
     return (
         <div className="flex flex-col gap-6 md:gap-8">
             <div className="flex gap-6">
@@ -53,7 +53,7 @@ export default async function Team() {
             </div>
 
             <div className="flex flex-col gap-4">
-                <div className="grid grid-cols-1 gap-6 pb-24 sm:pb-0 xl:grid-cols-[1fr_minmax(0,31rem)]">
+                <div className="grid grid-cols-1 gap-6 pb-24 md:pb-0 xl:grid-cols-[1fr_clamp(29rem,33vw,30.5rem)]">
                     <TeamList
                         teammates={currentTeam.members}
                         currentUserEmail={user.email}
@@ -77,5 +77,5 @@ export async function getCurrentHackathon() {
     }
 
     // Return the most recent hackathon
-    return hackathons[0];
+    return hackathons[hackathons.length - 1];
 }

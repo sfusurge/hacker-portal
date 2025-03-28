@@ -6,7 +6,6 @@ import { FormTextInput } from '@/components/ui/input/input';
 import { FormSeparator } from '@/components/ui/form-separator';
 import { useState } from 'react';
 import { LinkIcon } from '@heroicons/react/24/outline';
-import { useRouter } from 'next/navigation';
 import { useMediaQuery } from '@uidotdev/usehooks';
 import {
     ResponsiveDialogContent,
@@ -19,7 +18,6 @@ import { DialogClose } from '@/components/ui/dialog';
 import JoinTeamButton from './JoinTeamButton';
 
 export default function JoinTeamForm() {
-    const router = useRouter();
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const [input, setInput] = useState<string>('');
     const [teamLink, setTeamLink] = useState<string>('');
