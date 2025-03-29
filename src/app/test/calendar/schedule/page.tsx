@@ -1,13 +1,11 @@
 'use client';
 import { DaySchedule } from '@/components/calendar/DaySchedule/DaySchedule';
-import { DayjsifyEvents } from '@/components/calendar/MonthCalendarShared';
 import { CalendarEvent } from '@/server/routers/eventsRouter';
 
 import dayjs from 'dayjs';
-import { useMemo } from 'react';
 
 export default function SchedulePage() {
-    const _events: CalendarEvent[] = [
+    const events: CalendarEvent[] = [
         {
             id: 1,
             checkedIn: true,
@@ -168,8 +166,6 @@ export default function SchedulePage() {
             description: 'Winners announced and closing remarks.',
         },
     ];
-
-    const events = useMemo(() => DayjsifyEvents(_events), [_events]);
 
     return (
         <DaySchedule

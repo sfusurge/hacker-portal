@@ -53,7 +53,7 @@ describe('teams routes tests', () => {
         assert.equal(currentTeam?.members.length, 1);
 
         const [member] = currentTeam!.members;
-        assert.equal(member.userId, user.userId);
+        assert.equal(member.userId, user!.id);
         assert.equal(member.firstName, TEST_FIRST_NAME);
         assert.equal(member.lastName, TEST_LAST_NAME);
     });
@@ -71,7 +71,7 @@ describe('teams routes tests', () => {
                 lastName: 'chilling',
             });
 
-            await trpcClient.teams.joinTeam({ teamId: team.id });
+            await trpcClient.teams.joinTeam({ teamDisplayId: team.displayId });
         }
 
         await mockCaller(trpcClient, {
@@ -81,7 +81,7 @@ describe('teams routes tests', () => {
         });
 
         await expect(
-            trpcClient.teams.joinTeam({ teamId: team.id })
+            trpcClient.teams.joinTeam({ teamDisplayId: team.displayId })
         ).rejects.toThrowError(BadRequestError);
     });
 
@@ -127,7 +127,7 @@ describe('teams routes tests', () => {
         });
 
         await expect(
-            trpcClient.teams.joinTeam({ teamId: team1.id })
+            trpcClient.teams.joinTeam({ teamDisplayId: team1.displayId })
         ).resolves.toBe(true);
     });
 
@@ -160,14 +160,14 @@ describe('teams routes tests', () => {
 
         await expect(
             trpcClient.teams.joinTeam({
-                teamId: team1.id,
+                teamDisplayId: team1.displayId,
             })
         ).rejects.toThrowError(BadRequestError);
     });
 
     it('when team is not found, throws ResourceNotFoundError', async () => {
         await expect(
-            trpcClient.teams.joinTeam({ teamId: 999 })
+            trpcClient.teams.joinTeam({ teamDisplayId: '999999' })
         ).rejects.toThrowError(ResourceNotFoundError);
     });
 
@@ -181,7 +181,7 @@ describe('teams routes tests', () => {
             email: 'user2@surge.com',
         });
 
-        await trpcClient.teams.joinTeam({ teamId: team.id });
+        await trpcClient.teams.joinTeam({ teamDisplayId: team.displayId });
 
         const currentTeam = await trpcClient.teams.getCurrentTeam({
             hackathonId: hackathon.id,
@@ -200,8 +200,8 @@ describe('teams routes tests', () => {
 
         vi.mocked(getUserData, { partial: true }).mockResolvedValue({
             email: TEST_EMAIL,
-            id: user.userId,
-            displayId: user.displayId,
+            id: user!.id,
+            displayId: user!.displayId,
         });
 
         const user1UpdatedTeam = await trpcClient.teams.getCurrentTeam({
@@ -211,7 +211,7 @@ describe('teams routes tests', () => {
         assert.equal(user1UpdatedTeam?.members.length, 1);
         assert.deepEqual(
             user1UpdatedTeam?.members.map(({ userId }) => userId),
-            [user.userId]
+            [user!.id]
         );
     });
 });

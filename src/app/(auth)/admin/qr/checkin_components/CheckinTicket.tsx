@@ -6,10 +6,11 @@ import { useEffect, useState } from 'react';
 import CheckinButton from '@/app/(auth)/admin/qr/checkin_components/CheckInButton';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { GetUsersOutput, trpc } from '@/trpc/client';
+import { CheckInEventType } from './ScanPage';
 
 type CheckInTicketProps = {
     currentHacker: GetUsersOutput[0];
-    checkInType: 'Event Check-in' | 'Lunch Check-in' | 'Workshop Check-in';
+    checkInType: CheckInEventType;
     specificMeal: string;
     specificWorkshop: string;
 };

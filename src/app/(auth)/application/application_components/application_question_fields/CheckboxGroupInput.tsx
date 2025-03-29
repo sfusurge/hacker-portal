@@ -1,7 +1,6 @@
 import { PrimitiveAtom, useAtom } from 'jotai';
-import { QuestionCheckBoxInput, QuestionMultipleCheckBox } from '../types';
+import { QuestionMultipleCheckBox } from '../types';
 
-import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 import { CheckboxGroup } from '@/components/ui/checkboxGroup/CheckBoxGroup';
 
 export function CheckBoxGroupInput({

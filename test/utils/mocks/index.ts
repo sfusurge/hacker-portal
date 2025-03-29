@@ -14,15 +14,17 @@ export async function mockCaller(
         image = 'imageurl',
     }: Partial<Awaited<ReturnType<typeof getUserData>>> = {}
 ) {
-    const [user] = await trpcClient.users.addUser({
+    const user = await trpcClient.users.addUser({
         email,
         firstName,
         lastName,
     });
 
+    expect(user).toBeDefined();
+
     vi.mocked(getUserData).mockResolvedValue({
-        id: user.userId,
-        displayId: user.displayId,
+        id: user!.id,
+        displayId: user!.displayId,
         email,
         firstName,
         lastName,

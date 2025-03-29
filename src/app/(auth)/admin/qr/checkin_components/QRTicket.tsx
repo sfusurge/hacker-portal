@@ -85,7 +85,7 @@ export default function QRTicket({
                         <div className="flex flex-1 items-center justify-center pt-7 pr-16 pb-7 pl-16 md:p-6">
                             <div className="relative aspect-square w-full">
                                 <Image
-                                    src={image}
+                                    src={image ?? ''}
                                     alt="QR Code"
                                     fill
                                     className="object-contain"
