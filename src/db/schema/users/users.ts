@@ -1,10 +1,11 @@
-import { getTableColumns, InferSelectModel, sql } from 'drizzle-orm';
+import { getTableColumns, InferSelectModel, sql, eq } from 'drizzle-orm';
 import { index, integer, pgEnum, pgTable, varchar } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { databaseClient } from '../../client';
 
 import { getSixDigitId, userRNGParams } from '@/lib/PRNG/LCG';
+import { auth } from '@/auth/auth';
 
 export const UserRoleEnum = {
     user: 'user',
@@ -104,3 +105,29 @@ export async function addUser(vals: z.infer<typeof insertUserSchema>) {
     });
     return res;
 }
+
+export async function getUserData() {
+    const session = await auth();
+
+    if (!session || !session.user || !session.user.email) {
+        return undefined;
+    }
+
+    const dbUser = (
+        await databaseClient
+            .select()
+            .from(users)
+            .limit(1)
+            .where(eq(users.email, session.user?.email))
+    )[0];
+
+    if (!dbUser) {
+        return undefined;
+    }
+
+    return {
+        ...dbUser,
+        image: session.user.image,
+    };
+}
+export type UserData = Awaited<ReturnType<typeof getUserData>>;

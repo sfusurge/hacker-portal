@@ -6,7 +6,7 @@ import {
     StatusEnum,
     updateApplicationStatusSchema,
 } from '@/db/schema/applications';
-import { users } from '@/db/schema/users/users';
+import { getUserData, users } from '@/db/schema/users/users';
 import { and, asc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { InternalServerError } from '../exceptions';
@@ -14,8 +14,6 @@ import { publicProcedure, router } from '../trpc';
 import Handlebars from 'handlebars';
 import { welcomeEmailTemplate } from '@/server/routers/templates';
 import { transporter } from '@/server/nodemailerTransporter';
-import { getUserData } from '@/app/(auth)/layout';
-const env = process.env;
 
 export interface SubmitApplicationResponse {
     hackathonId: number;
@@ -109,7 +107,7 @@ export const applicationsRouter = router({
             });
 
             let oAuthMailOptions = {
-                from: env.SENDINGEMAIL,
+                from: process.env.SENDINGEMAIL,
                 to: user.email,
                 subject: "We've Received Your JourneyHacks Application 😎",
                 text: 'Thank you for applying to JourneyHacks!',
@@ -117,7 +115,7 @@ export const applicationsRouter = router({
             };
 
             let sfuMailOptions = {
-                from: env.SENDINGEMAIL,
+                from: process.env.SENDINGEMAIL,
                 to: extractedEmail,
                 subject: "We've Received Your JourneyHacks Application 😎",
                 text: 'Thank you for applying to JourneyHacks!',

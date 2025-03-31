@@ -9,7 +9,7 @@ import {
     TEST_LAST_NAME,
 } from '../utils';
 import { BadRequestError, ResourceNotFoundError } from '@/server/exceptions';
-import { getUserData } from '@/app/(auth)/layout';
+import { getUserData } from '@/db/schema/users/users';
 
 describe('teams routes tests', () => {
     const trpcClient = createCaller({});

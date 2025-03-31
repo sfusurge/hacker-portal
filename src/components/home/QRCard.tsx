@@ -6,15 +6,12 @@ import style from '@/app/(auth)/application/application_components/ApplicationFo
 import { useState } from 'react';
 import { Conditional } from '@/lib/Conditional';
 import QRTicket from '@/app/(auth)/admin/qr/checkin_components/QRTicket';
-import { GetUsersOutput, trpc } from '@/trpc/client';
 import { cn } from '@/lib/utils';
-import SelectOption from '@/app/(auth)/admin/selectoption/components/SelectOption';
-import SelectMeal from '@/app/(auth)/admin/qr/checkin_components/SelectMeal';
 import WithdrawPrompt from '@/components/home/WithdrawPrompt';
-import { MergedUserData } from '@/app/(auth)/layout';
+import { UserData } from '@/db/schema/users/users';
 
 type QRCardProps = {
-    userData: MergedUserData;
+    userData: UserData;
     image: string;
 };
 
@@ -45,7 +42,7 @@ export default function QRCard({ userData, image }: QRCardProps) {
             <div className="z-10 flex flex-col rounded-xl border border-neutral-600/30 bg-neutral-900">
                 <div className="flex w-full flex-row items-center justify-between border-b border-b-neutral-600/30 p-5">
                     <div className="flex flex-col gap-2">
-                        <span className="text-sm leading-none font-medium text-white/60">
+                        <span className="text-sm font-medium leading-none text-white/60">
                             Your Application Status
                         </span>
                         <h2
@@ -65,7 +62,7 @@ export default function QRCard({ userData, image }: QRCardProps) {
                 </div>
 
                 <div className="flex flex-1 flex-col items-center justify-between gap-6 text-center md:flex-row">
-                    <div className="flex max-w-full flex-col gap-2 p-5 text-start md:pr-0 md:pl-5">
+                    <div className="flex max-w-full flex-col gap-2 p-5 text-start md:pl-5 md:pr-0">
                         <h2 className="text-lg font-semibold text-white">
                             You&#39;ve been accepted into JourneyHacks 2025!
                         </h2>
@@ -104,7 +101,7 @@ export default function QRCard({ userData, image }: QRCardProps) {
                             </div>
 
                             <div className="large-dashes-vertical relative w-0 border-neutral-200">
-                                <div className="absolute -top-2.5 -left-2.5 h-5 w-5 rounded-full bg-neutral-900"></div>
+                                <div className="absolute -left-2.5 -top-2.5 h-5 w-5 rounded-full bg-neutral-900"></div>
                                 <div className="absolute -bottom-2.5 -left-2.5 h-5 w-5 rounded-full bg-neutral-900"></div>
                             </div>
 
@@ -115,10 +112,10 @@ export default function QRCard({ userData, image }: QRCardProps) {
             </div>
 
             <div
-                className={`bg-opacity-80 fixed inset-0 z-200 w-full bg-black transition-opacity duration-300 ${isTicketOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+                className={`z-200 fixed inset-0 w-full bg-black bg-opacity-80 transition-opacity duration-300 ${isTicketOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
             >
                 <div
-                    className={`fixed right-0 bottom-0 left-0 h-[100vh] transform transition-transform duration-300 ${isTicketOpen ? 'translate-y-0' : 'translate-y-full'}`}
+                    className={`fixed bottom-0 left-0 right-0 h-[100vh] transform transition-transform duration-300 ${isTicketOpen ? 'translate-y-0' : 'translate-y-full'}`}
                     onClick={(e) => e.stopPropagation()}
                 >
                     <QRTicket

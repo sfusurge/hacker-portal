@@ -10,12 +10,12 @@ import { BellAlertIcon } from '@heroicons/react/24/outline';
 import { redirect, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { QrCodeIcon } from '@heroicons/react/24/solid';
-import { MergedUserData } from '@/app/(auth)/layout';
 import SelectOption from '@/app/(auth)/admin/selectoption/components/SelectOption';
+import { UserData } from '@/db/schema/users/users';
 
 interface MobileBottomNavProps {
     className?: string;
-    initialData?: MergedUserData;
+    initialData?: UserData;
 }
 
 const excludedUrls = [
@@ -145,11 +145,11 @@ export default function MobileBottomNav({
             )}
             <div>
                 <div
-                    className={`bg-opacity-50 fixed inset-0 z-200 w-full bg-black transition-opacity duration-300 ${isOptionsOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+                    className={`z-200 fixed inset-0 w-full bg-black bg-opacity-50 transition-opacity duration-300 ${isOptionsOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
                     onClick={toggleOptions}
                 >
                     <div
-                        className={`fixed right-0 bottom-0 left-0 transform transition-transform duration-300 ease-in-out ${isOptionsOpen ? 'translate-y-0' : 'translate-y-full'}`}
+                        className={`fixed bottom-0 left-0 right-0 transform transition-transform duration-300 ease-in-out ${isOptionsOpen ? 'translate-y-0' : 'translate-y-full'}`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <SelectOption setCheckInType={setCheckInType} />

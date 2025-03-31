@@ -1,9 +1,9 @@
-import { getUserData } from '../../layout';
 import { redirect } from 'next/navigation';
 import CurrentStateUI from '@/components/team/NoTeam/CurrentState';
 import { createCaller } from '@/server/appRouter';
 import TeamList from '@/components/team/InTeam/TeamList';
 import InviteCard from '@/components/team/InTeam/InviteCard';
+import { getUserData } from '@/db/schema/users/users';
 export default async function Team() {
     const user = await getUserData();
 

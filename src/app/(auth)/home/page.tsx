@@ -1,8 +1,8 @@
 import ApplicationCard from '@/components/home/ApplicationCard';
 import DiscordCard from '@/components/home/DiscordCard';
+import { getUserData } from '@/db/schema/users/users';
 
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
-import { getUserData } from '../layout';
 
 export default async function Home() {
     const data = await getUserData();

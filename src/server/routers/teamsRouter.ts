@@ -1,4 +1,3 @@
-import { getUserData } from '@/app/(auth)/layout';
 import { databaseClient } from '@/db/client';
 import {
     joinTeamSchema,
@@ -25,7 +24,7 @@ import {
     ResourceNotFoundError,
 } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
-import { users } from '@/db/schema/users/users';
+import { getUserData, users } from '@/db/schema/users/users';
 import { PgQueryResultHKT, PgTransaction } from 'drizzle-orm/pg-core';
 
 import { getSixDigitId, teamRNGParams } from '@/lib/PRNG/LCG';
