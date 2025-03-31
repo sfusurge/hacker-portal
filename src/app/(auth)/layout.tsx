@@ -7,38 +7,12 @@ import { ReactNode } from 'react';
 
 import { auth } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
-import { users } from '@/db/schema/users/users';
+import { getUserData, users } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
 
 import { CacheClearer } from '@/app/(auth)/CacheClear';
 import { redirect } from 'next/navigation';
 import { ClientAuthContext } from './ClientAuthContext';
-
-export async function getUserData() {
-    const session = await auth();
-
-    if (!session || !session.user || !session.user.email) {
-        return undefined;
-    }
-
-    const dbUser = (
-        await databaseClient
-            .select()
-            .from(users)
-            .limit(1)
-            .where(eq(users.email, session.user?.email))
-    )[0];
-
-    if (!dbUser) {
-        return undefined;
-    }
-
-    return {
-        ...dbUser,
-        image: session.user.image,
-    };
-}
-export type MergedUserData = Awaited<ReturnType<typeof getUserData>>;
 
 export default async function Layout({ children }: { children: ReactNode }) {
     const initialUserData = await getUserData();
@@ -57,11 +31,11 @@ export default async function Layout({ children }: { children: ReactNode }) {
                 <CacheClearer initialData={initialUserData}></CacheClearer>
                 <MobileTopNav
                     initialData={initialUserData}
-                    className="fixed top-0 left-0 z-100 md:hidden"
+                    className="z-100 fixed left-0 top-0 md:hidden"
                 ></MobileTopNav>
                 <MobileBottomNav
                     initialData={initialUserData}
-                    className="fixed bottom-0 left-0 z-100 md:hidden"
+                    className="z-100 fixed bottom-0 left-0 md:hidden"
                 ></MobileBottomNav>
                 <DesktopNav
                     initialData={initialUserData}

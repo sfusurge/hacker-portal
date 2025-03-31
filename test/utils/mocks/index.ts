@@ -1,7 +1,7 @@
-import { getUserData } from '@/app/(auth)/layout';
 import { createCaller } from '@/server/appRouter';
 import { vi } from 'vitest';
 import { TEST_EMAIL, TEST_FIRST_NAME, TEST_LAST_NAME } from '..';
+import { getUserData } from '@/db/schema/users/users';
 
 export async function mockCaller(
     trpcClient: ReturnType<typeof createCaller>,

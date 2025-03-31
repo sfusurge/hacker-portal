@@ -8,10 +8,9 @@ import { redirect } from 'next/navigation';
 import CountdownTimer from './Countdown';
 import { trpc } from '@/trpc/client';
 import { useEffect, useState } from 'react';
-import QRTicket from '@/app/(auth)/admin/qr/checkin_components/QRTicket';
 import QRCard from '@/components/home/QRCard';
 import WithdrawCard from '@/components/home/WithdrawCard';
-import { MergedUserData } from '@/app/(auth)/layout';
+import { UserData } from '@/db/schema/users/users';
 
 export type AppStatus =
     | 'Not Yet Started'
@@ -23,7 +22,7 @@ export type AppStatus =
     | 'Waitlisted';
 
 type ApplicationCardProps = {
-    userData: MergedUserData;
+    userData: UserData;
     image: string;
 };
 
@@ -80,7 +79,7 @@ export default function ApplicationCard({
         <div className="flex flex-col rounded-xl border border-neutral-600/30 bg-neutral-900">
             <div className="flex w-full flex-row items-center justify-between border-b border-b-neutral-600/30 p-5">
                 <div className="flex flex-col gap-2">
-                    <span className="text-sm leading-none font-medium text-white/60">
+                    <span className="text-sm font-medium leading-none text-white/60">
                         Your Application Status
                     </span>
                     <h2
@@ -149,7 +148,7 @@ export default function ApplicationCard({
                         alt="Four otters are gathered around a table, reviewing application submissions."
                     ></Image>
                     <div className="text-left md:text-center">
-                        <h2 className="mb-2.5 text-xl font-medium text-balance text-white">
+                        <h2 className="mb-2.5 text-balance text-xl font-medium text-white">
                             We’re currently reviewing your application 📝
                         </h2>
                         <p className="text-white/60 md:text-balance">
