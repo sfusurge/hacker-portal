@@ -11,27 +11,17 @@ import { cn } from '@/lib/utils';
 import SelectOption from '@/app/(auth)/admin/selectoption/components/SelectOption';
 import SelectMeal from '@/app/(auth)/admin/qr/checkin_components/SelectMeal';
 import WithdrawPrompt from '@/components/home/WithdrawPrompt';
+import { MergedUserData } from '@/app/(auth)/layout';
 
 type QRCardProps = {
-    userData:
-        | {
-              displayId: string;
-              image: string | null | undefined;
-              id: number;
-              firstName: string | null;
-              lastName: string | null;
-              phoneNumber: string | null;
-              email: string;
-              userRole: string;
-          }
-        | undefined;
+    userData: MergedUserData;
     image: string;
 };
 
 export default function QRCard({ userData, image }: QRCardProps) {
     const [isTicketOpen, setIsTicketOpen] = useState(false);
     const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
-    const userId = userData.id;
+    const userId = userData?.id;
     const handleOpenTicket = () => {
         setIsTicketOpen(true);
     };
@@ -133,8 +123,8 @@ export default function QRCard({ userData, image }: QRCardProps) {
                 >
                     <QRTicket
                         userId={userData?.displayId}
-                        firstName={userData?.firstName}
-                        lastName={userData?.lastName}
+                        firstName={userData?.firstName ?? ''}
+                        lastName={userData?.lastName ?? ''}
                         image={image}
                         closeTicket={handleCloseTicket}
                     />
@@ -142,10 +132,13 @@ export default function QRCard({ userData, image }: QRCardProps) {
             </div>
 
             <Conditional showWhen={isWithdrawPromptOpen}>
-                <WithdrawPrompt
-                    userId={userId}
-                    closePrompt={handleCloseWithdrawPrompt}
-                />
+                {/* We expect userId to be valid here, if not, the user should've been logged out already. */}
+                {userData?.id && (
+                    <WithdrawPrompt
+                        userId={userData.id}
+                        closePrompt={handleCloseWithdrawPrompt}
+                    />
+                )}
             </Conditional>
         </>
     );

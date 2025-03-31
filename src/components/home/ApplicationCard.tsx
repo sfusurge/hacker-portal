@@ -52,7 +52,8 @@ export default function ApplicationCard({
     }, []);
 
     if (applicationSubmitted.data) {
-        status = getApplicationStatus.data.currentStatus;
+        // if user already submitted, its safe to assume that applicationStatus is a valid value.
+        status = getApplicationStatus.data!.currentStatus;
     } else if (questionSetExists) {
         status = 'In Progress';
     } else {
@@ -76,15 +77,15 @@ export default function ApplicationCard({
     }
 
     return (
-        <div className="bg-neutral-900 flex flex-col rounded-xl border border-neutral-600/30">
-            <div className="p-5 flex flex-row items-center justify-between w-full border-b border-b-neutral-600/30">
+        <div className="flex flex-col rounded-xl border border-neutral-600/30 bg-neutral-900">
+            <div className="flex w-full flex-row items-center justify-between border-b border-b-neutral-600/30 p-5">
                 <div className="flex flex-col gap-2">
-                    <span className="text-sm text-white/60 font-medium leading-none">
+                    <span className="text-sm leading-none font-medium text-white/60">
                         Your Application Status
                     </span>
                     <h2
                         className={cn(
-                            'text-xl font-semibold text-left',
+                            'text-left text-xl font-semibold',
                             leadingIconStyles
                         )}
                     >
@@ -121,17 +122,17 @@ export default function ApplicationCard({
                 </Conditional>
             </div>
 
-            <div className="text-center p-5 lg:p-8 flex flex-col gap-6 items-center flex-1 justify-center">
+            <div className="flex flex-1 flex-col items-center justify-center gap-6 p-5 text-center lg:p-8">
                 <Conditional
                     showWhen={
                         status === 'Not Yet Started' || status === 'In Progress'
                     }
                 >
                     <div>
-                        <h2 className="text-white text-lg font-medium mb-1">
+                        <h2 className="mb-1 text-lg font-medium text-white">
                             Don't miss out!
                         </h2>
-                        <p className="text-white/60 text-sm">
+                        <p className="text-sm text-white/60">
                             Hacker registration closes in...
                         </p>
                     </div>
@@ -144,11 +145,11 @@ export default function ApplicationCard({
                         src="/login/application-review.webp"
                         width={1537}
                         height={1134}
-                        className="max-w-[240px] mb-2"
+                        className="mb-2 max-w-[240px]"
                         alt="Four otters are gathered around a table, reviewing application submissions."
                     ></Image>
                     <div className="text-left md:text-center">
-                        <h2 className="text-white text-balance text-xl font-medium mb-2.5">
+                        <h2 className="mb-2.5 text-xl font-medium text-balance text-white">
                             We’re currently reviewing your application 📝
                         </h2>
                         <p className="text-white/60 md:text-balance">
@@ -162,7 +163,7 @@ export default function ApplicationCard({
             <Conditional
                 showWhen={status !== 'Awaiting Review' && status !== 'Rejected'}
             >
-                <div className="p-5 border-t border-t-neutral-600/30 md:hidden *:w-full">
+                <div className="border-t border-t-neutral-600/30 p-5 *:w-full md:hidden">
                     <Conditional showWhen={status === 'Not Yet Started'}>
                         <Button
                             size="cozy"

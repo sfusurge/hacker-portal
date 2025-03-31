@@ -1,19 +1,8 @@
-import ApplicationCard, { AppStatus } from '@/components/home/ApplicationCard';
+import ApplicationCard from '@/components/home/ApplicationCard';
 import DiscordCard from '@/components/home/DiscordCard';
 
-import { createCaller } from '@/server/appRouter';
-import QRCard from '@/components/home/QRCard';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
 import { getUserData } from '../layout';
-
-const backendStatusToClientStatus: Record<string, AppStatus> = {
-    'N/A': 'Not Yet Started',
-    'Awaiting Review': 'Submitted – Under Review',
-    // TODO: be more specific here
-    Accepted: 'Accepted – Awaiting RSVP',
-    Declined: 'Rejected',
-    'Wait List': 'Waitlisted',
-};
 
 export default async function Home() {
     const data = await getUserData();
