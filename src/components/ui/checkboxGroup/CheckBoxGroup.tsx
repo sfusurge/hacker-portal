@@ -7,7 +7,9 @@ interface CheckBoxGroupProps {
     max?: number;
     choices: { name: string; data: string }[];
     selected?: string[];
-    onSelection?: (selected: Set<string>) => void;
+    onSelection?: (selected: Set<string>, other: string | undefined) => void;
+    allowOther?: boolean;
+    otherValue?: string | undefined;
     required?: boolean;
 }
 export function CheckboxGroup({
@@ -15,6 +17,8 @@ export function CheckboxGroup({
     max = 1,
     choices,
     selected: _selected,
+    allowOther = false,
+    otherValue,
     onSelection,
     required,
 }: CheckBoxGroupProps) {
@@ -65,12 +69,24 @@ export function CheckboxGroup({
                             selected.delete(item.data);
                         }
 
-                        onSelection && onSelection(selected);
+                        onSelection && onSelection(selected, otherValue);
                         updateValidity();
                     }}
                     disabled={selected.size >= max && !selected.has(item.data)}
+                    required={false}
                 ></CheckBoxWithLabel>
             ))}
+
+            {allowOther && (
+                <CheckBoxWithLabel
+                    checked={otherValue !== undefined}
+                    name="other"
+                    key="other"
+                    onChange={(e) => {
+                        // if(e.tar)
+                    }}
+                ></CheckBoxWithLabel>
+            )}
         </fieldset>
     );
 }
