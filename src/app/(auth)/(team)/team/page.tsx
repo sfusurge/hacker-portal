@@ -12,11 +12,11 @@ export default async function Team() {
     }
 
     const trpcClient = createCaller({});
-    const currentHackathon = await getCurrentHackathon();
+    const hackathon = await trpcClient.hackathons.getActiveHackathon();
 
     // Get current team for newest hackathon
     const currentTeam = await trpcClient.teams.getCurrentTeam({
-        hackathonId: currentHackathon.id,
+        hackathonId: hackathon.id,
     });
 
     // If user is in not in a team for the current hackathon, show join team UI
@@ -24,7 +24,7 @@ export default async function Team() {
         return (
             <div className="flex h-full w-full items-center justify-center">
                 <CurrentStateUI
-                    hackathonId={currentHackathon.id}
+                    hackathonId={hackathon.id}
                     title="You're not in a team yet! 🥺"
                     description="Join an existing team or create a new one to view your team's information here."
                 />
@@ -65,17 +65,4 @@ export default async function Team() {
             </div>
         </div>
     );
-}
-
-// temp function to get most recent hackathon
-export async function getCurrentHackathon() {
-    const trpcClient = createCaller({});
-    const hackathons = await trpcClient.hackathons.getHackathons();
-
-    if (!hackathons || hackathons.length === 0) {
-        throw new Error('No hackathons found');
-    }
-
-    // Return the most recent hackathon
-    return hackathons[hackathons.length - 1];
 }

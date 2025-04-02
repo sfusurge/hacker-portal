@@ -19,14 +19,15 @@ const hackathons = pgTable('hackathons', {
     name: varchar('name', { length: 255 }).notNull(),
     startDate: varchar('start_date', { length: 255 }).notNull(),
     endDate: varchar('end_date', { length: 255 }).notNull(),
-    submissionDeadline: timestamp('submission_deadline').default(
-        JOURNEY_HACK_2025_DEADLINE
-    ),
-    isActive: boolean('is_active').notNull().default(false),
+    submissionDeadline: timestamp('submission_deadline')
+        .notNull()
+        .default(JOURNEY_HACK_2025_DEADLINE),
     questions: jsonb('questions')
         .$type<ApplicationPage[]>()
         .notNull()
         .default([]),
+    version: integer('id').notNull().default(1),
+    isActive: boolean('is_active').notNull().default(false),
 });
 
 const insertHackathonSchema = createInsertSchema(hackathons, {

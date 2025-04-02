@@ -14,10 +14,13 @@ export const hackathonsRouter = router({
     }),
 
     getActiveHackathon: publicProcedure.query(async () => {
-        const { isActive, ...rest } = getTableColumns(hackathons);
+        const { isActive, ...restOfHackathonColumns } =
+            getTableColumns(hackathons);
 
         const [hackathon] = await databaseClient
-            .select(rest)
+            .select({
+                ...restOfHackathonColumns,
+            })
             .from(hackathons)
             .where(eq(hackathons.isActive, true))
             .limit(1)
@@ -37,11 +40,13 @@ export const hackathonsRouter = router({
                     endDate: input.endDate,
                     isActive: input.isActive,
                     questions: input.questions as ApplicationPage[],
+                    version: input.version,
                 })
                 .returning();
 
             return hackathon;
         }),
+
     deleteHackathon: publicProcedure
         .input(deleteHackathonSchema)
         .mutation(async (opts) => {

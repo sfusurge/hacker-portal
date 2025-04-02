@@ -34,7 +34,6 @@ export interface HackathonData {
 }
 
 export interface ApplicationPage extends Entry {
-    version: number;
     questions: ApplicationQuestion[];
 }
 
