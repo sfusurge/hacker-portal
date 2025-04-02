@@ -1,9 +1,16 @@
 import { redirect } from 'next/navigation';
 import { createCaller } from '@/server/appRouter';
-import { Button } from '@/components/ui/button';
-import CurrentStateUI from '@/components/team/NoTeam/CurrentState';
-import Link from 'next/link';
-import JoinTeamButton from '@/components/team/NoTeam/JoinTeamButton';
+import InviteDialog from '@/components/team/InviteDialog';
+async function getCurrentHackathon() {
+    const trpcClient = createCaller({});
+    const hackathons = await trpcClient.hackathons.getHackathons();
+
+    if (!hackathons || hackathons.length === 0) {
+        throw new Error('No hackathons found');
+    }
+
+    return hackathons[hackathons.length - 1];
+}
 
 export default async function InvitePage({
     params,
@@ -20,67 +27,26 @@ export default async function InvitePage({
 
     const trpcClient = createCaller({});
 
-    // TODO: Join Team, Team Full, already in a Team, Team not found (ex. Invite is referencing an inactive hackathon or id is invalid), Team joining is disabled,
+    const currentHackathon = await getCurrentHackathon();
+
+    const currentTeam = await trpcClient.teams.getCurrentTeam({
+        hackathonId: currentHackathon.id,
+    });
+
     try {
         const team = await trpcClient.teams.getTeamByDisplayId({
             teamDisplayId: displayId,
         });
 
-        if (!team) {
-            return (
-                <CurrentStateUI
-                    title="Team Not Found"
-                    description="The team you're trying to join doesn't exist or the invite link is invalid."
-                />
-            );
-        }
-
-        const actionButtons = (
-            <div className="grid w-full gap-3 sm:grid-cols-2">
-                <Link href="/team">
-                    <Button
-                        variant="default"
-                        size="cozy"
-                        hierarchy="secondary"
-                        className="w-full"
-                    >
-                        Cancel
-                    </Button>
-                </Link>
-
-                <JoinTeamButton teamDisplayId={displayId} className="w-full" />
-            </div>
-        );
-
         return (
-            <CurrentStateUI
-                title="Team Invitation!"
-                description={`You've been invited to join the team, ${team.name}.`}
-                buttons={actionButtons}
-                imageSrc="/login/application-review.webp"
+            <InviteDialog
+                team={team}
+                hasTeam={currentTeam}
+                displayId={displayId}
             />
         );
     } catch (error) {
         console.error('Error in invite page:', error);
-        return (
-            <CurrentStateUI
-                title="Team Not Found"
-                description="The team you're trying to join doesn't exist or the invite link is invalid."
-                buttons={
-                    <>
-                        <Link href="/team" className="w-full">
-                            <Button
-                                variant="default"
-                                size="cozy"
-                                hierarchy="secondary"
-                                className="w-full"
-                            >
-                                Go back home
-                            </Button>
-                        </Link>
-                    </>
-                }
-            />
-        );
+        return <InviteDialog team={null} displayId={displayId} />;
     }
 }
