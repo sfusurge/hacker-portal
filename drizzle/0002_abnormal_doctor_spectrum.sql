@@ -1,1 +1,0 @@
-ALTER TABLE "user_oauth" ALTER COLUMN "user_id" SET NOT NULL;

@@ -1,2 +1,0 @@
-def npm():
-    return "npm"
