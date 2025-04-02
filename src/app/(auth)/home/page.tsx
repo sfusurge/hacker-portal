@@ -15,7 +15,7 @@ export default async function Home() {
     const data = await getUserData();
 
     // TODO: Replace with Dynamic Hackathon ID
-    const hackathonId = 5;
+    const hackathonId = 6;
     const trpcClient = createCaller({});
 
     const [applicationStatus, applicationSubmitted, team, events] =

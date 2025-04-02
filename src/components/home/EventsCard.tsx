@@ -107,7 +107,7 @@ export default function EventsCard({ events }: { events: any[] }) {
                 ) : (
                     <div className="flex flex-col items-center justify-center gap-6 md:px-10 md:py-8 md:text-center">
                         <Image
-                            src="/dashboard/moon-otters.png"
+                            src="/dashboard/moon-otters.webp"
                             width={1444}
                             height={1276}
                             alt="A bunch of otters on the moon"
