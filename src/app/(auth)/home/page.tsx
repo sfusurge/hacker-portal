@@ -6,16 +6,13 @@ import { getUserData } from '@/db/schema/users/users';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
 import { createCaller } from '@/server/appRouter';
 import { Suspense } from 'react';
-import {
-    ApplicationCardSkeleton,
-    TeamCardSkeleton,
-} from '@/components/home/Skeletons';
+import { ApplicationCardSkeleton } from '@/components/home/Skeletons';
 
 export default async function Home() {
     const data = await getUserData();
 
     // TODO: Replace with Dynamic Hackathon ID
-    const hackathonId = 6;
+    const hackathonId = 5;
     const trpcClient = createCaller({});
 
     const [applicationStatus, applicationSubmitted, team, events] =
@@ -62,13 +59,11 @@ export default async function Home() {
                     />
                 </Suspense>
 
-                <Suspense fallback={<TeamCardSkeleton />}>
-                    <TeamCard
-                        userData={data}
-                        hackathonId={hackathonId}
-                        team={team}
-                    />
-                </Suspense>
+                <TeamCard
+                    userData={data}
+                    hackathonId={hackathonId}
+                    team={team}
+                />
 
                 <div className="mb-24 flex flex-col gap-6 md:mb-0 md:gap-8 xl:col-span-11 xl:grid xl:grid-cols-2">
                     <EventsCard events={events} />

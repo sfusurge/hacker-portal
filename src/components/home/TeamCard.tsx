@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { getStatusVariant } from '@/lib/application-status';
 import Link from 'next/link';
 import { LinkIcon } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import {
@@ -24,6 +24,7 @@ import { UserData } from '@/db/schema/users/users';
 import { StatusEnum } from '@/db/schema/applications';
 import { inferProcedureOutput } from '@trpc/server';
 import { AppRouter } from '@/server/appRouter';
+import { TeamCardSkeleton } from '@/components/home/Skeletons';
 
 type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
 
@@ -82,6 +83,15 @@ export default function TeamCard({
     team: TeamType | null | undefined;
 }) {
     const [copied, setCopied] = useState(false);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    if (!isClient) {
+        return <TeamCardSkeleton />;
+    }
 
     if (!team) {
         return (
