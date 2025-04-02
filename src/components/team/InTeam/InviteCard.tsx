@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/dashboard-card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
     ExclamationTriangleIcon,
     LinkIcon,
@@ -54,8 +54,8 @@ export default function InviteCard({ teamId }: { teamId: string }) {
 
     return (
         <Card className="w-full">
-            <CardContent footer={false}>
-                <div className="mb-4 flex flex-col gap-2">
+            <CardContent className="gap-6">
+                <div className="flex flex-col gap-2">
                     <h2 className="text-lg font-semibold">
                         Invite Your Teammates 🦦
                     </h2>

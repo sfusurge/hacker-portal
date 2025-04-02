@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeftStartOnRectangleIcon } from '@heroicons/react/16/solid';
 import TeammateItem from './TeammateItem';
-import { Card, CardFooter, CardContent } from '@/components/ui/dashboard-card';
+import { Card, CardFooter, CardContent } from '@/components/ui/card';
 import LeaveTeamForm from './LeaveTeamForm';
 import { DialogTrigger, Dialog } from '@/components/ui/dialog';
 import { users } from '@/db/schema/users/users';
@@ -80,7 +80,7 @@ export default function TeamList({
     return (
         <Dialog>
             <Card>
-                <CardContent footer={true} className="">
+                <CardContent className="">
                     <span className="text-left text-xs font-normal text-white/60 md:text-sm">
                         Your Teammates
                     </span>

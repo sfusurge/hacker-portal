@@ -14,7 +14,7 @@ export default function CurrentStateUI({
     hackathonId,
     title = 'This team is currently full! 🥺',
     description = "Join a different team or create a new one to view your team's information here.",
-    imageSrc = '/teams/alone_otter.webp',
+    imageSrc = '/teams/alone-otter.webp',
     buttons,
 }: TeamFullUIProps) {
     return (
