@@ -1,6 +1,15 @@
-import { CSSProperties, useEffect, useMemo, useRef } from 'react';
+import {
+    CSSProperties,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import { CheckBoxWithLabel } from '../checkbox/checkboxWithLabel';
 import style from './CheckBoxGroup.module.css';
+import { FormTextInput } from '../input/input';
+import { setSourceMapsEnabled } from 'process';
 
 interface CheckBoxGroupProps {
     min?: number;
@@ -18,25 +27,58 @@ export function CheckboxGroup({
     choices,
     selected: _selected,
     allowOther = false,
-    otherValue,
+    otherValue: defaultOther,
     onSelection,
     required,
 }: CheckBoxGroupProps) {
     const selected = useMemo(() => new Set(_selected), [_selected]);
+    const [otherValue, setOtherValue] = useState<string | undefined>(
+        defaultOther
+    );
+    const [usingOther, setUsingOther] = useState(
+        allowOther && otherValue !== undefined
+    );
     const ref = useRef<HTMLInputElement>(null);
 
     function updateValidity() {
         if (!ref.current || !required) {
             return;
         }
-        if (selected.size > max) {
-            ref.current.setCustomValidity(`Too many selections! Max: ${max}`);
-        } else if (selected.size < min) {
-            ref.current.setCustomValidity(`Too few selections! Min: ${min}`);
+
+        if (usingOther && !otherValue) {
+            ref.current.setCustomValidity("Please fill the 'Other' value.");
         } else {
-            ref.current.setCustomValidity('');
+            const count = selected.size + (otherValue && usingOther ? 1 : 0);
+
+            if (count > max) {
+                ref.current.setCustomValidity(
+                    `Too many selections! Max: ${max}`
+                );
+            } else if (count < min) {
+                ref.current.setCustomValidity(
+                    `Too few selections! Min: ${min}`
+                );
+            } else {
+                ref.current.setCustomValidity('');
+            }
         }
+
+        triggerOnSelect();
     }
+
+    function triggerOnSelect() {
+        onSelection &&
+            onSelection(selected, usingOther ? otherValue : undefined);
+    }
+
+    const mounted = useRef(false);
+    useEffect(() => {
+        if (mounted.current) {
+            updateValidity();
+        } else {
+            mounted.current = true;
+        }
+    }, [otherValue, usingOther]);
 
     return (
         <fieldset
@@ -69,7 +111,6 @@ export function CheckboxGroup({
                             selected.delete(item.data);
                         }
 
-                        onSelection && onSelection(selected, otherValue);
                         updateValidity();
                     }}
                     disabled={selected.size >= max && !selected.has(item.data)}
@@ -79,13 +120,34 @@ export function CheckboxGroup({
 
             {allowOther && (
                 <CheckBoxWithLabel
-                    checked={otherValue !== undefined}
-                    name="other"
+                    checked={usingOther}
+                    // defaultChecked={usingOther}
+                    name="Other"
                     key="other"
                     onChange={(e) => {
-                        // if(e.tar)
+                        if (e.target.checked) {
+                            setUsingOther(true);
+                        } else {
+                            setUsingOther(false);
+                        }
                     }}
-                ></CheckBoxWithLabel>
+                >
+                    {usingOther && (
+                        <FormTextInput
+                            type="text"
+                            lazy
+                            timeOut={300}
+                            onLazyChange={(val) => {
+                                setOtherValue(val);
+                            }}
+                            defaultValue={otherValue}
+                            required={required}
+                            errorMsg="Required!"
+                            placeholder="Customer value here"
+                            hideBackground
+                        />
+                    )}
+                </CheckBoxWithLabel>
             )}
         </fieldset>
     );

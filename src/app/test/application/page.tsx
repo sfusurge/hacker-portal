@@ -2,19 +2,25 @@
 
 import { ApplicationForm } from '@/app/(auth)/application/application_components/ApplicationForm';
 import { ApplicationData } from '@/app/(auth)/application/application_components/types';
-import { atom } from 'jotai';
+import { atom, useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 
 export default function TestApplicationPage() {
     const appAtom = useMemo(() => atom(applicationSet), []);
-
+    const appContent = useAtomValue(appAtom);
     return (
-        <ApplicationForm
-            appDataAtom={appAtom}
-            submitApplication={() => {
-                alert('submitting!');
-            }}
-        />
+        <>
+            <ApplicationForm
+                appDataAtom={appAtom}
+                submitApplication={() => {
+                    alert('submitting!');
+                }}
+            />
+
+            <pre>
+                <code>{JSON.stringify(appContent, undefined, 4)}</code>
+            </pre>
+        </>
     );
 }
 
@@ -28,6 +34,22 @@ const applicationSet: ApplicationData = {
             title: 'First page',
             description: 'The first page with bunch of input fields',
             questions: [
+                {
+                    questionId: 6,
+                    type: 'multiple-checkbox',
+                    title: 'Preferred Foods',
+                    description:
+                        'Select all the foods you like. (At least 1, at most 2)',
+                    required: true,
+                    min: 1,
+                    max: 2,
+                    choices: [
+                        { data: 'pizza', name: 'Pizza', value: false },
+                        { data: 'burger', name: 'Burger', value: false },
+                        { data: 'pasta', name: 'Pasta', value: false },
+                    ],
+                    allowOther: true,
+                },
                 {
                     questionId: 5,
                     type: 'multiple-choice',
@@ -63,22 +85,22 @@ const applicationSet: ApplicationData = {
                     required: false,
                     value: 10,
                 },
-                {
-                    questionId: 10, // questionId can be anything, as long as they are all unique.
-                    type: 'text-line',
-                    title: 'Postal Code',
-                    description:
-                        'Text with validation, Canadian or US postal code',
-                    maxCount: 7,
-                    placeHolder: 'A1C 2B3',
-                    required: true,
-                    validator: {
-                        pattern:
-                            '([a-zA-Z]\\d[a-zA-Z]\\s?\\d[a-zA-Z]\\d)|(\\d{5}(?:-\\d{4})?)',
-                        errorMsg:
-                            'Not a valid canadian postal code, nor a US zip code!',
-                    },
-                },
+                // {
+                //     questionId: 10, // questionId can be anything, as long as they are all unique.
+                //     type: 'text-line',
+                //     title: 'Postal Code',
+                //     description:
+                //         'Text with validation, Canadian or US postal code',
+                //     maxCount: 7,
+                //     placeHolder: 'A1C 2B3',
+                //     required: true,
+                //     validator: {
+                //         pattern:
+                //             '([a-zA-Z]\\d[a-zA-Z]\\s?\\d[a-zA-Z]\\d)|(\\d{5}(?:-\\d{4})?)',
+                //         errorMsg:
+                //             'Not a valid canadian postal code, nor a US zip code!',
+                //     },
+                // },
 
                 {
                     questionId: 21312312,
@@ -139,22 +161,6 @@ const applicationSet: ApplicationData = {
                 //     required: false,
                 //     value: false, // Default unchecked
                 // },
-
-                {
-                    questionId: 6,
-                    type: 'multiple-checkbox',
-                    title: 'Preferred Foods',
-                    description:
-                        'Select all the foods you like. (At least 1, at most 2)',
-                    required: true,
-                    min: 1,
-                    max: 2,
-                    choices: [
-                        { data: 'pizza', name: 'Pizza', value: false },
-                        { data: 'burger', name: 'Burger', value: false },
-                        { data: 'pasta', name: 'Pasta', value: false },
-                    ],
-                },
             ],
         },
 
