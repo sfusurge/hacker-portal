@@ -53,6 +53,45 @@ vi.mock('@/db/client', async () => {
 
     const databaseClient = drizzle(db);
 
+    // Workaround for https://github.com/drizzle-team/drizzle-orm/issues/3975
+    // since PGLite and PG drizzle API are different for execute
+    // we need to re-make those functions to behave like PG version
+    const originalExecute = databaseClient.execute;
+    const originalTransaction = databaseClient.transaction;
+
+    // @ts-expect-error
+    databaseClient.execute = async function executeUnwrappingRows(...args) {
+        const result = await originalExecute.apply(this, args);
+        return result.rows;
+    };
+
+    // @ts-ignore
+    databaseClient.transaction = async function transactionUnwrappingRows(
+        transaction,
+        ...args
+    ) {
+        const result = await originalTransaction.apply(this, [
+            async function (tx, ...rest) {
+                const txExecute = tx.execute;
+
+                // @ts-ignore
+                tx.execute = async function (...args) {
+                    const result = await txExecute.apply(this, args);
+
+                    return result.rows;
+                };
+
+                // @ts-ignore
+                const result = await transaction(tx, ...rest);
+
+                return result;
+            },
+            ...args,
+        ]);
+
+        return result;
+    };
+
     return {
         db,
         databaseClient,
@@ -62,11 +101,9 @@ vi.mock('@/db/client', async () => {
 beforeEach(async () => {
     // clean db data for each test
     await databaseClient.transaction(async (tx) => {
-        const result = (await tx.execute(
+        const rows = (await tx.execute(
             sql`SELECT * FROM information_schema.tables WHERE table_schema = 'public'`
         )) as Record<string, any>;
-
-        const rows = result.rows;
 
         const tables = rows
             .map((row: Record<string, any>) => row['table_name'])
@@ -75,6 +112,8 @@ beforeEach(async () => {
         console.debug('truncating tables', tables);
 
         await tx.execute(sql.raw(`TRUNCATE TABLE ${tables}`));
+
+        return true;
     });
 });
 

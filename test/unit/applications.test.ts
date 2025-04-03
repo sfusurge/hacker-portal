@@ -9,8 +9,6 @@ import { mockCaller } from '../utils/mocks';
 describe('applications routes tests', () => {
     const trpcClient = createCaller({});
 
-    vi.mock('@/app/(auth)/layout');
-
     let hackathon: Awaited<
         ReturnType<typeof trpcClient.hackathons.addHackathon>
     >;
