@@ -1,5 +1,13 @@
 import { getTableColumns, InferSelectModel, sql, eq } from 'drizzle-orm';
-import { index, integer, pgEnum, pgTable, varchar } from 'drizzle-orm/pg-core';
+import {
+    index,
+    integer,
+    pgEnum,
+    pgTable,
+    text,
+    timestamp,
+    varchar,
+} from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { databaseClient } from '../../client';
@@ -27,6 +35,8 @@ const users = pgTable(
         lastName: varchar('last_name', { length: 64 }),
         phoneNumber: varchar('phone_number', { length: 15 }),
         email: varchar('email', { length: 255 }).unique().notNull(),
+        emailVerified: timestamp('email_verified', { mode: 'date' }),
+        image: text('image'),
         userRole: userRoleDbEnum('user_role').default('user').notNull(),
         displayId: varchar('display_id', { length: 6 }).notNull().unique(),
     },

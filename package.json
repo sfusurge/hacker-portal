@@ -21,6 +21,7 @@
         "posttest:e2e": "npm run clean-test-db"
     },
     "dependencies": {
+        "@auth/drizzle-adapter": "^1.8.0",
         "@faker-js/faker": "^9.3.0",
         "@heroicons/react": "^2.2.0",
         "@hookform/resolvers": "^3.9.1",

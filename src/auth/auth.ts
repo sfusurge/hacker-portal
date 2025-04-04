@@ -1,13 +1,16 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import GithubProvider from 'next-auth/providers/github';
+import DiscordProvider from 'next-auth/providers/discord';
 
+import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import { databaseClient } from '@/db/client';
 import { addUser, users } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
 import { userOAuth } from '@/db/schema/users/userOAuth';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+    adapter: DrizzleAdapter(databaseClient),
     trustHost: true,
     secret: process.env.NEXTAUTH_SECRET,
     providers: [
@@ -18,6 +21,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         GithubProvider({
             clientId: process.env.AUTH_GITHUB_ID as string,
             clientSecret: process.env.AUTH_GITHUB_SECRET as string,
+        }),
+        DiscordProvider({
+            clientId: process.env.AUTH_DISCORD_ID as string,
+            clientSecret: process.env.AUTH_DISCORD_SECRET as string,
         }),
     ],
     pages: {

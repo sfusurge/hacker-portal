@@ -11,6 +11,9 @@ import { users } from './users';
 export const ProvidersEnum = {
     GOOGLE: 'google',
     GITHUB: 'github',
+    DISCORD: 'discord',
+    MICROSOFT: 'microsoft',
+    EMAIL_LINK: 'email_link',
     NULL: 'n/a',
 };
 
@@ -19,6 +22,9 @@ export type ProvidersEnumType = typeof ProvidersEnum;
 export const providerDbEnum = pgEnum('oauth_provider', [
     ProvidersEnum.GITHUB,
     ProvidersEnum.GOOGLE,
+    ProvidersEnum.DISCORD,
+    ProvidersEnum.MICROSOFT,
+    ProvidersEnum.EMAIL_LINK,
     ProvidersEnum.NULL,
 ]);
 

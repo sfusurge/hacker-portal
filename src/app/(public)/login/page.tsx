@@ -66,6 +66,17 @@ export default async function Login({
         });
     }
 
+    async function loginWithDiscord() {
+        'use server';
+        console.log(
+            `/login${redirectTarget !== undefined ? '?from=' + encodeURIComponent(redirectTarget) : ''}`
+        );
+
+        await signIn('discord', {
+            redirectTo: `/login${redirectTarget !== undefined ? '?from=' + encodeURIComponent(redirectTarget) : ''}`,
+        });
+    }
+
     return (
         <div id="auth" className="md:grid md:grid-cols-2 2xl:grid-cols-3">
             <div className="bg-neutral-925 flex h-screen max-h-screen w-screen flex-col justify-center gap-14 p-6 md:w-full 2xl:col-span-1">
@@ -82,7 +93,7 @@ export default async function Login({
                         <p className="text-brand-400 mb-2 text-center text-sm font-semibold">
                             Welcome
                         </p>
-                        <h1 className="text-balance text-center text-3xl font-semibold leading-tight text-white">
+                        <h1 className="text-center text-3xl leading-tight font-semibold text-balance text-white">
                             Sign in to the Surge Portal to apply to our events
                         </h1>
                     </div>
@@ -112,6 +123,19 @@ export default async function Login({
                                 leadingIconAlt="GitHub logo"
                             >
                                 Continue with GitHub
+                            </Button>
+                        </form>
+
+                        <form action={loginWithDiscord} className="w-full">
+                            <Button
+                                variant="default"
+                                hierarchy="secondary"
+                                size="cozy"
+                                className="w-full"
+                                leadingIcon="/icons/discord.svg"
+                                leadingIconAlt="Discord logo"
+                            >
+                                Continue with Discord
                             </Button>
                         </form>
                     </div>
