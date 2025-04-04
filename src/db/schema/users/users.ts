@@ -1,4 +1,4 @@
-import { getTableColumns, InferSelectModel, sql, eq } from 'drizzle-orm';
+import { InferSelectModel, sql, eq } from 'drizzle-orm';
 import {
     index,
     integer,
@@ -25,17 +25,18 @@ export const userRoleDbEnum = pgEnum('user_role', [
     UserRoleEnum.user,
 ]);
 
-const users = pgTable(
-    'users',
+export const users = pgTable(
+    'user',
     {
         id: integer('id')
             .generatedAlwaysAsIdentity({ startWith: 1 })
             .primaryKey(),
+        name: text('name'), // not used
         firstName: varchar('first_name', { length: 64 }),
         lastName: varchar('last_name', { length: 64 }),
         phoneNumber: varchar('phone_number', { length: 15 }),
         email: varchar('email', { length: 255 }).unique().notNull(),
-        emailVerified: timestamp('email_verified', { mode: 'date' }),
+        emailVerified: timestamp('emailVerified', { mode: 'date' }),
         image: text('image'),
         userRole: userRoleDbEnum('user_role').default('user').notNull(),
         displayId: varchar('display_id', { length: 6 }).notNull().unique(),
@@ -78,7 +79,6 @@ export {
     insertUserSchema,
     selectUserSchema,
     updateUserSchema,
-    users,
 };
 export type { UserTableType };
 
@@ -86,15 +86,16 @@ export async function addUser(vals: z.infer<typeof insertUserSchema>) {
     // create the user, and catch their id
     const res = await databaseClient.transaction(async (tx) => {
         const [_index] = await tx.execute(
-            sql`select (last_value + 1) as "last_value" from users_id_seq`
+            sql`select (last_value + 1) as "last_value" from user_id_seq`
         );
         const index = parseInt(`${_index['last_value']}`, 10);
+        console.log('creating user at index: ', index);
 
         if (isNaN(index)) {
             // update failed.
             console.log(`Insert user failed, index fetch failed: ${index}`);
             console.log(
-                await tx.execute(sql`select (last_value + 1) from users_id_seq`)
+                await tx.execute(sql`select (last_value + 1) from user_id_seq`)
             );
 
             return undefined;

@@ -17,14 +17,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         GoogleProvider({
             clientId: process.env.AUTH_GOOGLE_ID as string,
             clientSecret: process.env.AUTH_GOOGLE_SECRET as string,
+            allowDangerousEmailAccountLinking: true,
         }),
         GithubProvider({
             clientId: process.env.AUTH_GITHUB_ID as string,
             clientSecret: process.env.AUTH_GITHUB_SECRET as string,
+            allowDangerousEmailAccountLinking: true,
         }),
         DiscordProvider({
             clientId: process.env.AUTH_DISCORD_ID as string,
             clientSecret: process.env.AUTH_DISCORD_SECRET as string,
+            allowDangerousEmailAccountLinking: true,
         }),
     ],
     pages: {

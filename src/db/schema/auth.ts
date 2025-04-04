@@ -11,7 +11,7 @@ export const accounts = pgTable(
             .references(() => users.id, { onDelete: 'cascade' }),
         type: text('type').$type<AdapterAccountType>().notNull(),
         provider: text('provider').notNull(),
-        providerAccountId: text('provider_account_id').notNull(),
+        providerAccountId: text('providerAccountId').notNull(),
         refresh_token: text('refresh_token'),
         access_token: text('access_token'),
         expires_at: integer('expires_at'),
@@ -29,8 +29,16 @@ export const accounts = pgTable(
     ]
 );
 
+export const sessions = pgTable('session', {
+    sessionToken: text('sessionToken').primaryKey(),
+    userId: integer('userId')
+        .notNull()
+        .references(() => users.id, { onDelete: 'cascade' }),
+    expires: timestamp('expires', { mode: 'date' }).notNull(),
+});
+
 export const verificationTokens = pgTable(
-    'verification_token',
+    'verificationToken',
     {
         identifier: text('identifier').notNull(),
         token: text('token').notNull(),
@@ -51,15 +59,15 @@ export const verificationTokens = pgTable(
 export const authenticators = pgTable(
     'authenticator',
     {
-        credentialID: text('credential_id').notNull().unique(),
+        credentialID: text('credentialID').notNull().unique(),
         userId: integer('userId')
             .notNull()
             .references(() => users.id, { onDelete: 'cascade' }),
-        providerAccountId: text('provider_account_id').notNull(),
-        credentialPublicKey: text('credential_public_key').notNull(),
+        providerAccountId: text('providerAccountId').notNull(),
+        credentialPublicKey: text('credentialPublicKey').notNull(),
         counter: integer('counter').notNull(),
-        credentialDeviceType: text('credential_device_type').notNull(),
-        credentialBackedUp: boolean('credential_backed_up').notNull(),
+        credentialDeviceType: text('credentialDeviceType').notNull(),
+        credentialBackedUp: boolean('credentialBackedUp').notNull(),
         transports: text('transports'),
     },
     (authenticator) => [
