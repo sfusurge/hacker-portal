@@ -1,38 +1,23 @@
 import NextAuth from 'next-auth';
-import GoogleProvider from 'next-auth/providers/google';
-import GithubProvider from 'next-auth/providers/github';
-import DiscordProvider from 'next-auth/providers/discord';
-
-import { DrizzleAdapter } from '@auth/drizzle-adapter';
-import { databaseClient } from '@/db/client';
-import { addUser, users } from '@/db/schema/users/users';
-import { eq } from 'drizzle-orm';
 import { userOAuth } from '@/db/schema/users/userOAuth';
+import { users, addUser } from '@/db/schema/users/users';
+import NodeMailerProvider from 'next-auth/providers/nodemailer';
+import { authConfig } from './authConfig';
+
+import { eq } from 'drizzle-orm';
+import { databaseClient } from '@/db/client';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-    adapter: DrizzleAdapter(databaseClient),
-    trustHost: true,
-    secret: process.env.NEXTAUTH_SECRET,
+    ...authConfig,
     providers: [
-        GoogleProvider({
-            clientId: process.env.AUTH_GOOGLE_ID as string,
-            clientSecret: process.env.AUTH_GOOGLE_SECRET as string,
-            allowDangerousEmailAccountLinking: true,
-        }),
-        GithubProvider({
-            clientId: process.env.AUTH_GITHUB_ID as string,
-            clientSecret: process.env.AUTH_GITHUB_SECRET as string,
-            allowDangerousEmailAccountLinking: true,
-        }),
-        DiscordProvider({
-            clientId: process.env.AUTH_DISCORD_ID as string,
-            clientSecret: process.env.AUTH_DISCORD_SECRET as string,
-            allowDangerousEmailAccountLinking: true,
-        }),
+        ...authConfig.providers,
+        // NodeMailerProvider(
+        //     {
+        //         server: process.env.AUTH_MAIL_SERVER,
+        //         from: process.env.SENDINGEMAIL
+        //     }
+        // ),
     ],
-    pages: {
-        signIn: '/login',
-    },
     callbacks: {
         signIn: async ({ user, profile, credentials, account }) => {
             if (!user.email) {
@@ -83,3 +68,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         },
     },
 });
+
+console.log('auth improted');
