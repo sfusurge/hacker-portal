@@ -39,5 +39,3 @@ export const middleware = edgeAuth(async (req) => {
 export const config = {
     matcher: ['/((?!_next/|.*\\..*).*)'],
 };
-
-console.log('end of middle');

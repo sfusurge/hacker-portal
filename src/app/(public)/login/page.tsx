@@ -1,12 +1,13 @@
 'use server';
 import { auth, signIn, signOut } from '@/auth/auth';
 import { Button } from '@/components/ui/button';
-import { FormTextInput } from '@/components/ui/input/input';
 import { databaseClient } from '@/db/client';
 import { users } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
 import Image from 'next/image';
 import { notFound, redirect } from 'next/navigation';
+import { LinkLogin } from './LinkLogin';
+import { createCaller } from '@/server/appRouter';
 
 export default async function Login({
     searchParams,
@@ -75,10 +76,19 @@ export default async function Login({
         });
     }
 
-    async function loginWithNodeMail() {
+    async function loginWithNodeMail(formData: FormData) {
         'use server';
-
-        await signIn('nodemailer', {});
+        console.log(formData);
+        const caller = createCaller({});
+        await caller.emails.sendEmail({
+            type: 'ACCEPTJH2025',
+            user: {
+                email: 'a2375658@gmail.com',
+                id: 123,
+                name: 'ABC',
+            },
+        });
+        await signIn('nodemailer', formData);
     }
 
     return (
@@ -143,19 +153,7 @@ export default async function Login({
                             </Button>
                         </form>
 
-                        <form action={loginWithNodeMail} className="w-full">
-                            <FormTextInput type="email" name="email" />
-                            <Button
-                                variant="default"
-                                hierarchy="secondary"
-                                size="cozy"
-                                className="w-full"
-                                leadingIcon="/icons/discord.svg"
-                                leadingIconAlt="Discord logo"
-                            >
-                                Get Login Link
-                            </Button>
-                        </form>
+                        <LinkLogin action={loginWithNodeMail} />
                     </div>
                 </div>
             </div>

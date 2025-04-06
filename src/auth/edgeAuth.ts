@@ -7,5 +7,3 @@ import { authConfig } from './authConfig';
 export const { auth: edgeAuth } = NextAuth({
     ...authConfig,
 });
-
-console.log('edge auth improted');

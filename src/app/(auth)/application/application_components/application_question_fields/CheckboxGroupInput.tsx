@@ -16,8 +16,8 @@ export function CheckBoxGroupInput({
             max={question.max ?? 99}
             required={question.required ?? false}
             selected={question.choices
-                .map((item) => (item.value ? item.data : undefined))
-                .filter((item) => item !== undefined)}
+                .filter((item) => item.value)
+                .map((item) => item.data)}
             onSelection={(selelect) => {
                 setQuestion({
                     ...question,

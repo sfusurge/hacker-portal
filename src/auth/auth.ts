@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth';
-import { userOAuth } from '@/db/schema/users/userOAuth';
 import { users, addUser } from '@/db/schema/users/users';
 import { authConfig } from './authConfig';
+import NodeMailerProvider from 'next-auth/providers/nodemailer';
 
 import { eq } from 'drizzle-orm';
 import { databaseClient } from '@/db/client';
@@ -10,12 +10,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     ...authConfig,
     providers: [
         ...authConfig.providers,
-        // NodeMailerProvider(
-        //     {
-        //         server: process.env.AUTH_MAIL_SERVER,
-        //         from: process.env.SENDINGEMAIL
-        //     }
-        // ),
+        NodeMailerProvider({
+            server: process.env.AUTH_MAIL_SERVER,
+            from: process.env.SENDINGEMAIL,
+        }),
     ],
     callbacks: {
         signIn: async ({ user, profile, credentials, account }) => {
@@ -50,17 +48,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         phoneNumber: null,
                     };
                 }
-            }
-
-            if (dbUser) {
-                // now check if the oauth provider is should be registered
-                await databaseClient
-                    .insert(userOAuth)
-                    .values({
-                        userId: dbUser.id,
-                        provider: account?.provider,
-                    })
-                    .onConflictDoNothing();
             }
 
             return true;
