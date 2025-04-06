@@ -1,6 +1,7 @@
 'use server';
 import { auth, signIn, signOut } from '@/auth/auth';
 import { Button } from '@/components/ui/button';
+import { FormTextInput } from '@/components/ui/input/input';
 import { databaseClient } from '@/db/client';
 import { users } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
@@ -68,13 +69,16 @@ export default async function Login({
 
     async function loginWithDiscord() {
         'use server';
-        console.log(
-            `/login${redirectTarget !== undefined ? '?from=' + encodeURIComponent(redirectTarget) : ''}`
-        );
 
         await signIn('discord', {
             redirectTo: `/login${redirectTarget !== undefined ? '?from=' + encodeURIComponent(redirectTarget) : ''}`,
         });
+    }
+
+    async function loginWithNodeMail() {
+        'use server';
+
+        await signIn('nodemailer', {});
     }
 
     return (
@@ -136,6 +140,20 @@ export default async function Login({
                                 leadingIconAlt="Discord logo"
                             >
                                 Continue with Discord
+                            </Button>
+                        </form>
+
+                        <form action={loginWithNodeMail} className="w-full">
+                            <FormTextInput type="email" name="email" />
+                            <Button
+                                variant="default"
+                                hierarchy="secondary"
+                                size="cozy"
+                                className="w-full"
+                                leadingIcon="/icons/discord.svg"
+                                leadingIconAlt="Discord logo"
+                            >
+                                Get Login Link
                             </Button>
                         </form>
                     </div>

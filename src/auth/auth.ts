@@ -1,7 +1,6 @@
 import NextAuth from 'next-auth';
 import { userOAuth } from '@/db/schema/users/userOAuth';
 import { users, addUser } from '@/db/schema/users/users';
-import NodeMailerProvider from 'next-auth/providers/nodemailer';
 import { authConfig } from './authConfig';
 
 import { eq } from 'drizzle-orm';
@@ -68,5 +67,3 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         },
     },
 });
-
-console.log('auth improted');
