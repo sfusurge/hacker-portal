@@ -78,17 +78,11 @@ export default async function Login({
 
     async function loginWithNodeMail(formData: FormData) {
         'use server';
-        console.log(formData);
-        const caller = createCaller({});
-        await caller.emails.sendEmail({
-            type: 'ACCEPTJH2025',
-            user: {
-                email: 'a2375658@gmail.com',
-                id: 123,
-                name: 'ABC',
-            },
+
+        await signIn('nodemailer', {
+            email: formData.get('email'),
+            redirect: false,
         });
-        await signIn('nodemailer', formData);
     }
 
     return (

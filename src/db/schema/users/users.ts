@@ -29,7 +29,7 @@ export const users = pgTable(
     'user',
     {
         id: integer('id')
-            .generatedAlwaysAsIdentity({ startWith: 1 })
+            .generatedByDefaultAsIdentity({ startWith: 1 })
             .primaryKey(),
         name: text('name'), // not used
         firstName: varchar('first_name', { length: 64 }),
