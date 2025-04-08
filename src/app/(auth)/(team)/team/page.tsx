@@ -55,10 +55,8 @@ export default async function Team() {
             <div className="flex flex-col gap-4">
                 <div className="grid grid-cols-1 gap-6 pb-24 md:pb-0 xl:grid-cols-[1fr_clamp(29rem,33vw,30.5rem)]">
                     <TeamList
-                        teammates={currentTeam.members}
                         currentUserEmail={user.email}
-                        maxMembersCount={currentTeam.maxMembersCount}
-                        teamId={currentTeam.id}
+                        team={currentTeam}
                     />
                     <InviteCard teamId={currentTeam.displayId} />
                 </div>

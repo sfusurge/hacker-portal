@@ -131,12 +131,7 @@ export function AcceptedContent({
     );
 }
 
-export function QRCodeButton({
-    onOpen,
-}: {
-    image: string;
-    onOpen: () => void;
-}) {
+export function QRCodeButton({ onOpen }: { onOpen: () => void }) {
     return (
         <Button
             variant={'brand'}

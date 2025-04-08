@@ -152,7 +152,7 @@ function getHeaderAction(
     onOpenTicket?: () => void
 ) {
     if (status === 'Accepted' && image && onOpenTicket) {
-        return <QRCodeButton image={image} onOpen={onOpenTicket} />;
+        return <QRCodeButton onOpen={onOpenTicket} />;
     }
 
     const headerActions = {

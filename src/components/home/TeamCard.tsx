@@ -25,6 +25,7 @@ import { StatusEnum } from '@/db/schema/applications';
 import { inferProcedureOutput } from '@trpc/server';
 import { AppRouter } from '@/server/appRouter';
 import { TeamCardSkeleton } from '@/components/home/Skeletons';
+import { copyToClipboard } from '@/lib/copy-to-clipboard';
 
 type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
 
@@ -137,33 +138,7 @@ export default function TeamCard({
 
     const handleCopyLink = async () => {
         const inviteLink = `https://portal.sfusurge.com/invite/${team.displayId}`;
-
-        try {
-            await navigator.clipboard.writeText(inviteLink);
-        } catch (err) {
-            // Fallback for environments where clipboard API might fail
-            try {
-                const tempInput = document.createElement('input');
-                tempInput.value = inviteLink;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                tempInput.setSelectionRange(0, 99999); // For mobile devices
-                document.execCommand('copy');
-                document.body.removeChild(tempInput);
-            } catch (copyErr) {
-                console.error('Failed to copy link: ', copyErr);
-                toast({
-                    variant: 'error',
-                    title: 'Failed to copy link',
-                    description:
-                        'Could not copy the invite link automatically.',
-                });
-                return;
-            }
-        }
-
-        setCopied(true);
-        setTimeout(() => setCopied(false), 3000);
+        await copyToClipboard(inviteLink, 'link', setCopied);
     };
 
     return (
@@ -210,7 +185,7 @@ export default function TeamCard({
                         value={`https://portal.sfusurge.com/invite/${team.displayId}`}
                         readOnly
                         className={cn(
-                            `flex-shrink flex-grow cursor-copy truncate border border-neutral-700/30 bg-neutral-800 py-0 ${copied ? 'text-success-400' : 'text-white/60'}`
+                            `flex-shrink flex-grow cursor-copy truncate border border-neutral-700/30 bg-neutral-800 py-0 text-white/60`
                         )}
                         onClick={handleCopyLink}
                         aria-label="Team Invite Link"
@@ -221,7 +196,7 @@ export default function TeamCard({
                         hierarchy="secondary"
                         className={cn(
                             'cursor-copy text-nowrap',
-                            copied ? 'text-success-400' : ''
+                            copied ? 'bg-neutral-600/60' : ''
                         )}
                         onClick={handleCopyLink}
                         leadingIcon="true"

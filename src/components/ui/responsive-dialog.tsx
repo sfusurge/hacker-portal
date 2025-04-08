@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { atom, useAtom } from 'jotai';
 import { cn } from '@/lib/utils';
 import { useMediaQuery } from '@uidotdev/usehooks';
 import {
@@ -24,7 +23,6 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from '@/components/ui/drawer';
-const createDialogOpenAtom = () => atom<boolean>(false);
 
 interface BaseProps {
     children: React.ReactNode;
@@ -43,10 +41,8 @@ interface ResponsiveProps extends BaseProps {
 
 const ResponsiveContext = React.createContext<{
     isDesktop: boolean;
-    dialogAtom: ReturnType<typeof createDialogOpenAtom>;
 }>({
     isDesktop: false,
-    dialogAtom: createDialogOpenAtom(),
 });
 
 const useResponsiveContext = () => {
@@ -65,8 +61,7 @@ const ResponsiveDialog = ({
     ...props
 }: RootResponsiveProps) => {
     const isDesktop = useMediaQuery('(min-width: 768px)');
-    const dialogAtomRef = React.useRef(createDialogOpenAtom());
-    const [isOpen, setIsOpen] = useAtom(dialogAtomRef.current);
+    const [isOpen, setIsOpen] = React.useState(false);
     const DialogComponent = isDesktop ? Dialog : Drawer;
     const Trigger = isDesktop ? DialogTrigger : DrawerTrigger;
 
@@ -74,7 +69,7 @@ const ResponsiveDialog = ({
         if (props.open !== undefined) {
             setIsOpen(props.open);
         }
-    }, [props.open, setIsOpen]);
+    }, [props.open]);
 
     const handleOpenChange = (open: boolean) => {
         setIsOpen(open);
@@ -82,9 +77,7 @@ const ResponsiveDialog = ({
     };
 
     return (
-        <ResponsiveContext.Provider
-            value={{ isDesktop, dialogAtom: dialogAtomRef.current }}
-        >
+        <ResponsiveContext.Provider value={{ isDesktop }}>
             <DialogComponent
                 {...props}
                 open={props.open !== undefined ? props.open : isOpen}

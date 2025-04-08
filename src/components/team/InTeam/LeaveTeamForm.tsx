@@ -14,7 +14,13 @@ import { useState } from 'react';
 import { UserGroupIcon } from '@heroicons/react/24/solid';
 import { toast } from '@/hooks/use-toast';
 
-export default function LeaveTeamForm({ teamId }: { teamId: number | string }) {
+export default function LeaveTeamForm({
+    teamId,
+    teamName,
+}: {
+    teamId: number | string;
+    teamName: string;
+}) {
     const router = useRouter();
     const [isLeaving, setIsLeaving] = useState(false);
     const leaveTeam = trpc.teams.leaveTeam.useMutation();
@@ -46,19 +52,27 @@ export default function LeaveTeamForm({ teamId }: { teamId: number | string }) {
                 description: 'Failed to leave the team. Please try again.',
                 variant: 'error',
             });
-        } finally {
-            // setIsLeaving(false);
+            setIsLeaving(false);
         }
     };
 
     return (
         <DialogContent className="max-w-sm gap-6 sm:max-w-[26rem]">
             <DialogHeader>
-                <DialogTitle>Leave team</DialogTitle>
+                <DialogTitle>Leave team {teamName}?</DialogTitle>
                 <DialogDescription>
-                    Are you sure you want to leave this team? If you choose to
-                    leave the team, you can join a new team before the
-                    submission deadline.
+                    You can join a new team before the application deadline:{' '}
+                    <span className="font-bold text-white/60">
+                        {new Date('2025-05-02T23:59:00Z').toLocaleDateString(
+                            'en-US',
+                            {
+                                month: 'long',
+                                day: 'numeric',
+                                year: 'numeric',
+                            }
+                        )}{' '}
+                        - 11:59 PM
+                    </span>
                 </DialogDescription>
             </DialogHeader>
             <DialogFooter className="grid gap-3 text-base md:grid-cols-2">
