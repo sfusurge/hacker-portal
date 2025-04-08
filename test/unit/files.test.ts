@@ -19,7 +19,7 @@ describe('files router tests', () => {
             bucketName: 'test-bucket',
             key,
             fileName,
-            file: fileBuffer,
+            file: fileBuffer.toString('base64'),
         });
 
         expect(uploadResult.success).toBe(true);
@@ -47,7 +47,7 @@ describe('files router tests', () => {
                 bucketName: 'test-bucket',
                 key,
                 fileName,
-                file: fileBuffer,
+                file: fileBuffer.toString('base64'),
             })
         ).rejects.toThrow(/File type.*is not allowed/);
     });
@@ -63,7 +63,7 @@ describe('files router tests', () => {
                 bucketName: 'test-bucket',
                 key,
                 fileName,
-                file: fileBuffer,
+                file: fileBuffer.toString('base64'),
             })
         ).rejects.toThrow(/File size.*exceeds maximum allowed size/);
     });

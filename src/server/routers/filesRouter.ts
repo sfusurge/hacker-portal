@@ -15,7 +15,7 @@ const uploadFileSchema = z.object({
     bucketName: z.string(),
     key: z.string(),
     fileName: z.string(),
-    file: z.instanceof(Buffer),
+    file: z.string(), // base64 string
 });
 
 const deleteFileSchema = z.object({
@@ -29,11 +29,14 @@ export const filesRouter = router({
         .mutation(async ({ input }) => {
             const { bucketName, key, file, fileName } = input;
 
+            // Convert base64 to buffer
+            const fileBuffer = Buffer.from(file, 'base64');
+
             // Validate file and get MIME type
-            const mimeType = validateFile(fileName, file);
+            const mimeType = validateFile(fileName, fileBuffer);
 
             // Upload file using our R2 module
-            return await uploadFileToR2(file, key, bucketName, mimeType);
+            return await uploadFileToR2(fileBuffer, key, bucketName, mimeType);
         }),
 
     deleteFile: publicProcedure

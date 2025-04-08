@@ -24,6 +24,7 @@ export default function CreateTeamForm({
 }) {
     const router = useRouter();
     const createTeam = trpc.teams.createTeam.useMutation();
+    const uploadFile = trpc.files.uploadFile.useMutation();
 
     const [teamInfo, setTeamInfo] = useState({
         teamName: '',
@@ -36,58 +37,31 @@ export default function CreateTeamForm({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [disabled, setDisabled] = useState<boolean>(true);
     const [isCreating, setIsCreating] = useState<boolean>(false);
+    const [fileData, setFileData] = useState<{
+        file: File;
+        buffer: string;
+    } | null>(null);
 
     useEffect(() => {
-        setDisabled(!teamInfo.teamName || !teamInfo.teamPicture || isCreating);
-    }, [teamInfo.teamName, teamInfo.teamPicture, isCreating]);
+        setDisabled(!teamInfo.teamName || !fileData || isCreating);
+    }, [teamInfo.teamName, fileData, isCreating]);
 
     const handleButtonClick = () => {
         fileInputRef.current?.click();
     };
 
-    // Basic verification of the file type, size, and dimensions on client side, with temporary creation of a URL for the image, swap to R2 when ready
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Validate file type
-        if (!['image/png', 'image/jpeg'].includes(file.type)) {
-            setError(
-                'Invalid file type. Only .png and .jpeg files are allowed.'
-            );
-            return;
+        try {
+            const buffer = await file.arrayBuffer();
+            const base64Buffer = Buffer.from(buffer).toString('base64');
+            setFileData({ file, buffer: base64Buffer });
+            setError(null);
+        } catch (err: any) {
+            setError(err.message || 'Failed to process image.');
         }
-
-        // Validate file size (max 2MB)
-        if (file.size > 2 * 1024 * 1024) {
-            setError('File size must be less than 2MB.');
-            return;
-        }
-
-        // Validate image dimensions (at least 200x200)
-        const img = new window.Image();
-        img.src = URL.createObjectURL(file);
-        img.onload = () => {
-            if (img.width < 200 || img.height < 200) {
-                setError('Image must be at least 200px x 200px.');
-                URL.revokeObjectURL(img.src);
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setTeamInfo((prevState) => ({
-                    ...prevState,
-                    teamPicture: reader.result as string,
-                }));
-                setError(null);
-            };
-            reader.readAsDataURL(file);
-        };
-        img.onerror = () => {
-            setError('Invalid image file.');
-            URL.revokeObjectURL(img.src);
-        };
     };
 
     const handleTeamNameChange = (value: string | number) => {
@@ -100,7 +74,7 @@ export default function CreateTeamForm({
 
     const handleFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!teamInfo.teamName || !teamInfo.teamPicture) {
+        if (!teamInfo.teamName || !fileData) {
             setError('Please fill out all required fields.');
             return;
         }
@@ -108,25 +82,39 @@ export default function CreateTeamForm({
         setError(null);
 
         try {
+            // Upload to R2 using filesRouter
+            const key = `${hackathonId}/${Date.now()}-${teamInfo.teamName}`;
+            const result = await uploadFile.mutateAsync({
+                bucketName: 'team-pictures',
+                key,
+                fileName: fileData.file.name,
+                file: fileData.buffer,
+            });
+
+            if (!result.success) {
+                throw new Error('Failed to upload image');
+            }
+
             const newTeam = await createTeam.mutateAsync({
                 hackathonId,
                 name: teamInfo.teamName,
-                teamPictureUrl: teamInfo.teamPicture,
+                teamPictureUrl: `${process.env.NEXT_PUBLIC_R2_ENDPOINT}/${key}`,
             });
 
             if (!newTeam) {
-                setError('Failed to create team. Please try again.');
+                throw new Error('Failed to create team');
             }
 
             toast({
                 title: 'Team created!',
-                description: `Your team ${newTeam.name} was successfuly created.`,
+                description: `Your team ${newTeam.name} was successfully created.`,
                 variant: 'default',
                 icon: <UserGroupIcon />,
             });
             router.push(`/team`);
-        } catch (err) {
-            setError('Failed to create team. Please try again.');
+        } catch (err: any) {
+            console.error(err);
+            setError(err.message || 'Failed to create team. Please try again.');
             setIsCreating(false);
         }
     };
@@ -143,7 +131,11 @@ export default function CreateTeamForm({
 
             <div className="flex gap-6 text-white/60">
                 <Image
-                    src={teamInfo.teamPicture || '/teams/default.webp'}
+                    src={
+                        fileData
+                            ? `${process.env.NEXT_PUBLIC_R2_ENDPOINT}/${fileData.file.name}`
+                            : '/teams/default.webp'
+                    }
                     alt="Team picture"
                     width={64}
                     height={64}
@@ -176,17 +168,14 @@ export default function CreateTeamForm({
                                 Upload
                             </Button>
                         </label>
-                        {teamInfo.teamPicture && (
+                        {fileData && (
                             <Button
                                 variant="default"
                                 hierarchy="tertiary"
                                 size="compact"
                                 className="hover:bg-neutral-750/60 border-2 border-transparent underline underline-offset-4"
                                 onClick={() => {
-                                    setTeamInfo((prevState) => ({
-                                        ...prevState,
-                                        teamPicture: '',
-                                    }));
+                                    setFileData(null);
                                 }}
                                 type="button"
                                 disabled={isCreating}
