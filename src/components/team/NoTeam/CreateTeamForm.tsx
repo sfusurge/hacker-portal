@@ -94,11 +94,10 @@ export default function CreateTeamForm({
             if (!result.success) {
                 throw new Error('Failed to upload image');
             }
-
             const newTeam = await createTeam.mutateAsync({
                 hackathonId,
                 name: teamInfo.teamName,
-                teamPictureUrl: `${process.env.NEXT_PUBLIC_R2_ENDPOINT}/${key}`,
+                teamPictureUrl: `${result.key}`,
             });
 
             if (!newTeam) {
@@ -133,13 +132,14 @@ export default function CreateTeamForm({
                 <Image
                     src={
                         fileData
-                            ? `${process.env.NEXT_PUBLIC_R2_ENDPOINT}/${fileData.file.name}`
+                            ? URL.createObjectURL(fileData.file)
                             : '/teams/default.webp'
                     }
                     alt="Team picture"
                     width={64}
                     height={64}
                     className="h-16 w-16 rounded-xl"
+                    unoptimized={!!fileData}
                 />
                 <div className="flex flex-col gap-3">
                     <label className="block text-sm font-medium">

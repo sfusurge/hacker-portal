@@ -2,6 +2,7 @@ import {
     S3Client,
     PutObjectCommand,
     DeleteObjectCommand,
+    GetObjectCommand,
 } from '@aws-sdk/client-s3';
 import mime from 'mime-types';
 
@@ -115,6 +116,34 @@ export async function deleteFileFromR2(key: string, bucketName: string) {
         };
     } catch (error) {
         console.error('Error deleting file:', error);
+        throw error;
+    }
+}
+
+export async function getFileFromR2(key: string, bucketName: string) {
+    if (!bucketName) {
+        throw new Error('Bucket name is required');
+    }
+
+    try {
+        const command = new GetObjectCommand({
+            Bucket: bucketName,
+            Key: key,
+        });
+
+        const response = await s3Client.send(command);
+        const buffer = await response.Body?.transformToByteArray();
+
+        if (!buffer) {
+            throw new Error('Image not found');
+        }
+
+        return {
+            buffer,
+            contentType: response.ContentType || 'image/jpeg',
+        };
+    } catch (error) {
+        console.error('Error fetching file:', error);
         throw error;
     }
 }

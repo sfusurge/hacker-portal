@@ -5,6 +5,7 @@ import {
     uploadFileToR2,
     deleteFileFromR2,
     validateFile,
+    getFileFromR2,
 } from '@/lib/cloudflare/r2';
 
 // Maximum file size in bytes (2MB)
@@ -19,6 +20,11 @@ const uploadFileSchema = z.object({
 });
 
 const deleteFileSchema = z.object({
+    bucketName: z.string(),
+    key: z.string(),
+});
+
+const getFileSchema = z.object({
     bucketName: z.string(),
     key: z.string(),
 });
@@ -45,4 +51,9 @@ export const filesRouter = router({
             const { bucketName, key } = input;
             return await deleteFileFromR2(key, bucketName);
         }),
+
+    getFile: publicProcedure.input(getFileSchema).query(async ({ input }) => {
+        const { bucketName, key } = input;
+        return await getFileFromR2(key, bucketName);
+    }),
 });
