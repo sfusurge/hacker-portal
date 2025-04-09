@@ -1,16 +1,9 @@
 import { redirect } from 'next/navigation';
 import { createCaller } from '@/server/appRouter';
 import InviteDialog from '@/components/team/InviteDialog';
-async function getCurrentHackathon() {
-    const trpcClient = createCaller({});
-    const hackathons = await trpcClient.hackathons.getHackathons();
-
-    if (!hackathons || hackathons.length === 0) {
-        throw new Error('No hackathons found');
-    }
-
-    return hackathons[hackathons.length - 1];
-}
+import { getCurrentHackathon } from '../../team/page';
+import { getUserData } from '@/db/schema/users/users';
+import TeamDisplay from '@/components/team/TeamDisplay';
 
 export default async function InvitePage({
     params,
@@ -19,16 +12,19 @@ export default async function InvitePage({
 }) {
     const { id } = await params;
     const displayId = id;
+    const user = await getUserData();
 
     // Validate display ID
     if (!displayId || displayId.length !== 6) {
         redirect('/team');
     }
 
+    if (!user) {
+        redirect('/login');
+    }
+
     const trpcClient = createCaller({});
-
     const currentHackathon = await getCurrentHackathon();
-
     const currentTeam = await trpcClient.teams.getCurrentTeam({
         hackathonId: currentHackathon.id,
     });
@@ -39,14 +35,30 @@ export default async function InvitePage({
         });
 
         return (
-            <InviteDialog
-                team={team}
-                hasTeam={currentTeam}
-                displayId={displayId}
-            />
+            <>
+                <TeamDisplay
+                    currentTeam={currentTeam}
+                    currentHackathon={currentHackathon}
+                    user={user}
+                />
+                <InviteDialog
+                    team={team}
+                    hasTeam={currentTeam}
+                    displayId={displayId}
+                />
+            </>
         );
     } catch (error) {
         console.error('Error in invite page:', error);
-        return <InviteDialog team={null} displayId={displayId} />;
+        return (
+            <>
+                <TeamDisplay
+                    currentTeam={currentTeam}
+                    currentHackathon={currentHackathon}
+                    user={user}
+                />
+                <InviteDialog team={null} displayId={displayId} />
+            </>
+        );
     }
 }

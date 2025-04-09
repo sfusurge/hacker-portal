@@ -50,14 +50,14 @@ export default function InviteCard({ teamId }: { teamId: string }) {
                                 variant="default"
                                 size={'cozy'}
                                 hierarchy={'secondary'}
-                                className={`text-nowrap ${isCopied ? 'bg-neutral-600/60' : ''}`}
+                                className={`text-nowrap ${isCopied ? 'bg-neutral-700/60' : ''}`}
                                 onClick={() => handleCopy(teamLink, 'link')}
                                 leadingIcon="true"
                                 leadingIconChild={
                                     <LinkIcon className="h-4 w-4" />
                                 }
                             >
-                                {isCopied ? 'Copied' : 'Copy link'}
+                                {isCopied ? 'Copied!' : 'Copy link'}
                             </Button>
                         </div>
                     }
@@ -73,14 +73,14 @@ export default function InviteCard({ teamId }: { teamId: string }) {
                                 variant="default"
                                 size={'cozy'}
                                 hierarchy={'secondary'}
-                                className={`text-nowrap ${isCodeCopied ? 'bg-neutral-600/60' : ''}`}
+                                className={`text-nowrap ${isCodeCopied ? 'bg-neutral-700/60' : ''}`}
                                 onClick={() => handleCopy(teamCode, 'code')}
                                 leadingIcon="true"
                                 leadingIconChild={
                                     <DocumentDuplicateIcon className="h-4 w-4" />
                                 }
                             >
-                                {isCodeCopied ? 'Copied' : 'Copy code'}
+                                {isCodeCopied ? 'Copied!' : 'Copy code'}
                             </Button>
                         </div>
                     }

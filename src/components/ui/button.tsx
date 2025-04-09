@@ -46,7 +46,7 @@ const buttonVariants = cva(
             {
                 variant: 'brand',
                 hierarchy: 'primary',
-                className: 'text-white bg-brand-600 hover:bg-brand-700',
+                className: 'text-white bg-brand-700 hover:bg-brand-600',
             },
             {
                 variant: 'brand',

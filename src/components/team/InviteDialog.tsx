@@ -1,18 +1,19 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import JoinTeamButton from '@/components/team/NoTeam/JoinTeamButton';
 import { ExclamationTriangleIcon } from '@heroicons/react/16/solid';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
     DialogDescription,
+    DialogFooter,
 } from '@/components/ui/dialog';
+import { useState } from 'react';
+import { ExclamationCircleIcon } from '@heroicons/react/24/solid';
+import { useRouter } from 'next/navigation';
 
 interface TeamData {
     id: number;
@@ -38,40 +39,50 @@ export default function InviteDialog({
     isOpen?: boolean;
     hasTeam?: TeamData | null;
 }) {
+    const [open, handleOpenChange] = useState(isOpen);
     const router = useRouter();
-    const [open, setOpen] = useState(isOpen);
 
-    const handleOpenChange = (open: boolean) => {
-        setOpen(open);
-        if (!open) {
-            router.push('/team');
-        }
+    const handleClose = () => {
+        handleOpenChange(false);
+        router.push('/team');
     };
 
     if (!team) {
         return (
-            <Dialog open={open} onOpenChange={handleOpenChange}>
-                <DialogContent className="sm:max-w-[26.5rem]">
+            <Dialog
+                open={open}
+                onOpenChange={(isOpen) => {
+                    if (!isOpen) handleClose();
+                    else handleOpenChange(isOpen);
+                }}
+            >
+                <DialogContent className="gap-6 p-6 sm:max-w-[22.5rem]">
                     <DialogHeader>
-                        <DialogTitle>Team Not Found</DialogTitle>
-                        <DialogDescription>
-                            The team you&apos;re trying to join doesn&apos;t
-                            exist or the invite link is invalid.
-                        </DialogDescription>
+                        <div className="bg-danger-900/30 flex h-12 w-12 items-center justify-center rounded-full">
+                            <ExclamationCircleIcon className="text-danger-500 h-6 w-6" />
+                        </div>
                     </DialogHeader>
-                    <div className="mt-4">
-                        <Link href="/team" className="w-full">
-                            <Button
-                                variant="default"
-                                size="cozy"
-                                hierarchy="secondary"
-                                className="w-full"
-                                onClick={() => setOpen(false)}
-                            >
-                                Go back home
-                            </Button>
-                        </Link>
+                    <div className="flex flex-col gap-2">
+                        <DialogTitle className="text-base font-semibold">
+                            Invalid invitation link
+                        </DialogTitle>
+                        <DialogDescription className="text-sm leading-normal text-white/60">
+                            This invitation link is invalid or expired. Please
+                            check the link or request a new link from your
+                            teammates.
+                        </DialogDescription>
                     </div>
+                    <DialogFooter>
+                        <Button
+                            variant="brand"
+                            size="cozy"
+                            hierarchy="primary"
+                            className="w-full"
+                            onClick={handleClose}
+                        >
+                            Return to team page
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         );
@@ -80,7 +91,13 @@ export default function InviteDialog({
     const isTeamFull = team.members.length >= team.maxMembersCount;
 
     return (
-        <Dialog open={open} onOpenChange={handleOpenChange}>
+        <Dialog
+            open={open}
+            onOpenChange={(isOpen) => {
+                if (!isOpen) handleClose();
+                else handleOpenChange(isOpen);
+            }}
+        >
             <DialogContent className="text-center sm:max-w-[26.5rem]">
                 <div className="flex flex-col items-center justify-center gap-6">
                     <div className="relative">
@@ -124,40 +141,28 @@ export default function InviteDialog({
                     </div>
 
                     <div className="grid w-full grid-cols-2 gap-3">
-                        {!hasTeam && !isTeamFull ? (
-                            <>
-                                <Button
-                                    variant="default"
-                                    size="cozy"
-                                    hierarchy="secondary"
-                                    className="w-full"
-                                    onClick={() => handleOpenChange(false)}
-                                >
-                                    Cancel
-                                </Button>
-                                <JoinTeamButton
-                                    teamDisplayId={displayId}
-                                    className="w-full"
-                                />
-                            </>
-                        ) : (
-                            <div className="col-span-2 flex flex-col gap-3">
-                                <Button
-                                    variant="brand"
-                                    size="cozy"
-                                    hierarchy="primary"
-                                    className="w-full"
-                                    onClick={() => handleOpenChange(false)}
-                                >
-                                    {hasTeam
-                                        ? 'Return to your team'
-                                        : 'Return to join team'}
-                                </Button>
+                        <Button
+                            variant="default"
+                            size="cozy"
+                            hierarchy="secondary"
+                            className="w-full"
+                            onClick={handleClose}
+                        >
+                            Cancel
+                        </Button>
+                        <JoinTeamButton
+                            teamDisplayId={displayId}
+                            className="w-full"
+                            disabled={hasTeam !== null || isTeamFull}
+                        />
+
+                        {(hasTeam || isTeamFull) && (
+                            <div className="col-span-2 mt-2">
                                 <span className="text-danger-400 flex items-center justify-center gap-2 text-center text-xs text-pretty">
                                     <ExclamationTriangleIcon className="text-danger-500 h-4 w-4" />
                                     {hasTeam
-                                        ? "You can't join this team because you're in a team"
-                                        : "You can't join this team because it's full"}
+                                        ? "You can't join because you have a team."
+                                        : "You can't join this team because it's full."}
                                 </span>
                             </div>
                         )}

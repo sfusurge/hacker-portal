@@ -84,34 +84,18 @@ export default function TeamCard({
     team: TeamType | null | undefined;
 }) {
     const [copied, setCopied] = useState(false);
-    const [isClient, setIsClient] = useState(false);
-
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
-
-    if (!isClient) {
-        return <TeamCardSkeleton />;
-    }
 
     if (!team) {
         return (
             <Card className="col-span-4">
-                <CardHeader className="">
-                    <CardHeaderColumn>
-                        <CardHeaderDescription>Your Team</CardHeaderDescription>
-                        <CardHeaderTitle>No Team Joined</CardHeaderTitle>
-                    </CardHeaderColumn>
-                </CardHeader>
-
-                <CardContent className="p-8">
+                <CardContent className="gap-6">
                     <div className="flex w-full max-w-auto justify-center">
                         <Image
-                            src={'/teams/alone-otter.webp'}
+                            src={'/login/application-review.webp'}
                             alt="Sad otter alone in the grass"
                             width="365"
                             height="144"
-                            className="w-full max-w-96 px-5"
+                            className="w-full max-w-56"
                         />
                     </div>
                     <div
@@ -122,16 +106,13 @@ export default function TeamCard({
                         <h1 className="text-xl font-semibold">
                             You&apos;re not in a team yet! 🥺
                         </h1>
-                        <p className="font-light text-pretty text-white/60">
+                        <p className="px-2 font-light text-pretty text-white/60">
                             Join an existing team or create a new one to view
                             your team&apos;s information here.
                         </p>
                     </div>
-                </CardContent>
-
-                <CardFooter className="p-5">
                     <JoinTeam compact={true} hackathonId={hackathonId} />
-                </CardFooter>
+                </CardContent>
             </Card>
         );
     }
@@ -196,7 +177,7 @@ export default function TeamCard({
                         hierarchy="secondary"
                         className={cn(
                             'cursor-copy text-nowrap',
-                            copied ? 'bg-neutral-600/60' : ''
+                            copied ? 'bg-neutral-700/60' : ''
                         )}
                         onClick={handleCopyLink}
                         leadingIcon="true"
