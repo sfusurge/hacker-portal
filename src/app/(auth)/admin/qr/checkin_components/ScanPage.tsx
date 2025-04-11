@@ -36,6 +36,12 @@ type ScanPageProps = {
     workshopType: string;
 };
 
+export type CheckInEventType =
+    | 'Event Check-in'
+    | 'Lunch Check-in'
+    | 'Dinner Check-in'
+    | 'Workshop Check-in';
+
 // export default function ScanPage() {
 export default function ScanPage({
     event,
@@ -47,7 +53,7 @@ export default function ScanPage({
     const hackers = trpc.users.getUsers.useQuery().data;
 
     const [currentHacker, setCurrentHacker] = useState<
-        GetUsersOutput | undefined
+        GetUsersOutput[0] | undefined
     >();
 
     //Manual input component state
@@ -88,12 +94,8 @@ export default function ScanPage({
         }
     };
 
-    const [checkInType, setCheckInType] = useState<
-        | 'Event Check-in'
-        | 'Lunch Check-in'
-        | 'Dinner Check-in'
-        | 'Workshop Check-in'
-    >('Event Check-in');
+    const [checkInType, setCheckInType] =
+        useState<CheckInEventType>('Event Check-in');
     const [dropdownOption, setDropdownOption] = useState<string>('');
 
     const [userId, setUserId] = useState<string>('');
@@ -190,7 +192,7 @@ export default function ScanPage({
                     transform: 'translate(-50%, -50%)',
                     zIndex: 10,
                 }}
-                className="relative aspect-3/4 min-h-screen w-full md:max-w-sm"
+                className="relative z-[10] aspect-[3/4] min-h-screen w-full md:max-w-sm"
             >
                 <div className="absolute inset-0 overflow-hidden">
                     <Scanner
@@ -327,10 +329,8 @@ export default function ScanPage({
                         className={`fixed right-0 bottom-0 left-0 transform transition-transform duration-300 ease-in-out ${isCheckInPrompt ? 'translate-y-0' : 'translate-y-full'}`}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {secondState && (
+                        {secondState && currentHacker && checkInType && (
                             <CheckinTicket
-                                // userId={userId}
-                                // userList={userList}
                                 currentHacker={currentHacker}
                                 checkInType={checkInType}
                                 specificMeal={specificMeal}

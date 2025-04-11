@@ -1,5 +1,3 @@
-import { it } from 'vitest';
-
 export const TEST_HACKATHON_NAME = 'test-hackathon';
 
 export const TEST_HACKATHON_START_DATE = '2024-08-17';
@@ -18,11 +16,3 @@ export interface SkipDbCleanUp {
 export interface E2ETestFixture {
     e2e: boolean;
 }
-
-export const itSkipDbCleanUp = it.extend<SkipDbCleanUp>({
-    skipDbCleanUp: true,
-});
-
-export const e2eTest = it.extend<E2ETestFixture>({
-    e2e: true,
-});

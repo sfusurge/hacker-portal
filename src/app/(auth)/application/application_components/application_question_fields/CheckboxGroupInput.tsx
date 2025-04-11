@@ -1,7 +1,6 @@
 import { PrimitiveAtom, useAtom } from 'jotai';
-import { QuestionCheckBoxInput, QuestionMultipleCheckBox } from '../types';
+import { QuestionMultipleCheckBox } from '../types';
 
-import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 import { CheckboxGroup } from '@/components/ui/checkboxGroup/CheckBoxGroup';
 
 export function CheckBoxGroupInput({
@@ -19,15 +18,18 @@ export function CheckBoxGroupInput({
             selected={question.choices
                 .map((item) => (item.value ? item.data : undefined))
                 .filter((item) => item !== undefined)}
-            onSelection={(selelect) => {
+            onSelection={(selelect, other) => {
                 setQuestion({
                     ...question,
+                    otherValue: other,
                     choices: question.choices.map((item) => ({
                         ...item,
                         value: selelect.has(item.data),
                     })),
                 });
             }}
+            allowOther={question.allowOther}
+            otherValue={question.otherValue}
         ></CheckboxGroup>
     );
 }

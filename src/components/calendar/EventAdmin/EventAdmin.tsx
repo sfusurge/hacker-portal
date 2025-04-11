@@ -224,7 +224,6 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                             lazy
                             onLazyChange={(t) => {
                                 setLongDescription(t);
-                                console.log('in change', t);
                             }}
                         />
                     </div>

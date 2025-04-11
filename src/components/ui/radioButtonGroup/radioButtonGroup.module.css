@@ -60,7 +60,7 @@
 
 .optionLabel:has(input:checked)::before {
     border-color: var(--outline-brand-primary);
-    border-width: 6px;
+    border-width: 5px;
     background-color: white;
 }
 

@@ -3,9 +3,9 @@ import GoogleProvider from 'next-auth/providers/google';
 import GithubProvider from 'next-auth/providers/github';
 
 import { databaseClient } from '@/db/client';
-import { addUser, users } from '@/db/schema/users';
+import { addUser, users } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
-import { userOAuth } from '@/db/schema/userOAuth';
+import { userOAuth } from '@/db/schema/users/userOAuth';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     trustHost: true,
@@ -26,6 +26,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     callbacks: {
         signIn: async ({ user, profile, credentials, account }) => {
             if (!user.email) {
+                console.log(`bad login! signing out:  ${user}`);
+
                 // bad login, somehow
                 return await signOut({
                     redirectTo: '/login',

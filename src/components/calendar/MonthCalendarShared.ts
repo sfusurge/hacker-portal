@@ -89,9 +89,7 @@ export function groupEventsByDay(
     };
 
     for (const [key, val] of Object.entries(grouped)) {
-        val.sort((a, b) => {
-            return a.startTime.unix() - b.startTime.unix();
-        });
+        val.sort((a, b) => a.startTime.unix() - b.startTime.unix());
         grouped[parseInt(key)] = val;
     }
 

@@ -6,16 +6,16 @@ import {
     timestamp,
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema } from 'drizzle-zod';
-import { hackathons } from './hackathons';
-import { users } from './users';
 import { z } from 'zod';
+import { events } from './events';
+import { users } from './users/users';
 
 export const checkIns = pgTable(
     'check_ins',
     {
         eventId: integer('event_id')
             .notNull()
-            .references(() => hackathons.id),
+            .references(() => events.id),
         userId: integer('user_id')
             .notNull()
             .references(() => users.id),

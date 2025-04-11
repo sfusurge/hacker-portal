@@ -1,9 +1,9 @@
 'use client';
 
+import { UserData } from '@/db/schema/users/users';
 import { useEffect } from 'react';
-import { MergedUserData } from './home/layout';
 
-export function CacheClearer({ initialData }: { initialData: MergedUserData }) {
+export function CacheClearer({ initialData }: { initialData: UserData }) {
     useEffect(() => {
         if (
             localStorage.getItem('email') &&

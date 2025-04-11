@@ -37,19 +37,29 @@ function LCG_at_N(n: number, a: number, b: number, m: number, seed: number) {
  * 2. a - 1 is divisible by all prime factors of m
  * 3. a - 1 is divisible by 4 if m is divisible by 4.
  */
-const d6Params = Object.freeze({
+export const userRNGParams = Object.freeze({
     a: 29, // (4 * 7 + 1) -> a - 1 is disible by 2 and 7
     b: 97, // co prime with m since 97 is prime
-    m: 917504, // 2**17 * 7, a large 6 digit number that has lots of repeated factors
+    m: 917504, // 2^17 * 7, a large 6 digit number that has lots of repeated factors
     seed: 173429, // any starting seed works
+});
+
+export const teamRNGParams = Object.freeze({
+    a: 57, // 8 * 7 + 1 (divisible by all prime factors of m, and is divisible by 4 since m is divisible by 4)
+    b: 59,
+    m: 917504, // 2^17 * 7
+    seed: 295219,
 });
 
 /**
  * return the nth term the LCG sequence with the above configuration.
  * For example n could be the sequential id of a user, and result would be their display id.
  */
-export function getSixDigitId(n: number) {
-    return `${LCG_at_N(n, d6Params.a, d6Params.b, d6Params.m, d6Params.seed)}`.padStart(
+export function getSixDigitId(
+    n: number,
+    param: { a: number; b: number; m: number; seed: number }
+) {
+    return `${LCG_at_N(n, param.a, param.b, param.m, param.seed)}`.padStart(
         6,
         '0'
     );

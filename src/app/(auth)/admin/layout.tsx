@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 
 import { notFound } from 'next/navigation';
-import { getUserData } from '../layout';
+import { getUserData } from '@/db/schema/users/users';
 
 export default async function Layout({ children }: { children: ReactNode }) {
     const userData = await getUserData();

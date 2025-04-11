@@ -10,12 +10,12 @@ import { BellAlertIcon } from '@heroicons/react/24/outline';
 import { redirect, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { QrCodeIcon } from '@heroicons/react/24/solid';
-import { MergedUserData } from '@/app/(auth)/layout';
 import SelectOption from '@/app/(auth)/admin/selectoption/components/SelectOption';
+import { UserData } from '@/db/schema/users/users';
 
 interface MobileBottomNavProps {
     className?: string;
-    initialData?: MergedUserData;
+    initialData?: UserData;
 }
 
 const excludedUrls = [
@@ -93,7 +93,7 @@ export default function MobileBottomNav({
                     )}
                 >
                     <NavLink
-                        href="#"
+                        href="/home"
                         label="Home"
                         icon={<HomeIcon></HomeIcon>}
                         iconAlt="Home logo"
@@ -102,13 +102,11 @@ export default function MobileBottomNav({
                     ></NavLink>
 
                     <NavLink
-                        href="#"
+                        href="/team"
                         label="Team"
                         icon={<UserGroupIcon></UserGroupIcon>}
                         iconAlt="Team logo"
                         platform="mobile"
-                        active={false}
-                        disabled={true}
                     ></NavLink>
 
                     <NavLink

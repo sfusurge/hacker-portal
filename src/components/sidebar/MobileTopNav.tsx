@@ -16,11 +16,11 @@ import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { MergedUserData } from '@/app/(auth)/layout';
+import { UserData } from '@/db/schema/users/users';
 
 interface MobileTopNavProps {
     className?: string;
-    initialData?: MergedUserData;
+    initialData?: UserData;
 }
 
 const excludedUrls = [
@@ -44,7 +44,7 @@ export default function MobileTopNav({
                 return setHideTopNav(true);
             }
             setHideTopNav(false);
-            document.body.style.setProperty('--paddingTop', '4rem');
+            document.body.style.setProperty('--paddingTop', '5rem');
         }
     }, [url]);
 
