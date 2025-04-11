@@ -16,7 +16,6 @@ describe('files router tests', () => {
 
         // Test upload
         const uploadResult = await caller.uploadFile({
-            bucketName: 'test-bucket',
             key,
             fileName,
             file: fileBuffer.toString('base64'),
@@ -28,7 +27,6 @@ describe('files router tests', () => {
 
         // Test delete
         const deleteResult = await caller.deleteFile({
-            bucketName: 'test-bucket',
             key,
         });
 
@@ -44,7 +42,6 @@ describe('files router tests', () => {
 
         await expect(
             caller.uploadFile({
-                bucketName: 'test-bucket',
                 key,
                 fileName,
                 file: fileBuffer.toString('base64'),
@@ -60,7 +57,6 @@ describe('files router tests', () => {
 
         await expect(
             caller.uploadFile({
-                bucketName: 'test-bucket',
                 key,
                 fileName,
                 file: fileBuffer.toString('base64'),

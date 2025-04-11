@@ -34,7 +34,6 @@ export default async function Team() {
     // Else, they are currently in a team, show join team UI
     const image = await trpcClient.files
         .getFile({
-            bucketName: 'team-pictures',
             key: currentTeam.teamPictureUrl || '/teams/default.webp',
         })
         .catch((error) => {

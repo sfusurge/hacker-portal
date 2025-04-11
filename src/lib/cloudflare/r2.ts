@@ -57,17 +57,12 @@ export function validateFile(fileName: string, fileContent: Buffer): string {
 export async function uploadFileToR2(
     fileContent: Buffer,
     key: string,
-    bucketName: string,
     mimeType: string
 ) {
-    if (!bucketName) {
-        throw new Error('Bucket name is required');
-    }
-
     try {
         // Set up the upload parameters
         const uploadParams = {
-            Bucket: bucketName,
+            Bucket: process.env.R2_BUCKET_NAME,
             Key: key,
             Body: fileContent,
             ContentType: mimeType,
@@ -88,14 +83,10 @@ export async function uploadFileToR2(
     }
 }
 
-export async function deleteFileFromR2(key: string, bucketName: string) {
-    if (!bucketName) {
-        throw new Error('Bucket name is required');
-    }
-
+export async function deleteFileFromR2(key: string) {
     try {
         const deleteParams = {
-            Bucket: bucketName,
+            Bucket: process.env.R2_BUCKET_NAME,
             Key: key,
         };
 
@@ -112,14 +103,10 @@ export async function deleteFileFromR2(key: string, bucketName: string) {
     }
 }
 
-export async function getFileFromR2(key: string, bucketName: string) {
-    if (!bucketName) {
-        throw new Error('Bucket name is required');
-    }
-
+export async function getFileFromR2(key: string) {
     try {
         const command = new GetObjectCommand({
-            Bucket: bucketName,
+            Bucket: process.env.R2_BUCKET_NAME,
             Key: key,
         });
 

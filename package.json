@@ -18,7 +18,8 @@
         "posttest:unit": "npm run clean-test-db",
         "pretest:e2e": "npm run prepare-test-db",
         "test:e2e": "vitest run --project e2e",
-        "posttest:e2e": "npm run clean-test-db"
+        "posttest:e2e": "npm run clean-test-db",
+        "test:r2": "vitest run --project r2"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.758.0",
