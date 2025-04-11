@@ -34,7 +34,7 @@ type AdditionFormFields = {
     icon?: React.ReactNode;
 } & (
     | {
-          type: 'text' | 'search' | 'datetime-local';
+          type: 'text' | 'search' | 'datetime-local' | 'tel';
           onLazyChange?: (value: string) => void;
       }
     | {
