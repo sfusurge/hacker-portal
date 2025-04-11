@@ -25,6 +25,10 @@ export function isApplicationQuestionFilled(question: ApplicationQuestion) {
                     checkedCounts += 1;
                 }
             }
+
+            if (question.allowOther && question.otherValue) {
+                checkedCounts += 1;
+            }
             return (
                 checkedCounts >= (question.min ?? 0) &&
                 checkedCounts <= (question.max ?? 99)

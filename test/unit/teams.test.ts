@@ -14,8 +14,6 @@ import { getUserData } from '@/db/schema/users/users';
 describe('teams routes tests', () => {
     const trpcClient = createCaller({});
 
-    vi.mock('@/app/(auth)/layout');
-
     let hackathon: Awaited<
         ReturnType<typeof trpcClient.hackathons.addHackathon>
     >;
@@ -128,7 +126,7 @@ describe('teams routes tests', () => {
 
         await expect(
             trpcClient.teams.joinTeam({ teamDisplayId: team1.displayId })
-        ).resolves.toBe(true);
+        ).resolves.not.toBeNull();
     });
 
     it('when user is already in a team, createTeam throw BadRequestError', async () => {

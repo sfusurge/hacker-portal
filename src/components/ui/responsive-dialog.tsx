@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-
 import { cn } from '@/lib/utils';
 import { useMediaQuery } from '@uidotdev/usehooks';
 import {
@@ -40,7 +39,9 @@ interface ResponsiveProps extends BaseProps {
     asChild?: true;
 }
 
-const ResponsiveContext = React.createContext<{ isDesktop: boolean }>({
+const ResponsiveContext = React.createContext<{
+    isDesktop: boolean;
+}>({
     isDesktop: false,
 });
 
@@ -60,13 +61,27 @@ const ResponsiveDialog = ({
     ...props
 }: RootResponsiveProps) => {
     const isDesktop = useMediaQuery('(min-width: 768px)');
+    const [isOpen, setIsOpen] = React.useState(false);
     const DialogComponent = isDesktop ? Dialog : Drawer;
     const Trigger = isDesktop ? DialogTrigger : DrawerTrigger;
+
+    React.useEffect(() => {
+        if (props.open !== undefined) {
+            setIsOpen(props.open);
+        }
+    }, [props.open]);
+
+    const handleOpenChange = (open: boolean) => {
+        setIsOpen(open);
+        props.onOpenChange?.(open);
+    };
 
     return (
         <ResponsiveContext.Provider value={{ isDesktop }}>
             <DialogComponent
                 {...props}
+                open={props.open !== undefined ? props.open : isOpen}
+                onOpenChange={handleOpenChange}
                 {...(!isDesktop && { autoFocus: true })}
             >
                 {trigger && <Trigger asChild>{trigger}</Trigger>}

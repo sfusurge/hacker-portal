@@ -1,9 +1,8 @@
 import { redirect } from 'next/navigation';
-import CurrentStateUI from '@/components/team/NoTeam/CurrentState';
 import { createCaller } from '@/server/appRouter';
-import TeamList from '@/components/team/InTeam/TeamList';
-import InviteCard from '@/components/team/InTeam/InviteCard';
 import { getUserData } from '@/db/schema/users/users';
+import TeamDisplay from '@/components/team/TeamDisplay';
+
 export default async function Team() {
     const user = await getUserData();
 
@@ -18,6 +17,7 @@ export default async function Team() {
     const currentTeam = await trpcClient.teams.getCurrentTeam({
         hackathonId: currentHackathon.id,
     });
+
 
     // If user is in not in a team for the current hackathon, show join team UI
     if (!currentTeam) {

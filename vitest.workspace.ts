@@ -11,7 +11,7 @@ const workspace = defineWorkspace([
         test: {
             name: 'unit',
             dir: 'test/unit',
-            setupFiles: ['./test/setup/localDB.ts'],
+            setupFiles: ['./test/setup/localDB.ts', './test/setup/userData.ts'],
         },
     },
     {

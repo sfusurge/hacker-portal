@@ -92,15 +92,14 @@ export async function addUser(vals: z.infer<typeof insertUserSchema>) {
 
         const displayId = getSixDigitId(index, userRNGParams);
 
-        const insertResult = (
-            await databaseClient
-                .insert(users)
-                .values({
-                    ...vals,
-                    displayId,
-                })
-                .returning()
-        )[0];
+        const [insertResult] = await tx
+            .insert(users)
+            .values({
+                ...vals,
+                displayId,
+            })
+            .returning();
+
         return insertResult;
     });
     return res;
