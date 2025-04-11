@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/responsive-dialog';
 import { toast } from '@/hooks/use-toast';
 import { UserGroupIcon } from '@heroicons/react/24/solid';
+import { Conditional } from '@/lib/Conditional';
+import { useMediaQuery } from '@uidotdev/usehooks';
 
 export default function CreateTeamForm({
     hackathonId,
@@ -24,6 +26,7 @@ export default function CreateTeamForm({
 }) {
     const router = useRouter();
     const createTeam = trpc.teams.createTeam.useMutation();
+    const isDesktop = useMediaQuery('(min-width: 768px)');
 
     const [teamInfo, setTeamInfo] = useState({
         teamName: '',
@@ -149,21 +152,83 @@ export default function CreateTeamForm({
                     height={64}
                     className="h-16 w-16 rounded-xl"
                 />
-                <div className="flex flex-col gap-3">
-                    <label className="block text-sm font-medium">
-                        Team picture *
-                    </label>
-                    <Input
-                        type="file"
-                        id="file-upload"
-                        className="hidden w-auto"
-                        accept=".png, .jpeg"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                        required
-                        disabled={isCreating}
-                    />
-                    <div className="flex gap-1">
+                <Conditional showWhen={isDesktop}>
+                    <div className="flex flex-col gap-3">
+                        <label className="block text-sm font-medium">
+                            Team picture *
+                        </label>
+                        <Input
+                            type="file"
+                            id="file-upload"
+                            className="hidden w-auto"
+                            accept=".png, .jpeg"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            required
+                            disabled={isCreating}
+                        />
+                        <div className="flex gap-1">
+                            <label
+                                htmlFor="file-upload"
+                                className="cursor-pointer"
+                            >
+                                <Button
+                                    variant="default"
+                                    hierarchy="primary"
+                                    size="compact"
+                                    onClick={handleButtonClick}
+                                    type="button"
+                                    disabled={isCreating}
+                                >
+                                    Upload
+                                </Button>
+                            </label>
+                            {teamInfo.teamPicture && (
+                                <Button
+                                    variant="default"
+                                    hierarchy="tertiary"
+                                    size="compact"
+                                    className="hover:bg-neutral-750/60 border-2 border-transparent underline underline-offset-4"
+                                    onClick={() => {
+                                        setTeamInfo((prevState) => ({
+                                            ...prevState,
+                                            teamPicture: '',
+                                        }));
+                                    }}
+                                    type="button"
+                                    disabled={isCreating}
+                                >
+                                    Clear
+                                </Button>
+                            )}
+                        </div>
+                        <p className="text-xs">
+                            .png, jpeg files up to 2 MB <br /> At least 200px x
+                            200px
+                        </p>
+                    </div>
+                </Conditional>
+                <Conditional showWhen={!isDesktop}>
+                    <div className="flex flex-col gap-3">
+                        <label className="block text-sm font-medium">
+                            Team picture *
+                        </label>
+                        <Input
+                            type="file"
+                            id="file-upload"
+                            className="hidden w-auto"
+                            accept=".png, .jpeg"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            required
+                            disabled={isCreating}
+                        />
+                        <p className="text-xs">
+                            .png, jpeg files up to 2 MB <br /> At least 200px x
+                            200px
+                        </p>
+                    </div>
+                    <div className="flex flex-col items-end justify-end gap-1">
                         <label htmlFor="file-upload" className="cursor-pointer">
                             <Button
                                 variant="default"
@@ -176,30 +241,8 @@ export default function CreateTeamForm({
                                 Upload
                             </Button>
                         </label>
-                        {teamInfo.teamPicture && (
-                            <Button
-                                variant="default"
-                                hierarchy="tertiary"
-                                size="compact"
-                                className="hover:bg-neutral-750/60 border-2 border-transparent underline underline-offset-4"
-                                onClick={() => {
-                                    setTeamInfo((prevState) => ({
-                                        ...prevState,
-                                        teamPicture: '',
-                                    }));
-                                }}
-                                type="button"
-                                disabled={isCreating}
-                            >
-                                Clear
-                            </Button>
-                        )}
                     </div>
-                    <p className="text-xs">
-                        .png, jpeg files up to 2 MB <br /> At least 200px x
-                        200px
-                    </p>
-                </div>
+                </Conditional>
             </div>
 
             <div className="flex flex-col gap-3">

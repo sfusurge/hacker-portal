@@ -24,7 +24,7 @@ export default function TeammateItem({
     lastName = null,
     name,
     email = '',
-    image = '/teams/default.webp',
+    image = '/teams/single-otter.webp',
     currentUser = false,
     index = 0,
     isPlaceholder = false,
@@ -52,7 +52,7 @@ export default function TeammateItem({
         return (
             <>
                 <li className="h-11"></li>
-                {index == 3 ||
+                {index == maxMembersCount - 1 ||
                     (index !== maxMembersCount - 1 && !isMobile && (
                         <hr className="border-neutral-700/20" />
                     ))}
@@ -66,7 +66,7 @@ export default function TeammateItem({
                 <div className="flex flex-1 items-center gap-3 overflow-hidden md:gap-4">
                     <img
                         alt={displayName + ' profile picture'}
-                        src={image ?? '/teams/default.webp'}
+                        src={image ?? '/teams/single-otter.webp'}
                         width={32}
                         height={32}
                         className="h-8 w-8 rounded-full object-cover md:h-11 md:w-11"
@@ -96,7 +96,7 @@ export default function TeammateItem({
             {!isLastItem && isMobile && (
                 <hr className="border-neutral-700/20" />
             )}
-            {index !== 3 && !isMobile && (
+            {index !== maxMembersCount - 1 && !isMobile && (
                 <hr className="border-neutral-700/20" />
             )}
         </>
