@@ -27,7 +27,6 @@ const workspace = defineWorkspace([
         test: {
             name: 'r2',
             dir: 'test/r2',
-            setupFiles: ['./test/setup/localDB.ts'],
             alias: {
                 '@': path.resolve(__dirname, 'src'),
             },
