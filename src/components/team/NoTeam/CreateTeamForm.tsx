@@ -17,7 +17,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { UserGroupIcon } from '@heroicons/react/24/solid';
 import { Conditional } from '@/lib/Conditional';
-import { useMediaQuery } from '@uidotdev/usehooks';
+import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
 
 export default function CreateTeamForm({
     hackathonId,
