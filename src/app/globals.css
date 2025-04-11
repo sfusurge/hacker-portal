@@ -274,8 +274,8 @@ body {
     --background-brand-focus: var(--brand-950_60);
     --background-brand-secondary: var(--brand-900);
     --background-neutral-secondary: var(--neutral-800_60);
-    --background-sunkan: var(--neutral-925) /* outline */
-        --outline-brand-primary: var(--brand-500);
+    --background-sunkan: var(--neutral-925); /* outline */
+    --outline-brand-primary: var(--brand-500);
 
     /* ==== END SEMANTICS ====  */
 
