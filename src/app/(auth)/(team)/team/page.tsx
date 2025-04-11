@@ -2,6 +2,9 @@ import { redirect } from 'next/navigation';
 import { createCaller } from '@/server/appRouter';
 import { getUserData } from '@/db/schema/users/users';
 import TeamDisplay from '@/components/team/TeamDisplay';
+import TeamList from '@/components/team/InTeam/TeamList';
+import CurrentStateUI from '@/components/team/NoTeam/CurrentState';
+import InviteCard from '@/components/team/InTeam/InviteCard';
 
 export default async function Team() {
     const user = await getUserData();
@@ -18,8 +21,7 @@ export default async function Team() {
         hackathonId: currentHackathon.id,
     });
 
-
-    // If user is in not in a team for the current hackathon, show join team UI
+    // If user is not in a team for the current hackathon, show join team UI
     if (!currentTeam) {
         return (
             <div className="flex h-full w-full items-center justify-center">
@@ -31,7 +33,8 @@ export default async function Team() {
             </div>
         );
     }
-    // Else, they are currently in a team, show join team UI
+
+    // At this point currentTeam is guaranteed to be defined
     const image = await trpcClient.files
         .getFile({
             key: currentTeam.teamPictureUrl || '/teams/default.webp',
@@ -64,10 +67,13 @@ export default async function Team() {
                 <div className="flex flex-col gap-4">
                     <div className="grid grid-cols-1 gap-6 pb-24 md:pb-0 xl:grid-cols-[1fr_clamp(29rem,33vw,30.5rem)]">
                         <TeamList
-                            teammates={currentTeam.members}
                             currentUserEmail={user.email}
-                            maxMembersCount={currentTeam.maxMembersCount}
-                            teamId={currentTeam.id}
+                            team={{
+                                id: currentTeam.id,
+                                name: currentTeam.name,
+                                members: currentTeam.members,
+                                maxMembersCount: currentTeam.maxMembersCount,
+                            }}
                         />
                         <InviteCard teamId={currentTeam.displayId} />
                     </div>
@@ -100,10 +106,13 @@ export default async function Team() {
             <div className="flex flex-col gap-4">
                 <div className="grid grid-cols-1 gap-6 pb-24 md:pb-0 xl:grid-cols-[1fr_clamp(29rem,33vw,30.5rem)]">
                     <TeamList
-                        teammates={currentTeam.members}
                         currentUserEmail={user.email}
-                        maxMembersCount={currentTeam.maxMembersCount}
-                        teamId={currentTeam.id}
+                        team={{
+                            id: currentTeam.id,
+                            name: currentTeam.name,
+                            members: currentTeam.members,
+                            maxMembersCount: currentTeam.maxMembersCount,
+                        }}
                     />
                     <InviteCard teamId={currentTeam.displayId} />
                 </div>
