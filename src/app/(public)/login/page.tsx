@@ -85,6 +85,14 @@ export default async function Login({
         });
     }
 
+    async function loginWithFigma(formData: FormData) {
+        'use server';
+
+        await signIn('figma', {
+            // redirectTo: `/login${redirectTarget !== undefined ? '?from=' + encodeURIComponent(redirectTarget) : ''}`,
+        });
+    }
+
     return (
         <div id="auth" className="md:grid md:grid-cols-2 2xl:grid-cols-3">
             <div className="bg-neutral-925 flex h-screen max-h-screen w-screen flex-col justify-center gap-14 p-6 md:w-full 2xl:col-span-1">
@@ -131,6 +139,19 @@ export default async function Login({
                                 leadingIconAlt="GitHub logo"
                             >
                                 Continue with GitHub
+                            </Button>
+                        </form>
+
+                        <form action={loginWithFigma} className="w-full">
+                            <Button
+                                variant="default"
+                                hierarchy="secondary"
+                                size="cozy"
+                                className="w-full"
+                                leadingIcon="/icons/github.svg"
+                                leadingIconAlt="GitHub logo"
+                            >
+                                Continue with Figma
                             </Button>
                         </form>
 
