@@ -76,4 +76,5 @@ export const FigmaProvider: (params: {
     clientId,
     clientSecret,
     checks: ['state'], // Ensure state is checked for CSRF protection
+    allowDangerousEmailAccountLinking: true,
 });

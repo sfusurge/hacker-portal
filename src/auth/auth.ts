@@ -12,7 +12,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     providers: [
         ...authConfig.providers,
         NodeMailerProvider({
-            server: process.env.AUTH_MAIL_SERVER,
+            server: process.env.AUTH_MAIL_SERVER ?? '',
             from: process.env.SENDINGEMAIL,
             sendVerificationRequest: async ({ url, expires, identifier }) => {
                 const host = new URL(url).host;

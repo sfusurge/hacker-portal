@@ -3,7 +3,13 @@ import { edgeAuth } from '@/auth/edgeAuth';
 
 // Since nextjs don't support middleware route groups yet.
 
-const authRoutes = new Set(['application', 'home', 'admin']);
+const authRoutes = new Set([
+    'application',
+    'home',
+    'admin',
+    'schedule',
+    'application',
+]);
 
 function getFirstSegment(str: string) {
     const idx = str.indexOf('/', 1);
@@ -22,6 +28,8 @@ export const middleware = edgeAuth(async (req) => {
     } else {
         if (authRoutes.has(getFirstSegment(path))) {
             const sessionUser = (await edgeAuth())?.user;
+            console.log('middle ware', sessionUser);
+
             // redirect unauthenticated users.
             if (!sessionUser) {
                 const target = new URL('/login', req.url);
