@@ -42,3 +42,5 @@ next-env.d.ts
 **/notes.md
 
 certificates
+# Local Netlify folder
+.netlify

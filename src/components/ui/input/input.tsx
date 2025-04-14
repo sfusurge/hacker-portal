@@ -25,18 +25,27 @@ const Input = forwardRef<HTMLInputElement, ComponentProps<'input'>>(
 );
 Input.displayName = 'Input';
 
+type AdditionFormFields = {
+    lazy?: boolean;
+    timeOut?: number;
+    hideBackground?: boolean;
+    errorMsg?: string;
+    className?: string;
+    icon?: React.ReactNode;
+} & (
+    | {
+          type: 'text' | 'search' | 'datetime-local' | 'tel';
+          onLazyChange?: (value: string) => void;
+      }
+    | {
+          type: 'number';
+          onLazyChange?: (value: number) => void;
+      }
+);
+
 export const FormTextInput = forwardRef<
     HTMLInputElement,
-    ComponentProps<'input'> & {
-        lazy?: boolean;
-        timeOut?: number;
-        type: 'text' | 'number' | 'search' | 'datetime-local' | string;
-        hideBackground?: boolean;
-        errorMsg?: string;
-        onLazyChange?: (value: string | number) => void;
-        className?: string;
-        icon?: React.ReactNode;
-    }
+    ComponentProps<'input'> & AdditionFormFields
 >(
     (
         {
@@ -72,7 +81,11 @@ export const FormTextInput = forwardRef<
             if (onLazyChange) {
                 // invoke change regardless if valid or not
                 // only check if error should block submit *during* submition
-                onLazyChange(inputRef.current.value);
+                if (type !== 'number') {
+                    onLazyChange(inputRef.current.value);
+                } else {
+                    onLazyChange(inputRef.current.valueAsNumber);
+                }
             }
         }
 

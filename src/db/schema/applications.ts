@@ -37,12 +37,14 @@ export const applications = pgTable(
         userId: integer('user_id')
             .references(() => users.id)
             .notNull(),
-        currentStatus: applicationStatusEnum()
+        currentStatus: applicationStatusEnum('current_status')
             .default('Awaiting Review')
             .notNull(),
-        pendingStatus: applicationStatusEnum().default('N/A').notNull(),
+        pendingStatus: applicationStatusEnum('pending_status')
+            .default('N/A')
+            .notNull(),
         response: json().notNull(),
-        createdDate: timestamp()
+        createdDate: timestamp('created_date')
             .defaultNow()
             .$onUpdate(() => new Date())
             .notNull(),

@@ -20,7 +20,7 @@ export function NumberInput({
             autoComplete={question.autoComplete}
             defaultValue={question.value ?? ''}
             onLazyChange={(newVal) => {
-                const intVal = parseInt(newVal as string);
+                const intVal = newVal;
                 if (isNaN(intVal)) {
                     // reject bad input by setting value to undefined, but still trigger render
                     setQuestion({ ...question, value: undefined });

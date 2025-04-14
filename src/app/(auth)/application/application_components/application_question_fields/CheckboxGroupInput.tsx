@@ -18,15 +18,18 @@ export function CheckBoxGroupInput({
             selected={question.choices
                 .map((item) => (item.value ? item.data : undefined))
                 .filter((item) => item !== undefined)}
-            onSelection={(selelect) => {
+            onSelection={(selelect, other) => {
                 setQuestion({
                     ...question,
+                    otherValue: other,
                     choices: question.choices.map((item) => ({
                         ...item,
                         value: selelect.has(item.data),
                     })),
                 });
             }}
+            allowOther={question.allowOther}
+            otherValue={question.otherValue}
         ></CheckboxGroup>
     );
 }

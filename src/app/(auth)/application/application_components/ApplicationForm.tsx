@@ -33,7 +33,7 @@ import {
 import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 import { redirect } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
-import { useMediaQuery } from '@uidotdev/usehooks';
+import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
 import { cn } from '@/lib/utils';
 import { hackathonAtom, useHackathon } from '@/hooks/use-hackathon';
 import { an } from 'vitest/dist/chunks/reporters.D7Jzd9GS.js';

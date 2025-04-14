@@ -50,30 +50,30 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetDate }) => {
     };
 
     return (
-        <div className="grid grid-cols-3 gap-4 max-w-96 w-full">
-            <div className="bg-neutral-850 border border-neutral-600/30 rounded-lg">
-                <div className="bg-neutral-750 font-mono text-white text-sm font-medium h-10 mx-auto flex items-center justify-center rounded-md rounded-bl-none rounded-br-none">
+        <div className="grid w-full max-w-96 grid-cols-3 gap-4">
+            <div className="bg-neutral-850 rounded-lg border border-neutral-600/30">
+                <div className="bg-neutral-750 mx-auto flex h-10 items-center justify-center rounded-md rounded-br-none rounded-bl-none font-mono text-sm font-medium text-white">
                     <span className="block leading-none">DAYS</span>
                 </div>
-                <div className="text-4xl sm:text-5xl text-white font-semibold w-[2ch] mx-auto text-center py-4">
+                <div className="mx-auto w-[2ch] py-4 text-center text-4xl font-semibold text-white sm:text-5xl">
                     {formatTime(timeLeft.days)}
                 </div>
             </div>
 
-            <div className="bg-neutral-850 border border-neutral-600/30 rounded-lg">
-                <div className="bg-neutral-750 font-mono text-white text-sm font-medium h-10 mx-auto flex items-center justify-center rounded-md rounded-bl-none rounded-br-none">
+            <div className="bg-neutral-850 rounded-lg border border-neutral-600/30">
+                <div className="bg-neutral-750 mx-auto flex h-10 items-center justify-center rounded-md rounded-br-none rounded-bl-none font-mono text-sm font-medium text-white">
                     <span className="block leading-none">HOURS</span>
                 </div>
-                <div className="text-4xl sm:text-5xl text-white font-semibold w-[2ch] mx-auto text-center py-4">
+                <div className="mx-auto w-[2ch] py-4 text-center text-4xl font-semibold text-white sm:text-5xl">
                     {formatTime(timeLeft.hours)}
                 </div>
             </div>
 
-            <div className="bg-neutral-850 border border-neutral-600/30 rounded-lg">
-                <div className="bg-neutral-750 font-mono text-white text-sm font-medium h-10 mx-auto flex items-center justify-center rounded-md rounded-bl-none rounded-br-none">
+            <div className="bg-neutral-850 rounded-lg border border-neutral-600/30">
+                <div className="bg-neutral-750 mx-auto flex h-10 items-center justify-center rounded-md rounded-br-none rounded-bl-none font-mono text-sm font-medium text-white">
                     <span className="block leading-none">MINS</span>
                 </div>
-                <div className="text-4xl sm:text-5xl text-white font-semibold w-[2ch] mx-auto text-center py-4">
+                <div className="mx-auto w-[2ch] py-4 text-center text-4xl font-semibold text-white sm:text-5xl">
                     {formatTime(timeLeft.minutes)}
                 </div>
             </div>
