@@ -14,16 +14,16 @@ export default function CurrentStateUI({
     hackathonId,
     title = 'This team is currently full! 🥺',
     description = "Join a different team or create a new one to view your team's information here.",
-    imageSrc = '/teams/alone_otter.webp',
+    imageSrc = '/login/application-review.webp',
     buttons,
 }: TeamFullUIProps) {
     return (
         <div className="flex h-full w-full items-center justify-center">
             <div className="flex w-full max-w-fit flex-col items-center justify-center gap-6 text-center">
-                <div className="w-full max-w-auto">
+                <div className="max-w-auto w-full">
                     <Image
                         src={imageSrc}
-                        alt="Sad otter alone in the grass"
+                        alt="Otters around a table"
                         width="365"
                         height="144"
                         className="w-full px-10"

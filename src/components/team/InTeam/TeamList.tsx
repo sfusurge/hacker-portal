@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeftStartOnRectangleIcon } from '@heroicons/react/16/solid';
 import TeammateItem from './TeammateItem';
-import { Card, CardFooter, CardContent } from '@/components/ui/dashboard-card';
+import { Card, CardFooter, CardContent } from '@/components/ui/card';
 import LeaveTeamForm from './LeaveTeamForm';
 import { DialogTrigger, Dialog } from '@/components/ui/dialog';
 import { users } from '@/db/schema/users/users';
@@ -25,21 +25,19 @@ type UserWithPlaceholder = UserType & {
 };
 
 interface TeamListProps {
-    teammates: Array<TeamMember>;
     currentUserEmail: string;
-    maxMembersCount: number;
-    teamId: number;
+    team: {
+        id: number;
+        name: string;
+        members: Array<TeamMember>;
+        maxMembersCount: number;
+    };
 }
 
-export default function TeamList({
-    teammates,
-    currentUserEmail,
-    maxMembersCount,
-    teamId,
-}: TeamListProps) {
+export default function TeamList({ currentUserEmail, team }: TeamListProps) {
     // Map TeamMember to UserType
     const mappedTeammates = useMemo(() => {
-        return teammates.map(
+        return team.members.map(
             (member) =>
                 ({
                     id: member.userId,
@@ -49,7 +47,7 @@ export default function TeamList({
                     currentStatus: member.currentStatus,
                 }) as UserType & { currentStatus?: string | null }
         );
-    }, [teammates]);
+    }, [team.members]);
 
     const paddedTeammates = useMemo(() => {
         const placeholder: UserWithPlaceholder = {
@@ -64,11 +62,11 @@ export default function TeamList({
             currentStatus: null,
         };
         const padded = [...mappedTeammates] as UserWithPlaceholder[];
-        while (padded.length < maxMembersCount) {
+        while (padded.length < team.maxMembersCount) {
             padded.push(placeholder);
         }
         return padded;
-    }, [mappedTeammates, maxMembersCount]);
+    }, [mappedTeammates, team.maxMembersCount]);
 
     const lastVisibleIndex = useMemo(() => {
         return paddedTeammates.reduce((lastIndex, teammate, index) => {
@@ -79,7 +77,7 @@ export default function TeamList({
     return (
         <Dialog>
             <Card>
-                <CardContent footer={true} className="">
+                <CardContent className="">
                     <span className="text-left text-xs font-normal text-white/60 md:text-sm">
                         Your Teammates
                     </span>
@@ -93,7 +91,7 @@ export default function TeamList({
                                     teammate.email === currentUserEmail
                                 }
                                 isPlaceholder={teammate.placeholder}
-                                maxMembersCount={maxMembersCount}
+                                maxMembersCount={team.maxMembersCount}
                                 isLastItem={i === lastVisibleIndex}
                             />
                         ))}
@@ -132,7 +130,7 @@ export default function TeamList({
                     </Button>
                 </DialogTrigger>
             </div>
-            <LeaveTeamForm teamId={teamId} />
+            <LeaveTeamForm teamId={team.id} teamName={team.name} />
         </Dialog>
     );
 }

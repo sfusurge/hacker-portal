@@ -1,16 +1,16 @@
 'use client';
 import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/dashboard-card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
     ExclamationTriangleIcon,
     LinkIcon,
     DocumentDuplicateIcon,
 } from '@heroicons/react/16/solid';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { FormSeparator } from '@/components/ui/form-separator';
 import InputOtp from '@/app/(auth)/admin/qr/checkin_components/six_digit_input-otp';
+import { copyToClipboard } from '@/lib/copy-to-clipboard';
 
 export default function InviteCard({ teamId }: { teamId: string }) {
     const teamLink = `https://portal.sfusurge.com/invite/${teamId}`;
@@ -19,43 +19,14 @@ export default function InviteCard({ teamId }: { teamId: string }) {
     const [teamCode, setTeamCode] = useState(teamId);
 
     const handleCopy = async (textToCopy: string, type: 'link' | 'code') => {
-        try {
-            // copy to clipboard
-            await navigator.clipboard.writeText(textToCopy);
-        } catch (err) {
-            // Fallback for mobile and older browsers: create temporary input element and copy it, maybe find a different way to do this
-            const tempInput = document.createElement('input');
-            tempInput.value = textToCopy;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-        }
-
-        // Toast on desktop only
-        if (window.matchMedia('(min-width: 640px)').matches) {
-            toast({
-                variant: 'default',
-                title: `${type === 'link' ? 'Link' : 'Code'} copied!`,
-                icon:
-                    type === 'link' ? <LinkIcon /> : <DocumentDuplicateIcon />,
-            });
-        }
-
-        // Update UI state
-        if (type === 'link') {
-            setIsCopied(true);
-            setTimeout(() => setIsCopied(false), 3000);
-        } else {
-            setIsCodeCopied(true);
-            setTimeout(() => setIsCodeCopied(false), 3000);
-        }
+        const setterFunction = type === 'link' ? setIsCopied : setIsCodeCopied;
+        await copyToClipboard(textToCopy, type, setterFunction);
     };
 
     return (
         <Card className="w-full">
-            <CardContent footer={false}>
-                <div className="mb-4 flex flex-col gap-2">
+            <CardContent className="gap-6">
+                <div className="flex flex-col gap-2">
                     <h2 className="text-lg font-semibold">
                         Invite Your Teammates 🦦
                     </h2>
@@ -71,7 +42,7 @@ export default function InviteCard({ teamId }: { teamId: string }) {
                             <Input
                                 value={teamLink}
                                 type="text"
-                                className={`flex-shrink flex-grow cursor-copy border border-neutral-700/30 bg-neutral-800 ${isCopied ? 'text-success-400' : 'text-white/60'}`}
+                                className="flex-shrink flex-grow cursor-copy border border-neutral-700/30 bg-neutral-800 text-white/60"
                                 readOnly
                                 onClick={() => handleCopy(teamLink, 'link')}
                             />
@@ -79,14 +50,14 @@ export default function InviteCard({ teamId }: { teamId: string }) {
                                 variant="default"
                                 size={'cozy'}
                                 hierarchy={'secondary'}
-                                className={`cursor-copy text-nowrap ${isCopied ? 'text-success-400' : ''}`}
+                                className={`text-nowrap ${isCopied ? 'bg-neutral-700/60' : ''}`}
                                 onClick={() => handleCopy(teamLink, 'link')}
                                 leadingIcon="true"
                                 leadingIconChild={
                                     <LinkIcon className="h-4 w-4" />
                                 }
                             >
-                                {isCopied ? 'Copied' : 'Copy link'}
+                                {isCopied ? 'Copied!' : 'Copy link'}
                             </Button>
                         </div>
                     }
@@ -95,11 +66,6 @@ export default function InviteCard({ teamId }: { teamId: string }) {
                             <InputOtp
                                 input={teamId}
                                 setInput={setTeamCode}
-                                textColor={
-                                    isCodeCopied
-                                        ? 'text-success-400'
-                                        : undefined
-                                }
                                 readOnly
                                 className="cursor-copy"
                             />
@@ -107,14 +73,14 @@ export default function InviteCard({ teamId }: { teamId: string }) {
                                 variant="default"
                                 size={'cozy'}
                                 hierarchy={'secondary'}
-                                className={`flex h-full cursor-copy items-center justify-center text-nowrap ${isCodeCopied ? 'text-success-400' : ''}`}
+                                className={`text-nowrap ${isCodeCopied ? 'bg-neutral-700/60' : ''}`}
                                 onClick={() => handleCopy(teamCode, 'code')}
                                 leadingIcon="true"
                                 leadingIconChild={
                                     <DocumentDuplicateIcon className="h-4 w-4" />
                                 }
                             >
-                                {isCodeCopied ? 'Copied' : 'Copy code'}
+                                {isCodeCopied ? 'Copied!' : 'Copy code'}
                             </Button>
                         </div>
                     }

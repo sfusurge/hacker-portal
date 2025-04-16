@@ -3,11 +3,12 @@
 import { Button } from '@/components/ui/button';
 import { trpc } from '@/trpc/client';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, forwardRef } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { UserGroupIcon } from '@heroicons/react/24/solid';
 import { ComponentProps } from 'react';
 import { InternalServerError } from '@/server/exceptions';
+
 interface JoinTeamButtonProps
     extends Omit<ComponentProps<typeof Button>, 'onClick' | 'onError'> {
     teamDisplayId: string;
@@ -16,60 +17,82 @@ interface JoinTeamButtonProps
     loadingText?: string;
 }
 
-export default function JoinTeamButton({
-    teamDisplayId,
-    onError,
-    disabled,
-    ...buttonProps
-}: JoinTeamButtonProps) {
-    const router = useRouter();
-    const [isJoining, setIsJoining] = useState(false);
-
-    const joinTeamMutation = trpc.teams.joinTeam.useMutation({
-        onSuccess: (data) => {
-            toast({
-                title: 'Success!',
-                description: `You've successfully joined the team ${data.name}.`,
-                variant: 'default',
-                icon: <UserGroupIcon />,
-            });
-
-            router.push('/team');
-            router.refresh();
+const JoinTeamButton = forwardRef<HTMLButtonElement, JoinTeamButtonProps>(
+    function JoinTeamButton(
+        {
+            teamDisplayId,
+            onError,
+            disabled,
+            buttonText = 'Join team',
+            loadingText = 'Joining...',
+            ...buttonProps
         },
-        onError: (error) => {
-            console.log(error);
-            toast({
-                title: 'Failed to join team',
-                description: error.message,
-                variant: 'default',
-                icon: <UserGroupIcon />,
-            });
+        ref
+    ) {
+        const router = useRouter();
+        const [isJoining, setIsJoining] = useState(false);
 
-            // handle other errors TODO
-            if (error instanceof InternalServerError) {
-                console.log(error);
+        const joinTeamMutation = trpc.teams.joinTeam.useMutation({
+            onSuccess: (data) => {
+                toast({
+                    title: 'Success!',
+                    description: `You've successfully joined the team ${data.name}.`,
+                    variant: 'default',
+                    icon: <UserGroupIcon />,
+                });
+
+                router.push('/team');
+                router.refresh();
+            },
+            onError: (error) => {
+                toast({
+                    title: 'Failed to join team',
+                    description: error.message,
+                    variant: 'default',
+                    icon: <UserGroupIcon />,
+                });
+
+                if (onError) {
+                    onError(new Error(error.message));
+                }
+
+                if (error instanceof InternalServerError) {
+                    console.error('Internal server error:', error);
+                }
+
+                setIsJoining(false);
+            },
+        });
+
+        const handleJoinTeam = () => {
+            if (!teamDisplayId || teamDisplayId.trim() === '') {
+                if (onError) {
+                    onError(
+                        new Error('Please enter a valid team code or link')
+                    );
+                }
+                return;
             }
 
-            setIsJoining(false);
-        },
-    });
+            setIsJoining(true);
+            joinTeamMutation.mutate({ teamDisplayId });
+        };
 
-    const handleJoinTeam = async () => {
-        setIsJoining(true);
-        joinTeamMutation.mutate({ teamDisplayId });
-    };
+        return (
+            <Button
+                ref={ref}
+                onClick={handleJoinTeam}
+                disabled={isJoining || disabled || !teamDisplayId}
+                variant="brand"
+                size="cozy"
+                hierarchy="primary"
+                type="button"
+                {...buttonProps}
+            >
+                {isJoining ? loadingText : buttonText}
+            </Button>
+        );
+    }
+);
 
-    return (
-        <Button
-            onClick={handleJoinTeam}
-            disabled={isJoining || disabled}
-            variant="brand"
-            size="cozy"
-            hierarchy="primary"
-            {...buttonProps}
-        >
-            {isJoining ? 'Joining...' : 'Join team'}
-        </Button>
-    );
-}
+export default JoinTeamButton;

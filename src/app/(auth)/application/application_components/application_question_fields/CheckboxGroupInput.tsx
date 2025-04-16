@@ -16,17 +16,20 @@ export function CheckBoxGroupInput({
             max={question.max ?? 99}
             required={question.required ?? false}
             selected={question.choices
-                .filter((item) => item.value)
-                .map((item) => item.data)}
-            onSelection={(selelect) => {
+                .map((item) => (item.value ? item.data : undefined))
+                .filter((item) => item !== undefined)}
+            onSelection={(selelect, other) => {
                 setQuestion({
                     ...question,
+                    otherValue: other,
                     choices: question.choices.map((item) => ({
                         ...item,
                         value: selelect.has(item.data),
                     })),
                 });
             }}
+            allowOther={question.allowOther}
+            otherValue={question.otherValue}
         ></CheckboxGroup>
     );
 }
