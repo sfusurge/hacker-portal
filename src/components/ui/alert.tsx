@@ -5,6 +5,7 @@ import {
     ExclamationTriangleIcon,
     ShieldExclamationIcon,
     InformationCircleIcon,
+    XCircleIcon,
 } from '@heroicons/react/20/solid';
 
 import { cn } from '@/lib/utils';
@@ -26,8 +27,9 @@ const alertVariants = cva('relative w-full rounded-lg border p-3 text-sm', {
 
 const Alert = React.forwardRef<
     HTMLDivElement,
-    React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof alertVariants>
->(({ className, variant, ...props }, ref) => {
+    React.HTMLAttributes<HTMLDivElement> &
+        VariantProps<typeof alertVariants> & { onClose?: () => void }
+>(({ className, variant, onClose, ...props }, ref) => {
     const IconComponent = React.useMemo(() => {
         switch (variant) {
             case 'success':
@@ -61,6 +63,15 @@ const Alert = React.forwardRef<
             <div className="flex gap-2">
                 {IconComponent}
                 <div className="flex-1">{props.children}</div>
+                {onClose && (
+                    <button
+                        onClick={onClose}
+                        className="flex h-4 w-4 cursor-pointer items-center justify-center text-white/30 opacity-70 transition-opacity hover:opacity-100 focus:outline-none"
+                    >
+                        <XCircleIcon className="h-4 w-4" />
+                        <span className="sr-only">Close</span>
+                    </button>
+                )}
             </div>
         </div>
     );

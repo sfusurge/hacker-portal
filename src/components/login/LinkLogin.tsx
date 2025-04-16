@@ -33,7 +33,7 @@ export default function LinkLogin({
     return (
         <form action={handleSubmit} className="w-full space-y-4" ref={formRef}>
             <div className="space-y-2">
-                <Label>Email address</Label>
+                <Label>Email</Label>
                 <FormTextInput
                     type="email"
                     name="email"

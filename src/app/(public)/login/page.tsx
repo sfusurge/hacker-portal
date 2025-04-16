@@ -7,7 +7,6 @@ import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import LoginContainer from '@/components/login/LoginContainer';
 import type { OAuthProvider } from '@/components/login/constants';
-import Privacy from '@/components/login/Privacy';
 
 export default async function Login({
     searchParams,
@@ -68,7 +67,10 @@ export default async function Login({
     }
 
     return (
-        <div id="auth" className="relative h-screen w-screen overflow-hidden">
+        <div
+            id="auth"
+            className="relative h-[100dvh] w-[100dvw] overflow-hidden"
+        >
             <div className="block h-full w-full bg-[#C4D086] lg:hidden"></div>
             <Image
                 src="/login/journeyhacks-header-2x.webp"
@@ -86,7 +88,6 @@ export default async function Login({
                             loginWithProvider={loginWithProvider}
                         />
                     </div>
-                    <Privacy />
                 </div>
             </div>
         </div>

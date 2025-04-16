@@ -19,7 +19,7 @@ export default function EmailSent({
                 alt="Otter with mail illustration"
             />
             <div className="space-y-3">
-                <h1 className="text-3xl leading-tight font-semibold">
+                <h1 className="leading-tighter text-3xl font-semibold">
                     Check your email!
                 </h1>
                 <p className="max-w-84 text-pretty text-white/60">
@@ -28,7 +28,7 @@ export default function EmailSent({
                     link that&apos;ll log you into the SFU Surge portal. 🦦
                 </p>
             </div>
-            <p className="w-full text-center">
+            <p className="w-full text-center text-white/60">
                 Didn&apos;t receive an email?
                 <span
                     onClick={onResend}
