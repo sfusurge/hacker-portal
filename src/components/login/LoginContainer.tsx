@@ -7,6 +7,8 @@ import { OAuthProvider } from './constants';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AnimatePresence, motion } from 'motion/react';
 import { Conditional } from '@/lib/Conditional';
+import { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 
 export default function LoginContainer({
     loginWithNodeMail,
@@ -21,6 +23,7 @@ export default function LoginContainer({
     const [sentEmail, setSentEmail] = useState('');
     const [showAlert, setShowAlert] = useState(false);
     const [loggedIn, setLoggedIn] = useState(false);
+    const { data: session, status } = useSession();
 
     const handleEmailSuccess = async (formData: FormData) => {
         const result = await loginWithNodeMail(formData);
@@ -41,6 +44,15 @@ export default function LoginContainer({
             }, 2500);
         }
     };
+
+    // Check session status to determine if user is logged in and has sent an email
+    useEffect(() => {
+        if (status === 'authenticated' && session) {
+            setLoggedIn(true);
+        } else if (status === 'unauthenticated') {
+            setLoggedIn(false);
+        }
+    }, [session, status]);
 
     return (
         <>
