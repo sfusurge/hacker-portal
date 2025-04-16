@@ -1,13 +1,13 @@
 'use server';
-import { auth, signIn, signOut } from '@/auth/auth';
-import { Button } from '@/components/ui/button';
+import { auth, signIn } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
 import { users } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
 import Image from 'next/image';
-import { notFound, redirect } from 'next/navigation';
-import { LinkLogin } from './LinkLogin';
-import { createCaller } from '@/server/appRouter';
+import { redirect } from 'next/navigation';
+import LoginContainer from '@/components/login/LoginContainer';
+import type { OAuthProvider } from '@/components/login/constants';
+import Privacy from '@/components/login/Privacy';
 
 export default async function Login({
     searchParams,
@@ -15,7 +15,6 @@ export default async function Login({
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
     const redirectTarget = (await searchParams)['from'] as string;
-
     const session = await auth();
 
     if (session) {
@@ -52,133 +51,44 @@ export default async function Login({
         // no target specified = default home
         return redirect('/home');
     }
-
-    async function loginWithGoogle() {
+    async function loginWithProvider(provider: OAuthProvider) {
         'use server';
+        const redirectPath = `/login${redirectTarget ? '?from=' + encodeURIComponent(redirectTarget) : ''}`;
 
-        await signIn('google', {
-            redirectTo: `/login${redirectTarget !== undefined ? '?from=' + encodeURIComponent(redirectTarget) : ''}`,
-        });
-    }
-
-    async function loginWithGithub() {
-        'use server';
-        await signIn('github', {
-            redirectTo: `/login${redirectTarget !== undefined ? '?from=' + encodeURIComponent(redirectTarget) : ''}`,
-        });
-    }
-
-    async function loginWithDiscord() {
-        'use server';
-
-        await signIn('discord', {
-            redirectTo: `/login${redirectTarget !== undefined ? '?from=' + encodeURIComponent(redirectTarget) : ''}`,
-        });
+        await signIn(provider.toLowerCase(), { redirectTo: redirectPath });
     }
 
     async function loginWithNodeMail(formData: FormData) {
         'use server';
-
         await signIn('nodemailer', {
             email: formData.get('email'),
             redirect: false,
         });
-    }
-
-    async function loginWithFigma(formData: FormData) {
-        'use server';
-
-        await signIn('figma', {
-            // redirectTo: `/login${redirectTarget !== undefined ? '?from=' + encodeURIComponent(redirectTarget) : ''}`,
-        });
+        return { success: true, email: formData.get('email') as string };
     }
 
     return (
-        <div id="auth" className="md:grid md:grid-cols-2 2xl:grid-cols-3">
-            <div className="bg-neutral-925 flex h-screen max-h-screen w-screen flex-col justify-center gap-14 p-6 md:w-full 2xl:col-span-1">
-                <div className="flex flex-col justify-center gap-8">
-                    <Image
-                        src="/login/sparkcheffrizz.webp"
-                        width={80}
-                        height={80}
-                        className="mx-auto rounded-lg"
-                        alt="Sparky wearing a chef\'s hat"
-                    ></Image>
-
-                    <div className="flex w-full flex-col items-center gap-4 text-center *:max-w-96">
-                        <p className="text-brand-400 mb-2 text-center text-sm font-semibold">
-                            Welcome
-                        </p>
-                        <h1 className="text-center text-3xl leading-tight font-semibold text-balance text-white">
-                            Sign in to the Surge Portal to apply to our events
-                        </h1>
-                    </div>
-
-                    <div className="flex w-full flex-col items-center gap-4 *:max-w-96">
-                        <form action={loginWithGoogle} className="w-full">
-                            <Button
-                                type="submit"
-                                variant="default"
-                                hierarchy="secondary"
-                                size="cozy"
-                                className="w-full"
-                                leadingIcon="/icons/google.svg"
-                                leadingIconAlt="Google logo"
-                            >
-                                Continue with Google
-                            </Button>
-                        </form>
-
-                        <form action={loginWithGithub} className="w-full">
-                            <Button
-                                variant="default"
-                                hierarchy="secondary"
-                                size="cozy"
-                                className="w-full"
-                                leadingIcon="/icons/github.svg"
-                                leadingIconAlt="GitHub logo"
-                            >
-                                Continue with GitHub
-                            </Button>
-                        </form>
-
-                        <form action={loginWithFigma} className="w-full">
-                            <Button
-                                variant="default"
-                                hierarchy="secondary"
-                                size="cozy"
-                                className="w-full"
-                                leadingIcon="/icons/github.svg"
-                                leadingIconAlt="GitHub logo"
-                            >
-                                Continue with Figma
-                            </Button>
-                        </form>
-
-                        <form action={loginWithDiscord} className="w-full">
-                            <Button
-                                variant="default"
-                                hierarchy="secondary"
-                                size="cozy"
-                                className="w-full"
-                                leadingIcon="/icons/discord.svg"
-                                leadingIconAlt="Discord logo"
-                            >
-                                Continue with Discord
-                            </Button>
-                        </form>
-
-                        <LinkLogin action={loginWithNodeMail} />
-                    </div>
-                </div>
-            </div>
+        <div id="auth" className="relative h-screen w-screen overflow-hidden">
+            <div className="block h-full w-full bg-[#C4D086] lg:hidden"></div>
             <Image
                 src="/login/journeyhacks-header-2x.webp"
                 alt="Stormy and Sparky are cooking."
-                width={1920}
-                height={1080}
-                className="hidden h-full object-cover md:block 2xl:col-span-2"
-            ></Image>
+                fill
+                className="absolute hidden h-full w-full object-cover lg:block"
+                priority
+            />
+
+            <div className="absolute inset-0 flex h-full items-center justify-center p-0 sm:justify-start sm:p-4">
+                <div className="bg-neutral-925 flex h-full w-full flex-col overflow-y-auto p-6 sm:max-h-[95vh] sm:rounded-xl sm:p-24 sm:py-10 lg:max-w-[35rem]">
+                    <div className="flex flex-1 items-center">
+                        <LoginContainer
+                            loginWithNodeMail={loginWithNodeMail}
+                            loginWithProvider={loginWithProvider}
+                        />
+                    </div>
+                    <Privacy />
+                </div>
+            </div>
         </div>
     );
 }
