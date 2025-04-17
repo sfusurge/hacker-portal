@@ -17,13 +17,22 @@ export const MAX_FILE_SIZE = 2 * 1024 * 1024;
 // Allowed image MIME types
 export const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png'] as const;
 
-if (
-    !process.env.R2_ENDPOINT ||
-    !process.env.R2_ACCESS_KEY_ID ||
-    !process.env.R2_SECRET_ACCESS_KEY ||
-    !process.env.R2_BUCKET_NAME
-) {
-    throw new Error('Missing required R2 environment variables');
+if (process.env.R2_ENDPOINT) {
+    throw new Error('Missing required R2_ENDPOINT environment variables');
+}
+
+if (!process.env.R2_ACCESS_KEY_ID) {
+    throw new Error('Missing required R2_ACCESS_KEY_ID environment variables');
+}
+
+if (!process.env.R2_SECRET_ACCESS_KEY) {
+    throw new Error(
+        'Missing required R2_SECRET_ACCESS_KEY environment variables'
+    );
+}
+
+if (!process.env.R2_BUCKET_NAME) {
+    throw new Error('Missing required R2_BUCKET_NAME environment variables');
 }
 
 // Initialize the S3 client with Cloudflare R2 credentials
@@ -44,8 +53,10 @@ export function validateFile(fileName: string, fileContent: Buffer): string {
     // Check file size
     const fileSize = fileContent.length;
     if (fileSize > MAX_FILE_SIZE) {
+        const fileSizeInMB = fileSize / (1024 * 1024);
+
         throw new BadRequestError(
-            `File size (${(fileSize / 1024 / 1024).toFixed(2)}MB) exceeds maximum allowed size of 2MB`
+            `File size (${fileSizeInMB}MB) exceeds maximum allowed size of 2MB`
         );
     }
 
