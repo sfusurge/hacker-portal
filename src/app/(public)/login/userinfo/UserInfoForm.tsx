@@ -2,15 +2,13 @@
 
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-
 import { FormTextInput } from '@/components/ui/input/input';
 import { Label } from '@/components/ui/label/label';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { redirect, RedirectType, useSearchParams } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
+import { redirect, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Suspense } from 'react';
-
 import { updateUserInfo } from './userinfo_action';
+import { Input } from '@/components/ui/input/input';
 
 export default function UserInfoForm() {
     const searchParams = useSearchParams();
@@ -24,7 +22,12 @@ export default function UserInfoForm() {
     useEffect(() => {
         if (!session) {
             redirect(
-                `/login${searchParams.get('from') ? '?from=' + encodeURIComponent(searchParams.get('from')!) : ''}`
+                `/login${
+                    searchParams.get('from')
+                        ? '?from=' +
+                          encodeURIComponent(searchParams.get('from')!)
+                        : ''
+                }`
             );
         }
     }, [session]);
@@ -32,35 +35,121 @@ export default function UserInfoForm() {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
-
+    const [profilePicture, setProfilePicture] = useState('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const formRef = useRef<HTMLFormElement>(null);
 
-    function submit() {
-        if (formRef.current) {
-            formRef.current.requestSubmit();
+    // TODO: UPLOAD TO R2
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setProfilePicture(reader.result as string);
+            };
+            reader.readAsDataURL(file);
         }
-    }
+    };
+
+    const handleButtonClick = () => {
+        fileInputRef.current?.click();
+    };
 
     return (
-        <Suspense>
-            <div
-                id="userInfo"
-                className="md:grid md:grid-cols-2 2xl:grid-cols-3"
-            >
-                <div className="w-screen max-h-screen bg-neutral-925 h-screen p-6 flex flex-col items-center gap-14 justify-center md:w-full 2xl:col-span-1">
-                    <div className="flex flex-col gap-12 max-w-96 w-full">
-                        <div className="text-center">
-                            <h1 className="text-3xl mb-3 font-semibold text-white text-balance leading-tight">
-                                Tell us about yourself
+        <div
+            id="auth"
+            className="relative h-[100dvh] w-[100dvw] overflow-hidden"
+        >
+            <div className="block h-full w-full bg-[#C4D086] lg:hidden" />
+            <Image
+                src="/login/journeyhacks-header-2x.webp"
+                alt="Stormy and Sparky are cooking."
+                fill
+                className="absolute hidden h-full w-full object-cover lg:block"
+                priority
+            />
+
+            <div className="absolute inset-0 flex h-full items-center justify-center p-0 sm:justify-start sm:p-4">
+                <div className="bg-neutral-925 flex h-full w-full flex-col overflow-y-auto p-6 sm:max-h-[95vh] sm:rounded-xl sm:p-24 sm:py-10 lg:max-w-[35rem]">
+                    <div className="flex h-full w-full flex-col items-start gap-12 sm:items-center sm:justify-center sm:gap-10">
+                        <div className="space-y-3 text-white sm:text-center">
+                            <h1 className="text-3xl leading-tight font-semibold">
+                                Let&apos;s get started
                             </h1>
-                            <p className="text-white/60 text-balance">
-                                We need some information before you can start
-                                applying to our events. 🦦
+                            <p className="text-white/60">
+                                Tell us about yourself 🦦
                             </p>
                         </div>
-                        <form ref={formRef} action={updateUserWithRedirect}>
-                            <div className="flex flex-col gap-4 *:max-w-96 w-full items-center">
-                                <div className="w-full flex flex-col md:flex-row gap-4 md:gap-6">
+
+                        <form
+                            ref={formRef}
+                            action={updateUserWithRedirect}
+                            className="flex h-full w-full max-w-100 flex-col space-y-12 sm:block sm:h-max"
+                        >
+                            <div className="flex-1 space-y-8">
+                                <div className="flex items-start gap-6">
+                                    <Image
+                                        src={
+                                            profilePicture ||
+                                            '/teams/single-otter.webp'
+                                        }
+                                        alt="Profile picture"
+                                        width={64}
+                                        height={64}
+                                        className="rounded-full"
+                                    />
+                                    <div className="flex flex-col gap-3">
+                                        <label className="block text-sm font-medium text-white/60">
+                                            Profile picture{' '}
+                                            <span className="text-white/30">
+                                                (Optional)
+                                            </span>
+                                        </label>
+                                        <Input
+                                            type="file"
+                                            id="file-upload"
+                                            className="hidden w-auto"
+                                            accept=".png, .jpeg"
+                                            ref={fileInputRef}
+                                            onChange={handleFileChange}
+                                        />
+                                        <div className="flex gap-1">
+                                            <label
+                                                htmlFor="file-upload"
+                                                className="cursor-pointer"
+                                            >
+                                                <Button
+                                                    variant="default"
+                                                    hierarchy="secondary"
+                                                    size="compact"
+                                                    onClick={handleButtonClick}
+                                                    type="button"
+                                                >
+                                                    Upload
+                                                </Button>
+                                            </label>
+                                            {profilePicture && (
+                                                <Button
+                                                    variant="default"
+                                                    hierarchy="tertiary"
+                                                    size="compact"
+                                                    className="hover:bg-neutral-750/60 border-2 border-transparent underline underline-offset-4"
+                                                    onClick={() =>
+                                                        setProfilePicture('')
+                                                    }
+                                                    type="button"
+                                                >
+                                                    Clear
+                                                </Button>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-white/60">
+                                            .png, jpeg files up to 2 MB <br />
+                                            At least 200px x 200px
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-row gap-4 md:gap-6">
                                     <div className="w-full">
                                         <Label required={true}>
                                             First name
@@ -69,10 +158,9 @@ export default function UserInfoForm() {
                                             name="firstname"
                                             type="search"
                                             lazy
-                                            style={{ width: '100%' }}
-                                            onLazyChange={(text) => {
-                                                setFirstName(text as string);
-                                            }}
+                                            onLazyChange={(text) =>
+                                                setFirstName(text as string)
+                                            }
                                             required
                                             placeholder="First name..."
                                         />
@@ -84,26 +172,23 @@ export default function UserInfoForm() {
                                             name="lastname"
                                             type="search"
                                             lazy
-                                            style={{ width: '100%' }}
-                                            onLazyChange={(text) => {
-                                                setLastName(text as string);
-                                            }}
+                                            onLazyChange={(text) =>
+                                                setLastName(text as string)
+                                            }
                                             required
                                             placeholder="Last name..."
                                         />
                                     </div>
                                 </div>
-
                                 <div className="w-full">
                                     <Label required={true}>Phone number</Label>
                                     <FormTextInput
                                         name="phone"
                                         type="tel"
                                         lazy
-                                        style={{ width: '100%' }}
-                                        onLazyChange={(text) => {
-                                            setPhoneNumber(text as string);
-                                        }}
+                                        onLazyChange={(text) =>
+                                            setPhoneNumber(text as string)
+                                        }
                                         required
                                         placeholder="6048622113"
                                         pattern="^(1|)[2-9]\d{2}[2-9]\d{6}$"
@@ -112,39 +197,26 @@ export default function UserInfoForm() {
                                 </div>
                             </div>
 
-                            <div className="flex flex-col mt-6 gap-4 *:max-w-96 items-center w-full">
-                                <Button
-                                    type="submit"
-                                    variant="brand"
-                                    hierarchy="primary"
-                                    role="submit"
-                                    disabled={
-                                        !(
-                                            firstName.length > 0 &&
-                                            lastName.length > 0 &&
-                                            phoneNumber.length > 0
-                                        )
-                                    }
-                                    size="cozy"
-                                    className="w-full"
-                                    onClick={() => {
-                                        submit();
-                                    }}
-                                >
-                                    Continue
-                                </Button>
-                            </div>
+                            <Button
+                                type="submit"
+                                variant="brand"
+                                hierarchy="primary"
+                                disabled={
+                                    !(
+                                        firstName.length > 0 &&
+                                        lastName.length > 0 &&
+                                        phoneNumber.length > 0
+                                    )
+                                }
+                                size="cozy"
+                                className="mt-auto w-full sm:mt-6"
+                            >
+                                Continue
+                            </Button>
                         </form>
                     </div>
                 </div>
-                <Image
-                    src="/login/journeyhacks-header-2x.webp"
-                    alt="Stormy and Sparky are cooking."
-                    width={1920}
-                    height={1080}
-                    className="hidden md:block h-full object-cover 2xl:col-span-2"
-                ></Image>
             </div>
-        </Suspense>
+        </div>
     );
 }

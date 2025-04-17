@@ -15,7 +15,18 @@ export const usersRouter = router({
      * get users along with their display id.
      */
     getUsers: publicProcedure.query(async () => {
-        const res = await databaseClient.select().from(users);
+        const res = await databaseClient
+            .select({
+                id: users.id,
+                email: users.email,
+                image: users.image,
+                firstName: users.firstName,
+                lastName: users.lastName,
+                phoneNumber: users.phoneNumber,
+                userRole: users.userRole,
+                displayId: users.displayId,
+            })
+            .from(users);
         return res;
     }),
     addUser: publicProcedure.input(insertUserSchema).mutation(async (opts) => {
@@ -41,3 +52,13 @@ export const usersRouter = router({
 });
 
 export type UsersRouter = typeof usersRouter;
+export interface UserType {
+    id: number;
+    email: string;
+    image?: string | undefined;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    phoneNumber?: string | undefined;
+    userRole: string;
+    displayId: string;
+}

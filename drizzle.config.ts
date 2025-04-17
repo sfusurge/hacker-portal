@@ -1,4 +1,5 @@
 import { defineConfig } from 'drizzle-kit';
+console.log('connecting to db: ', process.env.DBURL);
 
 export default defineConfig({
     schema: './src/db/schema/*',

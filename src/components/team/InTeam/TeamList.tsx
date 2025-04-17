@@ -9,8 +9,7 @@ import { DialogTrigger, Dialog } from '@/components/ui/dialog';
 import { users } from '@/db/schema/users/users';
 import { InferSelectModel } from 'drizzle-orm';
 import { ApplicationStatus } from '@/lib/application-status';
-
-type UserType = InferSelectModel<typeof users>;
+import { UserType } from '@/server/routers/usersRouter';
 
 type TeamMember = {
     userId: number;
@@ -55,7 +54,7 @@ export default function TeamList({ currentUserEmail, team }: TeamListProps) {
             id: -1,
             firstName: 'Empty',
             lastName: 'Slot',
-            phoneNumber: null,
+            phoneNumber: undefined,
             email: '',
             userRole: 'user',
             placeholder: true,
