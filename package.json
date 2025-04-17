@@ -48,7 +48,7 @@
         "date-fns": "^4.1.0",
         "dayjs": "^1.11.13",
         "drizzle-orm": "^0.42.0",
-        "drizzle-zod": "^0.6.0",
+        "drizzle-zod": "^0.7.1",
         "google": "link:@next/third-parties/google",
         "input-otp": "^1.4.2",
         "jotai": "^2.12.2",
