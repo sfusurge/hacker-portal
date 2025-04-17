@@ -15,7 +15,7 @@ import { useHydrateAtoms } from 'jotai/utils';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { redirect, usePathname } from 'next/navigation';
 import { UserData } from '@/db/schema/users/users';
 
 interface MobileTopNavProps {
@@ -68,7 +68,7 @@ export default function MobileTopNav({
                             ></Image>
 
                             <div className="flex flex-col gap-2">
-                                <span className="line-clamp-1 text-sm font-medium leading-none text-white">
+                                <span className="line-clamp-1 text-sm leading-none font-medium text-white">
                                     JourneyHacks 2025
                                 </span>
                                 <span className="line-clamp-1 text-sm leading-none text-white/60">
@@ -106,9 +106,12 @@ export default function MobileTopNav({
                                     variant="error"
                                     className="px-2"
                                     onClick={async () => {
-                                        await signOut({
-                                            redirectTo: '/',
-                                        });
+                                        await signOut();
+                                        if (typeof window !== 'undefined') {
+                                            localStorage.removeItem(
+                                                'auth-login-success'
+                                            );
+                                        }
                                     }}
                                 ></NavLink>
                                 <PopoverPrimitive.Arrow className="fill-neutral-850 mr-4 shadow-lg" />

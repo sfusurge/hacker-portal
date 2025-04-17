@@ -1,10 +1,7 @@
-import { redirect } from 'next/navigation';
-import { createCaller } from '@/server/appRouter';
-import { getUserData } from '@/db/schema/users/users';
 import TeamDisplay from '@/components/team/TeamDisplay';
-import TeamList from '@/components/team/InTeam/TeamList';
-import CurrentStateUI from '@/components/team/NoTeam/CurrentState';
-import InviteCard from '@/components/team/InTeam/InviteCard';
+import { getUserData } from '@/db/schema/users/users';
+import { createCaller } from '@/server/appRouter';
+import { redirect } from 'next/navigation';
 
 export default async function Team() {
     const user = await getUserData();
@@ -14,122 +11,36 @@ export default async function Team() {
     }
 
     const trpcClient = createCaller({});
-    const currentHackathon = await getCurrentHackathon();
+    const hackathon = await trpcClient.hackathons.getActiveHackathon();
 
     // Get current team for newest hackathon
     const currentTeam = await trpcClient.teams.getCurrentTeam({
-        hackathonId: currentHackathon.id,
+        hackathonId: hackathon.id,
     });
 
-    // If user is not in a team for the current hackathon, show join team UI
-    if (!currentTeam) {
-        return (
-            <div className="flex h-full w-full items-center justify-center">
-                <CurrentStateUI
-                    hackathonId={currentHackathon.id}
-                    title="You're not in a team yet! 🥺"
-                    description="Join an existing team or create a new one to view your team's information here."
-                />
-            </div>
-        );
-    }
+    const teamPictureUrl = currentTeam?.teamPictureUrl;
 
-    // At this point currentTeam is guaranteed to be defined
-    const image = await trpcClient.files
-        .getFile({
-            key: currentTeam.teamPictureUrl || '/teams/default.webp',
-        })
-        .catch((error) => {
-            console.error('Error fetching image:', error);
-            return null;
-        });
+    const image = teamPictureUrl
+        ? await trpcClient.files
+              .getFile({
+                  key: teamPictureUrl,
+              })
+              .catch((error) => {
+                  console.error('Error fetching image:', error);
+                  return null;
+              })
+        : null;
 
-    if (!image) {
-        return (
-            <div className="flex flex-col gap-6 md:gap-8">
-                <div className="flex gap-6">
-                    <img
-                        src="/teams/default.webp"
-                        alt={`${currentTeam.name} logo`}
-                        className="inline-block h-11 w-11 rounded-xl md:h-16 md:w-16"
-                    />
-                    <div className="flex flex-col justify-between gap-1">
-                        <p className="text-sm text-white/60">
-                            Your team ({currentTeam.members.length}/
-                            {currentTeam.maxMembersCount}) members
-                        </p>
-                        <h1 className="text-3xl font-semibold text-white">
-                            {currentTeam.name}
-                        </h1>
-                    </div>
-                </div>
-
-                <div className="flex flex-col gap-4">
-                    <div className="grid grid-cols-1 gap-6 pb-24 md:pb-0 xl:grid-cols-[1fr_clamp(29rem,33vw,30.5rem)]">
-                        <TeamList
-                            currentUserEmail={user.email}
-                            team={{
-                                id: currentTeam.id,
-                                name: currentTeam.name,
-                                members: currentTeam.members,
-                                maxMembersCount: currentTeam.maxMembersCount,
-                            }}
-                        />
-                        <InviteCard teamId={currentTeam.displayId} />
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    const imageUrl = `data:${image.contentType};base64,${Buffer.from(image.buffer).toString('base64')}`;
+    const imageData = image
+        ? `data:${image.contentType};base64,${Buffer.from(image.buffer).toString('base64')}`
+        : undefined;
 
     return (
-        <div className="flex flex-col gap-6 md:gap-8">
-            <div className="flex gap-6">
-                <img
-                    src={imageUrl ?? '/teams/default.webp'}
-                    alt={`${currentTeam.name} logo`}
-                    className="inline-block h-11 w-11 rounded-xl md:h-16 md:w-16"
-                />
-                <div className="flex flex-col justify-between gap-1">
-                    <p className="text-sm text-white/60">
-                        Your team ({currentTeam.members.length}/
-                        {currentTeam.maxMembersCount}) members
-                    </p>
-                    <h1 className="text-3xl font-semibold text-white">
-                        {currentTeam.name}
-                    </h1>
-                </div>
-            </div>
-
-            <div className="flex flex-col gap-4">
-                <div className="grid grid-cols-1 gap-6 pb-24 md:pb-0 xl:grid-cols-[1fr_clamp(29rem,33vw,30.5rem)]">
-                    <TeamList
-                        currentUserEmail={user.email}
-                        team={{
-                            id: currentTeam.id,
-                            name: currentTeam.name,
-                            members: currentTeam.members,
-                            maxMembersCount: currentTeam.maxMembersCount,
-                        }}
-                    />
-                    <InviteCard teamId={currentTeam.displayId} />
-                </div>
-            </div>
-        </div>
+        <TeamDisplay
+            currentTeam={currentTeam}
+            currentHackathon={hackathon}
+            user={user}
+            imageData={imageData}
+        />
     );
-}
-
-// temp function to get most recent hackathon
-export async function getCurrentHackathon() {
-    const trpcClient = createCaller({});
-    const hackathons = await trpcClient.hackathons.getHackathons();
-
-    if (!hackathons || hackathons.length === 0) {
-        throw new Error('No hackathons found');
-    }
-
-    // Return the most recent hackathon
-    return hackathons[hackathons.length - 1];
 }

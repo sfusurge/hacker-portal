@@ -5,10 +5,7 @@ import DesktopNav from '@/components/sidebar/DesktopNav';
 
 import { ReactNode } from 'react';
 
-import { auth } from '@/auth/auth';
-import { databaseClient } from '@/db/client';
-import { getUserData, users } from '@/db/schema/users/users';
-import { eq } from 'drizzle-orm';
+import { getUserData } from '@/db/schema/users/users';
 
 import { CacheClearer } from '@/app/(auth)/CacheClear';
 import { redirect } from 'next/navigation';
@@ -16,9 +13,10 @@ import { ClientAuthContext } from './ClientAuthContext';
 
 export default async function Layout({ children }: { children: ReactNode }) {
     const initialUserData = await getUserData();
+    console.log('ini user data', initialUserData);
 
     if (!initialUserData) {
-        return await redirect('/signout');
+        return redirect('/signout');
     }
 
     return (
@@ -31,11 +29,11 @@ export default async function Layout({ children }: { children: ReactNode }) {
                 <CacheClearer initialData={initialUserData}></CacheClearer>
                 <MobileTopNav
                     initialData={initialUserData}
-                    className="z-100 fixed left-0 top-0 md:hidden"
+                    className="fixed top-0 left-0 z-100 md:hidden"
                 ></MobileTopNav>
                 <MobileBottomNav
                     initialData={initialUserData}
-                    className="z-100 fixed bottom-0 left-0 md:hidden"
+                    className="fixed bottom-0 left-0 z-100 md:hidden"
                 ></MobileBottomNav>
                 <DesktopNav
                     initialData={initialUserData}

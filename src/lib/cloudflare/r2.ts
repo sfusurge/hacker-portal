@@ -1,4 +1,9 @@
 import {
+    BadRequestError,
+    InternalServerError,
+    ResourceNotFoundError,
+} from '@/server/exceptions';
+import {
     S3Client,
     PutObjectCommand,
     DeleteObjectCommand,
@@ -15,7 +20,8 @@ export const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png'] as const;
 if (
     !process.env.R2_ENDPOINT ||
     !process.env.R2_ACCESS_KEY_ID ||
-    !process.env.R2_SECRET_ACCESS_KEY
+    !process.env.R2_SECRET_ACCESS_KEY ||
+    !process.env.R2_BUCKET_NAME
 ) {
     throw new Error('Missing required R2 environment variables');
 }
@@ -38,7 +44,7 @@ export function validateFile(fileName: string, fileContent: Buffer): string {
     // Check file size
     const fileSize = fileContent.length;
     if (fileSize > MAX_FILE_SIZE) {
-        throw new Error(
+        throw new BadRequestError(
             `File size (${(fileSize / 1024 / 1024).toFixed(2)}MB) exceeds maximum allowed size of 2MB`
         );
     }
@@ -46,7 +52,7 @@ export function validateFile(fileName: string, fileContent: Buffer): string {
     // Check file type
     const mimeType = getMimeType(fileName);
     if (!ALLOWED_MIME_TYPES.includes(mimeType as any)) {
-        throw new Error(
+        throw new BadRequestError(
             `File type ${mimeType} is not allowed. Allowed types: ${ALLOWED_MIME_TYPES.join(', ')}`
         );
     }
@@ -60,16 +66,14 @@ export async function uploadFileToR2(
     mimeType: string
 ) {
     try {
-        // Set up the upload parameters
-        const uploadParams = {
+        // Upload the file
+        const command = new PutObjectCommand({
             Bucket: process.env.R2_BUCKET_NAME,
             Key: key,
             Body: fileContent,
             ContentType: mimeType,
-        };
+        });
 
-        // Upload the file
-        const command = new PutObjectCommand(uploadParams);
         const response = await s3Client.send(command);
 
         return {
@@ -79,7 +83,10 @@ export async function uploadFileToR2(
         };
     } catch (error) {
         console.error('Error uploading file:', error);
-        throw error;
+        throw new InternalServerError(
+            'An exception occured uploading file',
+            error
+        );
     }
 }
 
@@ -91,7 +98,7 @@ export async function deleteFileFromR2(key: string) {
         };
 
         const command = new DeleteObjectCommand(deleteParams);
-        const response = await s3Client.send(command);
+        await s3Client.send(command);
 
         return {
             success: true,
@@ -99,7 +106,10 @@ export async function deleteFileFromR2(key: string) {
         };
     } catch (error) {
         console.error('Error deleting file:', error);
-        throw error;
+        throw new InternalServerError(
+            'An exception occured deleting file',
+            error
+        );
     }
 }
 
@@ -114,7 +124,7 @@ export async function getFileFromR2(key: string) {
         const buffer = await response.Body?.transformToByteArray();
 
         if (!buffer) {
-            throw new Error('Image not found');
+            throw new ResourceNotFoundError({ id: key, resourceType: 'image' });
         }
 
         return {
@@ -123,6 +133,9 @@ export async function getFileFromR2(key: string) {
         };
     } catch (error) {
         console.error('Error fetching file:', error);
-        throw error;
+        throw new InternalServerError(
+            `An exception occured getting file ${key}`,
+            error
+        );
     }
 }

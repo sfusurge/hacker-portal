@@ -84,8 +84,8 @@ export default function DesktopNav({
                                 className={clsx(
                                     'absolute z-10 flex h-9 w-9 shrink-0 items-center justify-center',
                                     collapsed
-                                        ? 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'
-                                        : 'left-3 top-3'
+                                        ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
+                                        : 'top-3 left-3'
                                 )}
                             >
                                 <Image
@@ -120,15 +120,15 @@ export default function DesktopNav({
                                             className="conditional-wrapper"
                                         >
                                             {!collapsed && (
-                                                <div className="aspect-5/3 relative overflow-hidden rounded-2xl border border-neutral-800">
+                                                <div className="relative aspect-5/3 overflow-hidden rounded-2xl border border-neutral-800">
                                                     <div className="absolute top-0 flex w-full flex-row items-center gap-3 bg-neutral-900/50 p-3 backdrop-blur-lg">
                                                         <div className="h-9 w-9 shrink-0 opacity-0" />
                                                         <div className="mt-1 flex flex-col gap-2 overflow-hidden">
-                                                            <span className="line-clamp-1 whitespace-nowrap text-sm font-medium leading-none text-white">
+                                                            <span className="line-clamp-1 text-sm leading-none font-medium whitespace-nowrap text-white">
                                                                 JourneyHacks
                                                                 2025
                                                             </span>
-                                                            <span className="line-clamp-1 whitespace-nowrap text-sm leading-none text-white/60">
+                                                            <span className="line-clamp-1 text-sm leading-none whitespace-nowrap text-white/60">
                                                                 February 14,
                                                                 2025
                                                             </span>
@@ -229,9 +229,12 @@ export default function DesktopNav({
                     <div className="mt-auto pt-5">
                         <button
                             onClick={async () => {
-                                await signOut({
-                                    redirectTo: '/login',
-                                });
+                                await signOut();
+                                if (typeof window !== 'undefined') {
+                                    localStorage.removeItem(
+                                        'auth-login-success'
+                                    );
+                                }
                             }}
                             className={clsx(
                                 'flex h-11 w-full items-center gap-3 rounded-lg px-3 text-red-400 transition-colors hover:bg-red-950/30 hover:text-red-300',

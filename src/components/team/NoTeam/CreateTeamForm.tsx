@@ -17,7 +17,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { UserGroupIcon } from '@heroicons/react/24/solid';
 import { Conditional } from '@/lib/Conditional';
-import { useMediaQuery } from '@uidotdev/usehooks';
+import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
 
 export default function CreateTeamForm({
     hackathonId,
@@ -31,13 +31,12 @@ export default function CreateTeamForm({
 
     const isDesktop = useMediaQuery('(min-width: 768px)');
 
-
     const [teamInfo, setTeamInfo] = useState({
         teamName: '',
         teamPicture: '',
-        _isDirty: false,
+        isDirty: false,
     });
-    const isTeamNameError = teamInfo.teamName === '' && teamInfo._isDirty;
+    const isTeamNameError = teamInfo.teamName === '' && teamInfo.isDirty;
     const errorMsg = isTeamNameError ? 'Team name is required.' : undefined;
     const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,7 +73,7 @@ export default function CreateTeamForm({
         setTeamInfo((prevState) => ({
             ...prevState,
             teamName: value as string,
-            _isDirty: true,
+            isDirty: true,
         }));
     };
 
@@ -89,10 +88,7 @@ export default function CreateTeamForm({
 
         try {
             // Upload to R2 using filesRouter
-            const key = `${hackathonId}/${Date.now()}-${teamInfo.teamName}`;
             const result = await uploadFile.mutateAsync({
-                bucketName: 'team-pictures',
-                key,
                 fileName: fileData.file.name,
                 file: fileData.buffer,
             });
@@ -100,6 +96,7 @@ export default function CreateTeamForm({
             if (!result.success) {
                 throw new Error('Failed to upload image');
             }
+
             const newTeam = await createTeam.mutateAsync({
                 hackathonId,
                 name: teamInfo.teamName,
@@ -252,7 +249,6 @@ export default function CreateTeamForm({
                                 Clear
                             </Button>
                         )}
-
                     </div>
                 </Conditional>
             </div>

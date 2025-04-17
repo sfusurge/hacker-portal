@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 
 import { trpc } from '@/trpc/client';
 import { EmailUser } from '@/db/schema/emails';
+import { useHackathon } from '@/hooks/use-hackathon';
 
 type SideCardProps = {
     toggleSideCard: () => void;
@@ -56,6 +57,8 @@ export default function SideCard({
     toggleSideCard,
     setRefreshTable,
 }: SideCardProps) {
+    const { hackathon } = useHackathon();
+
     const [sideCardInfo] = useAtom(sideCardAtom) || {};
     const [id, setId] = useState<number>(sideCardInfo?.id || 0);
     const [name, setName] = useState(sideCardInfo?.name || '');
@@ -88,7 +91,7 @@ export default function SideCard({
     ) => {
         try {
             updateApplication.mutate({
-                hackathonId: 1,
+                hackathonId: hackathon!.id,
                 userId: id,
                 status: status,
                 pendingStatus: status,
@@ -125,8 +128,8 @@ export default function SideCard({
     };
 
     return (
-        <div className="flex flex-col z-20 w-5/12 h-screen bg-neutral-850 p-8 rounded-lg gap-4 shadow-lg border border-neutral-600/60">
-            <div className="flex flex-row items-center justify-between mb-4">
+        <div className="bg-neutral-850 z-20 flex h-screen w-5/12 flex-col gap-4 rounded-lg border border-neutral-600/60 p-8 shadow-lg">
+            <div className="mb-4 flex flex-row items-center justify-between">
                 <h1 className="text-xl font-bold text-white">
                     Hacker Application
                 </h1>
@@ -134,7 +137,7 @@ export default function SideCard({
                     <XMarkIcon className="h-6 w-6 text-white" />
                 </button>
             </div>
-            <ScrollArea className="flex flex-col p-2 h-4/12 w-full bg-neutral-900 rounded-lg shadow-inner border border-neutral-600/60">
+            <ScrollArea className="flex h-4/12 w-full flex-col rounded-lg border border-neutral-600/60 bg-neutral-900 p-2 shadow-inner">
                 <div className="space-y-6 p-5">
                     <header className="text-lg font-bold text-white">
                         Personal Information
@@ -150,7 +153,7 @@ export default function SideCard({
                                 id="name"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="bg-neutral-800 text-white border border-neutral-700/18 w-1/2"
+                                className="w-1/2 border border-neutral-700/18 bg-neutral-800 text-white"
                             />
                         </div>
 
@@ -165,7 +168,7 @@ export default function SideCard({
                                 onChange={(e) =>
                                     setStudentNumber(e.target.value)
                                 }
-                                className="bg-neutral-800 text-white border border-neutral-700/18 w-1/2"
+                                className="w-1/2 border border-neutral-700/18 bg-neutral-800 text-white"
                             />
                         </div>
 
@@ -178,19 +181,19 @@ export default function SideCard({
                                 id="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="bg-neutral-800 text-white border border-neutral-700/18 w-1/2"
+                                className="w-1/2 border border-neutral-700/18 bg-neutral-800 text-white"
                             />
                         </div>
 
                         <RadioGroup value={major} onValueChange={setMajor}>
                             <Label className="text-white/60">Major</Label>
-                            <div className="flex flex-col gap-2 w-1/2">
+                            <div className="flex w-1/2 flex-col gap-2">
                                 {allMajors.map((majorOption) => (
                                     <div
-                                        className={`flex items-center space-x-2 pl-2 pr-2 pt-3 pb-3 rounded-lg cursor-pointer border ${
+                                        className={`flex cursor-pointer items-center space-x-2 rounded-lg border pt-3 pr-2 pb-3 pl-2 ${
                                             major === majorOption
                                                 ? 'bg-brand-950/60 border-brand-900'
-                                                : 'bg-neutral-800/60 border border-neutral-600/60'
+                                                : 'border border-neutral-600/60 bg-neutral-800/60'
                                         }`}
                                         key={majorOption}
                                         onClick={() => setMajor(majorOption)}
@@ -201,15 +204,15 @@ export default function SideCard({
                                             onChange={() =>
                                                 setMajor(majorOption)
                                             }
-                                            className={`appearance-none w-5 h-5 rounded-full border ${
+                                            className={`h-5 w-5 appearance-none rounded-full border ${
                                                 major === majorOption
                                                     ? 'bg-brand-500 border-blue-800'
-                                                    : 'bg-neutral-700 border-neutral-500'
+                                                    : 'border-neutral-500 bg-neutral-700'
                                             }`}
                                         />
                                         <Label
                                             htmlFor={majorOption}
-                                            className="cursor-pointer text-white font-light"
+                                            className="cursor-pointer font-light text-white"
                                         >
                                             {majorOption}
                                         </Label>
@@ -232,7 +235,7 @@ export default function SideCard({
                                 onChange={(e) =>
                                     setEnrollmentYear(e.target.value)
                                 }
-                                className="bg-neutral-800 text-white border border-neutral-700/18 w-1/2"
+                                className="w-1/2 border border-neutral-700/18 bg-neutral-800 text-white"
                             />
                         </div>
                     </div>
@@ -250,7 +253,7 @@ export default function SideCard({
                             id="teamMemberNames"
                             value={teamMemberNames}
                             onChange={(e) => setTeamMemberNames(e.target.value)}
-                            className="bg-neutral-800 text-white border border-neutral-700/18 w-1/2"
+                            className="w-1/2 border border-neutral-700/18 bg-neutral-800 text-white"
                         />
                     </div>
 
@@ -277,17 +280,17 @@ export default function SideCard({
                         <Label className="text-white/60">
                             Participant Type
                         </Label>
-                        <div className="flex flex-col gap-2 w-fit">
+                        <div className="flex w-fit flex-col gap-2">
                             {[
                                 'Individual',
                                 'Individual looking for a team',
                                 'Team (4 max)',
                             ].map((type) => (
                                 <div
-                                    className={`flex items-center space-x-2 pl-4 pr-4 pt-3 pb-3 rounded-lg cursor-pointer border ${
+                                    className={`flex cursor-pointer items-center space-x-2 rounded-lg border pt-3 pr-4 pb-3 pl-4 ${
                                         participantType === type
                                             ? 'bg-brand-950/60 border-brand-900'
-                                            : 'bg-neutral-800/60 border border-neutral-600/60'
+                                            : 'border border-neutral-600/60 bg-neutral-800/60'
                                     }`}
                                     key={type}
                                     onClick={() => setParticipantType(type)}
@@ -298,15 +301,15 @@ export default function SideCard({
                                         onChange={() =>
                                             setParticipantType(type)
                                         }
-                                        className={`appearance-none w-5 h-5 rounded-full border ${
+                                        className={`h-5 w-5 appearance-none rounded-full border ${
                                             participantType === type
                                                 ? 'bg-brand-500 border-blue-800'
-                                                : 'bg-neutral-700 border-neutral-500'
+                                                : 'border-neutral-500 bg-neutral-700'
                                         }`}
                                     />
                                     <Label
                                         htmlFor={type}
-                                        className="cursor-pointer text-white font-light"
+                                        className="cursor-pointer font-light text-white"
                                     >
                                         {type}
                                     </Label>
@@ -320,10 +323,10 @@ export default function SideCard({
                             Dietary Restrictions
                         </Label>
 
-                        <div className="flex flex-col gap-5 ml-3">
+                        <div className="ml-3 flex flex-col gap-5">
                             {allDietaryRestrictions.map((restriction) => (
                                 <div
-                                    className="flex items-center space-x-2 "
+                                    className="flex items-center space-x-2"
                                     key={restriction}
                                 >
                                     <Checkbox
@@ -337,11 +340,11 @@ export default function SideCard({
                                                 isChecked
                                             )
                                         }
-                                        className="data-[state=checked]:bg-blue-500 border-brand-500 size-5"
+                                        className="border-brand-500 size-5 data-[state=checked]:bg-blue-500"
                                     />
                                     <Label
                                         htmlFor={restriction}
-                                        className="text-white font-light"
+                                        className="font-light text-white"
                                     >
                                         {restriction}
                                     </Label>
@@ -357,13 +360,13 @@ export default function SideCard({
                         }
                     >
                         <Label className="text-white/60">Photo Consent</Label>
-                        <div className="flex flex-col gap-2 w-fit">
+                        <div className="flex w-fit flex-col gap-2">
                             {['Yes', 'No'].map((option) => (
                                 <div
-                                    className={`flex items-center space-x-2 pl-4 pr-4 pt-3 pb-3 rounded-lg cursor-pointer border ${
+                                    className={`flex cursor-pointer items-center space-x-2 rounded-lg border pt-3 pr-4 pb-3 pl-4 ${
                                         (photoConsent ? 'Yes' : 'No') === option
                                             ? 'bg-brand-950/60 border-brand-900'
-                                            : 'bg-neutral-800/60 border border-neutral-600/60'
+                                            : 'border border-neutral-600/60 bg-neutral-800/60'
                                     }`}
                                     key={option}
                                     onClick={() =>
@@ -376,16 +379,16 @@ export default function SideCard({
                                         onChange={() =>
                                             setPhotoConsent(option === 'Yes')
                                         }
-                                        className={`appearance-none w-5 h-5 rounded-full border ${
+                                        className={`h-5 w-5 appearance-none rounded-full border ${
                                             (photoConsent ? 'Yes' : 'No') ===
                                             option
                                                 ? 'bg-brand-500 border-blue-800'
-                                                : 'bg-neutral-700 border-neutral-500'
+                                                : 'border-neutral-500 bg-neutral-700'
                                         }`}
                                     />
                                     <Label
                                         htmlFor={option}
-                                        className="cursor-pointer text-white font-light"
+                                        className="cursor-pointer font-light text-white"
                                     >
                                         {option}
                                     </Label>
@@ -396,14 +399,14 @@ export default function SideCard({
                 </div>
             </ScrollArea>
 
-            <section className="mt-6 p-4 border border-neutral-600/30 rounded-xl">
-                <header className="text-lg font-bold mb-4">
+            <section className="mt-6 rounded-xl border border-neutral-600/30 p-4">
+                <header className="mb-4 text-lg font-bold">
                     Change Application Status
                 </header>
                 <div className="flex flex-wrap gap-5">
                     <Button
                         key={'Accept'}
-                        className={`h-7 bg-success-950 text-success-300`}
+                        className={`bg-success-950 text-success-300 h-7`}
                         onClick={() =>
                             handleChangeApplicationStatus('Accepted')
                         }
@@ -412,7 +415,7 @@ export default function SideCard({
                     </Button>
                     <Button
                         key={'Decline'}
-                        className={`h-7 bg-danger-950 text-danger-300`}
+                        className={`bg-danger-950 text-danger-300 h-7`}
                         onClick={() =>
                             handleChangeApplicationStatus('Declined')
                         }

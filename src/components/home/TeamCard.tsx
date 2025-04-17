@@ -6,8 +6,7 @@ import { Input } from '@/components/ui/input';
 import { getStatusVariant } from '@/lib/application-status';
 import Link from 'next/link';
 import { LinkIcon } from '@heroicons/react/24/outline';
-import { useState, useEffect } from 'react';
-import { toast } from '@/hooks/use-toast';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import {
     Card,
@@ -24,7 +23,6 @@ import { UserData } from '@/db/schema/users/users';
 import { StatusEnum } from '@/db/schema/applications';
 import { inferProcedureOutput } from '@trpc/server';
 import { AppRouter } from '@/server/appRouter';
-import { TeamCardSkeleton } from '@/components/home/Skeletons';
 import { copyToClipboard } from '@/lib/copy-to-clipboard';
 
 type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
@@ -89,7 +87,7 @@ export default function TeamCard({
         return (
             <Card className="col-span-4">
                 <CardContent className="gap-6">
-                    <div className="flex w-full max-w-auto justify-center">
+                    <div className="max-w-auto flex w-full justify-center">
                         <Image
                             src={'/login/application-review.webp'}
                             alt="Sad otter alone in the grass"

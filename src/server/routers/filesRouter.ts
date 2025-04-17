@@ -9,7 +9,7 @@ import {
 
 // Input validation schemas
 const uploadFileSchema = z.object({
-    key: z.string(),
+    key: z.string().default(() => crypto.randomUUID()),
     fileName: z.string(),
     file: z.string(), // base64 string
 });

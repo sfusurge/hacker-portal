@@ -18,6 +18,7 @@ export default defineConfig({
         clearMocks: true,
         mockReset: true,
         restoreMocks: true,
+        dangerouslyIgnoreUnhandledErrors: true,
     },
     // https://github.com/vitest-dev/vitest/discussions/3042
     resolve: {

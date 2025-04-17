@@ -6,7 +6,7 @@ import {
     StatusEnum,
     updateApplicationStatusSchema,
 } from '@/db/schema/applications';
-import { getUserData, users } from '@/db/schema/users/users';
+import { getUserData, user } from '@/db/schema/users/users';
 import { and, asc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { InternalServerError } from '../exceptions';
@@ -24,35 +24,7 @@ export interface SubmitApplicationResponse {
     pendingStatus: StatusEnum;
 }
 
-const nullSchema = z.object({
-    hackathonId: z.number().int().optional(),
-});
-
 export const applicationsRouter = router({
-    userAlreadySubmitted: publicProcedure
-        .input(nullSchema)
-        .query(async ({ input }) => {
-            const user = await getUserData();
-
-            const app = await databaseClient
-                .select()
-                .from(applications)
-                .innerJoin(
-                    users,
-                    and(
-                        eq(applications.userId, users.id),
-                        eq(users.email, user?.email!)
-                    )
-                )
-                .where(
-                    input.hackathonId !== undefined
-                        ? eq(applications.hackathonId, input.hackathonId)
-                        : undefined
-                );
-
-            return app.length > 0;
-        }),
-
     submitApplication: publicProcedure
         .input(insertApplicationSchema)
         .mutation(async ({ input }): Promise<SubmitApplicationResponse> => {
@@ -69,7 +41,7 @@ export const applicationsRouter = router({
             const [application] = await databaseClient
                 .insert(applications)
                 .values({
-                    userId: sql`(SELECT ${users.id} FROM ${users} WHERE ${users.email} = ${email} LIMIT 1)`,
+                    userId: sql`(SELECT ${user.id} FROM ${user} WHERE ${user.email} = ${email} LIMIT 1)`,
                     hackathonId: input.hackathonId,
                     response: input.response,
                 })
@@ -191,34 +163,25 @@ export const applicationsRouter = router({
 
             return application;
         }),
-    getApplicationStatus: publicProcedure
-        .input(
-            z.object({
-                hackathonId: z.number().int(),
-                userId: z.number().int().optional(),
-            })
-        )
+
+    getCurrentApplication: publicProcedure
+        .input(z.object({ hackathonId: z.number().int() }))
         .query(async ({ input }) => {
-            let userId: number;
+            const user = await getUserData();
 
-            if (input.userId) {
-                userId = input.userId;
-            } else {
-                const user = await getUserData();
-
-                userId = user?.id!;
+            if (!user) {
+                throw new InternalServerError(
+                    'Unexpected `undefined` userData'
+                );
             }
 
             const [application] = await databaseClient
-                .select({
-                    currentStatus: applications.currentStatus,
-                    pendingStatus: applications.pendingStatus,
-                })
+                .select()
                 .from(applications)
                 .where(
                     and(
                         eq(applications.hackathonId, input.hackathonId),
-                        eq(applications.userId, userId)
+                        eq(applications.userId, user.id)
                     )
                 )
                 .limit(1);

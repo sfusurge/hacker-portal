@@ -145,11 +145,11 @@ export default function MobileBottomNav({
             )}
             <div>
                 <div
-                    className={`z-200 fixed inset-0 w-full bg-black bg-opacity-50 transition-opacity duration-300 ${isOptionsOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+                    className={`bg-opacity-50 fixed inset-0 z-200 w-full bg-black transition-opacity duration-300 ${isOptionsOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
                     onClick={toggleOptions}
                 >
                     <div
-                        className={`fixed bottom-0 left-0 right-0 transform transition-transform duration-300 ease-in-out ${isOptionsOpen ? 'translate-y-0' : 'translate-y-full'}`}
+                        className={`fixed right-0 bottom-0 left-0 transform transition-transform duration-300 ease-in-out ${isOptionsOpen ? 'translate-y-0' : 'translate-y-full'}`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <SelectOption setCheckInType={setCheckInType} />

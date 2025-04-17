@@ -1,12 +1,13 @@
-import { filesRouter } from '@/server/routers/filesRouter';
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
-
-// Create a direct caller to the filesRouter instead of the full appRouter
-const caller = filesRouter.createCaller({});
+import { createCaller } from '@/server/appRouter';
 
 describe('files router tests', () => {
+    const trpcClient = createCaller({});
+
+    const caller = trpcClient.files;
+
     it('should upload and delete an image file', async () => {
         // Read a test image file
         const imagePath = path.join(__dirname, '../fixtures/g.JPG');

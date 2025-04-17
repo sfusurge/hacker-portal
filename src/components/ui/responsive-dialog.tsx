@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { useMediaQuery } from '@uidotdev/usehooks';
+import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
+
 import {
     Dialog,
     DialogClose,

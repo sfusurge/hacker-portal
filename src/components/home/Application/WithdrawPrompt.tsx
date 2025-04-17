@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { FormTextInput } from '@/components/ui/input/input';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { trpc } from '@/trpc/client';
 import { Conditional } from '@/lib/Conditional';
 import {
@@ -14,6 +14,7 @@ import {
     DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useHackathon } from '@/hooks/use-hackathon';
 
 export type WithdrawPromptProps = {
     userId: number;
@@ -32,21 +33,24 @@ export default function WithdrawPrompt({
     const [withdrawn, setWithdrawn] = useState(false);
     const [open, setOpen] = useState(isOpen);
 
+    const { hackathon } = useHackathon();
+
     const updateApplication =
         trpc.applications.updateApplicationStatus.useMutation();
 
-    const handleWithdraw = () => {
+    const handleWithdraw = useCallback(() => {
         setWithdrawn(true);
         try {
             updateApplication.mutate({
-                hackathonId: 1,
+                // hackathonId should be available now
+                hackathonId: hackathon!.id,
                 userId: userId,
                 status: 'Withdrawn',
             });
         } catch (error) {
             console.error('Failed to update application:', error);
         }
-    };
+    }, [hackathon, updateApplication, userId]);
 
     const handleClose = () => {
         setOpen(false);
@@ -60,6 +64,11 @@ export default function WithdrawPrompt({
             setNotSubmittable(true);
         }
     }, [verifyText]);
+
+    // Wait until hackathon is load
+    if (!hackathon) {
+        return false;
+    }
 
     return (
         <Dialog

@@ -11,7 +11,6 @@ import { CalendarEvent } from '@/server/routers/eventsRouter';
 import dayjs from 'dayjs';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
-import { L } from 'vitest/dist/chunks/reporters.D7Jzd9GS.js';
 import { userInfoAtom } from '../ClientAuthContext';
 import { MonthCalendar } from '@/components/calendar/MonthCalendar/MonthCalendar';
 import {
@@ -27,6 +26,7 @@ import {
 import { useWindowSize } from '@/lib/utils';
 import { MobileMonthCalendar } from '@/components/calendar/MobileMonthCalendar/MobileMonthCalendar';
 import { trpc } from '@/trpc/client';
+import { useHackathon } from '@/hooks/use-hackathon';
 
 export function ClientCalendarPage({
     events: _events,
@@ -56,10 +56,13 @@ export function ClientCalendarPage({
 
     const [width, height] = useWindowSize();
 
+    const { hackathon } = useHackathon();
+
     const fetchEvents = trpc.events.getEvents.useQuery(
-        { hackathonId: 1 },
+        { hackathonId: hackathon.id },
         { enabled: false }
     );
+
     useEffect(() => {
         async function updateEvents() {
             const res = await fetchEvents.refetch();

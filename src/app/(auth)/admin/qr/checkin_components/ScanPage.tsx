@@ -159,8 +159,11 @@ export default function ScanPage({
     }, [event, meal, mealType, workshop, workshopType]);
 
     useEffect(() => {
-        setUserList(hackers);
-    });
+        if (hackers) {
+            const x = hackers;
+            setUserList(hackers);
+        }
+    }, [hackers]);
 
     useEffect(() => {
         if (dropdownOption === 'Lunch Check-in') {

@@ -8,9 +8,9 @@ import { X } from 'lucide-react';
 
 export type QRTicketProps = {
     userId: string | undefined;
-    firstName: string | undefined;
-    lastName: string | undefined;
-    image: string | undefined;
+    firstName?: string | null;
+    lastName?: string | null;
+    image?: string | null;
     closeTicket: () => void;
 };
 
