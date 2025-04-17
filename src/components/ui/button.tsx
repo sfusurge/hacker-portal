@@ -26,6 +26,7 @@ const buttonVariants = cva(
                 caution: '',
                 error: '',
                 brand: '',
+                social: '',
             },
             hierarchy: {
                 primary:
@@ -90,6 +91,11 @@ const buttonVariants = cva(
                 disabled: true,
                 className:
                     'bg-neutral-900 text-danger-400/30 border-neutral-700/30 pointer-events-none',
+            },
+            {
+                variant: 'social',
+                hierarchy: 'primary',
+                className: 'bg-white hover:bg-white/90 text-neutral-950',
             },
         ],
     }

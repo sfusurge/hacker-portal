@@ -1,5 +1,13 @@
-import { getTableColumns, InferSelectModel, sql, eq } from 'drizzle-orm';
-import { index, integer, pgEnum, pgTable, varchar } from 'drizzle-orm/pg-core';
+import { InferSelectModel, sql, eq } from 'drizzle-orm';
+import {
+    index,
+    integer,
+    pgEnum,
+    pgTable,
+    text,
+    timestamp,
+    varchar,
+} from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { databaseClient } from '../../client';
@@ -17,16 +25,19 @@ export const userRoleDbEnum = pgEnum('user_role', [
     UserRoleEnum.user,
 ]);
 
-const users = pgTable(
-    'users',
+export const user = pgTable(
+    'user',
     {
         id: integer('id')
-            .generatedAlwaysAsIdentity({ startWith: 1 })
+            .generatedByDefaultAsIdentity({ startWith: 1 })
             .primaryKey(),
+        name: text('name'), // not used
         firstName: varchar('first_name', { length: 64 }),
         lastName: varchar('last_name', { length: 64 }),
         phoneNumber: varchar('phone_number', { length: 15 }),
         email: varchar('email', { length: 255 }).unique().notNull(),
+        emailVerified: timestamp('emailVerified', { mode: 'date' }),
+        image: text('image'),
         userRole: userRoleDbEnum('user_role').default('user').notNull(),
         displayId: varchar('display_id', { length: 6 }).notNull().unique(),
     },
@@ -38,9 +49,9 @@ const users = pgTable(
     }
 );
 
-const selectUserSchema = createSelectSchema(users); // select a user by either their primary key id or their display id.
+const selectUserSchema = createSelectSchema(user); // select a user by either their primary key id or their display id.
 
-const insertUserSchema = createInsertSchema(users, {
+const insertUserSchema = createInsertSchema(user, {
     email: (email) => email.email(),
 }).omit({ displayId: true });
 // zod createUpdateSchema is busted, using manual zod obj for now
@@ -61,14 +72,13 @@ const deleteUserSchema = z.object({
     id: z.number().int(),
 });
 
-type UserTableType = InferSelectModel<typeof users>;
+type UserTableType = InferSelectModel<typeof user>;
 
 export {
     deleteUserSchema,
     insertUserSchema,
     selectUserSchema,
     updateUserSchema,
-    users,
 };
 export type { UserTableType };
 
@@ -76,15 +86,16 @@ export async function addUser(vals: z.infer<typeof insertUserSchema>) {
     // create the user, and catch their id
     const res = await databaseClient.transaction(async (tx) => {
         const [_index] = await tx.execute(
-            sql`select (last_value + 1) as "last_value" from users_id_seq`
+            sql`select (last_value + 1) as "last_value" from user_id_seq`
         );
         const index = parseInt(`${_index['last_value']}`, 10);
+        console.log('creating user at index: ', index);
 
         if (isNaN(index)) {
             // update failed.
             console.log(`Insert user failed, index fetch failed: ${index}`);
             console.log(
-                await tx.execute(sql`select (last_value + 1) from users_id_seq`)
+                await tx.execute(sql`select (last_value + 1) from user_id_seq`)
             );
 
             return undefined;
@@ -93,7 +104,7 @@ export async function addUser(vals: z.infer<typeof insertUserSchema>) {
         const displayId = getSixDigitId(index, userRNGParams);
 
         const [insertResult] = await tx
-            .insert(users)
+            .insert(user)
             .values({
                 ...vals,
                 displayId,
@@ -115,9 +126,9 @@ export async function getUserData() {
     const dbUser = (
         await databaseClient
             .select()
-            .from(users)
+            .from(user)
             .limit(1)
-            .where(eq(users.email, session.user?.email))
+            .where(eq(user.email, session.user?.email))
     )[0];
 
     if (!dbUser) {

@@ -7,7 +7,7 @@ import {
     uuid,
     varchar,
 } from 'drizzle-orm/pg-core';
-import { users } from './users';
+import { user } from './users';
 import { hackathons } from '../hackathons';
 import {
     createInsertSchema,
@@ -31,7 +31,7 @@ const levelStudyEnum = pgEnum('levelStudy', [
 
 const userPersonalData = pgTable('userPersonalData', {
     id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
-    userId: uuid('user_id').references(() => users.id, {
+    userId: uuid('user_id').references(() => user.id, {
         onDelete: 'no action',
     }),
     hackathonId: integer('hackathon_id').references(() => hackathons.id, {

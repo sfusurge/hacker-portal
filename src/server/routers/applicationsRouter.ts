@@ -6,7 +6,7 @@ import {
     StatusEnum,
     updateApplicationStatusSchema,
 } from '@/db/schema/applications';
-import { getUserData, users } from '@/db/schema/users/users';
+import { getUserData, user } from '@/db/schema/users/users';
 import { and, asc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { InternalServerError } from '../exceptions';
@@ -41,7 +41,7 @@ export const applicationsRouter = router({
             const [application] = await databaseClient
                 .insert(applications)
                 .values({
-                    userId: sql`(SELECT ${users.id} FROM ${users} WHERE ${users.email} = ${email} LIMIT 1)`,
+                    userId: sql`(SELECT ${user.id} FROM ${user} WHERE ${user.email} = ${email} LIMIT 1)`,
                     hackathonId: input.hackathonId,
                     response: input.response,
                 })

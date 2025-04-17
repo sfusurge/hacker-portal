@@ -24,7 +24,7 @@ import {
     ResourceNotFoundError,
 } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
-import { getUserData, users } from '@/db/schema/users/users';
+import { getUserData, user } from '@/db/schema/users/users';
 import { PgQueryResultHKT, PgTransaction } from 'drizzle-orm/pg-core';
 
 import { getSixDigitId, teamRNGParams } from '@/lib/PRNG/LCG';
@@ -191,18 +191,18 @@ export const teamsRouter = router({
             const members = await databaseClient
                 .select({
                     userId: membersTable.userId,
-                    firstName: users.firstName,
-                    lastName: users.lastName,
-                    email: users.email,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    email: user.email,
                     currentStatus: applications.currentStatus,
                 })
                 .from(membersTable)
-                .innerJoin(users, eq(users.id, membersTable.userId))
+                .innerJoin(user, eq(user.id, membersTable.userId))
                 .where(eq(membersTable.teamId, team.id))
                 .leftJoin(
                     applications,
                     and(
-                        eq(applications.userId, users.id),
+                        eq(applications.userId, user.id),
                         eq(applications.hackathonId, input.hackathonId)
                     )
                 );
@@ -266,11 +266,11 @@ export const teamsRouter = router({
             const members = await databaseClient
                 .select({
                     userId: membersTable.userId,
-                    firstName: users.firstName,
-                    lastName: users.lastName,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
                 })
                 .from(membersTable)
-                .innerJoin(users, eq(users.id, membersTable.userId))
+                .innerJoin(user, eq(user.id, membersTable.userId))
                 .where(eq(membersTable.teamId, team.id));
 
             return {
