@@ -12,6 +12,9 @@ export default function SignOutPage() {
     const router = useRouter();
     useEffect(() => {
         if (session.status === 'authenticated') {
+            fetch('/signout/delete_cookies', {
+                method: 'post',
+            });
             signOut()
                 .then(() =>
                     fetch('/signout/delete_cookies', {
