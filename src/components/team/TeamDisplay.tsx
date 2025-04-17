@@ -4,11 +4,12 @@ import InviteCard from '@/components/team/InTeam/InviteCard';
 import { UserData } from '@/db/schema/users/users';
 import { inferProcedureOutput } from '@trpc/server';
 import { AppRouter } from '@/server/appRouter';
+import Image from 'next/image';
 
 type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
 type HackathonType = inferProcedureOutput<
-    AppRouter['hackathons']['getHackathons']
->[number];
+    AppRouter['hackathons']['getActiveHackathon']
+>;
 
 type TeamDisplayProps = {
     currentTeam: TeamType;
@@ -38,7 +39,7 @@ export default function TeamDisplay({
     return (
         <div className="flex flex-col gap-6 md:gap-8">
             <div className="flex gap-6">
-                <img
+                <Image
                     src={currentTeam.teamPictureUrl ?? '/teams/default.webp'}
                     alt={`${currentTeam.name} logo`}
                     className="inline-block h-11 w-11 rounded-xl md:h-16 md:w-16"

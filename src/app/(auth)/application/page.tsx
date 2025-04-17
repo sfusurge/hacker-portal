@@ -9,21 +9,22 @@ import { hackathonAtom } from '@/hooks/use-hackathon';
 import { useHackathon } from '@/hooks/use-hackathon';
 
 /**
- * // TODO
+ * TODO
  * Currently this solutiion creates a slight flick during intial load.
  * todo: investigate in this potential solution
  * https://jotai.org/docs/utilities/storage#server-side-rendering
  */
-
 export default function Application() {
     const { hackathon } = useHackathon();
 
     const submitApplication = trpc.applications.submitApplication.useMutation();
 
-    const applicationSubmitted =
-        trpc.applications.userAlreadySubmitted.useQuery({});
-
-    // const [hackathon, _] = useAtom(questionSetAtom);
+    const application = trpc.applications.getCurrentApplication.useQuery(
+        {
+            hackathonId: hackathon?.id!,
+        },
+        { enabled: hackathon !== undefined }
+    );
 
     const session = useSession();
 
@@ -32,10 +33,12 @@ export default function Application() {
             localStorage.setItem('email', session.data.user.email);
         }
 
-        if (applicationSubmitted.data) {
-            redirect('/home');
+        if (hackathon) {
+            if (application.data) {
+                redirect('/home');
+            }
         }
-    }, [session]);
+    }, [session, hackathon, application.data]);
 
     useEffect(() => {
         document.body.style.setProperty('--paddingTop', '5rem');
@@ -44,13 +47,12 @@ export default function Application() {
     return (
         <ApplicationForm
             appDataAtom={hackathonAtom}
-            submitApplication={() => {
-                if (applicationSubmitted.data) {
+            submitApplication={(flattenResponse) => {
+                if (application.data) {
                     return;
                 }
 
-                const response = hackathon!.pages
-                    .flatMap((page) => page.questions)
+                const response = flattenResponse
                     .map((question) => {
                         const questionId = question.questionId;
                         const type = question.type;

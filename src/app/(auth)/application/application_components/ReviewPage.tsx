@@ -54,13 +54,9 @@ export function ReviewPage({
     }
 
     const flattenedQuestions = useMemo(() => {
-        const questions: ApplicationQuestion[] = [];
-
-        for (const page of response) {
-            for (const question of page.questions) {
-                questions.push(question);
-            }
-        }
+        const questions: ApplicationQuestion[] = response.flatMap(
+            ({ questions }) => questions
+        );
 
         return questions;
     }, [response]);

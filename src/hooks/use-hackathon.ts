@@ -55,7 +55,7 @@ export function useHackathon() {
                     submissionDeadline: dayjs(data.submissionDeadline),
                     startDate: dayjs(data.startDate),
                     endDate: dayjs(data.endDate),
-                    version: 1,
+                    version: data.version,
                 });
             }
         };

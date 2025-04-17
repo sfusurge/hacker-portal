@@ -39,7 +39,7 @@ export type AppStatus =
 type ApplicationCardProps = {
     userData: UserData;
     image?: string;
-    applicationStatus: any;
+    applicationStatus?: string;
     applicationSubmitted: boolean;
 };
 
@@ -65,7 +65,7 @@ export default function ApplicationCard({
 
     const status = determineApplicationStatus(
         applicationSubmitted,
-        applicationStatus?.currentStatus as AppStatus | undefined,
+        applicationStatus,
         questionSetExists
     );
 
@@ -107,12 +107,12 @@ export default function ApplicationCard({
 
 // Helper function to determine application status
 function determineApplicationStatus(
-    applicationSubmitted: boolean | undefined,
-    currentStatus: AppStatus | undefined,
-    questionSetExists: boolean
+    applicationSubmitted?: boolean,
+    currentStatus?: string,
+    questionSetExists?: boolean
 ): AppStatus {
     if (applicationSubmitted && currentStatus) {
-        return currentStatus;
+        return currentStatus as AppStatus;
     } else if (questionSetExists) {
         return 'In Progress';
     } else {

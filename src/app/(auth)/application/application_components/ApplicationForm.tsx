@@ -15,7 +15,14 @@ import {
 import { atomWithStorage, splitAtom } from 'jotai/utils';
 import style from './ApplicationForm.module.css';
 import { TextLineInput } from './application_question_fields/TextLineInput';
-import { ComponentProps, useEffect, useMemo, useRef, useState } from 'react';
+import {
+    ComponentProps,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import { Label } from '@/components/ui/label/label';
 import { isApplicationQuestionFilled } from './application_question_fields/shared';
 import { NumberInput } from './application_question_fields/NumberInput';
@@ -35,8 +42,7 @@ import { redirect } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
 import { cn } from '@/lib/utils';
-import { hackathonAtom, useHackathon } from '@/hooks/use-hackathon';
-import { an } from 'vitest/dist/chunks/reporters.D7Jzd9GS.js';
+import { useHackathon } from '@/hooks/use-hackathon';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -59,66 +65,64 @@ export const finalErrCheckAtom = atom(false); // when the user clicks the review
 
 interface ApplicationFormProps {
     appDataAtom: PrimitiveAtom<HackathonData | undefined>;
-    submitApplication: () => void;
-    pagesAtom: PrimitiveAtom<ApplicationPage[]>;
+    submitApplication: (reponse: ApplicationQuestion[]) => void;
 }
 
 const RESPONSE_KEY = 'response_key';
+const HACKATHON_VERSION_KEY = 'version_key';
 
 const responseAtom = atomWithStorage<ApplicationPage[]>(RESPONSE_KEY, []);
+const hackathonVersionAtom = atomWithStorage<number | undefined>(
+    HACKATHON_VERSION_KEY,
+    undefined
+);
 
 /**
  *
  * appData can be locally cached or a new empty one.
  */
-export function ApplicationForm({
-    submitApplication,
-    pagesAtom,
-}: ApplicationFormProps) {
+export function ApplicationForm({ submitApplication }: ApplicationFormProps) {
     'use client';
     const { hackathon } = useHackathon();
 
     const [response, setResponse] = useAtom(responseAtom);
 
-    const pagesData = useAtomValue(pagesAtom);
+    const [hackathonVersion, setHackathonVerison] =
+        useAtom(hackathonVersionAtom);
 
     useEffect(() => {
         if (!hackathon) {
             return;
         }
 
-        if (hackathon.pages.length !== response.length) {
+        if (hackathon.version !== hackathonVersion) {
             setResponse(hackathon.pages);
+            setHackathonVerison(hackathon.version);
         }
-
-        const curQuestions = response.flatMap((page) => page.questions);
-        const hackahtonQuestions = hackathon.pages.flatMap(
-            (page) => page.questions
-        );
-    }, [hackathon]);
+    }, [hackathon, hackathonVersion, setHackathonVerison, setResponse]);
 
     // which page is currently displayed
     const currentPageIndex = useAtomValue(pageIndexAtom); // using the state to get the for reals value
 
     // states of each page.
-    const pagesAtomsAtom = splitAtom(pagesAtom); // create an atom containing a list of atoms, from a single atom containing a list
-    const pagesAtoms = useAtomValue(pagesAtomsAtom); // getting the list of atoms out of the previous ato
+    // create an atom containing a list of atoms, from a single atom containing a list
+    const pagesAtomsAtom = splitAtom(responseAtom);
+    // getting the list of atoms out of the previous ato
+    const pagesAtoms = useAtomValue(pagesAtomsAtom);
 
     // page validations
-    const pageStatesAtom = useMemo(
-        () =>
-            atom(
-                pagesData.map(
-                    (item) =>
-                        ({
-                            title: item.title!,
-                            state: 'not started',
-                            error: false,
-                        }) as PageFormState
-                )
-            ),
-        []
-    );
+    const pageStatesAtom = useMemo(() => {
+        return atom(
+            response.map(
+                (item) =>
+                    ({
+                        title: item.title!,
+                        state: 'not started',
+                        error: false,
+                    }) as PageFormState
+            )
+        );
+    }, [response]);
     const pageStateAtomsAtom = splitAtom(pageStatesAtom);
     const [pageStateAtoms] = useAtom(pageStateAtomsAtom);
 
@@ -135,14 +139,18 @@ export function ApplicationForm({
                         behavior: 'smooth',
                     });
                 } else {
-                    pageContainerRef.current!.scrollTo({
+                    pageContainerRef.current?.scrollTo({
                         behavior: 'smooth',
                         top: 0,
                     });
                 }
             }, 0);
         }
-    }, [currentPageIndex]);
+    }, [currentPageIndex, isMobile]);
+
+    const flattenResponse = useMemo(() => {
+        return response.flatMap(({ questions }) => questions);
+    }, [response]);
 
     return (
         <div className={style.appFormRoot}>
@@ -174,9 +182,9 @@ export function ApplicationForm({
                     <div className={style.formContainer}>
                         {currentPageIndex === pagesAtoms.length && (
                             <ReviewPage
-                                response={pagesData}
+                                response={response}
                                 submit={() => {
-                                    submitApplication();
+                                    submitApplication(flattenResponse);
                                 }}
                                 mobileMode={isMobile}
                             ></ReviewPage>
@@ -202,7 +210,7 @@ export function ApplicationForm({
                         pageCount={pagesAtoms.length}
                         pageStatesAtom={pageStatesAtom}
                         submit={() => {
-                            submitApplication();
+                            submitApplication(flattenResponse);
                         }}
                     />
                 )
@@ -226,54 +234,58 @@ function Page({
 
     const finalErrCheck = useAtomValue(finalErrCheckAtom);
 
-    function updateFormStatus(extraCheck = false) {
-        if (formRef.current) {
-            // check and report if user is trying to submit
-            let error = finalErrCheck
-                ? !formRef.current.reportValidity()
-                : !formRef.current.checkValidity();
+    const updateFormStatus = useCallback(
+        (extraCheck = false) => {
+            if (formRef.current) {
+                // check and report if user is trying to submit
+                let error = finalErrCheck
+                    ? !formRef.current.reportValidity()
+                    : !formRef.current.checkValidity();
 
-            // when page content changes, check if everything in the page is filled
-            let atLeastOneFilled = false;
-            let allFilled = true;
+                // when page content changes, check if everything in the page is filled
+                let atLeastOneFilled = false;
+                let allFilled = true;
 
-            for (const question of page.questions) {
-                const filled = isApplicationQuestionFilled(question);
+                for (const question of page.questions) {
+                    const filled = isApplicationQuestionFilled(question);
 
-                atLeastOneFilled ||= filled;
-                allFilled &&= filled;
+                    atLeastOneFilled ||= filled;
+                    allFilled &&= filled;
 
-                if (atLeastOneFilled && !allFilled) {
-                    break;
+                    if (atLeastOneFilled && !allFilled) {
+                        break;
+                    }
                 }
-            }
 
-            let state: PageFormState['state'] = 'not started';
-            if (allFilled) {
-                state = 'completed';
-            } else if (atLeastOneFilled) {
-                state = 'started';
-            }
+                let state: PageFormState['state'] = 'not started';
+                if (allFilled) {
+                    state = 'completed';
+                } else if (atLeastOneFilled) {
+                    state = 'started';
+                }
 
-            // extra check during initial load when the form is filled, to fix some strange bug.
-            if (error && extraCheck && state === 'completed') {
-                error = formRef.current.reportValidity();
-            }
+                // extra check during initial load when the form is filled, to fix some strange bug.
+                if (error && extraCheck && state === 'completed') {
+                    error = formRef.current.reportValidity();
+                }
 
-            setPageState({
-                title: page.title!,
-                error,
-                state,
-            });
-        }
-    }
+                setPageState({
+                    title: page.title!,
+                    error,
+                    state,
+                });
+            }
+        },
+        [finalErrCheck, page.questions, page.title, setPageState]
+    );
+
     useEffect(() => {
         updateFormStatus();
-    }, [page]);
+    }, [page, updateFormStatus]);
 
     useEffect(() => {
         updateFormStatus(true);
-    }, []);
+    }, [updateFormStatus]);
 
     const questionsAtom = useMemo(
         () =>
@@ -286,7 +298,7 @@ function Page({
                     });
                 }
             ),
-        []
+        [pageAtom]
     );
     const questionAtomsAtom = splitAtom(questionsAtom);
     const [questionAtoms] = useAtom(questionAtomsAtom);
@@ -488,19 +500,4 @@ function PageButtons({
             )}
         </div>
     );
-}
-
-function shouldUpdateLocalQuestions(
-    upstream: ApplicationQuestion[],
-    local: ApplicationQuestion[]
-): boolean {
-    if (upstream.length !== local.length) {
-        return true;
-    }
-
-    const zipped = upstream.map((question, i) => [question, local[i]]);
-
-    return zipped.every(([upstreamQuestion, localQuestion]) => {
-        return upstreamQuestion.title !== localQuestion.title;
-    });
 }

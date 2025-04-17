@@ -153,7 +153,7 @@ export default function ReviewApplicationsTable({
     // Get data from DB
     const applicationData = trpc.applications.getApplications.useQuery(
         {
-            hackathonId: hackathon.id,
+            hackathonId: hackathon?.id!,
             maxResult: 200,
         },
         // only load applications data once hackathon has been loaded
