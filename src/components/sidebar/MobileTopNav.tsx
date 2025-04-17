@@ -106,10 +106,7 @@ export default function MobileTopNav({
                                     variant="error"
                                     className="px-2"
                                     onClick={async () => {
-                                        await signOut({
-                                            redirectTo: '/login',
-                                            callbackUrl: '/login',
-                                        });
+                                        await signOut({});
                                         if (typeof window !== 'undefined') {
                                             localStorage.removeItem(
                                                 'auth-login-success'
