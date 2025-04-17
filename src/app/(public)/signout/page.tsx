@@ -1,7 +1,7 @@
 'use client';
 
 import { signOut, useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { redirect, useRouter } from 'next/navigation';
 
 import { useEffect } from 'react';
 
@@ -12,8 +12,8 @@ export default function SignOutPage() {
     const router = useRouter();
     useEffect(() => {
         if (session.status === 'authenticated') {
-            signOut({
-                redirectTo: '/login',
+            signOut().then(() => {
+                redirect('/login');
             });
         } else {
             router.replace('/login');
