@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -7,7 +8,8 @@
     --border-width-1: 1px;
 
     /* Small inset shadow for skeuomorphic effect */
-    --shadow-skeumorphic-sm: 0px 1px 0px 0px rgba(255, 255, 255, 0.24) inset,
+    --shadow-skeumorphic-sm:
+        0px 1px 0px 0px rgba(255, 255, 255, 0.24) inset,
         0px 0px 0px 1px rgba(255, 255, 255, 0.12) inset;
 
     /* Animation for caret blinking */
@@ -124,20 +126,21 @@
 
     /* Font family variables */
     --font-sans-0:
-    /* Primary sans-serif font stack */ Inter, ui-sans-serif,
-        system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    /* Primary sans-serif font stack */
+        Inter, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
     --font-sans--font-feature-settings:
-    /* Font feature settings for sans-serif */ 'cv01'
-            on,
-        'cv03' on, 'cv04' on, 'cv05' on, 'cv08' on, 'cv10' on, 'cv11' on;
+    /* Font feature settings for sans-serif */
+        'cv01' on, 'cv03' on, 'cv04' on, 'cv05' on, 'cv08' on, 'cv10' on,
+        'cv11' on;
 
     /* Length for font-sans settings */
     --font-sans-length: 2;
 
     /* Monospace font stack */
-    --font-mono: DM Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    --font-mono:
+        DM Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
         'Liberation Mono', 'Courier New', monospace;
 
     /* Line height variables */
@@ -273,8 +276,8 @@ body {
     --background-brand-focus: var(--brand-950_60);
     --background-brand-secondary: var(--brand-900);
     --background-neutral-secondary: var(--neutral-800_60);
-    --background-sunkan: var(--neutral-925) /* outline */
-        --outline-brand-primary: var(--brand-500);
+    --background-sunkan: var(--neutral-925); /* outline */
+    --outline-brand-primary: var(--brand-500);
 
     /* ==== END SEMANTICS ====  */
 

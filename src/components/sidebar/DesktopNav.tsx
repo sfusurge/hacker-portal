@@ -18,12 +18,12 @@ import { signOut } from 'next-auth/react';
 import { redirect, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import React from 'react';
-import { MergedUserData } from '@/app/(auth)/layout';
 import { SwitchTransition, CSSTransition } from 'react-transition-group';
+import { UserData } from '@/db/schema/users/users';
 
 interface DesktopNavProps {
     className?: string;
-    initialData?: MergedUserData;
+    initialData?: UserData;
 }
 
 export default function DesktopNav({
@@ -162,13 +162,11 @@ export default function DesktopNav({
                                 })}
                             />
                             <NavLink
-                                href="/teams"
-                                label="Teams"
+                                href="/team"
+                                label="Team"
                                 icon={<UserGroupIcon className="h-6 w-6" />}
                                 iconAlt="Teams logo"
                                 platform="desktop"
-                                active={url.startsWith('/teams')}
-                                disabled={true}
                                 className={clsx({
                                     'justify-center': collapsed,
                                 })}
@@ -233,7 +231,13 @@ export default function DesktopNav({
                             onClick={async () => {
                                 await signOut({
                                     redirectTo: '/login',
+                                    callbackUrl: '/login',
                                 });
+                                if (typeof window !== 'undefined') {
+                                    localStorage.removeItem(
+                                        'auth-login-success'
+                                    );
+                                }
                             }}
                             className={clsx(
                                 'flex h-11 w-full items-center gap-3 rounded-lg px-3 text-red-400 transition-colors hover:bg-red-950/30 hover:text-red-300',

@@ -1,7 +1,3 @@
-.hasLength:not(:has(.textinput:user-invalid)) {
-    padding-bottom: 1.5rem;
-}
-
 .hasLength {
     position: relative;
 }
@@ -40,7 +36,7 @@
 .inputHolder:has(.textinput:user-invalid)::after,
 .inputHolder:has(.textinput:invalid:not(:placeholder-shown))::after {
     content: var(--errMsg);
-    color: var(--danger-500);
+    color: var(--color-danger-400);
     font-size: smaller;
     max-width: calc(100% - 2rem);
     line-height: 1rem;
@@ -49,13 +45,16 @@
 }
 
 .inputHolder.hasError::after {
-    content: '_';
     font-size: smaller;
     line-height: 1rem;
     display: block;
     padding-top: 0.2rem;
-    height: 20px;
+    /* height: 20px; */
     color: transparent;
+}
+
+.hasLength.hasLength::after {
+    content: '_';
 }
 
 .textinput {

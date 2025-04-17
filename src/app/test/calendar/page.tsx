@@ -1,9 +1,8 @@
 'use client';
 
 import { MonthCalendar } from '@/components/calendar/MonthCalendar/MonthCalendar';
-import { LinearTimeline } from '@/components/calendar/LinearTimeLine/LinearTimeline';
-import { Provider, useAtom, useSetAtom } from 'jotai';
-import { useMemo } from 'react';
+import { useAtom } from 'jotai';
+
 import {
     currentYearMonthAtom,
     DayjsifyEvents,
@@ -13,7 +12,7 @@ import dayjs from 'dayjs';
 import { CalendarEvent } from '@/server/routers/eventsRouter';
 
 export default function Calendar() {
-    const _events: CalendarEvent[] = [
+    const events: CalendarEvent[] = [
         {
             id: 1,
             checkedIn: true,
@@ -197,7 +196,6 @@ export default function Calendar() {
         },
     ];
 
-    const events = useMemo(() => DayjsifyEvents(_events), [_events]);
     const [{ year, month }, updateMonth] = useAtom(currentYearMonthAtom);
     return (
         // Provider provides context for this page, so that calendar variables is only shared within this page, not truely global.

@@ -14,6 +14,7 @@ export const CheckBoxWithLabel = forwardRef<
             required,
             other = false,
             checked = false,
+            children,
             ...props
         },
         ref
@@ -35,6 +36,10 @@ export const CheckBoxWithLabel = forwardRef<
                     required={required}
                 ></input>
                 {name}
+
+                <div style={{ flexBasis: '100%', marginLeft: '1.75rem' }}>
+                    {children}
+                </div>
             </label>
         );
     }

@@ -6,13 +6,14 @@ import * as React from 'react';
 import type { ToastActionElement, ToastProps } from '@/components/ui/toast';
 
 const TOAST_LIMIT = 1;
-const TOAST_REMOVE_DELAY = 1000000;
+const TOAST_REMOVE_DELAY = 10000;
 
 type ToasterToast = ToastProps & {
     id: string;
     title?: React.ReactNode;
     description?: React.ReactNode;
     action?: ToastActionElement;
+    icon?: React.ReactNode;
 };
 
 const actionTypes = {
@@ -139,7 +140,15 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, 'id'>;
 
-function toast({ ...props }: Toast) {
+export type ToastActionType = {
+    title?: string;
+    description?: string;
+    action?: ToastActionElement;
+    variant?: 'default' | 'success' | 'error' | 'warning' | 'info';
+    icon?: React.ReactNode;
+};
+
+function toast({ ...props }: Toast & ToastActionType) {
     const id = genId();
 
     const update = (props: ToasterToast) =>
@@ -162,7 +171,7 @@ function toast({ ...props }: Toast) {
     });
 
     return {
-        id: id,
+        id,
         dismiss,
         update,
     };
@@ -190,3 +199,5 @@ function useToast() {
 }
 
 export { useToast, toast };
+
+// Remove the duplicate toast function at the end of the file

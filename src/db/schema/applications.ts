@@ -7,7 +7,7 @@ import {
     timestamp,
 } from 'drizzle-orm/pg-core';
 import { hackathons } from './hackathons';
-import { users } from './users';
+import { user } from './users/users';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
@@ -35,14 +35,16 @@ export const applications = pgTable(
             .references(() => hackathons.id)
             .notNull(),
         userId: integer('user_id')
-            .references(() => users.id)
+            .references(() => user.id)
             .notNull(),
-        currentStatus: applicationStatusEnum()
+        currentStatus: applicationStatusEnum('current_status')
             .default('Awaiting Review')
             .notNull(),
-        pendingStatus: applicationStatusEnum().default('N/A').notNull(),
+        pendingStatus: applicationStatusEnum('pending_status')
+            .default('N/A')
+            .notNull(),
         response: json().notNull(),
-        createdDate: timestamp()
+        createdDate: timestamp('created_date')
             .defaultNow()
             .$onUpdate(() => new Date())
             .notNull(),

@@ -4,12 +4,10 @@ import {
     insertCheckInSchema,
     isCheckInSchema,
 } from '@/db/schema/checkIn';
-import { UserRoleEnum } from '@/db/schema/users';
-import { InternalServerError, UnauthorizedError } from '../exceptions';
+import { getUserData, UserRoleEnum } from '@/db/schema/users/users';
+import { UnauthorizedError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
-import { and, asc, eq, getTableColumns } from 'drizzle-orm';
-import { events as eventsTable } from '@/db/schema/events';
-import { getUserData } from '@/app/(auth)/layout';
+import { and, eq } from 'drizzle-orm';
 
 export const checkInRouter = router({
     checkIn: publicProcedure

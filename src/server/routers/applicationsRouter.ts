@@ -1,4 +1,3 @@
-import { auth } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
 import {
     applications,
@@ -7,7 +6,7 @@ import {
     StatusEnum,
     updateApplicationStatusSchema,
 } from '@/db/schema/applications';
-import { users } from '@/db/schema/users';
+import { getUserData, user } from '@/db/schema/users/users';
 import { and, asc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { InternalServerError } from '../exceptions';
@@ -15,7 +14,6 @@ import { publicProcedure, router } from '../trpc';
 import Handlebars from 'handlebars';
 import { welcomeEmailTemplate } from '@/server/routers/templates';
 import { transporter } from '@/server/nodemailerTransporter';
-const env = process.env;
 
 export interface SubmitApplicationResponse {
     hackathonId: number;
@@ -34,16 +32,16 @@ export const applicationsRouter = router({
     userAlreadySubmitted: publicProcedure
         .input(nullSchema)
         .query(async ({ input }) => {
-            const session = await auth();
+            const user = await getUserData();
 
             const app = await databaseClient
                 .select()
                 .from(applications)
                 .innerJoin(
-                    users,
+                    user,
                     and(
-                        eq(applications.userId, users.id),
-                        eq(users.email, session?.user?.email!)
+                        eq(applications.userId, user.id),
+                        eq(user.email, user?.email!)
                     )
                 )
                 .where(
@@ -58,9 +56,9 @@ export const applicationsRouter = router({
     submitApplication: publicProcedure
         .input(insertApplicationSchema)
         .mutation(async ({ input }): Promise<SubmitApplicationResponse> => {
-            const session = await auth();
+            const user = await getUserData();
 
-            const email = session?.user?.email;
+            const email = user?.email;
 
             if (!email) {
                 throw new InternalServerError(
@@ -71,7 +69,7 @@ export const applicationsRouter = router({
             const [application] = await databaseClient
                 .insert(applications)
                 .values({
-                    userId: sql`(SELECT ${users.id} FROM ${users} WHERE ${users.email} = ${email} LIMIT 1)`,
+                    userId: sql`(SELECT ${user.id} FROM ${user} WHERE ${user.email} = ${email} LIMIT 1)`,
                     hackathonId: input.hackathonId,
                     response: input.response,
                 })
@@ -90,7 +88,7 @@ export const applicationsRouter = router({
                 return { name, email };
             };
 
-            if (!session?.user?.email) {
+            if (!user?.email) {
                 throw new InternalServerError(
                     'User email is missing. Cannot send email.'
                 );
@@ -109,15 +107,15 @@ export const applicationsRouter = router({
             });
 
             let oAuthMailOptions = {
-                from: env.SENDINGEMAIL,
-                to: session.user.email,
+                from: process.env.SENDINGEMAIL,
+                to: user.email,
                 subject: "We've Received Your JourneyHacks Application 😎",
                 text: 'Thank you for applying to JourneyHacks!',
                 html: htmlContent,
             };
 
             let sfuMailOptions = {
-                from: env.SENDINGEMAIL,
+                from: process.env.SENDINGEMAIL,
                 to: extractedEmail,
                 subject: "We've Received Your JourneyHacks Application 😎",
                 text: 'Thank you for applying to JourneyHacks!',
@@ -201,27 +199,14 @@ export const applicationsRouter = router({
             })
         )
         .query(async ({ input }) => {
-            const session = await auth();
             let userId: number;
 
             if (input.userId) {
                 userId = input.userId;
             } else {
-                const email = session?.user?.email;
-                if (!email) {
-                    throw new InternalServerError('User not authenticated');
-                }
+                const user = await getUserData();
 
-                const user = await databaseClient
-                    .select({ id: users.id })
-                    .from(users)
-                    .where(eq(users.email, email))
-                    .limit(1);
-
-                if (user.length === 0) {
-                    throw new InternalServerError('User not found');
-                }
-                userId = user[0].id;
+                userId = user?.id!;
             }
 
             const [application] = await databaseClient

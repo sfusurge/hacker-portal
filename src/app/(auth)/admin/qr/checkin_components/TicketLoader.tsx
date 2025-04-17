@@ -12,7 +12,7 @@ export default function TicketLoader({ userId }: TicketLoaderProps) {
 
     if (isLoading) {
         return (
-            <div className="bg-black flex justify-center items-center min-h-screen min-w-screen h-full">
+            <div className="flex h-full min-h-screen min-w-screen items-center justify-center bg-black">
                 <p className="text-white">Loading...</p>
             </div>
         );
@@ -20,15 +20,16 @@ export default function TicketLoader({ userId }: TicketLoaderProps) {
 
     if (!hackers) {
         return (
-            <div className="bg-black flex justify-center items-center min-h-screen min-w-screen h-full">
+            <div className="flex h-full min-h-screen min-w-screen items-center justify-center bg-black">
                 <p className="text-red-500">Failed to load data</p>
             </div>
         );
     }
 
     return (
-        <div className="bg-black flex justify-center items-center min-h-screen min-w-screen h-full">
-            <QRTicket userId={userId} hackers={hackers} />
+        <div className="flex h-full min-h-screen min-w-screen items-center justify-center bg-black">
+            {/* // FIXME */}
+            {/* <QRTicket userId={userId} hackers={hackers} /> */}
         </div>
     );
 }

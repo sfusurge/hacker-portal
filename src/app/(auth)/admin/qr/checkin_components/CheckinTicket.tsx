@@ -6,10 +6,11 @@ import { useEffect, useState } from 'react';
 import CheckinButton from '@/app/(auth)/admin/qr/checkin_components/CheckInButton';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { GetUsersOutput, trpc } from '@/trpc/client';
+import { CheckInEventType } from './ScanPage';
 
 type CheckInTicketProps = {
     currentHacker: GetUsersOutput[0];
-    checkInType: 'Event Check-in' | 'Lunch Check-in' | 'Workshop Check-in';
+    checkInType: CheckInEventType;
     specificMeal: string;
     specificWorkshop: string;
 };
@@ -85,49 +86,49 @@ export default function CheckinTicket({
                 },
             };
             const code = await generateQRCode(id, opts);
-            console.log(code);
+
             setQRCode(code);
         };
         if (userId) fetchQRcode(userId);
     }, [userId]);
 
     return (
-        <div className="flex flex-col justify-center items-center overflow-hidden relative gap-2">
+        <div className="relative flex flex-col items-center justify-center gap-2 overflow-hidden">
             {/* Toast Notification */}
             {showToast && (
-                <div className="p-4 w-96 bg-success-950/30 text-white rounded-lg shadow-lg transition-transform duration-300 ease-in-out transform">
+                <div className="bg-success-950/30 w-96 transform rounded-lg p-4 text-white shadow-lg transition-transform duration-300 ease-in-out">
                     <div className="flex flex-row items-center gap-2">
-                        <CheckCircleIcon className="size-6 fill-success-500" />
+                        <CheckCircleIcon className="fill-success-500 size-6" />
                         <header>Successfully checked in!</header>
                     </div>
                 </div>
             )}
 
-            <div className="md:max-w-sm min-w-screen flex-col justify-start items-start inline-flex bg-neutral-900 rounded-tl-xl rounded-xl border-t border-neutral-600/30">
-                <div className="flex-col justify-center items-center inline-flex gap-4">
+            <div className="inline-flex min-w-screen flex-col items-start justify-start rounded-xl rounded-tl-xl border-t border-neutral-600/30 bg-neutral-900 md:max-w-sm">
+                <div className="inline-flex flex-col items-center justify-center gap-4">
                     <button className="pt-3" aria-label="Close">
-                        <div className="w-9 h-1.5 relative bg-neutral-750 rounded-full"></div>
+                        <div className="bg-neutral-750 relative h-1.5 w-9 rounded-full"></div>
                     </button>
 
-                    <section className="flex-col justify-center items-center flex">
+                    <section className="flex flex-col items-center justify-center">
                         <Image
                             src={pfp}
                             alt="Profile Picture"
                             width={44}
                             height={44}
-                            className="rounded-full mb-4 block"
+                            className="mb-4 block rounded-full"
                         />
-                        <header className="self-stretch h-11 flex-col justify-center items-center gap-0.5 flex">
-                            <div className="text-center text-white text-xl font-semibold leading-snug">
+                        <header className="flex h-11 flex-col items-center justify-center gap-0.5 self-stretch">
+                            <div className="text-center text-xl leading-snug font-semibold text-white">
                                 {firstname + ' ' + lastname}
                             </div>
-                            <div className="text-white/60 text-sm font-normal">
+                            <div className="text-sm font-normal text-white/60">
                                 Hacker
                             </div>
                         </header>
                     </section>
 
-                    <div className="relative w-52 h-52 aspect-square">
+                    <div className="relative aspect-square h-52 w-52">
                         <Image
                             src={QRCode}
                             alt="QR Code"
@@ -136,15 +137,15 @@ export default function CheckinTicket({
                         />
                     </div>
 
-                    <div className="h-56 w-96 px-6 pb-10 bg-neutral-900 flex-col justify-start items-start flex overflow-hidden">
-                        <div className="self-stretch h-36 pb-10 flex-col justify-start items-start gap-2 flex">
-                            <div className="self-stretch justify-between items-center inline-flex overflow-hidden">
-                                <div className="text-white/60 text-sm">
+                    <div className="flex h-56 w-96 flex-col items-start justify-start overflow-hidden bg-neutral-900 px-6 pb-10">
+                        <div className="flex h-36 flex-col items-start justify-start gap-2 self-stretch pb-10">
+                            <div className="inline-flex items-center justify-between self-stretch overflow-hidden">
+                                <div className="text-sm text-white/60">
                                     Status
                                 </div>
-                                <div className="h-7 justify-end items-center gap-3 flex">
+                                <div className="flex h-7 items-center justify-end gap-3">
                                     <div
-                                        className={`px-3 rounded-lg justify-center items-center gap-1 flex overflow-hidden ${
+                                        className={`flex items-center justify-center gap-1 overflow-hidden rounded-lg px-3 ${
                                             checkInStatus
                                                 ? 'bg-success-950 text-success-300'
                                                 : 'bg-brand-950 text-white/60'
@@ -159,15 +160,15 @@ export default function CheckinTicket({
                                 </div>
                             </div>
 
-                            <div className="self-stretch h-px border border-neutral-700/20" />
+                            <div className="h-px self-stretch border border-neutral-700/20" />
 
-                            <div className="self-stretch justify-between items-center inline-flex overflow-hidden">
-                                <div className="grow shrink basis-0 text-white/60 text-sm font-normal leading-tight">
+                            <div className="inline-flex items-center justify-between self-stretch overflow-hidden">
+                                <div className="shrink grow basis-0 text-sm leading-tight font-normal text-white/60">
                                     Check-in time
                                 </div>
-                                <div className="h-7 justify-end items-center gap-3 flex">
-                                    <div className="px-3 bg-neutral-800 rounded-lg justify-center items-center gap-1 flex ">
-                                        <div className="text-center text-white/60 text-sm font-medium">
+                                <div className="flex h-7 items-center justify-end gap-3">
+                                    <div className="flex items-center justify-center gap-1 rounded-lg bg-neutral-800 px-3">
+                                        <div className="text-center text-sm font-medium text-white/60">
                                             {checkInTime}
                                         </div>
                                     </div>

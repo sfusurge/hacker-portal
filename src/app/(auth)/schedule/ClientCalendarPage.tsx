@@ -11,7 +11,6 @@ import { CalendarEvent } from '@/server/routers/eventsRouter';
 import dayjs from 'dayjs';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
-import { L } from 'vitest/dist/chunks/reporters.D7Jzd9GS.js';
 import { userInfoAtom } from '../ClientAuthContext';
 import { MonthCalendar } from '@/components/calendar/MonthCalendar/MonthCalendar';
 import {

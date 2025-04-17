@@ -5,6 +5,7 @@ import { act, ComponentProps, forwardRef, ReactNode } from 'react';
 import { cva, VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 
 interface NavLinkProps {
     href: string;
@@ -14,7 +15,7 @@ interface NavLinkProps {
 }
 
 const navLinkVariants = cva(
-    'group flex items-center rounded-lg transition-colors',
+    'group flex items-center rounded-lg transition-colors pt-2 md:pt-0',
     {
         variants: {
             variant: {
@@ -46,20 +47,31 @@ export function NavLink({
     disabled,
     iconAlt,
     platform,
-    active,
+    active: propActive,
     ...props
 }: ComponentProps<'a'> & NavLinkProps & VariantProps<typeof navLinkVariants>) {
+    const pathname = usePathname();
+
+    // Determine if this link should be active
+    // Special case: Team nav item should be active for all team-related pages
+    const isActive =
+        propActive !== undefined
+            ? propActive
+            : pathname.startsWith(href) ||
+              (href === '/team' &&
+                  (pathname.includes('/team') || pathname.includes('/invite')));
+
     const iconStyles = cn({
         'text-brand-400 group-hover:text-brand-200':
-            active && !disabled && icon,
-        'text-white/30 group-hover:text-white/60': !active && !disabled && icon,
+            isActive && !disabled && icon,
+        'text-white/30 group-hover:text-white/60':
+            !isActive && !disabled && icon,
         'text-danger-400/60 group-hover:text-danger-400':
             variant === 'error' && !disabled && icon,
         'text-white/18': disabled && icon,
     });
 
     const isCollapsed = className?.includes('justify-center');
-
     return (
         <Link
             href={href}
@@ -68,7 +80,7 @@ export function NavLink({
                 navLinkVariants({
                     variant,
                     platform,
-                    active,
+                    active: isActive,
                     disabled,
                 }),
                 isCollapsed ? 'justify-center' : 'justify-start',
@@ -78,11 +90,11 @@ export function NavLink({
             {icon && iconAlt && (
                 <div
                     className={cn(
-                        'w-6 h-6 transition-colors flex items-center justify-center',
+                        'flex h-6 w-6 items-center justify-center transition-colors',
                         iconStyles
                     )}
                 >
-                    <div className="w-6 h-6 [&>svg]:w-full [&>svg]:h-full">
+                    <div className="h-6 w-6 [&>svg]:h-full [&>svg]:w-full">
                         {icon}
                     </div>
                 </div>
