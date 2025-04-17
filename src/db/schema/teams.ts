@@ -9,7 +9,7 @@ import {
 import { hackathons } from './hackathons';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import { users } from './users/users';
+import { user } from './users/users';
 
 const DEFAULT_MAX_MEMBERS_COUNT = 4;
 
@@ -28,7 +28,7 @@ export const teams = pgTable(
             .default(DEFAULT_MAX_MEMBERS_COUNT),
         createdBy: integer('created_by')
             .notNull()
-            .references(() => users.id),
+            .references(() => user.id),
         createdAt: timestamp('created_at').notNull().defaultNow(),
         displayId: varchar('display_id', { length: 6 }).notNull().unique(),
     },

@@ -1,5 +1,5 @@
 import NextAuth from 'next-auth';
-import { users, addUser } from '@/db/schema/users/users';
+import { user, addUser } from '@/db/schema/users/users';
 import { authConfig } from './authConfig';
 import NodeMailerProvider from 'next-auth/providers/nodemailer';
 
@@ -38,9 +38,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }),
     ],
     callbacks: {
-        signIn: async ({ user, profile, credentials, account }) => {
-            if (!user.email) {
-                console.log(`bad login! signing out:  ${user}`);
+        signIn: async ({ user: signinUser, profile, credentials, account }) => {
+            if (!signinUser.email) {
+                console.log(`bad login! signing out:  ${signinUser}`);
 
                 // bad login, somehow
                 return await signOut({
@@ -51,15 +51,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             let dbUser = (
                 await databaseClient
                     .select()
-                    .from(users)
-                    .where(eq(users.email, user.email))
+                    .from(user)
+                    .where(eq(user.email, signinUser.email))
                     .limit(1)
             )[0];
 
             // logged in, but user doesn't exist in db, so lets make one.
             if (!dbUser) {
                 const res = await addUser({
-                    email: user.email,
+                    email: signinUser.email,
                 });
 
                 if (res) {

@@ -8,7 +8,7 @@ import {
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { events } from './events';
-import { users } from './users/users';
+import { user } from './users/users';
 
 export const checkIns = pgTable(
     'check_ins',
@@ -18,7 +18,7 @@ export const checkIns = pgTable(
             .references(() => events.id),
         userId: integer('user_id')
             .notNull()
-            .references(() => users.id),
+            .references(() => user.id),
         checkInTime: timestamp('check_in_time').notNull().defaultNow(),
     },
     (table) => {

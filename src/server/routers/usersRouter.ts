@@ -5,7 +5,7 @@ import {
     insertUserSchema,
     deleteUserSchema,
     updateUserSchema,
-    users,
+    user,
     addUser,
 } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
@@ -17,16 +17,16 @@ export const usersRouter = router({
     getUsers: publicProcedure.query(async () => {
         const res = await databaseClient
             .select({
-                id: users.id,
-                email: users.email,
-                image: users.image,
-                firstName: users.firstName,
-                lastName: users.lastName,
-                phoneNumber: users.phoneNumber,
-                userRole: users.userRole,
-                displayId: users.displayId,
+                id: user.id,
+                email: user.email,
+                image: user.image,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                phoneNumber: user.phoneNumber,
+                userRole: user.userRole,
+                displayId: user.displayId,
             })
-            .from(users);
+            .from(user);
         return res;
     }),
     addUser: publicProcedure.input(insertUserSchema).mutation(async (opts) => {
@@ -36,18 +36,16 @@ export const usersRouter = router({
     deleteUser: publicProcedure
         .input(deleteUserSchema)
         .mutation(async (opts) => {
-            await databaseClient
-                .delete(users)
-                .where(eq(users.id, opts.input.id));
+            await databaseClient.delete(user).where(eq(user.id, opts.input.id));
         }),
     updateUser: publicProcedure
         .input(updateUserSchema)
         .mutation(async (opts) => {
             const { id, ...updateValues } = opts.input;
             await databaseClient
-                .update(users)
+                .update(user)
                 .set(updateValues)
-                .where(eq(users.id, id));
+                .where(eq(user.id, id));
         }),
 });
 

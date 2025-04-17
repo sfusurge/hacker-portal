@@ -2,12 +2,12 @@
 
 import React from 'react';
 import { Chip } from '@/components/ui/chip';
-import { users } from '@/db/schema/users/users';
+import { user } from '@/db/schema/users/users';
 import { InferSelectModel } from 'drizzle-orm';
 import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
 import { getStatusVariant, ApplicationStatus } from '@/lib/application-status';
 
-type UserType = InferSelectModel<typeof users>;
+type UserType = InferSelectModel<typeof user>;
 
 // Extended props for the placeholder
 interface TeammateItemProps extends Partial<UserType> {

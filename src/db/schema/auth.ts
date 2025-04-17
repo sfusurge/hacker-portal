@@ -1,14 +1,14 @@
 import { boolean, primaryKey, text, timestamp } from 'drizzle-orm/pg-core';
 import { pgTable, integer } from 'drizzle-orm/pg-core';
 import type { AdapterAccountType } from 'next-auth/adapters';
-import { users } from './users/users';
+import { user } from './users/users';
 
 export const accounts = pgTable(
     'account',
     {
         userId: integer('userId')
             .notNull()
-            .references(() => users.id, { onDelete: 'cascade' }),
+            .references(() => user.id, { onDelete: 'cascade' }),
         type: text('type').$type<AdapterAccountType>().notNull(),
         provider: text('provider').notNull(),
         providerAccountId: text('providerAccountId').notNull(),
@@ -33,7 +33,7 @@ export const sessions = pgTable('session', {
     sessionToken: text('sessionToken').primaryKey(),
     userId: integer('userId')
         .notNull()
-        .references(() => users.id, { onDelete: 'cascade' }),
+        .references(() => user.id, { onDelete: 'cascade' }),
     expires: timestamp('expires', { mode: 'date' }).notNull(),
 });
 
@@ -62,7 +62,7 @@ export const authenticators = pgTable(
         credentialID: text('credentialID').notNull().unique(),
         userId: integer('userId')
             .notNull()
-            .references(() => users.id, { onDelete: 'cascade' }),
+            .references(() => user.id, { onDelete: 'cascade' }),
         providerAccountId: text('providerAccountId').notNull(),
         credentialPublicKey: text('credentialPublicKey').notNull(),
         counter: integer('counter').notNull(),

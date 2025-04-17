@@ -1,7 +1,7 @@
 'use server';
 import { auth, signIn } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
-import { users } from '@/db/schema/users/users';
+import { user } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
@@ -23,8 +23,8 @@ export default async function Login({
         const res = (
             await databaseClient
                 .select()
-                .from(users)
-                .where(eq(users.email, session.user?.email!))
+                .from(user)
+                .where(eq(user.email, session.user?.email!))
         )[0];
 
         if (!res) {

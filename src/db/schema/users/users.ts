@@ -25,7 +25,7 @@ export const userRoleDbEnum = pgEnum('user_role', [
     UserRoleEnum.user,
 ]);
 
-export const users = pgTable(
+export const user = pgTable(
     'user',
     {
         id: integer('id')
@@ -49,9 +49,9 @@ export const users = pgTable(
     }
 );
 
-const selectUserSchema = createSelectSchema(users); // select a user by either their primary key id or their display id.
+const selectUserSchema = createSelectSchema(user); // select a user by either their primary key id or their display id.
 
-const insertUserSchema = createInsertSchema(users, {
+const insertUserSchema = createInsertSchema(user, {
     email: (email) => email.email(),
 }).omit({ displayId: true });
 // zod createUpdateSchema is busted, using manual zod obj for now
@@ -72,7 +72,7 @@ const deleteUserSchema = z.object({
     id: z.number().int(),
 });
 
-type UserTableType = InferSelectModel<typeof users>;
+type UserTableType = InferSelectModel<typeof user>;
 
 export {
     deleteUserSchema,
@@ -104,7 +104,7 @@ export async function addUser(vals: z.infer<typeof insertUserSchema>) {
         const displayId = getSixDigitId(index, userRNGParams);
 
         const [insertResult] = await tx
-            .insert(users)
+            .insert(user)
             .values({
                 ...vals,
                 displayId,
@@ -126,9 +126,9 @@ export async function getUserData() {
     const dbUser = (
         await databaseClient
             .select()
-            .from(users)
+            .from(user)
             .limit(1)
-            .where(eq(users.email, session.user?.email))
+            .where(eq(user.email, session.user?.email))
     )[0];
 
     if (!dbUser) {

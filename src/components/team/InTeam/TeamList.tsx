@@ -6,7 +6,7 @@ import TeammateItem from './TeammateItem';
 import { Card, CardFooter, CardContent } from '@/components/ui/card';
 import LeaveTeamForm from './LeaveTeamForm';
 import { DialogTrigger, Dialog } from '@/components/ui/dialog';
-import { users } from '@/db/schema/users/users';
+import { user } from '@/db/schema/users/users';
 import { InferSelectModel } from 'drizzle-orm';
 import { ApplicationStatus } from '@/lib/application-status';
 import { UserType } from '@/server/routers/usersRouter';

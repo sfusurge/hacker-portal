@@ -7,7 +7,7 @@ import { ReactNode } from 'react';
 
 import { auth } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
-import { getUserData, users } from '@/db/schema/users/users';
+import { getUserData, user } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
 
 import { CacheClearer } from '@/app/(auth)/CacheClear';
