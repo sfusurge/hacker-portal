@@ -32,7 +32,11 @@ export const applicationsRouter = router({
     userAlreadySubmitted: publicProcedure
         .input(nullSchema)
         .query(async ({ input }) => {
-            const user = await getUserData();
+            const userData = await getUserData();
+
+            if (!userData) {
+                return false;
+            }
 
             const app = await databaseClient
                 .select()
@@ -40,8 +44,8 @@ export const applicationsRouter = router({
                 .innerJoin(
                     user,
                     and(
-                        eq(applications.userId, user.id),
-                        eq(user.email, user?.email!)
+                        eq(applications.userId, userData.id),
+                        eq(user.email, userData.email)
                     )
                 )
                 .where(
@@ -199,6 +203,8 @@ export const applicationsRouter = router({
             })
         )
         .query(async ({ input }) => {
+            console.log('A');
+
             let userId: number;
 
             if (input.userId) {

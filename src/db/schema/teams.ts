@@ -19,7 +19,7 @@ export const teams = pgTable(
         id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
         hackathonId: integer('hackathon_id')
             .notNull()
-            .references(() => hackathons.id),
+            .references(() => hackathons.id, { onDelete: 'cascade' }),
         name: varchar('name', { length: 256 }).notNull(),
         // Link to team photo
         teamPictureUrl: text('team_picture_url'),
@@ -28,7 +28,7 @@ export const teams = pgTable(
             .default(DEFAULT_MAX_MEMBERS_COUNT),
         createdBy: integer('created_by')
             .notNull()
-            .references(() => user.id),
+            .references(() => user.id, { onDelete: 'cascade' }),
         createdAt: timestamp('created_at').notNull().defaultNow(),
         displayId: varchar('display_id', { length: 6 }).notNull().unique(),
     },

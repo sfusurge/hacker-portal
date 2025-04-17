@@ -7,7 +7,6 @@ import {
 } from 'drizzle-orm/pg-core';
 import { teams } from './teams';
 import { user } from './users/users';
-import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
 export const members = pgTable(
@@ -18,7 +17,7 @@ export const members = pgTable(
             .references(() => teams.id, { onDelete: 'cascade' }),
         userId: integer('user_id')
             .notNull()
-            .references(() => user.id),
+            .references(() => user.id, { onDelete: 'cascade' }),
         createdAt: timestamp('created_at').notNull().defaultNow(),
     },
     (table) => {

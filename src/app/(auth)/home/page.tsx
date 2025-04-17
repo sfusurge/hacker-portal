@@ -15,6 +15,8 @@ export default async function Home() {
     const hackathonId = 5;
     const trpcClient = createCaller({});
 
+    console.log('entering home page');
+
     const [applicationStatus, applicationSubmitted, team, events] =
         await Promise.all([
             trpcClient.applications.getApplicationStatus({
