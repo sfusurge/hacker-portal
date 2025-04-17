@@ -2,13 +2,14 @@ import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { createCaller } from '@/server/appRouter';
+import { BadRequestError } from '@/server/exceptions';
 
 describe('files router tests', () => {
     const trpcClient = createCaller({});
 
     const caller = trpcClient.files;
 
-    it('should upload and delete an image file', async () => {
+    it('when input are valid, uploadFile and deleteFile works', async () => {
         // Read a test image file
         const imagePath = path.join(__dirname, '../fixtures/g.JPG');
         const fileBuffer = fs.readFileSync(imagePath);
@@ -35,7 +36,30 @@ describe('files router tests', () => {
         expect(deleteResult.key).toBe(key);
     });
 
-    it('should reject invalid file type', async () => {
+    it('when key is not provided, uploadFile uses a random UUID', async () => {
+        const imagePath = path.join(__dirname, '../fixtures/g.JPG');
+        const fileBuffer = fs.readFileSync(imagePath);
+        const fileName = 'test-image.jpg';
+
+        const uploadResult = await caller.uploadFile({
+            fileName,
+            file: fileBuffer.toString('base64'),
+        });
+
+        expect(uploadResult.success).toBe(true);
+        expect(uploadResult.key).not.toBeNull();
+        expect(uploadResult.etag).toBeDefined();
+
+        // Test delete
+        const deleteResult = await caller.deleteFile({
+            key: uploadResult.key,
+        });
+
+        expect(deleteResult.success).toBe(true);
+        expect(deleteResult.key).toBe(uploadResult.key);
+    });
+
+    it('when files have invalid file type, uploadFile throws BadRequestError', async () => {
         // Create a text file buffer
         const fileBuffer = Buffer.from('test content');
         const fileName = 'test.txt';
@@ -47,10 +71,10 @@ describe('files router tests', () => {
                 fileName,
                 file: fileBuffer.toString('base64'),
             })
-        ).rejects.toThrow(/File type.*is not allowed/);
+        ).rejects.toThrow(BadRequestError);
     });
 
-    it('should reject files above 2MB', async () => {
+    it('when files are above 2MB, uploadFile throws BadRequestError', async () => {
         // Create a buffer larger than 2MB
         const fileBuffer = Buffer.alloc(2.1 * 1024 * 1024); // 2.1MB
         const fileName = 'large-image.jpg';
@@ -62,6 +86,6 @@ describe('files router tests', () => {
                 fileName,
                 file: fileBuffer.toString('base64'),
             })
-        ).rejects.toThrow(/File size.*exceeds maximum allowed size/);
+        ).rejects.toThrow(BadRequestError);
     });
 });
