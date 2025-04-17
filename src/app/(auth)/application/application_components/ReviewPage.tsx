@@ -1,9 +1,15 @@
 'use client';
 
-import { ApplicationData, ApplicationQuestion } from './types';
+import { ApplicationQuestion, ApplicationPage } from './types';
 import style from './ApplicationForm.module.css';
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
+
+export interface ReviewPageProps {
+    submit: () => void;
+    mobileMode?: boolean;
+    response: ApplicationPage[];
+}
 
 /**
  * Review Page Gets a submit button if mobile mode.
@@ -11,14 +17,10 @@ import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/Skewmorphic
  * @
  */
 export function ReviewPage({
-    application,
     submit,
+    response,
     mobileMode = false,
-}: {
-    application: ApplicationData;
-    submit: () => void;
-    mobileMode?: boolean;
-}) {
+}: ReviewPageProps) {
     function getQuestionResponse(question: ApplicationQuestion) {
         let res = '';
         switch (question.type) {
@@ -52,16 +54,12 @@ export function ReviewPage({
     }
 
     const flattenedQuestions = useMemo(() => {
-        const questions: ApplicationQuestion[] = [];
-
-        for (const page of application.pages) {
-            for (const question of page.questions) {
-                questions.push(question);
-            }
-        }
+        const questions: ApplicationQuestion[] = response.flatMap(
+            ({ questions }) => questions
+        );
 
         return questions;
-    }, [application]);
+    }, [response]);
 
     return (
         <div

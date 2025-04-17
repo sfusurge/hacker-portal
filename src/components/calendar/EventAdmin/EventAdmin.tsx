@@ -13,6 +13,7 @@ import { trpc } from '@/trpc/client';
 import { FormTextArea } from '@/components/ui/formTextArea/FormTextArea';
 import { Button } from '@/components/ui/button';
 import dayjs from 'dayjs';
+import { useHackathon } from '@/hooks/use-hackathon';
 
 export interface EventAdminProps {
     eventsAtom: PrimitiveAtom<CalendarEvent[]>;
@@ -23,19 +24,6 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
     const [_selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
     const [events, setEvents] = useAtom(eventsAtom);
     const [editMode, setEditMode] = useAtom(editModeAtom);
-
-    function ConvertEvent(e: InternalCalendarEventType | undefined) {
-        if (e) {
-            const { startTime, endTime, ...rest } = e;
-            return {
-                ...rest,
-                startDate: startTime.toDate(),
-                endDate: endTime.toDate(),
-            } as CalendarEvent;
-        } else {
-            return { color: '#6466F1', hackathonId: 1 } as CalendarEvent;
-        }
-    }
 
     const [event, setEvent] = useState(ConvertEvent(_selectedEvent?.event));
 
@@ -53,8 +41,9 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
 
     const updateEventapi = trpc.events.updateEvent.useMutation();
     const createEventApi = trpc.events.createEvent.useMutation();
+    const { hackathon } = useHackathon();
     const eventsFetch = trpc.events.getEvents.useQuery(
-        { hackathonId: 1 },
+        { hackathonId: hackathon.id },
         {
             enabled: false,
         }
@@ -252,4 +241,22 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
             </SideDrawer>
         </>
     );
+}
+
+function ConvertEvent(e: InternalCalendarEventType | undefined) {
+    const { hackathon } = useHackathon();
+
+    if (e) {
+        const { startTime, endTime, ...rest } = e;
+        return {
+            ...rest,
+            startDate: startTime.toDate(),
+            endDate: endTime.toDate(),
+        } as CalendarEvent;
+    } else {
+        return {
+            color: '#6466F1',
+            hackathonId: hackathon.id,
+        } as CalendarEvent;
+    }
 }

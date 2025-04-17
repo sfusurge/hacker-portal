@@ -89,7 +89,7 @@ export default function TeamCard({
         return (
             <Card className="col-span-4">
                 <CardContent className="gap-6">
-                    <div className="max-w-auto flex w-full justify-center">
+                    <div className="flex w-full max-w-auto justify-center">
                         <Image
                             src={'/login/application-review.webp'}
                             alt="Sad otter alone in the grass"

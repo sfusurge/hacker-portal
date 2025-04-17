@@ -24,39 +24,7 @@ export interface SubmitApplicationResponse {
     pendingStatus: StatusEnum;
 }
 
-const nullSchema = z.object({
-    hackathonId: z.number().int().optional(),
-});
-
 export const applicationsRouter = router({
-    userAlreadySubmitted: publicProcedure
-        .input(nullSchema)
-        .query(async ({ input }) => {
-            const userData = await getUserData();
-
-            if (!userData) {
-                return false;
-            }
-
-            const app = await databaseClient
-                .select()
-                .from(applications)
-                .innerJoin(
-                    user,
-                    and(
-                        eq(applications.userId, userData.id),
-                        eq(user.email, userData.email)
-                    )
-                )
-                .where(
-                    input.hackathonId !== undefined
-                        ? eq(applications.hackathonId, input.hackathonId)
-                        : undefined
-                );
-
-            return app.length > 0;
-        }),
-
     submitApplication: publicProcedure
         .input(insertApplicationSchema)
         .mutation(async ({ input }): Promise<SubmitApplicationResponse> => {
@@ -195,36 +163,25 @@ export const applicationsRouter = router({
 
             return application;
         }),
-    getApplicationStatus: publicProcedure
-        .input(
-            z.object({
-                hackathonId: z.number().int(),
-                userId: z.number().int().optional(),
-            })
-        )
+
+    getCurrentApplication: publicProcedure
+        .input(z.object({ hackathonId: z.number().int() }))
         .query(async ({ input }) => {
-            console.log('A');
+            const user = await getUserData();
 
-            let userId: number;
-
-            if (input.userId) {
-                userId = input.userId;
-            } else {
-                const user = await getUserData();
-
-                userId = user?.id!;
+            if (!user) {
+                throw new InternalServerError(
+                    'Unexpected `undefined` userData'
+                );
             }
 
             const [application] = await databaseClient
-                .select({
-                    currentStatus: applications.currentStatus,
-                    pendingStatus: applications.pendingStatus,
-                })
+                .select()
                 .from(applications)
                 .where(
                     and(
                         eq(applications.hackathonId, input.hackathonId),
-                        eq(applications.userId, userId)
+                        eq(applications.userId, user.id)
                     )
                 )
                 .limit(1);

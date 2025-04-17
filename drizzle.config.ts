@@ -10,5 +10,6 @@ export default defineConfig({
             process.env.DBURL ??
             'postgres://root:12345@localhost:5434/portaldb',
     },
+    strict: true,
     verbose: true,
 });

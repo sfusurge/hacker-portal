@@ -11,31 +11,18 @@ export default async function Team() {
     }
 
     const trpcClient = createCaller({});
-    const currentHackathon = await getCurrentHackathon();
+    const hackathon = await trpcClient.hackathons.getActiveHackathon();
 
     // Get current team for newest hackathon
     const currentTeam = await trpcClient.teams.getCurrentTeam({
-        hackathonId: currentHackathon.id,
+        hackathonId: hackathon.id,
     });
 
     return (
         <TeamDisplay
             currentTeam={currentTeam}
-            currentHackathon={currentHackathon}
+            currentHackathon={hackathon}
             user={user}
         />
     );
-}
-
-// temp function to get most recent hackathon
-export async function getCurrentHackathon() {
-    const trpcClient = createCaller({});
-    const hackathons = await trpcClient.hackathons.getHackathons();
-
-    if (!hackathons || hackathons.length === 0) {
-        throw new Error('No hackathons found');
-    }
-
-    // Return the most recent hackathon
-    return hackathons[hackathons.length - 1];
 }

@@ -6,7 +6,7 @@ import {
     timestamp,
     varchar,
 } from 'drizzle-orm/pg-core';
-import { createInsertSchema, createUpdateSchema } from 'drizzle-zod';
+import { createUpdateSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { hackathons } from './hackathons';
 

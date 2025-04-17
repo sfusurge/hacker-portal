@@ -20,7 +20,7 @@ export default function CurrentStateUI({
     return (
         <div className="flex h-full w-full items-center justify-center">
             <div className="flex w-full max-w-fit flex-col items-center justify-center gap-6 text-center">
-                <div className="max-w-auto w-full">
+                <div className="w-full max-w-auto">
                     <Image
                         src={imageSrc}
                         alt="Otters around a table"

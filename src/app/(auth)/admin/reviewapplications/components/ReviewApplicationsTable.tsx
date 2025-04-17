@@ -32,6 +32,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import { DocumentArrowDownIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/16/solid';
+import { useHackathon } from '@/hooks/use-hackathon';
 
 const validEmailTypes = ['ACCEPTJH2025'];
 
@@ -147,11 +148,17 @@ export default function ReviewApplicationsTable({
 
     // const [tableSize, setTableSize] = useState(10);
 
-    //Get data from DB
-    const applicationData = trpc.applications.getApplications.useQuery({
-        hackathonId: 1,
-        maxResult: 200,
-    });
+    const { hackathon, hackathonLoaded } = useHackathon();
+
+    // Get data from DB
+    const applicationData = trpc.applications.getApplications.useQuery(
+        {
+            hackathonId: hackathon?.id!,
+            maxResult: 200,
+        },
+        // only load applications data once hackathon has been loaded
+        { enabled: hackathonLoaded }
+    );
 
     //Data state
     const [data, setData] = useState<Applicant[]>([]);
