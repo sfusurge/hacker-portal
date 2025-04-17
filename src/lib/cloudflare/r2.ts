@@ -17,7 +17,7 @@ export const MAX_FILE_SIZE = 2 * 1024 * 1024;
 // Allowed image MIME types
 export const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png'] as const;
 
-if (process.env.R2_ENDPOINT) {
+if (!process.env.R2_ENDPOINT) {
     throw new Error('Missing required R2_ENDPOINT environment variables');
 }
 

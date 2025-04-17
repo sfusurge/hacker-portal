@@ -1,10 +1,14 @@
-import { describe, it, expect } from 'vitest';
-import fs from 'fs';
-import path from 'path';
 import { createCaller } from '@/server/appRouter';
 import { BadRequestError } from '@/server/exceptions';
+import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import { describe, expect, it } from 'vitest';
 
 describe('files router tests', () => {
+    // Load environment variables
+    dotenv.config();
+
     const trpcClient = createCaller({});
 
     const caller = trpcClient.files;
