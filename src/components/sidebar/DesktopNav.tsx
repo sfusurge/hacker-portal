@@ -229,10 +229,7 @@ export default function DesktopNav({
                     <div className="mt-auto pt-5">
                         <button
                             onClick={async () => {
-                                await signOut({
-                                    redirectTo: '/login',
-                                    callbackUrl: '/login',
-                                });
+                                await signOut();
                                 if (typeof window !== 'undefined') {
                                     localStorage.removeItem(
                                         'auth-login-success'
