@@ -15,7 +15,7 @@ import { useHydrateAtoms } from 'jotai/utils';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { redirect, usePathname } from 'next/navigation';
 import { UserData } from '@/db/schema/users/users';
 
 interface MobileTopNavProps {
@@ -106,7 +106,8 @@ export default function MobileTopNav({
                                     variant="error"
                                     className="px-2"
                                     onClick={async () => {
-                                        await signOut({});
+                                        redirect('/signout');
+
                                         if (typeof window !== 'undefined') {
                                             localStorage.removeItem(
                                                 'auth-login-success'
