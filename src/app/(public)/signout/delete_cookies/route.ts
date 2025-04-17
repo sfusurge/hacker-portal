@@ -7,5 +7,10 @@ export async function POST(request: Request) {
     c.delete('__Secure-authjs.session-token');
     c.delete('authjs.session-token');
 
-    return Response.json({});
+    return new Response('delelting auth cookies', {
+        status: 200,
+        headers: {
+            'Set-Cookie': `__Secure-authjs.session-token=abc; Max-Age=0`,
+        },
+    });
 }
