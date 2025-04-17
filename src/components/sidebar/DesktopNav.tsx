@@ -229,11 +229,7 @@ export default function DesktopNav({
                     <div className="mt-auto pt-5">
                         <button
                             onClick={async () => {
-                                document.cookie.split(';').forEach((cookie) => {
-                                    const name = cookie.split('=')[0].trim();
-                                    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
-                                });
-                                // redirect('/signout');
+                                await signOut();
                                 if (typeof window !== 'undefined') {
                                     localStorage.removeItem(
                                         'auth-login-success'

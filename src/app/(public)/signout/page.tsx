@@ -12,21 +12,9 @@ export default function SignOutPage() {
     const router = useRouter();
     useEffect(() => {
         if (session.status === 'authenticated') {
-            document.cookie.split(';').forEach((cookie) => {
-                const name = cookie.split('=')[0].trim();
-                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
+            signOut().then(() => {
+                redirect('/login');
             });
-            signOut()
-                .then(() =>
-                    fetch('/signout/delete_cookies', {
-                        method: 'post',
-                    })
-                )
-                .then(() => {
-                    console.log('called signout api');
-
-                    redirect('/login');
-                });
         } else {
             router.replace('/login');
         }
