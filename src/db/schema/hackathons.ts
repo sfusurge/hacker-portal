@@ -26,7 +26,7 @@ const hackathons = pgTable('hackathons', {
         .$type<ApplicationPage[]>()
         .notNull()
         .default([]),
-    version: integer('id').notNull().default(1),
+    version: integer('version').notNull().default(1),
     isActive: boolean('is_active').notNull().default(false),
 });
 
