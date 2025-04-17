@@ -7,6 +7,7 @@ import { hackathonsRouter } from './routers/hackathonsRouter';
 import { sendEmailRouter } from './routers/sendEmailRouter';
 import { usersRouter } from './routers/usersRouter';
 import { teamsRouter } from './routers/teamsRouter';
+import { filesRouter } from './routers/filesRouter';
 
 export const appRouter = router({
     health_check: publicProcedure.query(() => {
@@ -17,11 +18,11 @@ export const appRouter = router({
     hackathons: hackathonsRouter,
     applications: applicationsRouter,
     emails: sendEmailRouter,
-
     events: eventsRouter,
     checkIn: checkInRouter,
 
     teams: teamsRouter,
+    files: filesRouter,
 });
 
 // For server side call in unit test

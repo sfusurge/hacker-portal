@@ -15,12 +15,14 @@ type TeamDisplayProps = {
     currentTeam: TeamType;
     currentHackathon: HackathonType;
     user: UserData;
+    imageData?: string;
 };
 
 export default function TeamDisplay({
     currentTeam,
     currentHackathon,
     user,
+    imageData = '/teams/default.webp',
 }: TeamDisplayProps) {
     // If user is not in a team for the current hackathon, show join team UI
     if (!currentTeam) {
@@ -40,7 +42,7 @@ export default function TeamDisplay({
         <div className="flex flex-col gap-6 md:gap-8">
             <div className="flex gap-6">
                 <Image
-                    src={currentTeam.teamPictureUrl ?? '/teams/default.webp'}
+                    src={imageData}
                     alt={`${currentTeam.name} logo`}
                     className="inline-block h-11 w-11 rounded-xl md:h-16 md:w-16"
                 />

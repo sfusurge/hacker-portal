@@ -27,6 +27,8 @@ import { publicProcedure, router } from '../trpc';
 import { getUserData, user } from '@/db/schema/users/users';
 import { PgQueryResultHKT, PgTransaction } from 'drizzle-orm/pg-core';
 
+import { user as userTable } from '@/db/schema/users/users';
+
 import { getSixDigitId, teamRNGParams } from '@/lib/PRNG/LCG';
 import { z } from 'zod';
 
@@ -191,13 +193,13 @@ export const teamsRouter = router({
             const members = await databaseClient
                 .select({
                     userId: membersTable.userId,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    email: user.email,
+                    firstName: userTable.firstName,
+                    lastName: userTable.lastName,
+                    email: userTable.email,
                     currentStatus: applications.currentStatus,
                 })
                 .from(membersTable)
-                .innerJoin(user, eq(user.id, membersTable.userId))
+                .innerJoin(userTable, eq(userTable.id, membersTable.userId))
                 .where(eq(membersTable.teamId, team.id))
                 .leftJoin(
                     applications,
