@@ -168,7 +168,7 @@ export function CheckboxGroup({
                             defaultValue={otherValue}
                             required={required && usingOther}
                             errorMsg="Required!"
-                            placeholder="Customer value here"
+                            placeholder="Please specify"
                             hideBackground
                         />
                     )}
