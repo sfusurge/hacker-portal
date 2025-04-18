@@ -1,7 +1,7 @@
-import { redirect } from 'next/navigation';
-import { createCaller } from '@/server/appRouter';
-import { getUserData } from '@/db/schema/users/users';
 import TeamDisplay from '@/components/team/TeamDisplay';
+import { getUserData } from '@/db/schema/users/users';
+import { createCaller } from '@/server/appRouter';
+import { redirect } from 'next/navigation';
 
 export default async function Team() {
     const user = await getUserData();
@@ -11,31 +11,36 @@ export default async function Team() {
     }
 
     const trpcClient = createCaller({});
-    const currentHackathon = await getCurrentHackathon();
+    const hackathon = await trpcClient.hackathons.getActiveHackathon();
 
     // Get current team for newest hackathon
     const currentTeam = await trpcClient.teams.getCurrentTeam({
-        hackathonId: currentHackathon.id,
+        hackathonId: hackathon.id,
     });
+
+    const teamPictureUrl = currentTeam?.teamPictureUrl;
+
+    const image = teamPictureUrl
+        ? await trpcClient.files
+              .getFile({
+                  key: teamPictureUrl,
+              })
+              .catch((error) => {
+                  console.error('Error fetching image:', error);
+                  return null;
+              })
+        : null;
+
+    const imageData = image
+        ? `data:${image.contentType};base64,${Buffer.from(image.buffer).toString('base64')}`
+        : undefined;
 
     return (
         <TeamDisplay
             currentTeam={currentTeam}
-            currentHackathon={currentHackathon}
+            currentHackathon={hackathon}
             user={user}
+            imageData={imageData}
         />
     );
-}
-
-// temp function to get most recent hackathon
-export async function getCurrentHackathon() {
-    const trpcClient = createCaller({});
-    const hackathons = await trpcClient.hackathons.getHackathons();
-
-    if (!hackathons || hackathons.length === 0) {
-        throw new Error('No hackathons found');
-    }
-
-    // Return the most recent hackathon
-    return hackathons[hackathons.length - 1];
 }

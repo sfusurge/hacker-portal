@@ -89,7 +89,7 @@ export default function DesktopNav({
                                 )}
                             >
                                 <Image
-                                    src="/login/sparkcheffrizz.webp"
+                                    src="/dashboard/OtterHead.png"
                                     alt="Sparky wearing a chef's hat"
                                     width={36}
                                     height={36}
@@ -125,18 +125,16 @@ export default function DesktopNav({
                                                         <div className="h-9 w-9 shrink-0 opacity-0" />
                                                         <div className="mt-1 flex flex-col gap-2 overflow-hidden">
                                                             <span className="line-clamp-1 text-sm leading-none font-medium whitespace-nowrap text-white">
-                                                                JourneyHacks
-                                                                2025
+                                                                SparkJam
                                                             </span>
                                                             <span className="line-clamp-1 text-sm leading-none whitespace-nowrap text-white/60">
-                                                                February 14,
-                                                                2025
+                                                                May 17, 2025
                                                             </span>
                                                         </div>
                                                     </div>
                                                     <Image
-                                                        src="/dashboard/sidebar-header.webp"
-                                                        alt="Stormy and Sparky cooking"
+                                                        src="/dashboard/SparkJamOtterTableHeader.png"
+                                                        alt="Sparkjam"
                                                         width={200}
                                                         height={200}
                                                         className="h-full w-full object-cover"
@@ -171,17 +169,17 @@ export default function DesktopNav({
                                     'justify-center': collapsed,
                                 })}
                             />
-                            <NavLink
-                                href="/schedule"
-                                label="Schedule"
-                                icon={<CalendarDaysIcon className="h-6 w-6" />}
-                                iconAlt="Schedule logo"
-                                platform="desktop"
-                                active={url.startsWith('/schedule')}
-                                className={clsx({
-                                    'justify-center': collapsed,
-                                })}
-                            />
+                            {/*<NavLink*/}
+                            {/*    href="/schedule"*/}
+                            {/*    label="Schedule"*/}
+                            {/*    icon={<CalendarDaysIcon className="h-6 w-6" />}*/}
+                            {/*    iconAlt="Schedule logo"*/}
+                            {/*    platform="desktop"*/}
+                            {/*    active={url.startsWith('/schedule')}*/}
+                            {/*    className={clsx({*/}
+                            {/*        'justify-center': collapsed,*/}
+                            {/*    })}*/}
+                            {/*/>*/}
                             <NavLink
                                 href="/notifications"
                                 label="Notifications"
@@ -287,7 +285,7 @@ export default function DesktopNav({
                             alt="Default avatar for the user"
                             src={
                                 initialData?.image ??
-                                '/sidebar/default-avatar.webpp'
+                                '/sidebar/default-avatar.webp'
                             }
                             width={32}
                             height={32}

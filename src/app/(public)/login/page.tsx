@@ -73,7 +73,7 @@ export default async function Login({
         >
             <div className="block h-full w-full bg-[#C4D086] lg:hidden"></div>
             <Image
-                src="/login/journeyhacks-header-2x.webp"
+                src="/login/SparkJamOtterTableHeader.png"
                 alt="Stormy and Sparky are cooking."
                 fill
                 className="absolute hidden h-full w-full object-cover lg:block"

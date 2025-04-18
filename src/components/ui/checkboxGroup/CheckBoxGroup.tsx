@@ -1,15 +1,15 @@
+'use client';
+
 import {
-    CSSProperties,
+    type CSSProperties,
     useCallback,
     useEffect,
-    useMemo,
     useRef,
     useState,
 } from 'react';
 import { CheckBoxWithLabel } from '../checkbox/checkboxWithLabel';
 import style from './CheckBoxGroup.module.css';
 import { FormTextInput } from '../input/input';
-import { setSourceMapsEnabled } from 'process';
 
 interface CheckBoxGroupProps {
     min?: number;
@@ -21,26 +21,35 @@ interface CheckBoxGroupProps {
     otherValue?: string | undefined;
     required?: boolean;
 }
+
 export function CheckboxGroup({
     min = 0,
     max = 1,
     choices,
-    selected: _selected,
+    selected: initialSelected = [],
     allowOther = false,
     otherValue: defaultOther,
     onSelection,
     required,
 }: CheckBoxGroupProps) {
-    const selected = useMemo(() => new Set(_selected), [_selected]);
+    // Create a state for selected items instead of just a memoized value
+    const [internalSelectedItems, setInternalSelectedItems] = useState<
+        Set<string>
+    >(new Set(initialSelected));
     const [otherValue, setOtherValue] = useState<string | undefined>(
         defaultOther
     );
     const [usingOther, setUsingOther] = useState(
-        allowOther && otherValue !== undefined
+        allowOther && defaultOther !== undefined
     );
     const ref = useRef<HTMLInputElement>(null);
 
-    function updateValidity() {
+    // Use a derived value that combines the prop and internal state
+    const selectedItems = initialSelected
+        ? new Set(initialSelected)
+        : internalSelectedItems;
+
+    const updateValidity = useCallback(() => {
         if (!ref.current || !required) {
             return;
         }
@@ -48,7 +57,8 @@ export function CheckboxGroup({
         if (usingOther && !otherValue) {
             ref.current.setCustomValidity("Please fill the 'Other' value.");
         } else {
-            const count = selected.size + (otherValue && usingOther ? 1 : 0);
+            const count =
+                selectedItems.size + (otherValue && usingOther ? 1 : 0);
 
             if (count > max) {
                 ref.current.setCustomValidity(
@@ -62,23 +72,30 @@ export function CheckboxGroup({
                 ref.current.setCustomValidity('');
             }
         }
+    }, [max, min, otherValue, required, selectedItems.size, usingOther]);
 
-        triggerOnSelect();
-    }
-
-    function triggerOnSelect() {
-        onSelection &&
-            onSelection(selected, usingOther ? otherValue : undefined);
-    }
-
-    const mounted = useRef(false);
+    // Trigger onSelection whenever relevant state changes
     useEffect(() => {
-        if (mounted.current) {
-            updateValidity();
+        updateValidity();
+    }, [updateValidity]);
+
+    const handleCheckboxChange = (item: string, checked: boolean) => {
+        // Create a new Set based on the current selectedItems
+        const newSelected = new Set(selectedItems);
+
+        if (checked) {
+            newSelected.add(item);
         } else {
-            mounted.current = true;
+            newSelected.delete(item);
         }
-    }, [otherValue, usingOther]);
+
+        // Update internal state
+        setInternalSelectedItems(newSelected);
+
+        // Directly call onSelection with the new set
+        onSelection &&
+            onSelection(newSelected, usingOther ? otherValue : undefined);
+    };
 
     return (
         <fieldset
@@ -96,24 +113,21 @@ export function CheckboxGroup({
                 ref={ref}
                 type="text"
                 style={{ display: 'none' }}
-                required
+                required={required}
                 defaultValue={'n/a'}
             />
             {choices.map((item, index) => (
                 <CheckBoxWithLabel
-                    checked={selected.has(item.data)}
+                    checked={selectedItems.has(item.data)}
                     name={item.name}
                     key={index}
                     onChange={(e) => {
-                        if (e.target.checked) {
-                            selected.add(item.data);
-                        } else {
-                            selected.delete(item.data);
-                        }
-
-                        updateValidity();
+                        handleCheckboxChange(item.data, e.target.checked);
                     }}
-                    disabled={selected.size >= max && !selected.has(item.data)}
+                    disabled={
+                        selectedItems.size >= max &&
+                        !selectedItems.has(item.data)
+                    }
                     required={false}
                 ></CheckBoxWithLabel>
             ))}
@@ -121,15 +135,10 @@ export function CheckboxGroup({
             {allowOther && (
                 <CheckBoxWithLabel
                     checked={usingOther}
-                    // defaultChecked={usingOther}
                     name="Other"
                     key="other"
                     onChange={(e) => {
-                        if (e.target.checked) {
-                            setUsingOther(true);
-                        } else {
-                            setUsingOther(false);
-                        }
+                        setUsingOther(e.target.checked);
                     }}
                 >
                     {usingOther && (
@@ -141,7 +150,7 @@ export function CheckboxGroup({
                                 setOtherValue(val);
                             }}
                             defaultValue={otherValue}
-                            required={required}
+                            required={required && usingOther}
                             errorMsg="Required!"
                             placeholder="Customer value here"
                             hideBackground

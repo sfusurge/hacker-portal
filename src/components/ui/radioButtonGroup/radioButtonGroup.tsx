@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useMemo, useState } from 'react';
 import { FormTextInput } from '../input/input';
 import style from './radioButtonGroup.module.css';
@@ -13,23 +15,7 @@ export interface RadioButtonGroupProps {
 }
 
 /**
- * ***options***: an array of {data, name}. "name" is displayed while "data" is for internal representation.
- * "data" is returned in onSelection.
- *
- * ***allowDeselect***: when enabled, user can set value back to undefined by selecting an already selected option
- *
- * ***allowCustomInput***: when enabled, shows a "Others" option at the *end* of the options list.
- * When selected, a custom text input appears for the user type of custom value.
- * TODO: **No validation nor any way to indicate a value is custom for now.**
- *
- * ***required***: When enabled, there must be an selection, or if "Other" is chosen, then the custom input must not be empty.
- *
- * ***onSelection***: this callback triggers whenever a selection is made, only the "data" is returned.
- * This component is not lazy* and triggers as soon as a selection is made.
- * \*However this component *is* lazy when allowCustomInput is on, the textfield only triggers callback every 500ms
- * undefined is returned if user de-selects.
- *
- * ***defaultSelection***: determine if a value should be selected on initial render. Can be any string, will only select on data match.
+ * RadioButtonGroup component with improved handling for selections
  */
 export function RadioButtonGroup({
     options,
@@ -44,15 +30,31 @@ export function RadioButtonGroup({
         defaultSelection
     );
 
+    // Debug log for the photograph consent question
+    useEffect(() => {
+        if (name.includes('16')) {
+            console.log('RadioButtonGroup state:', {
+                name,
+                selection,
+                defaultSelection,
+                options,
+                required,
+            });
+        }
+    }, [name, selection, defaultSelection, options, required]);
+
     const datas = useMemo(() => {
         const set = new Set<string | undefined>(
             options.map((item) => item.data)
         );
         set.add(undefined); // so that undefined is an "expected value"
         return set;
-    }, []);
+    }, [options]);
 
-    const usingCustomInput = useMemo(() => !datas.has(selection), [selection]);
+    const usingCustomInput = useMemo(
+        () => selection !== undefined && !datas.has(selection),
+        [selection, datas]
+    );
 
     function clearSelection(val: string) {
         if (!allowDeselect) {
@@ -65,45 +67,60 @@ export function RadioButtonGroup({
     }
 
     function setSelection(val: string | undefined) {
+        console.log(`Setting selection for ${name} to:`, val);
         _setSelection(val);
-        onSelection && onSelection(val);
+        if (onSelection) {
+            onSelection(val);
+        }
     }
 
+    // Update internal state when defaultSelection changes
     useEffect(() => {
-        _setSelection(defaultSelection); // :see_no_evil:
+        if (defaultSelection !== undefined) {
+            _setSelection(defaultSelection);
+        }
     }, [defaultSelection]);
 
     return (
         <fieldset className={style.optionsContainer}>
-            {options.map((item, index) => (
-                <label
-                    key={index}
-                    htmlFor={item.data}
-                    className={style.optionLabel}
-                >
-                    <input
-                        type="radio"
-                        id={item.data}
-                        name={name}
-                        value={item.data}
-                        required={required}
-                        checked={item.data === selection}
-                        onChange={() => {
-                            setSelection(item.data);
-                        }}
-                        className={style.radio}
-                        onClick={() => {
-                            clearSelection(item.data);
-                        }}
-                    />
-                    {item.name}
-                </label>
-            ))}
+            {options.map((item, index) => {
+                // Create a unique ID for each radio input
+                const inputId = `${name}-${item.data.replace(/\s+/g, '-')}-${index}`;
+
+                return (
+                    <label
+                        key={index}
+                        htmlFor={inputId}
+                        className={style.optionLabel}
+                    >
+                        <input
+                            type="radio"
+                            id={inputId}
+                            name={name}
+                            value={item.data}
+                            required={required}
+                            checked={item.data === selection}
+                            onChange={() => {
+                                setSelection(item.data);
+                            }}
+                            className={style.radio}
+                            onClick={(e) => {
+                                // Prevent the default radio behavior to handle deselection manually
+                                if (allowDeselect && item.data === selection) {
+                                    e.preventDefault();
+                                    clearSelection(item.data);
+                                }
+                            }}
+                        />
+                        {item.name}
+                    </label>
+                );
+            })}
             {
                 // Other - for custom input
                 allowCustomInput && (
                     <label
-                        htmlFor="other"
+                        htmlFor={`${name}-other`}
                         className={style.optionLabel}
                         style={{
                             flexFlow: 'wrap',
@@ -111,17 +128,17 @@ export function RadioButtonGroup({
                     >
                         <input
                             type="radio"
-                            id="other"
+                            id={`${name}-other`}
                             name={name}
                             checked={usingCustomInput}
                             onChange={() => {
                                 setSelection('');
                             }}
                             className={style.radio}
-                        ></input>
+                        />
                         Other
                         {
-                            // TODO, give the custom input validation?
+                            // Custom input field
                             allowCustomInput && usingCustomInput && (
                                 <FormTextInput
                                     type="text"
@@ -138,7 +155,7 @@ export function RadioButtonGroup({
                                     }}
                                     defaultValue={selection}
                                     hideBackground
-                                ></FormTextInput>
+                                />
                             )
                         }
                     </label>

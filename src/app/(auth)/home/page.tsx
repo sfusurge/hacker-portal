@@ -11,28 +11,23 @@ import { ApplicationCardSkeleton } from '@/components/home/Skeletons';
 export default async function Home() {
     const data = await getUserData();
 
-    // TODO: Replace with Dynamic Hackathon ID
-    const hackathonId = 5;
     const trpcClient = createCaller({});
 
-    console.log('entering home page');
+    const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
 
-    const [applicationStatus, applicationSubmitted, team, events] =
-        await Promise.all([
-            trpcClient.applications.getApplicationStatus({
-                hackathonId: hackathonId,
-                userId: data!.id,
-            }),
-            trpcClient.applications.userAlreadySubmitted({
-                hackathonId: hackathonId,
-            }),
-            trpcClient.teams.getCurrentTeam({
-                hackathonId: hackathonId,
-            }),
-            trpcClient.events.getEvents({
-                hackathonId: hackathonId,
-            }),
-        ]);
+    const hackathonId = activeHackathon.id;
+
+    const [application, team, events] = await Promise.all([
+        trpcClient.applications.getCurrentApplication({
+            hackathonId: hackathonId,
+        }),
+        trpcClient.teams.getCurrentTeam({
+            hackathonId: hackathonId,
+        }),
+        trpcClient.events.getEvents({
+            hackathonId: hackathonId,
+        }),
+    ]);
 
     const opts: QROptions = {
         margin: 1,
@@ -56,8 +51,8 @@ export default async function Home() {
                     <ApplicationCard
                         userData={data}
                         image={userQR}
-                        applicationStatus={applicationStatus}
-                        applicationSubmitted={applicationSubmitted}
+                        applicationStatus={application?.currentStatus}
+                        applicationSubmitted={application !== null}
                     />
                 </Suspense>
 

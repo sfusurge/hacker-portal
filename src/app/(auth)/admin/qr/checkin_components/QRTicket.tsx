@@ -8,9 +8,9 @@ import { X } from 'lucide-react';
 
 export type QRTicketProps = {
     userId: string | undefined;
-    firstName: string | undefined;
-    lastName: string | undefined;
-    image: string | undefined;
+    firstName?: string | null;
+    lastName?: string | null;
+    image?: string | null;
     closeTicket: () => void;
 };
 
@@ -77,7 +77,7 @@ export default function QRTicket({
                         </h2>
 
                         <h1 className="tracking-tightest text-center text-xl leading-5 font-semibold text-white">
-                            JourneyHacks 2025
+                            Sparkjam
                         </h1>
                     </header>
 

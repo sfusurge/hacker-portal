@@ -60,11 +60,11 @@ export default function EventsCard({ events }: { events: any[] }) {
                     <CardHeaderDescription>Your Schedule</CardHeaderDescription>
                     <CardHeaderTitle>Upcoming Events</CardHeaderTitle>
                 </CardHeaderColumn>
-                <Link href="/schedule" className="hidden md:block">
-                    <Button size="cozy" variant="default" hierarchy="primary">
-                        View event schedule
-                    </Button>
-                </Link>
+                {/*<Link href="/schedule" className="hidden md:block">*/}
+                {/*    /!*<Button size="cozy" variant="default" hierarchy="primary">*!/*/}
+                {/*    /!*    View event schedule*!/*/}
+                {/*    /!*</Button>*!/*/}
+                {/*</Link>*/}
             </CardHeader>
             <CardContent
                 className={
@@ -126,18 +126,18 @@ export default function EventsCard({ events }: { events: any[] }) {
                     </div>
                 )}
             </CardContent>
-            <CardFooter className="md:hidden">
-                <Link href="/schedule">
-                    <Button
-                        size="cozy"
-                        variant="default"
-                        hierarchy="primary"
-                        className="w-full"
-                    >
-                        View event schedule
-                    </Button>
-                </Link>
-            </CardFooter>
+            {/*<CardFooter className="md:hidden">*/}
+            {/*    <Link href="/schedule">*/}
+            {/*        <Button*/}
+            {/*            size="cozy"*/}
+            {/*            variant="default"*/}
+            {/*            hierarchy="primary"*/}
+            {/*            className="w-full"*/}
+            {/*        >*/}
+            {/*            View event schedule*/}
+            {/*        </Button>*/}
+            {/*    </Link>*/}
+            {/*</CardFooter>*/}
 
             <AnimatePresence>
                 {showModal && selectedEvent && (

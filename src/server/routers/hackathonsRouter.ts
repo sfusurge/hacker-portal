@@ -1,3 +1,4 @@
+import { ApplicationPage } from '@/app/(auth)/application/application_components/types';
 import { publicProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
 import {
@@ -5,24 +6,47 @@ import {
     hackathons,
     deleteHackathonSchema,
 } from '@/db/schema/hackathons';
-import { eq } from 'drizzle-orm';
+import { asc, eq, getTableColumns } from 'drizzle-orm';
 
 export const hackathonsRouter = router({
     getHackathons: publicProcedure.query(async () => {
         return await databaseClient.select().from(hackathons);
     }),
+
+    getActiveHackathon: publicProcedure.query(async () => {
+        const { isActive, ...restOfHackathonColumns } =
+            getTableColumns(hackathons);
+
+        const [hackathon] = await databaseClient
+            .select({
+                ...restOfHackathonColumns,
+            })
+            .from(hackathons)
+            .where(eq(hackathons.isActive, true))
+            .limit(1)
+            .orderBy(asc(hackathons.startDate));
+
+        return hackathon ?? null;
+    }),
+
     addHackathon: publicProcedure
         .input(insertHackathonSchema)
-        .mutation(async (opts) => {
+        .mutation(async ({ input }) => {
             const [hackathon] = await databaseClient
                 .insert(hackathons)
                 .values({
-                    ...opts.input,
+                    name: input.name,
+                    startDate: input.startDate,
+                    endDate: input.endDate,
+                    isActive: input.isActive,
+                    questions: input.questions as ApplicationPage[],
+                    version: input.version,
                 })
                 .returning();
 
             return hackathon;
         }),
+
     deleteHackathon: publicProcedure
         .input(deleteHackathonSchema)
         .mutation(async (opts) => {

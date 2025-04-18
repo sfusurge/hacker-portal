@@ -4,22 +4,25 @@ import InviteCard from '@/components/team/InTeam/InviteCard';
 import { UserData } from '@/db/schema/users/users';
 import { inferProcedureOutput } from '@trpc/server';
 import { AppRouter } from '@/server/appRouter';
+import Image from 'next/image';
 
 type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
 type HackathonType = inferProcedureOutput<
-    AppRouter['hackathons']['getHackathons']
->[number];
+    AppRouter['hackathons']['getActiveHackathon']
+>;
 
 type TeamDisplayProps = {
     currentTeam: TeamType;
     currentHackathon: HackathonType;
     user: UserData;
+    imageData?: string;
 };
 
 export default function TeamDisplay({
     currentTeam,
     currentHackathon,
     user,
+    imageData = '/teams/default.webp',
 }: TeamDisplayProps) {
     // If user is not in a team for the current hackathon, show join team UI
     if (!currentTeam) {
@@ -38,8 +41,10 @@ export default function TeamDisplay({
     return (
         <div className="flex flex-col gap-6 md:gap-8">
             <div className="flex gap-6">
-                <img
-                    src={currentTeam.teamPictureUrl ?? '/teams/default.webp'}
+                <Image
+                    width={64}
+                    height={64}
+                    src={imageData}
                     alt={`${currentTeam.name} logo`}
                     className="inline-block h-11 w-11 rounded-xl md:h-16 md:w-16"
                 />

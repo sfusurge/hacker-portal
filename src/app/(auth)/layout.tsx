@@ -5,10 +5,7 @@ import DesktopNav from '@/components/sidebar/DesktopNav';
 
 import { ReactNode } from 'react';
 
-import { auth } from '@/auth/auth';
-import { databaseClient } from '@/db/client';
-import { getUserData, user } from '@/db/schema/users/users';
-import { eq } from 'drizzle-orm';
+import { getUserData } from '@/db/schema/users/users';
 
 import { CacheClearer } from '@/app/(auth)/CacheClear';
 import { redirect } from 'next/navigation';
@@ -19,7 +16,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
     console.log('ini user data', initialUserData);
 
     if (!initialUserData) {
-        return await redirect('/signout');
+        return redirect('/signout');
     }
 
     return (

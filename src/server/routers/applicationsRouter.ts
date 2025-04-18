@@ -12,7 +12,10 @@ import { z } from 'zod';
 import { InternalServerError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
 import Handlebars from 'handlebars';
-import { welcomeEmailTemplate } from '@/server/routers/templates';
+import {
+    welcomeEmailTemplate,
+    welcomeSparkhacksTemplate,
+} from '@/server/routers/templates';
 import { transporter } from '@/server/nodemailerTransporter';
 
 export interface SubmitApplicationResponse {
@@ -24,39 +27,7 @@ export interface SubmitApplicationResponse {
     pendingStatus: StatusEnum;
 }
 
-const nullSchema = z.object({
-    hackathonId: z.number().int().optional(),
-});
-
 export const applicationsRouter = router({
-    userAlreadySubmitted: publicProcedure
-        .input(nullSchema)
-        .query(async ({ input }) => {
-            const userData = await getUserData();
-
-            if (!userData) {
-                return false;
-            }
-
-            const app = await databaseClient
-                .select()
-                .from(applications)
-                .innerJoin(
-                    user,
-                    and(
-                        eq(applications.userId, userData.id),
-                        eq(user.email, userData.email)
-                    )
-                )
-                .where(
-                    input.hackathonId !== undefined
-                        ? eq(applications.hackathonId, input.hackathonId)
-                        : undefined
-                );
-
-            return app.length > 0;
-        }),
-
     submitApplication: publicProcedure
         .input(insertApplicationSchema)
         .mutation(async ({ input }): Promise<SubmitApplicationResponse> => {
@@ -73,7 +44,7 @@ export const applicationsRouter = router({
             const [application] = await databaseClient
                 .insert(applications)
                 .values({
-                    userId: sql`(SELECT ${user.id} FROM ${user} WHERE ${user.email} = ${email} LIMIT 1)`,
+                    userId: user.id,
                     hackathonId: input.hackathonId,
                     response: input.response,
                 })
@@ -88,7 +59,7 @@ export const applicationsRouter = router({
 
             //based on code copied from rewviewappplications table lmao
             const tempDummy = (item: any) => {
-                const { '1': name, '2': email } = item.response || {};
+                const { '2': name, '5': email } = item.response || {};
                 return { name, email };
             };
 
@@ -97,7 +68,7 @@ export const applicationsRouter = router({
                     'User email is missing. Cannot send email.'
                 );
             }
-
+            console.log(input);
             const extractedEmail = tempDummy(input).email;
             if (!extractedEmail) {
                 throw new InternalServerError(
@@ -105,42 +76,52 @@ export const applicationsRouter = router({
                 );
             }
 
-            const template = Handlebars.compile(welcomeEmailTemplate);
+            const template = Handlebars.compile(welcomeSparkhacksTemplate);
             const htmlContent = template({
-                firstName: tempDummy(input).name,
+                // firstName: tempDummy(input).name,
             });
 
             let oAuthMailOptions = {
                 from: process.env.SENDINGEMAIL,
                 to: user.email,
-                subject: "We've Received Your JourneyHacks Application 😎",
-                text: 'Thank you for applying to JourneyHacks!',
+                subject: process.env.WELCOME_SUBJECT,
+                text: process.env.WELCOME_TEXT,
                 html: htmlContent,
             };
 
             let sfuMailOptions = {
                 from: process.env.SENDINGEMAIL,
                 to: extractedEmail,
-                subject: "We've Received Your JourneyHacks Application 😎",
-                text: 'Thank you for applying to JourneyHacks!',
+                subject: process.env.WELCOME_SUBJECT,
+                text: process.env.WELCOME_TEXT,
                 html: htmlContent,
             };
 
-            transporter.sendMail(oAuthMailOptions, (error, info) => {
-                if (error) {
-                    console.error('Error sending email:', error);
-                } else {
-                    console.log('Email sent:', info.response);
-                }
-            });
+            if (user.email != extractedEmail) {
+                transporter.sendMail(oAuthMailOptions, (error, info) => {
+                    if (error) {
+                        console.error('Error sending email:', error);
+                    } else {
+                        console.log('Email sent:', info.response);
+                    }
+                });
 
-            transporter.sendMail(sfuMailOptions, (error, info) => {
-                if (error) {
-                    console.error('Error sending email:', error);
-                } else {
-                    console.log('Email sent:', info.response);
-                }
-            });
+                transporter.sendMail(sfuMailOptions, (error, info) => {
+                    if (error) {
+                        console.error('Error sending email:', error);
+                    } else {
+                        console.log('Email sent:', info.response);
+                    }
+                });
+            } else {
+                transporter.sendMail(oAuthMailOptions, (error, info) => {
+                    if (error) {
+                        console.error('Error sending email:', error);
+                    } else {
+                        console.log('Email sent:', info.response);
+                    }
+                });
+            }
 
             return {
                 ...application,
@@ -195,36 +176,25 @@ export const applicationsRouter = router({
 
             return application;
         }),
-    getApplicationStatus: publicProcedure
-        .input(
-            z.object({
-                hackathonId: z.number().int(),
-                userId: z.number().int().optional(),
-            })
-        )
+
+    getCurrentApplication: publicProcedure
+        .input(z.object({ hackathonId: z.number().int() }))
         .query(async ({ input }) => {
-            console.log('A');
+            const user = await getUserData();
 
-            let userId: number;
-
-            if (input.userId) {
-                userId = input.userId;
-            } else {
-                const user = await getUserData();
-
-                userId = user?.id!;
+            if (!user) {
+                throw new InternalServerError(
+                    'Unexpected `undefined` userData'
+                );
             }
 
             const [application] = await databaseClient
-                .select({
-                    currentStatus: applications.currentStatus,
-                    pendingStatus: applications.pendingStatus,
-                })
+                .select()
                 .from(applications)
                 .where(
                     and(
                         eq(applications.hackathonId, input.hackathonId),
-                        eq(applications.userId, userId)
+                        eq(applications.userId, user.id)
                     )
                 )
                 .limit(1);
