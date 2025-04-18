@@ -6,6 +6,8 @@ import {
     validateFile,
     getFileFromR2,
 } from '@/lib/cloudflare/r2';
+import { getUserData } from '@/db/schema/users/users';
+import { InternalServerError } from '../exceptions';
 
 // Input validation schemas
 const uploadFileSchema = z.object({
@@ -26,16 +28,26 @@ export const filesRouter = router({
     uploadFile: publicProcedure
         .input(uploadFileSchema)
         .mutation(async ({ input }) => {
+            const userData = await getUserData();
+
+            if (!userData?.id) {
+                throw new InternalServerError(
+                    'Unexpected undefined `userData`'
+                );
+            }
+
             const { key, file, fileName } = input;
 
-            // Convert base64 to buffer
             const fileBuffer = Buffer.from(file, 'base64');
 
-            // Validate file and get MIME type
             const mimeType = validateFile(fileName, fileBuffer);
 
-            // Upload file using our R2 module
-            return await uploadFileToR2(fileBuffer, key, mimeType);
+            return await uploadFileToR2({
+                key,
+                mimeType,
+                fileContent: fileBuffer,
+                userId: userData.id,
+            });
         }),
 
     deleteFile: publicProcedure

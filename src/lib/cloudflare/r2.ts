@@ -71,18 +71,28 @@ export function validateFile(fileName: string, fileContent: Buffer): string {
     return mimeType;
 }
 
-export async function uploadFileToR2(
-    fileContent: Buffer,
-    key: string,
-    mimeType: string
-) {
+export interface UploadFileRequest {
+    fileContent: Buffer;
+    key: string;
+    mimeType: string;
+    userId: number;
+}
+
+export async function uploadFileToR2({
+    fileContent,
+    key,
+    mimeType,
+    userId,
+}: UploadFileRequest) {
     try {
-        // Upload the file
         const command = new PutObjectCommand({
             Bucket: process.env.R2_BUCKET_NAME,
             Key: key,
             Body: fileContent,
             ContentType: mimeType,
+            Metadata: {
+                userId: `${userId}`,
+            },
         });
 
         const response = await s3Client.send(command);
