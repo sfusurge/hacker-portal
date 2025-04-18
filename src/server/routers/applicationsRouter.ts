@@ -84,16 +84,16 @@ export const applicationsRouter = router({
             let oAuthMailOptions = {
                 from: process.env.SENDINGEMAIL,
                 to: user.email,
-                subject: process.env.WELCOME_SUBJECT,
-                text: process.env.WELCOME_TEXT,
+                subject: 'Your SparkJam Application Has Been Received!',
+                text: 'Your SparkJam Application Has Been Received!',
                 html: htmlContent,
             };
 
             let sfuMailOptions = {
                 from: process.env.SENDINGEMAIL,
                 to: extractedEmail,
-                subject: process.env.WELCOME_SUBJECT,
-                text: process.env.WELCOME_TEXT,
+                subject: 'Your SparkJam Application Has Been Received!',
+                text: 'Your SparkJam Application Has Been Received!',
                 html: htmlContent,
             };
 
