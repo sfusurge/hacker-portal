@@ -8,6 +8,7 @@ import {
     PutObjectCommand,
     DeleteObjectCommand,
     GetObjectCommand,
+    ListObjectsV2Command,
 } from '@aws-sdk/client-s3';
 import mime from 'mime-types';
 
@@ -136,10 +137,10 @@ export async function deleteFileFromR2(key: string) {
     }
 }
 
-export async function getFileFromR2(key: string) {
+export async function getFileFromR2(key: string, bucketName: string) {
     try {
         const command = new GetObjectCommand({
-            Bucket: process.env.R2_BUCKET_NAME,
+            Bucket: bucketName,
             Key: key,
         });
 
@@ -158,6 +159,55 @@ export async function getFileFromR2(key: string) {
         console.error('Error fetching file:', error);
         throw new InternalServerError(
             `An exception occured getting file ${key}`,
+            error
+        );
+    }
+}
+
+export async function getFilesByUserId(
+    userId: number | string,
+    bucketName: string
+) {
+    try {
+        const command = new ListObjectsV2Command({
+            Bucket: bucketName,
+        });
+
+        const response = await s3Client.send(command);
+
+        if (!response.Contents) {
+            return { files: [] };
+        }
+
+        const userFiles = [];
+
+        for (const item of response.Contents) {
+            if (!item.Key) continue;
+
+            try {
+                const getObjectCommand = new GetObjectCommand({
+                    Bucket: bucketName,
+                    Key: item.Key,
+                });
+
+                const objectResponse = await s3Client.send(getObjectCommand);
+                const objectUserId = objectResponse.Metadata?.userid;
+                if (objectUserId === userId) {
+                    let currentFile = await getFileFromR2(item.Key, bucketName);
+                    // userFiles.push(Buffer.from(currentFile.buffer).toString('base64'));
+                    return Buffer.from(currentFile.buffer).toString('base64');
+                }
+            } catch (error) {
+                console.error(
+                    `Error fetching metadata for file ${item.Key}:`,
+                    error
+                );
+            }
+        }
+    } catch (error) {
+        console.error('Error listing files by user ID:', error);
+        throw new InternalServerError(
+            `An exception occurred listing files for user ${userId}`,
             error
         );
     }

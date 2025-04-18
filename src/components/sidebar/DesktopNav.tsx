@@ -13,6 +13,7 @@ import {
     ChevronDoubleRightIcon,
 } from '@heroicons/react/24/outline';
 import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
+import { trpc } from '@/trpc/client';
 
 import { signOut } from 'next-auth/react';
 import { redirect, usePathname } from 'next/navigation';
@@ -32,6 +33,19 @@ export default function DesktopNav({
 }: DesktopNavProps) {
     const [collapsed, setCollapsed] = useState(false);
     const [isLargeScreen, setIsLargeScreen] = useState(true);
+    const image = trpc.files.getUserImages.useQuery({
+        userId: initialData?.id.toString(),
+        bucketName: 'profile-pictures',
+    });
+
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (image.data) {
+            const dataUrl = `data:image/png;base64,${image.data}`;
+            setAvatarUrl(dataUrl);
+        }
+    }, [image.data]);
 
     useEffect(() => {
         const checkScreenSize = () => {
@@ -282,8 +296,9 @@ export default function DesktopNav({
                 <div className="flex items-center gap-3">
                     <div className="h-8 w-8 shrink-0">
                         <img
-                            alt="Default avatar for the user"
+                            alt="User avatar"
                             src={
+                                avatarUrl ??
                                 initialData?.image ??
                                 '/sidebar/default-avatar.webp'
                             }

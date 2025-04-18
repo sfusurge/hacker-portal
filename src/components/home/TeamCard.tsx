@@ -104,7 +104,7 @@ export default function TeamCard({
                         <h1 className="text-xl font-semibold">
                             You&apos;re not in a team yet! 🥺
                         </h1>
-                        <p className="px-2 font-light text-pretty text-white/60">
+                        <p className="px-2 text-pretty text-white/60">
                             Join an existing team or create a new one to view
                             your team&apos;s information here.
                         </p>

@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { FormTextInput } from '@/components/ui/input/input';
 import { Label } from '@/components/ui/label/label';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export default function LinkLogin({
     action,
@@ -14,9 +14,20 @@ export default function LinkLogin({
     ) => Promise<{ success: boolean; email: string } | void>;
     onSuccess?: (email: string) => void;
 }) {
+    function isValidEmail(email: string): boolean {
+        // Basic email validation regex
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
     const [email, setEmail] = useState('');
+    const [isEmailValid, setIsEmailValid] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const formRef = useRef<HTMLFormElement>(null);
+
+    useEffect(() => {
+        setIsEmailValid(isValidEmail(email));
+    }, [email]);
 
     const handleSubmit = async (formData: FormData) => {
         setIsLoading(true);
@@ -46,7 +57,7 @@ export default function LinkLogin({
                 hierarchy="primary"
                 size="cozy"
                 className="w-full"
-                disabled={!email || isLoading}
+                disabled={!isEmailValid || isLoading}
                 type="submit"
             >
                 {isLoading ? 'Sending...' : 'Continue'}
