@@ -59,7 +59,7 @@ export const applicationsRouter = router({
 
             //based on code copied from rewviewappplications table lmao
             const tempDummy = (item: any) => {
-                const { '1': name, '2': email } = item.response || {};
+                const { '2': name, '5': email } = item.response || {};
                 return { name, email };
             };
 
@@ -68,7 +68,7 @@ export const applicationsRouter = router({
                     'User email is missing. Cannot send email.'
                 );
             }
-
+            console.log(input);
             const extractedEmail = tempDummy(input).email;
             if (!extractedEmail) {
                 throw new InternalServerError(

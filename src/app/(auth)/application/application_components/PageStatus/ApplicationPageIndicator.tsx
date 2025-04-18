@@ -102,9 +102,15 @@ export function DesktopPageIndicator({
                             onClick={() => {
                                 setIndex(index);
                             }}
-                            className={cn(style.pageStatusItem, 'text-left')}
+                            className={cn(
+                                style.pageStatusItem,
+                                'flex items-start text-left'
+                            )}
                         >
-                            {getPageStatus(item, errCheck)} {item.title}
+                            <span className="mr-2 flex-shrink-0">
+                                {getPageStatus(item, errCheck)}
+                            </span>
+                            <span className="flex-grow">{item.title}</span>
                         </button>
 
                         <div
@@ -113,14 +119,20 @@ export function DesktopPageIndicator({
                     </div>
                 );
             })}
-            <button onClick={tryReview} className={style.pageStatusItem}>
-                <ArrowUpCircleIcon
-                    style={{
-                        minWidth: '28px',
-                        height: '28px',
-                    }}
-                />
-                Review
+            <button
+                onClick={tryReview}
+                className={cn(style.pageStatusItem, 'flex items-start')}
+            >
+                <span className="mr-2 flex-shrink-0">
+                    <ArrowUpCircleIcon
+                        style={{
+                            minWidth: '28px',
+                            width: '28px',
+                            height: '28px',
+                        }}
+                    />
+                </span>
+                <span className="flex-grow">Review</span>
             </button>
         </div>
     );
@@ -236,32 +248,46 @@ export function MobilePageIndicator({
                     {pageStates.map((item, _index) => (
                         <button
                             key={_index}
-                            className={cn({
-                                [style.pageButton]: true,
-                                [style.focus]: _index === index,
-                            })}
+                            className={cn(
+                                {
+                                    [style.pageButton]: true,
+                                    [style.focus]: _index === index,
+                                },
+                                'flex items-start'
+                            )}
                             onClick={() => {
                                 setIndex(_index);
                                 setShowPages(false);
                             }}
                         >
-                            {getPageStatus(item, errCheck)}
-                            {getPageTitle(_index)}
+                            <span className="mr-2 flex-shrink-0">
+                                {getPageStatus(item, errCheck)}
+                            </span>
+                            <span className="flex-grow">
+                                {getPageTitle(_index)}
+                            </span>
                         </button>
                     ))}
 
                     <button
-                        className={cn({
-                            [style.pageButton]: true,
-                            [style.focus]: index === pageStates.length,
-                        })}
+                        className={cn(
+                            {
+                                [style.pageButton]: true,
+                                [style.focus]: index === pageStates.length,
+                            },
+                            'flex items-start'
+                        )}
                         onClick={() => {
                             tryReview();
                         }}
                     >
-                        <div style={{ width: '28px' }} />{' '}
-                        {pageStates.length + 1}.{' '}
-                        {getPageTitle(pageStates.length)}
+                        <span className="mr-2 flex-shrink-0">
+                            <div style={{ width: '28px', height: '28px' }} />
+                        </span>
+                        <span className="flex-grow">
+                            {pageStates.length + 1}.{' '}
+                            {getPageTitle(pageStates.length)}
+                        </span>
                     </button>
                 </div>
             </div>

@@ -1,8 +1,20 @@
 'use client';
 
-import { ApplicationQuestion, ApplicationPage } from './types';
+import type {
+    ApplicationQuestion,
+    ApplicationPage,
+    QuestionTextLineInput,
+    QuestionTextAreaInput,
+    QuestionNumberInput,
+    QuestionCheckBoxInput,
+    QuestionMultipleChoice,
+    QuestionMultipleCheckBox,
+    QuestionDatePicker,
+    QuestionSchoolName,
+    QuestionNameInput,
+} from './types';
 import style from './ApplicationForm.module.css';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 
 export interface ReviewPageProps {
@@ -13,80 +25,122 @@ export interface ReviewPageProps {
 
 /**
  * Review Page Gets a submit button if mobile mode.
- * @
- * @
  */
 export function ReviewPage({
     submit,
     response,
     mobileMode = false,
 }: ReviewPageProps) {
+    // Add this debug log at the beginning of the component
+    useEffect(() => {
+        console.log('Review page received response:', response);
+        // Log a sample question to see its structure
+        if (
+            response.length > 0 &&
+            response[0].questions &&
+            response[0].questions.length > 0
+        ) {
+            console.log('Sample question:', response[0].questions[0]);
+        }
+    }, [response]);
+
     function getQuestionResponse(question: ApplicationQuestion) {
-        let res = '';
+        // Type-specific handling based on question type
         switch (question.type) {
             case 'text-line':
             case 'text-area':
+                const textQuestion = question as
+                    | QuestionTextLineInput
+                    | QuestionTextAreaInput;
+                return textQuestion.value?.trim() || 'N/A';
+
             case 'number':
-                res = question.value as string;
-                break;
+                const numQuestion = question as QuestionNumberInput;
+                return numQuestion.value !== undefined
+                    ? String(numQuestion.value)
+                    : 'N/A';
 
             case 'checkbox':
-                res = question.value ? 'yes' : 'no';
-                break;
+                const checkboxQuestion = question as QuestionCheckBoxInput;
+                return checkboxQuestion.value === true ? 'Yes' : 'No';
 
             case 'multiple-checkbox':
-                res = question.choices
-                    .filter((item) => item.value)
-                    .map((item) => item.name)
-                    .join(', ');
-                break;
-            case 'multiple-choice':
-                res = question.value as string;
-                break;
-            default:
-                break;
-        }
+                const multiCheckboxQuestion =
+                    question as QuestionMultipleCheckBox;
+                if (Array.isArray(multiCheckboxQuestion.choices)) {
+                    const selectedChoices = multiCheckboxQuestion.choices
+                        .filter((item) => item.value === true)
+                        .map((item) => item.name);
 
-        if (res === undefined || res.length === 0) {
-            return 'N/A';
+                    // Include "Other" value if present
+                    if (
+                        multiCheckboxQuestion.allowOther &&
+                        multiCheckboxQuestion.otherValue
+                    ) {
+                        selectedChoices.push(multiCheckboxQuestion.otherValue);
+                    }
+
+                    return selectedChoices.length > 0
+                        ? selectedChoices.join(', ')
+                        : 'N/A';
+                }
+                return 'N/A';
+
+            case 'multiple-choice':
+                const multiChoiceQuestion = question as QuestionMultipleChoice;
+                return multiChoiceQuestion.value || 'N/A';
+
+            case 'date':
+                const dateQuestion = question as QuestionDatePicker;
+                return dateQuestion.value || 'N/A';
+
+            case 'school-name':
+                const schoolQuestion = question as QuestionSchoolName;
+                return schoolQuestion.value || 'N/A';
+
+            case 'name':
+                const nameQuestion = question as QuestionNameInput;
+                if (nameQuestion.firstName || nameQuestion.lastName) {
+                    return `${nameQuestion.firstName || ''} ${nameQuestion.lastName || ''}`.trim();
+                }
+                return 'N/A';
+
+            default:
+                return 'N/A';
         }
-        return res;
     }
 
     const flattenedQuestions = useMemo(() => {
-        const questions: ApplicationQuestion[] = response.flatMap(
-            ({ questions }) => questions
-        );
-
-        return questions;
+        return response.flatMap(({ questions }) => questions || []);
     }, [response]);
 
+    // Debug output to help identify the issue
+    console.log('Review page questions:', flattenedQuestions);
+
     return (
-        <div
-            style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1.5rem',
-                padding: '24px',
-                marginBottom: '7rem',
-            }}
-        >
+        <div className="mb-28 flex flex-col gap-6 p-6">
             <h1 className="text-2xl font-medium">Review Application</h1>
 
-            {flattenedQuestions.map((question, index) => {
-                return (
-                    <div key={index}>
-                        <h3 className={style.title}>{question.title}</h3>
-                        <span className={style.description}>
-                            {getQuestionResponse(question)}
-                        </span>
-                    </div>
-                );
-            })}
+            {flattenedQuestions.length === 0 ? (
+                <div className="py-4 text-center">No questions to review</div>
+            ) : (
+                flattenedQuestions.map((question, index) => {
+                    const response = getQuestionResponse(question);
+                    return (
+                        <div key={index} className="border-b pb-4">
+                            <h3 className={style.title}>{question.title}</h3>
+                            <span className={`${style.description} mt-2 block`}>
+                                {response}
+                            </span>
+                        </div>
+                    );
+                })
+            )}
 
             {mobileMode && (
                 <SkewmorphicButton
                     onClick={submit}
+                    className="mt-4"
                     style={{ background: 'var(--brand-500)' }}
                 >
                     Submit!

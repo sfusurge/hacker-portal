@@ -2287,19 +2287,10 @@ export const welcomeSparkhacksTemplate = `<!doctype html>
 
 }</style></head>
     <body>
-        <!--*|IF:MC_PREVIEW_TEXT|*-->
-        <!--[if !gte mso 9]><!----><span class="mcnPreviewText" style="display:none; font-size:0px; line-height:0px; max-height:0px; max-width:0px; opacity:0; overflow:hidden; visibility:hidden; mso-hide:all;">*|MC_PREVIEW_TEXT|*</span><!--<![endif]-->
-        <!--*|END:IF|*-->
         <center>
             <table align="center" border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" id="bodyTable">
                 <tr>
                     <td align="center" valign="top" id="bodyCell">
-                        <!-- BEGIN TEMPLATE // -->
-                        <!--[if (gte mso 9)|(IE)]>
-                        <table align="center" border="0" cellspacing="0" cellpadding="0" width="600" style="width:600px;">
-                        <tr>
-                        <td align="center" valign="top" width="600" style="width:600px;">
-                        <![endif]-->
                         <table border="0" cellpadding="0" cellspacing="0" width="100%" class="templateContainer">
                             <tr>
                                 <td valign="top" id="templatePreheader"></td>
@@ -2363,12 +2354,6 @@ The SparkJam Team<br>
                                 <td valign="top" id="templateFooter"></td>
                             </tr>
                         </table>
-                        <!--[if (gte mso 9)|(IE)]>
-                        </td>
-                        </tr>
-                        </table>
-                        <![endif]-->
-                        <!-- // END TEMPLATE -->
                     </td>
                 </tr>
             </table>
