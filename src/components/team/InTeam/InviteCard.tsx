@@ -92,7 +92,7 @@ export default function InviteCard({ teamId }: { teamId: string }) {
                         <label className="text-caution-400 font-medium">
                             Caution
                         </label>
-                        <p className="font-light text-white/60">
+                        <p className="text-white/60">
                             Avoid sharing these invitations with strangers!
                         </p>
                     </div>

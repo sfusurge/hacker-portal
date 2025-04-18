@@ -29,7 +29,7 @@ import {
     useRef,
     useState,
 } from 'react';
-import { Label } from '@/components/ui/label';
+import { Label } from '@/components/ui/label/label';
 import { isApplicationQuestionFilled } from './application_question_fields/shared';
 import { NumberInput } from './application_question_fields/NumberInput';
 import { RadioInput } from './application_question_fields/RadioInput';

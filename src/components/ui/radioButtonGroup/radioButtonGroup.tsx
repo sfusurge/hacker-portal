@@ -133,7 +133,7 @@ export function RadioButtonGroup({
                                     onLazyChange={(val) => {
                                         setSelection(val as string);
                                     }}
-                                    placeholder="Custom value here"
+                                    placeholder="Please specify"
                                     errorMsg="Required!"
                                     required={required}
                                     style={{

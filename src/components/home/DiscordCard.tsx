@@ -20,7 +20,7 @@ export default function DiscordCard() {
         <Card className="h-full">
             <CardHeader>
                 <CardHeaderColumn>
-                    <CardHeaderDescription>Events</CardHeaderDescription>
+                    <CardHeaderDescription>Your Events</CardHeaderDescription>
                     <CardHeaderTitle>Join the Surge Discord!</CardHeaderTitle>
                 </CardHeaderColumn>
                 <Link href={DISCORD_LINK} target="_blank">
