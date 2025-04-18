@@ -378,6 +378,192 @@ const QUESTIONS: ApplicationPage[] = [
     },
 ];
 
+const JOURNEYHACKS_QUESTIONS: ApplicationPage[] = [
+    {
+        title: 'JourneyHacks 2025',
+        questions: [
+            {
+                type: 'text-line',
+                title: 'Full Name',
+                maxCount: 50,
+                required: true,
+                questionId: 1,
+                placeHolder: 'Name...',
+            },
+            {
+                type: 'text-line',
+                title: 'SFU email',
+                maxCount: 100,
+                required: true,
+                // validator: {
+                //     errorMsg: 'Not a valid email',
+                // },
+                questionId: 2,
+                placeHolder: 'name@sfu.ca',
+            },
+            {
+                type: 'text-line',
+                title: 'Student Number',
+                maxCount: 9,
+                required: true,
+                validator: {
+                    pattern: '[0-9]{9}',
+                    errorMsg: 'Not a valid student number!',
+                },
+                questionId: 3,
+            },
+            {
+                type: 'multiple-choice',
+                title: 'Major',
+                choices: [
+                    {
+                        data: 'Business',
+                        name: 'Business',
+                    },
+                    {
+                        data: 'Computing Science',
+                        name: 'Computing Science',
+                    },
+                    {
+                        data: 'Data Science',
+                        name: 'Data Science',
+                    },
+                    {
+                        data: 'Engineering',
+                        name: 'Engineering',
+                    },
+                    {
+                        data: 'Health Science',
+                        name: 'Health Science',
+                    },
+                    {
+                        data: 'Math',
+                        name: 'Math',
+                    },
+                    {
+                        data: 'SIAT',
+                        name: 'SIAT',
+                    },
+                ],
+                questionId: 4,
+                allowCustom: true,
+            },
+            {
+                type: 'text-line',
+                title: 'Year of Study',
+                required: true,
+                questionId: 5,
+                placeHolder: '(e.g. 1st year, 2nd year)',
+            },
+            {
+                type: 'multiple-choice',
+                title: 'Participant type (each member must fill out their own form)',
+                choices: [
+                    {
+                        data: 'Individual',
+                        name: 'Individual',
+                    },
+                    {
+                        data: 'Individual looking for a team',
+                        name: 'Individual looking for a team',
+                    },
+                    {
+                        data: 'Team (4 people max)',
+                        name: 'Team (4 people max)',
+                    },
+                ],
+                required: true,
+                questionId: 6,
+            },
+            {
+                type: 'text-line',
+                title: 'Full name of team members',
+                maxCount: 150,
+                required: false,
+                questionId: 7,
+                description: 'Please use commas to separate names.',
+            },
+            {
+                type: 'multiple-checkbox',
+                title: 'Please fill out any dietary restrictions.',
+                choices: [
+                    {
+                        data: 'Halal',
+                        name: 'Halal',
+                        value: false,
+                    },
+                    {
+                        data: 'Vegetarian',
+                        name: 'Vegetarian',
+                        value: false,
+                    },
+                    {
+                        data: 'Vegan',
+                        name: 'Vegan',
+                        value: false,
+                    },
+                    {
+                        data: 'Pescetarian',
+                        name: 'Pescetarian',
+                        value: false,
+                    },
+                    {
+                        data: 'Gluten-free',
+                        name: 'Gluten-free',
+                        value: false,
+                    },
+                    {
+                        data: 'Kosher',
+                        name: 'Kosher',
+                        value: false,
+                    },
+                    {
+                        data: 'Dairy Free',
+                        name: 'Dairy Free',
+                        value: false,
+                    },
+                    {
+                        data: 'Egg Allergy',
+                        name: 'Egg Allergy',
+                        value: false,
+                    },
+                    {
+                        data: 'Nut Allergy',
+                        name: 'Nut Allergy',
+                        value: false,
+                    },
+                    {
+                        data: 'Seafood Allergy',
+                        name: 'Seafood Allergy',
+                        value: false,
+                    },
+                ],
+                required: false,
+                questionId: 8,
+                description:
+                    'Please email us at sfusurgelogistics@gmail.com if you have any restrictions that are not included on this list, and include your First Name, Last Name, and Student Number.',
+            },
+            {
+                type: 'multiple-choice',
+                title: 'Do you consent to having your photo taken during the event?',
+                choices: [
+                    {
+                        data: 'Yes',
+                        name: 'Yes',
+                    },
+                    {
+                        data: 'No',
+                        name: 'No',
+                    },
+                ],
+                required: true,
+                questionId: 9,
+            },
+        ],
+        description: '',
+    },
+];
+
 const HACKATHON_KEY = 'active_hackathon';
 
 export const hackathonAtom = atomWithStorage<HackathonData | undefined>(
@@ -424,11 +610,11 @@ export function useHackathon() {
                 setHackathon({
                     hackathonName: data.name,
                     id: data.id,
-                    pages: QUESTIONS,
+                    pages: JOURNEYHACKS_QUESTIONS,
                     submissionDeadline: dayjs(data.submissionDeadline),
                     startDate: dayjs(data.startDate),
                     endDate: dayjs(data.endDate),
-                    version: 1,
+                    version: 2,
                 });
             }
         };
