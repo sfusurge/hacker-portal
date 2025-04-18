@@ -52,8 +52,7 @@ export function CheckboxGroup({
         : internalSelectedItems;
 
     const updateValidity = useCallback(() => {
-        console.log('force', forceValidCheck);
-        if ((!ref.current || !required) && !forceValidCheck) {
+        if (!ref.current || !required) {
             return;
         }
 
@@ -156,6 +155,7 @@ export function CheckboxGroup({
                     onChange={(e) => {
                         setUsingOther(e.target.checked);
                     }}
+                    required={false}
                 >
                     {usingOther && (
                         <FormTextInput
