@@ -89,7 +89,7 @@ export default function DesktopNav({
                                 )}
                             >
                                 <Image
-                                    src="/login/sparkcheffrizz.webp"
+                                    src="/dashboard/OtterHead.png"
                                     alt="Sparky wearing a chef's hat"
                                     width={36}
                                     height={36}
@@ -133,8 +133,8 @@ export default function DesktopNav({
                                                         </div>
                                                     </div>
                                                     <Image
-                                                        src="/dashboard/sidebar-header.webp"
-                                                        alt="Stormy and Sparky cooking"
+                                                        src="/dashboard/SparkJamOtterTableHeader.png"
+                                                        alt="Sparkjam"
                                                         width={200}
                                                         height={200}
                                                         className="h-full w-full object-cover"

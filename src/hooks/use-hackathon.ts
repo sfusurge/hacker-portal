@@ -47,15 +47,15 @@ const QUESTIONS: ApplicationPage[] = [
                 choices: [
                     {
                         data: 'she/her/hers',
-                        name: 'she',
+                        name: 'she/her/hers',
                     },
                     {
                         data: 'he/him/his',
-                        name: 'he',
+                        name: 'he/him/his',
                     },
                     {
                         data: 'they/them/theirs',
-                        name: 'they',
+                        name: 'they/them/theirs',
                     },
                 ],
                 allowCustom: true,

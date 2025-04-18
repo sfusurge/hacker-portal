@@ -60,11 +60,11 @@ export default function EventsCard({ events }: { events: any[] }) {
                     <CardHeaderDescription>Your Schedule</CardHeaderDescription>
                     <CardHeaderTitle>Upcoming Events</CardHeaderTitle>
                 </CardHeaderColumn>
-                <Link href="/schedule" className="hidden md:block">
-                    <Button size="cozy" variant="default" hierarchy="primary">
-                        View event schedule
-                    </Button>
-                </Link>
+                {/*<Link href="/schedule" className="hidden md:block">*/}
+                {/*    /!*<Button size="cozy" variant="default" hierarchy="primary">*!/*/}
+                {/*    /!*    View event schedule*!/*/}
+                {/*    /!*</Button>*!/*/}
+                {/*</Link>*/}
             </CardHeader>
             <CardContent
                 className={
