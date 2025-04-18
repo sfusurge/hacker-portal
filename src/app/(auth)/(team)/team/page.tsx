@@ -23,6 +23,7 @@ export default async function Team() {
         ? await trpcClient.files
               .getFile({
                   key: teamPictureUrl,
+                  bucketName: 'team-pictures',
               })
               .catch((error) => {
                   console.error('Error fetching image:', error);

@@ -34,6 +34,7 @@ export default async function InvitePage({
             ? await trpcClient.files
                   .getFile({
                       key: teamPictureUrl,
+                      bucketName: 'team-pictures',
                   })
                   .catch((error) => {
                       console.error('Error fetching image:', error);
