@@ -60,8 +60,8 @@ export default function MobileTopNav({
                     <div className="flex w-full flex-row items-center justify-between">
                         <div className="my-auto flex flex-row gap-3">
                             <Image
-                                src="/login/sparkcheffrizz.webp"
-                                alt="Sparky wearing a chef\'s hat"
+                                src="/dashboard/OtterHead.png"
+                                alt="Sparky black and white drawing"
                                 width={36}
                                 height={36}
                                 className="h-9 w-9 rounded-lg"
@@ -69,10 +69,10 @@ export default function MobileTopNav({
 
                             <div className="flex flex-col gap-2">
                                 <span className="line-clamp-1 text-sm leading-none font-medium text-white">
-                                    JourneyHacks 2025
+                                    SparkJam
                                 </span>
                                 <span className="line-clamp-1 text-sm leading-none text-white/60">
-                                    February 14, 2025
+                                    May 17, 2025
                                 </span>
                             </div>
                         </div>

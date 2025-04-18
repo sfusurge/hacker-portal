@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createCaller } from '@/server/appRouter';
 import InviteDialog from '@/components/team/InviteDialog';
-import { getCurrentHackathon } from '../../team/page';
 import { getUserData } from '@/db/schema/users/users';
 import TeamDisplay from '@/components/team/TeamDisplay';
 
@@ -14,37 +13,51 @@ export default async function InvitePage({
     const displayId = id;
     const user = await getUserData();
 
-    // Validate display ID
-    if (!displayId || displayId.length !== 6) {
-        redirect('/team');
-    }
-
     if (!user) {
         redirect('/login');
     }
 
     const trpcClient = createCaller({});
-    const currentHackathon = await getCurrentHackathon();
-    const currentTeam = await trpcClient.teams.getCurrentTeam({
-        hackathonId: currentHackathon.id,
+    const hackathon = await trpcClient.hackathons.getActiveHackathon();
+    const currentUserTeam = await trpcClient.teams.getCurrentTeam({
+        hackathonId: hackathon.id,
     });
 
     try {
-        const team = await trpcClient.teams.getTeamByDisplayId({
+        const teamURL = await trpcClient.teams.getTeamByDisplayId({
             teamDisplayId: displayId,
         });
+
+        const teamPictureUrl = teamURL?.teamPictureUrl;
+
+        const image = teamPictureUrl
+            ? await trpcClient.files
+                  .getFile({
+                      key: teamPictureUrl,
+                  })
+                  .catch((error) => {
+                      console.error('Error fetching image:', error);
+                      return null;
+                  })
+            : null;
+
+        const imageData = image
+            ? `data:${image.contentType};base64,${Buffer.from(image.buffer).toString('base64')}`
+            : undefined;
 
         return (
             <>
                 <TeamDisplay
-                    currentTeam={currentTeam}
-                    currentHackathon={currentHackathon}
+                    currentTeam={currentUserTeam}
+                    currentHackathon={hackathon}
                     user={user}
+                    imageData={imageData}
                 />
                 <InviteDialog
-                    team={team}
-                    hasTeam={currentTeam}
+                    team={teamURL}
+                    hasTeam={currentUserTeam}
                     displayId={displayId}
+                    imageData={imageData}
                 />
             </>
         );
@@ -53,11 +66,15 @@ export default async function InvitePage({
         return (
             <>
                 <TeamDisplay
-                    currentTeam={currentTeam}
-                    currentHackathon={currentHackathon}
+                    currentTeam={currentUserTeam}
+                    currentHackathon={hackathon}
                     user={user}
                 />
-                <InviteDialog team={null} displayId={displayId} />
+                <InviteDialog
+                    team={null}
+                    displayId={displayId}
+                    imageData={undefined}
+                />
             </>
         );
     }

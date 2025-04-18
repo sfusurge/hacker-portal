@@ -23,6 +23,7 @@ import {
     WithdrawnContent,
     QRCodeButton,
 } from './ApplicationContent';
+import { ArrowRightIcon } from 'lucide-react';
 
 export type AppStatus =
     | 'Not Yet Started'
@@ -163,8 +164,11 @@ function getHeaderAction(
                 hierarchy="primary"
                 className="hidden md:block"
                 onClick={() => redirect('/application')}
+                trailingIconChild={
+                    <ArrowRightIcon className="inline-flex h-4 w-4" />
+                }
             >
-                Apply
+                Begin application
             </Button>
         ),
         'In Progress': (
@@ -174,8 +178,11 @@ function getHeaderAction(
                 hierarchy="primary"
                 className="hidden md:block"
                 onClick={() => redirect('/application')}
+                trailingIconChild={
+                    <ArrowRightIcon className="inline-flex h-4 w-4" />
+                }
             >
-                Continue
+                Continue application
             </Button>
         ),
     };
@@ -235,6 +242,9 @@ function getCardFooter(status: AppStatus) {
                 hierarchy="primary"
                 onClick={() => redirect('/application')}
                 className="w-full"
+                trailingIconChild={
+                    <ArrowRightIcon className="inline-flex h-4 w-4" />
+                }
             >
                 Begin application
             </Button>
@@ -246,6 +256,9 @@ function getCardFooter(status: AppStatus) {
                 hierarchy="primary"
                 onClick={() => redirect('/application')}
                 className="w-full"
+                trailingIconChild={
+                    <ArrowRightIcon className="inline-flex h-4 w-4" />
+                }
             >
                 Continue application
             </Button>
@@ -257,7 +270,7 @@ function getCardFooter(status: AppStatus) {
                 hierarchy="primary"
                 className="w-full"
             >
-                RSVP to JourneyHacks 2025
+                RSVP to SparkJam
             </Button>
         ),
         "Accepted and RSVP'd": (

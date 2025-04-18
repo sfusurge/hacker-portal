@@ -14,7 +14,7 @@ import {
 import { useState } from 'react';
 import { ExclamationCircleIcon } from '@heroicons/react/24/solid';
 import { useRouter } from 'next/navigation';
-
+import Image from 'next/image';
 interface TeamData {
     id: number;
     name: string;
@@ -33,11 +33,13 @@ export default function InviteDialog({
     displayId,
     isOpen = true,
     hasTeam = null,
+    imageData,
 }: {
     team: TeamData | null;
     displayId: string;
     isOpen?: boolean;
     hasTeam?: TeamData | null;
+    imageData?: string;
 }) {
     const [open, handleOpenChange] = useState(isOpen);
     const router = useRouter();
@@ -89,7 +91,6 @@ export default function InviteDialog({
     }
 
     const isTeamFull = team.members.length >= team.maxMembersCount;
-
     return (
         <Dialog
             open={open}
@@ -101,8 +102,10 @@ export default function InviteDialog({
             <DialogContent className="text-center sm:max-w-[26.5rem]">
                 <div className="flex flex-col items-center justify-center gap-6">
                     <div className="relative">
-                        <img
-                            src={team.teamPictureUrl ?? '/teams/default.webp'}
+                        <Image
+                            width={64}
+                            height={64}
+                            src={imageData ?? '/teams/default.webp'}
                             alt={`${team.name} logo`}
                             className="h-16 w-16 rounded-xl"
                         />
