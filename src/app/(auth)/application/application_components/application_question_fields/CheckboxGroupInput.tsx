@@ -1,9 +1,10 @@
 'use client';
 
-import { type PrimitiveAtom, useAtom } from 'jotai';
+import { type PrimitiveAtom, useAtom, useAtomValue } from 'jotai';
 import type { QuestionMultipleCheckBox } from '../types';
 import { CheckboxGroup } from '@/components/ui/checkboxGroup/CheckBoxGroup';
 import { useCallback } from 'react';
+import { finalErrCheckAtom } from '../ApplicationForm';
 
 export function CheckBoxGroupInput({
     dataAtom,
@@ -11,6 +12,7 @@ export function CheckBoxGroupInput({
     dataAtom: PrimitiveAtom<QuestionMultipleCheckBox>;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
+    const finalCheck = useAtomValue(finalErrCheckAtom);
 
     // Extract selected values from choices
     const selectedValues = question.choices
@@ -42,6 +44,7 @@ export function CheckBoxGroupInput({
             onSelection={handleSelection}
             allowOther={question.allowOther}
             otherValue={question.otherValue}
+            forceValidCheck={finalCheck}
         />
     );
 }

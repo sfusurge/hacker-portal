@@ -30,19 +30,6 @@ export function RadioButtonGroup({
         defaultSelection
     );
 
-    // Debug log for the photograph consent question
-    useEffect(() => {
-        if (name.includes('16')) {
-            console.log('RadioButtonGroup state:', {
-                name,
-                selection,
-                defaultSelection,
-                options,
-                required,
-            });
-        }
-    }, [name, selection, defaultSelection, options, required]);
-
     const datas = useMemo(() => {
         const set = new Set<string | undefined>(
             options.map((item) => item.data)
