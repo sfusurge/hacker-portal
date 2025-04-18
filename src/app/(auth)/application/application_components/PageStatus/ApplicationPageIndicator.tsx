@@ -77,20 +77,35 @@ export function DesktopPageIndicator({
     const setIndex = useSetAtom(indexAtom);
     const [errCheck, setErrCheck] = useAtom(finalErrCheckAtom);
 
+    const [validationPerformed, setValidationPerformed] = useState(false);
     function tryReview() {
-        let valid = true;
+        setErrCheck(true);
 
-        for (const pageState of pageStates) {
-            valid &&= !pageState.error;
-        }
-
-        if (!valid) {
-            alert('Not all pages are valid!');
-            setErrCheck(true);
-        } else {
-            setIndex(pageStates.length); // the lastpage + 1 is the review page.
-        }
+        setTimeout(() => {
+            setValidationPerformed(true);
+        }, 0);
     }
+
+    useEffect(() => {
+        if (validationPerformed) {
+            let valid = true;
+            let idx = 0;
+            for (; idx < pageStates.length; idx++) {
+                valid &&= !pageStates[idx].error;
+                if (!valid) {
+                    break;
+                }
+            }
+
+            if (!valid) {
+                alert('Not all pages are valid!');
+                setIndex(idx);
+                setErrCheck(false);
+            } else {
+                setIndex(pageStates.length); // the lastpage + 1 is the review page.
+            }
+        }
+    }, [validationPerformed]);
 
     return (
         <div className={style.pageStatusContainer}>

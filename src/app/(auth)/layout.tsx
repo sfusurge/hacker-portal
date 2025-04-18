@@ -13,7 +13,6 @@ import { ClientAuthContext } from './ClientAuthContext';
 
 export default async function Layout({ children }: { children: ReactNode }) {
     const initialUserData = await getUserData();
-    console.log('ini user data', initialUserData);
 
     if (!initialUserData) {
         return redirect('/signout');

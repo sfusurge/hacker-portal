@@ -32,17 +32,6 @@ export function ReviewPage({
     mobileMode = false,
 }: ReviewPageProps) {
     // Add this debug log at the beginning of the component
-    useEffect(() => {
-        console.log('Review page received response:', response);
-        // Log a sample question to see its structure
-        if (
-            response.length > 0 &&
-            response[0].questions &&
-            response[0].questions.length > 0
-        ) {
-            console.log('Sample question:', response[0].questions[0]);
-        }
-    }, [response]);
 
     function getQuestionResponse(question: ApplicationQuestion) {
         // Type-specific handling based on question type
