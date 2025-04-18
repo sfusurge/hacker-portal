@@ -14,6 +14,7 @@ const uploadFileSchema = z.object({
     key: z.string().default(() => crypto.randomUUID()),
     fileName: z.string(),
     file: z.string(), // base64 string
+    bucketName: z.string(),
 });
 
 const deleteFileSchema = z.object({
@@ -47,6 +48,7 @@ export const filesRouter = router({
                 mimeType,
                 fileContent: fileBuffer,
                 userId: userData.id,
+                bucketName: input.bucketName,
             });
         }),
 

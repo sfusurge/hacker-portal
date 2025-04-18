@@ -1,5 +1,7 @@
 'use client';
 
+import type React from 'react';
+
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { FormTextInput } from '@/components/ui/input/input';
@@ -9,10 +11,13 @@ import { redirect, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { updateUserInfo } from './userinfo_action';
 import { Input } from '@/components/ui/input/input';
+import { trpc } from '@/trpc/client';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function UserInfoForm() {
     const searchParams = useSearchParams();
     const session = useSession();
+    const uploadFile = trpc.files.uploadFile.useMutation();
 
     const updateUserWithRedirect = updateUserInfo.bind(
         null,
@@ -22,12 +27,7 @@ export default function UserInfoForm() {
     useEffect(() => {
         if (!session) {
             redirect(
-                `/login${
-                    searchParams.get('from')
-                        ? '?from=' +
-                          encodeURIComponent(searchParams.get('from')!)
-                        : ''
-                }`
+                `/login${searchParams.get('from') ? '?from=' + encodeURIComponent(searchParams.get('from')!) : ''}`
             );
         }
     }, [session]);
@@ -36,23 +36,79 @@ export default function UserInfoForm() {
     const [lastName, setLastName] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [profilePicture, setProfilePicture] = useState('');
+    const [fileData, setFileData] = useState<{
+        file: File;
+        buffer: string;
+    } | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const formRef = useRef<HTMLFormElement>(null);
 
-    // TODO: UPLOAD TO R2
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
         const file = event.target.files?.[0];
-        if (file) {
+        if (!file) return;
+
+        try {
+            //Create a preview for immediate display
             const reader = new FileReader();
             reader.onloadend = () => {
                 setProfilePicture(reader.result as string);
             };
             reader.readAsDataURL(file);
+
+            //Process file for R2 upload
+            const buffer = await file.arrayBuffer();
+            const base64Buffer = Buffer.from(buffer).toString('base64');
+            setFileData({ file, buffer: base64Buffer });
+            setError(null);
+        } catch (err: any) {
+            setError(err.message || 'Failed to process image.');
         }
     };
 
     const handleButtonClick = () => {
         fileInputRef.current?.click();
+    };
+
+    const handleSubmit = async (formData: FormData) => {
+        setIsSubmitting(true);
+        setError(null);
+
+        try {
+            let profilePictureUrl = '';
+
+            // Upload file to R2 if one is selected
+            if (fileData) {
+                const result = await uploadFile.mutateAsync({
+                    fileName: fileData.file.name,
+                    file: fileData.buffer,
+                    bucketName: 'profile-pictures',
+                });
+
+                if (!result.success) {
+                    throw new Error('Failed to upload profile picture');
+                }
+
+                profilePictureUrl = result.key;
+            }
+
+            // Add the profile picture URL to the form data
+            if (profilePictureUrl) {
+                formData.append('profilePictureUrl', profilePictureUrl);
+            }
+
+            // Call the original action with the updated form data
+            await updateUserWithRedirect(formData);
+        } catch (err: any) {
+            console.error(err);
+            setError(
+                err.message || 'Failed to update profile. Please try again.'
+            );
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -62,7 +118,7 @@ export default function UserInfoForm() {
         >
             <div className="block h-full w-full bg-[#C4D086] lg:hidden" />
             <Image
-                src="/login/journeyhacks-header-2x.webp"
+                src="/login/SparkJamOtterTableHeader.png"
                 alt="Stormy and Sparky are cooking."
                 fill
                 className="absolute hidden h-full w-full object-cover lg:block"
@@ -83,20 +139,29 @@ export default function UserInfoForm() {
 
                         <form
                             ref={formRef}
-                            action={updateUserWithRedirect}
+                            action={(formData) => handleSubmit(formData)}
                             className="flex h-full w-full max-w-100 flex-col space-y-12 sm:block sm:h-max"
                         >
+                            {error && (
+                                <Alert variant="warning">
+                                    <AlertTitle>Upload failed</AlertTitle>
+                                    <AlertDescription>{error}</AlertDescription>
+                                </Alert>
+                            )}
+
                             <div className="flex-1 space-y-8">
                                 <div className="flex items-start gap-6">
                                     <Image
                                         src={
                                             profilePicture ||
-                                            '/teams/single-otter.webp'
+                                            '/teams/single-otter.webp' ||
+                                            '/placeholder.svg'
                                         }
                                         alt="Profile picture"
                                         width={64}
                                         height={64}
                                         className="rounded-full"
+                                        unoptimized={!!profilePicture}
                                     />
                                     <div className="flex flex-col gap-3">
                                         <label className="block text-sm font-medium text-white/60">
@@ -109,9 +174,10 @@ export default function UserInfoForm() {
                                             type="file"
                                             id="file-upload"
                                             className="hidden w-auto"
-                                            accept=".png, .jpeg"
+                                            accept=".png, .jpeg, .jpg"
                                             ref={fileInputRef}
                                             onChange={handleFileChange}
+                                            disabled={isSubmitting}
                                         />
                                         <div className="flex gap-1">
                                             <label
@@ -124,6 +190,7 @@ export default function UserInfoForm() {
                                                     size="compact"
                                                     onClick={handleButtonClick}
                                                     type="button"
+                                                    disabled={isSubmitting}
                                                 >
                                                     Upload
                                                 </Button>
@@ -134,10 +201,12 @@ export default function UserInfoForm() {
                                                     hierarchy="tertiary"
                                                     size="compact"
                                                     className="hover:bg-neutral-750/60 border-2 border-transparent underline underline-offset-4"
-                                                    onClick={() =>
-                                                        setProfilePicture('')
-                                                    }
+                                                    onClick={() => {
+                                                        setProfilePicture('');
+                                                        setFileData(null);
+                                                    }}
                                                     type="button"
+                                                    disabled={isSubmitting}
                                                 >
                                                     Clear
                                                 </Button>
@@ -163,6 +232,7 @@ export default function UserInfoForm() {
                                             }
                                             required
                                             placeholder="First name..."
+                                            disabled={isSubmitting}
                                         />
                                     </div>
 
@@ -177,6 +247,7 @@ export default function UserInfoForm() {
                                             }
                                             required
                                             placeholder="Last name..."
+                                            disabled={isSubmitting}
                                         />
                                     </div>
                                 </div>
@@ -193,6 +264,7 @@ export default function UserInfoForm() {
                                         placeholder="6048622113"
                                         pattern="^(1|)[2-9]\d{2}[2-9]\d{6}$"
                                         errorMsg="Not a valid phone number"
+                                        disabled={isSubmitting}
                                     />
                                 </div>
                             </div>
@@ -202,6 +274,7 @@ export default function UserInfoForm() {
                                 variant="brand"
                                 hierarchy="primary"
                                 disabled={
+                                    isSubmitting ||
                                     !(
                                         firstName.length > 0 &&
                                         lastName.length > 0 &&
@@ -211,7 +284,7 @@ export default function UserInfoForm() {
                                 size="cozy"
                                 className="mt-auto w-full sm:mt-6"
                             >
-                                Continue
+                                {isSubmitting ? 'Submitting...' : 'Continue'}
                             </Button>
                         </form>
                     </div>

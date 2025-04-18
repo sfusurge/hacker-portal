@@ -91,6 +91,7 @@ export default function CreateTeamForm({
             const result = await uploadFile.mutateAsync({
                 fileName: fileData.file.name,
                 file: fileData.buffer,
+                bucketName: 'team-pictures',
             });
 
             if (!result.success) {

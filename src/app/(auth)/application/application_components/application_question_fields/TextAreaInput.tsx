@@ -12,7 +12,7 @@ export function TextAreaInput({
     return (
         <FormTextArea
             lazy
-            maxLength={question.maxCount ?? 100}
+            maxLength={question.maxCount ?? 2000}
             defaultValue={question.value ?? ''}
             onLazyChange={(val) => {
                 setQuestion({ ...question, value: val });

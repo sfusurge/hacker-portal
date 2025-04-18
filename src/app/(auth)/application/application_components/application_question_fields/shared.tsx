@@ -3,12 +3,6 @@
 import type { ApplicationQuestion } from '../types';
 
 export function isApplicationQuestionFilled(question: ApplicationQuestion) {
-    // Add debug logging to help identify issues
-
-    if (!question.required) {
-        return true; // no need to check if the question is not required
-    }
-
     try {
         switch (question.type) {
             case 'text-area':
@@ -25,45 +19,18 @@ export function isApplicationQuestionFilled(question: ApplicationQuestion) {
                 return question.value ?? false;
 
             case 'multiple-checkbox':
-                let checkedCounts = 0;
-                for (const choice of question.choices) {
-                    if (choice.value) {
-                        checkedCounts += 1;
-                    }
-                }
-
-                if (question.allowOther && question.otherValue) {
-                    checkedCounts += 1;
-                }
-
-                const result =
-                    checkedCounts >= (question.min ?? 0) &&
-                    checkedCounts <= (question.max ?? 99);
-
-                console.log(`Multiple checkbox result for ${question.title}:`, {
-                    checkedCounts,
-                    min: question.min ?? 0,
-                    max: question.max ?? 99,
-                    result,
-                });
-
-                return result;
+                return (
+                    (Array.isArray(question.choices) &&
+                        question.choices.some(
+                            (choice) => choice.value === true
+                        )) ||
+                    (question.allowOther === true &&
+                        !!question.otherValue &&
+                        question.otherValue.trim() !== '')
+                );
 
             case 'multiple-choice':
                 return question.value !== undefined;
-
-            case 'name':
-                // Handle name type if it exists in your application
-                return (
-                    (question.firstName && question.firstName.length > 0) ||
-                    (question.lastName && question.lastName.length > 0)
-                );
-
-            case 'school-name':
-                // Handle school-name type if it exists
-                return (
-                    question.value !== undefined && question.value.length > 0
-                );
         }
     } catch (error) {
         console.error(
