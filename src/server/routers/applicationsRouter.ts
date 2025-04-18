@@ -41,7 +41,7 @@ export const applicationsRouter = router({
             const [application] = await databaseClient
                 .insert(applications)
                 .values({
-                    userId: sql`(SELECT ${user.id} FROM ${user} WHERE ${user.email} = ${email} LIMIT 1)`,
+                    userId: user.id,
                     hackathonId: input.hackathonId,
                     response: input.response,
                 })
