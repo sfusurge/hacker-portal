@@ -153,7 +153,7 @@ export default function CreateTeamForm({
                             type="file"
                             id="file-upload"
                             className="hidden w-auto"
-                            accept=".png, .jpeg"
+                            accept=".png, .jpeg, .jpg"
                             ref={fileInputRef}
                             onChange={handleFileChange}
                             required

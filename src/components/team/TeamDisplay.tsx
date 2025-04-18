@@ -42,6 +42,8 @@ export default function TeamDisplay({
         <div className="flex flex-col gap-6 md:gap-8">
             <div className="flex gap-6">
                 <Image
+                    width={64}
+                    height={64}
                     src={imageData}
                     alt={`${currentTeam.name} logo`}
                     className="inline-block h-11 w-11 rounded-xl md:h-16 md:w-16"
