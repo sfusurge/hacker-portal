@@ -126,18 +126,18 @@ export default function EventsCard({ events }: { events: any[] }) {
                     </div>
                 )}
             </CardContent>
-            <CardFooter className="md:hidden">
-                <Link href="/schedule">
-                    <Button
-                        size="cozy"
-                        variant="default"
-                        hierarchy="primary"
-                        className="w-full"
-                    >
-                        View event schedule
-                    </Button>
-                </Link>
-            </CardFooter>
+            {/*<CardFooter className="md:hidden">*/}
+            {/*    <Link href="/schedule">*/}
+            {/*        <Button*/}
+            {/*            size="cozy"*/}
+            {/*            variant="default"*/}
+            {/*            hierarchy="primary"*/}
+            {/*            className="w-full"*/}
+            {/*        >*/}
+            {/*            View event schedule*/}
+            {/*        </Button>*/}
+            {/*    </Link>*/}
+            {/*</CardFooter>*/}
 
             <AnimatePresence>
                 {showModal && selectedEvent && (

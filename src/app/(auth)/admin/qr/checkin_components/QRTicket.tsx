@@ -77,7 +77,7 @@ export default function QRTicket({
                         </h2>
 
                         <h1 className="tracking-tightest text-center text-xl leading-5 font-semibold text-white">
-                            JourneyHacks 2025
+                            Sparkjam
                         </h1>
                     </header>
 

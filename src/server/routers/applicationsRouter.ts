@@ -12,7 +12,10 @@ import { z } from 'zod';
 import { InternalServerError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
 import Handlebars from 'handlebars';
-import { welcomeEmailTemplate } from '@/server/routers/templates';
+import {
+    welcomeEmailTemplate,
+    welcomeSparkhacksTemplate,
+} from '@/server/routers/templates';
 import { transporter } from '@/server/nodemailerTransporter';
 
 export interface SubmitApplicationResponse {
@@ -73,42 +76,52 @@ export const applicationsRouter = router({
                 );
             }
 
-            const template = Handlebars.compile(welcomeEmailTemplate);
+            const template = Handlebars.compile(welcomeSparkhacksTemplate);
             const htmlContent = template({
-                firstName: tempDummy(input).name,
+                // firstName: tempDummy(input).name,
             });
 
             let oAuthMailOptions = {
                 from: process.env.SENDINGEMAIL,
                 to: user.email,
-                subject: "We've Received Your JourneyHacks Application 😎",
-                text: 'Thank you for applying to JourneyHacks!',
+                subject: process.env.WELCOME_SUBJECT,
+                text: process.env.WELCOME_TEXT,
                 html: htmlContent,
             };
 
             let sfuMailOptions = {
                 from: process.env.SENDINGEMAIL,
                 to: extractedEmail,
-                subject: "We've Received Your JourneyHacks Application 😎",
-                text: 'Thank you for applying to JourneyHacks!',
+                subject: process.env.WELCOME_SUBJECT,
+                text: process.env.WELCOME_TEXT,
                 html: htmlContent,
             };
 
-            transporter.sendMail(oAuthMailOptions, (error, info) => {
-                if (error) {
-                    console.error('Error sending email:', error);
-                } else {
-                    console.log('Email sent:', info.response);
-                }
-            });
+            if (user.email != extractedEmail) {
+                transporter.sendMail(oAuthMailOptions, (error, info) => {
+                    if (error) {
+                        console.error('Error sending email:', error);
+                    } else {
+                        console.log('Email sent:', info.response);
+                    }
+                });
 
-            transporter.sendMail(sfuMailOptions, (error, info) => {
-                if (error) {
-                    console.error('Error sending email:', error);
-                } else {
-                    console.log('Email sent:', info.response);
-                }
-            });
+                transporter.sendMail(sfuMailOptions, (error, info) => {
+                    if (error) {
+                        console.error('Error sending email:', error);
+                    } else {
+                        console.log('Email sent:', info.response);
+                    }
+                });
+            } else {
+                transporter.sendMail(oAuthMailOptions, (error, info) => {
+                    if (error) {
+                        console.error('Error sending email:', error);
+                    } else {
+                        console.log('Email sent:', info.response);
+                    }
+                });
+            }
 
             return {
                 ...application,

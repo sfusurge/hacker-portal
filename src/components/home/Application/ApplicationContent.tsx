@@ -20,7 +20,7 @@ export function CountdownContent() {
                     Hacker registration closes in...
                 </p>
             </div>
-            <CountdownTimer targetDate={new Date(2025, 1, 11, 23, 59, 59)} />
+            <CountdownTimer targetDate={new Date(2025, 3, 30, 23, 59, 59)} />
         </>
     );
 }
@@ -53,7 +53,7 @@ export function AcceptedContent({
         <>
             <div className="flex max-w-full flex-col gap-2 text-start md:pr-0 md:pl-0">
                 <h2 className="text-lg font-semibold text-pretty text-white">
-                    You&#39;ve been accepted into JourneyHacks 2025!
+                    You&#39;ve been accepted into {process.env.CURRENT_EVENT}!
                 </h2>
                 <h3 className="text-white/70">
                     You&apos;ve been assigned the following QR code, which
@@ -196,7 +196,8 @@ export function WithdrawnContent() {
         <>
             <div className="flex max-w-full flex-col gap-2 text-start">
                 <h2 className="text-lg font-semibold text-white">
-                    You&apos;ve withdrawn your application to JourneyHacks.
+                    You&apos;ve withdrawn your application to{' '}
+                    {process.env.CURRENT_EVENT}.
                 </h2>
 
                 <h3 className="text-white/70">
