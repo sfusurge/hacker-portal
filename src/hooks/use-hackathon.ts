@@ -428,7 +428,7 @@ export function useHackathon() {
                     submissionDeadline: dayjs(data.submissionDeadline),
                     startDate: dayjs(data.startDate),
                     endDate: dayjs(data.endDate),
-                    version: data.version,
+                    version: 1,
                 });
             }
         };

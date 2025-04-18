@@ -74,7 +74,7 @@ const HACKATHON_VERSION_KEY = 'version_key';
 const responseAtom = atomWithStorage<ApplicationPage[]>(RESPONSE_KEY, []);
 const hackathonVersionAtom = atomWithStorage<number | undefined>(
     HACKATHON_VERSION_KEY,
-    undefined
+    1
 );
 
 /**
