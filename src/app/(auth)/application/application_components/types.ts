@@ -107,9 +107,6 @@ export interface QuestionMultipleChoice extends Question {
     allowCustom?: boolean;
     allowDeselect?: boolean;
     choices: ChoiceOption[];
-    freeFormChoice?: {
-        placeHolder: string;
-    };
 }
 
 export interface QuestionMultipleCheckBox extends Question {
@@ -119,7 +116,7 @@ export interface QuestionMultipleCheckBox extends Question {
     choices: {
         data: string;
         name: string;
-        value: boolean;
+        value?: boolean;
     }[];
     allowOther?: boolean;
     otherValue?: string;
