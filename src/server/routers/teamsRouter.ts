@@ -31,6 +31,7 @@ import { user as userTable } from '@/db/schema/users/users';
 
 import { getSixDigitId, teamRNGParams } from '@/lib/PRNG/LCG';
 import { z } from 'zod';
+import { deleteFileFromR2 } from '@/lib/cloudflare/r2';
 
 export const teamsRouter = router({
     createTeam: publicProcedure
@@ -230,14 +231,42 @@ export const teamsRouter = router({
                 });
             }
 
-            await databaseClient
-                .delete(membersTable)
-                .where(
-                    and(
-                        eq(membersTable.teamId, input.teamId),
-                        eq(membersTable.userId, user.id)
-                    )
+            const teamPictureUrl = await databaseClient.transaction(
+                async (tx) => {
+                    await tx
+                        .delete(membersTable)
+                        .where(
+                            and(
+                                eq(membersTable.teamId, input.teamId),
+                                eq(membersTable.userId, user.id)
+                            )
+                        );
+
+                    const members = await tx
+                        .select({ teamId: membersTable.teamId })
+                        .from(membersTable)
+                        .where(eq(membersTable.teamId, input.teamId));
+
+                    if (members.length === 0) {
+                        const [team] = await tx
+                            .delete(teams)
+                            .where(eq(teams.id, input.teamId))
+                            .returning();
+
+                        return team?.teamPictureUrl ?? null;
+                    }
+
+                    return null;
+                }
+            );
+
+            if (teamPictureUrl) {
+                console.log(
+                    `Last member left the team, removing ${teamPictureUrl} from R2`
                 );
+
+                await deleteFileFromR2(teamPictureUrl);
+            }
 
             return true;
         }),
