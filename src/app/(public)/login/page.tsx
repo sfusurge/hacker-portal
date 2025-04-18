@@ -71,12 +71,11 @@ export default async function Login({
             id="auth"
             className="relative h-[100dvh] w-[100dvw] overflow-hidden"
         >
-            <div className="block h-full w-full bg-[#C4D086] lg:hidden"></div>
             <Image
                 src="/login/SparkJamOtterTableHeader.png"
-                alt="Stormy and Sparky are cooking."
+                alt="Stormy and Sparky in B&W drawings."
                 fill
-                className="absolute hidden h-full w-full object-cover lg:block"
+                className="absolute h-full w-full object-cover"
                 priority
             />
 

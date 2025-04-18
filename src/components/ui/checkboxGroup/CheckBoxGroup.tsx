@@ -20,6 +20,7 @@ interface CheckBoxGroupProps {
     allowOther?: boolean;
     otherValue?: string | undefined;
     required?: boolean;
+    forceValidCheck?: boolean;
 }
 
 export function CheckboxGroup({
@@ -31,6 +32,7 @@ export function CheckboxGroup({
     otherValue: defaultOther,
     onSelection,
     required,
+    forceValidCheck = false,
 }: CheckBoxGroupProps) {
     // Create a state for selected items instead of just a memoized value
     const [internalSelectedItems, setInternalSelectedItems] = useState<
@@ -50,33 +52,47 @@ export function CheckboxGroup({
         : internalSelectedItems;
 
     const updateValidity = useCallback(() => {
-        if (!ref.current || !required) {
+        console.log('force', forceValidCheck);
+        if ((!ref.current || !required) && !forceValidCheck) {
             return;
         }
 
         if (usingOther && !otherValue) {
-            ref.current.setCustomValidity("Please fill the 'Other' value.");
+            ref.current!.setCustomValidity("Please fill the 'Other' value.");
         } else {
             const count =
                 selectedItems.size + (otherValue && usingOther ? 1 : 0);
 
             if (count > max) {
-                ref.current.setCustomValidity(
+                ref.current!.setCustomValidity(
                     `Too many selections! Max: ${max}`
                 );
             } else if (count < min) {
-                ref.current.setCustomValidity(
+                ref.current!.setCustomValidity(
                     `Too few selections! Min: ${min}`
                 );
             } else {
-                ref.current.setCustomValidity('');
+                ref.current!.setCustomValidity('');
             }
         }
-    }, [max, min, otherValue, required, selectedItems.size, usingOther]);
+    }, [
+        max,
+        min,
+        otherValue,
+        required,
+        selectedItems.size,
+        usingOther,
+        forceValidCheck,
+    ]);
 
+    const [initialized, setInitialized] = useState(false);
     // Trigger onSelection whenever relevant state changes
     useEffect(() => {
-        updateValidity();
+        if (initialized) {
+            updateValidity();
+        } else {
+            setInitialized(true);
+        }
     }, [updateValidity]);
 
     const handleCheckboxChange = (item: string, checked: boolean) => {
@@ -114,7 +130,7 @@ export function CheckboxGroup({
                 type="text"
                 style={{ display: 'none' }}
                 required={required}
-                defaultValue={'n/a'}
+                defaultValue={'na'}
             />
             {choices.map((item, index) => (
                 <CheckBoxWithLabel

@@ -12,22 +12,6 @@ export function RadioInput({
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
 
-    // Debug log to see what's happening with this specific question
-    useEffect(() => {
-        if (
-            question.title?.includes('photograph') ||
-            question.questionId === 16
-        ) {
-            console.log('Photo consent question:', {
-                questionId: question.questionId,
-                title: question.title,
-                value: question.value,
-                choices: question.choices,
-                required: question.required,
-            });
-        }
-    }, [question]);
-
     return (
         <RadioButtonGroup
             options={question.choices}

@@ -13,7 +13,6 @@ export default async function Team() {
     const trpcClient = createCaller({});
     const hackathon = await trpcClient.hackathons.getActiveHackathon();
 
-    // Get current team for newest hackathon
     const currentTeam = await trpcClient.teams.getCurrentTeam({
         hackathonId: hackathon.id,
     });

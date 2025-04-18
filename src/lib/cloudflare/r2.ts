@@ -76,6 +76,7 @@ export interface UploadFileRequest {
     key: string;
     mimeType: string;
     userId: number;
+    bucketName: string;
 }
 
 export async function uploadFileToR2({
@@ -83,10 +84,11 @@ export async function uploadFileToR2({
     key,
     mimeType,
     userId,
+    bucketName,
 }: UploadFileRequest) {
     try {
         const command = new PutObjectCommand({
-            Bucket: process.env.R2_BUCKET_NAME,
+            Bucket: bucketName,
             Key: key,
             Body: fileContent,
             ContentType: mimeType,

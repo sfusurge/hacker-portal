@@ -476,9 +476,7 @@ function Question({
     return (
         <div className={cn(style.ver)} style={{ width: '100%' }}>
             {question.title && (
-                <Label className={question.required ? 'required' : ''}>
-                    {question.title}
-                </Label>
+                <Label required={question.required}>{question.title}</Label>
             )}
             {question.description && (
                 <span className={cn(style.description, 'mb-1.5 max-w-96')}>
@@ -510,20 +508,35 @@ function PageButtons({
     const pageStates = useAtomValue(pageStatesAtom);
     const setErrCheck = useSetAtom(finalErrCheckAtom);
 
+    const [validationPerformed, setValidationPerformed] = useState(false);
     function tryReview() {
-        let valid = true;
+        setErrCheck(true);
 
-        for (const pageState of pageStates) {
-            valid &&= !pageState.error;
-        }
-
-        if (!valid) {
-            alert('Not all pages are valid!');
-            setErrCheck(true);
-        } else {
-            setIndex(pageCount); // the lastpage + 1 is the review page.
-        }
+        setTimeout(() => {
+            setValidationPerformed(true);
+        }, 0);
     }
+
+    useEffect(() => {
+        if (validationPerformed) {
+            let valid = true;
+            let idx = 0;
+            for (; idx < pageStates.length; idx++) {
+                valid &&= !pageStates[idx].error;
+                if (!valid) {
+                    break;
+                }
+            }
+
+            if (!valid) {
+                alert('Not all pages are valid!');
+                setIndex(idx);
+                setErrCheck(false);
+            } else {
+                setIndex(pageCount); // the lastpage + 1 is the review page.
+            }
+        }
+    }, [validationPerformed]);
 
     return (
         <div className={style.pageButtons}>
