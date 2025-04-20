@@ -122,7 +122,6 @@ export async function getUserData() {
     if (!session || !session.user || !session.user.email) {
         return undefined;
     }
-
     const normalizedEmail = session.user.email.toLowerCase();
 
     const dbUser = (

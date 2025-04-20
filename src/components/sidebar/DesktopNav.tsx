@@ -240,14 +240,13 @@ export default function DesktopNav({
                     </div>
                     <div className="mt-auto pt-5">
                         <button
-                            onClick={() => {
+                            onClick={async () => {
+                                await signOut();
                                 if (typeof window !== 'undefined') {
                                     localStorage.removeItem(
                                         'auth-login-success'
                                     );
                                 }
-
-                                window.location.href = '/signout';
                             }}
                             className={clsx(
                                 'flex h-11 w-full items-center gap-3 rounded-lg px-3 text-red-400 transition-colors hover:bg-red-950/30 hover:text-red-300',

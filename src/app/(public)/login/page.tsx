@@ -1,6 +1,5 @@
 'use server';
-// Import signOut along with auth and signIn
-import { auth, signIn, signOut } from '@/auth/auth';
+import { auth, signIn } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
 import { user } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
@@ -17,89 +16,54 @@ export default async function Login({
     const redirectTarget = (await searchParams)['from'] as string;
     const session = await auth();
 
-    if (session && session.user?.email) {
-        const normalizedEmail = session.user.email.toLowerCase();
+    if (session) {
+        // user already logged in
 
-        try {
-            const res = (
-                await databaseClient
-                    .select()
-                    .from(user)
-                    .where(eq(user.email, normalizedEmail))
-            )[0];
+        // check if user needs to input personal info still
+        const res = (
+            await databaseClient
+                .select()
+                .from(user)
+                .where(eq(user.email, session.user?.email!))
+        )[0];
 
-            if (!res) {
-                console.error(
-                    `User ${normalizedEmail} exists in session but not in database - forcing signout`
-                );
-                await signOut({ redirect: true, redirectTo: '/login' });
-                return null;
-            }
-
-            if (res.email.toLowerCase() !== normalizedEmail) {
-                console.error(
-                    `Session email (${normalizedEmail}) doesn't match database email (${res.email.toLowerCase()}) - forcing signout`
-                );
-                await signOut({ redirect: true, redirectTo: '/login' });
-                return null;
-            }
-
-            if (!res.firstName || !res.lastName || !res.phoneNumber) {
-                let target = '/login/userinfo';
-                if (redirectTarget) {
-                    target = `${target}?from=${encodeURIComponent(redirectTarget)}`;
-                }
-                return redirect(target);
-            }
-
-            if (redirectTarget) {
-                return redirect(redirectTarget);
-            }
-
-            return redirect('/home');
-        } catch (error) {
-            if ((error as any)?.digest?.startsWith('NEXT_REDIRECT')) {
-                throw error;
-            }
-
-            console.error('Error checking user in database:', error);
-            await signOut({
-                redirect: true,
-                redirectTo: '/login?error=DatabaseError',
-            });
-            return null;
+        if (!res) {
+            // somehow this user isnt created, signout/invalidate the sesson
+            // await notFound();
+            return redirect('/signout');
         }
-    }
 
+        if (!res.firstName || !res.lastName || !res.phoneNumber) {
+            // user info isn't filled out, redirect to userinfo
+            let target = '/login/userinfo';
+            if (redirectTarget) {
+                target = `${target}?from=${encodeURIComponent(redirectTarget)}`;
+            }
+            return redirect(target);
+        }
+
+        // user info is all filled
+        if (redirectTarget) {
+            return redirect(redirectTarget);
+        }
+
+        // no target specified = default home
+        return redirect('/home');
+    }
     async function loginWithProvider(provider: OAuthProvider) {
         'use server';
         const redirectPath = `/login${redirectTarget ? '?from=' + encodeURIComponent(redirectTarget) : ''}`;
+
         await signIn(provider.toLowerCase(), { redirectTo: redirectPath });
     }
 
     async function loginWithNodeMail(formData: FormData) {
         'use server';
-        // Normalize email to lowercase
-        const email = (formData.get('email') as string)?.toLowerCase();
-
-        if (!email) {
-            return { success: false, email: '', error: 'Email is required' };
-        }
-
-        try {
-            await signIn('nodemailer', {
-                email: email,
-                redirect: false,
-            });
-            return { success: true, email: email };
-        } catch (error) {
-            console.error('Error sending login email:', error);
-            return {
-                success: false,
-                email: email,
-                error: 'Failed to send login email. Please try again.',
-            };
-        }
+        await signIn('nodemailer', {
+            email: formData.get('email'),
+            redirect: false,
+        });
+        return { success: true, email: formData.get('email') as string };
     }
 
     return (
