@@ -26,6 +26,7 @@ const buttonVariants = cva(
                 caution: '',
                 error: '',
                 brand: '',
+                danger: '',
                 social: '',
             },
             hierarchy: {
@@ -68,16 +69,27 @@ const buttonVariants = cva(
                     'bg-neutral-800/60 hover:bg-neutral-750/60 border-neutral-600/60',
             },
             {
-                variant: 'caution',
+                variant: 'danger',
                 hierarchy: 'primary',
                 className: 'bg-danger-700 hover:bg-danger-600',
+            },
+            {
+                variant: 'danger',
+                hierarchy: 'primary',
+                disabled: true,
+                className:
+                    'shadow-none bg-danger-900/60 text-danger-400/40 pointer-events-none',
+            },
+            {
+                variant: 'caution',
+                hierarchy: 'primary',
+                className: 'bg-caution-700 hover:bg-caution-600',
             },
             {
                 variant: 'caution',
                 hierarchy: 'primary',
                 disabled: true,
-                className:
-                    'shadow-none bg-danger-900/60 text-danger-400/40 pointer-events-none',
+                className: 'bg-caution-900/60  pointer-events-none',
             },
             {
                 variant: 'caution',
