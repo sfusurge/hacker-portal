@@ -1,5 +1,6 @@
 'use server';
-import { auth, signIn } from '@/auth/auth';
+// Import signOut along with auth and signIn
+import { auth, signIn, signOut } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
 import { user } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
@@ -16,44 +17,62 @@ export default async function Login({
     const redirectTarget = (await searchParams)['from'] as string;
     const session = await auth();
 
-    if (session) {
-        // user already logged in
+    if (session && session.user?.email) {
+        const normalizedEmail = session.user.email.toLowerCase();
 
-        // check if user needs to input personal info still
-        const res = (
-            await databaseClient
-                .select()
-                .from(user)
-                .where(eq(user.email, session.user?.email!))
-        )[0];
+        try {
+            const res = (
+                await databaseClient
+                    .select()
+                    .from(user)
+                    .where(eq(user.email, normalizedEmail))
+            )[0];
 
-        if (!res) {
-            // somehow this user isnt created, signout/invalidate the sesson
-            // await notFound();
-            return redirect('/signout');
-        }
-
-        if (!res.firstName || !res.lastName || !res.phoneNumber) {
-            // user info isn't filled out, redirect to userinfo
-            let target = '/login/userinfo';
-            if (redirectTarget) {
-                target = `${target}?from=${encodeURIComponent(redirectTarget)}`;
+            if (!res) {
+                console.error(
+                    `User ${normalizedEmail} exists in session but not in database - forcing signout`
+                );
+                await signOut({ redirect: true, redirectTo: '/login' });
+                return null;
             }
-            return redirect(target);
-        }
 
-        // user info is all filled
-        if (redirectTarget) {
-            return redirect(redirectTarget);
-        }
+            if (res.email.toLowerCase() !== normalizedEmail) {
+                console.error(
+                    `Session email (${normalizedEmail}) doesn't match database email (${res.email.toLowerCase()}) - forcing signout`
+                );
+                await signOut({ redirect: true, redirectTo: '/login' });
+                return null;
+            }
 
-        // no target specified = default home
-        return redirect('/home');
+            if (!res.firstName || !res.lastName || !res.phoneNumber) {
+                let target = '/login/userinfo';
+                if (redirectTarget) {
+                    target = `${target}?from=${encodeURIComponent(redirectTarget)}`;
+                }
+                return redirect(target);
+            }
+
+            if (redirectTarget) {
+                return redirect(redirectTarget);
+            }
+
+            return redirect('/home');
+        } catch (error) {
+            if ((error as any)?.digest?.startsWith('NEXT_REDIRECT')) {
+                throw error;
+            }
+
+            console.error('Error checking user in database:', error);
+            await signOut({
+                redirect: true,
+                redirectTo: '/login?error=DatabaseError',
+            });
+            return null;
+        }
     }
     async function loginWithProvider(provider: OAuthProvider) {
         'use server';
         const redirectPath = `/login${redirectTarget ? '?from=' + encodeURIComponent(redirectTarget) : ''}`;
-
         await signIn(provider.toLowerCase(), { redirectTo: redirectPath });
     }
 

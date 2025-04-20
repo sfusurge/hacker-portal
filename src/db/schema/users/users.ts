@@ -123,12 +123,14 @@ export async function getUserData() {
         return undefined;
     }
 
+    const normalizedEmail = session.user.email.toLowerCase();
+
     const dbUser = (
         await databaseClient
             .select()
             .from(user)
             .limit(1)
-            .where(eq(user.email, session.user?.email))
+            .where(eq(user.email, normalizedEmail))
     )[0];
 
     if (!dbUser) {
