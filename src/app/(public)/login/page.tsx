@@ -1,6 +1,5 @@
 'use server';
-// Import signOut along with auth and signIn
-import { auth, signIn, signOut } from '@/auth/auth';
+import { auth, signIn } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
 import { user } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
@@ -30,18 +29,16 @@ export default async function Login({
 
             if (!res) {
                 console.error(
-                    `User ${normalizedEmail} exists in session but not in database - forcing signout`
+                    `User ${normalizedEmail} exists in session but not in database - redirecting to signout page`
                 );
-                await signOut({ redirect: true, redirectTo: '/login' });
-                return null;
+                return redirect('/signout');
             }
 
             if (res.email.toLowerCase() !== normalizedEmail) {
                 console.error(
-                    `Session email (${normalizedEmail}) doesn't match database email (${res.email.toLowerCase()}) - forcing signout`
+                    `Session email (${normalizedEmail}) doesn't match database email (${res.email.toLowerCase()}) - redirecting to signout page`
                 );
-                await signOut({ redirect: true, redirectTo: '/login' });
-                return null;
+                return redirect('/signout');
             }
 
             if (!res.firstName || !res.lastName || !res.phoneNumber) {
@@ -63,13 +60,10 @@ export default async function Login({
             }
 
             console.error('Error checking user in database:', error);
-            await signOut({
-                redirect: true,
-                redirectTo: '/login?error=DatabaseError',
-            });
-            return null;
+            return redirect('/signout');
         }
     }
+
     async function loginWithProvider(provider: OAuthProvider) {
         'use server';
         const redirectPath = `/login${redirectTarget ? '?from=' + encodeURIComponent(redirectTarget) : ''}`;
@@ -78,11 +72,18 @@ export default async function Login({
 
     async function loginWithNodeMail(formData: FormData) {
         'use server';
+        // Normalize email to lowercase
+        const email = (formData.get('email') as string)?.toLowerCase();
+
+        if (!email) {
+            return { success: false, error: 'Email is required' };
+        }
+
         await signIn('nodemailer', {
-            email: formData.get('email'),
+            email: email,
             redirect: false,
         });
-        return { success: true, email: formData.get('email') as string };
+        return { success: true, email: email };
     }
 
     return (

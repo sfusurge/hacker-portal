@@ -16,7 +16,9 @@ export default function LoginContainer({
 }: {
     loginWithNodeMail: (
         formData: FormData
-    ) => Promise<{ success: boolean; email: string } | void>;
+    ) => Promise<
+        { success: boolean; email: string; error?: string } | undefined
+    >;
     loginWithProvider: (provider: OAuthProvider) => Promise<void>;
 }) {
     const [emailSent, setEmailSent] = useState(false);
