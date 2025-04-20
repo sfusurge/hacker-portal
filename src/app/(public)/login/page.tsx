@@ -1,5 +1,6 @@
 'use server';
-import { auth, signIn } from '@/auth/auth';
+// Import signOut along with auth and signIn
+import { auth, signIn, signOut } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
 import { user } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
@@ -29,16 +30,18 @@ export default async function Login({
 
             if (!res) {
                 console.error(
-                    `User ${normalizedEmail} exists in session but not in database - redirecting to signout page`
+                    `User ${normalizedEmail} exists in session but not in database - forcing signout`
                 );
-                return redirect('/signout');
+                await signOut({ redirect: true, redirectTo: '/login' });
+                return null;
             }
 
             if (res.email.toLowerCase() !== normalizedEmail) {
                 console.error(
-                    `Session email (${normalizedEmail}) doesn't match database email (${res.email.toLowerCase()}) - redirecting to signout page`
+                    `Session email (${normalizedEmail}) doesn't match database email (${res.email.toLowerCase()}) - forcing signout`
                 );
-                return redirect('/signout');
+                await signOut({ redirect: true, redirectTo: '/login' });
+                return null;
             }
 
             if (!res.firstName || !res.lastName || !res.phoneNumber) {
