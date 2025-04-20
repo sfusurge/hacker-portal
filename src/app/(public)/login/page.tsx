@@ -63,7 +63,11 @@ export default async function Login({
             }
 
             console.error('Error checking user in database:', error);
-            return redirect('/signout');
+            await signOut({
+                redirect: true,
+                redirectTo: '/login?error=DatabaseError',
+            });
+            return null;
         }
     }
 
@@ -79,14 +83,23 @@ export default async function Login({
         const email = (formData.get('email') as string)?.toLowerCase();
 
         if (!email) {
-            return { success: false, error: 'Email is required' };
+            return { success: false, email: '', error: 'Email is required' };
         }
 
-        await signIn('nodemailer', {
-            email: email,
-            redirect: false,
-        });
-        return { success: true, email: email };
+        try {
+            await signIn('nodemailer', {
+                email: email,
+                redirect: false,
+            });
+            return { success: true, email: email };
+        } catch (error) {
+            console.error('Error sending login email:', error);
+            return {
+                success: false,
+                email: email,
+                error: 'Failed to send login email. Please try again.',
+            };
+        }
     }
 
     return (
