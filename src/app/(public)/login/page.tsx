@@ -70,6 +70,7 @@ export default async function Login({
             return null;
         }
     }
+
     async function loginWithProvider(provider: OAuthProvider) {
         'use server';
         const redirectPath = `/login${redirectTarget ? '?from=' + encodeURIComponent(redirectTarget) : ''}`;
@@ -78,11 +79,27 @@ export default async function Login({
 
     async function loginWithNodeMail(formData: FormData) {
         'use server';
-        await signIn('nodemailer', {
-            email: formData.get('email'),
-            redirect: false,
-        });
-        return { success: true, email: formData.get('email') as string };
+        // Normalize email to lowercase
+        const email = (formData.get('email') as string)?.toLowerCase();
+
+        if (!email) {
+            return { success: false, email: '', error: 'Email is required' };
+        }
+
+        try {
+            await signIn('nodemailer', {
+                email: email,
+                redirect: false,
+            });
+            return { success: true, email: email };
+        } catch (error) {
+            console.error('Error sending login email:', error);
+            return {
+                success: false,
+                email: email,
+                error: 'Failed to send login email. Please try again.',
+            };
+        }
     }
 
     return (
