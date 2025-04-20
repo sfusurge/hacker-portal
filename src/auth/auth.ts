@@ -41,55 +41,38 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         signIn: async ({ user: signinUser, profile, credentials, account }) => {
             if (!signinUser.email) {
                 console.log(`bad login! signing out:  ${signinUser}`);
-                return false;
+
+                // bad login, somehow
+                return await signOut({
+                    redirectTo: '/login',
+                });
             }
 
-            // Normalize email to lowercase
-            const normalizedEmail = signinUser.email.toLowerCase();
-            signinUser.email = normalizedEmail;
+            let dbUser = (
+                await databaseClient
+                    .select()
+                    .from(user)
+                    .where(eq(user.email, signinUser.email))
+                    .limit(1)
+            )[0];
 
-            try {
-                let dbUser = (
-                    await databaseClient
-                        .select()
-                        .from(user)
-                        .where(eq(user.email, normalizedEmail))
-                        .limit(1)
-                )[0];
+            // logged in, but user doesn't exist in db, so lets make one.
+            if (!dbUser) {
+                const res = await addUser({
+                    email: signinUser.email,
+                });
 
-                // logged in, but user doesn't exist in db, so lets make one.
-                if (!dbUser) {
-                    console.log(
-                        `Creating new user with email: ${normalizedEmail}`
-                    );
-                    const res = await addUser({
-                        email: normalizedEmail,
-                    });
-
-                    if (res) {
-                        dbUser = {
-                            ...res,
-                            firstName: null,
-                            lastName: null,
-                            phoneNumber: null,
-                        };
-                    }
-                } else {
-                    console.log(`Found existing user: ${dbUser.email}`);
+                if (res) {
+                    dbUser = {
+                        ...res,
+                        firstName: null,
+                        lastName: null,
+                        phoneNumber: null,
+                    };
                 }
+            }
 
-                return true;
-            } catch (error) {
-                console.error('Error in signIn callback:', error);
-                return false;
-            }
-        },
-        session: ({ session, token }) => {
-            if (session?.user?.email) {
-                // Ensure email is always lowercase in the session
-                session.user.email = session.user.email.toLowerCase();
-            }
-            return session;
+            return true;
         },
     },
 });
