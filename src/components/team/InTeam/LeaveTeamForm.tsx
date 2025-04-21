@@ -90,7 +90,7 @@ export default function LeaveTeamForm({
                 </DialogTrigger>
                 <Button
                     type="submit"
-                    variant="caution"
+                    variant="danger"
                     size="cozy"
                     hierarchy="primary"
                     onClick={onLeaveTeam}
