@@ -105,14 +105,13 @@ export default function MobileTopNav({
                                     platform="desktop"
                                     variant="error"
                                     className="px-2"
-                                    onClick={() => {
+                                    onClick={async () => {
+                                        await signOut();
                                         if (typeof window !== 'undefined') {
                                             localStorage.removeItem(
                                                 'auth-login-success'
                                             );
                                         }
-
-                                        window.location.href = '/signout';
                                     }}
                                 ></NavLink>
                                 <PopoverPrimitive.Arrow className="fill-neutral-850 mr-4 shadow-lg" />

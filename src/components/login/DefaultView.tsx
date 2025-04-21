@@ -47,7 +47,7 @@ export default function DefaultView({
                             hierarchy="primary"
                             size="cozy"
                             className={`w-full`}
-                            leadingIcon={`/icons/${provider}.svg`}
+                            leadingIcon={`/icons/${provider.toLowerCase()}.svg`}
                             leadingIconAlt={`${provider.charAt(0).toUpperCase() + provider.slice(1)} logo`}
                         >
                             {provider.charAt(0).toUpperCase() +
