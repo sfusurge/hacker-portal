@@ -5,6 +5,7 @@ import type { QuestionMultipleCheckBox } from '../types';
 import { CheckboxGroup } from '@/components/ui/checkboxGroup/CheckBoxGroup';
 import { useCallback } from 'react';
 import { finalErrCheckAtom } from '../ApplicationForm';
+import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 
 export function CheckBoxGroupInput({
     dataAtom,
@@ -22,6 +23,8 @@ export function CheckBoxGroupInput({
     // Use a callback to handle selection changes
     const handleSelection = useCallback(
         (selected: Set<string>, other?: string) => {
+            console.log(selected, other);
+
             setQuestion((prev) => ({
                 ...prev,
                 otherValue: other,
@@ -36,6 +39,7 @@ export function CheckBoxGroupInput({
 
     return (
         <CheckboxGroup
+            id={question.questionId}
             choices={question.choices}
             min={question.min ?? 1}
             max={question.max ?? 99}

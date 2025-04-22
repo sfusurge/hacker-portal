@@ -15,6 +15,8 @@ export const CheckBoxWithLabel = forwardRef<
             other = false,
             checked = false,
             children,
+            id,
+            onChange,
             ...props
         },
         ref
@@ -23,20 +25,20 @@ export const CheckBoxWithLabel = forwardRef<
             <label
                 style={{ ...externalStyle } as CSSProperties}
                 className={cn(style.label, className)}
-                htmlFor={name}
+                htmlFor={id ?? name}
             >
                 <input
-                    ref={ref}
-                    {...props}
                     className={style.check}
+                    ref={ref}
                     type="checkbox"
-                    checked={checked}
-                    id={name}
+                    id={id ?? name}
                     name={name}
+                    defaultChecked={checked}
+                    onChange={onChange}
                     required={required}
+                    {...props}
                 ></input>
                 {name}
-
                 <div style={{ flexBasis: '100%', marginLeft: '1.75rem' }}>
                     {children}
                 </div>

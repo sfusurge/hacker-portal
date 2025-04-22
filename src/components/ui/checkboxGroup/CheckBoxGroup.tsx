@@ -12,6 +12,7 @@ import style from './CheckBoxGroup.module.css';
 import { FormTextInput } from '../input/input';
 
 interface CheckBoxGroupProps {
+    id: string | number;
     min?: number;
     max?: number;
     choices: { name: string; data: string }[];
@@ -24,12 +25,13 @@ interface CheckBoxGroupProps {
 }
 
 export function CheckboxGroup({
+    id,
     min = 0,
     max = 1,
     choices,
     selected: initialSelected = [],
     allowOther = false,
-    otherValue: defaultOther,
+    otherValue: defaultOther = '',
     onSelection,
     required,
     forceValidCheck = false,
@@ -42,10 +44,14 @@ export function CheckboxGroup({
         defaultOther
     );
     const [usingOther, setUsingOther] = useState(
-        allowOther && defaultOther !== undefined
+        allowOther && defaultOther !== undefined && defaultOther.length > 0
     );
     const ref = useRef<HTMLInputElement>(null);
 
+    useEffect(() => {
+        console.log(usingOther, 'other');
+        onSelection && onSelection(selectedItems, otherValue);
+    }, [usingOther, otherValue]);
     // Use a derived value that combines the prop and internal state
     const selectedItems = initialSelected
         ? new Set(initialSelected)
@@ -156,6 +162,7 @@ export function CheckboxGroup({
                         setUsingOther(e.target.checked);
                     }}
                     required={false}
+                    id={'Other' + id}
                 >
                     {usingOther && (
                         <FormTextInput
