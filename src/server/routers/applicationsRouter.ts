@@ -68,7 +68,6 @@ export const applicationsRouter = router({
                     'User email is missing. Cannot send email.'
                 );
             }
-            console.log(input);
             const extractedEmail = tempDummy(input).email;
             if (!extractedEmail) {
                 throw new InternalServerError(

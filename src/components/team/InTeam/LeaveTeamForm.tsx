@@ -46,7 +46,6 @@ export default function LeaveTeamForm({
 
             router.push('/team');
         } catch (error) {
-            console.log(error);
             toast({
                 title: 'Error',
                 description: 'Failed to leave the team. Please try again.',

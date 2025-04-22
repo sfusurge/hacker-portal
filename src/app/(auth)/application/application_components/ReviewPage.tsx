@@ -103,9 +103,6 @@ export function ReviewPage({
         return response.flatMap(({ questions }) => questions || []);
     }, [response]);
 
-    // Debug output to help identify the issue
-    console.log('Review page questions:', flattenedQuestions);
-
     return (
         <div className="mb-28 flex flex-col gap-6 p-6">
             <h1 className="text-2xl font-medium">Review Application</h1>

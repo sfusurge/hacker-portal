@@ -23,8 +23,6 @@ export function CheckBoxGroupInput({
     // Use a callback to handle selection changes
     const handleSelection = useCallback(
         (selected: Set<string>, other?: string) => {
-            console.log(selected, other);
-
             setQuestion((prev) => ({
                 ...prev,
                 otherValue: other,

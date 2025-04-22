@@ -46,8 +46,6 @@ export default function Application() {
         if (application.data) {
             redirect('/home');
         }
-
-        console.log('appljcatino change', application.data);
     }, [application]);
 
     useEffect(() => {

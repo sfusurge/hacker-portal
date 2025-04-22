@@ -205,11 +205,6 @@ export function ApplicationForm({ submitApplication }: ApplicationFormProps) {
         return response.flatMap(({ questions }) => questions || []);
     }, [response]);
 
-    // // Add this debug log to see what's being submitted
-    // useEffect(() => {
-    //     console.log("Current form responses:", response)
-    // }, [response])
-
     // Guard against empty pages
     if (!pgs || pgs.length === 0) {
         return (
@@ -531,7 +526,6 @@ function PageButtons({
             if (!valid) {
                 alert('Not all pages are valid!');
                 setIndex(idx);
-                setErrCheck(false);
             } else {
                 setIndex(pageCount); // the lastpage + 1 is the review page.
             }

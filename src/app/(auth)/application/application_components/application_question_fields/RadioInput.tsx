@@ -20,9 +20,6 @@ export function RadioInput({
             defaultSelection={question.value}
             required={question.required ?? false}
             onSelection={(newVal) => {
-                console.log(
-                    `Selection changed for question ${question.questionId}: ${newVal}`
-                );
                 setQuestion({ ...question, value: newVal });
             }}
             // Use questionId instead of title for the name to avoid potential issues with long titles

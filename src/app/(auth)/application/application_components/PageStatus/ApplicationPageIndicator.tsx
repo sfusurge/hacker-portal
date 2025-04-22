@@ -96,14 +96,13 @@ export function DesktopPageIndicator({
                     break;
                 }
             }
-
             if (!valid) {
                 alert('Not all pages are valid!');
                 setIndex(idx);
-                setErrCheck(false);
             } else {
                 setIndex(pageStates.length); // the lastpage + 1 is the review page.
             }
+            setValidationPerformed(false);
         }
     }, [validationPerformed]);
 

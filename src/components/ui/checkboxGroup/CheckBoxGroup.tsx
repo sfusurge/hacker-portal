@@ -49,7 +49,6 @@ export function CheckboxGroup({
     const ref = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        console.log(usingOther, 'other');
         onSelection && onSelection(selectedItems, otherValue);
     }, [usingOther, otherValue]);
     // Use a derived value that combines the prop and internal state

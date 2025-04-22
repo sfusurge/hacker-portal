@@ -28,7 +28,6 @@ export const middleware = edgeAuth(async (req) => {
     } else {
         if (authRoutes.has(getFirstSegment(path))) {
             const sessionUser = (await edgeAuth())?.user;
-            console.log('middle ware', sessionUser);
 
             // redirect unauthenticated users.
             if (!sessionUser) {
