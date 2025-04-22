@@ -23,22 +23,32 @@ export default function Application() {
         {
             hackathonId: hackathon?.id!,
         },
-        { enabled: hackathon !== undefined }
+        {
+            enabled: false,
+        }
     );
 
     const session = useSession();
 
     useEffect(() => {
+        if (hackathon) {
+            application.refetch();
+        }
+    }, [hackathon]);
+
+    useEffect(() => {
         if (session.data?.user?.email) {
             localStorage.setItem('email', session.data.user.email);
         }
+    }, [session]);
 
-        if (hackathon) {
-            if (application.data) {
-                redirect('/home');
-            }
+    useEffect(() => {
+        if (application.data) {
+            redirect('/home');
         }
-    }, [session, hackathon, application.data]);
+
+        console.log('appljcatino change', application.data);
+    }, [application]);
 
     useEffect(() => {
         document.body.style.setProperty('--paddingTop', '5rem');

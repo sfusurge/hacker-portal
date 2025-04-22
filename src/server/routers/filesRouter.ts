@@ -5,7 +5,6 @@ import {
     deleteFileFromR2,
     validateFile,
     getFileFromR2,
-    getFilesByUserId,
 } from '@/lib/cloudflare/r2';
 import { getUserData } from '@/db/schema/users/users';
 import { InternalServerError } from '../exceptions';
@@ -85,6 +84,12 @@ export const filesRouter = router({
                 }
                 userId = userData.id.toString();
             }
-            return await getFilesByUserId(userId, bucketName);
+            try {
+                return Buffer.from(
+                    (await getFileFromR2(userId, bucketName)).buffer
+                ).toString('base64');
+            } catch (error) {
+                return '';
+            }
         }),
 });
