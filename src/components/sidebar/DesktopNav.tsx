@@ -41,7 +41,7 @@ export default function DesktopNav({
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
     useEffect(() => {
-        if (image.data) {
+        if (image.data && image.data.length > 0) {
             const dataUrl = `data:image/png;base64,${image.data}`;
             setAvatarUrl(dataUrl);
         }
