@@ -529,6 +529,7 @@ function PageButtons({
             } else {
                 setIndex(pageCount); // the lastpage + 1 is the review page.
             }
+            setValidationPerformed(false);
         }
     }, [validationPerformed]);
 
