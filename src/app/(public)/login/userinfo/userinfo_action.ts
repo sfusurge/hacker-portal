@@ -19,6 +19,7 @@ export async function updateUserInfo(
             firstName: (formdata.get('firstname') as string) ?? null,
             lastName: (formdata.get('lastname') as string) ?? null,
             phoneNumber: (formdata.get('phone') as string) ?? null,
+            image: (formdata.get('profilePictureId') as string) ?? null,
         })
         .where(eq(user.email, session?.user?.email!));
 

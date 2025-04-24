@@ -78,7 +78,7 @@ export default function UserInfoForm() {
         setError(null);
 
         try {
-            let profilePictureUrl = '';
+            let profilePictureId = '';
 
             // Upload file to R2 if one is selected
             if (fileData) {
@@ -92,12 +92,12 @@ export default function UserInfoForm() {
                     throw new Error('Failed to upload profile picture');
                 }
 
-                profilePictureUrl = result.key;
+                profilePictureId = result.key;
             }
 
             // Add the profile picture URL to the form data
-            if (profilePictureUrl) {
-                formData.append('profilePictureUrl', profilePictureUrl);
+            if (profilePictureId) {
+                formData.append('profilePictureId', profilePictureId);
             }
 
             // Call the original action with the updated form data

@@ -35,7 +35,7 @@ export const applications = pgTable(
             .references(() => hackathons.id)
             .notNull(),
         userId: integer('user_id')
-            .references(() => user.id)
+            .references(() => user.id, { onDelete: 'no action' })
             .notNull(),
         currentStatus: applicationStatusEnum('current_status')
             .default('Awaiting Review')

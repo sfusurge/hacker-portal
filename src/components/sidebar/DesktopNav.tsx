@@ -33,10 +33,7 @@ export default function DesktopNav({
 }: DesktopNavProps) {
     const [collapsed, setCollapsed] = useState(false);
     const [isLargeScreen, setIsLargeScreen] = useState(true);
-    const image = trpc.files.getUserImages.useQuery({
-        userId: initialData?.id.toString(),
-        bucketName: 'profile-pictures',
-    });
+    const image = trpc.files.getUserImages.useQuery({});
 
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
@@ -44,6 +41,8 @@ export default function DesktopNav({
         if (image.data && image.data.length > 0) {
             const dataUrl = `data:image/png;base64,${image.data}`;
             setAvatarUrl(dataUrl);
+        } else {
+            setAvatarUrl('/sidebar/default-avatar.webp');
         }
     }, [image.data]);
 

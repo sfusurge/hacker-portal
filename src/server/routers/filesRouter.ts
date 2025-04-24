@@ -1,12 +1,12 @@
 import { publicProcedure, router } from '../trpc';
-import { z } from 'zod';
+import { object, z } from 'zod';
 import {
     uploadFileToR2,
     deleteFileFromR2,
     validateFile,
     getFileFromR2,
 } from '@/lib/cloudflare/r2';
-import { getUserData } from '@/db/schema/users/users';
+import { getUserData, user } from '@/db/schema/users/users';
 import { InternalServerError } from '../exceptions';
 
 // Input validation schemas
@@ -24,11 +24,6 @@ const deleteFileSchema = z.object({
 const getFileSchema = z.object({
     key: z.string(),
     bucketName: z.string(),
-});
-
-const getUserImagesSchema = z.object({
-    bucketName: z.string(),
-    userId: z.string().optional(), // Optional - if not provided, will use the current user
 });
 
 export const filesRouter = router({
@@ -71,22 +66,24 @@ export const filesRouter = router({
     }),
 
     getUserImages: publicProcedure
-        .input(getUserImagesSchema)
+        .input(z.object({}))
         .query(async ({ input }) => {
-            const { bucketName, userId: requestedUserId } = input;
-            let userId = requestedUserId;
-            if (!userId) {
-                const userData = await getUserData();
-                if (!userData?.id) {
-                    throw new InternalServerError(
-                        'Unexpected undefined `userData`'
-                    );
-                }
-                userId = userData.id.toString();
+            const userData = await getUserData();
+
+            if (!userData?.id) {
+                throw new InternalServerError(
+                    'Unexpected undefined `userData`'
+                );
             }
+
+            if (!userData.image) {
+                return '';
+            }
+
             try {
                 return Buffer.from(
-                    (await getFileFromR2(userId, bucketName)).buffer
+                    (await getFileFromR2(userData.image, 'profile-pictures'))
+                        .buffer
                 ).toString('base64');
             } catch (error) {
                 return '';
