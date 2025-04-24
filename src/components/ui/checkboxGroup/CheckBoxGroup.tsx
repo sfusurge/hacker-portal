@@ -4,6 +4,7 @@ import {
     type CSSProperties,
     useCallback,
     useEffect,
+    useMemo,
     useRef,
     useState,
 } from 'react';
@@ -15,7 +16,12 @@ interface CheckBoxGroupProps {
     id: string | number;
     min?: number;
     max?: number;
-    choices: { name: string; data: string }[];
+    choices: {
+        name: string;
+        data: string;
+        value?: boolean;
+        exclusive?: boolean;
+    }[];
     selected?: string[];
     onSelection?: (selected: Set<string>, other: string | undefined) => void;
     allowOther?: boolean;
@@ -52,9 +58,12 @@ export function CheckboxGroup({
         onSelection && onSelection(selectedItems, otherValue);
     }, [usingOther, otherValue]);
     // Use a derived value that combines the prop and internal state
-    const selectedItems = initialSelected
-        ? new Set(initialSelected)
-        : internalSelectedItems;
+
+    const selectedItems = useMemo(
+        () =>
+            initialSelected ? new Set(initialSelected) : internalSelectedItems,
+        [internalSelectedItems, initialSelected]
+    );
 
     const updateValidity = useCallback(() => {
         if (!ref.current || !required) {
@@ -99,9 +108,17 @@ export function CheckboxGroup({
         }
     }, [updateValidity]);
 
-    const handleCheckboxChange = (item: string, checked: boolean) => {
+    const handleCheckboxChange = (
+        item: string,
+        checked: boolean,
+        exclusive: boolean = false
+    ) => {
+        if (!checked) {
+            exclusive = false; // ignore exclusive items when deselecting.
+        }
+
         // Create a new Set based on the current selectedItems
-        const newSelected = new Set(selectedItems);
+        const newSelected = new Set(exclusive ? [] : selectedItems);
 
         if (checked) {
             newSelected.add(item);
@@ -112,9 +129,16 @@ export function CheckboxGroup({
         // Update internal state
         setInternalSelectedItems(newSelected);
 
+        if (exclusive) {
+            setUsingOther(false);
+        }
+
         // Directly call onSelection with the new set
         onSelection &&
-            onSelection(newSelected, usingOther ? otherValue : undefined);
+            onSelection(
+                newSelected,
+                usingOther && exclusive ? otherValue : undefined
+            );
     };
 
     return (
@@ -136,21 +160,27 @@ export function CheckboxGroup({
                 required={required}
                 defaultValue={'na'}
             />
-            {choices.map((item, index) => (
-                <CheckBoxWithLabel
-                    checked={selectedItems.has(item.data)}
-                    name={item.name}
-                    key={index}
-                    onChange={(e) => {
-                        handleCheckboxChange(item.data, e.target.checked);
-                    }}
-                    disabled={
-                        selectedItems.size >= max &&
-                        !selectedItems.has(item.data)
-                    }
-                    required={false}
-                ></CheckBoxWithLabel>
-            ))}
+            {choices.map((item, index) => {
+                return (
+                    <CheckBoxWithLabel
+                        checked={selectedItems.has(item.data)}
+                        name={item.name}
+                        key={index}
+                        onChange={(e) => {
+                            handleCheckboxChange(
+                                item.data,
+                                e.target.checked,
+                                item.exclusive
+                            );
+                        }}
+                        disabled={
+                            selectedItems.size >= max &&
+                            !selectedItems.has(item.data)
+                        }
+                        required={false}
+                    ></CheckBoxWithLabel>
+                );
+            })}
 
             {allowOther && (
                 <CheckBoxWithLabel

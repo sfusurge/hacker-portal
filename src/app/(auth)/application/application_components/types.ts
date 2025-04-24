@@ -116,6 +116,7 @@ export interface QuestionMultipleCheckBox extends Question {
     choices: {
         data: string;
         name: string;
+        exclusive?: boolean;
         value?: boolean;
     }[];
     allowOther?: boolean;

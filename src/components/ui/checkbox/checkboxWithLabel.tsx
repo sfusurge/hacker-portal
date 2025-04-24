@@ -33,7 +33,7 @@ export const CheckBoxWithLabel = forwardRef<
                     type="checkbox"
                     id={id ?? name}
                     name={name}
-                    defaultChecked={checked}
+                    checked={checked}
                     onChange={onChange}
                     required={required}
                     {...props}
