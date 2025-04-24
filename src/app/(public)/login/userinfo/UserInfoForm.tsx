@@ -103,7 +103,12 @@ export default function UserInfoForm() {
             // Call the original action with the updated form data
             await updateUserWithRedirect(formData);
         } catch (err: any) {
+            if (err?.digest?.startsWith('NEXT_REDIRECT')) {
+                throw err; // re-throw to let Next.js handle it
+            }
+
             console.error(err);
+
             setError(
                 err.message || 'Failed to update profile. Please try again.'
             );

@@ -131,14 +131,12 @@ export async function getUserData() {
             .limit(1)
             .where(eq(user.email, normalizedEmail))
     )[0];
-
     if (!dbUser) {
         return undefined;
     }
 
     return {
         ...dbUser,
-        image: session.user.image,
     };
 }
 export type UserData = Awaited<ReturnType<typeof getUserData>>;

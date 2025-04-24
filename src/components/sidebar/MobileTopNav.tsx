@@ -10,13 +10,13 @@ import {
 import { NavLink } from './NavLink';
 import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
 
-import { useHydrateAtoms } from 'jotai/utils';
-
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { redirect, usePathname } from 'next/navigation';
 import { UserData } from '@/db/schema/users/users';
+
+import { trpc } from '@/trpc/client';
 
 interface MobileTopNavProps {
     className?: string;
@@ -36,6 +36,21 @@ export default function MobileTopNav({
 }: MobileTopNavProps) {
     const [hideTopNav, setHideTopNav] = useState(false);
     const url = usePathname();
+
+    const image = trpc.files.getUserImages.useQuery({});
+
+    const [avatarUrl, setAvatarUrl] = useState<string>(
+        '/sidebar/default-avatar.webp'
+    );
+
+    useEffect(() => {
+        if (image.data && image.data.length > 0) {
+            const dataUrl = `data:image/png;base64,${image.data}`;
+            setAvatarUrl(dataUrl);
+        } else {
+            setAvatarUrl('/sidebar/default-avatar.webp');
+        }
+    }, [image.data]);
 
     useEffect(() => {
         for (const excludeURL of excludedUrls) {
@@ -83,10 +98,7 @@ export default function MobileTopNav({
                                     width={36}
                                     height={36}
                                     alt="Default avatar for the user"
-                                    src={
-                                        initialData?.image ??
-                                        '/sidebar/default-avatar.webp'
-                                    }
+                                    src={avatarUrl}
                                     className="aspect-square h-10 w-10 rounded-full"
                                 ></img>
                             </PopoverTrigger>

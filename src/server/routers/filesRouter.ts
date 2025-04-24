@@ -86,6 +86,7 @@ export const filesRouter = router({
                         .buffer
                 ).toString('base64');
             } catch (error) {
+                console.error('error while fetching user image', error);
                 return '';
             }
         }),

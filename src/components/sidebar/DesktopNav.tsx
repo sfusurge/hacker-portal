@@ -35,7 +35,9 @@ export default function DesktopNav({
     const [isLargeScreen, setIsLargeScreen] = useState(true);
     const image = trpc.files.getUserImages.useQuery({});
 
-    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(
+        '/sidebar/default-avatar.webp'
+    );
 
     useEffect(() => {
         if (image.data && image.data.length > 0) {
