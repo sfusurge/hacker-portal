@@ -3,9 +3,11 @@
 import {
     atom,
     type PrimitiveAtom,
+    SetStateAction,
     useAtom,
     useAtomValue,
     useSetAtom,
+    WritableAtom,
 } from 'jotai';
 import type {
     HackathonData,
@@ -47,33 +49,7 @@ import { ArrowLeftIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { cn } from '@/lib/utils';
-import { useHackathon } from '@/hooks/use-hackathon';
-
-function useMediaQuery(query: string): boolean {
-    const [matches, setMatches] = useState(false);
-
-    useEffect(() => {
-        const media = window.matchMedia(query);
-
-        // Initial check
-        setMatches(media.matches);
-
-        // Update matches when the media query changes
-        const listener = (e: MediaQueryListEvent) => {
-            setMatches(e.matches);
-        };
-
-        // Add listener
-        media.addEventListener('change', listener);
-
-        // Clean up
-        return () => {
-            media.removeEventListener('change', listener);
-        };
-    }, [query]);
-
-    return matches;
-}
+import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -95,72 +71,48 @@ export const pageIndexAtom = atom(0); // defining the state
 export const finalErrCheckAtom = atom(false); // when the user clicks the review & submit for the first time,
 
 interface ApplicationFormProps {
-    appDataAtom: PrimitiveAtom<HackathonData | undefined>;
-    submitApplication: (response: ApplicationQuestion[]) => void;
+    appDataAtom: WritableAtom<HackathonData, [val: HackathonData], void>;
+    submitApplication: () => void;
 }
-
-const RESPONSE_KEY = 'response_key';
-const HACKATHON_VERSION_KEY = 'version_key';
-
-const responseAtom = atomWithStorage<ApplicationPage[]>(RESPONSE_KEY, []);
-const hackathonVersionAtom = atomWithStorage<number | undefined>(
-    HACKATHON_VERSION_KEY,
-    1
-);
 
 /**
  *
  * appData can be locally cached or a new empty one.
  */
-export function ApplicationForm({ submitApplication }: ApplicationFormProps) {
-    const { hackathon } = useHackathon();
-    const [response, setResponse] = useAtom(responseAtom);
-    const [pgs, setPgs] = useState<ApplicationPage[]>([]);
+export function ApplicationForm({
+    appDataAtom,
+    submitApplication,
+}: ApplicationFormProps) {
     const router = useRouter();
+    const pagesAtom = useMemo(
+        () =>
+            atom(
+                (get) => get(appDataAtom)?.pages ?? [],
+                (get, set, val: ApplicationPage[]) => {
+                    set(appDataAtom, {
+                        ...get(appDataAtom),
+                        pages: val,
+                    });
+                }
+            ),
+        []
+    );
 
-    const [hackathonVersion, setHackathonVersion] =
-        useAtom(hackathonVersionAtom);
-
-    // Initialize pages from hackathon data
-    useEffect(() => {
-        if (!hackathon) {
-            return;
-        }
-
-        if (
-            hackathon.pages &&
-            (hackathon.version !== hackathonVersion || pgs.length === 0)
-        ) {
-            setPgs(hackathon.pages);
-            setHackathonVersion(hackathon.version);
-
-            // Initialize response with hackathon pages if empty
-            if (response.length === 0) {
-                setResponse(hackathon.pages);
-            }
-        }
-    }, [
-        hackathon,
-        hackathonVersion,
-        setHackathonVersion,
-        setResponse,
-        response.length,
-        pgs.length,
-    ]);
+    const pages = useAtomValue(pagesAtom);
 
     // which page is currently displayed
     const currentPageIndex = useAtomValue(pageIndexAtom);
 
     // states of each page.
     // create an atom containing a list of atoms, from a single atom containing a list
-    const pagesAtomsAtom = splitAtom(responseAtom);
+    const pagesAtomsAtom = splitAtom(pagesAtom);
     // getting the list of atoms out of the previous atom
     const pagesAtoms = useAtomValue(pagesAtomsAtom);
 
     // page validations
     const pageStatesAtom = useMemo(() => {
         return atom(
-            (pgs || []).map(
+            (pages || []).map(
                 (item) =>
                     ({
                         title: item.title || '',
@@ -169,7 +121,7 @@ export function ApplicationForm({ submitApplication }: ApplicationFormProps) {
                     }) as PageFormState
             )
         );
-    }, [pgs]);
+    }, [pages]);
 
     const pageStateAtomsAtom = splitAtom(pageStatesAtom);
     const [pageStateAtoms] = useAtom(pageStateAtomsAtom);
@@ -196,17 +148,8 @@ export function ApplicationForm({ submitApplication }: ApplicationFormProps) {
         }
     }, [currentPageIndex, isMobile]);
 
-    // Make sure we're passing the response atom data to ReviewPage, not just the original pages
-    const responseData = useAtomValue(responseAtom);
-
-    // Get the actual user responses from responseAtom instead of pgs
-    const flattenResponse = useMemo(() => {
-        // Get the actual user responses from responseAtom instead of pgs
-        return response.flatMap(({ questions }) => questions || []);
-    }, [response]);
-
     // Guard against empty pages
-    if (!pgs || pgs.length === 0) {
+    if (!pages || pages.length === 0) {
         return (
             <div className="p-8 text-center">Loading application form...</div>
         );
@@ -242,11 +185,9 @@ export function ApplicationForm({ submitApplication }: ApplicationFormProps) {
                     <div className={style.formContainer}>
                         {currentPageIndex === pagesAtoms.length && (
                             <ReviewPage
-                                response={
-                                    responseData.length > 0 ? responseData : pgs
-                                }
+                                response={pages}
                                 submit={() => {
-                                    submitApplication(flattenResponse);
+                                    submitApplication();
                                 }}
                                 mobileMode={isMobile}
                             />
@@ -272,7 +213,7 @@ export function ApplicationForm({ submitApplication }: ApplicationFormProps) {
                         pageCount={pagesAtoms.length}
                         pageStatesAtom={pageStatesAtom}
                         submit={() => {
-                            submitApplication(flattenResponse);
+                            submitApplication();
                         }}
                     />
                 )
