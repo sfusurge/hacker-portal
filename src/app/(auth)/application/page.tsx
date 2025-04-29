@@ -10,6 +10,7 @@ import { useHackathon } from '@/hooks/use-hackathon';
 import {
     atom,
     PrimitiveAtom,
+    Provider,
     useAtom,
     useAtomValue,
     WritableAtom,
@@ -35,7 +36,16 @@ const localAppResponseAtom = atomWithStorage('application_response', {
 const hackathonWithLocalAtom = atom(
     (get) => {
         const local = get(localAppResponseAtom);
-        const unReadyValue = {} as HackathonData;
+        const unReadyValue = {
+            pages: [],
+            endDate: dayjs(),
+            id: -1,
+            hackathonName: '',
+            startDate: dayjs(),
+            submissionDeadline: dayjs(),
+            version: -1,
+            title: '',
+        } as HackathonData;
 
         const hackathon = get(hackathonAtom);
 
@@ -52,7 +62,6 @@ const hackathonWithLocalAtom = atom(
         const pages = hackathon.pages;
 
         loadResponseIntoSchema(pages, local.response);
-
         return { ...hackathon, pages: pages };
     },
     (get, set, val: HackathonData) => {
@@ -70,13 +79,21 @@ const hackathonWithLocalAtom = atom(
     }
 );
 
+export default function Application() {
+    return (
+        <>
+            <ApplicationWithContext />
+        </>
+    );
+}
+
 /**
  * TODO
  * Currently this solutiion creates a slight flick during intial load.
  * todo: investigate in this potential solution
  * https://jotai.org/docs/utilities/storage#server-side-rendering
  */
-export default function Application() {
+export function ApplicationWithContext() {
     const { hackathon } = useHackathon();
     const hackathonWithResponse = useAtomValue(hackathonWithLocalAtom);
     const submitApplication = trpc.applications.submitApplication.useMutation();
@@ -109,8 +126,6 @@ export default function Application() {
     useEffect(() => {
         document.body.style.setProperty('--paddingTop', '5rem');
     }, []);
-
-    console.log(hackathonWithResponse);
 
     return (
         <ApplicationForm

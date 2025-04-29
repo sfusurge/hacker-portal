@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import Provider from '@/trpc/Provider';
+import TRPCProvider from '@/trpc/Provider';
 import { SessionProvider } from 'next-auth/react';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Toaster } from '@/components/ui/toaster';
+import { Provider as JotaiProivder } from 'jotai';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -33,10 +34,12 @@ export default function RootLayout({
             <link rel="icon" href="/favicon.png" sizes="any" />
             <body className={inter.className}>
                 <SessionProvider>
-                    <Provider>
-                        {children}
-                        <Toaster />
-                    </Provider>
+                    <TRPCProvider>
+                        <JotaiProivder>
+                            {children}
+                            <Toaster />
+                        </JotaiProivder>
+                    </TRPCProvider>
                 </SessionProvider>
             </body>
             <GoogleAnalytics gaId="G-99DQSJDLRK" />

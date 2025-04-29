@@ -1,6 +1,7 @@
 'use client';
 
 import {
+    Atom,
     atom,
     type PrimitiveAtom,
     SetStateAction,
@@ -87,7 +88,9 @@ export function ApplicationForm({
     const pagesAtom = useMemo(
         () =>
             atom(
-                (get) => get(appDataAtom)?.pages ?? [],
+                (get) => {
+                    return get(appDataAtom).pages;
+                },
                 (get, set, val: ApplicationPage[]) => {
                     set(appDataAtom, {
                         ...get(appDataAtom),
@@ -106,26 +109,39 @@ export function ApplicationForm({
     // states of each page.
     // create an atom containing a list of atoms, from a single atom containing a list
     const pagesAtomsAtom = splitAtom(pagesAtom);
+
     // getting the list of atoms out of the previous atom
-    const pagesAtoms = useAtomValue(pagesAtomsAtom);
+    const [pagesAtoms] = useAtom(pagesAtomsAtom);
+
+    const _pageStateAtom = useRef(atom<PageFormState[]>([]));
 
     // page validations
     const pageStatesAtom = useMemo(() => {
         return atom(
-            (pages || []).map(
-                (item) =>
-                    ({
+            (get) => {
+                const cur = get(_pageStateAtom.current);
+                const latest = get(appDataAtom).pages;
+
+                if (cur.length === latest.length) {
+                    return cur;
+                }
+
+                return latest.map((item) => {
+                    return {
                         title: item.title || '',
                         state: 'not started',
                         error: false,
-                    }) as PageFormState
-            )
+                    } as PageFormState;
+                });
+            },
+            (get, set, val: PageFormState[]) => {
+                set(_pageStateAtom.current, val);
+            }
         );
-    }, [pages]);
+    }, []);
 
     const pageStateAtomsAtom = splitAtom(pageStatesAtom);
     const [pageStateAtoms] = useAtom(pageStateAtomsAtom);
-
     // mobile conditional render
     const isMobile = useMediaQuery('(max-width: 767.5px)');
 
@@ -232,97 +248,93 @@ function Page({
     pageStateAtom: PrimitiveAtom<PageFormState>;
 }) {
     const page = useAtomValue(pageAtom);
+
     const setPageState = useSetAtom(pageStateAtom);
     const formRef = useRef<HTMLFormElement>(null);
-
-    const finalErrCheck = useAtomValue(finalErrCheckAtom);
-
-    const updateFormStatus = useCallback(
-        (extraCheck = false) => {
-            if (formRef.current) {
-                // Check form validity
-                let error = finalErrCheck
-                    ? !formRef.current.reportValidity()
-                    : !formRef.current.checkValidity();
-
-                // Count required questions and filled required questions
-                let requiredQuestions = 0;
-                let filledRequiredQuestions = 0;
-                let atLeastOneFilled = false;
-
-                for (const question of page.questions || []) {
-                    // Only consider required questions for completion status
-                    if (question.required) {
-                        requiredQuestions++;
-                        const filled = isApplicationQuestionFilled(question);
-                        if (filled) {
-                            filledRequiredQuestions++;
-                        }
-                    }
-
-                    // Track if any question (required or not) is filled
-                    if (isApplicationQuestionFilled(question)) {
-                        atLeastOneFilled = true;
-                    }
-                }
-
-                // Determine page state based on filled questions
-                let state: PageFormState['state'] = 'not started';
-
-                // Only mark as completed if ALL required questions are filled
-                if (
-                    requiredQuestions > 0 &&
-                    filledRequiredQuestions === requiredQuestions
-                ) {
-                    state = 'completed';
-                } else if (atLeastOneFilled) {
-                    state = 'started';
-                }
-
-                // Extra validation check
-                if (error && extraCheck && state === 'completed') {
-                    error = !formRef.current.reportValidity();
-                }
-
-                console.log(
-                    'page',
-                    requiredQuestions,
-                    filledRequiredQuestions,
-                    error,
-                    state
-                );
-
-                // Update page state
-                setPageState({
-                    title: page.title || '',
-                    error,
-                    state,
-                });
-            }
-        },
-        [finalErrCheck, page]
-    );
-
-    useEffect(() => {
-        updateFormStatus();
-    }, [page, updateFormStatus]);
-
-    useEffect(() => {
-        updateFormStatus(true);
-    }, [updateFormStatus]);
 
     const questionsAtom = useMemo(
         () =>
             atom(
-                (get) => get(pageAtom).questions || [],
+                (get) => get(pageAtom).questions,
                 (get, set, newQuestion: ApplicationQuestion[]) => {
                     set(pageAtom, (prev) => {
                         return { ...prev, questions: newQuestion };
                     });
                 }
             ),
-        [pageAtom]
+        []
     );
+
+    const finalErrCheck = useAtomValue(finalErrCheckAtom);
+
+    function updateFormStatus(extraCheck = false) {
+        if (formRef.current) {
+            // Check form validity
+            let error = finalErrCheck
+                ? !formRef.current.reportValidity()
+                : !formRef.current.checkValidity();
+
+            // Count required questions and filled required questions
+            let requiredQuestions = 0;
+            let filledRequiredQuestions = 0;
+            let atLeastOneFilled = false;
+
+            for (const question of page.questions || []) {
+                // Only consider required questions for completion status
+                if (question.required) {
+                    requiredQuestions++;
+                    const filled = isApplicationQuestionFilled(question);
+                    if (filled) {
+                        filledRequiredQuestions++;
+                    }
+                }
+
+                // Track if any question (required or not) is filled
+                if (isApplicationQuestionFilled(question)) {
+                    atLeastOneFilled = true;
+                }
+            }
+
+            // Determine page state based on filled questions
+            let state: PageFormState['state'] = 'not started';
+
+            // Only mark as completed if ALL required questions are filled
+            if (
+                requiredQuestions > 0 &&
+                filledRequiredQuestions === requiredQuestions
+            ) {
+                state = 'completed';
+            } else if (atLeastOneFilled) {
+                state = 'started';
+            }
+
+            // Extra validation check
+            if (error && extraCheck && state === 'completed') {
+                error = !formRef.current.reportValidity();
+            }
+
+            console.log({
+                title: page.title || '',
+                error,
+                state,
+            });
+
+            // Update page state
+            setPageState({
+                title: page.title || '',
+                error,
+                state,
+            });
+        }
+    }
+    useEffect(() => {
+        updateFormStatus();
+    }, [page, finalErrCheck]);
+
+    useEffect(() => {
+        updateFormStatus(true);
+    }, []);
+
     const questionAtomsAtom = splitAtom(questionsAtom);
     const [questionAtoms] = useAtom(questionAtomsAtom);
 
@@ -445,7 +457,7 @@ function PageButtons({
 }: {
     indexAtom: PrimitiveAtom<number>;
     pageCount: number;
-    pageStatesAtom: PrimitiveAtom<PageFormState[]>;
+    pageStatesAtom: Atom<PageFormState[]>;
     submit?: () => void;
 }) {
     const [index, setIndex] = useAtom(indexAtom);
