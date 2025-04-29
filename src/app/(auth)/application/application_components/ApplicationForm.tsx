@@ -284,6 +284,14 @@ function Page({
                     error = !formRef.current.reportValidity();
                 }
 
+                console.log(
+                    'page',
+                    requiredQuestions,
+                    filledRequiredQuestions,
+                    error,
+                    state
+                );
+
                 // Update page state
                 setPageState({
                     title: page.title || '',
@@ -292,7 +300,7 @@ function Page({
                 });
             }
         },
-        [finalErrCheck, page.questions, page.title, setPageState]
+        [finalErrCheck, page]
     );
 
     useEffect(() => {

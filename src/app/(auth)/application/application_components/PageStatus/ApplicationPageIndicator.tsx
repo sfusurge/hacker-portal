@@ -77,6 +77,8 @@ export function DesktopPageIndicator({
     const setIndex = useSetAtom(indexAtom);
     const [errCheck, setErrCheck] = useAtom(finalErrCheckAtom);
 
+    console.log('states', pageStates);
+
     const [validationPerformed, setValidationPerformed] = useState(false);
     function tryReview() {
         setErrCheck(true);
