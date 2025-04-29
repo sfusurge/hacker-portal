@@ -34,22 +34,27 @@ import { DocumentArrowDownIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/16/solid';
 import { useHackathon } from '@/hooks/use-hackathon';
 
-const validEmailTypes = ['ACCEPTJH2025'];
+const validEmailTypes = ['ACCEPTSJ2025'];
 
 export type Applicant = {
     id: number;
-    status: string;
-    tempStatus: string;
-    applicationDate: Date;
-    name: string;
-    studentNumber: number;
+    applicationFee: boolean;
+    firstName: string;
+    lastName: string;
+    pronouns: string;
     email: string;
+    phoneNumber: number;
+    school: string;
     major: string;
-    enrollmentYear: number;
-    participantType: string;
-    teamMemberNames: string;
+    yearOfStudy: string;
+    attendedDesignJam: string;
+    howManyJams: number;
+    passionateAreas: string[];
+    whyInterested: string;
+    whatHopeLearn: string;
     dietaryRestrictions: string[];
-    photoConsent: boolean;
+    photoConsent: string;
+    howHeardAbout: string[];
 };
 
 type ReviewApplicationsTableProps = {
@@ -102,47 +107,55 @@ export default function ReviewApplicationsTable({
 
     //Function to transform the data received from DB to the json format the table expects
     const transformResponse = (response: any) => {
-        const tempDummy = response.map((item: any) => {
-            const id = item.userId;
-            const status = item.currentStatus;
-            const tempStatus = item.pendingStatus;
-            const applicationDate = item.createdDate;
-            // const {
-            //     name,
-            //     email,
-            //     studentNumber,
-            //     major,
-            //     enrollmentYear,
-            //     dietaryRestrictions,
-            //     photoConsent,
-            // } = item.response;
-            const {
-                '1': name,
-                '2': email,
-                '3': studentNumber,
-                '4': major,
-                '5': enrollmentYear,
-                '6': participantType,
-                '7': teamMemberNames,
-                '8': dietaryRestrictions,
-                '9': photoConsent,
-            } = item.response;
-            return {
-                id: parseInt(id, 10),
-                status,
-                tempStatus,
-                applicationDate: new Date(applicationDate),
-                name,
-                email,
-                studentNumber,
-                major,
-                enrollmentYear,
-                participantType,
-                teamMemberNames,
-                dietaryRestrictions,
-                photoConsent,
-            };
-        });
+        const tempDummy = response
+            .filter((item: any) => item.hackathonId === 8)
+            .map((item: any) => {
+                const hackathonId = item.hackathonId;
+                const id = item.userId;
+                const status = item.currentStatus;
+                const applicationDate = item.createdDate;
+                const {
+                    '1': applicationFee,
+                    '2': firstName,
+                    '3': lastName,
+                    '4': pronouns,
+                    '5': email,
+                    '6': phoneNumber,
+                    '7': major,
+                    '8': yearOfStudy,
+                    '9': attendedDesignJam,
+                    '10': howManyJams,
+                    '11': passionateAreas,
+                    '12': whyInterested,
+                    '13': whatHopeLearn,
+                    '14': dietaryRestrictions,
+                    '15': photoConsent,
+                    '16': howHeardAbout,
+                } = item.response;
+
+                return {
+                    id: parseInt(id, 10),
+                    status,
+                    applicationDate: new Date(applicationDate),
+                    applicationFee,
+                    firstName,
+                    lastName,
+                    pronouns,
+                    email,
+                    phoneNumber,
+                    major,
+                    yearOfStudy,
+                    attendedDesignJam,
+                    howManyJams,
+                    passionateAreas,
+                    whyInterested,
+                    whatHopeLearn,
+                    dietaryRestrictions,
+                    photoConsent,
+                    howHeardAbout,
+                };
+            });
+
         return tempDummy;
     };
 
@@ -171,26 +184,12 @@ export default function ReviewApplicationsTable({
         }
     }, [applicationData.data]);
 
-    useEffect(() => {
-        setData((prevData: Applicant[]) =>
-            prevData.map((item) =>
-                item.id === refreshTable.userId
-                    ? {
-                          ...item,
-                          status: refreshTable.status,
-                          tempStatus: refreshTable.pendingStatus,
-                      }
-                    : item
-            )
-        );
-    }, [refreshTable]);
-
     //Filters and sorting
     const [globalFilter, setGlobalFilter] = useState<string>('');
     type SortingState = { id: string; desc: boolean }[];
 
     const [sorting, setSorting] = useState<SortingState>([
-        { id: 'name', desc: false },
+        { id: 'firstName', desc: false },
     ]);
     const [rowSelection, setRowSelection] = useState({});
 
@@ -247,7 +246,7 @@ export default function ReviewApplicationsTable({
             size: 50,
         },
         {
-            accessorKey: 'name',
+            accessorKey: 'firstName',
             header: ({ column }) => (
                 <span
                     className="cursor-pointer"
@@ -255,7 +254,28 @@ export default function ReviewApplicationsTable({
                         column.toggleSorting(column.getIsSorted() === 'asc')
                     }
                 >
-                    Name{' '}
+                    First Name{' '}
+                    {column.getIsSorted()
+                        ? column.getIsSorted() === 'desc'
+                            ? ' ↓'
+                            : ' ↑'
+                        : ''}
+                </span>
+            ),
+            cell: (info) => info.getValue(),
+            size: 150, // Initial width
+            minSize: 100, // Minimum width
+        },
+        {
+            accessorKey: 'lastName',
+            header: ({ column }) => (
+                <span
+                    className="cursor-pointer"
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
+                >
+                    Last Name{' '}
                     {column.getIsSorted()
                         ? column.getIsSorted() === 'desc'
                             ? ' ↓'
@@ -277,7 +297,7 @@ export default function ReviewApplicationsTable({
                         className={`rounded-md px-3 py-0.5 text-xs ${
                             value === 'Accepted'
                                 ? 'bg-success-950 text-success-300'
-                                : value === 'Wait List'
+                                : value === 'RSVP'
                                   ? 'bg-yellow-950 text-yellow-300'
                                   : value === 'Declined'
                                     ? 'bg-danger-950 text-danger-300'
@@ -291,30 +311,30 @@ export default function ReviewApplicationsTable({
             size: 120,
             minSize: 120,
         },
-        {
-            accessorKey: 'tempStatus',
-            header: () => 'Temporary Status',
-            cell: (info) => {
-                const value = info.getValue<string>();
-                return (
-                    <span
-                        className={`rounded-md px-3 py-0.5 text-xs ${
-                            value === 'Accepted'
-                                ? 'bg-success-950 text-success-300'
-                                : value === 'Wait List'
-                                  ? 'bg-yellow-950 text-yellow-300'
-                                  : value === 'Declined'
-                                    ? 'bg-danger-950 text-danger-300'
-                                    : 'bg-neutral-600/30'
-                        }`}
-                    >
-                        {value}
-                    </span>
-                );
-            },
-            size: 150,
-            minSize: 150,
-        },
+        // {
+        //     accessorKey: 'tempStatus',
+        //     header: () => 'Temporary Status',
+        //     cell: (info) => {
+        //         const value = info.getValue<string>();
+        //         return (
+        //             <span
+        //                 className={`rounded-md px-3 py-0.5 text-xs ${
+        //                     value === 'Accepted'
+        //                         ? 'bg-success-950 text-success-300'
+        //                         : value === 'Wait List'
+        //                           ? 'bg-yellow-950 text-yellow-300'
+        //                           : value === 'Declined'
+        //                             ? 'bg-danger-950 text-danger-300'
+        //                             : 'bg-neutral-600/30'
+        //                 }`}
+        //             >
+        //                 {value}
+        //             </span>
+        //         );
+        //     },
+        //     size: 150,
+        //     minSize: 150,
+        // },
         {
             accessorKey: 'id',
             header: () => 'Hacker ID',
@@ -328,50 +348,74 @@ export default function ReviewApplicationsTable({
             minSize: 150,
         },
         {
+            accessorKey: 'pronouns',
+            header: () => 'Pronouns',
+            size: 200,
+            minSize: 150,
+        },
+        {
             accessorKey: 'email',
             header: () => 'Email',
             size: 200,
             minSize: 150,
         },
         {
-            accessorKey: 'studentNumber',
-            header: () => 'Student Number',
-            size: 200,
-            minSize: 150,
+            accessorKey: 'phoneNumber',
+            header: () => 'Phone Number',
+            size: 150,
+            minSize: 100,
         },
         {
             accessorKey: 'major',
             header: () => 'Major',
             size: 150,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'enrollmentYear',
-            header: () => 'Enrollment Year',
-            size: 150,
             minSize: 150,
         },
         {
-            accessorKey: 'participantType',
-            header: () => 'Participant Type',
+            accessorKey: 'yearOfStudy',
+            header: () => 'Year of Study',
             size: 150,
             minSize: 100,
         },
         {
-            accessorKey: 'teamMemberNames',
-            header: () => 'Team Member Names',
+            accessorKey: 'attendedDesignJam',
+            header: () => 'Addended Design Jam Before?',
             size: 200,
             minSize: 150,
+        },
+        {
+            accessorKey: 'howManyJams',
+            header: () => 'howManyJams',
+            size: 200,
+            minSize: 150,
+        },
+        {
+            accessorKey: 'passionateAreas',
+            header: () => 'passionateAreas',
+            size: 150,
+            minSize: 100,
+        },
+        {
+            accessorKey: 'whyInterested',
+            header: () => 'whyInterested',
+            size: 150,
+            minSize: 100,
+        },
+        {
+            accessorKey: 'whatHopeLearn',
+            header: () => 'whatHopeLearn',
+            size: 150,
+            minSize: 100,
         },
         {
             accessorKey: 'dietaryRestrictions',
-            header: () => 'Dietary Restrictions',
-            size: 200,
-            minSize: 150,
+            header: () => 'dietaryRestrictions',
+            size: 150,
+            minSize: 100,
         },
         {
             accessorKey: 'photoConsent',
-            header: () => 'Photo Consent',
+            header: () => 'photoConsent',
             size: 150,
             minSize: 100,
         },
@@ -413,28 +457,54 @@ export default function ReviewApplicationsTable({
 
     const exportExcel = () => {
         const selectedRows = table.getSelectedRowModel().rows;
-        const rowData = selectedRows.map((row) => ({
-            id: row.original.id,
-            name: row.original.name,
-            status: row.original.status,
-            applicationDate: row.original.applicationDate.toISOString(),
-            email: row.original.email,
-            major: row.original.major,
-            enrollmentYear: row.original.enrollmentYear,
-            participantType: row.original.participantType,
-            teamMemberNames: row.original.teamMemberNames,
-            dietaryRestrictions: row.original.dietaryRestrictions.join(', '),
-            photoConsent: row.original.photoConsent ? 'Yes' : 'No',
-        }));
+        const tempData = selectedRows.map((row) => {
+            const {
+                id,
+                firstName,
+                lastName,
+                email,
+                phoneNumber,
+                school,
+                major,
+                yearOfStudy,
+                attendedDesignJam,
+                howManyJams,
+                passionateAreas,
+                whyInterested,
+                whatHopeLearn,
+                dietaryRestrictions,
+                photoConsent,
+                howHeardAbout,
+            } = row.original;
 
-        if (rowData.length === 0) {
+            return {
+                id,
+                firstName,
+                lastName,
+                email,
+                phoneNumber,
+                school,
+                major,
+                yearOfStudy,
+                attendedDesignJam,
+                howManyJams,
+                passionateAreas: passionateAreas.join(', '),
+                whyInterested,
+                whatHopeLearn,
+                dietaryRestrictions: dietaryRestrictions.join(', '),
+                photoConsent,
+                howHeardAbout: howHeardAbout.join(', '),
+            };
+        });
+
+        if (tempData.length === 0) {
             alert(
                 'No rows selected. Please select at least one row to export.'
             );
             return;
         }
 
-        const csv = generateCsv(csvConfig)(rowData);
+        const csv = generateCsv(csvConfig)(tempData);
         download(csvConfig)(csv);
     };
 
