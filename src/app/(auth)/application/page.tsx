@@ -14,6 +14,27 @@ import {
 } from '@/app/(auth)/application/application_components/types';
 import dayjs from 'dayjs';
 import { getResponseMap } from '@/app/(auth)/application/application_components/utils';
+import { atomWithStorage } from 'jotai/utils';
+
+const localAppResponseAtom = atomWithStorage('application_response', {
+    hackathonId: -1,
+    email: undefined,
+    response: {} as Record<string, any>,
+});
+
+const questionPagesWithLocal = atom((get) => {
+    const local = get(localAppResponseAtom);
+
+    if (local.hackathonId === -1) {
+        return;
+    }
+
+    const hackathon = get(hackathonAtom);
+
+    if (!hackathon) {
+        return;
+    }
+});
 
 /**
  * TODO
