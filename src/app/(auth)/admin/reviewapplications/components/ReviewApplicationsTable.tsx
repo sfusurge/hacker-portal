@@ -160,7 +160,7 @@ export default function ReviewApplicationsTable({
         { enabled: hackathonLoaded }
     );
 
-    //Data state
+    // Data state
     const [data, setData] = useState<Applicant[]>([]);
 
     //Change data state on update of DB
