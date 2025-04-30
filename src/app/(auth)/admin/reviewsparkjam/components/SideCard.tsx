@@ -55,9 +55,6 @@ export default function SideCard({
     const [id, setId] = useState<number>(sideCardInfo?.id || 0);
     const [firstName, setFirstName] = useState(sideCardInfo?.firstName || '');
     const [email, setEmail] = useState(sideCardInfo?.email || '');
-    const [studentNumber, setStudentNumber] = useState(
-        sideCardInfo?.studentNumber || ''
-    );
     const [major, setMajor] = useState(sideCardInfo?.major || '');
     const [enrollmentYear, setEnrollmentYear] = useState(
         sideCardInfo?.enrollmentYear || ''
@@ -142,7 +139,7 @@ export default function SideCard({
                             </Label>
                             <Input
                                 type="text"
-                                id="name"
+                                id="firstName"
                                 value={firstName}
                                 // onChange={(e) => setName(e.target.value)}
                                 className="w-1/2 border border-neutral-700/18 bg-neutral-800 text-white"
@@ -151,15 +148,13 @@ export default function SideCard({
 
                         <div>
                             <Label className="text-white/60" htmlFor="email">
-                                Student Number
+                                Last Name
                             </Label>
                             <Input
-                                type="studentNumber"
-                                id="studentNumber"
-                                value={studentNumber}
-                                onChange={(e) =>
-                                    setStudentNumber(e.target.value)
-                                }
+                                type="text"
+                                id="lastName"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
                                 className="w-1/2 border border-neutral-700/18 bg-neutral-800 text-white"
                             />
                         </div>
