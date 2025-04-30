@@ -1,14 +1,7 @@
 'use client';
 
 import { trpc } from '@/trpc/client';
-import {
-    Fragment,
-    HTMLProps,
-    useEffect,
-    useReducer,
-    useRef,
-    useState,
-} from 'react';
+import { Fragment, HTMLProps, useEffect, useRef, useState } from 'react';
 import {
     ColumnDef,
     flexRender,
@@ -19,10 +12,7 @@ import {
     useReactTable,
 } from '@tanstack/react-table';
 
-import { atom, useAtom } from 'jotai';
-
-const sideCardAtomSJ = atom<Applicant>();
-export { sideCardAtomSJ };
+import { atom, useSetAtom } from 'jotai';
 
 import { Input } from '@/components/ui/input';
 import { mkConfig, generateCsv, download } from 'export-to-csv';
@@ -38,12 +28,13 @@ const validEmailTypes = ['ACCEPTSJ2025'];
 
 export type Applicant = {
     id: number;
+    teamName: string | null;
     applicationFee: boolean;
     firstName: string;
     lastName: string;
     pronouns: string;
     email: string;
-    phoneNumber: number;
+    phoneNumber: string;
     school: string;
     major: string;
     yearOfStudy: string;
@@ -62,11 +53,13 @@ type ReviewApplicationsTableProps = {
     refreshTable: any;
 };
 
+export const sideCardAtomSJ = atom<Applicant>();
+
 export default function ReviewApplicationsTable({
     toggleSideCard,
     refreshTable,
 }: ReviewApplicationsTableProps) {
-    const [sideCardInfo, setSideCardInfo] = useAtom(sideCardAtomSJ);
+    const setSideCardInfo = useSetAtom(sideCardAtomSJ);
 
     const sendEmail = trpc.emails.sendEmail.useMutation();
     const [isEmailPopupOpen, setIsEmailPopupOpen] = useState(false);
@@ -78,7 +71,7 @@ export default function ReviewApplicationsTable({
         setIsEmailPopupOpen(!isEmailPopupOpen);
     };
 
-    //sends emails to selected users
+    // sends emails to selected users
     const handleSendingEmails = async (rows: any, type: string) => {
         try {
             const rowData = rows.map((row: any) => ({
@@ -105,63 +98,6 @@ export default function ReviewApplicationsTable({
         }
     };
 
-    //Function to transform the data received from DB to the json format the table expects
-    const transformResponse = (response: any) => {
-        const tempDummy = response
-            .filter((item: any) => item.hackathonId === 8)
-            .map((item: any) => {
-                const id = item.userId;
-                const status = item.currentStatus;
-                const applicationDate = item.createdDate;
-                const {
-                    '1': applicationFee,
-                    '2': firstName,
-                    '3': lastName,
-                    '4': pronouns,
-                    '5': email,
-                    '6': phoneNumber,
-                    '7': school,
-                    '8': major,
-                    '9': yearOfStudy,
-                    '10': attendedDesignJam,
-                    '11': howManyJams,
-                    '12': passionateAreas,
-                    '13': whyInterested,
-                    '14': whatHopeLearn,
-                    '15': dietaryRestrictions,
-                    '16': photoConsent,
-                    '17': howHeardAbout,
-                } = item.response;
-
-                return {
-                    id: parseInt(id, 10),
-                    status,
-                    applicationDate: new Date(applicationDate),
-                    applicationFee,
-                    firstName,
-                    lastName,
-                    pronouns,
-                    email,
-                    phoneNumber,
-                    school,
-                    major,
-                    yearOfStudy,
-                    attendedDesignJam,
-                    howManyJams,
-                    passionateAreas,
-                    whyInterested,
-                    whatHopeLearn,
-                    dietaryRestrictions,
-                    photoConsent,
-                    howHeardAbout,
-                };
-            });
-
-        return tempDummy;
-    };
-
-    // const [tableSize, setTableSize] = useState(10);
-
     const { hackathon, hackathonLoaded } = useHackathon();
 
     // Get data from DB
@@ -174,7 +110,7 @@ export default function ReviewApplicationsTable({
         { enabled: hackathonLoaded }
     );
 
-    //Data state
+    // Data state
     const [data, setData] = useState<Applicant[]>([]);
 
     //Change data state on update of DB
@@ -182,43 +118,33 @@ export default function ReviewApplicationsTable({
         if (applicationData.data) {
             const transformed = transformResponse(applicationData.data);
             setData(transformed);
+            console.log({ transformed });
         }
     }, [applicationData.data]);
 
-    //Filters and sorting
+    useEffect(() => {
+        setData((prevData: Applicant[]) =>
+            prevData.map((item) =>
+                item.id === refreshTable.userId
+                    ? {
+                          ...item,
+                          status: refreshTable.status,
+                          tempStatus: refreshTable.pendingStatus,
+                      }
+                    : item
+            )
+        );
+    }, [refreshTable]);
+
+    // Filters and sorting
     const [globalFilter, setGlobalFilter] = useState<string>('');
     type SortingState = { id: string; desc: boolean }[];
 
     const [sorting, setSorting] = useState<SortingState>([
-        { id: 'firstName', desc: false },
+        // sort by people with a team first
+        { id: 'teamName', desc: true },
     ]);
     const [rowSelection, setRowSelection] = useState({});
-
-    //I copied this from somewhere, this is for the checkboxes in the table
-    function IndeterminateCheckbox({
-        indeterminate,
-        className = '',
-        ...rest
-    }: { indeterminate?: boolean } & HTMLProps<HTMLInputElement>) {
-        const ref = useRef<HTMLInputElement>(null);
-
-        useEffect(() => {
-            if (ref.current) {
-                ref.current.indeterminate =
-                    (!rest.checked && indeterminate) || false;
-            }
-        }, [indeterminate, rest.checked]);
-
-        return (
-            <input
-                type="checkbox"
-                ref={ref}
-                className={`${className} cursor-pointer`}
-                {...rest}
-                onClick={(e) => e.stopPropagation()}
-            />
-        );
-    }
 
     const defaultColumns: ColumnDef<Applicant>[] = [
         {
@@ -245,6 +171,13 @@ export default function ReviewApplicationsTable({
                 </div>
             ),
             size: 50,
+        },
+        {
+            id: 'teamName',
+            accessorKey: 'teamName',
+            header: 'Team Name',
+            size: 150,
+            minSize: 100,
         },
         {
             accessorKey: 'firstName',
@@ -427,13 +360,10 @@ export default function ReviewApplicationsTable({
             minSize: 100,
         },
     ];
-    const [columns] = useState<typeof defaultColumns>(() => [
-        ...defaultColumns,
-    ]);
 
     const table = useReactTable({
         data,
-        columns,
+        columns: defaultColumns,
         state: {
             globalFilter,
             sorting,
@@ -467,6 +397,7 @@ export default function ReviewApplicationsTable({
         const tempData = selectedRows.map((row) => {
             const {
                 id,
+                teamName,
                 firstName,
                 lastName,
                 email,
@@ -486,6 +417,7 @@ export default function ReviewApplicationsTable({
 
             return {
                 id,
+                teamName,
                 firstName,
                 lastName,
                 email,
@@ -842,4 +774,100 @@ export default function ReviewApplicationsTable({
             )}
         </div>
     );
+}
+
+// I copied this from somewhere, this is for the checkboxes in the table
+function IndeterminateCheckbox({
+    indeterminate,
+    className = '',
+    ...rest
+}: { indeterminate?: boolean } & HTMLProps<HTMLInputElement>) {
+    const ref = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (ref.current) {
+            ref.current.indeterminate =
+                (!rest.checked && indeterminate) || false;
+        }
+    }, [indeterminate, rest.checked]);
+
+    return (
+        <input
+            type="checkbox"
+            ref={ref}
+            className={`${className} cursor-pointer`}
+            {...rest}
+            onClick={(e) => e.stopPropagation()}
+        />
+    );
+}
+
+// Function to transform the data received from DB to the json format the table expects
+function transformResponse(response: any[]) {
+    const responses = response
+        .map((item) => {
+            const id = item.userId;
+            const status = item.currentStatus;
+            const applicationDate = item.createdDate;
+            const {
+                '1': applicationFee,
+                '2': firstName,
+                '3': lastName,
+                '4': pronouns,
+                '5': email,
+                '6': phoneNumber,
+                '7': school,
+                '8': major,
+                '9': yearOfStudy,
+                '10': attendedDesignJam,
+                '11': howManyJams,
+                '12': passionateAreas,
+                '13': whyInterested,
+                '14': whatHopeLearn,
+                '15': dietaryRestrictions,
+                '16': photoConsent,
+                '17': howHeardAbout,
+            } = item.response as Record<string, any>;
+
+            const teamName = item.teamName
+                ? `${item.teamName} (${item.teamId})`
+                : null;
+
+            return {
+                id: Number(id),
+                teamName: teamName,
+                status,
+                applicationDate: new Date(applicationDate),
+                applicationFee,
+                firstName,
+                lastName,
+                pronouns,
+                email,
+                phoneNumber,
+                school,
+                major,
+                yearOfStudy,
+                attendedDesignJam,
+                howManyJams,
+                passionateAreas,
+                whyInterested,
+                whatHopeLearn,
+                dietaryRestrictions,
+                photoConsent,
+                howHeardAbout,
+            };
+        })
+        .toSorted((res1, res2) => {
+            const team1 = res1.teamName ?? '';
+            const team2 = res2.teamName ?? '';
+            if (team1 > team2) {
+                return 1;
+            } else if (team1 < team2) {
+                return -1;
+            } else {
+                return 0;
+            }
+        });
+
+    return responses;
 }

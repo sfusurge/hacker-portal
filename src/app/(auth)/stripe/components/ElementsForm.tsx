@@ -1,7 +1,5 @@
 'use client';
 
-import type { StripeError } from '@stripe/stripe-js';
-
 import * as React from 'react';
 import { JSX, useState } from 'react';
 
@@ -120,7 +118,7 @@ function CheckoutForm() {
                 );
             }
         } catch (err) {
-            const { message } = err as StripeError;
+            const { message } = err as Error;
             setPayment({ status: 'error' });
             setErrorMessage(message ?? 'An unknown error occurred');
         }
