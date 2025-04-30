@@ -34,8 +34,6 @@ import { DocumentArrowDownIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/16/solid';
 import { useHackathon } from '@/hooks/use-hackathon';
 
-const validEmailTypes = ['ACCEPTJH2025'];
-
 export type Applicant = {
     id: number;
     status: string;
@@ -82,7 +80,7 @@ export default function ReviewApplicationsTable({
     };
 
     //sends emails to selected users
-    const handleSendingEmails = async (rows: any, type: string) => {
+    const handleSendingEmails = async (rows: any) => {
         try {
             if (!selectedTemplateId) {
                 toast({
@@ -105,7 +103,6 @@ export default function ReviewApplicationsTable({
             for (let i = 0; i < rowData.length; i++) {
                 try {
                     await sendEmail.mutateAsync({
-                        type: type,
                         templateId: selectedTemplateId,
                         user: {
                             id: rowData[i].id,
@@ -765,49 +762,6 @@ export default function ReviewApplicationsTable({
 
                         <div className="mb-4">
                             <Label className="mb-2 text-white/60">
-                                Email Type
-                            </Label>
-                            <RadioGroup
-                                value={emailType}
-                                onValueChange={setEmailType}
-                            >
-                                <div className="flex w-full flex-col gap-2">
-                                    {validEmailTypes.map((type) => (
-                                        <div
-                                            className={`flex cursor-pointer items-center space-x-2 rounded-lg border px-4 py-3 ${
-                                                emailType === type
-                                                    ? 'bg-brand-950/60 border-brand-900'
-                                                    : 'border-neutral-600/60 bg-neutral-800/60'
-                                            }`}
-                                            key={type}
-                                            onClick={() => setEmailType(type)}
-                                        >
-                                            <RadioGroupItem
-                                                value={type}
-                                                id={type}
-                                                onChange={() =>
-                                                    setEmailType(type)
-                                                }
-                                                className={`h-5 w-5 appearance-none rounded-full border ${
-                                                    emailType === type
-                                                        ? 'bg-brand-500 border-blue-800'
-                                                        : 'border-neutral-500 bg-neutral-700'
-                                                }`}
-                                            />
-                                            <Label
-                                                htmlFor={type}
-                                                className="cursor-pointer font-light text-white"
-                                            >
-                                                {type}
-                                            </Label>
-                                        </div>
-                                    ))}
-                                </div>
-                            </RadioGroup>
-                        </div>
-
-                        <div className="mb-4">
-                            <Label className="mb-2 text-white/60">
                                 Select Email Template
                             </Label>
                             {templatesLoading ? (
@@ -884,22 +838,15 @@ export default function ReviewApplicationsTable({
                             </button>
                             <button
                                 className={`rounded-md px-4 py-2 text-sm whitespace-nowrap text-white ${
-                                    !emailType ||
-                                    !selectedTemplateId ||
-                                    isSending
+                                    !selectedTemplateId || isSending
                                         ? 'cursor-not-allowed bg-neutral-600/60'
                                         : 'bg-brand-600 hover:bg-brand-700'
                                 }`}
                                 type="button"
-                                disabled={
-                                    !emailType ||
-                                    !selectedTemplateId ||
-                                    isSending
-                                }
+                                disabled={!selectedTemplateId || isSending}
                                 onClick={() =>
                                     handleSendingEmails(
-                                        table.getSelectedRowModel().rows,
-                                        emailType
+                                        table.getSelectedRowModel().rows
                                     )
                                 }
                             >

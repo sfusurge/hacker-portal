@@ -9,12 +9,11 @@ import { createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
 export const sendEmailSchema = z.object({
-    type: z.string(),
     templateId: z.number(),
     user: z.object({
         id: z.number(),
-        name: z.string(),
         email: z.string().email(),
+        name: z.string(),
     }),
 });
 

@@ -8,6 +8,7 @@ import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
 import { QrCodeIcon } from '@heroicons/react/24/solid';
+import { EnvelopeIcon } from '@heroicons/react/24/outline';
 import {
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
@@ -221,6 +222,21 @@ export default function DesktopNav({
                                         'justify-center': collapsed,
                                     })}
                                 />
+                            )}
+                            {initialData?.userRole === 'admin' && (
+                                <NavLink
+                                    href="/admin/email/"
+                                    label="Email Templates (Admin)"
+                                    icon={
+                                        <EnvelopeIcon className="h-6 w-6"></EnvelopeIcon>
+                                    }
+                                    iconAlt="email"
+                                    platform="desktop"
+                                    active={url.startsWith('/admin/email')}
+                                    className={clsx({
+                                        'justify-center': collapsed,
+                                    })}
+                                ></NavLink>
                             )}
                             {initialData?.userRole === 'admin' && (
                                 <NavLink
