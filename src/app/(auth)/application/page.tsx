@@ -3,18 +3,11 @@
 import { trpc } from '@/trpc/client';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { ApplicationForm } from './application_components/ApplicationForm';
 import { hackathonAtom } from '@/hooks/use-hackathon';
 import { useHackathon } from '@/hooks/use-hackathon';
-import {
-    atom,
-    PrimitiveAtom,
-    Provider,
-    useAtom,
-    useAtomValue,
-    WritableAtom,
-} from 'jotai';
+import { atom, useAtomValue } from 'jotai';
 import {
     ApplicationPage,
     HackathonData,
@@ -66,7 +59,6 @@ const hackathonWithLocalAtom = atom(
     },
     (get, set, val: HackathonData) => {
         const userInfo = get(userInfoAtom);
-
         if (!userInfo || !userInfo.email) {
             return;
         }
@@ -76,16 +68,10 @@ const hackathonWithLocalAtom = atom(
             email: userInfo.email,
             response: getResponseMap(val.pages),
         });
+
+        set(hackathonAtom, { ...val });
     }
 );
-
-export default function Application() {
-    return (
-        <>
-            <ApplicationWithContext />
-        </>
-    );
-}
 
 /**
  * TODO
@@ -93,7 +79,7 @@ export default function Application() {
  * todo: investigate in this potential solution
  * https://jotai.org/docs/utilities/storage#server-side-rendering
  */
-export function ApplicationWithContext() {
+export default function Application() {
     const { hackathon } = useHackathon();
     const hackathonWithResponse = useAtomValue(hackathonWithLocalAtom);
     const submitApplication = trpc.applications.submitApplication.useMutation();

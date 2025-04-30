@@ -247,7 +247,7 @@ function Page({
     hidden: boolean;
     pageStateAtom: PrimitiveAtom<PageFormState>;
 }) {
-    const page = useAtomValue(pageAtom);
+    const [page, setPage] = useAtom(pageAtom);
 
     const setPageState = useSetAtom(pageStateAtom);
     const formRef = useRef<HTMLFormElement>(null);
@@ -257,9 +257,7 @@ function Page({
             atom(
                 (get) => get(pageAtom).questions,
                 (get, set, newQuestion: ApplicationQuestion[]) => {
-                    set(pageAtom, (prev) => {
-                        return { ...prev, questions: newQuestion };
-                    });
+                    set(pageAtom, { ...get(pageAtom), questions: newQuestion });
                 }
             ),
         []
@@ -313,12 +311,6 @@ function Page({
                 error = !formRef.current.reportValidity();
             }
 
-            console.log({
-                title: page.title || '',
-                error,
-                state,
-            });
-
             // Update page state
             setPageState({
                 title: page.title || '',
@@ -345,6 +337,18 @@ function Page({
             style={hidden ? { display: 'none' } : {}}
             noValidate
         >
+            <button
+                type="button"
+                onClick={() => {
+                    setPage({
+                        ...page,
+                        title: new Date().toTimeString(),
+                    });
+                }}
+            >
+                CLICK MEEE
+            </button>
+
             {page.title && <h2 className={style.mainTitle}>{page.title}</h2>}
             {page.description && (
                 <p className={style.description}>{page.description}</p>
