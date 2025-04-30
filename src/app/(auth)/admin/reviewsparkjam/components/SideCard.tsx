@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAtom } from 'jotai/index';
-import { sideCardAtom } from '@/app/(auth)/admin/reviewapplications/components/ReviewApplicationsTable';
+import { sideCardAtomSJ } from '@/app/(auth)/admin/reviewsparkjam/components/ReviewApplicationsTable';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 
@@ -19,16 +19,6 @@ type SideCardProps = {
     setRefreshTable: React.Dispatch<React.SetStateAction<{}>>;
 };
 
-export const allWorkshops = [
-    'Intro to GitHub (1 - 1:30pm)',
-    'Intro to React.js (2 - 3pm)',
-    'Intro to Figma (3 - 4pm)',
-];
-export const allAttendancePeriods = [
-    'Half Day Workshops (12:30 - 4pm)',
-    'Half Day PM Build (4 - 8:30pm)',
-    'Full Day (12:30 - 8:30pm)',
-];
 export const allMajors = [
     'Business',
     'Computing Science',
@@ -59,9 +49,11 @@ export default function SideCard({
 }: SideCardProps) {
     const { hackathon } = useHackathon();
 
-    const [sideCardInfo] = useAtom(sideCardAtom) || {};
+    const [sideCardInfo] = useAtom(sideCardAtomSJ) || {};
+    console.log(sideCardInfo);
+
     const [id, setId] = useState<number>(sideCardInfo?.id || 0);
-    const [name, setName] = useState(sideCardInfo?.name || '');
+    const [firstName, setFirstName] = useState(sideCardInfo?.firstName || '');
     const [email, setEmail] = useState(sideCardInfo?.email || '');
     const [studentNumber, setStudentNumber] = useState(
         sideCardInfo?.studentNumber || ''
@@ -146,13 +138,13 @@ export default function SideCard({
                     <div className="grid gap-4">
                         <div>
                             <Label className="text-white/60" htmlFor="name">
-                                Name
+                                First Name
                             </Label>
                             <Input
                                 type="text"
                                 id="name"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
+                                value={firstName}
+                                // onChange={(e) => setName(e.target.value)}
                                 className="w-1/2 border border-neutral-700/18 bg-neutral-800 text-white"
                             />
                         </div>

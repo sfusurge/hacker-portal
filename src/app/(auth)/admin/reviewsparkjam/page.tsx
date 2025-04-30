@@ -2,9 +2,9 @@
 
 import ReviewApplicationsTable, {
     Applicant,
-} from '@/app/(auth)/admin/reviewapplications/components/ReviewApplicationsTable';
+} from '@/app/(auth)/admin/reviewsparkjam/components/ReviewApplicationsTable';
 import { useEffect, useState } from 'react';
-import SideCard from '@/app/(auth)/admin/reviewapplications/components/SideCard';
+import SideCard from '@/app/(auth)/admin/reviewsparkjam/components/SideCard';
 
 export default function ReviewApplicationsPage() {
     const [isSideCardOpen, setIsSideCardOpen] = useState(false);
