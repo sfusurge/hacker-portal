@@ -21,8 +21,8 @@ import {
 
 import { atom, useAtom } from 'jotai';
 
-const sideCardAtom = atom<Applicant>();
-export { sideCardAtom };
+const sideCardAtomSJ = atom<Applicant>();
+export { sideCardAtomSJ };
 
 import { Input } from '@/components/ui/input';
 import { mkConfig, generateCsv, download } from 'export-to-csv';
@@ -66,7 +66,7 @@ export default function ReviewApplicationsTable({
     toggleSideCard,
     refreshTable,
 }: ReviewApplicationsTableProps) {
-    const [sideCardInfo, setSideCardInfo] = useAtom(sideCardAtom);
+    const [sideCardInfo, setSideCardInfo] = useAtom(sideCardAtomSJ);
 
     const sendEmail = trpc.emails.sendEmail.useMutation();
     const [isEmailPopupOpen, setIsEmailPopupOpen] = useState(false);
@@ -110,7 +110,6 @@ export default function ReviewApplicationsTable({
         const tempDummy = response
             .filter((item: any) => item.hackathonId === 8)
             .map((item: any) => {
-                const hackathonId = item.hackathonId;
                 const id = item.userId;
                 const status = item.currentStatus;
                 const applicationDate = item.createdDate;
