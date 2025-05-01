@@ -54,7 +54,7 @@ export default function ApplicationCard({
     const [isTicketOpen, setIsTicketOpen] = useState(false);
 
     useEffect(() => {
-        const questionSet = localStorage.getItem('response_key');
+        const questionSet = localStorage.getItem('application_response');
         if (questionSet !== null) {
             setQuestionSetExists(true);
         }
