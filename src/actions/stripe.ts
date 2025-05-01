@@ -5,7 +5,8 @@ import { formatAmountForStripe } from '@/utils/stripe-helpers';
 import { stripe } from '@/lib/stripe';
 
 export async function createPaymentIntent(
-    paymentAmount: number
+    paymentAmount: number,
+    userEmail: string
 ): Promise<{ client_secret: string }> {
     const paymentIntent: Stripe.PaymentIntent =
         await stripe.paymentIntents.create({
@@ -14,6 +15,7 @@ export async function createPaymentIntent(
             automatic_payment_methods: {
                 enabled: true, // Enable automatic payment methods
             },
+            receipt_email: userEmail,
         });
 
     return {
