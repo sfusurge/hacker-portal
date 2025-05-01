@@ -37,7 +37,8 @@ export type AppStatus =
     | 'Waitlisted'
     | 'Accepted'
     | 'Withdrawn'
-    | 'Loading';
+    | 'Loading'
+    | 'Accepted - Pending Payment';
 
 type ApplicationCardProps = {
     userData: UserData;
@@ -128,6 +129,7 @@ function determineApplicationStatus(
 // Helpers to render different parts based on status
 function getStatusStyleForTitle(status: AppStatus): string {
     switch (status) {
+        case 'Accepted - Pending Payment':
         case 'Accepted':
             return 'text-brand-400';
         case 'Awaiting Review':
@@ -271,7 +273,7 @@ function getCardFooter(status: AppStatus, hackathonName: string) {
                 Continue application
             </Button>
         ),
-        'Accepted – Awaiting RSVP': (
+        'Accepted - Pending Payment': (
             <Button
                 size="cozy"
                 variant="brand"
@@ -297,9 +299,8 @@ function getCardFooter(status: AppStatus, hackathonName: string) {
         status !== 'Accepted' &&
         status !== 'Awaiting Review' &&
         status !== 'Withdrawn';
-    const action = shouldShowFooter
-        ? footerActions[status as keyof typeof footerActions] || null
-        : null;
+    const action = footerActions[status as keyof typeof footerActions];
+    console.log(action);
 
     if (!action) return null;
 

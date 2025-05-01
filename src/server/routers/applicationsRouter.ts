@@ -6,7 +6,7 @@ import {
     StatusEnum,
     updateApplicationStatusSchema,
 } from '@/db/schema/applications';
-import { getUserData } from '@/db/schema/users/users';
+import { getUserData, user } from '@/db/schema/users/users';
 import { and, asc, eq, getTableColumns } from 'drizzle-orm';
 import { z } from 'zod';
 import { InternalServerError } from '../exceptions';
@@ -207,6 +207,23 @@ export const applicationsRouter = router({
                 .limit(1);
 
             return application ?? null;
+        }),
+
+    getApplicationByEmail: publicProcedure
+        .input(
+            z.object({
+                email: z.string().email(),
+            })
+        )
+        .query(async ({ input }) => {
+            const [application] = await databaseClient
+                .select(getTableColumns(applications))
+                .from(applications)
+                .innerJoin(user, eq(applications.userId, user.id))
+                .where(eq(user.email, input.email))
+                .limit(1);
+
+            return application;
         }),
 });
 

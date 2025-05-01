@@ -78,6 +78,7 @@ export const updateApplicationStatusSchema = z.object({
     userId: z.number().int(),
     status: z
         .enum([
+            'N/A',
             'Accepted',
             'Declined',
             'Awaiting Review',
@@ -88,6 +89,7 @@ export const updateApplicationStatusSchema = z.object({
         .optional(),
     pendingStatus: z
         .enum([
+            'N/A',
             'Accepted',
             'Declined',
             'Awaiting Review',

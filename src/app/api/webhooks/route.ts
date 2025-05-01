@@ -3,6 +3,7 @@ import type { Stripe } from 'stripe';
 import { NextResponse } from 'next/server';
 
 import { stripe } from '@/lib/stripe';
+import { createCaller } from '@/server/appRouter';
 
 export async function POST(req: Request) {
     let event: Stripe.Event;
@@ -50,10 +51,35 @@ export async function POST(req: Request) {
                     console.log(
                         `Payment failed: ${data.last_payment_error?.message}`
                     );
+
                     break;
                 case 'payment_intent.succeeded':
                     data = event.data.object as Stripe.PaymentIntent;
-                    console.log(`PaymentIntent status: ${data.status}`);
+                    if (!data.receipt_email) {
+                        console.error('No Receipt email is found');
+                        break;
+                    }
+                    // since payment suceeded, update application status
+                    const trpcClient = createCaller({});
+                    const application =
+                        await trpcClient.applications.getApplicationByEmail({
+                            email: data.receipt_email,
+                        });
+
+                    if (
+                        !application ||
+                        application.currentStatus !==
+                            'Accepted - Pending Payment'
+                    ) {
+                        console.error('invalid application', application);
+                        break;
+                    }
+
+                    await trpcClient.applications.updateApplicationStatus({
+                        ...application,
+                        status: 'Accepted',
+                    });
+
                     break;
                 default:
                     throw new Error(`Unhandled event: ${event.type}`);
