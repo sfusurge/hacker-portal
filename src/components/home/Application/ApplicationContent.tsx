@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Conditional } from '@/lib/Conditional';
 import QRTicket from '@/app/(auth)/admin/qr/checkin_components/QRTicket';
@@ -10,8 +10,29 @@ import { UserData } from '@/db/schema/users/users';
 import CountdownTimer from '../Application/Countdown';
 import { CardTitle, CardDescription } from '@/components/ui/card';
 import { useHackathon } from '@/hooks/use-hackathon';
+import dayjs from 'dayjs';
 
 export function CountdownContent() {
+    const [currentTime, setime] = useState(dayjs());
+    const cutoffTime = dayjs(new Date(2025, 4, 1)).startOf('day');
+    const overdue = useMemo(
+        () => currentTime.isAfter(cutoffTime),
+        [currentTime]
+    );
+    useEffect(() => {
+        setTimeout(() => {
+            setime(dayjs());
+        }, 1000);
+    }, []);
+
+    if (overdue) {
+        return (
+            <div className="text-center">
+                <CardTitle className="mb-1">Application closed!</CardTitle>
+            </div>
+        );
+    }
+
     return (
         <>
             <div className="text-center">
