@@ -201,14 +201,14 @@ export const teamsRouter = router({
                 })
                 .from(membersTable)
                 .innerJoin(userTable, eq(userTable.id, membersTable.userId))
-                .where(eq(membersTable.teamId, team.id))
                 .leftJoin(
                     applications,
                     and(
-                        eq(applications.userId, user.id),
+                        eq(applications.userId, membersTable.userId),
                         eq(applications.hackathonId, input.hackathonId)
                     )
-                );
+                )
+                .where(eq(membersTable.teamId, team.id));
 
             return {
                 ...team,

@@ -6,17 +6,16 @@ import {
     StatusEnum,
     updateApplicationStatusSchema,
 } from '@/db/schema/applications';
-import { getUserData, user } from '@/db/schema/users/users';
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { getUserData } from '@/db/schema/users/users';
+import { and, asc, eq, getTableColumns } from 'drizzle-orm';
 import { z } from 'zod';
 import { InternalServerError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
 import Handlebars from 'handlebars';
-import {
-    welcomeEmailTemplate,
-    welcomeSparkhacksTemplate,
-} from '@/server/routers/templates';
+import { welcomeSparkhacksTemplate } from '@/server/routers/templates';
 import { transporter } from '@/server/nodemailerTransporter';
+import { teams } from '@/db/schema/teams';
+import { members } from '@/db/schema/members';
 
 export interface SubmitApplicationResponse {
     hackathonId: number;
@@ -147,13 +146,22 @@ export const applicationsRouter = router({
                       )
                     : hackathonIdMatchCondition;
 
-            return await databaseClient
-                .select()
+            const applicationsWithTeamInfo = await databaseClient
+                .select({
+                    ...getTableColumns(applications),
+                    response: applications.response,
+                    teamId: members.teamId,
+                    teamName: teams.name,
+                })
                 .from(applications)
+                .leftJoin(members, eq(applications.userId, members.userId))
+                .leftJoin(teams, eq(members.teamId, teams.id))
                 .where(condition)
                 .orderBy(asc(applications.createdDate))
                 .limit(input.maxResult)
                 .offset(offset);
+
+            return applicationsWithTeamInfo;
         }),
 
     updateApplicationStatus: publicProcedure

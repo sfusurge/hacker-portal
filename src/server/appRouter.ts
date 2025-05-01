@@ -8,6 +8,7 @@ import { sendEmailRouter } from './routers/sendEmailRouter';
 import { usersRouter } from './routers/usersRouter';
 import { teamsRouter } from './routers/teamsRouter';
 import { filesRouter } from './routers/filesRouter';
+import { emailsRouter } from './routers/emailTemplateRouter';
 
 export const appRouter = router({
     health_check: publicProcedure.query(() => {
@@ -18,6 +19,7 @@ export const appRouter = router({
     hackathons: hackathonsRouter,
     applications: applicationsRouter,
     emails: sendEmailRouter,
+    emailTemplates: emailsRouter,
     events: eventsRouter,
     checkIn: checkInRouter,
 

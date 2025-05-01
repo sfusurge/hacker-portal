@@ -5,42 +5,56 @@ import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useAtom } from 'jotai/index';
-import { sideCardAtom } from '@/app/(auth)/admin/reviewapplications/components/ReviewApplicationsTable';
-import { Textarea } from '@/components/ui/textarea';
+import { useAtomValue } from 'jotai/index';
+import { sideCardAtomSJ } from '@/app/(auth)/admin/reviewsparkjam/components/ReviewApplicationsTable';
 import { Button } from '@/components/ui/button';
 
 import { trpc } from '@/trpc/client';
-import { EmailUser } from '@/db/schema/emails';
 import { useHackathon } from '@/hooks/use-hackathon';
+import { FormTextInput } from '@/components/ui/input/input';
 
 type SideCardProps = {
     toggleSideCard: () => void;
     setRefreshTable: React.Dispatch<React.SetStateAction<{}>>;
 };
 
-export const allWorkshops = [
-    'Intro to GitHub (1 - 1:30pm)',
-    'Intro to React.js (2 - 3pm)',
-    'Intro to Figma (3 - 4pm)',
+const ALL_SCHOOLS = [
+    'Simon Fraser University',
+    'University of British Columbia',
+    'British Columbia Institute of Technology',
+    'Capilano University',
+    'Emily Carr University of Art + Design',
+    'Kwantlen Polytechnic University',
 ];
-export const allAttendancePeriods = [
-    'Half Day Workshops (12:30 - 4pm)',
-    'Half Day PM Build (4 - 8:30pm)',
-    'Full Day (12:30 - 8:30pm)',
-];
-export const allMajors = [
+
+export const ALL_MAJORS = [
+    'Interactive Arts and Technology',
+    'Interaction Design',
+    'Computer Science',
+    'Human-Computer Interaction',
     'Business',
-    'Computing Science',
-    'Data Science',
-    'Engineering',
-    'Health Science',
-    'Math',
-    'SIAT',
+    'Cognitive Science',
+    'Psychology',
+];
+
+export const YEAR_OF_STUDY_OPTIONS = ['1', '2', '3', '4', '5-7', '8+'];
+
+export const DESIGN_TOPICS_OPTIONS = [
+    'User Interface Design',
+    'User Experience Design',
+    'Interaction Design',
+    'User Experience Research',
+    'Product Design',
+    'Branding',
+    'Motion Design',
+    'Graphic Design',
+    'Service Design',
+    'Design Engineering',
+    'Design Systems',
     'Other..',
 ];
 
-export const allDietaryRestrictions = [
+export const ALL_RESTRICTIONS = [
     'Halal',
     'Vegetarian',
     'Vegan',
@@ -53,32 +67,72 @@ export const allDietaryRestrictions = [
     'Seafood Allergy',
 ];
 
+export const HEARD_ABOUT_OPTIONS = [
+    'Social media (Instagram, Discord, etc.)',
+    'Word of mouth',
+    'Website',
+    'Flyer or poster',
+    'Collaborating organization',
+    'Online community (e.g., Reddit, LinkedIn)',
+];
+
 export default function SideCard({
     toggleSideCard,
     setRefreshTable,
 }: SideCardProps) {
     const { hackathon } = useHackathon();
 
-    const [sideCardInfo] = useAtom(sideCardAtom) || {};
-    const [id, setId] = useState<number>(sideCardInfo?.id || 0);
-    const [name, setName] = useState(sideCardInfo?.name || '');
+    const sideCardInfo = useAtomValue(sideCardAtomSJ);
+
+    console.log(sideCardInfo);
+
+    const [userId, setUserId] = useState<number>(sideCardInfo?.id || 0);
+
+    const [firstName, setFirstName] = useState(sideCardInfo?.firstName || '');
+    const [lastName, setLastName] = useState(sideCardInfo?.lastName || '');
+    const [pronouns, setPronouns] = useState(sideCardInfo?.pronouns || '');
     const [email, setEmail] = useState(sideCardInfo?.email || '');
-    const [studentNumber, setStudentNumber] = useState(
-        sideCardInfo?.studentNumber || ''
+    const [phoneNumber, setPhoneNumber] = useState(
+        sideCardInfo?.phoneNumber || ''
     );
+    const [school, setSchool] = useState(sideCardInfo?.school || '');
     const [major, setMajor] = useState(sideCardInfo?.major || '');
-    const [enrollmentYear, setEnrollmentYear] = useState(
-        sideCardInfo?.enrollmentYear || ''
+    const [yearOfStudy, setYearOfStudy] = useState(
+        sideCardInfo?.yearOfStudy || ''
     );
-    const [participantType, setParticipantType] = useState(
-        sideCardInfo?.participantType || ''
+    const [attendedDesignJam, setAttendedDesignJam] = useState(
+        sideCardInfo?.attendedDesignJam || ''
     );
-    const [teamMemberNames, setTeamMemberNames] = useState(
-        sideCardInfo?.teamMemberNames || ''
+    const [howManyJams, setHowManyJams] = useState(
+        sideCardInfo?.howManyJams || ''
+    );
+    const [passionateAreas, setPassionateAreas] = useState(
+        sideCardInfo?.passionateAreas || []
+    );
+    const otherPassionateArea = passionateAreas.find(
+        (area) => !DESIGN_TOPICS_OPTIONS.includes(area)
+    );
+
+    const [whyInterested, setWhyInterested] = useState(
+        sideCardInfo?.whyInterested || ''
+    );
+    const [whatHopeLearn, setWhatHopeLearn] = useState(
+        sideCardInfo?.whatHopeLearn || ''
     );
     const [dietaryRestrictions, setDietaryRestrictions] = useState(
         sideCardInfo?.dietaryRestrictions || []
     );
+    const otherDietaryRestrictions = dietaryRestrictions.find(
+        (restriction) => !ALL_RESTRICTIONS.includes(restriction)
+    );
+
+    const [howHeardAbout, setHowHeardAbout] = useState(
+        sideCardInfo?.howHeardAbout || []
+    );
+    const otherHeardAbout = howHeardAbout.find(
+        (heardAbout) => !HEARD_ABOUT_OPTIONS.includes(heardAbout)
+    );
+
     const [photoConsent, setPhotoConsent] = useState(
         sideCardInfo?.photoConsent || false
     );
@@ -87,12 +141,17 @@ export default function SideCard({
         trpc.applications.updateApplicationStatus.useMutation();
 
     const handleChangeApplicationStatus = (
-        status: 'Awaiting Review' | 'Accepted' | 'Declined' | 'Wait List'
+        status:
+            | 'Awaiting Review'
+            | 'Accepted'
+            | 'Declined'
+            | 'Wait List'
+            | 'Accepted - Pending Payment'
     ) => {
         try {
             updateApplication.mutate({
                 hackathonId: hackathon!.id,
-                userId: id,
+                userId: userId,
                 status: status,
                 pendingStatus: status,
             });
@@ -101,18 +160,12 @@ export default function SideCard({
             console.error('Failed to update application:', error);
         }
         setRefreshTable({
-            userId: id,
+            userId: userId,
             status: status,
             pendingStatus: status,
         });
         toggleSideCard();
     };
-
-    // const updateTeamMember = (index: number, value: string) => {
-    //     const updatedTeamMembers = [...teamMemberNames];
-    //     updatedTeamMembers[index] = value;
-    //     setTeamMemberNames(updatedTeamMembers);
-    // };
 
     const updateDietaryRestriction = (
         restriction: string,
@@ -126,6 +179,260 @@ export default function SideCard({
             );
         }
     };
+
+    const schoolTemplate = (
+        <RadioGroup value={school} onValueChange={setSchool}>
+            <Label className="text-white/60">School</Label>
+            <div className="flex w-1/2 flex-col gap-2">
+                {ALL_SCHOOLS.map((schoolOption) => (
+                    <div
+                        className={`flex cursor-pointer items-center space-x-2 rounded-lg border pt-3 pr-2 pb-3 pl-2 ${
+                            school === schoolOption
+                                ? 'bg-brand-950/60 border-brand-900'
+                                : 'border border-neutral-600/60 bg-neutral-800/60'
+                        }`}
+                        key={schoolOption}
+                        onClick={() => setSchool(schoolOption)}
+                    >
+                        <RadioGroupItem
+                            value={schoolOption}
+                            id={schoolOption}
+                            onChange={() => setSchool(schoolOption)}
+                            className={`h-5 w-5 appearance-none rounded-full border ${
+                                school === schoolOption
+                                    ? 'bg-brand-500 border-blue-800'
+                                    : 'border-neutral-500 bg-neutral-700'
+                            }`}
+                        />
+                        <Label
+                            htmlFor={schoolOption}
+                            className="cursor-pointer font-light text-white"
+                        >
+                            {schoolOption}
+                        </Label>
+                    </div>
+                ))}
+                {!ALL_SCHOOLS.includes(school) && (
+                    <div
+                        className={`flex cursor-pointer items-center space-x-2 rounded-lg border pt-3 pr-2 pb-3 pl-2 ${'bg-brand-950/60 border-brand-900'}`}
+                        key={school}
+                        onClick={() => setSchool(school)}
+                    >
+                        <RadioGroupItem
+                            value={school}
+                            id={school}
+                            onChange={() => setMajor(school)}
+                            className={`h-5 w-5 appearance-none rounded-full border ${'bg-brand-500 border-blue-800'}`}
+                        />
+                        <Label
+                            htmlFor={school}
+                            className="cursor-pointer font-light text-white"
+                        >
+                            {school}
+                        </Label>
+                    </div>
+                )}
+            </div>
+        </RadioGroup>
+    );
+
+    const majorTemplate = (
+        <RadioGroup value={major} onValueChange={setMajor}>
+            <Label className="text-white/60">Major</Label>
+            <div className="flex w-1/2 flex-col gap-2">
+                {ALL_MAJORS.map((majorOption) => (
+                    <div
+                        className={`flex cursor-pointer items-center space-x-2 rounded-lg border pt-3 pr-2 pb-3 pl-2 ${
+                            major === majorOption
+                                ? 'bg-brand-950/60 border-brand-900'
+                                : 'border border-neutral-600/60 bg-neutral-800/60'
+                        }`}
+                        key={majorOption}
+                        onClick={() => setMajor(majorOption)}
+                    >
+                        <RadioGroupItem
+                            value={majorOption}
+                            id={majorOption}
+                            onChange={() => setMajor(majorOption)}
+                            className={`h-5 w-5 appearance-none rounded-full border ${
+                                major === majorOption
+                                    ? 'bg-brand-500 border-blue-800'
+                                    : 'border-neutral-500 bg-neutral-700'
+                            }`}
+                        />
+                        <Label
+                            htmlFor={majorOption}
+                            className="cursor-pointer font-light text-white"
+                        >
+                            {majorOption}
+                        </Label>
+                    </div>
+                ))}
+                {!ALL_MAJORS.includes(major) && (
+                    <div
+                        className={`flex cursor-pointer items-center space-x-2 rounded-lg border pt-3 pr-2 pb-3 pl-2 ${'bg-brand-950/60 border-brand-900'}`}
+                        key={major}
+                        onClick={() => setMajor(major)}
+                    >
+                        <RadioGroupItem
+                            value={major}
+                            id={major}
+                            onChange={() => setMajor(major)}
+                            className={`h-5 w-5 appearance-none rounded-full border ${'bg-brand-500 border-blue-800'}`}
+                        />
+                        <Label
+                            htmlFor={major}
+                            className="cursor-pointer font-light text-white"
+                        >
+                            {major}
+                        </Label>
+                    </div>
+                )}
+            </div>
+        </RadioGroup>
+    );
+
+    const passionateAreasTemplate = (
+        <div className="ml-3 flex flex-col gap-5">
+            {DESIGN_TOPICS_OPTIONS.map((topic) => (
+                <div className="flex items-center space-x-2" key={topic}>
+                    <Checkbox
+                        id={topic}
+                        checked={passionateAreas.includes(topic)}
+                        onCheckedChange={(isChecked) => {
+                            if (isChecked) {
+                                setPassionateAreas([...passionateAreas, topic]);
+                            } else {
+                                setPassionateAreas(
+                                    passionateAreas.filter(
+                                        (item) => item !== topic
+                                    )
+                                );
+                            }
+                        }}
+                        className="border-brand-500 size-5 data-[state=checked]:bg-blue-500"
+                    />
+                    <Label htmlFor={topic} className="font-light text-white">
+                        {topic}
+                    </Label>
+                </div>
+            ))}
+            {otherPassionateArea && (
+                <div
+                    className={`flex cursor-pointer items-center space-x-2 rounded-lg border pt-3 pr-2 pb-3 pl-2 ${'bg-brand-950/60 border-brand-900'}`}
+                    key={otherPassionateArea}
+                >
+                    <RadioGroupItem
+                        value={otherPassionateArea}
+                        id={otherPassionateArea}
+                        className={`h-5 w-5 appearance-none rounded-full border ${'bg-brand-500 border-blue-800'}`}
+                    />
+                    <Label
+                        htmlFor={otherPassionateArea}
+                        className="cursor-pointer font-light text-white"
+                    >
+                        {otherPassionateArea}
+                    </Label>
+                </div>
+            )}
+        </div>
+    );
+
+    const heardAboutTemplate = (
+        <div className="ml-3 flex flex-col gap-5">
+            {HEARD_ABOUT_OPTIONS.map((heardAboutOption) => (
+                <div
+                    className="flex items-center space-x-2"
+                    key={heardAboutOption}
+                >
+                    <Checkbox
+                        id={heardAboutOption}
+                        checked={howHeardAbout.includes(heardAboutOption)}
+                        onCheckedChange={(isChecked) => {
+                            if (isChecked) {
+                                setHowHeardAbout([
+                                    ...howHeardAbout,
+                                    heardAboutOption,
+                                ]);
+                            } else {
+                                setHowHeardAbout(
+                                    howHeardAbout.filter(
+                                        (item) => item !== heardAboutOption
+                                    )
+                                );
+                            }
+                        }}
+                        className="border-brand-500 size-5 data-[state=checked]:bg-blue-500"
+                    />
+                    <Label
+                        htmlFor={heardAboutOption}
+                        className="font-light text-white"
+                    >
+                        {heardAboutOption}
+                    </Label>
+                </div>
+            ))}
+            {otherHeardAbout && (
+                <div
+                    className={`flex cursor-pointer items-center space-x-2 rounded-lg border pt-3 pr-2 pb-3 pl-2 ${'bg-brand-950/60 border-brand-900'}`}
+                    key={otherHeardAbout}
+                >
+                    <RadioGroupItem
+                        value={otherHeardAbout}
+                        id={otherHeardAbout}
+                        className={`h-5 w-5 appearance-none rounded-full border ${'bg-brand-500 border-blue-800'}`}
+                    />
+                    <Label
+                        htmlFor={otherHeardAbout}
+                        className="cursor-pointer font-light text-white"
+                    >
+                        {otherHeardAbout}
+                    </Label>
+                </div>
+            )}
+        </div>
+    );
+
+    const dietaryRestrictionsTemplate = (
+        <div className="ml-3 flex flex-col gap-5">
+            {ALL_RESTRICTIONS.map((restriction) => (
+                <div className="flex items-center space-x-2" key={restriction}>
+                    <Checkbox
+                        id={restriction}
+                        checked={dietaryRestrictions.includes(restriction)}
+                        onCheckedChange={(isChecked) =>
+                            updateDietaryRestriction(restriction, isChecked)
+                        }
+                        className="border-brand-500 size-5 data-[state=checked]:bg-blue-500"
+                    />
+                    <Label
+                        htmlFor={restriction}
+                        className="font-light text-white"
+                    >
+                        {restriction}
+                    </Label>
+                </div>
+            ))}
+            {otherDietaryRestrictions && (
+                <div
+                    className={`flex cursor-pointer items-center space-x-2 rounded-lg border pt-3 pr-2 pb-3 pl-2 ${'bg-brand-950/60 border-brand-900'}`}
+                    key={otherHeardAbout}
+                >
+                    <RadioGroupItem
+                        value={otherDietaryRestrictions}
+                        id={otherDietaryRestrictions}
+                        className={`h-5 w-5 appearance-none rounded-full border ${'bg-brand-500 border-blue-800'}`}
+                    />
+                    <Label
+                        htmlFor={otherDietaryRestrictions}
+                        className="cursor-pointer font-light text-white"
+                    >
+                        {otherDietaryRestrictions}
+                    </Label>
+                </div>
+            )}
+        </div>
+    );
 
     return (
         <div className="bg-neutral-850 z-20 flex h-screen w-5/12 flex-col gap-4 rounded-lg border border-neutral-600/60 p-8 shadow-lg">
@@ -145,29 +452,43 @@ export default function SideCard({
 
                     <div className="grid gap-4">
                         <div>
-                            <Label className="text-white/60" htmlFor="name">
-                                Name
+                            <Label
+                                className="text-white/60"
+                                htmlFor="firstName"
+                            >
+                                First Name
                             </Label>
                             <Input
                                 type="text"
-                                id="name"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
+                                id="firstName"
+                                value={firstName}
+                                onChange={(e) => setFirstName(e.target.value)}
                                 className="w-1/2 border border-neutral-700/18 bg-neutral-800 text-white"
                             />
                         </div>
 
                         <div>
-                            <Label className="text-white/60" htmlFor="email">
-                                Student Number
+                            <Label className="text-white/60" htmlFor="lastName">
+                                Last Name
                             </Label>
                             <Input
-                                type="studentNumber"
-                                id="studentNumber"
-                                value={studentNumber}
-                                onChange={(e) =>
-                                    setStudentNumber(e.target.value)
-                                }
+                                type="text"
+                                id="lastName"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
+                                className="w-1/2 border border-neutral-700/18 bg-neutral-800 text-white"
+                            />
+                        </div>
+
+                        <div>
+                            <Label className="text-white/60" htmlFor="pronouns">
+                                Pronouns
+                            </Label>
+                            <Input
+                                type="text"
+                                id="pronouns"
+                                value={pronouns}
+                                onChange={(e) => setPronouns(e.target.value)}
                                 className="w-1/2 border border-neutral-700/18 bg-neutral-800 text-white"
                             />
                         </div>
@@ -185,172 +506,191 @@ export default function SideCard({
                             />
                         </div>
 
-                        <RadioGroup value={major} onValueChange={setMajor}>
-                            <Label className="text-white/60">Major</Label>
-                            <div className="flex w-1/2 flex-col gap-2">
-                                {allMajors.map((majorOption) => (
-                                    <div
-                                        className={`flex cursor-pointer items-center space-x-2 rounded-lg border pt-3 pr-2 pb-3 pl-2 ${
-                                            major === majorOption
-                                                ? 'bg-brand-950/60 border-brand-900'
-                                                : 'border border-neutral-600/60 bg-neutral-800/60'
-                                        }`}
-                                        key={majorOption}
-                                        onClick={() => setMajor(majorOption)}
-                                    >
-                                        <RadioGroupItem
-                                            value={majorOption}
-                                            id={majorOption}
-                                            onChange={() =>
-                                                setMajor(majorOption)
-                                            }
-                                            className={`h-5 w-5 appearance-none rounded-full border ${
-                                                major === majorOption
-                                                    ? 'bg-brand-500 border-blue-800'
-                                                    : 'border-neutral-500 bg-neutral-700'
-                                            }`}
-                                        />
-                                        <Label
-                                            htmlFor={majorOption}
-                                            className="cursor-pointer font-light text-white"
-                                        >
-                                            {majorOption}
-                                        </Label>
-                                    </div>
-                                ))}
-                            </div>
-                        </RadioGroup>
-
                         <div>
                             <Label
                                 className="text-white/60"
-                                htmlFor="enrollmentYear"
+                                htmlFor="phoneNumber"
                             >
-                                Enrollment Year
+                                Phone Number
                             </Label>
                             <Input
                                 type="number"
-                                id="enrollmentYear"
-                                value={enrollmentYear}
-                                onChange={(e) =>
-                                    setEnrollmentYear(e.target.value)
-                                }
+                                id="phoneNumber"
+                                value={phoneNumber}
+                                onChange={(e) => setPhoneNumber(e.target.value)}
                                 className="w-1/2 border border-neutral-700/18 bg-neutral-800 text-white"
                             />
                         </div>
+
+                        {schoolTemplate}
+
+                        {majorTemplate}
+
+                        <RadioGroup
+                            value={yearOfStudy}
+                            onValueChange={setYearOfStudy}
+                        >
+                            <Label className="text-white/60">
+                                Current Year of Study
+                            </Label>
+                            <div className="flex w-1/2 flex-col gap-2">
+                                {YEAR_OF_STUDY_OPTIONS.map(
+                                    (yearOfStudyOption) => (
+                                        <div
+                                            className={`flex cursor-pointer items-center space-x-2 rounded-lg border pt-3 pr-2 pb-3 pl-2 ${
+                                                yearOfStudy ===
+                                                yearOfStudyOption
+                                                    ? 'bg-brand-950/60 border-brand-900'
+                                                    : 'border border-neutral-600/60 bg-neutral-800/60'
+                                            }`}
+                                            key={yearOfStudyOption}
+                                            onClick={() =>
+                                                setMajor(yearOfStudyOption)
+                                            }
+                                        >
+                                            <RadioGroupItem
+                                                value={yearOfStudyOption}
+                                                id={yearOfStudyOption}
+                                                onChange={() =>
+                                                    setMajor(yearOfStudyOption)
+                                                }
+                                                className={`h-5 w-5 appearance-none rounded-full border ${
+                                                    yearOfStudy ===
+                                                    yearOfStudyOption
+                                                        ? 'bg-brand-500 border-blue-800'
+                                                        : 'border-neutral-500 bg-neutral-700'
+                                                }`}
+                                            />
+                                            <Label
+                                                htmlFor={yearOfStudyOption}
+                                                className="cursor-pointer font-light text-white"
+                                            >
+                                                {yearOfStudyOption}
+                                            </Label>
+                                        </div>
+                                    )
+                                )}
+                            </div>
+                        </RadioGroup>
                     </div>
 
                     <header className="text-lg font-bold text-white">
-                        Event Information
+                        Design Skills and Experience
                     </header>
 
-                    <div>
-                        <Label className="text-white/60" htmlFor="email">
-                            Team Member Names
-                        </Label>
-                        <Input
-                            type="teamMemberNames"
-                            id="teamMemberNames"
-                            value={teamMemberNames}
-                            onChange={(e) => setTeamMemberNames(e.target.value)}
-                            className="w-1/2 border border-neutral-700/18 bg-neutral-800 text-white"
-                        />
-                    </div>
-
-                    {/*<div className="grid gap-4">*/}
-                    {/*    <Label className="text-white/60">Team Members</Label>*/}
-                    {/*    {teamMemberNames.map((member, index) => (*/}
-                    {/*        <Input*/}
-                    {/*            key={index}*/}
-                    {/*            type="text"*/}
-                    {/*            value={member}*/}
-                    {/*            onChange={(e) =>*/}
-                    {/*                updateTeamMember(index, e.target.value)*/}
-                    {/*            }*/}
-                    {/*            placeholder={`Team Member ${index + 1}`}*/}
-                    {/*            className="bg-neutral-800 text-white border border-neutral-700/18 w-1/2"*/}
-                    {/*        />*/}
-                    {/*    ))}*/}
-                    {/*</div>*/}
-
                     <RadioGroup
-                        value={participantType}
-                        onValueChange={setParticipantType}
+                        value={attendedDesignJam}
+                        onValueChange={(value) => setAttendedDesignJam(value)}
                     >
-                        <Label className="text-white/60">
-                            Participant Type
-                        </Label>
+                        <Label className="text-white/60">Photo Consent</Label>
                         <div className="flex w-fit flex-col gap-2">
-                            {[
-                                'Individual',
-                                'Individual looking for a team',
-                                'Team (4 max)',
-                            ].map((type) => (
+                            {['Yes', 'No'].map((option) => (
                                 <div
                                     className={`flex cursor-pointer items-center space-x-2 rounded-lg border pt-3 pr-4 pb-3 pl-4 ${
-                                        participantType === type
+                                        attendedDesignJam === option
                                             ? 'bg-brand-950/60 border-brand-900'
                                             : 'border border-neutral-600/60 bg-neutral-800/60'
                                     }`}
-                                    key={type}
-                                    onClick={() => setParticipantType(type)}
+                                    key={option}
+                                    onClick={() => setAttendedDesignJam(option)}
                                 >
                                     <RadioGroupItem
-                                        value={type}
-                                        id={type}
+                                        value={option}
+                                        id={option}
                                         onChange={() =>
-                                            setParticipantType(type)
+                                            setAttendedDesignJam(option)
                                         }
                                         className={`h-5 w-5 appearance-none rounded-full border ${
-                                            participantType === type
+                                            attendedDesignJam === option
                                                 ? 'bg-brand-500 border-blue-800'
                                                 : 'border-neutral-500 bg-neutral-700'
                                         }`}
                                     />
                                     <Label
-                                        htmlFor={type}
+                                        htmlFor={option}
                                         className="cursor-pointer font-light text-white"
                                     >
-                                        {type}
+                                        {option}
                                     </Label>
                                 </div>
                             ))}
                         </div>
                     </RadioGroup>
 
+                    <div>
+                        <Label
+                            className="text-white/60"
+                            htmlFor="attendedDesignJam"
+                        >
+                            Number of Design Jams Attended
+                        </Label>
+                        <Input
+                            type="text"
+                            id="attendedDesignJam"
+                            value={howManyJams}
+                            onChange={(e) => setHowManyJams(e.target.value)}
+                            className="w-1/2 border border-neutral-700/18 bg-neutral-800 text-white"
+                        />
+                    </div>
+
+                    <div>
+                        <Label
+                            className="text-white/60"
+                            htmlFor="passionateAreas"
+                        >
+                            Passionate Areas
+                        </Label>
+                        {passionateAreasTemplate}
+                    </div>
+
+                    <header className="text-lg font-bold text-white">
+                        Personal Statement
+                    </header>
+
+                    <div>
+                        <Label
+                            className="text-white/60"
+                            htmlFor="whyInterested"
+                        >
+                            Why are you interested in participating in this
+                            design jam?
+                        </Label>
+                        <FormTextInput
+                            type="text"
+                            id="whyInterested"
+                            value={whyInterested}
+                            onChange={(e) => setWhyInterested(e.target.value)}
+                            className="w-1/2 border border-neutral-700/18 bg-neutral-800 text-white"
+                        />
+                    </div>
+
+                    <div>
+                        <Label
+                            className="text-white/60"
+                            htmlFor="whatHopeLearn"
+                        >
+                            What do you hope to learn or achieve during this
+                            event?
+                        </Label>
+                        <FormTextInput
+                            type="text"
+                            id="whatHopeLearn"
+                            value={whatHopeLearn}
+                            onChange={(e) => setWhatHopeLearn(e.target.value)}
+                            className="w-1/2 border border-neutral-700/18 bg-neutral-800 text-white"
+                        />
+                    </div>
+
+                    <header className="text-lg font-bold text-white">
+                        Additional Information
+                    </header>
+
                     <div className="flex flex-col gap-4">
                         <Label className="text-white/60">
                             Dietary Restrictions
                         </Label>
 
-                        <div className="ml-3 flex flex-col gap-5">
-                            {allDietaryRestrictions.map((restriction) => (
-                                <div
-                                    className="flex items-center space-x-2"
-                                    key={restriction}
-                                >
-                                    <Checkbox
-                                        id={restriction}
-                                        checked={dietaryRestrictions.includes(
-                                            restriction
-                                        )}
-                                        onCheckedChange={(isChecked) =>
-                                            updateDietaryRestriction(
-                                                restriction,
-                                                isChecked
-                                            )
-                                        }
-                                        className="border-brand-500 size-5 data-[state=checked]:bg-blue-500"
-                                    />
-                                    <Label
-                                        htmlFor={restriction}
-                                        className="font-light text-white"
-                                    >
-                                        {restriction}
-                                    </Label>
-                                </div>
-                            ))}
-                        </div>
+                        {dietaryRestrictionsTemplate}
                     </div>
 
                     <RadioGroup
@@ -395,6 +735,14 @@ export default function SideCard({
                                 </div>
                             ))}
                         </div>
+
+                        <div className="flex flex-col gap-4">
+                            <Label className="text-white/60">
+                                How did you hear about us?
+                            </Label>
+
+                            {heardAboutTemplate}
+                        </div>
                     </RadioGroup>
                 </div>
             </ScrollArea>
@@ -408,10 +756,12 @@ export default function SideCard({
                         key={'Accept'}
                         className={`bg-success-950 text-success-300 h-7`}
                         onClick={() =>
-                            handleChangeApplicationStatus('Accepted')
+                            handleChangeApplicationStatus(
+                                'Accepted - Pending Payment'
+                            )
                         }
                     >
-                        Accepted
+                        Accept
                     </Button>
                     <Button
                         key={'Decline'}

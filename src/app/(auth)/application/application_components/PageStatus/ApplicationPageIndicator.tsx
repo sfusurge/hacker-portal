@@ -1,4 +1,4 @@
-import { PrimitiveAtom, useAtomValue, useSetAtom, useAtom } from 'jotai';
+import { PrimitiveAtom, useAtomValue, useSetAtom, useAtom, Atom } from 'jotai';
 import style from './ApplicationPageIndicator.module.css';
 import { finalErrCheckAtom } from '../ApplicationForm';
 import {
@@ -70,7 +70,7 @@ export function DesktopPageIndicator({
     pageStateAtoms,
     indexAtom,
 }: {
-    pageStateAtoms: PrimitiveAtom<PageFormState[]>;
+    pageStateAtoms: Atom<PageFormState[]>;
     indexAtom: PrimitiveAtom<number>;
 }) {
     const pageStates = useAtomValue(pageStateAtoms);
@@ -156,7 +156,7 @@ export function MobilePageIndicator({
     pageStateAtoms,
     indexAtom,
 }: {
-    pageStateAtoms: PrimitiveAtom<PageFormState[]>;
+    pageStateAtoms: Atom<PageFormState[]>;
     indexAtom: PrimitiveAtom<number>;
 }) {
     const pageStates = useAtomValue(pageStateAtoms);

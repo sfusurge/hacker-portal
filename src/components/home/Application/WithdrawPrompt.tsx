@@ -42,7 +42,6 @@ export default function WithdrawPrompt({
         setWithdrawn(true);
         try {
             updateApplication.mutate({
-                // hackathonId should be available now
                 hackathonId: hackathon!.id,
                 userId: userId,
                 status: 'Withdrawn',

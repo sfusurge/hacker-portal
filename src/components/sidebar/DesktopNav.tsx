@@ -8,6 +8,7 @@ import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
 import { QrCodeIcon } from '@heroicons/react/24/solid';
+import { EnvelopeIcon } from '@heroicons/react/24/outline';
 import {
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
@@ -33,7 +34,12 @@ export default function DesktopNav({
 }: DesktopNavProps) {
     const [collapsed, setCollapsed] = useState(false);
     const [isLargeScreen, setIsLargeScreen] = useState(true);
-    const image = trpc.files.getUserImages.useQuery({});
+    const image = trpc.files.getUserImages.useQuery(
+        {},
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
 
     const [avatarUrl, setAvatarUrl] = useState<string | null>(
         '/sidebar/default-avatar.webp'
@@ -209,18 +215,33 @@ export default function DesktopNav({
                             />
                             {initialData?.userRole === 'admin' && (
                                 <NavLink
-                                    href="/admin/reviewapplications"
+                                    href="/admin/reviewsparkjam"
                                     label="Review Applications"
                                     icon={<BellAlertIcon className="h-6 w-6" />}
                                     iconAlt="Review Applications logo"
                                     platform="desktop"
                                     active={url.startsWith(
-                                        '/admin/reviewapplications'
+                                        '/admin/reviewsparkjam'
                                     )}
                                     className={clsx({
                                         'justify-center': collapsed,
                                     })}
                                 />
+                            )}
+                            {initialData?.userRole === 'admin' && (
+                                <NavLink
+                                    href="/admin/email/"
+                                    label="Email Templates (Admin)"
+                                    icon={
+                                        <EnvelopeIcon className="h-6 w-6"></EnvelopeIcon>
+                                    }
+                                    iconAlt="email"
+                                    platform="desktop"
+                                    active={url.startsWith('/admin/email')}
+                                    className={clsx({
+                                        'justify-center': collapsed,
+                                    })}
+                                ></NavLink>
                             )}
                             {initialData?.userRole === 'admin' && (
                                 <NavLink

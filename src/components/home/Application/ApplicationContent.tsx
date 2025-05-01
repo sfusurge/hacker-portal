@@ -8,17 +8,17 @@ import QRTicket from '@/app/(auth)/admin/qr/checkin_components/QRTicket';
 import WithdrawPrompt from '@/components/home/Application/WithdrawPrompt';
 import { UserData } from '@/db/schema/users/users';
 import CountdownTimer from '../Application/Countdown';
+import { CardTitle, CardDescription } from '@/components/ui/card';
+import { useHackathon } from '@/hooks/use-hackathon';
 
 export function CountdownContent() {
     return (
         <>
             <div className="text-center">
-                <h2 className="mb-1 text-lg font-medium text-white">
-                    Don&apos;t miss out!
-                </h2>
-                <p className="text-sm text-white/60">
+                <CardTitle className="mb-1">Don&apos;t miss out!</CardTitle>
+                <CardDescription className="text-sm">
                     Hacker registration closes in...
-                </p>
+                </CardDescription>
             </div>
             <CountdownTimer targetDate={new Date(2025, 3, 30, 23, 59, 59)} />
         </>
@@ -36,33 +36,32 @@ export function AcceptedContent({
     isTicketOpen?: boolean;
     setIsTicketOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
+    const { hackathon } = useHackathon();
     const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
-    // Use the passed state if available, otherwise use local state
     const [localTicketOpen, setLocalTicketOpen] = useState(false);
 
-    const ticketOpen =
-        isTicketOpen !== undefined ? isTicketOpen : localTicketOpen;
     const setTicketOpen = setIsTicketOpen || setLocalTicketOpen;
 
     const handleOpenWithdrawPrompt = () => setIsWithdrawPromptOpen(true);
     const handleCloseWithdrawPrompt = () => setIsWithdrawPromptOpen(false);
-    const handleOpenTicket = () => setTicketOpen(true);
     const handleCloseTicket = () => setTicketOpen(false);
 
     return (
         <>
             <div className="flex max-w-full flex-col gap-2 text-start md:pr-0 md:pl-0">
-                <h2 className="text-lg font-semibold text-pretty text-white">
+                <CardTitle className="text-pretty">
                     You&#39;ve been accepted into{' '}
-                    {process.env.NEXT_PUBLIC_CURRENT_EVENT}!
-                </h2>
-                <h3 className="text-white/70">
+                    {hackathon?.hackathonName ||
+                        process.env.NEXT_PUBLIC_CURRENT_EVENT}
+                    !
+                </CardTitle>
+                <CardDescription className="text-base">
                     You&apos;ve been assigned the following QR code, which
                     you&apos;ll need to check in to the hackathon and pick up
                     meals throughout the event.
-                </h3>
+                </CardDescription>
 
-                <p className="text-white/70">
+                <CardDescription>
                     {
                         "If you're no longer able to make it to the event, please "
                     }
@@ -73,7 +72,7 @@ export function AcceptedContent({
                         withdraw your application
                     </button>
                     .
-                </p>
+                </CardDescription>
             </div>
 
             {image && (
@@ -154,11 +153,11 @@ export function ReviewContent({ userData }: { userData: UserData }) {
     return (
         <>
             <div className="flex max-w-full flex-col gap-2 text-start">
-                <h2 className="text-lg font-semibold text-white">
+                <CardTitle>
                     We&apos;re currently reviewing your application 📝
-                </h2>
+                </CardTitle>
 
-                <p className="text-white/60">
+                <CardDescription>
                     Your application has been submitted and is being reviewed by
                     the Surge team. If you&apos;re no longer able to make it to
                     the event, please{' '}
@@ -169,7 +168,7 @@ export function ReviewContent({ userData }: { userData: UserData }) {
                         withdraw your application
                     </button>
                     .
-                </p>
+                </CardDescription>
             </div>
 
             <Image
@@ -193,15 +192,17 @@ export function ReviewContent({ userData }: { userData: UserData }) {
 }
 
 export function WithdrawnContent() {
+    const { hackathon } = useHackathon();
+
     return (
         <>
             <div className="flex max-w-full flex-col gap-2 text-start">
-                <h2 className="text-lg font-semibold text-white">
+                <CardTitle>
                     You&apos;ve withdrawn your application to{' '}
-                    {process.env.NEXT_PUBLIC_CURRENT_EVENT}.
-                </h2>
+                    {hackathon?.hackathonName}.
+                </CardTitle>
 
-                <h3 className="text-white/70">
+                <CardDescription>
                     {
                         'If you believe this is an error, please reach out to the organizing team '
                     }
@@ -212,7 +213,7 @@ export function WithdrawnContent() {
                         via our Discord server
                     </a>
                     .
-                </h3>
+                </CardDescription>
             </div>
 
             <Image
@@ -221,6 +222,35 @@ export function WithdrawnContent() {
                 height={725}
                 className="max-w-[240px]"
                 alt="An otter has dropped their mint chocolate ice cream. They look distraught."
+            />
+        </>
+    );
+}
+
+export function RejectedContent() {
+    const { hackathon } = useHackathon();
+
+    return (
+        <>
+            <div className="flex max-w-full flex-col gap-2 text-start">
+                <CardTitle>
+                    Thanks for applying to {hackathon?.hackathonName}.
+                </CardTitle>
+
+                <CardDescription>
+                    We&apos;re sorry to inform you that you weren&apos;t
+                    selected for this hackathon. We received a large number of
+                    applications and we unfortunately can&apos;t accept
+                    everyone, but we encourage you to apply again in the future.
+                </CardDescription>
+            </div>
+
+            <Image
+                src="/login/application-review.webp"
+                width={434}
+                height={320}
+                className="-order-1 max-w-72 md:order-last"
+                alt="Four otters are gathered around a table, reviewing application submissions."
             />
         </>
     );

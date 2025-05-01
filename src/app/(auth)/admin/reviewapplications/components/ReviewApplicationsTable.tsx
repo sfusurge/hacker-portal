@@ -34,8 +34,6 @@ import { DocumentArrowDownIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/16/solid';
 import { useHackathon } from '@/hooks/use-hackathon';
 
-const validEmailTypes = ['ACCEPTJH2025'];
-
 export type Applicant = {
     id: number;
     status: string;
@@ -65,8 +63,16 @@ export default function ReviewApplicationsTable({
 
     const sendEmail = trpc.emails.sendEmail.useMutation();
     const [isEmailPopupOpen, setIsEmailPopupOpen] = useState(false);
+    const [isSending, setIsSending] = useState(false);
     const [emailType, setEmailType] = useState('');
+    const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(
+        null
+    );
     const { toast } = useToast();
+
+    // Fetch email templates
+    const { data: emailTemplates, isLoading: templatesLoading } =
+        trpc.emailTemplates.getEmailTemplates.useQuery();
 
     // Email popup state toggle
     const toggleEmailPopup = () => {
@@ -74,29 +80,70 @@ export default function ReviewApplicationsTable({
     };
 
     //sends emails to selected users
-    const handleSendingEmails = async (rows: any, type: string) => {
+    const handleSendingEmails = async (rows: any) => {
         try {
+            if (!selectedTemplateId) {
+                toast({
+                    title: 'Error',
+                    description: 'Please select an email template',
+                    variant: 'default',
+                });
+                return;
+            }
+
             const rowData = rows.map((row: any) => ({
                 id: row.original.id,
-                name: row.original.name,
+                name: row.original.name ? String(row.original.name) : 'User',
                 email: row.original.email,
             }));
+
+            let successCount = 0;
+            let failureCount = 0;
+
             for (let i = 0; i < rowData.length; i++) {
-                sendEmail.mutate({
-                    type: type,
-                    user: {
-                        id: rowData[i].id,
-                        email: rowData[i].email,
-                        name: rowData[i].name,
-                    },
+                try {
+                    await sendEmail.mutateAsync({
+                        templateId: selectedTemplateId,
+                        user: {
+                            id: rowData[i].id,
+                            email: rowData[i].email,
+                            name: String(rowData[i].name),
+                        },
+                    });
+                    successCount++;
+                } catch (error) {
+                    console.error(
+                        `Error sending email to ${rowData[i].email}:`,
+                        error
+                    );
+                    failureCount++;
+                }
+            }
+
+            if (successCount > 0) {
+                toast({
+                    title: 'Success',
+                    description: `${successCount} email${successCount !== 1 ? 's' : ''} sent successfully${failureCount > 0 ? ` (${failureCount} failed)` : ''}`,
+                    className:
+                        'bg-neutral-900 text-white border-neutral-700/18',
+                });
+            } else if (failureCount > 0) {
+                toast({
+                    title: 'Error',
+                    description: `Failed to send ${failureCount} email${failureCount !== 1 ? 's' : ''}. Check console for details.`,
+                    variant: 'default',
                 });
             }
-            toast({
-                description: 'Emails Sent!',
-                className: 'bg-neutral-900 text-white border-neutral-700/18',
-            });
+
+            setIsEmailPopupOpen(false);
         } catch (error) {
-            console.error('Error sending email:', error);
+            console.error('Error in email sending process:', error);
+            toast({
+                title: 'Error',
+                description:
+                    'Failed to send emails. Check console for details.',
+                variant: 'default',
+            });
         }
     };
 
@@ -160,7 +207,7 @@ export default function ReviewApplicationsTable({
         { enabled: hackathonLoaded }
     );
 
-    //Data state
+    // Data state
     const [data, setData] = useState<Applicant[]>([]);
 
     //Change data state on update of DB
@@ -706,59 +753,106 @@ export default function ReviewApplicationsTable({
                     onClick={() => setIsEmailPopupOpen(false)}
                 >
                     <div
-                        className="flex flex-col gap-4 rounded-xl bg-neutral-900 p-10 text-white shadow-lg"
+                        className="flex w-full max-w-md flex-col gap-4 rounded-xl bg-neutral-900 p-10 text-white shadow-lg"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <RadioGroup
-                            value={emailType}
-                            onValueChange={setEmailType}
-                        >
-                            <Label className="mb-2 text-white/60">
-                                Which template do you want to use?
-                            </Label>
-                            <div className="flex w-full flex-col gap-2">
-                                {validEmailTypes.map((type) => (
-                                    <div
-                                        className={`flex cursor-pointer items-center space-x-2 rounded-lg border px-4 py-3 ${
-                                            emailType === type
-                                                ? 'bg-brand-950/60 border-brand-900'
-                                                : 'border-neutral-600/60 bg-neutral-800/60'
-                                        }`}
-                                        key={type}
-                                        onClick={() => setEmailType(type)}
-                                    >
-                                        <RadioGroupItem
-                                            value={type}
-                                            id={type}
-                                            onChange={() => setEmailType(type)}
-                                            className={`h-5 w-5 appearance-none rounded-full border ${
-                                                emailType === type
-                                                    ? 'bg-brand-500 border-blue-800'
-                                                    : 'border-neutral-500 bg-neutral-700'
-                                            }`}
-                                        />
-                                        <Label
-                                            htmlFor={type}
-                                            className="cursor-pointer font-light text-white"
-                                        >
-                                            {type}
-                                        </Label>
-                                    </div>
-                                ))}
-                            </div>
-                        </RadioGroup>
-                        <button
-                            className="rounded-md bg-neutral-800/60 px-4 py-2 text-sm whitespace-nowrap text-white hover:bg-neutral-700/60"
-                            type="button"
-                            onClick={() =>
-                                handleSendingEmails(
-                                    table.getSelectedRowModel().rows,
-                                    emailType
-                                )
-                            }
-                        >
+                        <h2 className="mb-2 text-xl font-semibold">
                             Send Emails
-                        </button>
+                        </h2>
+
+                        <div className="mb-4">
+                            <Label className="mb-2 text-white/60">
+                                Select Email Template
+                            </Label>
+                            {templatesLoading ? (
+                                <div className="text-sm text-white/60">
+                                    Loading templates...
+                                </div>
+                            ) : emailTemplates && emailTemplates.length > 0 ? (
+                                <div className="max-h-60 overflow-y-auto">
+                                    <RadioGroup
+                                        value={
+                                            selectedTemplateId?.toString() || ''
+                                        }
+                                        onValueChange={(value) =>
+                                            setSelectedTemplateId(Number(value))
+                                        }
+                                    >
+                                        <div className="flex w-full flex-col gap-2">
+                                            {emailTemplates.map((template) => (
+                                                <div
+                                                    className={`flex cursor-pointer items-center space-x-2 rounded-lg border px-4 py-3 ${
+                                                        selectedTemplateId ===
+                                                        template.id
+                                                            ? 'bg-brand-950/60 border-brand-900'
+                                                            : 'border-neutral-600/60 bg-neutral-800/60'
+                                                    }`}
+                                                    key={template.id}
+                                                    onClick={() =>
+                                                        setSelectedTemplateId(
+                                                            template.id
+                                                        )
+                                                    }
+                                                >
+                                                    <RadioGroupItem
+                                                        value={template.id.toString()}
+                                                        id={`template-${template.id}`}
+                                                        className={`h-5 w-5 appearance-none rounded-full border ${
+                                                            selectedTemplateId ===
+                                                            template.id
+                                                                ? 'bg-brand-500 border-blue-800'
+                                                                : 'border-neutral-500 bg-neutral-700'
+                                                        }`}
+                                                    />
+                                                    <div className="flex flex-col">
+                                                        <Label
+                                                            htmlFor={`template-${template.id}`}
+                                                            className="cursor-pointer font-medium text-white"
+                                                        >
+                                                            {template.title}
+                                                        </Label>
+                                                        <span className="text-xs text-white/60">
+                                                            {template.purpose}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </RadioGroup>
+                                </div>
+                            ) : (
+                                <div className="text-sm text-white/60">
+                                    No email templates found. Please create
+                                    templates in the Email Templates section.
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mt-2 flex justify-between">
+                            <button
+                                className="rounded-md bg-neutral-800 px-4 py-2 text-sm whitespace-nowrap text-white hover:bg-neutral-700"
+                                type="button"
+                                onClick={() => setIsEmailPopupOpen(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className={`rounded-md px-4 py-2 text-sm whitespace-nowrap text-white ${
+                                    !selectedTemplateId || isSending
+                                        ? 'cursor-not-allowed bg-neutral-600/60'
+                                        : 'bg-brand-600 hover:bg-brand-700'
+                                }`}
+                                type="button"
+                                disabled={!selectedTemplateId || isSending}
+                                onClick={() =>
+                                    handleSendingEmails(
+                                        table.getSelectedRowModel().rows
+                                    )
+                                }
+                            >
+                                {isSending ? 'Sending...' : 'Send Emails'}
+                            </button>
+                        </div>
                     </div>
                     <Toaster />
                 </div>
