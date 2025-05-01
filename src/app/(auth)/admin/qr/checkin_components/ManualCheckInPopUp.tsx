@@ -22,7 +22,7 @@ export default function ManualCheckIn({
 
     return (
         <div className="flex items-center justify-center overflow-hidden">
-            <div className="inline-flex max-w-sm flex-col items-start justify-start rounded-xl rounded-tl-xl border-t border-neutral-600/30 bg-neutral-900">
+            <div className="inline-flex max-w-full flex-col items-start justify-start rounded-xl rounded-tl-xl border-t border-neutral-600/30 bg-neutral-900 sm:max-w-sm">
                 <div className="flex flex-col items-center justify-start overflow-hidden">
                     <button
                         className="pt-3"

@@ -37,7 +37,12 @@ export default function MobileTopNav({
     const [hideTopNav, setHideTopNav] = useState(false);
     const url = usePathname();
 
-    const image = trpc.files.getUserImages.useQuery({});
+    const image = trpc.files.getUserImages.useQuery(
+        {},
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
 
     const [avatarUrl, setAvatarUrl] = useState<string>(
         '/sidebar/default-avatar.webp'
