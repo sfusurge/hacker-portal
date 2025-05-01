@@ -14,7 +14,9 @@ import dayjs from 'dayjs';
 
 export function CountdownContent() {
     const [currentTime, setime] = useState(dayjs());
-    const cutoffTime = dayjs(new Date(2025, 4, 1)).startOf('day');
+    const cutoffTime = dayjs(new Date(2025, 4, 1))
+        .startOf('day')
+        .add(1, 'hour');
     const overdue = useMemo(
         () => currentTime.isAfter(cutoffTime),
         [currentTime]

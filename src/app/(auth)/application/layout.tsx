@@ -1,10 +1,22 @@
 import { Button } from '@/components/ui/button';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc.js';
+import timezone from 'dayjs/plugin/timezone.js';
+
 import Image from 'next/image';
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default async function Layout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    dayjs.extend(utc);
+    dayjs.extend(timezone);
     const currentTime = dayjs();
-    const cutoffTime = dayjs(new Date(2025, 4, 1)).startOf('day');
+    const cutoffTime = dayjs
+        .tz('2025-05-01', 'Canada/Pacific')
+        .startOf('day')
+        .add(1, 'hour');
 
     if (currentTime.isAfter(cutoffTime)) {
         return (
