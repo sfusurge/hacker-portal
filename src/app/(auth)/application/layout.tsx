@@ -2,11 +2,7 @@ import { Button } from '@/components/ui/button';
 import dayjs from 'dayjs';
 import Image from 'next/image';
 
-export default async function Layout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
+export default function Layout({ children }: { children: React.ReactNode }) {
     const currentTime = dayjs();
     const cutoffTime = dayjs(new Date(2025, 4, 1)).startOf('day');
 
