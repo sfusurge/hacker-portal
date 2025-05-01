@@ -7,6 +7,71 @@ import { useEffect } from 'react';
 import { ApplicationForm } from './application_components/ApplicationForm';
 import { hackathonAtom } from '@/hooks/use-hackathon';
 import { useHackathon } from '@/hooks/use-hackathon';
+import { atom, useAtomValue } from 'jotai';
+import {
+    ApplicationPage,
+    HackathonData,
+} from '@/app/(auth)/application/application_components/types';
+import dayjs from 'dayjs';
+import {
+    getResponseMap,
+    loadResponseIntoSchema,
+} from '@/app/(auth)/application/application_components/utils';
+import { atomWithStorage } from 'jotai/utils';
+import { userInfoAtom } from '@/app/(auth)/ClientAuthContext';
+
+const localAppResponseAtom = atomWithStorage('application_response', {
+    hackathonId: -1,
+    email: '',
+    response: {} as Record<string, any>,
+});
+
+const hackathonWithLocalAtom = atom(
+    (get) => {
+        const local = get(localAppResponseAtom);
+        const unReadyValue = {
+            pages: [],
+            endDate: dayjs(),
+            id: -1,
+            hackathonName: '',
+            startDate: dayjs(),
+            submissionDeadline: dayjs(),
+            version: -1,
+            title: '',
+        } as HackathonData;
+
+        const hackathon = get(hackathonAtom);
+
+        if (!hackathon) {
+            return unReadyValue;
+        }
+
+        const user = get(userInfoAtom);
+
+        if (!user || user.email !== local.email) {
+            return { ...hackathon };
+        }
+
+        const pages = hackathon.pages;
+
+        loadResponseIntoSchema(pages, local.response);
+        return { ...hackathon, pages: pages };
+    },
+    (get, set, val: HackathonData) => {
+        const userInfo = get(userInfoAtom);
+        if (!userInfo || !userInfo.email) {
+            return;
+        }
+
+        set(localAppResponseAtom, {
+            hackathonId: val.id,
+            email: userInfo.email,
+            response: getResponseMap(val.pages),
+        });
+
+        set(hackathonAtom, { ...val });
+    }
+);
 
 /**
  * TODO
@@ -16,7 +81,7 @@ import { useHackathon } from '@/hooks/use-hackathon';
  */
 export default function Application() {
     const { hackathon } = useHackathon();
-
+    const hackathonWithResponse = useAtomValue(hackathonWithLocalAtom);
     const submitApplication = trpc.applications.submitApplication.useMutation();
 
     const application = trpc.applications.getCurrentApplication.useQuery(
@@ -30,12 +95,7 @@ export default function Application() {
 
     const session = useSession();
 
-    useEffect(() => {
-        if (hackathon) {
-            application.refetch();
-        }
-    }, [hackathon]);
-
+    // store user email for local storage user check
     useEffect(() => {
         if (session.data?.user?.email) {
             localStorage.setItem('email', session.data.user.email);
@@ -48,52 +108,20 @@ export default function Application() {
         }
     }, [application]);
 
+    // reserve extra top padding for this page
     useEffect(() => {
         document.body.style.setProperty('--paddingTop', '5rem');
     }, []);
 
     return (
         <ApplicationForm
-            appDataAtom={hackathonAtom}
-            submitApplication={(flattenResponse) => {
+            appDataAtom={hackathonWithLocalAtom}
+            submitApplication={() => {
                 if (application.data) {
                     return;
                 }
 
-                const response = flattenResponse
-                    .map((question) => {
-                        const questionId = question.questionId;
-                        const type = question.type;
-
-                        if (type === 'multiple-checkbox') {
-                            return {
-                                questionId,
-                                value: question.choices
-                                    .filter(({ value }) => value)
-                                    .map(({ data }) => data),
-                            };
-                        }
-
-                        if (type === 'name') {
-                            return {
-                                questionId,
-                                value: `${question.firstName} ${question.lastName}`,
-                            };
-                        }
-
-                        return {
-                            questionId,
-                            value: question.value,
-                        };
-                    })
-                    .reduce(
-                        (response, { questionId, value }) => {
-                            response[questionId] = value;
-
-                            return response;
-                        },
-                        {} as Record<string, any>
-                    );
+                const response = getResponseMap(hackathonWithResponse.pages);
 
                 console.log(`Submitting ${JSON.stringify(response)}`);
 

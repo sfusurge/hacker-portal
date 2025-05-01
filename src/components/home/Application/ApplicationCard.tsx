@@ -58,7 +58,7 @@ export default function ApplicationCard({
     const hackathonName = hackathon?.hackathonName || 'Hackathon';
 
     useEffect(() => {
-        const questionSet = localStorage.getItem('response_key');
+        const questionSet = localStorage.getItem('application_response');
         if (questionSet !== null) {
             setQuestionSetExists(true);
         }

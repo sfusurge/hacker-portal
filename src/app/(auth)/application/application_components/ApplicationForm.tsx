@@ -1,11 +1,14 @@
 'use client';
 
 import {
+    Atom,
     atom,
     type PrimitiveAtom,
+    SetStateAction,
     useAtom,
     useAtomValue,
     useSetAtom,
+    WritableAtom,
 } from 'jotai';
 import type {
     HackathonData,
@@ -47,33 +50,7 @@ import { ArrowLeftIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { cn } from '@/lib/utils';
-import { useHackathon } from '@/hooks/use-hackathon';
-
-function useMediaQuery(query: string): boolean {
-    const [matches, setMatches] = useState(false);
-
-    useEffect(() => {
-        const media = window.matchMedia(query);
-
-        // Initial check
-        setMatches(media.matches);
-
-        // Update matches when the media query changes
-        const listener = (e: MediaQueryListEvent) => {
-            setMatches(e.matches);
-        };
-
-        // Add listener
-        media.addEventListener('change', listener);
-
-        // Clean up
-        return () => {
-            media.removeEventListener('change', listener);
-        };
-    }, [query]);
-
-    return matches;
-}
+import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -95,85 +72,76 @@ export const pageIndexAtom = atom(0); // defining the state
 export const finalErrCheckAtom = atom(false); // when the user clicks the review & submit for the first time,
 
 interface ApplicationFormProps {
-    appDataAtom: PrimitiveAtom<HackathonData | undefined>;
-    submitApplication: (response: ApplicationQuestion[]) => void;
+    appDataAtom: WritableAtom<HackathonData, [val: HackathonData], void>;
+    submitApplication: () => void;
 }
-
-const RESPONSE_KEY = 'response_key';
-const HACKATHON_VERSION_KEY = 'version_key';
-
-const responseAtom = atomWithStorage<ApplicationPage[]>(RESPONSE_KEY, []);
-const hackathonVersionAtom = atomWithStorage<number | undefined>(
-    HACKATHON_VERSION_KEY,
-    1
-);
 
 /**
  *
  * appData can be locally cached or a new empty one.
  */
-export function ApplicationForm({ submitApplication }: ApplicationFormProps) {
-    const { hackathon } = useHackathon();
-    const [response, setResponse] = useAtom(responseAtom);
-    const [pgs, setPgs] = useState<ApplicationPage[]>([]);
+export function ApplicationForm({
+    appDataAtom,
+    submitApplication,
+}: ApplicationFormProps) {
     const router = useRouter();
+    const pagesAtom = useMemo(
+        () =>
+            atom(
+                (get) => {
+                    return get(appDataAtom).pages;
+                },
+                (get, set, val: ApplicationPage[]) => {
+                    set(appDataAtom, {
+                        ...get(appDataAtom),
+                        pages: val,
+                    });
+                }
+            ),
+        []
+    );
 
-    const [hackathonVersion, setHackathonVersion] =
-        useAtom(hackathonVersionAtom);
-
-    // Initialize pages from hackathon data
-    useEffect(() => {
-        if (!hackathon) {
-            return;
-        }
-
-        if (
-            hackathon.pages &&
-            (hackathon.version !== hackathonVersion || pgs.length === 0)
-        ) {
-            setPgs(hackathon.pages);
-            setHackathonVersion(hackathon.version);
-
-            // Initialize response with hackathon pages if empty
-            if (response.length === 0) {
-                setResponse(hackathon.pages);
-            }
-        }
-    }, [
-        hackathon,
-        hackathonVersion,
-        setHackathonVersion,
-        setResponse,
-        response.length,
-        pgs.length,
-    ]);
+    const pages = useAtomValue(pagesAtom);
 
     // which page is currently displayed
     const currentPageIndex = useAtomValue(pageIndexAtom);
 
     // states of each page.
     // create an atom containing a list of atoms, from a single atom containing a list
-    const pagesAtomsAtom = splitAtom(responseAtom);
+    const pagesAtomsAtom = splitAtom(pagesAtom);
+
     // getting the list of atoms out of the previous atom
-    const pagesAtoms = useAtomValue(pagesAtomsAtom);
+    const [pagesAtoms] = useAtom(pagesAtomsAtom);
+
+    const _pageStateAtom = useRef(atom<PageFormState[]>([]));
 
     // page validations
     const pageStatesAtom = useMemo(() => {
         return atom(
-            (pgs || []).map(
-                (item) =>
-                    ({
+            (get) => {
+                const cur = get(_pageStateAtom.current);
+                const latest = get(appDataAtom).pages;
+
+                if (cur.length === latest.length) {
+                    return cur;
+                }
+
+                return latest.map((item) => {
+                    return {
                         title: item.title || '',
                         state: 'not started',
                         error: false,
-                    }) as PageFormState
-            )
+                    } as PageFormState;
+                });
+            },
+            (get, set, val: PageFormState[]) => {
+                set(_pageStateAtom.current, val);
+            }
         );
-    }, [pgs]);
+    }, []);
 
     const pageStateAtomsAtom = splitAtom(pageStatesAtom);
     const [pageStateAtoms] = useAtom(pageStateAtomsAtom);
-
     // mobile conditional render
     const isMobile = useMediaQuery('(max-width: 767.5px)');
 
@@ -196,17 +164,8 @@ export function ApplicationForm({ submitApplication }: ApplicationFormProps) {
         }
     }, [currentPageIndex, isMobile]);
 
-    // Make sure we're passing the response atom data to ReviewPage, not just the original pages
-    const responseData = useAtomValue(responseAtom);
-
-    // Get the actual user responses from responseAtom instead of pgs
-    const flattenResponse = useMemo(() => {
-        // Get the actual user responses from responseAtom instead of pgs
-        return response.flatMap(({ questions }) => questions || []);
-    }, [response]);
-
     // Guard against empty pages
-    if (!pgs || pgs.length === 0) {
+    if (!pages || pages.length === 0) {
         return (
             <div className="p-8 text-center">Loading application form...</div>
         );
@@ -242,11 +201,9 @@ export function ApplicationForm({ submitApplication }: ApplicationFormProps) {
                     <div className={style.formContainer}>
                         {currentPageIndex === pagesAtoms.length && (
                             <ReviewPage
-                                response={
-                                    responseData.length > 0 ? responseData : pgs
-                                }
+                                response={pages}
                                 submit={() => {
-                                    submitApplication(flattenResponse);
+                                    submitApplication();
                                 }}
                                 mobileMode={isMobile}
                             />
@@ -272,7 +229,7 @@ export function ApplicationForm({ submitApplication }: ApplicationFormProps) {
                         pageCount={pagesAtoms.length}
                         pageStatesAtom={pageStatesAtom}
                         submit={() => {
-                            submitApplication(flattenResponse);
+                            submitApplication();
                         }}
                     />
                 )
@@ -290,90 +247,86 @@ function Page({
     hidden: boolean;
     pageStateAtom: PrimitiveAtom<PageFormState>;
 }) {
-    const page = useAtomValue(pageAtom);
+    const [page, setPage] = useAtom(pageAtom);
+
     const setPageState = useSetAtom(pageStateAtom);
     const formRef = useRef<HTMLFormElement>(null);
-
-    const finalErrCheck = useAtomValue(finalErrCheckAtom);
-
-    const updateFormStatus = useCallback(
-        (extraCheck = false) => {
-            if (formRef.current) {
-                // Check form validity
-                let error = finalErrCheck
-                    ? !formRef.current.reportValidity()
-                    : !formRef.current.checkValidity();
-
-                // Count required questions and filled required questions
-                let requiredQuestions = 0;
-                let filledRequiredQuestions = 0;
-                let atLeastOneFilled = false;
-
-                for (const question of page.questions || []) {
-                    // Only consider required questions for completion status
-                    if (question.required) {
-                        requiredQuestions++;
-                        const filled = isApplicationQuestionFilled(question);
-                        if (filled) {
-                            filledRequiredQuestions++;
-                        }
-                    }
-
-                    // Track if any question (required or not) is filled
-                    if (isApplicationQuestionFilled(question)) {
-                        atLeastOneFilled = true;
-                    }
-                }
-
-                // Determine page state based on filled questions
-                let state: PageFormState['state'] = 'not started';
-
-                // Only mark as completed if ALL required questions are filled
-                if (
-                    requiredQuestions > 0 &&
-                    filledRequiredQuestions === requiredQuestions
-                ) {
-                    state = 'completed';
-                } else if (atLeastOneFilled) {
-                    state = 'started';
-                }
-
-                // Extra validation check
-                if (error && extraCheck && state === 'completed') {
-                    error = !formRef.current.reportValidity();
-                }
-
-                // Update page state
-                setPageState({
-                    title: page.title || '',
-                    error,
-                    state,
-                });
-            }
-        },
-        [finalErrCheck, page.questions, page.title, setPageState]
-    );
-
-    useEffect(() => {
-        updateFormStatus();
-    }, [page, updateFormStatus]);
-
-    useEffect(() => {
-        updateFormStatus(true);
-    }, [updateFormStatus]);
 
     const questionsAtom = useMemo(
         () =>
             atom(
-                (get) => get(pageAtom).questions || [],
+                (get) => get(pageAtom).questions,
                 (get, set, newQuestion: ApplicationQuestion[]) => {
-                    set(pageAtom, (prev) => {
-                        return { ...prev, questions: newQuestion };
-                    });
+                    set(pageAtom, { ...get(pageAtom), questions: newQuestion });
                 }
             ),
-        [pageAtom]
+        []
     );
+
+    const finalErrCheck = useAtomValue(finalErrCheckAtom);
+
+    function updateFormStatus(extraCheck = false) {
+        if (formRef.current) {
+            // Check form validity
+            let error = finalErrCheck
+                ? !formRef.current.reportValidity()
+                : !formRef.current.checkValidity();
+
+            // Count required questions and filled required questions
+            let requiredQuestions = 0;
+            let filledRequiredQuestions = 0;
+            let atLeastOneFilled = false;
+
+            for (const question of page.questions || []) {
+                // Only consider required questions for completion status
+                if (question.required) {
+                    requiredQuestions++;
+                    const filled = isApplicationQuestionFilled(question);
+                    if (filled) {
+                        filledRequiredQuestions++;
+                    }
+                }
+
+                // Track if any question (required or not) is filled
+                if (isApplicationQuestionFilled(question)) {
+                    atLeastOneFilled = true;
+                }
+            }
+
+            // Determine page state based on filled questions
+            let state: PageFormState['state'] = 'not started';
+
+            // Only mark as completed if ALL required questions are filled
+            if (
+                requiredQuestions > 0 &&
+                filledRequiredQuestions === requiredQuestions
+            ) {
+                state = 'completed';
+            } else if (atLeastOneFilled) {
+                state = 'started';
+            }
+
+            // Extra validation check
+            if (error && extraCheck && state === 'completed') {
+                error = !formRef.current.reportValidity();
+            }
+
+            // Update page state
+            setPageState({
+                title: page.title || '',
+                error,
+                state,
+            });
+        }
+    }
+    useEffect(() => {
+        updateFormStatus();
+    }, [page, finalErrCheck]);
+
+    useEffect(() => {
+        updateFormStatus(true);
+    }, []);
+
     const questionAtomsAtom = splitAtom(questionsAtom);
     const [questionAtoms] = useAtom(questionAtomsAtom);
 
@@ -384,6 +337,18 @@ function Page({
             style={hidden ? { display: 'none' } : {}}
             noValidate
         >
+            <button
+                type="button"
+                onClick={() => {
+                    setPage({
+                        ...page,
+                        title: new Date().toTimeString(),
+                    });
+                }}
+            >
+                CLICK MEEE
+            </button>
+
             {page.title && <h2 className={style.mainTitle}>{page.title}</h2>}
             {page.description && (
                 <p className={style.description}>{page.description}</p>
@@ -496,7 +461,7 @@ function PageButtons({
 }: {
     indexAtom: PrimitiveAtom<number>;
     pageCount: number;
-    pageStatesAtom: PrimitiveAtom<PageFormState[]>;
+    pageStatesAtom: Atom<PageFormState[]>;
     submit?: () => void;
 }) {
     const [index, setIndex] = useAtom(indexAtom);

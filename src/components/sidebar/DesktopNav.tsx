@@ -34,7 +34,12 @@ export default function DesktopNav({
 }: DesktopNavProps) {
     const [collapsed, setCollapsed] = useState(false);
     const [isLargeScreen, setIsLargeScreen] = useState(true);
-    const image = trpc.files.getUserImages.useQuery({});
+    const image = trpc.files.getUserImages.useQuery(
+        {},
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
 
     const [avatarUrl, setAvatarUrl] = useState<string | null>(
         '/sidebar/default-avatar.webp'
