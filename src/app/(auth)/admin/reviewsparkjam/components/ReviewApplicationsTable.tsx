@@ -93,9 +93,7 @@ export default function ReviewApplicationsTable({
 
             const rowData = rows.map((row: any) => ({
                 id: row.original.id,
-                name: row.original.firstName
-                    ? `${row.original.firstName} ${row.original.lastName}`
-                    : 'User',
+                name: row.original.firstName && 'User',
                 email: row.original.email,
             }));
 

@@ -23,6 +23,7 @@ import {
     WithdrawnContent,
     QRCodeButton,
     RejectedContent,
+    AwaitingRSVPContent,
 } from './ApplicationContent';
 import { ArrowRightIcon } from 'lucide-react';
 import { useHackathon } from '@/hooks/use-hackathon';
@@ -86,7 +87,12 @@ export default function ApplicationCard({
                         {getDisplayStatus(status)}
                     </CardHeaderTitle>
                 </CardHeaderColumn>
-                {getHeaderAction(status, image, handleOpenTicket)}
+                {getHeaderAction(
+                    status,
+                    hackathonName,
+                    image,
+                    handleOpenTicket
+                )}
             </CardHeader>
 
             <CardContent
@@ -118,6 +124,9 @@ function determineApplicationStatus(
     questionSetExists?: boolean
 ): AppStatus {
     if (applicationSubmitted && currentStatus) {
+        if (currentStatus === 'Accepted - Pending Payment') {
+            return 'Accepted - Pending Payment';
+        }
         return currentStatus as AppStatus;
     } else if (questionSetExists) {
         return 'In Progress';
@@ -157,6 +166,7 @@ function getDisplayStatus(status: AppStatus): string {
 
 function getHeaderAction(
     status: AppStatus,
+    hackathonName: string,
     image?: string,
     onOpenTicket?: () => void
 ) {
@@ -193,6 +203,20 @@ function getHeaderAction(
                 Continue application
             </Button>
         ),
+        'Accepted - Pending Payment': (
+            <Button
+                size="cozy"
+                variant="brand"
+                hierarchy="primary"
+                className="block"
+                onClick={() => redirect('/rsvp')}
+                trailingIconChild={
+                    <ArrowRightIcon className="inline-flex h-4 w-4" />
+                }
+            >
+                RSVP to {hackathonName}
+            </Button>
+        ),
     };
 
     return headerActions[status as keyof typeof headerActions] || null;
@@ -223,6 +247,14 @@ function getCardContent(
     }
 
     switch (status) {
+        case 'Awaiting Review':
+            return <ReviewContent userData={userData} />;
+        case 'Withdrawn':
+            return <WithdrawnContent />;
+        case 'Declined':
+            return <RejectedContent />;
+        case 'Accepted - Pending Payment':
+            return <AwaitingRSVPContent userData={userData} />;
         case 'Accepted':
             return (
                 <AcceptedContent
@@ -232,12 +264,6 @@ function getCardContent(
                     setIsTicketOpen={setIsTicketOpen}
                 />
             );
-        case 'Awaiting Review':
-            return <ReviewContent userData={userData} />;
-        case 'Withdrawn':
-            return <WithdrawnContent />;
-        case 'Declined':
-            return <RejectedContent />;
         default:
             return <CountdownContent />;
     }

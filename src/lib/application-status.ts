@@ -15,6 +15,7 @@ export function getStatusVariant(status: ApplicationStatus): StatusVariant {
     switch (status) {
         case 'Awaiting Review':
             return 'yellow';
+        case 'Accepted - Pending Payment':
         case 'Accepted':
             return 'brand';
         case 'Declined':
