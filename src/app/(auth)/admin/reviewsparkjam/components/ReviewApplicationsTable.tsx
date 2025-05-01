@@ -10,6 +10,7 @@ import {
     getSortedRowModel,
     getFilteredRowModel,
     useReactTable,
+    SortingState,
 } from '@tanstack/react-table';
 
 import { atom, useSetAtom } from 'jotai';
@@ -138,8 +139,6 @@ export default function ReviewApplicationsTable({
 
     // Filters and sorting
     const [globalFilter, setGlobalFilter] = useState<string>('');
-    type SortingState = { id: string; desc: boolean }[];
-
     const [sorting, setSorting] = useState<SortingState>([
         // sort by people with a team first
         { id: 'teamName', desc: true },
@@ -229,7 +228,8 @@ export default function ReviewApplicationsTable({
                 return (
                     <span
                         className={`rounded-md px-3 py-0.5 text-xs ${
-                            value === 'Accepted'
+                            value === 'Accepted' ||
+                            value === 'Accepted - Pending Payment'
                                 ? 'bg-success-950 text-success-300'
                                 : value === 'RSVP'
                                   ? 'bg-yellow-950 text-yellow-300'
