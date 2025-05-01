@@ -22,8 +22,10 @@ import {
     ReviewContent,
     WithdrawnContent,
     QRCodeButton,
+    RejectedContent,
 } from './ApplicationContent';
 import { ArrowRightIcon } from 'lucide-react';
+import { useHackathon } from '@/hooks/use-hackathon';
 
 export type AppStatus =
     | 'Not Yet Started'
@@ -31,7 +33,7 @@ export type AppStatus =
     | 'Awaiting Review'
     | 'Accepted – Awaiting RSVP'
     | "Accepted and RSVP'd"
-    | 'Rejected'
+    | 'Declined'
     | 'Waitlisted'
     | 'Accepted'
     | 'Withdrawn'
@@ -52,9 +54,11 @@ export default function ApplicationCard({
 }: ApplicationCardProps) {
     const [questionSetExists, setQuestionSetExists] = useState(false);
     const [isTicketOpen, setIsTicketOpen] = useState(false);
+    const { hackathon } = useHackathon();
+    const hackathonName = hackathon?.hackathonName || 'Hackathon';
 
     useEffect(() => {
-        const questionSet = localStorage.getItem('response_key');
+        const questionSet = localStorage.getItem('application_response');
         if (questionSet !== null) {
             setQuestionSetExists(true);
         }
@@ -71,7 +75,7 @@ export default function ApplicationCard({
     );
 
     return (
-        <Card className="z-10 col-span-7 h-full">
+        <Card className="col-span-7 h-full">
             <CardHeader>
                 <CardHeaderColumn>
                     <CardHeaderDescription>
@@ -101,7 +105,7 @@ export default function ApplicationCard({
                 )}
             </CardContent>
 
-            {getCardFooter(status)}
+            {getCardFooter(status, hackathonName)}
         </Card>
     );
 }
@@ -136,6 +140,8 @@ function getStatusStyleForTitle(status: AppStatus): string {
             return 'text-brand-400';
         case 'Loading':
             return 'text-white/50';
+        case 'Declined':
+            return 'text-danger-500';
         default:
             return 'text-white';
     }
@@ -228,12 +234,14 @@ function getCardContent(
             return <ReviewContent userData={userData} />;
         case 'Withdrawn':
             return <WithdrawnContent />;
+        case 'Declined':
+            return <RejectedContent />;
         default:
             return <CountdownContent />;
     }
 }
 
-function getCardFooter(status: AppStatus) {
+function getCardFooter(status: AppStatus, hackathonName: string) {
     const footerActions = {
         'Not Yet Started': (
             <Button
@@ -270,7 +278,7 @@ function getCardFooter(status: AppStatus) {
                 hierarchy="primary"
                 className="w-full"
             >
-                RSVP to SparkJam
+                RSVP to {hackathonName}
             </Button>
         ),
         "Accepted and RSVP'd": (
@@ -286,7 +294,6 @@ function getCardFooter(status: AppStatus) {
     };
 
     const shouldShowFooter =
-        status !== 'Rejected' &&
         status !== 'Accepted' &&
         status !== 'Awaiting Review' &&
         status !== 'Withdrawn';
