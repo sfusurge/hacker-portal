@@ -104,9 +104,13 @@ export default function Application() {
 
     useEffect(() => {
         if (application.data) {
-            redirect('/home');
+            return redirect('/home');
         }
-    }, [application]);
+
+        if (hackathon?.id && !application.data) {
+            application.refetch();
+        }
+    }, [application, hackathon]);
 
     // reserve extra top padding for this page
     useEffect(() => {

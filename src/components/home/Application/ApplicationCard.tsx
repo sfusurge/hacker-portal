@@ -326,7 +326,6 @@ function getCardFooter(status: AppStatus, hackathonName: string) {
         status !== 'Awaiting Review' &&
         status !== 'Withdrawn';
     const action = footerActions[status as keyof typeof footerActions];
-    console.log(action);
 
     if (!action) return null;
 
