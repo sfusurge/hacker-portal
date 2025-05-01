@@ -337,18 +337,6 @@ function Page({
             style={hidden ? { display: 'none' } : {}}
             noValidate
         >
-            <button
-                type="button"
-                onClick={() => {
-                    setPage({
-                        ...page,
-                        title: new Date().toTimeString(),
-                    });
-                }}
-            >
-                CLICK MEEE
-            </button>
-
             {page.title && <h2 className={style.mainTitle}>{page.title}</h2>}
             {page.description && (
                 <p className={style.description}>{page.description}</p>

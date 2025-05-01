@@ -43,7 +43,7 @@ export function CountdownContent() {
                     Hacker registration closes in...
                 </CardDescription>
             </div>
-            <CountdownTimer targetDate={new Date(2025, 3, 30, 23, 59, 59)} />
+            <CountdownTimer targetDate={new Date(2025, 4, 1, 1)} />
         </>
     );
 }
