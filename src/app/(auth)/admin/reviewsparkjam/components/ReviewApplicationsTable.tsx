@@ -1,7 +1,14 @@
 'use client';
 
 import { trpc } from '@/trpc/client';
-import { Fragment, HTMLProps, useEffect, useRef, useState } from 'react';
+import {
+    Fragment,
+    HTMLProps,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import {
     ColumnDef,
     flexRender,
@@ -25,6 +32,7 @@ import { DocumentArrowDownIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/16/solid';
 import { useHackathon } from '@/hooks/use-hackathon';
 import dayjs from 'dayjs';
+import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
 
 export type Applicant = {
     id: number;
@@ -53,7 +61,7 @@ type ReviewApplicationsTableProps = {
     refreshTable: any;
 };
 
-export const sideCardAtomSJ = atom<Applicant>();
+export const sideCardAtomSJ = atom<ApplicationWithTeamInfo>();
 
 export default function ReviewApplicationsTable({
     toggleSideCard,
@@ -161,6 +169,19 @@ export default function ReviewApplicationsTable({
         // only load applications data once hackathon has been loaded
         { enabled: hackathonLoaded }
     );
+
+    const applicationDataMap = useMemo(() => {
+        const map = new Map<number, ApplicationWithTeamInfo>();
+        if (!applicationData.data) {
+            return map;
+        }
+
+        for (const appData of applicationData.data) {
+            map.set(appData.userId, appData);
+        }
+
+        return map;
+    }, [applicationData]);
 
     // Data state
     const [data, setData] = useState<Applicant[]>([]);
@@ -572,7 +593,11 @@ export default function ReviewApplicationsTable({
                                         className="cursor-pointer hover:bg-gray-800"
                                         onClick={() => {
                                             toggleSideCard();
-                                            setSideCardInfo(row.original);
+                                            setSideCardInfo(
+                                                applicationDataMap.get(
+                                                    row.original.id
+                                                )
+                                            );
                                         }}
                                     >
                                         {row

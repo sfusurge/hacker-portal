@@ -48,6 +48,8 @@ export type ApplicationQuestion =
     | QuestionMultipleCheckBox
     | QuestionNameInput;
 
+export type ApplicationQuestionType = ApplicationQuestion['type'];
+
 interface Question extends Entry {
     questionId: number; // must be unique to the application.
     type: string | 'N/A';
