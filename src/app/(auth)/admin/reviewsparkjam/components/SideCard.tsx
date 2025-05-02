@@ -433,7 +433,7 @@ export default function SideCard({
     );
 
     return (
-        <div className="bg-neutral-850 z-20 flex h-screen w-5/12 flex-col gap-4 rounded-lg border border-neutral-600/60 p-8 shadow-lg">
+        <div className="bg-neutral-850 z-20 flex h-screen w-full flex-col gap-4 rounded-lg border border-neutral-600/60 p-8 shadow-lg">
             <div className="mb-4 flex flex-row items-center justify-between">
                 <h1 className="text-xl font-bold text-white">
                     Hacker Application

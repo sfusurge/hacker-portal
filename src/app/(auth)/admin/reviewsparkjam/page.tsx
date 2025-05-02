@@ -28,14 +28,20 @@ export default function ReviewApplicationsPage() {
             >
                 <div
                     className={`fixed right-0 bottom-0 left-0 transform transition-transform duration-300 ease-in-out ${isSideCardOpen ? 'translate-x-0' : 'translate-x-full'}`}
-                    onClick={(e) => e.stopPropagation()}
                 >
                     {isSideCardOpen && (
                         <div className="flex justify-end">
-                            <SideCard
-                                toggleSideCard={closeSideCard}
-                                setRefreshTable={setRefreshTable}
-                            />
+                            <div
+                                style={{ width: '50%' }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                }}
+                            >
+                                <SideCard
+                                    toggleSideCard={closeSideCard}
+                                    setRefreshTable={setRefreshTable}
+                                />
+                            </div>
                         </div>
                     )}
                 </div>
