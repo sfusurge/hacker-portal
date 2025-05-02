@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DocumentArrowDownIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/16/solid';
 import { useHackathon } from '@/hooks/use-hackathon';
+import dayjs from 'dayjs';
 
 export type Applicant = {
     id: number;
@@ -225,7 +226,7 @@ export default function ReviewApplicationsTable({
             id: 'teamName',
             accessorKey: 'teamName',
             header: 'Team Name',
-            size: 150,
+            size: 200,
             minSize: 100,
         },
         {
@@ -292,8 +293,8 @@ export default function ReviewApplicationsTable({
                     </span>
                 );
             },
-            size: 120,
-            minSize: 120,
+            size: 200,
+            minSize: 200,
         },
         // {
         //     accessorKey: 'tempStatus',
@@ -320,27 +321,21 @@ export default function ReviewApplicationsTable({
         //     minSize: 150,
         // },
         {
-            accessorKey: 'id',
-            header: () => 'Hacker ID',
-            size: 200,
-            minSize: 150,
-        },
-        {
             accessorKey: 'applicationDate',
-            header: () => 'Application Date',
-            size: 200,
-            minSize: 150,
-        },
-        {
-            accessorKey: 'pronouns',
-            header: () => 'Pronouns',
-            size: 200,
-            minSize: 150,
+            header: () => 'Date',
+            size: 100,
+            minSize: 100,
+            cell: (info) => {
+                const datestring = dayjs(info.getValue() as Date).format(
+                    'MMM DD'
+                );
+                return datestring;
+            },
         },
         {
             accessorKey: 'email',
             header: () => 'Email',
-            size: 200,
+            size: 225,
             minSize: 150,
         },
         {
@@ -352,49 +347,37 @@ export default function ReviewApplicationsTable({
         {
             accessorKey: 'school',
             header: () => 'School',
-            size: 150,
+            size: 225,
             minSize: 150,
         },
         {
             accessorKey: 'major',
             header: () => 'Major',
-            size: 150,
+            size: 200,
             minSize: 150,
         },
         {
             accessorKey: 'yearOfStudy',
-            header: () => 'Year of Study',
-            size: 150,
+            header: () => 'Years',
+            size: 70,
             minSize: 100,
         },
         {
             accessorKey: 'attendedDesignJam',
-            header: () => 'Addended Design Jam Before?',
-            size: 200,
+            header: () => 'Addended Before?',
+            size: 150,
             minSize: 150,
         },
         {
             accessorKey: 'howManyJams',
             header: () => 'howManyJams',
-            size: 200,
+            size: 150,
             minSize: 150,
         },
         {
             accessorKey: 'passionateAreas',
             header: () => 'passionateAreas',
-            size: 150,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'whyInterested',
-            header: () => 'whyInterested',
-            size: 150,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'whatHopeLearn',
-            header: () => 'whatHopeLearn',
-            size: 150,
+            size: 300,
             minSize: 100,
         },
         {
@@ -431,9 +414,9 @@ export default function ReviewApplicationsTable({
         onRowSelectionChange: setRowSelection,
     });
 
-    // useEffect(() => {
-    //     setTableSize(table.getState().pagination.pageSize);
-    // }, [table.getState().pagination.pageSize]);
+    useEffect(() => {
+        table.setPageSize(20);
+    }, []);
 
     const csvConfig = mkConfig({
         fieldSeparator: ',',

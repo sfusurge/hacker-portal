@@ -119,12 +119,10 @@ export default function SideCard({
     const [whatHopeLearn, setWhatHopeLearn] = useState(
         sideCardInfo?.whatHopeLearn || ''
     );
-    const [dietaryRestrictions, setDietaryRestrictions] = useState(
-        sideCardInfo?.dietaryRestrictions || []
-    );
-    const otherDietaryRestrictions = dietaryRestrictions.find(
-        (restriction) => !ALL_RESTRICTIONS.includes(restriction)
-    );
+    const [dietaryRestrictions, setDietaryRestrictions] = useState({
+        data: sideCardInfo?.dietaryRestrictions || [],
+        other: undefined as string | undefined,
+    });
 
     const [howHeardAbout, setHowHeardAbout] = useState(
         sideCardInfo?.howHeardAbout || []
@@ -172,11 +170,17 @@ export default function SideCard({
         isChecked: boolean | string
     ) => {
         if (isChecked) {
-            setDietaryRestrictions([...dietaryRestrictions, restriction]);
+            setDietaryRestrictions({
+                data: [...dietaryRestrictions.data, restriction],
+                other: dietaryRestrictions.other,
+            });
         } else {
-            setDietaryRestrictions(
-                dietaryRestrictions.filter((item) => item !== restriction)
-            );
+            setDietaryRestrictions({
+                data: dietaryRestrictions.data.filter(
+                    (item) => item !== restriction
+                ),
+                other: dietaryRestrictions.other,
+            });
         }
     };
 
@@ -322,11 +326,11 @@ export default function SideCard({
                     className={`flex cursor-pointer items-center space-x-2 rounded-lg border pt-3 pr-2 pb-3 pl-2 ${'bg-brand-950/60 border-brand-900'}`}
                     key={otherPassionateArea}
                 >
-                    <RadioGroupItem
+                    {/* <RadioGroupItem
                         value={otherPassionateArea}
                         id={otherPassionateArea}
                         className={`h-5 w-5 appearance-none rounded-full border ${'bg-brand-500 border-blue-800'}`}
-                    />
+                    /> */}
                     <Label
                         htmlFor={otherPassionateArea}
                         className="cursor-pointer font-light text-white"
@@ -377,11 +381,11 @@ export default function SideCard({
                     className={`flex cursor-pointer items-center space-x-2 rounded-lg border pt-3 pr-2 pb-3 pl-2 ${'bg-brand-950/60 border-brand-900'}`}
                     key={otherHeardAbout}
                 >
-                    <RadioGroupItem
+                    {/* <RadioGroupItem
                         value={otherHeardAbout}
                         id={otherHeardAbout}
                         className={`h-5 w-5 appearance-none rounded-full border ${'bg-brand-500 border-blue-800'}`}
-                    />
+                    /> */}
                     <Label
                         htmlFor={otherHeardAbout}
                         className="cursor-pointer font-light text-white"
@@ -399,7 +403,7 @@ export default function SideCard({
                 <div className="flex items-center space-x-2" key={restriction}>
                     <Checkbox
                         id={restriction}
-                        checked={dietaryRestrictions.includes(restriction)}
+                        checked={dietaryRestrictions.data.includes(restriction)}
                         onCheckedChange={(isChecked) =>
                             updateDietaryRestriction(restriction, isChecked)
                         }
@@ -413,24 +417,18 @@ export default function SideCard({
                     </Label>
                 </div>
             ))}
-            {otherDietaryRestrictions && (
-                <div
-                    className={`flex cursor-pointer items-center space-x-2 rounded-lg border pt-3 pr-2 pb-3 pl-2 ${'bg-brand-950/60 border-brand-900'}`}
-                    key={otherHeardAbout}
-                >
-                    <RadioGroupItem
-                        value={otherDietaryRestrictions}
-                        id={otherDietaryRestrictions}
-                        className={`h-5 w-5 appearance-none rounded-full border ${'bg-brand-500 border-blue-800'}`}
-                    />
-                    <Label
-                        htmlFor={otherDietaryRestrictions}
-                        className="cursor-pointer font-light text-white"
-                    >
-                        {otherDietaryRestrictions}
-                    </Label>
-                </div>
-            )}
+
+            <FormTextInput
+                type="text"
+                placeholder="Other"
+                value={dietaryRestrictions.other}
+                onLazyChange={(val) => {
+                    setDietaryRestrictions({
+                        ...dietaryRestrictions,
+                        other: val,
+                    });
+                }}
+            />
         </div>
     );
 
@@ -444,7 +442,7 @@ export default function SideCard({
                     <XMarkIcon className="h-6 w-6 text-white" />
                 </button>
             </div>
-            <ScrollArea className="flex h-4/12 w-full flex-col rounded-lg border border-neutral-600/60 bg-neutral-900 p-2 shadow-inner">
+            <ScrollArea className="flex h-4/12 h-full w-full flex-col rounded-lg border border-neutral-600/60 bg-neutral-900 p-2 shadow-inner">
                 <div className="space-y-6 p-5">
                     <header className="text-lg font-bold text-white">
                         Personal Information
