@@ -50,10 +50,12 @@ function TeamMemberItem({
                 <div className="min-w-0 flex-1">
                     <p className="truncate">
                         {member.firstName || 'Unknown Member'}{' '}
+                        {member.email == userData?.email && (
+                            <span className="font-normal text-white/60">
+                                (You)
+                            </span>
+                        )}
                     </p>
-                    {member.email == userData?.email && (
-                        <span className="font-normal text-white/60">(You)</span>
-                    )}
                 </div>
             </div>
             <div className="shrink-0">
