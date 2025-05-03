@@ -24,6 +24,7 @@ import {
     QRCodeButton,
     RejectedContent,
     AwaitingRSVPContent,
+    WaitlistContent,
 } from './ApplicationContent';
 import { ArrowRightIcon } from 'lucide-react';
 import { useHackathon } from '@/hooks/use-hackathon';
@@ -35,7 +36,7 @@ export type AppStatus =
     | 'Accepted – Awaiting RSVP'
     | "Accepted and RSVP'd"
     | 'Declined'
-    | 'Waitlisted'
+    | 'Wait List'
     | 'Accepted'
     | 'Withdrawn'
     | 'Loading'
@@ -141,14 +142,14 @@ function getStatusStyleForTitle(status: AppStatus): string {
         case 'Accepted - Pending Payment':
         case 'Accepted':
             return 'text-brand-400';
+        case 'Withdrawn':
         case 'Awaiting Review':
+        case 'Wait List':
             return 'text-yellow-500';
         case 'Not Yet Started':
             return 'text-white';
         case 'In Progress':
             return 'text-caution-500';
-        case 'Withdrawn':
-            return 'text-brand-400';
         case 'Loading':
             return 'text-white/50';
         case 'Declined':
@@ -208,11 +209,8 @@ function getHeaderAction(
                 size="cozy"
                 variant="brand"
                 hierarchy="primary"
-                className="block"
+                className="hidden md:block"
                 onClick={() => redirect('/rsvp')}
-                trailingIconChild={
-                    <ArrowRightIcon className="inline-flex h-4 w-4" />
-                }
             >
                 RSVP to {hackathonName}
             </Button>
@@ -253,6 +251,8 @@ function getCardContent(
             return <WithdrawnContent />;
         case 'Declined':
             return <RejectedContent />;
+        case 'Wait List':
+            return <WaitlistContent />;
         case 'Accepted - Pending Payment':
             return <AwaitingRSVPContent userData={userData} />;
         case 'Accepted':

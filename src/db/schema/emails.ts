@@ -13,7 +13,9 @@ export const sendEmailSchema = z.object({
     user: z.object({
         id: z.number(),
         email: z.string().email(),
-        name: z.string(),
+        name: z.string().optional(),
+        firstName: z.string().optional(),
+        lastName: z.string().optional(),
     }),
 });
 

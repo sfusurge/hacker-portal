@@ -5,7 +5,11 @@ import { Chip } from '@/components/ui/chip';
 import { user } from '@/db/schema/users/users';
 import { InferSelectModel } from 'drizzle-orm';
 import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
-import { getStatusVariant, ApplicationStatus } from '@/lib/application-status';
+import {
+    getStatusVariant,
+    ApplicationStatus,
+    getTextVariant,
+} from '@/lib/application-status';
 
 type UserType = InferSelectModel<typeof user>;
 
@@ -43,6 +47,7 @@ export default function TeammateItem({
         'Unknown User';
 
     const statusVariant = getStatusVariant(currentStatus);
+    const textVariant = getTextVariant(currentStatus);
 
     // Placeholder is hidden on mobile
     if (isPlaceholder && isMobile) {
@@ -90,9 +95,7 @@ export default function TeammateItem({
                     </div>
                 </div>
                 <div className="flex items-center justify-center gap-4">
-                    <Chip variant={statusVariant}>
-                        {currentStatus || 'Not Submitted'}
-                    </Chip>
+                    <Chip variant={statusVariant}>{textVariant}</Chip>
                 </div>
             </li>
             {!isLastItem && isMobile && (
