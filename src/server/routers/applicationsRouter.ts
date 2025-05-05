@@ -240,7 +240,7 @@ export const applicationsRouter = router({
                 .where(eq(user.email, input.email))
                 .limit(1);
 
-            return application;
+            return application as ApplicationInfo;
         }),
 });
 
@@ -255,4 +255,13 @@ export interface ApplicationWithTeamInfo {
     currentStatus: StatusEnum;
     pendingStatus: StatusEnum;
     createdDate: number;
+}
+
+export interface ApplicationInfo {
+    response: Record<string, any>;
+    hackathonId: number;
+    userId: number;
+    currentStatus: StatusEnum;
+    pendingStatus: StatusEnum;
+    createdDate: Date;
 }
