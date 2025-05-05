@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/chip';
 import { Input } from '@/components/ui/input';
-import { getStatusVariant } from '@/lib/application-status';
+import { getStatusVariant, getTextVariant } from '@/lib/application-status';
 import Link from 'next/link';
 import { LinkIcon } from '@heroicons/react/24/outline';
 import { useState } from 'react';
@@ -20,7 +20,6 @@ import {
 import Image from 'next/image';
 import JoinTeam from '@/components/team/NoTeam/TeamOption';
 import { UserData } from '@/db/schema/users/users';
-import { StatusEnum } from '@/db/schema/applications';
 import { inferProcedureOutput } from '@trpc/server';
 import { AppRouter } from '@/server/appRouter';
 import { copyToClipboard } from '@/lib/copy-to-clipboard';
@@ -60,12 +59,8 @@ function TeamMemberItem({
                 </div>
             </div>
             <div className="shrink-0">
-                <Chip
-                    variant={getStatusVariant(
-                        (member.currentStatus ?? 'N/A') as StatusEnum
-                    )}
-                >
-                    {member.currentStatus || 'Not Submitted'}
+                <Chip variant={getStatusVariant(member.currentStatus)}>
+                    {getTextVariant(member.currentStatus)}
                 </Chip>
             </div>
         </div>

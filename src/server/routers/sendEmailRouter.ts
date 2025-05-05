@@ -73,7 +73,8 @@ export const sendEmailRouter = router({
 
                 // Prepare data for Handlebars
                 const templateData = {
-                    firstName: input.user.name,
+                    firstName: input.user.firstName,
+                    lastName: input.user.lastName,
                     email: input.user.email,
                     userId: input.user.id,
                 };

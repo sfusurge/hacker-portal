@@ -304,7 +304,34 @@ export function WithdrawnContent() {
         </>
     );
 }
+export function WaitlistContent() {
+    const { hackathon } = useHackathon();
 
+    return (
+        <>
+            <div className="flex max-w-full flex-col gap-2 text-start">
+                <CardTitle>
+                    You&#39;ve been placed on the waitlist for{' '}
+                    {hackathon?.hackathonName}.
+                </CardTitle>
+
+                <CardDescription>
+                    {
+                        "We received a large number of applications and we unfortunately can't accept everyone, but you have been placed on the waitlist."
+                    }
+                </CardDescription>
+            </div>
+
+            <Image
+                src="/login/application-review.webp"
+                width={434}
+                height={320}
+                className="-order-1 max-w-72 md:order-last"
+                alt="Four otters are gathered around a table, reviewing application submissions."
+            />
+        </>
+    );
+}
 export function RejectedContent() {
     const { hackathon } = useHackathon();
 

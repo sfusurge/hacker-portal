@@ -100,7 +100,8 @@ export default function ReviewApplicationsTable({
 
             const rowData = rows.map((row: any) => ({
                 id: row.original.id,
-                name: row.original.firstName && 'User',
+                firstName: row.original.firstName,
+                lastName: row.original.lastName,
                 email: row.original.email,
             }));
 
@@ -114,7 +115,8 @@ export default function ReviewApplicationsTable({
                         user: {
                             id: rowData[i].id,
                             email: rowData[i].email,
-                            name: String(rowData[i].name),
+                            firstName: rowData[i].firstName,
+                            lastName: rowData[i].lastName,
                         },
                     });
                     successCount++;
