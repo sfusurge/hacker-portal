@@ -171,15 +171,25 @@ export const applicationsRouter = router({
             return applicationsWithTeamInfo as ApplicationWithTeamInfo[];
         }),
 
-    updateApplicationStatus: publicProcedure
+    updateApplication: publicProcedure
         .input(updateApplicationStatusSchema)
         .mutation(async ({ input }) => {
+            const payload: Record<string, any> = {};
+            if (input.pendingStatus) {
+                payload['pendingStatus'] = input.pendingStatus;
+            }
+
+            if (input.status) {
+                payload['currentStatus'] = input.status;
+            }
+
+            if (input.response) {
+                payload['response'] = input.response;
+            }
+
             const [application] = await databaseClient
                 .update(applications)
-                .set({
-                    currentStatus: input.status,
-                    pendingStatus: input.pendingStatus,
-                })
+                .set(payload)
                 .where(
                     and(
                         eq(applications.hackathonId, input.hackathonId),

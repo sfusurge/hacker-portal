@@ -9,7 +9,7 @@ import {
 } from 'jotai';
 import { focusAtom } from 'jotai-optics';
 import style from './SideCard.module.css';
-import { MouseEventHandler, useEffect, useMemo } from 'react';
+import { MouseEventHandler, useEffect, useMemo, useState } from 'react';
 import { useHackathon } from '@/hooks/use-hackathon';
 import {
     ApplicationQuestion,
@@ -27,10 +27,15 @@ import { CheckBoxGroupInput } from '@/app/(auth)/application/application_compone
 import { Label } from '@/components/ui/label/label';
 import { XMarkIcon } from '@heroicons/react/20/solid';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
+import { StatusEnum } from '@/db/schema/applications';
+import { trpc } from '@/trpc/client';
 
 export interface SideCardProps {
     visible: boolean;
-    onclose: MouseEventHandler<HTMLDivElement | HTMLButtonElement>;
+    onclose: () => void;
 }
 
 const responseAtom = atom(
@@ -54,15 +59,41 @@ const statusAtom = focusAtom(sideCardAtomSJ, (op) =>
     op.valueOr({} as ApplicationWithTeamInfo).prop('pendingStatus')
 );
 
-export default function SideCard({ visible = false, onclose }: SideCardProps) {
+export default function SideCard({
+    visible = false,
+    onclose: _onclose,
+}: SideCardProps) {
     const responseData = useAtomValue(responseAtom);
-    const [status, setStatus] = useAtom(statusAtom);
-
+    const applicationData = useAtomValue(sideCardAtomSJ);
+    const [status, _setStatus] = useAtom(statusAtom);
+    const [editing, setEditing] = useState(false);
     const { hackathon } = useHackathon();
+    const updateApplication = trpc.applications.updateApplication.useMutation(
+        {}
+    );
+
     const ready = useMemo(
         () => visible && hackathon !== undefined,
         [visible, hackathon]
     );
+
+    function setStatus(s: StatusEnum) {
+        _setStatus(s);
+        setEditing(true);
+    }
+
+    function onclose() {
+        if (editing) {
+            alert(`??? ${status}`);
+            updateApplication.mutateAsync({
+                hackathonId: hackathon?.id!,
+                userId: applicationData?.userId!,
+                pendingStatus: status,
+                response: responseData,
+            });
+        }
+        _onclose();
+    }
 
     const questionTypeMap = useMemo(() => {
         // converts question id to Application question type
@@ -115,6 +146,7 @@ export default function SideCard({ visible = false, onclose }: SideCardProps) {
                 return <NumberInput dataAtom={numberAtom} />;
 
             case 'text-line':
+                5;
                 const textLineAtom = getGenericInputAtom(question, dataAtom);
                 return <TextLineInput dataAtom={textLineAtom} />;
 
@@ -185,6 +217,61 @@ export default function SideCard({ visible = false, onclose }: SideCardProps) {
                         </button>
                     </div>
 
+                    <div className={style.hor}>
+                        <Button
+                            className={
+                                status === 'Accepted - Pending Payment'
+                                    ? style.selectedButton
+                                    : ''
+                            }
+                            onClick={() => {
+                                // TODO This shouldn't be hard coded
+                                // should which ever status in appropreiate for the hackathon. Sparkjam needs payment, but most others won't
+                                setStatus('Accepted - Pending Payment');
+                            }}
+                            variant={'brand'}
+                            hierarchy={'primary'}
+                        >
+                            Accept
+                        </Button>
+                        <Button
+                            className={
+                                status === 'Wait List'
+                                    ? style.selectedButton
+                                    : ''
+                            }
+                            onClick={() => {
+                                setStatus('Wait List');
+                            }}
+                            variant={'caution'}
+                            hierarchy={'primary'}
+                        >
+                            Waitlist
+                        </Button>
+                        <Button
+                            className={
+                                status === 'Declined'
+                                    ? style.selectedButton
+                                    : ''
+                            }
+                            onClick={() => {
+                                setStatus('Declined');
+                            }}
+                            variant={'danger'}
+                            hierarchy={'primary'}
+                        >
+                            Decline
+                        </Button>
+
+                        <CheckBoxWithLabel
+                            name="Editing"
+                            checked={editing}
+                            onChange={(e) => {
+                                setEditing(e.target.checked);
+                            }}
+                        ></CheckBoxWithLabel>
+                    </div>
+
                     {/* application data */}
 
                     {Object.entries(responseData).map(([id, val]) => {
@@ -204,7 +291,53 @@ export default function SideCard({ visible = false, onclose }: SideCardProps) {
                         );
                     })}
 
-                    {/* Status change */}
+                    {/* Status change (repeating at both top and bottom of page)*/}
+                    <div className={style.hor}>
+                        <Button
+                            className={
+                                status === 'Accepted - Pending Payment'
+                                    ? style.selectedButton
+                                    : ''
+                            }
+                            onClick={() => {
+                                // TODO This shouldn't be hard coded
+                                // should which ever status in appropreiate for the hackathon. Sparkjam needs payment, but most others won't
+                                setStatus('Accepted - Pending Payment');
+                            }}
+                            variant={'brand'}
+                            hierarchy={'primary'}
+                        >
+                            Accept
+                        </Button>
+                        <Button
+                            className={
+                                status === 'Wait List'
+                                    ? style.selectedButton
+                                    : ''
+                            }
+                            onClick={() => {
+                                setStatus('Wait List');
+                            }}
+                            variant={'caution'}
+                            hierarchy={'primary'}
+                        >
+                            Waitlist
+                        </Button>
+                        <Button
+                            className={
+                                status === 'Declined'
+                                    ? style.selectedButton
+                                    : ''
+                            }
+                            onClick={() => {
+                                setStatus('Declined');
+                            }}
+                            variant={'danger'}
+                            hierarchy={'primary'}
+                        >
+                            Decline
+                        </Button>
+                    </div>
                 </div>
             )}
         </>

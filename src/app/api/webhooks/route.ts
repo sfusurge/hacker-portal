@@ -75,7 +75,7 @@ export async function POST(req: Request) {
                         break;
                     }
 
-                    await trpcClient.applications.updateApplicationStatus({
+                    await trpcClient.applications.updateApplication({
                         ...application,
                         status: 'Accepted',
                     });

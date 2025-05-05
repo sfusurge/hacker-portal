@@ -98,4 +98,5 @@ export const updateApplicationStatusSchema = z.object({
             'Accepted - Pending Payment',
         ])
         .optional(),
+    response: z.record(z.string(), z.any()).optional(),
 });

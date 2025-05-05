@@ -52,3 +52,13 @@
     height: 2px;
     background-color: var(--neutral-600);
 }
+
+.hor {
+    display: flex;
+    gap: 1rem;
+}
+
+.selectedButton {
+    border-color: var(--brand-400);
+    border-width: 3px;
+}
