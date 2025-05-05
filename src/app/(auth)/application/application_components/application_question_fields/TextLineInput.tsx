@@ -3,13 +3,22 @@
 import { Label } from '@/components/ui/label/label';
 import { QuestionTextLineInput } from '../types';
 import { FormTextInput, Input } from '@/components/ui/input/input';
-import { atom, PrimitiveAtom, useAtom, useSetAtom, type Atom } from 'jotai';
+import {
+    atom,
+    PrimitiveAtom,
+    useAtom,
+    useSetAtom,
+    WritableAtom,
+    type Atom,
+} from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 export function TextLineInput({
     dataAtom,
 }: {
-    dataAtom: PrimitiveAtom<QuestionTextLineInput>;
+    dataAtom:
+        | PrimitiveAtom<QuestionTextLineInput>
+        | WritableAtom<QuestionTextLineInput, [QuestionTextLineInput], void>;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
 

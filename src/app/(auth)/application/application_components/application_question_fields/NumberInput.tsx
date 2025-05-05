@@ -1,11 +1,13 @@
-import { PrimitiveAtom, useAtom } from 'jotai';
+import { PrimitiveAtom, useAtom, WritableAtom } from 'jotai';
 import { QuestionNumberInput } from '../types';
 import { FormTextInput } from '@/components/ui/input/input';
 
 export function NumberInput({
     dataAtom,
 }: {
-    dataAtom: PrimitiveAtom<QuestionNumberInput>;
+    dataAtom:
+        | PrimitiveAtom<QuestionNumberInput>
+        | WritableAtom<QuestionNumberInput, [val: QuestionNumberInput], void>;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
     return (

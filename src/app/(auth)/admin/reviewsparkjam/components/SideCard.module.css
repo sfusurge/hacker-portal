@@ -5,7 +5,7 @@
     width: 100dvw;
     height: 100dvh;
 
-    background-color: #00000066;
+    background-color: #00000077;
     backdrop-filter: blur(8px);
 
     z-index: 10000;
@@ -19,15 +19,26 @@
     position: fixed;
     top: 0;
     right: 0;
-    width: 50dvw;
+    width: 90dvw;
+    max-width: 600px;
     height: 100dvh;
 
     z-index: 20000;
 
     display: flex;
+
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    gap: 2rem;
+    padding: 1.5rem;
+    background-color: var(--neutral-900);
+    border-left: var(--neutral-800) 2px solid;
 }
 
 .titleRow {
+    display: flex;
+    justify-content: space-between;
 }
 
 .scroll {

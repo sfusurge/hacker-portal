@@ -1,16 +1,21 @@
 'use client';
 
-import { type PrimitiveAtom, useAtom, useAtomValue } from 'jotai';
+import { PrimitiveAtom, useAtom, useAtomValue, WritableAtom } from 'jotai';
 import type { QuestionMultipleCheckBox } from '../types';
 import { CheckboxGroup } from '@/components/ui/checkboxGroup/CheckBoxGroup';
-import { useCallback } from 'react';
+
 import { finalErrCheckAtom } from '../ApplicationForm';
-import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 
 export function CheckBoxGroupInput({
     dataAtom,
 }: {
-    dataAtom: PrimitiveAtom<QuestionMultipleCheckBox>;
+    dataAtom:
+        | PrimitiveAtom<QuestionMultipleCheckBox>
+        | WritableAtom<
+              QuestionMultipleCheckBox,
+              [QuestionMultipleCheckBox],
+              void
+          >;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
     const finalCheck = useAtomValue(finalErrCheckAtom);
@@ -21,19 +26,16 @@ export function CheckBoxGroupInput({
         .map((item) => item.data);
 
     // Use a callback to handle selection changes
-    const handleSelection = useCallback(
-        (selected: Set<string>, other?: string) => {
-            setQuestion((prev) => ({
-                ...prev,
-                otherValue: other,
-                choices: prev.choices.map((item) => ({
-                    ...item,
-                    value: selected.has(item.data),
-                })),
-            }));
-        },
-        [setQuestion]
-    );
+    function handleSelection(selected: Set<string>, other?: string) {
+        setQuestion({
+            ...question,
+            otherValue: other,
+            choices: question.choices.map((item) => ({
+                ...item,
+                value: selected.has(item.data),
+            })),
+        });
+    }
 
     return (
         <CheckboxGroup

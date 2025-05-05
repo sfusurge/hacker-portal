@@ -1,13 +1,18 @@
-import { atom, PrimitiveAtom, useAtom } from 'jotai';
+import { Atom, atom, PrimitiveAtom, useAtom, WritableAtom } from 'jotai';
 import { QuestionCheckBoxInput } from '../types';
 
 import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
-import { useEffect, useMemo } from 'react';
 
 export function CheckBoxInput({
     dataAtom,
 }: {
-    dataAtom: PrimitiveAtom<QuestionCheckBoxInput>;
+    dataAtom:
+        | PrimitiveAtom<QuestionCheckBoxInput>
+        | WritableAtom<
+              QuestionCheckBoxInput,
+              [val: QuestionCheckBoxInput],
+              void
+          >;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
     return (
