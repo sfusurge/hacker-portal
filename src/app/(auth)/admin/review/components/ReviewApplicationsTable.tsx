@@ -420,9 +420,20 @@ export default function ReviewApplicationsTable({
         onRowSelectionChange: setRowSelection,
     });
 
+    const [iniload, setIniload] = useState(true);
     useEffect(() => {
-        table.setPageSize(20);
-    }, []);
+        if (!iniload || data.length === 0) {
+            return;
+        }
+        // TODO remove this jank
+        if (localStorage.getItem('pagesize')) {
+            table.setPageSize(parseInt(localStorage.getItem('pagesize')!));
+        }
+        if (localStorage.getItem('pageindex')) {
+            table.setPageIndex(parseInt(localStorage.getItem('pageindex')!));
+        }
+        setIniload(false);
+    }, [data, iniload]);
 
     const csvConfig = mkConfig({
         fieldSeparator: ',',
@@ -644,7 +655,11 @@ export default function ReviewApplicationsTable({
                             <select
                                 value={table.getState().pagination.pageSize}
                                 onChange={(e) => {
-                                    table.setPageSize(Number(e.target.value));
+                                    table.setPageSize(parseInt(e.target.value));
+                                    localStorage.setItem(
+                                        'pagesize',
+                                        e.target.value
+                                    );
                                 }}
                                 className="rounded-md bg-neutral-800/60 px-4 py-2 text-sm text-white"
                             >
@@ -687,32 +702,58 @@ export default function ReviewApplicationsTable({
                             <div className="flex items-center gap-4">
                                 <button
                                     className=""
-                                    onClick={() => table.setPageIndex(0)}
+                                    onClick={() => {
+                                        table.setPageIndex(0);
+                                        localStorage.setItem(
+                                            'pageindex',
+                                            `${0}`
+                                        );
+                                    }}
                                     disabled={!table.getCanPreviousPage()}
                                 >
                                     {'<<'}
                                 </button>
                                 <button
                                     className=""
-                                    onClick={() => table.previousPage()}
+                                    onClick={() => {
+                                        table.previousPage();
+                                        localStorage.setItem(
+                                            'pageindex',
+                                            `${table.getState().pagination.pageIndex - 1}`
+                                        );
+                                    }}
                                     disabled={!table.getCanPreviousPage()}
                                 >
                                     {'<'}
                                 </button>
                                 <button
                                     className=""
-                                    onClick={() => table.nextPage()}
+                                    onClick={() => {
+                                        table.nextPage();
+                                        localStorage.setItem(
+                                            'pageindex',
+                                            `${table.getState().pagination.pageIndex + 1}`
+                                        );
+                                        console.log(
+                                            'update',
+                                            localStorage.getItem('pageindex')
+                                        );
+                                    }}
                                     disabled={!table.getCanNextPage()}
                                 >
                                     {'>'}
                                 </button>
                                 <button
                                     className=""
-                                    onClick={() =>
+                                    onClick={() => {
                                         table.setPageIndex(
                                             table.getPageCount() - 1
-                                        )
-                                    }
+                                        );
+                                        localStorage.setItem(
+                                            'pageindex',
+                                            `${table.getPageCount() - 1}`
+                                        );
+                                    }}
                                     disabled={!table.getCanNextPage()}
                                 >
                                     {'>>'}
