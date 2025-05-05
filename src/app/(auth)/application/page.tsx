@@ -1,15 +1,15 @@
 import { Button } from '@/components/ui/button';
 import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc.js';
-import timezone from 'dayjs/plugin/timezone.js';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
 import Image from 'next/image';
-import { useSearchParams } from 'next/navigation';
+import ApplicationPageComponent from '@/app/(auth)/application/ApplicationPage';
 
-export default async function Layout({
-    children,
+export default async function ApplicationPage({
+    searchParams,
 }: {
-    children: React.ReactNode;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
     dayjs.extend(utc);
     dayjs.extend(timezone);
@@ -18,10 +18,11 @@ export default async function Layout({
         .tz('2025-05-01', 'Canada/Pacific')
         .startOf('day')
         .add(1, 'hour');
-    const params = useSearchParams();
+    const params = await searchParams;
+
     const bypass =
         process.env.APPLY_BYPASS &&
-        params.get('appbypass') === process.env.APPLY_BYPASS;
+        params['appbypass'] === process.env.APPLY_BYPASS;
 
     if (currentTime.isAfter(cutoffTime) && !bypass) {
         return (
@@ -54,5 +55,5 @@ export default async function Layout({
         );
     }
 
-    return <>{children}</>;
+    return <ApplicationPageComponent />;
 }

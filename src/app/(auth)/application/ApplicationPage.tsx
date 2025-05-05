@@ -79,7 +79,7 @@ const hackathonWithLocalAtom = atom(
  * todo: investigate in this potential solution
  * https://jotai.org/docs/utilities/storage#server-side-rendering
  */
-export default function Application() {
+export default function ApplicationPageComponent() {
     const { hackathon } = useHackathon();
     const hackathonWithResponse = useAtomValue(hackathonWithLocalAtom);
     const submitApplication = trpc.applications.submitApplication.useMutation();
@@ -104,6 +104,7 @@ export default function Application() {
 
     useEffect(() => {
         if (application.data) {
+            alert('You have already applied! Redirecting to home.');
             return redirect('/home');
         }
 
