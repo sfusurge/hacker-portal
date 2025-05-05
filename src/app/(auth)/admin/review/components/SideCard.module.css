@@ -46,3 +46,9 @@
     flex: 1;
     overflow-y: auto;
 }
+
+.horDiv {
+    width: auto;
+    height: 2px;
+    background-color: var(--neutral-600);
+}

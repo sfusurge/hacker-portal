@@ -1,4 +1,4 @@
-import { sideCardAtomSJ } from '@/app/(auth)/admin/reviewsparkjam/components/ReviewApplicationsTable';
+import { sideCardAtomSJ } from '@/app/(auth)/admin/review/components/ReviewApplicationsTable';
 import {
     atom,
     Atom,
@@ -26,6 +26,7 @@ import { RadioInput } from '@/app/(auth)/application/application_components/appl
 import { CheckBoxGroupInput } from '@/app/(auth)/application/application_components/application_question_fields/CheckboxGroupInput';
 import { Label } from '@/components/ui/label/label';
 import { XMarkIcon } from '@heroicons/react/20/solid';
+import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
 
 export interface SideCardProps {
     visible: boolean;
@@ -49,12 +50,13 @@ const responseAtom = atom(
         });
     }
 );
-export default function ImprovedSideCard({
-    visible = false,
-    onclose,
-}: SideCardProps) {
+const statusAtom = focusAtom(sideCardAtomSJ, (op) =>
+    op.valueOr({} as ApplicationWithTeamInfo).prop('pendingStatus')
+);
+
+export default function SideCard({ visible = false, onclose }: SideCardProps) {
     const responseData = useAtomValue(responseAtom);
-    const applicationData = useAtomValue(sideCardAtomSJ);
+    const [status, setStatus] = useAtom(statusAtom);
 
     const { hackathon } = useHackathon();
     const ready = useMemo(

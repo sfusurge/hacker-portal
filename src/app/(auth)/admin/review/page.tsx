@@ -1,8 +1,8 @@
 'use client';
 
-import ReviewApplicationsTable from '@/app/(auth)/admin/reviewsparkjam/components/ReviewApplicationsTable';
+import ReviewApplicationsTable from '@/app/(auth)/admin/review/components/ReviewApplicationsTable';
 import { useState } from 'react';
-import ImprovedSideCard from '@/app/(auth)/admin/reviewsparkjam/components/ImprovedSideCard';
+import SideCard from '@/app/(auth)/admin/review/components/SideCard';
 
 export default function ReviewApplicationsPage() {
     const [isSideCardOpen, setIsSideCardOpen] = useState(false);
@@ -22,7 +22,7 @@ export default function ReviewApplicationsPage() {
                 refreshTable={refreshTable}
             />
 
-            <ImprovedSideCard
+            <SideCard
                 visible={isSideCardOpen}
                 onclose={() => {
                     closeSideCard();
