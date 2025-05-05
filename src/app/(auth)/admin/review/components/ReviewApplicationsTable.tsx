@@ -646,11 +646,13 @@ export default function ReviewApplicationsTable({
                                 }}
                                 className="rounded-md bg-neutral-800/60 px-4 py-2 text-sm text-white"
                             >
-                                {[10, 20, 30, 40, 50].map((pageSize) => (
-                                    <option key={pageSize} value={pageSize}>
-                                        {pageSize}
-                                    </option>
-                                ))}
+                                {[10, 20, 30, 40, 50, 100, 150, 200].map(
+                                    (pageSize) => (
+                                        <option key={pageSize} value={pageSize}>
+                                            {pageSize}
+                                        </option>
+                                    )
+                                )}
                             </select>
                         </div>
 
