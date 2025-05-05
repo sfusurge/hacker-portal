@@ -163,8 +163,8 @@ export const applicationsRouter = router({
 
             // converting date to unix timestamp before returning
             // suppressing warning to avoid uncessesary type conversion.
-            // @ts-ignore
             applicationsWithTeamInfo.forEach(
+                // @ts-ignore
                 (item) => (item.createdDate = item.createdDate.getTime())
             );
             // @ts-ignore

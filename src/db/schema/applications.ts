@@ -46,10 +46,7 @@ export const applications = pgTable(
             .default('N/A')
             .notNull(),
         response: json().notNull(),
-        createdDate: timestamp('created_date')
-            .defaultNow()
-            .$onUpdate(() => new Date())
-            .notNull(),
+        createdDate: timestamp('created_date').defaultNow().notNull(),
     },
     (table) => {
         return [
