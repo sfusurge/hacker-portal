@@ -210,9 +210,9 @@ function getHeaderAction(
                 variant="brand"
                 hierarchy="primary"
                 className="hidden md:block"
-                onClick={() => redirect('/rsvp')}
+                // onClick={() => redirect('/rsvp')}
             >
-                RSVP to {hackathonName}
+                Check email to RSVP soon!
             </Button>
         ),
     };
