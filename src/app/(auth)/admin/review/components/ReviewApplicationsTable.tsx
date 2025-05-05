@@ -84,6 +84,9 @@ export default function ReviewApplicationsTable({
         setIsEmailPopupOpen(!isEmailPopupOpen);
     };
 
+    const updateApplicationStatus =
+        trpc.applications.updateApplication.useMutation();
+
     //sends emails to selected users
     const handleSendingEmails = async (rows: any) => {
         try {
@@ -98,18 +101,24 @@ export default function ReviewApplicationsTable({
 
             setIsSending(true);
 
-            const rowData = rows.map((row: any) => ({
-                id: row.original.id,
-                firstName: row.original.firstName,
-                lastName: row.original.lastName,
-                email: row.original.email,
-            }));
+            const rowData = rows.map((row: any) => {
+                const appData = applicationDataMap.get(row.original.id);
+                return {
+                    id: row.original.id,
+                    firstName: row.original.firstName,
+                    lastName: row.original.lastName,
+                    email: row.original.email,
+                    pendingStatus: appData?.pendingStatus || null,
+                };
+            });
 
             let successCount = 0;
             let failureCount = 0;
+            let statusUpdateCount = 0;
 
             for (let i = 0; i < rowData.length; i++) {
                 try {
+                    // Send email
                     await sendEmail.mutateAsync({
                         templateId: selectedTemplateId,
                         user: {
@@ -119,6 +128,17 @@ export default function ReviewApplicationsTable({
                             lastName: rowData[i].lastName,
                         },
                     });
+
+                    // Update application status if pending status exists
+                    if (rowData[i].pendingStatus) {
+                        await updateApplicationStatus.mutateAsync({
+                            userId: rowData[i].id,
+                            hackathonId: hackathon?.id!,
+                            status: rowData[i].pendingStatus,
+                        });
+                        statusUpdateCount++;
+                    }
+
                     successCount++;
                 } catch (error) {
                     console.error(
@@ -132,10 +152,13 @@ export default function ReviewApplicationsTable({
             if (successCount > 0) {
                 toast({
                     title: 'Success',
-                    description: `${successCount} email${successCount !== 1 ? 's' : ''} sent successfully${failureCount > 0 ? ` (${failureCount} failed)` : ''}`,
+                    description: `${successCount} email${successCount !== 1 ? 's' : ''} sent successfully${failureCount > 0 ? ` (${failureCount} failed)` : ''}${statusUpdateCount > 0 ? ` and ${statusUpdateCount} status${statusUpdateCount !== 1 ? 'es' : ''} updated` : ''}`,
                     className:
                         'bg-neutral-900 text-white border-neutral-700/18',
                 });
+
+                // Refresh application data after status updates
+                applicationData.refetch();
             } else if (failureCount > 0) {
                 toast({
                     title: 'Error',
