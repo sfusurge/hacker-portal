@@ -4,6 +4,7 @@ import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
 
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation.js';
 
 export default async function Layout({
     children,
@@ -17,8 +18,12 @@ export default async function Layout({
         .tz('2025-05-01', 'Canada/Pacific')
         .startOf('day')
         .add(1, 'hour');
+    const params = useSearchParams();
+    const bypass =
+        process.env.APPLY_BYPASS &&
+        params.get('appbypass') === process.env.APPLY_BYPASS;
 
-    if (currentTime.isAfter(cutoffTime)) {
+    if (currentTime.isAfter(cutoffTime) && !bypass) {
         return (
             <div className="flex h-full w-full flex-col items-center justify-center gap-8">
                 <Image
