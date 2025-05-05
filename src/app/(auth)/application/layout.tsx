@@ -4,7 +4,7 @@ import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
 
 import Image from 'next/image';
-import { useSearchParams } from 'next/navigation.js';
+import { useSearchParams } from 'next/navigation';
 
 export default async function Layout({
     children,
