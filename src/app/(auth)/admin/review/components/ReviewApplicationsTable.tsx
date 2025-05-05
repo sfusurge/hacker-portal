@@ -102,13 +102,12 @@ export default function ReviewApplicationsTable({
             setIsSending(true);
 
             const rowData = rows.map((row: any) => {
-                const appData = applicationDataMap.get(row.original.id);
                 return {
                     id: row.original.id,
                     firstName: row.original.firstName,
                     lastName: row.original.lastName,
                     email: row.original.email,
-                    pendingStatus: appData?.pendingStatus || null,
+                    pendingStatus: row.original.pendingStatus,
                 };
             });
 
@@ -157,7 +156,6 @@ export default function ReviewApplicationsTable({
                         'bg-neutral-900 text-white border-neutral-700/18',
                 });
 
-                // Refresh application data after status updates
                 applicationData.refetch();
             } else if (failureCount > 0) {
                 toast({

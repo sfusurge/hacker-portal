@@ -56,10 +56,12 @@ export default function SideCard({
     const applicationData = useAtomValue(sideCardAtomSJ);
     const [status, _setStatus] = useAtom(statusAtom);
     const [editing, setEditing] = useState(false);
+    const [updateCurrentStatus, setUpdateCurrentStatus] = useState(false);
     const { hackathon } = useHackathon();
     const updateApplication = trpc.applications.updateApplication.useMutation(
         {}
     );
+    const utils = trpc.useContext();
 
     const ready = useMemo(
         () => visible && hackathon !== undefined,
@@ -73,12 +75,17 @@ export default function SideCard({
 
     function onclose() {
         if (editing) {
-            updateApplication.mutateAsync({
-                hackathonId: hackathon?.id!,
-                userId: applicationData?.userId!,
-                pendingStatus: status,
-                response: responseData,
-            });
+            updateApplication
+                .mutateAsync({
+                    hackathonId: hackathon?.id!,
+                    userId: applicationData?.userId!,
+                    pendingStatus: updateCurrentStatus ? undefined : status,
+                    status: updateCurrentStatus ? status : undefined,
+                    response: responseData,
+                })
+                .then(() => {
+                    utils.applications.getApplications.invalidate();
+                });
         }
         _onclose();
     }
@@ -250,14 +257,23 @@ export default function SideCard({
                         >
                             Decline
                         </Button>
+                        <div className="flex flex-col gap-2">
+                            <CheckBoxWithLabel
+                                name="Editing"
+                                checked={editing}
+                                onChange={(e) => {
+                                    setEditing(e.target.checked);
+                                }}
+                            ></CheckBoxWithLabel>
 
-                        <CheckBoxWithLabel
-                            name="Editing"
-                            checked={editing}
-                            onChange={(e) => {
-                                setEditing(e.target.checked);
-                            }}
-                        ></CheckBoxWithLabel>
+                            <CheckBoxWithLabel
+                                name="Current Status"
+                                checked={updateCurrentStatus}
+                                onChange={(e) => {
+                                    setUpdateCurrentStatus(e.target.checked);
+                                }}
+                            ></CheckBoxWithLabel>
+                        </div>
                     </div>
 
                     {/* application data */}
