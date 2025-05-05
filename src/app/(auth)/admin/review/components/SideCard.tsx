@@ -76,7 +76,7 @@ export default function SideCard({
             updateApplication.mutateAsync({
                 hackathonId: hackathon?.id!,
                 userId: applicationData?.userId!,
-                status: status,
+                pendingStatus: status,
                 response: responseData,
             });
         }

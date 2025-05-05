@@ -325,30 +325,31 @@ export default function ReviewApplicationsTable({
             size: 200,
             minSize: 200,
         },
-        // {
-        //     accessorKey: 'pendingStatus',
-        //     header: () => 'Pending Status',
-        //     cell: (info) => {
-        //         const value = info.getValue<string>();
-        //         return (
-        //             <span
-        //                 className={`rounded-md px-3 py-0.5 text-xs ${
-        //                     value === 'Accepted'
-        //                         ? 'bg-success-950 text-success-300'
-        //                         : value === 'Wait List'
-        //                           ? 'bg-yellow-950 text-yellow-300'
-        //                           : value === 'Declined'
-        //                             ? 'bg-danger-950 text-danger-300'
-        //                             : 'bg-neutral-600/30'
-        //                 }`}
-        //             >
-        //                 {value}
-        //             </span>
-        //         );
-        //     },
-        //     size: 150,
-        //     minSize: 150,
-        // },
+        {
+            accessorKey: 'pendingStatus',
+            header: () => 'Pending Status',
+            cell: (info) => {
+                const value = info.getValue<string>();
+                return (
+                    <span
+                        className={`rounded-md px-3 py-0.5 text-xs ${
+                            value === 'Accepted' ||
+                            value === 'Accepted - Pending Payment'
+                                ? 'bg-success-950 text-success-300'
+                                : value === 'Wait List'
+                                  ? 'bg-yellow-950 text-yellow-300'
+                                  : value === 'Declined'
+                                    ? 'bg-danger-950 text-danger-300'
+                                    : 'bg-neutral-600/30'
+                        }`}
+                    >
+                        {value}
+                    </span>
+                );
+            },
+            size: 150,
+            minSize: 150,
+        },
         {
             accessorKey: 'applicationDate',
             header: () => 'Date',
