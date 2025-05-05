@@ -1,7 +1,7 @@
 'use client';
 import style from './Payment.module.css';
 import { userInfoAtom } from '@/app/(auth)/ClientAuthContext';
-import ElementsForm from '@/app/(auth)/rsvp/components/ElementsForm';
+import ElementsForm from '@/app/(auth)/test_rsvp/components/ElementsForm';
 import { hackathonAtom } from '@/hooks/use-hackathon';
 import { trpc } from '@/trpc/client';
 import { useAtomValue } from 'jotai';
