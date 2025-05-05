@@ -1,14 +1,15 @@
 'use client';
 
-import { type PrimitiveAtom, useAtom } from 'jotai';
+import { type PrimitiveAtom, useAtom, WritableAtom } from 'jotai';
 import type { QuestionMultipleChoice } from '../types';
 import { RadioButtonGroup } from '@/components/ui/radioButtonGroup/radioButtonGroup';
-import { useEffect } from 'react';
 
 export function RadioInput({
     dataAtom,
 }: {
-    dataAtom: PrimitiveAtom<QuestionMultipleChoice>;
+    dataAtom:
+        | PrimitiveAtom<QuestionMultipleChoice>
+        | WritableAtom<QuestionMultipleChoice, [QuestionMultipleChoice], void>;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
 

@@ -1,12 +1,13 @@
-import { PrimitiveAtom, useAtom } from 'jotai';
-import { QuestionNumberInput, QuestionTextAreaInput } from '../types';
-import { FormTextInput } from '@/components/ui/input/input';
+import { PrimitiveAtom, useAtom, WritableAtom } from 'jotai';
+import { QuestionTextAreaInput } from '../types';
 import { FormTextArea } from '@/components/ui/formTextArea/FormTextArea';
 
 export function TextAreaInput({
     dataAtom,
 }: {
-    dataAtom: PrimitiveAtom<QuestionTextAreaInput>;
+    dataAtom:
+        | PrimitiveAtom<QuestionTextAreaInput>
+        | WritableAtom<QuestionTextAreaInput, [QuestionTextAreaInput], void>;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
     return (

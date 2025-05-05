@@ -215,14 +215,12 @@ export default function DesktopNav({
                             />
                             {initialData?.userRole === 'admin' && (
                                 <NavLink
-                                    href="/admin/reviewsparkjam"
+                                    href="/admin/review"
                                     label="Review Applications"
                                     icon={<BellAlertIcon className="h-6 w-6" />}
                                     iconAlt="Review Applications logo"
                                     platform="desktop"
-                                    active={url.startsWith(
-                                        '/admin/reviewsparkjam'
-                                    )}
+                                    active={url.startsWith('/admin/review')}
                                     className={clsx({
                                         'justify-center': collapsed,
                                     })}

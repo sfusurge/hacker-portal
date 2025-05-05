@@ -1,7 +1,14 @@
 'use client';
 
 import { trpc } from '@/trpc/client';
-import { Fragment, HTMLProps, useEffect, useRef, useState } from 'react';
+import {
+    Fragment,
+    HTMLProps,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import {
     ColumnDef,
     flexRender,
@@ -25,6 +32,7 @@ import { DocumentArrowDownIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/16/solid';
 import { useHackathon } from '@/hooks/use-hackathon';
 import dayjs from 'dayjs';
+import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
 
 export type Applicant = {
     id: number;
@@ -50,14 +58,12 @@ export type Applicant = {
 
 type ReviewApplicationsTableProps = {
     toggleSideCard: () => void;
-    refreshTable: any;
 };
 
-export const sideCardAtomSJ = atom<Applicant>();
+export const sideCardAtomSJ = atom<ApplicationWithTeamInfo>();
 
 export default function ReviewApplicationsTable({
     toggleSideCard,
-    refreshTable,
 }: ReviewApplicationsTableProps) {
     const setSideCardInfo = useSetAtom(sideCardAtomSJ);
 
@@ -164,6 +170,19 @@ export default function ReviewApplicationsTable({
         { enabled: hackathonLoaded }
     );
 
+    const applicationDataMap = useMemo(() => {
+        const map = new Map<number, ApplicationWithTeamInfo>();
+        if (!applicationData.data) {
+            return map;
+        }
+
+        for (const appData of applicationData.data) {
+            map.set(appData.userId, appData);
+        }
+
+        return map;
+    }, [applicationData]);
+
     // Data state
     const [data, setData] = useState<Applicant[]>([]);
 
@@ -172,23 +191,8 @@ export default function ReviewApplicationsTable({
         if (applicationData.data) {
             const transformed = transformResponse(applicationData.data);
             setData(transformed);
-            console.log({ transformed });
         }
     }, [applicationData.data]);
-
-    useEffect(() => {
-        setData((prevData: Applicant[]) =>
-            prevData.map((item) =>
-                item.id === refreshTable.userId
-                    ? {
-                          ...item,
-                          status: refreshTable.status,
-                          tempStatus: refreshTable.pendingStatus,
-                      }
-                    : item
-            )
-        );
-    }, [refreshTable]);
 
     // Filters and sorting
     const [globalFilter, setGlobalFilter] = useState<string>('');
@@ -274,8 +278,8 @@ export default function ReviewApplicationsTable({
             minSize: 100, // Minimum width
         },
         {
-            accessorKey: 'status',
-            header: () => 'Status',
+            accessorKey: 'currentStatus',
+            header: () => 'Current Status',
             cell: (info) => {
                 const value = info.getValue<string>();
                 return (
@@ -284,7 +288,7 @@ export default function ReviewApplicationsTable({
                             value === 'Accepted' ||
                             value === 'Accepted - Pending Payment'
                                 ? 'bg-success-950 text-success-300'
-                                : value === 'RSVP'
+                                : value === 'Wait List'
                                   ? 'bg-yellow-950 text-yellow-300'
                                   : value === 'Declined'
                                     ? 'bg-danger-950 text-danger-300'
@@ -299,8 +303,8 @@ export default function ReviewApplicationsTable({
             minSize: 200,
         },
         // {
-        //     accessorKey: 'tempStatus',
-        //     header: () => 'Temporary Status',
+        //     accessorKey: 'pendingStatus',
+        //     header: () => 'Pending Status',
         //     cell: (info) => {
         //         const value = info.getValue<string>();
         //         return (
@@ -574,7 +578,11 @@ export default function ReviewApplicationsTable({
                                         className="cursor-pointer hover:bg-gray-800"
                                         onClick={() => {
                                             toggleSideCard();
-                                            setSideCardInfo(row.original);
+                                            setSideCardInfo(
+                                                applicationDataMap.get(
+                                                    row.original.id
+                                                )
+                                            );
                                         }}
                                     >
                                         {row
@@ -640,11 +648,13 @@ export default function ReviewApplicationsTable({
                                 }}
                                 className="rounded-md bg-neutral-800/60 px-4 py-2 text-sm text-white"
                             >
-                                {[10, 20, 30, 40, 50].map((pageSize) => (
-                                    <option key={pageSize} value={pageSize}>
-                                        {pageSize}
-                                    </option>
-                                ))}
+                                {[10, 20, 30, 40, 50, 100, 150, 200].map(
+                                    (pageSize) => (
+                                        <option key={pageSize} value={pageSize}>
+                                            {pageSize}
+                                        </option>
+                                    )
+                                )}
                             </select>
                         </div>
 
@@ -889,7 +899,8 @@ function transformResponse(response: any[]) {
     const responses = response
         .map((item) => {
             const id = item.userId;
-            const status = item.currentStatus;
+            const currentStatus = item.currentStatus;
+            const pendingStatus = item.pendingStatus;
             const applicationDate = item.createdDate;
             const {
                 '1': applicationFee,
@@ -918,7 +929,8 @@ function transformResponse(response: any[]) {
             return {
                 id: Number(id),
                 teamName: teamName,
-                status,
+                currentStatus,
+                pendingStatus,
                 applicationDate: new Date(applicationDate),
                 applicationFee,
                 firstName,

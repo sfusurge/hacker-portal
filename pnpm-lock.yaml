@@ -110,6 +110,9 @@ importers:
       jotai:
         specifier: ^2.12.2
         version: 2.12.2(@types/react@18.3.20)(react@18.3.1)
+      jotai-optics:
+        specifier: ^0.4.0
+        version: 0.4.0(jotai@2.12.2(@types/react@18.3.20)(react@18.3.1))(optics-ts@2.4.1)
       lucide-react:
         specifier: ^0.460.0
         version: 0.460.0(react@18.3.1)
@@ -128,6 +131,9 @@ importers:
       next-auth:
         specifier: 5.0.0-beta.25
         version: 5.0.0-beta.25(next@15.0.3(@playwright/test@1.51.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(nodemailer@6.10.0)(react@18.3.1)
+      optics-ts:
+        specifier: ^2.4.1
+        version: 2.4.1
       perf_hooks:
         specifier: ^0.0.1
         version: 0.0.1
@@ -3274,6 +3280,12 @@ packages:
   jose@6.0.10:
     resolution: {integrity: sha512-skIAxZqcMkOrSwjJvplIPYrlXGpxTPnro2/QWTDCxAdWQrSTV5/KqspMWmi5WAx5+ULswASJiZ0a+1B/Lxt9cw==}
 
+  jotai-optics@0.4.0:
+    resolution: {integrity: sha512-osbEt9AgS55hC4YTZDew2urXKZkaiLmLqkTS/wfW5/l0ib8bmmQ7kBXSFaosV6jDDWSp00IipITcJARFHdp42g==}
+    peerDependencies:
+      jotai: '>=2.0.0'
+      optics-ts: '>=2.0.0'
+
   jotai@2.12.2:
     resolution: {integrity: sha512-oN8715y7MkjXlSrpyjlR887TOuc/NLZMs9gvgtfWH/JP47ChwO0lR2ijSwBvPMYyXRAPT+liIAhuBavluKGgtA==}
     engines: {node: '>=12.20.0'}
@@ -3621,6 +3633,9 @@ packages:
 
   once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
+
+  optics-ts@2.4.1:
+    resolution: {integrity: sha512-HaYzMHvC80r7U/LqAd4hQyopDezC60PO2qF5GuIwALut2cl5rK1VWHsqTp0oqoJJWjiv6uXKqsO+Q2OO0C3MmQ==}
 
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
@@ -7930,6 +7945,11 @@ snapshots:
 
   jose@6.0.10: {}
 
+  jotai-optics@0.4.0(jotai@2.12.2(@types/react@18.3.20)(react@18.3.1))(optics-ts@2.4.1):
+    dependencies:
+      jotai: 2.12.2(@types/react@18.3.20)(react@18.3.1)
+      optics-ts: 2.4.1
+
   jotai@2.12.2(@types/react@18.3.20)(react@18.3.1):
     optionalDependencies:
       '@types/react': 18.3.20
@@ -8251,6 +8271,8 @@ snapshots:
   once@1.4.0:
     dependencies:
       wrappy: 1.0.2
+
+  optics-ts@2.4.1: {}
 
   optionator@0.9.4:
     dependencies:

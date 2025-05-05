@@ -35,8 +35,7 @@ export default function WithdrawPrompt({
 
     const { hackathon } = useHackathon();
 
-    const updateApplication =
-        trpc.applications.updateApplicationStatus.useMutation();
+    const updateApplication = trpc.applications.updateApplication.useMutation();
 
     const handleWithdraw = useCallback(() => {
         setWithdrawn(true);

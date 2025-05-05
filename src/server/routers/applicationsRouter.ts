@@ -161,18 +161,35 @@ export const applicationsRouter = router({
                 .limit(input.maxResult)
                 .offset(offset);
 
-            return applicationsWithTeamInfo;
+            // converting date to unix timestamp before returning
+            // suppressing warning to avoid uncessesary type conversion.
+            // @ts-ignore
+            applicationsWithTeamInfo.forEach(
+                (item) => (item.createdDate = item.createdDate.getTime())
+            );
+            // @ts-ignore
+            return applicationsWithTeamInfo as ApplicationWithTeamInfo[];
         }),
 
-    updateApplicationStatus: publicProcedure
+    updateApplication: publicProcedure
         .input(updateApplicationStatusSchema)
         .mutation(async ({ input }) => {
+            const payload: Record<string, any> = {};
+            if (input.pendingStatus) {
+                payload['pendingStatus'] = input.pendingStatus;
+            }
+
+            if (input.status) {
+                payload['currentStatus'] = input.status;
+            }
+
+            if (input.response) {
+                payload['response'] = input.response;
+            }
+
             const [application] = await databaseClient
                 .update(applications)
-                .set({
-                    currentStatus: input.status,
-                    pendingStatus: input.pendingStatus,
-                })
+                .set(payload)
                 .where(
                     and(
                         eq(applications.hackathonId, input.hackathonId),
@@ -228,3 +245,14 @@ export const applicationsRouter = router({
 });
 
 export type ApplicationsRouter = typeof applicationsRouter;
+
+export interface ApplicationWithTeamInfo {
+    response: Record<string, any>;
+    teamId: number | null;
+    teamName: string | null;
+    hackathonId: number;
+    userId: number;
+    currentStatus: StatusEnum;
+    pendingStatus: StatusEnum;
+    createdDate: number;
+}
