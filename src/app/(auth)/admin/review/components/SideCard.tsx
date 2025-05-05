@@ -1,22 +1,12 @@
 import { sideCardAtomSJ } from '@/app/(auth)/admin/review/components/ReviewApplicationsTable';
-import {
-    atom,
-    Atom,
-    PrimitiveAtom,
-    useAtom,
-    useAtomValue,
-    WritableAtom,
-} from 'jotai';
+import { atom, useAtom, useAtomValue, WritableAtom } from 'jotai';
 import { focusAtom } from 'jotai-optics';
 import style from './SideCard.module.css';
-import { MouseEventHandler, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useHackathon } from '@/hooks/use-hackathon';
 import {
     ApplicationQuestion,
-    ApplicationQuestionType,
-    QuestionCheckBoxInput,
     QuestionMultipleCheckBox,
-    QuestionNumberInput,
 } from '@/app/(auth)/application/application_components/types';
 import { CheckBoxInput } from '@/app/(auth)/application/application_components/application_question_fields/CheckboxInput';
 import { NumberInput } from '@/app/(auth)/application/application_components/application_question_fields/NumberInput';
@@ -28,7 +18,6 @@ import { Label } from '@/components/ui/label/label';
 import { XMarkIcon } from '@heroicons/react/20/solid';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 import { StatusEnum } from '@/db/schema/applications';
 import { trpc } from '@/trpc/client';

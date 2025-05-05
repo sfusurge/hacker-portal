@@ -6,7 +6,6 @@ import SideCard from '@/app/(auth)/admin/review/components/SideCard';
 
 export default function ReviewApplicationsPage() {
     const [isSideCardOpen, setIsSideCardOpen] = useState(false);
-    const [refreshTable, setRefreshTable] = useState({});
 
     const openSideCard = () => {
         setIsSideCardOpen(true);
@@ -17,10 +16,7 @@ export default function ReviewApplicationsPage() {
 
     return (
         <div>
-            <ReviewApplicationsTable
-                toggleSideCard={openSideCard}
-                refreshTable={refreshTable}
-            />
+            <ReviewApplicationsTable toggleSideCard={openSideCard} />
 
             <SideCard
                 visible={isSideCardOpen}

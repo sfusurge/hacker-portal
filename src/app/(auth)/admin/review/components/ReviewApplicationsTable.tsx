@@ -58,14 +58,12 @@ export type Applicant = {
 
 type ReviewApplicationsTableProps = {
     toggleSideCard: () => void;
-    refreshTable: any;
 };
 
 export const sideCardAtomSJ = atom<ApplicationWithTeamInfo>();
 
 export default function ReviewApplicationsTable({
     toggleSideCard,
-    refreshTable,
 }: ReviewApplicationsTableProps) {
     const setSideCardInfo = useSetAtom(sideCardAtomSJ);
 
@@ -191,23 +189,8 @@ export default function ReviewApplicationsTable({
         if (applicationData.data) {
             const transformed = transformResponse(applicationData.data);
             setData(transformed);
-            console.log({ transformed });
         }
     }, [applicationData.data]);
-
-    useEffect(() => {
-        setData((prevData: Applicant[]) =>
-            prevData.map((item) =>
-                item.id === refreshTable.userId
-                    ? {
-                          ...item,
-                          status: refreshTable.status,
-                          tempStatus: refreshTable.pendingStatus,
-                      }
-                    : item
-            )
-        );
-    }, [refreshTable]);
 
     // Filters and sorting
     const [globalFilter, setGlobalFilter] = useState<string>('');
@@ -293,8 +276,8 @@ export default function ReviewApplicationsTable({
             minSize: 100, // Minimum width
         },
         {
-            accessorKey: 'status',
-            header: () => 'Status',
+            accessorKey: 'currentStatus',
+            header: () => 'Current Status',
             cell: (info) => {
                 const value = info.getValue<string>();
                 return (
@@ -317,30 +300,30 @@ export default function ReviewApplicationsTable({
             size: 200,
             minSize: 200,
         },
-        // {
-        //     accessorKey: 'tempStatus',
-        //     header: () => 'Temporary Status',
-        //     cell: (info) => {
-        //         const value = info.getValue<string>();
-        //         return (
-        //             <span
-        //                 className={`rounded-md px-3 py-0.5 text-xs ${
-        //                     value === 'Accepted'
-        //                         ? 'bg-success-950 text-success-300'
-        //                         : value === 'Wait List'
-        //                           ? 'bg-yellow-950 text-yellow-300'
-        //                           : value === 'Declined'
-        //                             ? 'bg-danger-950 text-danger-300'
-        //                             : 'bg-neutral-600/30'
-        //                 }`}
-        //             >
-        //                 {value}
-        //             </span>
-        //         );
-        //     },
-        //     size: 150,
-        //     minSize: 150,
-        // },
+        {
+            accessorKey: 'pendingStatus',
+            header: () => 'Pending Status',
+            cell: (info) => {
+                const value = info.getValue<string>();
+                return (
+                    <span
+                        className={`rounded-md px-3 py-0.5 text-xs ${
+                            value === 'Accepted'
+                                ? 'bg-success-950 text-success-300'
+                                : value === 'Wait List'
+                                  ? 'bg-yellow-950 text-yellow-300'
+                                  : value === 'Declined'
+                                    ? 'bg-danger-950 text-danger-300'
+                                    : 'bg-neutral-600/30'
+                        }`}
+                    >
+                        {value}
+                    </span>
+                );
+            },
+            size: 150,
+            minSize: 150,
+        },
         {
             accessorKey: 'applicationDate',
             header: () => 'Date',
@@ -912,7 +895,8 @@ function transformResponse(response: any[]) {
     const responses = response
         .map((item) => {
             const id = item.userId;
-            const status = item.currentStatus;
+            const currentStatus = item.currentStatus;
+            const pendingStatus = item.pendingStatus;
             const applicationDate = item.createdDate;
             const {
                 '1': applicationFee,
@@ -941,7 +925,8 @@ function transformResponse(response: any[]) {
             return {
                 id: Number(id),
                 teamName: teamName,
-                status,
+                currentStatus,
+                pendingStatus,
                 applicationDate: new Date(applicationDate),
                 applicationFee,
                 firstName,
