@@ -73,11 +73,10 @@ export default function SideCard({
 
     function onclose() {
         if (editing) {
-            alert(`??? ${status}`);
             updateApplication.mutateAsync({
                 hackathonId: hackathon?.id!,
                 userId: applicationData?.userId!,
-                pendingStatus: status,
+                status: status,
                 response: responseData,
             });
         }
