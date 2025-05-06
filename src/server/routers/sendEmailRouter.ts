@@ -25,50 +25,51 @@ export const sendEmailRouter = router({
                     );
                 }
 
-                // QRCode options
-                const opts = {
-                    margin: 1,
-                    scale: 10,
-                    color: { dark: '#000000', light: '#FFFFFF' },
-                };
-
+                let processedTemplateContent = template.content;
                 let qrcodeBase64: string | undefined;
                 let attachments = [];
 
-                try {
-                    const qrCodeDataUrl = await generateQRCode(
-                        input.user.id.toString(),
-                        opts
-                    );
-                    qrcodeBase64 = qrCodeDataUrl.replace(
-                        /^data:image\/png;base64,/,
-                        ''
-                    );
-                    console.log('QR code generated successfully');
+                // Only generate QR code if the template contains the placeholder
+                if (processedTemplateContent.includes('{{qrCode}}')) {
+                    // QRCode options
+                    const opts = {
+                        margin: 1,
+                        scale: 10,
+                        color: { dark: '#000000', light: '#FFFFFF' },
+                    };
 
-                    attachments.push({
-                        filename: 'qr.png',
-                        content: Buffer.from(qrcodeBase64, 'base64'),
-                        cid: 'qrcode',
-                    });
-                } catch (qrError) {
-                    console.error('Error generating QR code:', qrError);
-                }
+                    try {
+                        const qrCodeDataUrl = await generateQRCode(
+                            input.user.id.toString(),
+                            opts
+                        );
+                        qrcodeBase64 = qrCodeDataUrl.replace(
+                            /^data:image\/png;base64,/,
+                            ''
+                        );
+                        console.log('QR code generated successfully');
 
-                let processedTemplateContent = template.content;
-                const qrCodeImgTag =
-                    '<img src="cid:qrcode" alt="QR Code" style="display: block; max-width: 200px; height: auto; border: 0;" />';
+                        // Add QR code as embedded image for display in email
+                        attachments.push({
+                            filename: 'qr-inline.png',
+                            content: Buffer.from(qrcodeBase64, 'base64'),
+                            cid: 'qrcode',
+                        });
 
-                if (qrcodeBase64) {
-                    processedTemplateContent = processedTemplateContent.replace(
-                        /{{qrCode}}/g,
-                        qrCodeImgTag
-                    );
-                } else {
-                    processedTemplateContent = processedTemplateContent.replace(
-                        /{{qrCode}}/g,
-                        ''
-                    );
+                        const qrCodeImgTag =
+                            '<img src="cid:qrcode" alt="QR Code" style="display: block; max-width: 200px; height: auto; border: 0;" />';
+
+                        processedTemplateContent =
+                            processedTemplateContent.replace(
+                                /{{qrCode}}/g,
+                                qrCodeImgTag
+                            );
+                    } catch (qrError) {
+                        // Replace the placeholder with empty string if QR generation fails
+                        console.error('Error generating QR code:', qrError);
+                        processedTemplateContent =
+                            processedTemplateContent.replace(/{{qrCode}}/g, '');
+                    }
                 }
 
                 // Prepare data for Handlebars

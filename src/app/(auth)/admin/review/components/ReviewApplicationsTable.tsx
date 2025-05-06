@@ -128,12 +128,13 @@ export default function ReviewApplicationsTable({
                         },
                     });
 
-                    // Update application status if pending status exists
-                    if (rowData[i].pendingStatus) {
+                    const status = rowData[i].pendingStatus;
+
+                    if (status && status !== 'N/A') {
                         await updateApplicationStatus.mutateAsync({
                             userId: rowData[i].id,
                             hackathonId: hackathon?.id!,
-                            status: rowData[i].pendingStatus,
+                            status: status,
                         });
                         statusUpdateCount++;
                     }

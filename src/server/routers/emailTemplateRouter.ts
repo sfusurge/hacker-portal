@@ -90,6 +90,25 @@ export const emailsRouter = router({
             return template || null;
         }),
 
+    // Get email template by name
+    getEmailTemplateByName: publicProcedure
+        .input(z.object({ title: z.string() }))
+        .query(async ({ input }) => {
+            const user = await getUserData();
+
+            if (!user) {
+                throw new InternalServerError('User not authenticated');
+            }
+
+            const [template] = await databaseClient
+                .select()
+                .from(emailTemplates)
+                .where(eq(emailTemplates.title, input.title))
+                .limit(1);
+
+            return template || null;
+        }),
+
     // Update an existing email template
     updateEmailTemplate: publicProcedure
         .input(emailTemplateSchema.extend({ id: z.number().int() }))
