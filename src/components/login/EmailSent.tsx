@@ -12,7 +12,7 @@ export default function EmailSent({
     return (
         <div className="flex h-full w-full flex-col items-center justify-center gap-10 text-center">
             <Image
-                src="/login/otter-mail.webp"
+                src="/login/otter-mail.png"
                 width={320}
                 height={320}
                 className="w-full rounded-2xl md:max-w-100 lg:max-w-90"

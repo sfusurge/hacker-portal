@@ -26,7 +26,7 @@ export default async function ResultPage(
     if (paymentIntent.status === 'succeeded') {
         return (
             <FullPageInfo
-                src="/login/otter-mail.webp"
+                src="/login/otter-mail.png"
                 title={'Payment successful and we got your RSVP!'}
                 body="Stay tuned!"
             >

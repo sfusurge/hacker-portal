@@ -71,7 +71,7 @@ export default function PaymentElementPage() {
 function AlreadyPaid() {
     return (
         <FullPageInfo
-            src="/login/otter-mail.webp"
+            src="/login/otter-mail.png"
             title={"You are already RSVP'd and Accepted!"}
             body="Stay tuned!"
         >
