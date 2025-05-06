@@ -242,6 +242,21 @@ export const applicationsRouter = router({
 
             return application as ApplicationInfo;
         }),
+
+    getApplicationsByEmail: publicProcedure
+        .input(
+            z.object({
+                email: z.string().email(),
+            })
+        )
+        .query(async ({ input }) => {
+            const [application] = await databaseClient
+                .select(getTableColumns(applications))
+                .from(applications)
+                .innerJoin(user, eq(applications.userId, user.id))
+                .where(eq(user.email, input.email));
+            return application as ApplicationInfo;
+        }),
 });
 
 export type ApplicationsRouter = typeof applicationsRouter;

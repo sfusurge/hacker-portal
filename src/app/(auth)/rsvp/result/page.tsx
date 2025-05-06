@@ -30,12 +30,7 @@ export default async function ResultPage(
                 title={'Payment successful and we got your RSVP!'}
                 body="Stay tuned!"
             >
-                <Button
-                    size="cozy"
-                    variant="brand"
-                    hierarchy="primary"
-                    className="bg-brand-600 hover:bg-brand-700 text-white"
-                >
+                <Button size="cozy" variant="brand" hierarchy="primary">
                     <a href="/home">Return to home</a>
                 </Button>
             </FullPageInfo>

@@ -59,19 +59,34 @@ export async function POST(req: Request) {
                         console.error('No Receipt email is found');
                         break;
                     }
-                    // since payment suceeded, update application status
+                    // since payment succeeded, update application status
                     const trpcClient = createCaller({});
-                    const application =
-                        await trpcClient.applications.getApplicationByEmail({
+
+                    // Get the active hackathon first
+                    const activeHackathon =
+                        await trpcClient.hackathons.getActiveHackathon();
+                    if (!activeHackathon) {
+                        console.error('No active hackathon found');
+                        break;
+                    }
+
+                    const applications =
+                        await trpcClient.applications.getApplicationsByEmail({
                             email: data.receipt_email,
                         });
 
-                    if (
-                        !application ||
-                        application.currentStatus !==
-                            'Accepted - Pending Payment'
-                    ) {
-                        console.error('invalid application', application);
+                    // Find the application for the active hackathon
+                    // @ts-ignore help
+                    const application = applications.find(
+                        (app) =>
+                            app.hackathonId === activeHackathon.id &&
+                            app.currentStatus === 'Accepted - Pending Payment'
+                    );
+
+                    if (!application) {
+                        console.error(
+                            'No valid application found for active hackathon'
+                        );
                         break;
                     }
 
@@ -79,6 +94,46 @@ export async function POST(req: Request) {
                         ...application,
                         status: 'Accepted',
                     });
+
+                    // Send confirmation email after successful payment
+                    try {
+                        const rsvpTemplate =
+                            await trpcClient.emailTemplates.getEmailTemplateByPurpose(
+                                {
+                                    purpose: 'RSVP Received',
+                                }
+                            );
+
+                        if (rsvpTemplate) {
+                            // Extract name from application response if possible
+                            const firstName =
+                                application.response.firstName || 'User';
+                            const lastName =
+                                application.response.lastName || '';
+
+                            await trpcClient.emails.sendEmail({
+                                templateId: rsvpTemplate.id,
+                                user: {
+                                    id: application.userId,
+                                    firstName: firstName,
+                                    lastName: lastName,
+                                    email: data.receipt_email,
+                                },
+                            });
+                            console.log(
+                                'RSVP confirmation email sent successfully'
+                            );
+                        } else {
+                            console.error(
+                                'Email template with purpose "RSVP Received" not found'
+                            );
+                        }
+                    } catch (emailError) {
+                        console.error(
+                            'Failed to send RSVP confirmation email:',
+                            emailError
+                        );
+                    }
 
                     break;
                 default:

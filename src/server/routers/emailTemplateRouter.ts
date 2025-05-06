@@ -109,6 +109,25 @@ export const emailsRouter = router({
             return template || null;
         }),
 
+    // Get email template by purpose
+    getEmailTemplateByPurpose: publicProcedure
+        .input(z.object({ purpose: z.string() }))
+        .query(async ({ input }) => {
+            const user = await getUserData();
+
+            if (!user) {
+                throw new InternalServerError('User not authenticated');
+            }
+
+            const [template] = await databaseClient
+                .select()
+                .from(emailTemplates)
+                .where(eq(emailTemplates.purpose, input.purpose))
+                .limit(1);
+
+            return template || null;
+        }),
+
     // Update an existing email template
     updateEmailTemplate: publicProcedure
         .input(emailTemplateSchema.extend({ id: z.number().int() }))
