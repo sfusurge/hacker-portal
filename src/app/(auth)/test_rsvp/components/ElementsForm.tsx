@@ -34,7 +34,7 @@ export default function ElementsForm({
 
                 currency: 'cad',
                 mode: 'payment',
-                amount: 1500,
+                amount: 30,
             }}
         >
             <CheckoutForm userEmail={userEmail} />
@@ -136,7 +136,7 @@ function CheckoutForm({ userEmail }: { userEmail: string }) {
                 SparkJam Ticket
             </h3>
             <h3 className="text-gray-400">
-                Amount: <span className="text-white">$15.00</span>
+                Amount: <span className="text-white">30c</span>
             </h3>
 
             <form onSubmit={handleSubmit} className="space-y-6">

@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button';
+import { FullPageInfo } from '@/components/ui/FullPageInfo';
 import { stripe } from '@/lib/stripe';
 import { JSX } from 'react';
 
@@ -19,10 +21,33 @@ export default async function ResultPage(
 
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
-    return (
-        <>
-            <h1>Payment Result</h1>
-            <pre>{JSON.stringify(paymentIntent, null, 2)}</pre>
-        </>
-    );
+    console.log('payment results:');
+    console.log(JSON.stringify(paymentIntentId, undefined, 4));
+    if (paymentIntent.status === 'succeeded') {
+        return (
+            <FullPageInfo
+                src="/login/otter-mail.webp"
+                title={'Payment successful and we got your RSVP!'}
+                body="Stay tuned!"
+            >
+                <Button
+                    size="cozy"
+                    variant="brand"
+                    hierarchy="primary"
+                    className="bg-brand-600 hover:bg-brand-700 text-white"
+                >
+                    <a href="/home">Return to home</a>
+                </Button>
+            </FullPageInfo>
+        );
+    } else {
+        return (
+            <>
+                <h1>
+                    Payment failed, please contact the organizers. (You were not
+                    charged)
+                </h1>
+            </>
+        );
+    }
 }

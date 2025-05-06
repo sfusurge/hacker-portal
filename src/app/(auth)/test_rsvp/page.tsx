@@ -2,10 +2,12 @@
 import style from './Payment.module.css';
 import { userInfoAtom } from '@/app/(auth)/ClientAuthContext';
 import ElementsForm from '@/app/(auth)/test_rsvp/components/ElementsForm';
+import { FullPageInfo } from '@/components/ui/FullPageInfo';
 import { hackathonAtom } from '@/hooks/use-hackathon';
 import { trpc } from '@/trpc/client';
 import { useAtomValue } from 'jotai';
 import { useEffect, useMemo } from 'react';
+import { Button } from '@/components/ui/button';
 
 export default function PaymentElementPage() {
     const userInfo = useAtomValue(userInfoAtom);
@@ -68,17 +70,39 @@ export default function PaymentElementPage() {
 
 function AlreadyPaid() {
     return (
-        <h1 className={style.title}>
-            You already paid and RSVPed, stay tuned!
-        </h1>
+        <FullPageInfo
+            src="/login/otter-mail.webp"
+            title={"You are already RSVP'd and Accepted!"}
+            body="Stay tuned!"
+        >
+            <Button
+                size="cozy"
+                variant="brand"
+                hierarchy="primary"
+                className="bg-brand-600 hover:bg-brand-700 text-white"
+            >
+                <a href="/home">Return to home</a>
+            </Button>
+        </FullPageInfo>
     );
 }
 
 function Declined() {
     return (
-        <h1 className={style.title}>
-            Unfortuntely your application was declined {':^('}
-        </h1>
+        <FullPageInfo
+            src="/login/sad-otter.webp"
+            title={'Unfortunately your application was declined :('}
+            body="See you next time!"
+        >
+            <Button
+                size="cozy"
+                variant="brand"
+                hierarchy="primary"
+                className="bg-brand-600 hover:bg-brand-700 text-white"
+            >
+                <a href="/home">Return to home</a>
+            </Button>
+        </FullPageInfo>
     );
 }
 
