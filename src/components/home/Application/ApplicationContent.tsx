@@ -68,7 +68,7 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
                     Our team at SFU Surge is excited to offer you acceptance to{' '}
                     {hackathon?.hackathonName ||
                         process.env.NEXT_PUBLIC_CURRENT_EVENT}
-                    ! Please RVSP to confirm your attendance.
+                    ! Please RSVP to confirm your attendance.
                 </CardDescription>
                 <CardDescription>
                     {

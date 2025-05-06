@@ -111,9 +111,9 @@ export async function POST(req: Request) {
                         if (rsvpTemplate) {
                             // Extract name from application response if possible
                             const firstName =
-                                application.response.firstName || 'User';
+                                application.response['2'] ?? 'User';
                             const lastName =
-                                application.response.lastName || '';
+                                application.response['3'] ?? 'User';
 
                             await trpcClient.emails.sendEmail({
                                 templateId: rsvpTemplate.id,
