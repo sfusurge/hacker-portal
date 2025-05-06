@@ -113,12 +113,6 @@ export const emailsRouter = router({
     getEmailTemplateByPurpose: publicProcedure
         .input(z.object({ purpose: z.string() }))
         .query(async ({ input }) => {
-            const user = await getUserData();
-
-            if (!user) {
-                throw new InternalServerError('User not authenticated');
-            }
-
             const [template] = await databaseClient
                 .select()
                 .from(emailTemplates)

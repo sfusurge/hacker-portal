@@ -70,13 +70,17 @@ export async function POST(req: Request) {
                         break;
                     }
 
-                    const applications =
+                    const applicationsResult =
                         await trpcClient.applications.getApplicationsByEmail({
                             email: data.receipt_email,
                         });
 
+                    // Check if applications is an array or a single object
+                    const applications = Array.isArray(applicationsResult)
+                        ? applicationsResult
+                        : [applicationsResult].filter(Boolean);
+
                     // Find the application for the active hackathon
-                    // @ts-ignore help
                     const application = applications.find(
                         (app) =>
                             app.hackathonId === activeHackathon.id &&
