@@ -12,10 +12,15 @@ export function FullPageInfo({ src, children, title, body }: Props) {
             <Image
                 src={src}
                 width={700}
-                className="max-w-[240px]"
                 alt="An otter has dropped their mint chocolate ice cream. They look distraught."
             ></Image>
-            <div className="text-center text-white">
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1rem',
+                }}
+            >
                 <p className="text-brand-400 mb-2 text-sm font-semibold">
                     {title}
                 </p>

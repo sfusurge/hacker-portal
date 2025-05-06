@@ -14,7 +14,11 @@ import getStripe from '@/utils/get-stripejs';
 
 import { createPaymentIntent } from '@/actions/stripe';
 
-export default function ElementsForm(): JSX.Element {
+export default function ElementsForm({
+    userEmail,
+}: {
+    userEmail: string;
+}): JSX.Element {
     return (
         <Elements
             stripe={getStripe()}
@@ -30,15 +34,15 @@ export default function ElementsForm(): JSX.Element {
 
                 currency: 'cad',
                 mode: 'payment',
-                amount: 500,
+                amount: 50,
             }}
         >
-            <CheckoutForm />
+            <CheckoutForm userEmail={userEmail} />
         </Elements>
     );
 }
 
-function CheckoutForm() {
+function CheckoutForm({ userEmail }: { userEmail: string }) {
     const [cardholderName, setCardholderName] = useState<string>('');
     const [paymentType, setPaymentType] = useState<string>('');
     const [payment, setPayment] = useState<{
@@ -93,16 +97,18 @@ function CheckoutForm() {
                 return;
             }
 
-            const paymentAmount = 5;
+            const paymentAmount = 0.5;
 
-            const { client_secret: clientSecret } =
-                await createPaymentIntent(paymentAmount);
+            const { client_secret: clientSecret } = await createPaymentIntent(
+                paymentAmount,
+                userEmail
+            );
 
             const { error: confirmError } = await stripe.confirmPayment({
                 elements,
                 clientSecret,
                 confirmParams: {
-                    return_url: `${window.location.origin}/stripe/result`,
+                    return_url: `${window.location.origin}/rsvp/result`,
                     payment_method_data: {
                         billing_details: {
                             name: cardholderName,
@@ -130,7 +136,7 @@ function CheckoutForm() {
                 SparkJam Ticket
             </h3>
             <h3 className="text-gray-400">
-                Amount: <span className="text-white">$5.00</span>
+                Amount: <span className="text-white">50c</span>
             </h3>
 
             <form onSubmit={handleSubmit} className="space-y-6">
