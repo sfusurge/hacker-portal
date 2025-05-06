@@ -97,7 +97,7 @@ function CheckoutForm({ userEmail }: { userEmail: string }) {
                 return;
             }
 
-            const paymentAmount = 15;
+            const paymentAmount = 0.5;
 
             const { client_secret: clientSecret } = await createPaymentIntent(
                 paymentAmount,
