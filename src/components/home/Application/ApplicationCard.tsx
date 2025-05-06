@@ -305,6 +305,7 @@ function getCardFooter(status: AppStatus, hackathonName: string) {
                 variant="brand"
                 hierarchy="primary"
                 className="w-full"
+                onClick={() => redirect('/rsvp')}
             >
                 RSVP to {hackathonName}
             </Button>
