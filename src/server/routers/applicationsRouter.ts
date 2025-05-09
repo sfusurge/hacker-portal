@@ -7,7 +7,7 @@ import {
     updateApplicationStatusSchema,
 } from '@/db/schema/applications';
 import { getUserData, user } from '@/db/schema/users/users';
-import { and, asc, eq, getTableColumns } from 'drizzle-orm';
+import { and, asc, eq, getTableColumns, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { InternalServerError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
@@ -238,6 +238,7 @@ export const applicationsRouter = router({
                 .from(applications)
                 .innerJoin(user, eq(applications.userId, user.id))
                 .where(eq(user.email, input.email))
+                .orderBy(desc(applications.createdDate))
                 .limit(1);
 
             return application as ApplicationInfo;
@@ -250,12 +251,13 @@ export const applicationsRouter = router({
             })
         )
         .query(async ({ input }) => {
-            const [application] = await databaseClient
+            const applications_result = await databaseClient
                 .select(getTableColumns(applications))
                 .from(applications)
                 .innerJoin(user, eq(applications.userId, user.id))
-                .where(eq(user.email, input.email));
-            return application as ApplicationInfo;
+                .where(eq(user.email, input.email))
+                .orderBy(desc(applications.createdDate));
+            return applications_result as ApplicationInfo[];
         }),
 });
 

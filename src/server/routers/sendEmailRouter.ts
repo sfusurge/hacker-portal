@@ -4,6 +4,7 @@ import { sendEmailSchema } from '@/db/schema/emails';
 import { transporter } from '@/server/nodemailerTransporter';
 import { databaseClient } from '@/db/client';
 import { emailTemplates } from '@/db/schema/emails';
+import { user } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
 import { prepareEmailContent } from '@/app/(auth)/admin/email/emailPreview';
 const env = process.env;
@@ -72,11 +73,17 @@ export const sendEmailRouter = router({
                     }
                 }
 
-                // Prepare data for Handlebars
+                const [userData] = await databaseClient
+                    .select()
+                    .from(user)
+                    .where(eq(user.id, input.user.id))
+                    .limit(1);
+
                 const templateData = {
-                    firstName: input.user.firstName,
-                    lastName: input.user.lastName,
-                    email: input.user.email,
+                    firstName:
+                        userData.firstName ?? input.user.firstName ?? 'Friend',
+                    lastName: userData.lastName ?? input.user.lastName ?? '',
+                    email: userData.email ?? input.user.email,
                     userId: input.user.id,
                 };
 

@@ -108,6 +108,7 @@ export default function ReviewApplicationsTable({
                     lastName: row.original.lastName,
                     email: row.original.email,
                     pendingStatus: row.original.pendingStatus,
+                    currentStatus: row.original.currentStatus,
                 };
             });
 
@@ -130,7 +131,10 @@ export default function ReviewApplicationsTable({
 
                     const status = rowData[i].pendingStatus;
 
-                    if (status && status !== 'N/A') {
+                    if (
+                        status !== 'N/A' &&
+                        rowData[i].currentStatus !== 'Accepted'
+                    ) {
                         await updateApplicationStatus.mutateAsync({
                             userId: rowData[i].id,
                             hackathonId: hackathon?.id!,
@@ -296,6 +300,7 @@ export default function ReviewApplicationsTable({
                 </span>
             ),
             cell: (info) => info.getValue(),
+
             size: 150, // Initial width
             minSize: 100, // Minimum width
         },
@@ -921,7 +926,9 @@ export default function ReviewApplicationsTable({
                                     )
                                 }
                             >
-                                {isSending ? 'Sending...' : 'Send Emails'}
+                                {isSending
+                                    ? 'Sending...'
+                                    : `Send Email to ${table.getSelectedRowModel().rows.length} Rows`}
                             </button>
                         </div>
                     </div>

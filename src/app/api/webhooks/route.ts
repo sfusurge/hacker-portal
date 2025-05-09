@@ -1,7 +1,5 @@
 import type { Stripe } from 'stripe';
-
 import { NextResponse } from 'next/server';
-
 import { stripe } from '@/lib/stripe';
 import { createCaller } from '@/server/appRouter';
 
@@ -62,32 +60,16 @@ export async function POST(req: Request) {
                     // since payment succeeded, update application status
                     const trpcClient = createCaller({});
 
-                    // Get the active hackathon first
-                    const activeHackathon =
-                        await trpcClient.hackathons.getActiveHackathon();
-                    if (!activeHackathon) {
-                        console.error('No active hackathon found');
-                        break;
-                    }
-
-                    const applicationsResult =
-                        await trpcClient.applications.getApplicationsByEmail({
+                    const application =
+                        await trpcClient.applications.getApplicationByEmail({
                             email: data.receipt_email,
                         });
 
-                    // Check if applications is an array or a single object
-                    const applications = Array.isArray(applicationsResult)
-                        ? applicationsResult
-                        : [applicationsResult].filter(Boolean);
-
-                    // Find the application for the active hackathon
-                    const application = applications.find(
-                        (app) =>
-                            app.hackathonId === activeHackathon.id &&
-                            app.currentStatus === 'Accepted - Pending Payment'
-                    );
-
-                    if (!application) {
+                    if (
+                        !application ||
+                        application.currentStatus !==
+                            'Accepted - Pending Payment'
+                    ) {
                         console.error(
                             'No valid application found for active hackathon'
                         );
@@ -97,6 +79,7 @@ export async function POST(req: Request) {
                     await trpcClient.applications.updateApplication({
                         ...application,
                         status: 'Accepted',
+                        pendingStatus: 'N/A',
                     });
 
                     // Send confirmation email after successful payment
@@ -111,9 +94,8 @@ export async function POST(req: Request) {
                         if (rsvpTemplate) {
                             // Extract name from application response if possible
                             const firstName =
-                                application.response['2'] ?? 'User';
-                            const lastName =
-                                application.response['3'] ?? 'User';
+                                application.response['2'] ?? 'Friend';
+                            const lastName = application.response['3'] ?? '';
 
                             await trpcClient.emails.sendEmail({
                                 templateId: rsvpTemplate.id,
