@@ -20,7 +20,7 @@
         "paths": {
             "@/*": ["./src/*"]
         },
-        "target": "ES2017",
+        "target": "esnext",
         "types": ["vitest/globals"]
     },
     "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
