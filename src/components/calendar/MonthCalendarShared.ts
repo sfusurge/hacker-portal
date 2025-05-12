@@ -77,22 +77,32 @@ function groupBy<K extends PropertyKey, T>(
 
 export function groupEventsByDay(
     events: InternalCalendarEventType[],
-    firstDayOfMonth: Dayjs
+    firstDayOfMonth: Dayjs,
+    startDate: Dayjs,
+    days: number
 ) {
+    function dateId(time: Dayjs) {
+        return `${Math.floor(time.diff(firstDayOfMonth, 'hour') / 24) + 1}`;
+    }
+
     const grouped = {
-        ...groupBy(
-            events,
-            (item) =>
-                Math.floor(item.startTime.diff(firstDayOfMonth, 'hour') / 24) +
-                1
-        ),
+        ...groupBy(events, (item) => dateId(item.startTime)),
     };
 
     for (const [key, val] of Object.entries(grouped)) {
         val.sort((a, b) => a.startTime.unix() - b.startTime.unix());
-        grouped[parseInt(key)] = val;
+        grouped[key] = val;
     }
 
+    // fill missing days with empty group
+    for (let i = 0; i < days; i++) {
+        const id = dateId(startDate);
+
+        if (grouped[id] === undefined) {
+            grouped[id] = [];
+        }
+        startDate = startDate.add(1, 'day');
+    }
     return grouped;
 }
 

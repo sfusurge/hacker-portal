@@ -22,7 +22,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
         <>
             <ClientAuthContext userData={initialUserData}></ClientAuthContext>
             <div
-                className="bg-neutral-950 p-6 md:flex md:p-0 md:pr-5"
+                className="bg-neutral-950 p-2 md:flex md:p-6 md:pr-5"
                 style={{ height: '100dvh' }}
             >
                 <CacheClearer initialData={initialUserData}></CacheClearer>

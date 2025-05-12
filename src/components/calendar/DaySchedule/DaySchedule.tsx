@@ -38,10 +38,8 @@ export function DaySchedule({
     days: number;
     minColumnWidth: number;
 }) {
-    const endDate = startDate
-        .clone()
-        .add(Math.max(0, days - 1), 'day')
-        .endOf('day');
+    startDate = dayjs(startDate);
+    const endDate = startDate.add(Math.max(0, days - 1), 'day').endOf('day');
 
     const events = useMemo(() => DayjsifyEvents(_events), [_events]);
 
@@ -55,10 +53,14 @@ export function DaySchedule({
                         startTime.isBefore(endDate)
                     );
                 }),
-                dayjs(new Date(startDate.year(), startDate.month(), 1))
+                dayjs(new Date(startDate.year(), startDate.month(), 1)),
+                startDate,
+                days
             )
         );
     }, [events]);
+
+    console.log(processedEvents);
 
     const rootRef = useRef<HTMLDivElement>(null);
     const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
@@ -182,11 +184,7 @@ export function DaySchedule({
                                     </div>
                                     <div className={style.dayColumnContent}>
                                         {containerHeight > 0 &&
-                                            (true ||
-                                                day.isSame(
-                                                    currentTime,
-                                                    'day'
-                                                )) && (
+                                            day.isSame(currentTime, 'day') && (
                                                 <TimelineMarker
                                                     parentHeight={
                                                         containerHeight
@@ -239,6 +237,7 @@ function ProcessEventsForSchedule(eventsMaps: {
     for (let i = 0; i < events.length; i++) {
         const eventsOfDay = events[i];
         if (eventsOfDay.length === 0) {
+            out[eventTimes[i]] = [];
             continue;
         }
 

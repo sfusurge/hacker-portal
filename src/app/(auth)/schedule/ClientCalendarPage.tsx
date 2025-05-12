@@ -59,12 +59,15 @@ export function ClientCalendarPage({
     const { hackathon } = useHackathon();
 
     const fetchEvents = trpc.events.getEvents.useQuery(
-        { hackathonId: hackathon.id },
+        { hackathonId: hackathon?.id! },
         { enabled: false }
     );
 
     useEffect(() => {
         async function updateEvents() {
+            if (!hackathon || !hackathon.id) {
+                return;
+            }
             const res = await fetchEvents.refetch();
             setEvents(
                 res.data?.map((item) => {
@@ -80,7 +83,7 @@ export function ClientCalendarPage({
         return () => {
             clearInterval(interval);
         };
-    }, []);
+    }, [hackathon]);
 
     // TODO Mobile mode
 
@@ -192,9 +195,9 @@ export function ClientCalendarPage({
                 <div style={{ flex: '1', minHeight: '0' }}>
                     {showSchedule && (
                         <DaySchedule
-                            days={1}
+                            days={7}
                             minColumnWidth={300}
-                            startDate={dayjs(new Date(2025, 1, 14))}
+                            startDate={hackathon?.startDate ?? dayjs()}
                             events={events}
                         />
                     )}
