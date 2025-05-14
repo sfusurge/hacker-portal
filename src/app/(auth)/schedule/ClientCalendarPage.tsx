@@ -48,13 +48,13 @@ export function ClientCalendarPage({
         [year, month]
     );
 
+    const [width, height] = useWindowSize();
     const [showSchedule, setShowSchedule] = useState(true);
     const showCalendar = useMemo(() => !showSchedule, [showSchedule]);
+    const isMobile = useMemo(() => width <= 768, [width]);
 
     const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
     const [editMode, setEditMode] = useAtom(editModeAtom);
-
-    const [width, height] = useWindowSize();
 
     const { hackathon } = useHackathon();
 
@@ -85,16 +85,14 @@ export function ClientCalendarPage({
         };
     }, [hackathon]);
 
-    // TODO Mobile mode
-
     return (
         <>
             {isAdmin && <EventAdmin eventsAtom={eventsAtom} />}
 
             <div className="flex flex-col" style={{ height: '100%' }}>
                 <div
-                    className="flex"
                     style={{
+                        display: 'flex',
                         alignItems: 'center',
                         padding: '0.5rem',
                         flexFlow: 'wrap',
@@ -102,7 +100,7 @@ export function ClientCalendarPage({
                     }}
                 >
                     {/* header */}
-                    {showCalendar && (
+                    {!isMobile && showCalendar && (
                         <>
                             <span style={{ fontSize: 'large' }}>
                                 {monthObj.format('MMMM YYYY')}
@@ -147,15 +145,17 @@ export function ClientCalendarPage({
                         </>
                     )}
 
-                    <ToggleButton
-                        A="Day"
-                        B="Month"
-                        onToggle={(val) => {
-                            setShowSchedule(!val);
-                        }}
-                        toggle={showCalendar}
-                        style={{ marginLeft: 'auto', marginRight: '1rem' }}
-                    />
+                    {!isMobile && (
+                        <ToggleButton
+                            A="Day"
+                            B="Month"
+                            onToggle={(val) => {
+                                setShowSchedule(!val);
+                            }}
+                            toggle={showCalendar}
+                            style={{ marginLeft: 'auto', marginRight: '1rem' }}
+                        />
+                    )}
 
                     {isAdmin && (
                         <Button
@@ -192,8 +192,9 @@ export function ClientCalendarPage({
                     )}
                 </div>
 
-                <div style={{ flex: '1', minHeight: '0' }}>
-                    {showSchedule && (
+                <div style={{ flex: '1', minHeight: '0', overflow: 'auto' }}>
+                    {/* DESKTOP */}
+                    {!isMobile && showSchedule && (
                         <DaySchedule
                             days={7}
                             minColumnWidth={300}
@@ -201,13 +202,12 @@ export function ClientCalendarPage({
                             events={events}
                         />
                     )}
-
-                    {showCalendar && width > 768 && (
+                    {!isMobile && showCalendar && (
                         <MonthCalendar events={events} />
                     )}
-                    {showCalendar && width <= 768 && (
-                        <MobileMonthCalendar events={events} />
-                    )}
+
+                    {/* Mobile */}
+                    {isMobile && <MobileMonthCalendar events={events} />}
                 </div>
             </div>
         </>

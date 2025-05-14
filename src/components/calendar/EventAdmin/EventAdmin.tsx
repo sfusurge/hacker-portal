@@ -43,7 +43,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
     const createEventApi = trpc.events.createEvent.useMutation();
     const { hackathon } = useHackathon();
     const eventsFetch = trpc.events.getEvents.useQuery(
-        { hackathonId: hackathon.id },
+        { hackathonId: hackathon!.id },
         {
             enabled: false,
         }
@@ -244,8 +244,6 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
 }
 
 function ConvertEvent(e: InternalCalendarEventType | undefined) {
-    const { hackathon } = useHackathon();
-
     if (e) {
         const { startTime, endTime, ...rest } = e;
         return {
@@ -253,10 +251,6 @@ function ConvertEvent(e: InternalCalendarEventType | undefined) {
             startDate: startTime.toDate(),
             endDate: endTime.toDate(),
         } as CalendarEvent;
-    } else {
-        return {
-            color: '#6466F1',
-            hackathonId: hackathon.id,
-        } as CalendarEvent;
     }
+    return {} as CalendarEvent;
 }
