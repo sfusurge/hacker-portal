@@ -7,8 +7,19 @@ import { Label } from '@/components/ui/label/label';
 import { FormTextInput } from '@/components/ui/input/input';
 import { prepareEmailPreview } from '../emailPreview';
 import { type NewEmailTemplate } from '@/db/schema/emails';
+import { trpc } from '@/trpc/client';
+import {
+    PlaceholdersSection,
+    getDetectedPlaceholders,
+} from './PlaceholdersSection';
+import {
+    AttachmentsSection,
+    Attachment,
+} from '@/components/attachments/AttachmentsSection';
 
 export type EmailTemplateFormData = NewEmailTemplate;
+
+const bucketName = 'email-attachments';
 
 const AVAILABLE_PLACEHOLDERS = [
     { placeholder: '{{firstName}}', description: "Applicant's first name" },
@@ -18,20 +29,20 @@ const AVAILABLE_PLACEHOLDERS = [
         placeholder: '{{eventName}}',
         description: 'Name of the event (e.g., JourneyHacks 2025)',
     },
-    { placeholder: '{{teamMate1}}', description: 'Team mate 1 name' },
-    { placeholder: '{{teamMate2}}', description: 'Team mate 2 name' },
-    { placeholder: '{{teamMate3}}', description: 'Team mate 3 name' },
+    // { placeholder: '{{teamMate1}}', description: 'Team mate 1 name' },
+    // { placeholder: '{{teamMate2}}', description: 'Team mate 2 name' },
+    // { placeholder: '{{teamMate3}}', description: 'Team mate 3 name' },
     { placeholder: '{{qrCode}}', description: 'URL to a unique QR code image' },
-    {
-        placeholder: '{{acceptanceStatus}}',
-        description: "Applicant's acceptance status",
-    },
-    { placeholder: '{{eventDate}}', description: 'Date of the event' },
-    { placeholder: '{{eventLocation}}', description: 'Location of the event' },
-    {
-        placeholder: '{{rsvpDeadline}}',
-        description: 'Deadline to RSVP for the event',
-    },
+    // {
+    //     placeholder: '{{acceptanceStatus}}',
+    //     description: "Applicant's acceptance status",
+    // },
+    // { placeholder: '{{eventDate}}', description: 'Date of the event' },
+    // { placeholder: '{{eventLocation}}', description: 'Location of the event' },
+    // {
+    //     placeholder: '{{rsvpDeadline}}',
+    //     description: 'Deadline to RSVP for the event',
+    // },
 ];
 
 interface EmailTemplateFormProps {
@@ -49,89 +60,22 @@ export function EmailTemplateForm({
     onCancel,
     isLoading = false,
 }: EmailTemplateFormProps) {
-    const [formData, setFormData] = useState<EmailTemplateFormData>({
+    const [formData, setFormData] = useState<
+        EmailTemplateFormData & {
+            attachments: Array<Attachment>;
+        }
+    >({
         title: '',
         purpose: '',
         description: '',
         content: '',
+        attachments: [],
     });
-
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const [detectedPlaceholders, setDetectedPlaceholders] = useState<string[]>(
-        []
-    );
-    const [previewContent, setPreviewContent] = useState<string>('');
     const [showHighlights, setShowHighlights] = useState<boolean>(true);
+    const [deletedAttachments, setDeletedAttachments] = useState<string[]>([]);
 
-    const detectPlaceholders = (content: string) => {
-        const regex = /{{([a-zA-Z0-9]+)}}/g;
-        const matches = [];
-        let match;
-
-        while ((match = regex.exec(content)) !== null) {
-            const fullMatch = match[0];
-            if (
-                AVAILABLE_PLACEHOLDERS.some((p) => p.placeholder === fullMatch)
-            ) {
-                matches.push(fullMatch);
-            }
-        }
-
-        setDetectedPlaceholders([...new Set(matches)]);
-
-        let formattedContent = content;
-        [...new Set(matches)].forEach((placeholder) => {
-            const escapedPlaceholder = placeholder.replace(
-                /[.*+?^${}()|[\]\\]/g,
-                '\\$&'
-            );
-            formattedContent = formattedContent.replace(
-                new RegExp(escapedPlaceholder, 'g'),
-                showHighlights
-                    ? `<span class="placeholder-highlight">${placeholder}</span>`
-                    : placeholder
-            );
-        });
-
-        setPreviewContent(formattedContent);
-    };
-
-    useEffect(() => {
-        if (formData.content) {
-            detectPlaceholders(formData.content);
-        }
-    }, [showHighlights, formData.content]);
-
-    useEffect(() => {
-        if (initialData) {
-            setFormData({
-                title: initialData.title || '',
-                purpose: initialData.purpose || '',
-                description: initialData.description || '',
-                content: initialData.content || '',
-            });
-
-            if (initialData.content) {
-                detectPlaceholders(initialData.content);
-            }
-        }
-    }, [initialData]);
-
-    const handleInputChange = (value: string, name: string) => {
-        setFormData((prev) => ({ ...prev, [name]: value }));
-
-        if (errors[name]) {
-            setErrors((prev) => {
-                const newErrors = { ...prev };
-                delete newErrors[name];
-                return newErrors;
-            });
-        }
-
-        if (name === 'content') {
-            detectPlaceholders(value);
-        }
-    };
+    const deleteFileMutation = trpc.files.deleteFile.useMutation();
 
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {};
@@ -152,26 +96,91 @@ export function EmailTemplateForm({
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleFormSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleInputChange = (value: string, name: string) => {
+        setFormData((prev) => ({ ...prev, [name]: value }));
 
-        if (validateForm()) {
-            onSubmit(
-                initialData?.id ? { ...formData, id: initialData.id } : formData
-            );
+        if (errors[name]) {
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
         }
-    };
-
-    const getPlaceholderDescription = (placeholder: string): string => {
-        const found = AVAILABLE_PLACEHOLDERS.find(
-            (p) => p.placeholder === placeholder
-        );
-        return found ? found.description : 'Unknown placeholder';
     };
 
     const toggleHighlights = () => {
         setShowHighlights((prev) => !prev);
     };
+
+    const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!validateForm()) return;
+        try {
+            if (deletedAttachments.length > 0) {
+                await Promise.all(
+                    deletedAttachments.map((key) =>
+                        deleteFileMutation.mutateAsync({
+                            key,
+                            bucketName: bucketName,
+                        })
+                    )
+                );
+                setDeletedAttachments([]);
+            }
+
+            const formattedAttachments = formData.attachments.map(
+                (attachment) => ({
+                    key: attachment.key,
+                    fileName: attachment.fileName,
+                    cropData: attachment.cropData,
+                })
+            );
+
+            await onSubmit({
+                ...formData,
+                id: initialData?.id,
+                attachments: formattedAttachments,
+            });
+        } catch (error) {
+            console.error('Error submitting form:', error);
+        }
+    };
+
+    const handleAttachmentsChange = (newAttachments: Array<Attachment>) => {
+        setFormData((prev) => {
+            if (
+                JSON.stringify(prev.attachments) !==
+                JSON.stringify(newAttachments)
+            ) {
+                return {
+                    ...prev,
+                    attachments: newAttachments,
+                };
+            }
+            return prev;
+        });
+    };
+
+    const handleAttachmentDeleted = (key: string) => {
+        setDeletedAttachments((prev) => [...prev, key]);
+
+        setFormData((prev) => ({
+            ...prev,
+            attachments: prev.attachments.filter((a) => a.key !== key),
+        }));
+    };
+
+    useEffect(() => {
+        if (initialData) {
+            setFormData({
+                title: initialData.title || '',
+                purpose: initialData.purpose || '',
+                description: initialData.description || '',
+                content: initialData.content || '',
+                attachments: initialData.attachments || [],
+            });
+        }
+    }, [initialData]);
 
     return (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
@@ -228,7 +237,7 @@ export function EmailTemplateForm({
                                 rows={3}
                             />
                             {errors.description && (
-                                <p className="mt-1 text-sm text-red-500">
+                                <p className="text-danger-500 mt-1 text-sm">
                                     {errors.description}
                                 </p>
                             )}
@@ -251,14 +260,33 @@ export function EmailTemplateForm({
                                 className="font-mono text-sm"
                             />
                             {errors.content && (
-                                <p className="mt-1 text-sm text-red-500">
+                                <p className="text-danger-500 mt-1 text-sm">
                                     {errors.content}
                                 </p>
                             )}
                         </div>
+
+                        <AttachmentsSection
+                            attachments={formData.attachments || []}
+                            onAttachmentsChange={handleAttachmentsChange}
+                            onAttachmentDeleted={handleAttachmentDeleted}
+                            bucketName={bucketName}
+                        />
                     </div>
 
-                    <div className="flex space-x-4">
+                    <div className="flex w-full justify-end space-x-4">
+                        {onCancel && (
+                            <Button
+                                type="button"
+                                onClick={onCancel}
+                                variant="brand"
+                                hierarchy="secondary"
+                                size="cozy"
+                            >
+                                Cancel
+                            </Button>
+                        )}
+
                         <Button
                             type="submit"
                             disabled={isLoading}
@@ -272,18 +300,6 @@ export function EmailTemplateForm({
                                   ? 'Update Template'
                                   : 'Create Template'}
                         </Button>
-
-                        {onCancel && (
-                            <Button
-                                type="button"
-                                onClick={onCancel}
-                                variant="brand"
-                                hierarchy="secondary"
-                                size="cozy"
-                            >
-                                Cancel
-                            </Button>
-                        )}
                     </div>
                 </form>
 
@@ -313,41 +329,12 @@ export function EmailTemplateForm({
 
             <div>
                 <div className="sticky top-4">
-                    <div className="mb-4 flex items-center justify-between">
-                        <h3 className="text-lg font-medium">Preview</h3>
-                        <Button
-                            type="button"
-                            onClick={toggleHighlights}
-                            variant="brand"
-                            hierarchy="tertiary"
-                            size="cozy"
-                        >
-                            {showHighlights
-                                ? 'Hide Highlights'
-                                : 'Show Highlights'}
-                        </Button>
-                    </div>
-
-                    {detectedPlaceholders.length > 0 && (
-                        <div className="mb-4 bg-neutral-900 p-3">
-                            <h4 className="mb-2 text-sm font-medium">
-                                Detected Placeholders:
-                            </h4>
-                            <div className="flex flex-wrap gap-2">
-                                {detectedPlaceholders.map((placeholder) => (
-                                    <div
-                                        key={placeholder}
-                                        className="rounded-full bg-neutral-700 px-2 py-1 text-xs"
-                                        title={getPlaceholderDescription(
-                                            placeholder
-                                        )}
-                                    >
-                                        {placeholder}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                    <PlaceholdersSection
+                        availablePlaceholders={AVAILABLE_PLACEHOLDERS}
+                        emailContent={formData.content}
+                        showHighlights={showHighlights}
+                        toggleHighlights={toggleHighlights}
+                    />
 
                     <div className="overflow-hidden rounded-md border">
                         <div className="flex items-center border-b bg-gray-50 px-4 py-2 dark:bg-gray-800">
@@ -359,7 +346,10 @@ export function EmailTemplateForm({
                             <iframe
                                 srcDoc={prepareEmailPreview(formData.content, {
                                     showPlaceholders: showHighlights,
-                                    placeholders: detectedPlaceholders,
+                                    placeholders: getDetectedPlaceholders(
+                                        formData.content,
+                                        AVAILABLE_PLACEHOLDERS
+                                    ),
                                 })}
                                 title="Email Preview"
                                 className="h-full w-full border-0"

@@ -9,10 +9,9 @@ import {
     getEmailTemplateSchema,
     deleteEmailTemplateSchema,
 } from '@/db/schema/emails';
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 
 export const emailsRouter = router({
-    // Create a new email template
     createEmailTemplate: publicProcedure
         .input(emailTemplateSchema)
         .mutation(async ({ input }) => {
@@ -26,6 +25,19 @@ export const emailsRouter = router({
                 });
             }
 
+            const attachmentsWithCropData =
+                input.attachments?.map((attachment) => {
+                    console.log(
+                        'Attachment with cropData:',
+                        JSON.stringify(attachment)
+                    );
+                    return {
+                        key: attachment.key,
+                        fileName: attachment.fileName,
+                        cropData: attachment.cropData,
+                    };
+                }) || null;
+
             const [template] = await databaseClient
                 .insert(emailTemplates)
                 .values({
@@ -33,13 +45,13 @@ export const emailsRouter = router({
                     purpose: input.purpose,
                     description: input.description || null,
                     content: input.content,
+                    attachments: attachmentsWithCropData,
                 })
                 .returning();
 
             return template;
         }),
 
-    // Get all email templates
     getEmailTemplates: publicProcedure.query(async () => {
         const user = await getUserData();
 
@@ -58,12 +70,11 @@ export const emailsRouter = router({
         const templates = await databaseClient
             .select()
             .from(emailTemplates)
-            .orderBy(emailTemplates.updatedAt);
+            .orderBy(desc(emailTemplates.updatedAt));
 
         return templates;
     }),
 
-    // Get a specific email template by ID
     getEmailTemplate: publicProcedure
         .input(getEmailTemplateSchema)
         .query(async ({ input }) => {
@@ -90,7 +101,6 @@ export const emailsRouter = router({
             return template || null;
         }),
 
-    // Get email template by name
     getEmailTemplateByName: publicProcedure
         .input(z.object({ title: z.string() }))
         .query(async ({ input }) => {
@@ -109,7 +119,6 @@ export const emailsRouter = router({
             return template || null;
         }),
 
-    // Get email template by purpose
     getEmailTemplateByPurpose: publicProcedure
         .input(z.object({ purpose: z.string() }))
         .query(async ({ input }) => {
@@ -122,19 +131,31 @@ export const emailsRouter = router({
             return template || null;
         }),
 
-    // Update an existing email template
     updateEmailTemplate: publicProcedure
         .input(emailTemplateSchema.extend({ id: z.number().int() }))
         .mutation(async ({ input }) => {
             const user = await getUserData();
 
-            // Only admin can update templates
             if (user?.userRole !== UserRoleEnum.admin) {
                 throw new UnauthorizedError({
                     email: user?.email,
                     role: user?.userRole,
                 });
             }
+
+            // Ensure attachments with cropData are properly preserved
+            const attachmentsWithCropData =
+                input.attachments?.map((attachment) => {
+                    console.log(
+                        'Update attachment with cropData:',
+                        JSON.stringify(attachment)
+                    );
+                    return {
+                        key: attachment.key,
+                        fileName: attachment.fileName,
+                        cropData: attachment.cropData,
+                    };
+                }) || null;
 
             const [template] = await databaseClient
                 .update(emailTemplates)
@@ -143,6 +164,7 @@ export const emailsRouter = router({
                     purpose: input.purpose,
                     description: input.description || null,
                     content: input.content,
+                    attachments: attachmentsWithCropData,
                     updatedAt: new Date(),
                 })
                 .where(eq(emailTemplates.id, input.id))
@@ -151,7 +173,6 @@ export const emailsRouter = router({
             return template;
         }),
 
-    // Delete an email template
     deleteEmailTemplate: publicProcedure
         .input(deleteEmailTemplateSchema)
         .mutation(async ({ input }) => {

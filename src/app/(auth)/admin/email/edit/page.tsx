@@ -7,6 +7,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { trpc } from '@/trpc/client';
 import Link from 'next/link';
 import { EmailTemplateForm, EmailTemplateFormData } from './EmailTemplateForm';
+import { FolderArrowDownIcon } from '@heroicons/react/24/solid';
+import { Loader2 } from 'lucide-react';
 
 export default function EmailEditPage() {
     const { toast } = useToast();
@@ -19,20 +21,18 @@ export default function EmailEditPage() {
     const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Fetch template if ID is provided
-    const { data: template } = trpc.emailTemplates.getEmailTemplate.useQuery(
-        { id: templateId! },
-        { enabled: !!templateId }
-    );
+    const { data: template, isLoading: isTemplateLoading } =
+        trpc.emailTemplates.getEmailTemplate.useQuery(
+            { id: templateId! },
+            { enabled: !!templateId }
+        );
 
-    // Set selected template when data is loaded
     useEffect(() => {
         if (template) {
             setSelectedTemplate(template);
         }
     }, [template]);
 
-    // Create template mutation
     const createTemplateMutation =
         trpc.emailTemplates.createEmailTemplate.useMutation({
             onSuccess: () => {
@@ -40,6 +40,7 @@ export default function EmailEditPage() {
                     title: 'Success',
                     description: 'Template created successfully',
                     variant: 'default',
+                    icon: <FolderArrowDownIcon />,
                 });
                 router.push('/admin/email');
             },
@@ -52,14 +53,14 @@ export default function EmailEditPage() {
             },
         });
 
-    // Update template mutation
     const updateTemplateMutation =
         trpc.emailTemplates.updateEmailTemplate.useMutation({
             onSuccess: () => {
                 toast({
                     title: 'Success',
                     description: 'Template updated successfully',
-                    variant: 'success',
+                    variant: 'default',
+                    icon: <FolderArrowDownIcon />,
                 });
                 router.push('/admin/email');
             },
@@ -67,7 +68,7 @@ export default function EmailEditPage() {
                 toast({
                     title: 'Error',
                     description: `Error updating template: ${error.message}`,
-                    variant: 'error',
+                    variant: 'default',
                 });
             },
         });
@@ -78,21 +79,31 @@ export default function EmailEditPage() {
         setIsLoading(true);
         try {
             if (data.id) {
-                // Update existing template
                 await updateTemplateMutation.mutateAsync({
                     id: data.id,
                     title: data.title,
                     purpose: data.purpose,
                     description: data.description || '',
                     content: data.content,
+                    attachments:
+                        data.attachments?.map((attachment) => ({
+                            key: attachment.key,
+                            fileName: attachment.fileName,
+                            cropData: attachment.cropData,
+                        })) || [],
                 });
             } else {
-                // Create new template
                 await createTemplateMutation.mutateAsync({
                     title: data.title,
                     purpose: data.purpose,
                     description: data.description || '',
                     content: data.content,
+                    attachments:
+                        data.attachments?.map((attachment) => ({
+                            key: attachment.key,
+                            fileName: attachment.fileName,
+                            cropData: attachment.cropData,
+                        })) || [],
                 });
             }
         } finally {
@@ -119,11 +130,21 @@ export default function EmailEditPage() {
                 </Link>
             </div>
 
-            <EmailTemplateForm
-                initialData={selectedTemplate}
-                onSubmit={handleSubmit}
-                onCancel={handleCancel}
-            />
+            {templateId && isTemplateLoading ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                    <Loader2 className="text-brand-500 mb-4 h-8 w-8 animate-spin" />
+                    <p className="text-lg text-neutral-400">
+                        Loading template...
+                    </p>
+                </div>
+            ) : (
+                <EmailTemplateForm
+                    initialData={selectedTemplate}
+                    onSubmit={handleSubmit}
+                    onCancel={handleCancel}
+                    isLoading={isLoading}
+                />
+            )}
         </div>
     );
 }
