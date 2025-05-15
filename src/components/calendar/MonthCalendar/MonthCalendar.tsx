@@ -80,7 +80,9 @@ export function MonthCalendar({
         // have a view of only this month
         return groupEventsByDay(
             getEventsOfMonth(events, month, year),
-            dayjs(new Date(year, month, 1))
+            dayjs(new Date(year, month, 1)),
+            dayjs(),
+            0
         );
     }, [year, month]);
 

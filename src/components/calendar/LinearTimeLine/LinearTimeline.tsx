@@ -47,6 +47,8 @@ function _LinearTimeline({
         dayjs(new Date(month, year, 1))
     );
 
+    console.log(events, eventsGroupedByDay);
+
     const [showMoreInfo, setShowMore] = useAtom(showMoreInfoEvent);
 
     return (

@@ -48,6 +48,12 @@ export function ClientCalendarPage({
         [year, month]
     );
 
+    const [loaded, setLoaded] = useState(false);
+
+    useEffect(() => {
+        setLoaded(true);
+    }, []);
+
     const [width, height] = useWindowSize();
     const [showSchedule, setShowSchedule] = useState(true);
     const showCalendar = useMemo(() => !showSchedule, [showSchedule]);
@@ -89,7 +95,10 @@ export function ClientCalendarPage({
         <>
             {isAdmin && <EventAdmin eventsAtom={eventsAtom} />}
 
-            <div className="flex flex-col" style={{ height: '100%' }}>
+            <div
+                className="flex flex-col"
+                style={{ height: '100%', opacity: loaded ? 1 : 0 }}
+            >
                 <div
                     style={{
                         display: 'flex',
@@ -192,7 +201,7 @@ export function ClientCalendarPage({
                     )}
                 </div>
 
-                <div style={{ flex: '1', minHeight: '0', overflow: 'auto' }}>
+                <div style={{ flex: '1', minHeight: '0' }}>
                     {/* DESKTOP */}
                     {!isMobile && showSchedule && (
                         <DaySchedule

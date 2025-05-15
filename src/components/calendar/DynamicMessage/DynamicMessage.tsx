@@ -20,17 +20,18 @@ function limitDimention(
     parentLength: number
 ) {
     const center = parentReference + parentLength / 2;
+
     if (center - childLength / 2 - margin < 0) {
         // low limit
-        return margin - parentReference;
+        return margin;
     }
 
     if (center + childLength / 2 + margin > max) {
         // upper limit
-        return max - margin - childLength - parentReference;
+        return max - margin - childLength;
     }
 
-    return center - childLength / 2 - parentReference;
+    return center - childLength / 2;
 }
 
 /**
@@ -62,7 +63,7 @@ export function DynamicMessage({
 
     const childRef = useRef<HTMLDivElement>(null);
 
-    const [width, height] = useWindowSize();
+    const [width, height] = useDivSize(rootRef as HTMLDivElement);
 
     const [top, left] = useMemo(() => {
         let calcTop = 0;
@@ -73,88 +74,70 @@ export function DynamicMessage({
             const parent = (
                 parentRef as HTMLDivElement
             ).getBoundingClientRect();
+
+            const parentRight = parent.right - root.left;
+            const parentTop = parent.top - root.top;
+            const parentLeft = parent.left - root.left;
+            const parentBottom = parent.bottom - root.top;
+
             // try right side
-            if (parent.right + margin * 2 + child.width < width) {
+            if (parentRight + margin * 2 + child.width < width) {
                 // will fit in right side
 
                 calcTop = limitDimention(
                     height,
                     margin,
                     child.height,
-                    parent.top,
+                    parentTop,
                     parent.height
                 );
-                calcLeft = parent.width + margin;
-            } else if (parent.top - margin * 2 - child.height > 0) {
+                calcLeft = parentRight + margin;
+            } else if (parentTop - margin * 2 - child.height > 0) {
                 // try fitting top side
 
                 calcLeft = limitDimention(
                     width,
                     margin,
                     child.width,
-                    parent.left,
+                    parentLeft,
                     parent.width
                 );
-                calcTop = -(child.height + margin);
-            } else if (parent.bottom + margin * 2 + child.height > height) {
+                calcTop = parentTop - (child.height + margin);
+                console.log(calcLeft, calcTop);
+            } else if (parentBottom + margin * 2 + child.height > height) {
                 // fitting bottom side
                 calcLeft = limitDimention(
                     width,
                     margin,
                     child.width,
-                    parent.left,
+                    parentLeft,
                     parent.width
                 );
-                calcTop = parent.height + margin;
-            } else {
-                // all the other sides dont work, just place it on the left.
+                calcTop = parentBottom + margin;
+            } else if (parentLeft - margin * 2 - child.width > 0) {
+                // fit left side
                 calcTop = limitDimention(
                     height,
                     margin,
                     child.height,
-                    parent.top,
+                    parentTop,
                     parent.height
                 );
-                calcLeft = -(child.width + margin);
+                calcLeft = parentLeft - (child.width + margin);
+            } else {
+                calcLeft = (width - child.width) / 2;
+                calcTop = (height - child.height) / 2;
             }
-
-            // sicne this element isn't a direct child of "parent", calc and apply offset for position relative to root.
-            calcTop += parent.top - root.top;
-            calcLeft += parent.left - root.left;
         }
+        console.log(calcTop, calcLeft);
 
         return [calcTop, calcLeft];
     }, [width, height, childRef.current, parentRef, rootRef]);
 
-    // const clickedOutsideCallback = useCallback(
-    //     (e: MouseEvent) => {
-    //         if (
-    //             !childRef.current?.contains(e.target as Node) &&
-    //             !e.defaultPrevented
-    //         ) {
-    //             // clicked outside
-    //             e.preventDefault();
-    //             e.stopImmediatePropagation();
-
-    //             document.removeEventListener(
-    //                 'click',
-    //                 clickedOutsideCallback,
-    //                 true
-    //             );
-    //             closeLabel();
-    //         }
-    //     },
-    //     [closeLabel]
-    // );
-    // useEffect(() => {
-    //     document.addEventListener('click', clickedOutsideCallback, true);
-    //     return () => {
-    //         document.removeEventListener('click', clickedOutsideCallback, true);
-    //     };
-    // }, []);
     useEffect(() => {
         onOpen && onOpen();
     }, []);
+
     return (
         <>
             <div
@@ -195,22 +178,27 @@ export function DynamicMessage({
     );
 }
 
-/*
-https://stackoverflow.com/a/19014495/12471420
-*/
-function useWindowSize() {
-    //  minus 20 to approx scrollbar size
-    const [size, setSize] = useState([
-        window.innerWidth - 20,
-        window.innerHeight,
-    ]);
+function useDivSize(div: HTMLDivElement) {
+    const [size, setSize] = useState([0, 0]);
+
     useLayoutEffect(() => {
-        function updateSize() {
-            setSize([window.innerWidth - 20, window.innerHeight]);
-        }
-        window.addEventListener('resize', updateSize);
-        updateSize(); // update immediately for initial render
-        return () => window.removeEventListener('resize', updateSize);
+        const observer = new ResizeObserver((e) => {
+            for (const item of e) {
+                const contentSize = item.contentBoxSize[0];
+                setSize([contentSize.inlineSize, contentSize.blockSize]);
+                console.log({
+                    width: contentSize.inlineSize,
+                    height: contentSize.blockSize,
+                });
+            }
+        });
+
+        observer.observe(div);
+
+        return () => {
+            observer.disconnect();
+        };
     }, []);
+
     return size;
 }

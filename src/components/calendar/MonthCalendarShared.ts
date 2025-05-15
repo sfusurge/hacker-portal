@@ -78,8 +78,8 @@ function groupBy<K extends PropertyKey, T>(
 export function groupEventsByDay(
     events: InternalCalendarEventType[],
     firstDayOfMonth: Dayjs,
-    startDate: Dayjs,
-    days: number
+    startDate?: Dayjs,
+    days?: number
 ) {
     function dateId(time: Dayjs) {
         return `${Math.floor(time.diff(firstDayOfMonth, 'hour') / 24) + 1}`;
@@ -92,6 +92,11 @@ export function groupEventsByDay(
     for (const [key, val] of Object.entries(grouped)) {
         val.sort((a, b) => a.startTime.unix() - b.startTime.unix());
         grouped[key] = val;
+    }
+
+    if (startDate === undefined || days === undefined) {
+        // startDate and total days are optional, used to fill miss days with empty array.
+        return grouped;
     }
 
     // fill missing days with empty group
