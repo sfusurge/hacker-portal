@@ -11,34 +11,31 @@ import {
     selectedEventAtom,
 } from '../MonthCalendarShared';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { ClockIcon, MapPinIcon } from '@heroicons/react/24/solid';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence } from 'motion/react';
-import { LongDescriptionModal } from '../EventLongDescription/EventLongDescription';
+import {
+    EventLongDescriptionContent,
+    LongDescriptionModal,
+} from '../EventLongDescription/EventLongDescription';
+import { Drawer, DrawerContent } from '@/components/ui/drawer';
+import { DialogTitle } from '@/components/ui/dialog';
 
 const DATE_FORMAT = 'MMM DD, dddd';
-
-export function LinearTimeline({
-    events,
-    styles,
-}: Readonly<{
-    events: InternalCalendarEventType[];
-    styles?: CSSProperties | undefined;
-}>) {
-    return <_LinearTimeline events={events} styles={styles}></_LinearTimeline>;
-}
 
 const showMoreInfoEvent = atom<InternalCalendarEventType | undefined>(
     undefined
 );
 
-function _LinearTimeline({
+export function LinearTimeline({
     events,
     styles,
+    daySelected,
 }: {
     events: InternalCalendarEventType[];
-    styles: CSSProperties | undefined;
+    daySelected: (eventsOfDay: InternalCalendarEventType[]) => void;
+    styles?: CSSProperties | undefined;
 }) {
     const { month, year } = useAtomValue(currentYearMonthAtom);
 
@@ -47,22 +44,23 @@ function _LinearTimeline({
         dayjs(new Date(month, year, 1))
     );
 
-    console.log(events, eventsGroupedByDay);
-
     const [showMoreInfo, setShowMore] = useAtom(showMoreInfoEvent);
 
     return (
         <>
-            <AnimatePresence>
-                {showMoreInfo && (
-                    <LongDescriptionModal
-                        event={showMoreInfo}
-                        onClose={() => {
-                            setShowMore(undefined);
-                        }}
-                    />
-                )}
-            </AnimatePresence>
+            <Drawer
+                open={showMoreInfo !== undefined}
+                onClose={() => {
+                    setShowMore(undefined);
+                }}
+            >
+                <DrawerContent>
+                    <DialogTitle>{showMoreInfo?.title}</DialogTitle>
+                    {showMoreInfo && (
+                        <EventLongDescriptionContent event={showMoreInfo} />
+                    )}
+                </DrawerContent>
+            </Drawer>
 
             <div className={style.timelineContainer} style={styles}>
                 {Object.entries(eventsGroupedByDay).map((e) => {
@@ -72,6 +70,7 @@ function _LinearTimeline({
                         <TimeLineDayWrapper
                             key={key}
                             eventsOfDay={eventsOfDay}
+                            daySelected={daySelected}
                         ></TimeLineDayWrapper>
                     );
                 })}
@@ -82,30 +81,33 @@ function _LinearTimeline({
 
 function TimeLineDayWrapper({
     eventsOfDay,
+    daySelected,
 }: {
     eventsOfDay: InternalCalendarEventType[];
+    daySelected: (eventsOfDay: InternalCalendarEventType[]) => void;
 }) {
-    const [_selectedDay, set_SelectedDay] = useAtom(selectedDayAtom);
+    const [selectedDay, setSelectedDay] = useAtom(selectedDayAtom);
 
     const dayId = yearMonthDay(eventsOfDay[0].startTime);
 
     const ref = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (_selectedDay?.isSame(dayId, 'date')) {
+        if (selectedDay?.isSame(dayId, 'date')) {
             ref.current!.parentElement!.scrollTo({
                 behavior: 'smooth',
                 top: ref.current!.offsetTop,
             });
         }
-    }, [_selectedDay]);
+    }, [selectedDay]);
 
     return (
         <div className={style.dayWrapper} ref={ref}>
             <div
                 className={style.timelineHeader}
                 onClick={() => {
-                    set_SelectedDay(dayId);
+                    daySelected(eventsOfDay);
+                    setSelectedDay(eventsOfDay[0].startTime);
                 }}
             >
                 {eventsOfDay[0].startTime.format(DATE_FORMAT)}
@@ -121,7 +123,7 @@ function TimeLineDayWrapper({
 function TimelineItem({ event }: { event: InternalCalendarEventType }) {
     const [contentHeight, setContentHeight] = useState(0);
     const innerContentRef = useRef<HTMLDivElement | null>(null);
-    const [selectedEvent, setSelected] = useAtom(selectedEventAtom);
+    const setSelected = useSetAtom(selectedEventAtom);
     function expandContent() {
         if (contentHeight === 0) {
             setContentHeight(innerContentRef.current?.scrollHeight!);
@@ -170,13 +172,17 @@ function TimelineItem({ event }: { event: InternalCalendarEventType }) {
                     }}
                 >
                     <span className={style.line}>
-                        <ClockIcon style={{ width: '1rem' }} />{' '}
+                        <ClockIcon
+                            style={{ width: '1rem', margin: '0.25rem' }}
+                        />
                         {getEventDurationString(event)}
                     </span>
 
                     {event.location && (
                         <span className={style.line}>
-                            <MapPinIcon style={{ width: '1rem' }} />
+                            <MapPinIcon
+                                style={{ width: '1rem', margin: '0.25rem' }}
+                            />
                             {event.location}
                         </span>
                     )}

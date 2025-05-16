@@ -190,12 +190,14 @@ function useDivSize(div: HTMLDivElement) {
             }
         });
 
-        observer.observe(div);
+        if (div) {
+            observer.observe(div);
+        }
 
         return () => {
             observer.disconnect();
         };
-    }, []);
+    }, [div]);
 
     return size;
 }

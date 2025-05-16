@@ -1,6 +1,7 @@
 import { CalendarEvent } from '@/server/routers/eventsRouter';
 import { atom, PrimitiveAtom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
+    DayjsifyEvents,
     InternalCalendarEventType,
     selectedEventAtom,
 } from '../MonthCalendarShared';
@@ -16,7 +17,7 @@ import dayjs from 'dayjs';
 import { useHackathon } from '@/hooks/use-hackathon';
 
 export interface EventAdminProps {
-    eventsAtom: PrimitiveAtom<CalendarEvent[]>;
+    eventsAtom: PrimitiveAtom<InternalCalendarEventType[]>;
 }
 export const editModeAtom = atom(false);
 
@@ -73,13 +74,15 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
         setTimeout(async () => {
             const res = await eventsFetch.refetch();
             setEvents(
-                res.data?.map((item) => {
-                    return {
-                        ...item,
-                        startDate: new Date(item.startDate),
-                        endDate: new Date(item.endDate),
-                    };
-                }) ?? []
+                DayjsifyEvents(
+                    res.data?.map((item) => {
+                        return {
+                            ...item,
+                            startDate: new Date(item.startDate),
+                            endDate: new Date(item.endDate),
+                        };
+                    }) ?? []
+                )
             );
         }, 2000);
         setEditMode(false);

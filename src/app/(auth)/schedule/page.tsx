@@ -115,5 +115,10 @@ export default async function CalendarPage() {
         },
     ];
 
-    return <ClientCalendarPage events={ssrEvents}></ClientCalendarPage>;
+    return (
+        <ClientCalendarPage
+            events={ssrEvents}
+            hackathon={hackathon}
+        ></ClientCalendarPage>
+    );
 }

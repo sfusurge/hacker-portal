@@ -99,6 +99,8 @@ export function groupEventsByDay(
         return grouped;
     }
 
+    console.log(startDate);
+
     // fill missing days with empty group
     for (let i = 0; i < days; i++) {
         const id = dateId(startDate);
@@ -153,7 +155,7 @@ function getHour(t: Dayjs) {
 }
 
 export function getEventDurationString(event: InternalCalendarEventType) {
-    return `${event.startTime.format('ddd, MMM D')} - ${getHour(event.startTime)} to ${getHour(event.endTime)}`;
+    return `${getHour(event.startTime)} to ${getHour(event.endTime)}`;
 }
 
 export type InternalCalendarEventType = Omit<

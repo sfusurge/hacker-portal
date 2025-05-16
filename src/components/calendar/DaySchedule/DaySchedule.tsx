@@ -28,20 +28,18 @@ const [rowHeight, headerHeight] = [90, 30];
  * @returns
  */
 export function DaySchedule({
-    events: _events,
+    events,
     startDate,
     days,
     minColumnWidth,
 }: {
-    events: CalendarEvent[];
     startDate: Dayjs;
     days: number;
     minColumnWidth: number;
+    events: InternalCalendarEventType[];
 }) {
     startDate = dayjs(startDate);
     const endDate = startDate.add(Math.max(0, days - 1), 'day').endOf('day');
-
-    const events = useMemo(() => DayjsifyEvents(_events), [_events]);
 
     const processedEvents = useMemo(() => {
         return ProcessEventsForSchedule(
@@ -157,6 +155,8 @@ export function DaySchedule({
                         {Object.entries(processedEvents).map((item, index) => {
                             const [epochTimeString, columnsOfDay] = item;
                             const day = startDate.add(index, 'day');
+                            console.log('here', startDate, day, index);
+
                             return (
                                 <div
                                     key={`${epochTimeString}_${index}`}
@@ -174,8 +174,17 @@ export function DaySchedule({
                                     </div>
                                     <div className={style.dayColumnContent}>
                                         {containerHeight > 0 &&
-                                            day.isSame(currentTime, 'day') && (
+                                            ((currentTime.isBefore(startDate) &&
+                                                Object.keys(processedEvents)
+                                                    .length -
+                                                    1 ===
+                                                    index) ||
+                                                day.isSame(
+                                                    currentTime,
+                                                    'day'
+                                                )) && (
                                                 <TimelineMarker
+                                                    startDate={startDate}
                                                     parentHeight={
                                                         containerHeight
                                                     }
@@ -354,7 +363,13 @@ function DayEventItem({
     );
 }
 
-function TimelineMarker({ parentHeight }: { parentHeight: number }) {
+function TimelineMarker({
+    parentHeight,
+    startDate,
+}: {
+    parentHeight: number;
+    startDate: Dayjs;
+}) {
     const [currentTime, setCurrentTime] = useAtom(currentTimeAtom);
 
     const minutesInDay = 1440;
@@ -368,15 +383,20 @@ function TimelineMarker({ parentHeight }: { parentHeight: number }) {
     const markerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const interval = setInterval(() => {
+        function updateTime() {
             setCurrentTime(dayjs());
-        }, 60000);
+            markerRef.current!.scrollIntoView({
+                behavior: 'smooth',
+                block: 'end', // vertical
+            });
+        }
+        const interval = setInterval(updateTime, 60000);
         setCurrentTime(dayjs());
-        markerRef.current!.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-            inline: 'center',
-        });
+
+        setTimeout(() => {
+            updateTime();
+        }, 100);
+
         return () => {
             clearInterval(interval);
         };

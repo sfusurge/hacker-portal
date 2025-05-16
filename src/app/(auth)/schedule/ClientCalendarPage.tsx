@@ -3,6 +3,7 @@
 import { DaySchedule } from '@/components/calendar/DaySchedule/DaySchedule';
 import {
     currentYearMonthAtom,
+    DayjsifyEvents,
     selectedEventAtom,
 } from '@/components/calendar/MonthCalendarShared';
 import { Button } from '@/components/ui/button';
@@ -27,13 +28,24 @@ import { useWindowSize } from '@/lib/utils';
 import { MobileMonthCalendar } from '@/components/calendar/MobileMonthCalendar/MobileMonthCalendar';
 import { trpc } from '@/trpc/client';
 import { useHackathon } from '@/hooks/use-hackathon';
+import { HackathonData } from '@/app/(auth)/application/application_components/types';
 
 export function ClientCalendarPage({
     events: _events,
+    hackathon,
 }: {
     events: CalendarEvent[];
+    hackathon: {
+        id: number;
+        name: string;
+        startDate: string;
+        endDate: string;
+        submissionDeadline: Date;
+
+        version: number;
+    };
 }) {
-    const eventsAtom = useMemo(() => atom(_events), [_events]);
+    const eventsAtom = useMemo(() => atom(DayjsifyEvents(_events)), [_events]);
     const [events, setEvents] = useAtom(eventsAtom);
 
     const userInfo = useAtomValue(userInfoAtom);
@@ -59,10 +71,8 @@ export function ClientCalendarPage({
     const showCalendar = useMemo(() => !showSchedule, [showSchedule]);
     const isMobile = useMemo(() => width <= 768, [width]);
 
-    const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
+    const [selectedEvent, _] = useAtom(selectedEventAtom);
     const [editMode, setEditMode] = useAtom(editModeAtom);
-
-    const { hackathon } = useHackathon();
 
     const fetchEvents = trpc.events.getEvents.useQuery(
         { hackathonId: hackathon?.id! },
@@ -76,13 +86,15 @@ export function ClientCalendarPage({
             }
             const res = await fetchEvents.refetch();
             setEvents(
-                res.data?.map((item) => {
-                    return {
-                        ...item,
-                        startDate: new Date(item.startDate),
-                        endDate: new Date(item.endDate),
-                    };
-                }) ?? []
+                DayjsifyEvents(
+                    res.data?.map((item) => {
+                        return {
+                            ...item,
+                            startDate: new Date(item.startDate),
+                            endDate: new Date(item.endDate),
+                        };
+                    }) ?? []
+                )
             );
         }
         const interval = setInterval(updateEvents, 30000); // 5 mins
@@ -207,7 +219,7 @@ export function ClientCalendarPage({
                         <DaySchedule
                             days={7}
                             minColumnWidth={300}
-                            startDate={hackathon?.startDate ?? dayjs()}
+                            startDate={dayjs(hackathon.startDate)}
                             events={events}
                         />
                     )}

@@ -61,12 +61,10 @@ function range(count: number) {
 
 const rowHeightAtom = atom(170);
 export function MonthCalendar({
-    events: _events,
+    events,
 }: {
-    events: CalendarEvent[];
+    events: InternalCalendarEventType[];
 }) {
-    const events = useMemo(() => DayjsifyEvents(_events), [_events]);
-
     const [{ year, month }, updateYearMonth] = useAtom(currentYearMonthAtom);
 
     const monthInfo = useMemo(() => {
