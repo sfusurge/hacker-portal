@@ -7,8 +7,10 @@
     transform: translate(-50%, -50%); */
     z-index: 1000;
 
-    width: 80dvw;
-    height: 90dvh;
+    min-width: 400px;
+    min-height: 400px;
+    width: fit-content;
+    height: fit-content;
     max-height: 90dvh;
     max-width: 1200px;
 

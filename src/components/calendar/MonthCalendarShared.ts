@@ -98,9 +98,6 @@ export function groupEventsByDay(
         // startDate and total days are optional, used to fill miss days with empty array.
         return grouped;
     }
-
-    console.log(startDate);
-
     // fill missing days with empty group
     for (let i = 0; i < days; i++) {
         const id = dateId(startDate);

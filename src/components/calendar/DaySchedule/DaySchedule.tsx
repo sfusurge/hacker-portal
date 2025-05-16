@@ -58,8 +58,6 @@ export function DaySchedule({
         );
     }, [events]);
 
-    console.log(processedEvents);
-
     const rootRef = useRef<HTMLDivElement>(null);
     const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
 
@@ -155,8 +153,6 @@ export function DaySchedule({
                         {Object.entries(processedEvents).map((item, index) => {
                             const [epochTimeString, columnsOfDay] = item;
                             const day = startDate.add(index, 'day');
-                            console.log('here', startDate, day, index);
-
                             return (
                                 <div
                                     key={`${epochTimeString}_${index}`}

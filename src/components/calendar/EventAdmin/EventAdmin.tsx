@@ -44,9 +44,11 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
     const createEventApi = trpc.events.createEvent.useMutation();
     const { hackathon } = useHackathon();
     const eventsFetch = trpc.events.getEvents.useQuery(
-        { hackathonId: hackathon!.id },
+        { hackathonId: hackathon?.id! },
         {
             enabled: false,
+            refetchOnMount: false,
+            refetchOnWindowFocus: false,
         }
     );
 

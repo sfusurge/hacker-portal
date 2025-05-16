@@ -7,11 +7,11 @@ export default async function CalendarPage() {
 
     const hackathon = await trpcClient.hackathons.getActiveHackathon();
 
-    const _ssrEvents = await trpcClient.events.getEvents({
+    const ssrEvents = await trpcClient.events.getEvents({
         hackathonId: hackathon.id,
     });
 
-    const ssrEvents: CalendarEvent[] = [
+    const _ssrEvents: CalendarEvent[] = [
         {
             id: 1,
             checkedIn: false,
