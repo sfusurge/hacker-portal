@@ -27,8 +27,6 @@ import {
 import { useWindowSize } from '@/lib/utils';
 import { MobileMonthCalendar } from '@/components/calendar/MobileMonthCalendar/MobileMonthCalendar';
 import { trpc } from '@/trpc/client';
-import { useHackathon } from '@/hooks/use-hackathon';
-import { HackathonData } from '@/app/(auth)/application/application_components/types';
 
 export function ClientCalendarPage({
     events: _events,

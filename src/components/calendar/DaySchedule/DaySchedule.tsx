@@ -47,8 +47,8 @@ export function DaySchedule({
                 events.filter((item) => {
                     const startTime = item.startTime;
                     return (
-                        startTime.isAfter(startDate) &&
-                        startTime.isBefore(endDate)
+                        startTime.isAfter(startDate.startOf('day')) &&
+                        startTime.isBefore(endDate.endOf('day'))
                     );
                 }),
                 dayjs(new Date(startDate.year(), startDate.month(), 1)),
@@ -381,10 +381,18 @@ function TimelineMarker({
     useEffect(() => {
         function updateTime() {
             setCurrentTime(dayjs());
-            markerRef.current!.scrollIntoView({
-                behavior: 'smooth',
-                block: 'end', // vertical
-            });
+
+            if (currentTime.isBefore(startDate)) {
+                getScrollParent(markerRef.current!)?.scrollTo({
+                    top: top - 300,
+                    behavior: 'smooth',
+                });
+            } else {
+                markerRef.current!.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'end', // vertical
+                });
+            }
         }
         const interval = setInterval(updateTime, 60000);
         setCurrentTime(dayjs());
@@ -411,4 +419,16 @@ function TimelineMarker({
             <div className={style.timeText}>{currentTime.format('hh:mm')}</div>
         </div>
     );
+}
+
+function getScrollParent(node: HTMLElement | null) {
+    if (node == null) {
+        return null;
+    }
+
+    if (node.scrollHeight > node.clientHeight) {
+        return node;
+    } else {
+        return getScrollParent(node.parentNode as HTMLElement);
+    }
 }

@@ -116,6 +116,21 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
         }
 
         deleteApi.mutate({ eventId: event.id });
+
+        setTimeout(async () => {
+            const res = await eventsFetch.refetch();
+            setEvents(
+                DayjsifyEvents(
+                    res.data?.map((item) => {
+                        return {
+                            ...item,
+                            startDate: new Date(item.startDate),
+                            endDate: new Date(item.endDate),
+                        };
+                    }) ?? []
+                )
+            );
+        }, 2000);
         setEditMode(false);
     }
 
@@ -255,9 +270,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                         <Select
                             value={event?.eventType ?? EventType.EVENT}
                             defaultValue="Event"
-                            onValueChange={(
-                                eventType: EventType | undefined
-                            ) => {
+                            onValueChange={(eventType) => {
                                 if (!event) {
                                     return;
                                 }

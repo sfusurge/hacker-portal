@@ -79,7 +79,6 @@ export default function MobileBottomNav({
                         icon={<CalendarDaysIcon></CalendarDaysIcon>}
                         iconAlt="Schedule logo"
                         platform="mobile"
-                        active={false}
                         disabled={false}
                     ></NavLink>
 
