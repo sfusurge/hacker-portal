@@ -190,17 +190,17 @@ export default function DesktopNav({
                                     'justify-center': collapsed,
                                 })}
                             />
-                            {/*<NavLink*/}
-                            {/*    href="/schedule"*/}
-                            {/*    label="Schedule"*/}
-                            {/*    icon={<CalendarDaysIcon className="h-6 w-6" />}*/}
-                            {/*    iconAlt="Schedule logo"*/}
-                            {/*    platform="desktop"*/}
-                            {/*    active={url.startsWith('/schedule')}*/}
-                            {/*    className={clsx({*/}
-                            {/*        'justify-center': collapsed,*/}
-                            {/*    })}*/}
-                            {/*/>*/}
+                            <NavLink
+                                href="/schedule"
+                                label="Schedule"
+                                icon={<CalendarDaysIcon className="h-6 w-6" />}
+                                iconAlt="Schedule logo"
+                                platform="desktop"
+                                active={url.startsWith('/schedule')}
+                                className={clsx({
+                                    'justify-center': collapsed,
+                                })}
+                            />
                             <NavLink
                                 href="/notifications"
                                 label="Notifications"

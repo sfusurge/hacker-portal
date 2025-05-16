@@ -22,9 +22,14 @@ export function CountdownContent() {
         [currentTime]
     );
     useEffect(() => {
-        setTimeout(() => {
+        const interval = setInterval(() => {
             setime(dayjs());
-        }, 1000);
+            // 10 seconds
+        }, 10_000);
+
+        return () => {
+            clearInterval(interval);
+        };
     }, []);
 
     if (overdue) {

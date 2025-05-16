@@ -7,23 +7,19 @@ import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
 
-import { redirect, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { QrCodeIcon } from '@heroicons/react/24/solid';
-import SelectOption from '@/app/(auth)/admin/selectoption/components/SelectOption';
 import { UserData } from '@/db/schema/users/users';
+import SelectOption from '@/app/(auth)/admin/qr/checkin_components/SelectOption';
 
 interface MobileBottomNavProps {
     className?: string;
     initialData?: UserData;
 }
 
-const excludedUrls = [
-    '/application',
-    '/admin/qr/meal/D1L',
-    '/admin/qr/meal/D1D',
-    '/admin/qr/hackathon',
-];
+const excludedUrls = ['/application', '/admin/qr'];
+
 export default function MobileBottomNav({
     initialData,
     className,
@@ -41,47 +37,15 @@ export default function MobileBottomNav({
         }
     }, [url]);
 
-    const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+    const [isEventTypeOptionsOpen, setIsEventTypeOptionsOpen] = useState(false);
 
-    const toggleOptions = () => {
-        setIsOptionsOpen(!isOptionsOpen);
+    const closeSelectEventTypeOptions = () => {
+        setIsEventTypeOptionsOpen(false);
     };
 
-    const [checkInType, setCheckInType] = useState<string>('');
-    //
-    // const [isMealsOpen, setIsMealsOpen] = useState(false);
-    //
-    // const toggleMeals = () => {
-    //     setIsMealsOpen(true);
-    // };
-    //
-    // const closeMeals = () => {
-    //     setIsMealsOpen(false);
-    //     setCheckInType('');
-    // };
-    //
-    // const [isWorkshopsOpen, setIsWorkshopsOpen] = useState(false);
-    //
-    // const toggleWorkshops = () => {
-    //     setIsWorkshopsOpen(true);
-    // };
-    //
-    // const closeWorkshops = () => {
-    //     setIsWorkshopsOpen(false);
-    //     setCheckInType('');
-    // };
-
-    useEffect(() => {
-        if (checkInType === 'Lunch Check-in') {
-            redirect('/admin/qr/meal/D1L');
-            // } else if (checkInType === 'Workshop Check-in') {
-            //     toggleWorkshops();
-        } else if (checkInType === 'Dinner Check-in') {
-            redirect('/admin/qr/meal/D1D');
-        } else if (checkInType === 'Hackathon Check-in') {
-            redirect('/admin/qr/hackathon');
-        }
-    }, [checkInType]);
+    const openSelectEventTypeOptions = () => {
+        setIsEventTypeOptionsOpen(true);
+    };
 
     return (
         <>
@@ -115,7 +79,6 @@ export default function MobileBottomNav({
                         icon={<CalendarDaysIcon></CalendarDaysIcon>}
                         iconAlt="Schedule logo"
                         platform="mobile"
-                        active={false}
                         disabled={false}
                     ></NavLink>
 
@@ -132,7 +95,7 @@ export default function MobileBottomNav({
                     {initialData?.userRole === 'admin' && (
                         <NavLink
                             href=""
-                            onClick={toggleOptions}
+                            onClick={openSelectEventTypeOptions}
                             label="Check-In"
                             icon={<QrCodeIcon></QrCodeIcon>}
                             iconAlt="QR logo"
@@ -143,43 +106,11 @@ export default function MobileBottomNav({
                     )}
                 </div>
             )}
-            <div>
-                <div
-                    className={`bg-opacity-50 fixed inset-0 z-200 w-full bg-black transition-opacity duration-300 ${isOptionsOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
-                    onClick={toggleOptions}
-                >
-                    <div
-                        className={`fixed right-0 bottom-0 left-0 transform transition-transform duration-300 ease-in-out ${isOptionsOpen ? 'translate-y-0' : 'translate-y-full'}`}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <SelectOption setCheckInType={setCheckInType} />
-                    </div>
-                </div>
 
-                {/*<div*/}
-                {/*    className={`fixed inset-0 z-200 bg-black bg-opacity-50 transition-opacity duration-300 ${isMealsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}*/}
-                {/*    onClick={closeMeals}*/}
-                {/*>*/}
-                {/*    <div*/}
-                {/*        className={`fixed bottom-0 left-0 right-0 transition-transform duration-300 ease-in-out transform ${isMealsOpen ? 'translate-y-0' : 'translate-y-full'}`}*/}
-                {/*        onClick={(e) => e.stopPropagation()}*/}
-                {/*    >*/}
-                {/*        <SelectMeal/>*/}
-                {/*    </div>*/}
-                {/*</div>*/}
-
-                {/*<div*/}
-                {/*    className={`fixed inset-0 z-50 bg-black bg-opacity-50 transition-opacity duration-300 ${isWorkshopsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}*/}
-                {/*    onClick={closeWorkshops}*/}
-                {/*>*/}
-                {/*    <div*/}
-                {/*        className={`fixed bottom-0 left-0 right-0 transition-transform duration-300 ease-in-out transform ${isWorkshopsOpen ? 'translate-y-0' : 'translate-y-full'}`}*/}
-                {/*        onClick={(e) => e.stopPropagation()}*/}
-                {/*    >*/}
-                {/*        <SelectWorkshop />*/}
-                {/*    </div>*/}
-                {/*</div>*/}
-            </div>
+            <SelectOption
+                onClose={closeSelectEventTypeOptions}
+                show={isEventTypeOptionsOpen}
+            />
         </>
     );
 }
