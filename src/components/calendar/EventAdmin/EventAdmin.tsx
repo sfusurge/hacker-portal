@@ -120,6 +120,10 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
         }
     }, [editMode]);
 
+    if (!hackathon) {
+        return false;
+    }
+
     return (
         <>
             <SideDrawer visibleAtom={editModeAtom}>
