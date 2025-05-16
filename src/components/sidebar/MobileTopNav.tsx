@@ -23,12 +23,7 @@ interface MobileTopNavProps {
     initialData?: UserData;
 }
 
-const excludedUrls = [
-    '/application',
-    '/admin/qr/meal/D1L',
-    '/admin/qr/meal/D1D',
-    '/admin/qr/hackathon',
-];
+const excludedUrls = ['/application', '/admin/qr'];
 
 export default function MobileTopNav({
     initialData,

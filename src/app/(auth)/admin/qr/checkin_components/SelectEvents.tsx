@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 import { Fragment } from 'react';
 
 interface SelectWorkshopProps {
-    workshops: {
+    groupedEvents: {
         date: string;
         events: {
             title: string;
@@ -12,14 +12,14 @@ interface SelectWorkshopProps {
             endDate: dayjs.Dayjs;
         }[];
     }[];
-    onWorkshopClick: (eventId: number) => void;
+    onEventClick: (eventId: number) => void;
     show: boolean;
     onClose: () => void;
 }
 
-export default function SelectWorkshop({
-    workshops,
-    onWorkshopClick,
+export default function SelectEvent({
+    groupedEvents,
+    onEventClick,
     show,
     onClose,
 }: SelectWorkshopProps) {
@@ -44,40 +44,40 @@ export default function SelectWorkshop({
                             <div className="flex flex-col items-start justify-start gap-2 self-stretch p-6">
                                 <div className="inline-flex items-center justify-between self-stretch pr-2">
                                     <div className="text-center text-base font-semibold text-white">
-                                        Select Workshop
+                                        Select Event
                                     </div>
                                 </div>
                                 <div className="self-stretch text-sm font-normal text-white/60">
-                                    What workshop are you checking in for?
+                                    What event are you checking in for?
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex h-96 flex-col items-start justify-start self-stretch overflow-hidden bg-neutral-900 px-6">
+                        <div className="flex h-96 flex-col items-start justify-start self-stretch overflow-scroll bg-neutral-900 px-6">
                             <div className="flex h-96 flex-col items-start justify-start gap-4 self-stretch">
-                                {workshops.map(({ date, events }, i) => {
+                                {groupedEvents.map(({ date, events }, i) => {
                                     return (
                                         <Fragment key={`date-${i}`}>
                                             <div className="text-sm font-medium text-white/60">
                                                 {date}
                                             </div>
                                             <ScrollArea className="flex w-80 flex-col">
-                                                {events.map((workshop) => (
+                                                {events.map((event) => (
                                                     <button
-                                                        key={workshop.id}
+                                                        key={event.id}
                                                         className="mb-4 flex h-11 w-full flex-col items-start justify-center"
                                                         onClick={() =>
-                                                            onWorkshopClick(
-                                                                workshop.id
+                                                            onEventClick(
+                                                                event.id
                                                             )
                                                         }
                                                     >
                                                         <div className="text-base font-normal text-white">
-                                                            {workshop.title}
+                                                            {event.title}
                                                         </div>
                                                         <div className="flex items-center justify-start gap-1">
                                                             <div className="text-sm font-normal text-white/60">
-                                                                {workshop.startDate.format(
+                                                                {event.startDate.format(
                                                                     'MMMM DD [at] hh:mm A'
                                                                 )}
                                                             </div>
@@ -85,7 +85,7 @@ export default function SelectWorkshop({
                                                                 ∙
                                                             </div>
                                                             <div className="text-sm font-normal text-white/60">
-                                                                Workshop
+                                                                Event
                                                             </div>
                                                         </div>
                                                     </button>

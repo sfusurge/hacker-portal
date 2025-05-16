@@ -1,6 +1,8 @@
 import {
+    boolean,
     index,
     integer,
+    pgEnum,
     pgTable,
     text,
     timestamp,
@@ -9,6 +11,20 @@ import {
 import { createUpdateSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { hackathons } from './hackathons';
+
+export enum EventType {
+    EVENT = 'Event',
+    MEAL = 'Meal',
+    WORKSHOP = 'Workshop',
+}
+
+export const EVENT_TYPES = [
+    EventType.EVENT,
+    EventType.MEAL,
+    EventType.WORKSHOP,
+] as const;
+
+export const eventTypePgEnum = pgEnum('event_type_enum', EVENT_TYPES);
 
 export const events = pgTable(
     'events',
@@ -24,13 +40,15 @@ export const events = pgTable(
         location: varchar('location', { length: 1024 }).notNull(),
         description: varchar('description', { length: 2048 }).default(''),
         longDescription: text('long_description'),
+        eventType: eventTypePgEnum('event_type')
+            .notNull()
+            .default(EventType.EVENT),
+        hasCheckIn: boolean('has_check_in').notNull().default(false),
     },
     (table) => {
         return [index().on(table.hackathonId)];
     }
 );
-
-// export const insertEventSchema = createInsertSchema(events);
 
 export const insertEventSchema = z.object({
     hackathonId: z.number().int(),
@@ -41,8 +59,10 @@ export const insertEventSchema = z.object({
     location: z.string(),
     description: z.string().optional(),
     longDescription: z.string().optional(),
+    eventType: z.string().optional(),
+    hasCheckIn: z.boolean().optional(),
 });
-//
+
 export const getEventsSchema = z.object({
     hackathonId: z.number().int(),
 });
