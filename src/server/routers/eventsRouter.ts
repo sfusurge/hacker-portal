@@ -1,6 +1,7 @@
 import {
     deleteEventSchema,
     events as eventsTable,
+    EventType,
     getEventLongDescriptionSchema,
     getEventsSchema,
     insertEventSchema,
@@ -55,6 +56,8 @@ export const eventsRouter = router({
                     color: input.color,
                     description: input.description,
                     longDescription: input.longDescription,
+                    eventType: input.eventType as EventType,
+                    hasCheckIn: input.hasCheckIn,
                 })
                 .returning();
 
