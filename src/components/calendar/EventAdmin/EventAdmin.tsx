@@ -1,13 +1,13 @@
 import { CalendarEvent } from '@/server/routers/eventsRouter';
-import { atom, PrimitiveAtom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { atom, PrimitiveAtom, useAtom } from 'jotai';
 import {
     DayjsifyEvents,
     InternalCalendarEventType,
     selectedEventAtom,
 } from '../MonthCalendarShared';
 import { SideDrawer } from '@/components/ui/SideDrawer/SideDrawer';
-import { useEffect, useMemo, useState } from 'react';
-import { FormTextInput, Input } from '@/components/ui/input/input';
+import { useEffect, useState } from 'react';
+import { FormTextInput } from '@/components/ui/input/input';
 import { Label } from '@/components/ui/label';
 import { ColorPicker } from '@/components/ui/ColorPicker/ColorPicker';
 import { trpc } from '@/trpc/client';
@@ -15,6 +15,17 @@ import { FormTextArea } from '@/components/ui/formTextArea/FormTextArea';
 import { Button } from '@/components/ui/button';
 import dayjs from 'dayjs';
 import { useHackathon } from '@/hooks/use-hackathon';
+import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { EVENT_TYPES, EventType } from '@/db/schema/events';
 
 export interface EventAdminProps {
     eventsAtom: PrimitiveAtom<InternalCalendarEventType[]>;
@@ -26,14 +37,20 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
     const [events, setEvents] = useAtom(eventsAtom);
     const [editMode, setEditMode] = useAtom(editModeAtom);
 
-    const [event, setEvent] = useState(ConvertEvent(_selectedEvent?.event));
+    const [event, setEvent] = useState<CalendarEvent>();
+
+    const { hackathon } = useHackathon();
 
     useEffect(() => {
-        setEvent(ConvertEvent(_selectedEvent?.event));
-    }, [_selectedEvent?.event]);
+        if (!hackathon?.id) {
+            return;
+        }
+
+        setEvent(convertEvent(hackathon.id, _selectedEvent?.event));
+    }, [hackathon?.id, _selectedEvent?.event]);
 
     const longDescriptionFetch = trpc.events.getEventLongDescription.useQuery({
-        eventId: event.id ?? -1,
+        eventId: event?.id ?? -1,
     });
     const [longDescription, setLongDescription] = useState('');
     useEffect(() => {
@@ -42,7 +59,6 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
 
     const updateEventapi = trpc.events.updateEvent.useMutation();
     const createEventApi = trpc.events.createEvent.useMutation();
-    const { hackathon } = useHackathon();
     const eventsFetch = trpc.events.getEvents.useQuery(
         { hackathonId: hackathon?.id! },
         {
@@ -56,6 +72,10 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
 
     async function saveEvent(e: SubmitEvent) {
         e.preventDefault();
+        if (!event) {
+            return;
+        }
+
         if (!_selectedEvent) {
             createEventApi.mutate({
                 ...event,
@@ -66,9 +86,9 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
         } else {
             updateEventapi.mutate({
                 ...event,
-                eventId: event.id,
-                startDate: event.startDate.getTime(),
-                endDate: event.endDate.getTime(),
+                eventId: event.id!,
+                startDate: event.startDate?.getTime()!,
+                endDate: event.endDate?.getTime()!,
                 longDescription,
             });
         }
@@ -91,6 +111,10 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
     }
 
     function deleteEvent() {
+        if (!event) {
+            return;
+        }
+
         deleteApi.mutate({ eventId: event.id });
         setEditMode(false);
     }
@@ -100,6 +124,10 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
             setSelectedEvent(undefined);
         }
     }, [editMode]);
+
+    if (!hackathon) {
+        return false;
+    }
 
     return (
         <>
@@ -112,11 +140,11 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                         <FormTextInput
                             placeholder=" "
                             type="text"
-                            defaultValue={event.title ?? ''}
+                            defaultValue={event?.title ?? ''}
                             required
                             lazy
                             onLazyChange={(txt) => {
-                                setEvent({ ...event, title: `${txt}` });
+                                setEvent({ ...event!, title: `${txt}` });
                             }}
                         />
                     </div>
@@ -134,9 +162,9 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                                 '#84CC16',
                             ]}
                             colorChange={(c) => {
-                                setEvent({ ...event, color: c });
+                                setEvent({ ...event!, color: c });
                             }}
-                            selectedColor={event.color}
+                            selectedColor={event?.color ?? ''}
                         />
                     </div>
 
@@ -147,9 +175,9 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                             type="text"
                             required
                             lazy
-                            defaultValue={event.description ?? ''}
+                            defaultValue={event?.description ?? ''}
                             onLazyChange={(txt) => {
-                                event.description = `${txt}`;
+                                setEvent({ ...event!, description: txt });
                             }}
                         />
                     </div>
@@ -157,12 +185,12 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                         <Label>Location</Label>
                         <FormTextInput
                             placeholder=" "
-                            defaultValue={event.location}
+                            defaultValue={event?.location ?? ''}
                             type="text"
                             required
                             lazy
                             onLazyChange={(t) => {
-                                setEvent({ ...event, location: `${t}` });
+                                setEvent({ ...event!, location: `${t}` });
                             }}
                         />
                     </div>
@@ -170,7 +198,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                         <Label>Start Time</Label>
                         <FormTextInput
                             defaultValue={
-                                event.startDate
+                                event?.startDate
                                     ? dayjs(event.startDate).format(
                                           'YYYY-MM-DDTHH:mm:ss'
                                       )
@@ -181,7 +209,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                             required
                             onLazyChange={(t) => {
                                 setEvent({
-                                    ...event,
+                                    ...event!,
                                     startDate: dayjs(new Date(t)).toDate(),
                                 });
                             }}
@@ -192,7 +220,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                         <Label>End Time</Label>
                         <FormTextInput
                             defaultValue={
-                                event.endDate
+                                event?.endDate
                                     ? dayjs(event.endDate).format(
                                           'YYYY-MM-DDTHH:mm:ss'
                                       )
@@ -203,7 +231,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                             required
                             onLazyChange={(t) => {
                                 setEvent({
-                                    ...event,
+                                    ...event!,
                                     endDate: dayjs(new Date(t)).toDate(),
                                 });
                             }}
@@ -220,6 +248,65 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                                 setLongDescription(t);
                             }}
                         />
+                    </div>
+
+                    <div>
+                        <Label>Select Event</Label>
+                        <Select
+                            value={event?.eventType ?? EventType.EVENT}
+                            defaultValue="Event"
+                            onValueChange={(
+                                eventType: EventType | undefined
+                            ) => {
+                                if (!event) {
+                                    return;
+                                }
+
+                                setEvent({
+                                    ...event,
+                                    eventType: eventType as EventType,
+                                });
+                            }}
+                        >
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Choose Event Type" />
+                            </SelectTrigger>
+                            <SelectContent className="z-[9999] bg-neutral-800 text-white">
+                                <SelectGroup>
+                                    <SelectLabel>Event Type</SelectLabel>
+                                    {EVENT_TYPES.map((eventType) => {
+                                        return (
+                                            <SelectItem
+                                                key={eventType}
+                                                value={eventType}
+                                            >
+                                                {eventType}
+                                            </SelectItem>
+                                        );
+                                    })}
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="mb-2">
+                        <Label>Has check-in?</Label>
+                        <CheckBoxWithLabel
+                            name="yes"
+                            checked={event?.hasCheckIn}
+                            onChange={(e) => {
+                                setEvent((event) => {
+                                    if (!event) {
+                                        return event;
+                                    }
+
+                                    return {
+                                        ...event,
+                                        hasCheckIn: e.target.checked,
+                                    };
+                                });
+                            }}
+                        ></CheckBoxWithLabel>
                     </div>
 
                     <Button
@@ -248,13 +335,18 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
     );
 }
 
-function ConvertEvent(e: InternalCalendarEventType | undefined) {
+function convertEvent(hackathonId: number, e?: InternalCalendarEventType) {
     if (e) {
         const { startTime, endTime, ...rest } = e;
         return {
             ...rest,
             startDate: startTime.toDate(),
             endDate: endTime.toDate(),
+        } as CalendarEvent;
+    } else {
+        return {
+            color: '#6466F1',
+            hackathonId: hackathonId,
         } as CalendarEvent;
     }
     return {} as CalendarEvent;
