@@ -243,7 +243,7 @@ export default function DesktopNav({
                             )}
                             {initialData?.userRole === 'admin' && (
                                 <NavLink
-                                    href="/admin/qr/hackathon/"
+                                    href="/admin/qr"
                                     label="Hacker Checkin (Admin)"
                                     icon={
                                         <QrCodeIcon className="h-6 w-6"></QrCodeIcon>
