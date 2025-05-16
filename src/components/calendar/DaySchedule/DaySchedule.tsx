@@ -75,20 +75,10 @@ export function DaySchedule({
         <div
             style={{
                 height: '100%',
+                position: 'relative',
             }}
+            ref={rootRef}
         >
-            <div
-                ref={rootRef}
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: 0,
-                    height: `${headerHeight}px`,
-                }}
-            >
-                {/* spacer to provide reference position for dynamic message*/}
-            </div>
             <AnimatePresence>
                 {selectedEvent && selectedEvent.element && (
                     <DynamicMessage

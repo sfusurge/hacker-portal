@@ -103,8 +103,7 @@ export function DynamicMessage({
                     parent.width
                 );
                 calcTop = parentTop - (child.height + margin);
-                console.log(calcLeft, calcTop);
-            } else if (parentBottom + margin * 2 + child.height > height) {
+            } else if (parentBottom + margin * 2 + child.height < height) {
                 // fitting bottom side
                 calcLeft = limitDimention(
                     width,
@@ -129,8 +128,6 @@ export function DynamicMessage({
                 calcTop = (height - child.height) / 2;
             }
         }
-        console.log(calcTop, calcLeft);
-
         return [calcTop, calcLeft];
     }, [width, height, childRef.current, parentRef, rootRef]);
 
