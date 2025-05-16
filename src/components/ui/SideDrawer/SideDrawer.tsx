@@ -85,7 +85,7 @@ export function SideDrawer({
                                 <span>Back</span>
                             </div>
                         </Button>
-                        {children}
+                        <div style={{ minWidth: '250px' }}>{children}</div>
                     </motion.div>
                 )}
             </AnimatePresence>

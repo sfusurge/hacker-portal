@@ -8,7 +8,9 @@
     flex-direction: column;
     gap: 8px;
 
-    min-width: 350px;
+    max-width: 90dvw;
+    width: 350px;
+    min-width: 250px;
     backdrop-filter: blur(6px);
 }
 

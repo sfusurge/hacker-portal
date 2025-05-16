@@ -1,5 +1,6 @@
 import { createCaller } from '@/server/appRouter';
 import { ClientCalendarPage } from './ClientCalendarPage';
+import { CalendarEvent } from '@/server/routers/eventsRouter';
 
 export default async function CalendarPage() {
     const trpcClient = createCaller({});
@@ -10,5 +11,10 @@ export default async function CalendarPage() {
         hackathonId: hackathon.id,
     });
 
-    return <ClientCalendarPage events={ssrEvents}></ClientCalendarPage>;
+    return (
+        <ClientCalendarPage
+            events={ssrEvents}
+            hackathon={hackathon}
+        ></ClientCalendarPage>
+    );
 }

@@ -1,6 +1,7 @@
 import { CalendarEvent } from '@/server/routers/eventsRouter';
 import { atom, PrimitiveAtom, useAtom } from 'jotai';
 import {
+    DayjsifyEvents,
     InternalCalendarEventType,
     selectedEventAtom,
 } from '../MonthCalendarShared';
@@ -27,7 +28,7 @@ import {
 import { EVENT_TYPES, EventType } from '@/db/schema/events';
 
 export interface EventAdminProps {
-    eventsAtom: PrimitiveAtom<CalendarEvent[]>;
+    eventsAtom: PrimitiveAtom<InternalCalendarEventType[]>;
 }
 export const editModeAtom = atom(false);
 
@@ -62,6 +63,8 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
         { hackathonId: hackathon?.id! },
         {
             enabled: false,
+            refetchOnMount: false,
+            refetchOnWindowFocus: false,
         }
     );
 
@@ -93,13 +96,15 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
         setTimeout(async () => {
             const res = await eventsFetch.refetch();
             setEvents(
-                res.data?.map((item) => {
-                    return {
-                        ...item,
-                        startDate: new Date(item.startDate),
-                        endDate: new Date(item.endDate),
-                    };
-                }) ?? []
+                DayjsifyEvents(
+                    res.data?.map((item) => {
+                        return {
+                            ...item,
+                            startDate: new Date(item.startDate),
+                            endDate: new Date(item.endDate),
+                        };
+                    }) ?? []
+                )
             );
         }, 2000);
         setEditMode(false);
@@ -111,6 +116,21 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
         }
 
         deleteApi.mutate({ eventId: event.id });
+
+        setTimeout(async () => {
+            const res = await eventsFetch.refetch();
+            setEvents(
+                DayjsifyEvents(
+                    res.data?.map((item) => {
+                        return {
+                            ...item,
+                            startDate: new Date(item.startDate),
+                            endDate: new Date(item.endDate),
+                        };
+                    }) ?? []
+                )
+            );
+        }, 2000);
         setEditMode(false);
     }
 
@@ -342,4 +362,5 @@ function convertEvent(hackathonId: number, e?: InternalCalendarEventType) {
             hackathonId: hackathonId,
         } as CalendarEvent;
     }
+    return {} as CalendarEvent;
 }

@@ -6,7 +6,6 @@
 
     height: 100dvh;
     width: fit-content;
-    min-width: 300px;
     max-width: 100dvw;
 
     border-left: 2px solid var(--border-neutral-secondary);
@@ -15,6 +14,8 @@
 
     display: flex;
     flex-direction: column;
+
+    overflow: auto;
 }
 
 .backdrop {
