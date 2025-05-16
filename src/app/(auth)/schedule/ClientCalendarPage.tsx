@@ -59,7 +59,7 @@ export function ClientCalendarPage({
     const { hackathon } = useHackathon();
 
     const fetchEvents = trpc.events.getEvents.useQuery(
-        { hackathonId: hackathon.id },
+        { hackathonId: hackathon?.id! },
         { enabled: false }
     );
 

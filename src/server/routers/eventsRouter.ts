@@ -28,6 +28,8 @@ export interface CalendarEvent {
     location: string;
     description?: string | undefined;
     checkInTime?: string | undefined;
+    hasCheckIn: boolean;
+    eventType: EventType;
 }
 
 export const eventsRouter = router({
