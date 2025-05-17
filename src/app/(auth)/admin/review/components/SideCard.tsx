@@ -171,8 +171,6 @@ export default function SideCard({
                         return question;
                     },
                     (get, set, val: QuestionMultipleCheckBox) => {
-                        console.log('checkbox test', val);
-
                         const res: string[] = [];
                         for (const c of val.choices) {
                             if (c.value) {

@@ -148,16 +148,18 @@ export function MonthCalendar({
                             }}
                         >
                             <EventCard event={selectedEvent.event}>
-                                <SkewmorphicButton
-                                    style={{
-                                        backgroundColor: 'var(--brand-700)',
-                                    }}
-                                    onClick={() => {
-                                        setShowMore(true);
-                                    }}
-                                >
-                                    More Info
-                                </SkewmorphicButton>
+                                {selectedEvent.event.hasLongDescription && (
+                                    <SkewmorphicButton
+                                        style={{
+                                            backgroundColor: 'var(--brand-700)',
+                                        }}
+                                        onClick={() => {
+                                            setShowMore(true);
+                                        }}
+                                    >
+                                        More Info
+                                    </SkewmorphicButton>
+                                )}
                             </EventCard>
                         </DynamicMessage>
                     )}
