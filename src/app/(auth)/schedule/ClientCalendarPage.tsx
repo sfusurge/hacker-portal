@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ToggleButton } from '@/components/ui/ToggleButton/ToggleButton';
 import { CalendarEvent } from '@/server/routers/eventsRouter';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
 import { userInfoAtom } from '../ClientAuthContext';
@@ -77,6 +77,18 @@ export function ClientCalendarPage({
         { enabled: false }
     );
 
+    const [weekOffset, setWeekOffset] = useState(0);
+    function getStartDate() {
+        const today = dayjs();
+        const firstDay = dayjs(hackathon.startDate);
+
+        if (today.isBefore(firstDay)) {
+            return firstDay.add(weekOffset, 'week');
+        }
+
+        return today.add(weekOffset, 'week');
+    }
+
     useEffect(() => {
         async function updateEvents() {
             if (!hackathon || !hackathon.id) {
@@ -120,48 +132,21 @@ export function ClientCalendarPage({
                 >
                     {/* header */}
                     {!isMobile && showCalendar && (
-                        <>
-                            <span style={{ fontSize: 'large' }}>
-                                {monthObj.format('MMMM YYYY')}
-                            </span>
-                            <Button
-                                size="compact"
-                                hierarchy="secondary"
-                                variant="default"
-                                onClick={() => {
-                                    updateYearMonth('-1 month');
-                                }}
-                            >
-                                <ChevronLeftIcon
-                                    style={{ display: 'block', width: '16px' }}
-                                />
-                            </Button>
-                            <Button
-                                size="compact"
-                                hierarchy="secondary"
-                                variant="default"
-                                onClick={() => {
-                                    updateYearMonth('set', {
-                                        year: dayjs().year(),
-                                        month: dayjs().month(),
-                                    });
-                                }}
-                            >
-                                Today
-                            </Button>
-                            <Button
-                                size="compact"
-                                hierarchy="secondary"
-                                variant="default"
-                                onClick={() => {
-                                    updateYearMonth('+1 month');
-                                }}
-                            >
-                                <ChevronRightIcon
-                                    style={{ display: 'block', width: '16px' }}
-                                />
-                            </Button>
-                        </>
+                        <MonthControl
+                            monthObj={monthObj}
+                            updateYearMonth={updateYearMonth}
+                        />
+                    )}
+
+                    {!isMobile && showSchedule && (
+                        <WeekControl
+                            reset={() => {
+                                setWeekOffset(0);
+                            }}
+                            updateWeek={(d) => {
+                                setWeekOffset(weekOffset + d);
+                            }}
+                        />
                     )}
 
                     {!isMobile && (
@@ -217,7 +202,7 @@ export function ClientCalendarPage({
                         <DaySchedule
                             days={7}
                             minColumnWidth={300}
-                            startDate={dayjs(hackathon.startDate)}
+                            startDate={getStartDate()}
                             events={events}
                         />
                     )}
@@ -229,6 +214,103 @@ export function ClientCalendarPage({
                     {isMobile && <MobileMonthCalendar events={events} />}
                 </div>
             </div>
+        </>
+    );
+}
+
+function WeekControl({
+    reset,
+    updateWeek,
+}: {
+    reset: () => void;
+    updateWeek: (delta: number) => void;
+}) {
+    return (
+        <>
+            <Button
+                size="compact"
+                hierarchy="secondary"
+                variant="default"
+                onClick={() => {
+                    updateWeek(-1);
+                }}
+            >
+                <ChevronLeftIcon style={{ display: 'block', width: '16px' }} />
+            </Button>
+
+            <Button
+                size="compact"
+                hierarchy="secondary"
+                variant="default"
+                onClick={() => {
+                    reset();
+                }}
+            >
+                Reset
+            </Button>
+
+            <Button
+                size="compact"
+                hierarchy="secondary"
+                variant="default"
+                onClick={() => {
+                    updateWeek(+1);
+                }}
+            >
+                <ChevronRightIcon style={{ display: 'block', width: '16px' }} />
+            </Button>
+        </>
+    );
+}
+
+function MonthControl({
+    monthObj,
+    updateYearMonth,
+}: {
+    monthObj: dayjs.Dayjs;
+    updateYearMonth: (
+        changeType: 'set' | '+1 month' | '-1 month',
+        newVal?: { year: number; month: number } | undefined
+    ) => void;
+}) {
+    return (
+        <>
+            <span style={{ fontSize: 'large' }}>
+                {monthObj.format('MMMM YYYY')}
+            </span>
+            <Button
+                size="compact"
+                hierarchy="secondary"
+                variant="default"
+                onClick={() => {
+                    updateYearMonth('-1 month');
+                }}
+            >
+                <ChevronLeftIcon style={{ display: 'block', width: '16px' }} />
+            </Button>
+            <Button
+                size="compact"
+                hierarchy="secondary"
+                variant="default"
+                onClick={() => {
+                    updateYearMonth('set', {
+                        year: dayjs().year(),
+                        month: dayjs().month(),
+                    });
+                }}
+            >
+                Today
+            </Button>
+            <Button
+                size="compact"
+                hierarchy="secondary"
+                variant="default"
+                onClick={() => {
+                    updateYearMonth('+1 month');
+                }}
+            >
+                <ChevronRightIcon style={{ display: 'block', width: '16px' }} />
+            </Button>
         </>
     );
 }

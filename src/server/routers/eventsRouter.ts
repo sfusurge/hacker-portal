@@ -105,8 +105,6 @@ export const eventsRouter = router({
                 // endDate comes first
                 .orderBy(asc(eventsTable.startDate), asc(eventsTable.endDate));
 
-            console.log(`Returned rows: ${JSON.stringify(rows)}`);
-
             const events = rows.map(({ checkIn, event: _event }) => {
                 const { longDescription, ...event } = { ..._event };
                 return {

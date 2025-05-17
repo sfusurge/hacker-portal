@@ -183,10 +183,6 @@ function useDivSize(div: HTMLDivElement) {
             for (const item of e) {
                 const contentSize = item.contentBoxSize[0];
                 setSize([contentSize.inlineSize, contentSize.blockSize]);
-                console.log({
-                    width: contentSize.inlineSize,
-                    height: contentSize.blockSize,
-                });
             }
         });
 

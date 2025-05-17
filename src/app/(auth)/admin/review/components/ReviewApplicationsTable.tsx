@@ -762,10 +762,6 @@ export default function ReviewApplicationsTable({
                                             'pageindex',
                                             `${table.getState().pagination.pageIndex + 1}`
                                         );
-                                        console.log(
-                                            'update',
-                                            localStorage.getItem('pageindex')
-                                        );
                                     }}
                                     disabled={!table.getCanNextPage()}
                                 >
