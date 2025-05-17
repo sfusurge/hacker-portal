@@ -61,7 +61,6 @@ export function NavLink({
               (href === '/team' &&
                   (pathname.includes('/team') || pathname.includes('/invite')));
 
-    console.log(pathname, href, pathname.startsWith(href), isActive);
     const iconStyles = cn({
         'text-brand-400 group-hover:text-brand-200':
             isActive && !disabled && icon,

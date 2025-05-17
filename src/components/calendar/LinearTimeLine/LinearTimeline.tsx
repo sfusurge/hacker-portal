@@ -191,17 +191,19 @@ function TimelineItem({ event }: { event: InternalCalendarEventType }) {
                         <span className={style.line}>{event.description}</span>
                     )}
 
-                    <Button
-                        onClick={() => {
-                            setShowMore(event);
-                        }}
-                        size="compact"
-                        variant="default"
-                        hierarchy="secondary"
-                        style={{ margin: '0.25rem', marginLeft: 'auto' }}
-                    >
-                        More Info
-                    </Button>
+                    {event.hasLongDescription && (
+                        <Button
+                            onClick={() => {
+                                setShowMore(event);
+                            }}
+                            size="compact"
+                            variant="default"
+                            hierarchy="secondary"
+                            style={{ margin: '0.25rem', marginLeft: 'auto' }}
+                        >
+                            More Info
+                        </Button>
+                    )}
                 </div>
             </div>
         </div>

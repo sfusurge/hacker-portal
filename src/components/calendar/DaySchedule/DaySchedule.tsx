@@ -56,7 +56,7 @@ export function DaySchedule({
                 days
             )
         );
-    }, [events]);
+    }, [events, startDate, days]);
 
     const rootRef = useRef<HTMLDivElement>(null);
     const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
@@ -85,16 +85,18 @@ export function DaySchedule({
                         }}
                     >
                         <EventCard event={selectedEvent.event}>
-                            <SkewmorphicButton
-                                style={{
-                                    backgroundColor: 'var(--brand-700)',
-                                }}
-                                onClick={() => {
-                                    setShowMore(true);
-                                }}
-                            >
-                                More Info
-                            </SkewmorphicButton>
+                            {selectedEvent.event.hasLongDescription && (
+                                <SkewmorphicButton
+                                    style={{
+                                        backgroundColor: 'var(--brand-700)',
+                                    }}
+                                    onClick={() => {
+                                        setShowMore(true);
+                                    }}
+                                >
+                                    More Info
+                                </SkewmorphicButton>
+                            )}
                         </EventCard>
                     </DynamicMessage>
                 )}
@@ -389,8 +391,8 @@ function TimelineMarker({
                 });
             } else {
                 markerRef.current!.scrollIntoView({
-                    behavior: 'smooth',
                     block: 'end', // vertical
+                    behavior: 'smooth',
                 });
             }
         }
@@ -426,9 +428,11 @@ function getScrollParent(node: HTMLElement | null) {
         return null;
     }
 
-    if (node.scrollHeight > node.clientHeight) {
-        return node;
+    const parent = node.parentNode as HTMLElement;
+
+    if (parent.scrollHeight > parent.clientHeight) {
+        return parent;
     } else {
-        return getScrollParent(node.parentNode as HTMLElement);
+        return getScrollParent(parent as HTMLElement);
     }
 }

@@ -15,8 +15,6 @@ export default async function QRScan({ searchParams }: QRScanProps) {
         hackathonId: activeHackathon.id,
     });
 
-    console.log('events', events);
-
     const initialEventType = (await searchParams).initialEventType;
 
     return (
