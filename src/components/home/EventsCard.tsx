@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import { AnimatePresence } from 'motion/react';
-import { LongDescription } from '@/components/calendar/EventLongDescription/EventLongDescription';
+import { LongDescriptionModal } from '@/components/calendar/EventLongDescription/EventLongDescription';
 import {
     selectedEventAtom,
     DayjsifyEvents,
@@ -141,7 +141,7 @@ export default function EventsCard({ events }: { events: any[] }) {
 
             <AnimatePresence>
                 {showModal && selectedEvent && (
-                    <LongDescription
+                    <LongDescriptionModal
                         event={selectedEvent}
                         onClose={() => {
                             setShowModal(false);
