@@ -1,3 +1,5 @@
+'use client';
+
 import CurrentStateUI from '@/components/team/NoTeam/CurrentState';
 import TeamList from '@/components/team/InTeam/TeamList';
 import InviteCard from '@/components/team/InTeam/InviteCard';
@@ -5,7 +7,7 @@ import { UserData } from '@/db/schema/users/users';
 import { inferProcedureOutput } from '@trpc/server';
 import { AppRouter } from '@/server/appRouter';
 import Image from 'next/image';
-
+import SubmissionCountdown from '@/components/team/InTeam/SubmissionCountdown';
 type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
 type HackathonType = inferProcedureOutput<
     AppRouter['hackathons']['getActiveHackathon']
@@ -66,6 +68,10 @@ export default function TeamDisplay({
                         team={currentTeam}
                     />
                     <InviteCard teamId={currentTeam.displayId} />
+
+                    <SubmissionCountdown
+                        targetDate={new Date(2025, 5, 1, 28)}
+                    />
                 </div>
             </div>
         </div>
