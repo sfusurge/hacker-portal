@@ -31,54 +31,6 @@ export default function SubmissionCard({
             setFormData(initializeFormData(questions));
         }
     }, [questions, formData, setFormData]);
-
-    const handleSubmit = async () => {
-        if (!teamId || !hackathonId) {
-            setSubmitError('Missing team or hackathon information');
-            return;
-        }
-
-        setIsSubmitting(true);
-        setSubmitError(null);
-
-        try {
-            const questionsList = questions[0]?.questions || [];
-
-            const formattedData = questionsList.map((question: any) => ({
-                questionId: question.questionId,
-                title: question.title,
-                type: question.type,
-                value: formData[question.questionId],
-                description: question.description,
-                choices: question.choices,
-            }));
-
-            const response = await fetch('/api/submissions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    teamId,
-                    hackathonId,
-                    response: { questions: formattedData },
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to submit form');
-            }
-
-            setSubmitSuccess(true);
-        } catch (error) {
-            setSubmitError(
-                error instanceof Error ? error.message : 'An error occurred'
-            );
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
     return (
         <div className="space-y-4">
             <SubmissionForm
