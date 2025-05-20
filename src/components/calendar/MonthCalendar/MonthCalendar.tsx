@@ -24,7 +24,6 @@ import { EventCard } from '../EventCard/EventCard';
 
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { LongDescriptionModal } from '../EventLongDescription/EventLongDescription';
-import { CalendarEvent } from '@/server/routers/eventsRouter';
 
 function getMonthInfo(year: number, month: number): MonthInfoType {
     const target = dayjs(new Date(year, month, 1));
