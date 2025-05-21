@@ -491,7 +491,7 @@ export default function JudgingForm({
                         ))}
                     </div>
 
-                    <div className="sticky bottom-0 left-0 z-10 -mx-10 bg-neutral-800/60 px-10 py-6">
+                    <div className="sticky bottom-0 left-0 z-10 -mx-6 bg-neutral-800/60 px-10 py-6 xl:-mx-10">
                         <div className="mx-auto flex w-full max-w-md flex-col items-start justify-between gap-4">
                             <div className="grid w-full grid-cols-2 gap-4">
                                 <Button

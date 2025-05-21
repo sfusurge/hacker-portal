@@ -43,7 +43,8 @@ const projectSections = [
         type: 'pdf',
         title: 'Process Documentation',
         // https://pub-:).r2.dev/SparkJam%20Submission%20Form.pdf
-        url: 'https://file-examples.com/storage/fe36a1c5cf349bfec90f9e0/2017/10/file-sample_150kB.pdf',
+        url: 'https://pub-65990e7b450b4832886d09e5cef12aff.r2.dev/SparkJam%20Submission%20Form.pdf',
+        // url: 'https://file-examples.com/storage/fe36a1c5cf349bfec90f9e0/2017/10/file-sample_150kB.pdf',
     },
     {
         type: 'text',
@@ -88,9 +89,9 @@ export default async function ProjectPage({ params }: PageProps) {
     const hackathonId = activeHackathon.id;
 
     return (
-        <div className="grid h-full grid-cols-1 lg:grid-cols-3">
-            <div className="h-full overflow-y-auto pb-20 lg:col-span-2">
-                <div className="flex flex-col gap-10 pr-6 lg:pr-10">
+        <div className="grid h-full grid-cols-1 xl:grid-cols-3">
+            <div className="h-full overflow-y-auto pb-20 xl:col-span-2">
+                <div className="flex flex-col gap-10 pr-6 xl:pr-10">
                     {projectSections.map((section, index) => (
                         <SectionRenderer
                             key={index}
@@ -101,7 +102,7 @@ export default async function ProjectPage({ params }: PageProps) {
                 </div>
             </div>
 
-            <div className="relative overflow-y-auto bg-neutral-900 pb-20 md:pb-0 lg:col-span-1">
+            <div className="relative h-[-webkit-fill-available] w-[-webkit-fill-available] overflow-y-auto bg-neutral-900 p-6 pb-20 md:pb-0 xl:col-span-1 xl:p-10 xl:pb-0 xl:pl-10">
                 <JudgingForm
                     hackathonId={hackathonId}
                     user={user}
