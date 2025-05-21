@@ -18,11 +18,13 @@ import { auth } from '@/auth/auth';
 export const UserRoleEnum = {
     user: 'user',
     admin: 'admin',
+    judge: 'judge',
 };
 
 export const userRoleDbEnum = pgEnum('user_role', [
     UserRoleEnum.admin,
     UserRoleEnum.user,
+    UserRoleEnum.judge,
 ]);
 
 export const user = pgTable(

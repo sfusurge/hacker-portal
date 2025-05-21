@@ -28,22 +28,18 @@ const [rowHeight, headerHeight] = [90, 30];
  * @returns
  */
 export function DaySchedule({
-    events: _events,
+    events,
     startDate,
     days,
     minColumnWidth,
 }: {
-    events: CalendarEvent[];
     startDate: Dayjs;
     days: number;
     minColumnWidth: number;
+    events: InternalCalendarEventType[];
 }) {
-    const endDate = startDate
-        .clone()
-        .add(Math.max(0, days - 1), 'day')
-        .endOf('day');
-
-    const events = useMemo(() => DayjsifyEvents(_events), [_events]);
+    startDate = dayjs(startDate);
+    const endDate = startDate.add(Math.max(0, days - 1), 'day').endOf('day');
 
     const processedEvents = useMemo(() => {
         return ProcessEventsForSchedule(
@@ -51,14 +47,16 @@ export function DaySchedule({
                 events.filter((item) => {
                     const startTime = item.startTime;
                     return (
-                        startTime.isAfter(startDate) &&
-                        startTime.isBefore(endDate)
+                        startTime.isAfter(startDate.startOf('day')) &&
+                        startTime.isBefore(endDate.endOf('day'))
                     );
                 }),
-                dayjs(new Date(startDate.year(), startDate.month(), 1))
+                dayjs(new Date(startDate.year(), startDate.month(), 1)),
+                startDate,
+                days
             )
         );
-    }, [events]);
+    }, [events, startDate, days]);
 
     const rootRef = useRef<HTMLDivElement>(null);
     const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
@@ -73,20 +71,10 @@ export function DaySchedule({
         <div
             style={{
                 height: '100%',
+                position: 'relative',
             }}
+            ref={rootRef}
         >
-            <div
-                ref={rootRef}
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: 0,
-                    height: `${headerHeight}px`,
-                }}
-            >
-                {/* spacer to provide reference position for dynamic message*/}
-            </div>
             <AnimatePresence>
                 {selectedEvent && selectedEvent.element && (
                     <DynamicMessage
@@ -97,16 +85,18 @@ export function DaySchedule({
                         }}
                     >
                         <EventCard event={selectedEvent.event}>
-                            <SkewmorphicButton
-                                style={{
-                                    backgroundColor: 'var(--brand-700)',
-                                }}
-                                onClick={() => {
-                                    setShowMore(true);
-                                }}
-                            >
-                                More Info
-                            </SkewmorphicButton>
+                            {selectedEvent.event.hasLongDescription && (
+                                <SkewmorphicButton
+                                    style={{
+                                        backgroundColor: 'var(--brand-700)',
+                                    }}
+                                    onClick={() => {
+                                        setShowMore(true);
+                                    }}
+                                >
+                                    More Info
+                                </SkewmorphicButton>
+                            )}
                         </EventCard>
                     </DynamicMessage>
                 )}
@@ -182,12 +172,17 @@ export function DaySchedule({
                                     </div>
                                     <div className={style.dayColumnContent}>
                                         {containerHeight > 0 &&
-                                            (true ||
+                                            ((currentTime.isBefore(startDate) &&
+                                                Object.keys(processedEvents)
+                                                    .length -
+                                                    1 ===
+                                                    index) ||
                                                 day.isSame(
                                                     currentTime,
                                                     'day'
                                                 )) && (
                                                 <TimelineMarker
+                                                    startDate={startDate}
                                                     parentHeight={
                                                         containerHeight
                                                     }
@@ -239,6 +234,7 @@ function ProcessEventsForSchedule(eventsMaps: {
     for (let i = 0; i < events.length; i++) {
         const eventsOfDay = events[i];
         if (eventsOfDay.length === 0) {
+            out[eventTimes[i]] = [];
             continue;
         }
 
@@ -365,7 +361,13 @@ function DayEventItem({
     );
 }
 
-function TimelineMarker({ parentHeight }: { parentHeight: number }) {
+function TimelineMarker({
+    parentHeight,
+    startDate,
+}: {
+    parentHeight: number;
+    startDate: Dayjs;
+}) {
     const [currentTime, setCurrentTime] = useAtom(currentTimeAtom);
 
     const minutesInDay = 1440;
@@ -379,15 +381,28 @@ function TimelineMarker({ parentHeight }: { parentHeight: number }) {
     const markerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const interval = setInterval(() => {
+        function updateTime() {
             setCurrentTime(dayjs());
-        }, 60000);
+
+            if (currentTime.isBefore(startDate)) {
+                getScrollParent(markerRef.current!)?.scrollTo({
+                    top: top - 300,
+                    behavior: 'smooth',
+                });
+            } else {
+                markerRef.current!.scrollIntoView({
+                    block: 'end', // vertical
+                    behavior: 'smooth',
+                });
+            }
+        }
+        const interval = setInterval(updateTime, 60000);
         setCurrentTime(dayjs());
-        markerRef.current!.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-            inline: 'center',
-        });
+
+        setTimeout(() => {
+            updateTime();
+        }, 100);
+
         return () => {
             clearInterval(interval);
         };
@@ -406,4 +421,18 @@ function TimelineMarker({ parentHeight }: { parentHeight: number }) {
             <div className={style.timeText}>{currentTime.format('hh:mm')}</div>
         </div>
     );
+}
+
+function getScrollParent(node: HTMLElement | null) {
+    if (node == null) {
+        return null;
+    }
+
+    const parent = node.parentNode as HTMLElement;
+
+    if (parent.scrollHeight > parent.clientHeight) {
+        return parent;
+    } else {
+        return getScrollParent(parent as HTMLElement);
+    }
 }

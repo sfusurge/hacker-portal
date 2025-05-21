@@ -23,12 +23,7 @@ interface MobileTopNavProps {
     initialData?: UserData;
 }
 
-const excludedUrls = [
-    '/application',
-    '/admin/qr/meal/D1L',
-    '/admin/qr/meal/D1D',
-    '/admin/qr/hackathon',
-];
+const excludedUrls = ['/application', '/admin/qr'];
 
 export default function MobileTopNav({
     initialData,
@@ -89,10 +84,10 @@ export default function MobileTopNav({
 
                             <div className="flex flex-col gap-2">
                                 <span className="line-clamp-1 text-sm leading-none font-medium text-white">
-                                    SparkJam
+                                    SparkJam 2025
                                 </span>
                                 <span className="line-clamp-1 text-sm leading-none text-white/60">
-                                    May 17, 2025
+                                    May 17–31, 2025
                                 </span>
                             </div>
                         </div>

@@ -43,6 +43,7 @@
 }
 
 .label {
+    cursor: pointer;
     line-height: 100%;
     display: flex;
     align-items: center;
@@ -57,6 +58,20 @@
     max-width: 400px;
 
     color: white;
+}
+
+.inlineLabel {
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
+.inlineLabel::before {
+    align-self: center;
+    flex-shrink: 0;
+}
+
+.inlineLabel > input + * {
+    width: calc(100% - 28px);
 }
 
 .label:has(input:checked) {

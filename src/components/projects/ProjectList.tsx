@@ -1,0 +1,412 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { FormTextInput } from '@/components/ui/input/input';
+import { Label } from '@/components/ui/label/label';
+import ProjectCard from './ProjectCard';
+import { MagnifyingGlassIcon } from '@heroicons/react/16/solid';
+import {
+    DrawerContent,
+    DrawerTrigger,
+    Drawer,
+    DrawerTitle,
+    DrawerFooter,
+    DrawerClose,
+} from '../ui/drawer';
+import { Button } from '../ui/button';
+import { CheckboxGroup } from '../ui/checkboxGroup/CheckBoxGroup';
+import { useToast } from '@/hooks/use-toast';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { DropdownBadge } from '@/components/ui/dropdown-badge';
+const STATUS_KEY = 'judging_status_data';
+const FILTERS_KEY = 'judging_filters_data';
+
+interface Project {
+    [key: number]: string;
+}
+
+interface ProjectListProps {
+    projects: Project[];
+    userData: any;
+    judgedProjects: any[];
+}
+
+export default function ProjectList({
+    projects,
+    userData,
+    judgedProjects,
+}: ProjectListProps) {
+    const { toast } = useToast();
+    const [projectStatuses, setProjectStatuses] = useState<
+        Record<string, string>
+    >({});
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filteredProjects, setFilteredProjects] = useState(projects);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+    const defaultStatusFilters = ['not_started', 'in_progress'];
+    const [statusFilters, setStatusFilters] = useState<Set<string>>(
+        new Set(defaultStatusFilters)
+    );
+    const [initialStatusFilters, setInitialStatusFilters] = useState<
+        Set<string>
+    >(new Set(defaultStatusFilters));
+
+    // TODO: Fetch project submitted and compare with current user submissions and add to localstorage
+    useEffect(() => {
+        try {
+            const savedFilters = localStorage.getItem(FILTERS_KEY);
+            if (savedFilters) {
+                const parsedFilters = JSON.parse(savedFilters);
+                if (Array.isArray(parsedFilters) && parsedFilters.length > 0) {
+                    const filtersSet = new Set(parsedFilters);
+                    setStatusFilters(filtersSet);
+                    setInitialStatusFilters(filtersSet);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading saved filters:', error);
+            setStatusFilters(new Set(defaultStatusFilters));
+            setInitialStatusFilters(new Set(defaultStatusFilters));
+        }
+    }, []);
+
+    useEffect(() => {
+        const loadProjectStatuses = () => {
+            try {
+                const savedData = localStorage.getItem(STATUS_KEY);
+                if (savedData) {
+                    setProjectStatuses(JSON.parse(savedData));
+                }
+            } catch (error) {
+                console.error('Error loading project statuses:', error);
+            }
+        };
+
+        loadProjectStatuses();
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                loadProjectStatuses();
+            }
+        };
+
+        window.addEventListener('focus', loadProjectStatuses);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            window.removeEventListener('focus', loadProjectStatuses);
+            document.removeEventListener(
+                'visibilitychange',
+                handleVisibilityChange
+            );
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!searchQuery.trim() && statusFilters.size === 0) {
+            setFilteredProjects(projects);
+            return;
+        }
+
+        const query = searchQuery.toLowerCase();
+        const filtered = projects.filter((project, index) => {
+            const projectId = project[0] || String(index);
+            const matchesSearch =
+                !query.trim() ||
+                project[1]?.toLowerCase().includes(query) ||
+                project[2]?.toLowerCase().includes(query) ||
+                project[4]?.toLowerCase().includes(query);
+
+            const projectStatus = projectStatuses[projectId] || 'not_started';
+            const matchesStatus =
+                statusFilters.size === 0 || statusFilters.has(projectStatus);
+
+            return matchesSearch && matchesStatus;
+        });
+
+        setFilteredProjects(filtered);
+    }, [searchQuery, projects, statusFilters, projectStatuses]);
+
+    const handleStatusFilterChange = (selected: Set<string>) => {
+        setStatusFilters(selected);
+
+        if (window.innerWidth >= 768) {
+            try {
+                const filtersArray = Array.from(selected);
+                if (filtersArray.length > 0) {
+                    localStorage.setItem(
+                        FILTERS_KEY,
+                        JSON.stringify(filtersArray)
+                    );
+                    setInitialStatusFilters(new Set(selected));
+                } else {
+                    localStorage.removeItem(FILTERS_KEY);
+                }
+            } catch (error) {
+                console.error('Error saving filters:', error);
+            }
+        }
+    };
+
+    const resetStatusFilters = () => {
+        setStatusFilters(new Set(initialStatusFilters));
+    };
+
+    const isFilterChanged = () => {
+        if (statusFilters.size !== initialStatusFilters.size) return true;
+
+        for (const filter of statusFilters) {
+            if (!initialStatusFilters.has(filter)) return true;
+        }
+
+        for (const filter of initialStatusFilters) {
+            if (!statusFilters.has(filter)) return true;
+        }
+
+        return false;
+    };
+
+    const getStatusInfo = (projectId: string | number) => {
+        const status = projectStatuses[projectId];
+
+        if (status === 'completed') {
+            return {
+                label: 'Completed',
+                className: 'bg-success-950 text-success-300',
+            };
+        } else if (status === 'in_progress') {
+            return {
+                label: 'In Progress',
+                className: 'bg-caution-950 text-caution-300',
+            };
+        } else {
+            return {
+                label: 'Not Yet Started',
+                className: 'bg-neutral-800 text-white',
+            };
+        }
+    };
+
+    const handleApplyFilters = () => {
+        const filtersArray = Array.from(statusFilters);
+        setInitialStatusFilters(new Set(statusFilters));
+
+        try {
+            if (filtersArray.length > 0) {
+                localStorage.setItem(FILTERS_KEY, JSON.stringify(filtersArray));
+            } else {
+                localStorage.removeItem(FILTERS_KEY);
+            }
+        } catch (error) {
+            console.error('Error saving filters:', error);
+        }
+
+        if (window.innerWidth < 768) {
+            toast({
+                title: 'Filters applied',
+                variant: 'success',
+            });
+        }
+    };
+
+    const handleCancel = () => {
+        resetStatusFilters();
+    };
+
+    return (
+        <>
+            <div className="mb-10 flex flex-col gap-10 md:-m-10 md:mb-10 md:border-b md:border-b-neutral-600/30 md:bg-neutral-900 md:p-10">
+                <div className="flex flex-col gap-4">
+                    <h1 className="text-3xl font-semibold text-white">
+                        Hi, {userData?.firstName} {userData?.lastName}! 👋
+                    </h1>
+                    <p className="text-white/60">
+                        Here are the projects you&apos;ve been assigned to
+                        judge.
+                    </p>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                    <Label>Search for a project</Label>
+                    <div className="flex gap-3">
+                        <FormTextInput
+                            name="search"
+                            id="search"
+                            type="search"
+                            icon={
+                                <MagnifyingGlassIcon className="h-4 w-4 text-white/60" />
+                            }
+                            defaultValue={searchQuery}
+                            lazy
+                            onLazyChange={(text) => {
+                                setSearchQuery(text);
+                            }}
+                        />
+                        <div className="block md:hidden">
+                            <Drawer>
+                                <DrawerTrigger asChild>
+                                    <DropdownBadge
+                                        label="Status"
+                                        count={
+                                            statusFilters.size > 0
+                                                ? statusFilters.size
+                                                : undefined
+                                        }
+                                        hierarchy="primary"
+                                        variant="default"
+                                    />
+                                </DrawerTrigger>
+                                <DrawerContent>
+                                    <DrawerTitle>
+                                        Filter by project status
+                                    </DrawerTitle>
+                                    <div className="flex flex-col gap-3">
+                                        <CheckboxGroup
+                                            id="status-filters-mobile"
+                                            choices={[
+                                                {
+                                                    name: 'Not Yet Started',
+                                                    data: 'not_started',
+                                                },
+                                                {
+                                                    name: 'In Progress',
+                                                    data: 'in_progress',
+                                                },
+                                                {
+                                                    name: 'Completed',
+                                                    data: 'completed',
+                                                },
+                                            ]}
+                                            selected={Array.from(statusFilters)}
+                                            onSelection={(selected) =>
+                                                handleStatusFilterChange(
+                                                    selected
+                                                )
+                                            }
+                                            max={3}
+                                        />
+                                    </div>
+                                    <DrawerFooter className="grid grid-cols-2 gap-4">
+                                        <DrawerClose asChild>
+                                            <Button
+                                                type="button"
+                                                hierarchy={'primary'}
+                                                variant={'default'}
+                                                size="cozy"
+                                                onClick={handleCancel}
+                                            >
+                                                Cancel
+                                            </Button>
+                                        </DrawerClose>
+                                        <DrawerClose asChild>
+                                            <Button
+                                                type="button"
+                                                hierarchy={'primary'}
+                                                variant={'brand'}
+                                                size="cozy"
+                                                disabled={!isFilterChanged()}
+                                                onClick={handleApplyFilters}
+                                            >
+                                                Apply filters
+                                            </Button>
+                                        </DrawerClose>
+                                    </DrawerFooter>
+                                </DrawerContent>
+                            </Drawer>
+                        </div>
+                        <div className="hidden md:block">
+                            <DropdownMenu onOpenChange={setIsDropdownOpen}>
+                                <DropdownMenuTrigger asChild>
+                                    <DropdownBadge
+                                        label="Status"
+                                        count={
+                                            statusFilters.size > 0
+                                                ? statusFilters.size
+                                                : undefined
+                                        }
+                                        hierarchy="primary"
+                                        variant="default"
+                                        isOpen={isDropdownOpen}
+                                    />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="start"
+                                    className="w-56"
+                                >
+                                    <div className="p-2">
+                                        <CheckboxGroup
+                                            id="status-filters-desktop"
+                                            choices={[
+                                                {
+                                                    name: 'Not Yet Started',
+                                                    data: 'not_started',
+                                                },
+                                                {
+                                                    name: 'In Progress',
+                                                    data: 'in_progress',
+                                                },
+                                                {
+                                                    name: 'Completed',
+                                                    data: 'completed',
+                                                },
+                                            ]}
+                                            selected={Array.from(statusFilters)}
+                                            onSelection={(selected) => {
+                                                handleStatusFilterChange(
+                                                    selected
+                                                );
+                                            }}
+                                            max={3}
+                                        />
+                                    </div>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="@container">
+                <div className="mb-24 grid grid-cols-1 gap-8 md:mb-0 @[450px]:grid-cols-2 @[625px]:grid-cols-3 @[875px]:grid-cols-4">
+                    {filteredProjects
+                        .sort((a, b) => {
+                            const projectIdA = a[0] || '';
+                            const projectIdB = b[0] || '';
+                            const statusA =
+                                projectStatuses[projectIdA] || 'not_started';
+                            const statusB =
+                                projectStatuses[projectIdB] || 'not_started';
+
+                            const order = {
+                                in_progress: 0,
+                                not_started: 1,
+                                completed: 2,
+                            };
+                            return (
+                                (order[statusA as keyof typeof order] ?? 0) -
+                                (order[statusB as keyof typeof order] ?? 0)
+                            );
+                        })
+                        .map((project, index) => {
+                            const projectId = project[0] || String(index);
+                            const statusInfo = getStatusInfo(projectId);
+                            return (
+                                <ProjectCard
+                                    key={index}
+                                    project={project}
+                                    index={index}
+                                    projectId={projectId}
+                                    statusInfo={statusInfo}
+                                />
+                            );
+                        })}
+                </div>
+            </div>
+        </>
+    );
+}

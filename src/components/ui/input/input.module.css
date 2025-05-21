@@ -61,7 +61,7 @@
     color: white;
     background-color: var(--background-neutral-secondary);
     border: 1px solid var(--border-neutral-secondary);
-    height: 48px;
+    height: 44px;
 }
 
 .textinput:focus {

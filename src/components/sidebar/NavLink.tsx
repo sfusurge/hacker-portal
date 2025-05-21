@@ -1,20 +1,21 @@
 'use client';
 
 import Link from 'next/link';
-import { act, ComponentProps, forwardRef, ReactNode } from 'react';
+import { ComponentProps, ReactNode } from 'react';
 import { cva, VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { motion } from 'motion/react';
 
 interface NavLinkProps {
     href: string;
     label: string;
     icon?: ReactNode;
     iconAlt?: string;
+    collapsed?: boolean;
 }
 
-const navLinkVariants = cva(
+export const navLinkVariants = cva(
     'group flex items-center rounded-lg transition-colors pt-2 md:pt-0',
     {
         variants: {
@@ -48,16 +49,15 @@ export function NavLink({
     iconAlt,
     platform,
     active: propActive,
+    collapsed,
     ...props
 }: ComponentProps<'a'> & NavLinkProps & VariantProps<typeof navLinkVariants>) {
     const pathname = usePathname();
 
-    // Determine if this link should be active
-    // Special case: Team nav item should be active for all team-related pages
     const isActive =
         propActive !== undefined
             ? propActive
-            : pathname.startsWith(href) ||
+            : pathname.includes(href) ||
               (href === '/team' &&
                   (pathname.includes('/team') || pathname.includes('/invite')));
 
@@ -71,35 +71,58 @@ export function NavLink({
         'text-white/18': disabled && icon,
     });
 
-    const isCollapsed = className?.includes('justify-center');
+    const isCollapsed = collapsed || className?.includes('justify-center');
+
     return (
-        <Link
-            href={href}
-            {...props}
-            className={cn(
-                navLinkVariants({
-                    variant,
-                    platform,
-                    active: isActive,
-                    disabled,
-                }),
-                isCollapsed ? 'justify-center' : 'justify-start',
-                className
-            )}
+        <motion.div
+            initial={false}
+            animate={{
+                width: isCollapsed ? '48px' : '100%',
+                height: isCollapsed ? '48px' : 'auto',
+            }}
+            transition={{
+                duration: isActive ? 0.15 : 0.3,
+                ease: 'easeInOut',
+            }}
         >
-            {icon && iconAlt && (
-                <div
-                    className={cn(
-                        'flex h-6 w-6 items-center justify-center transition-colors',
-                        iconStyles
-                    )}
-                >
-                    <div className="h-6 w-6 [&>svg]:h-full [&>svg]:w-full">
-                        {icon}
+            <Link
+                href={href}
+                {...props}
+                className={cn(
+                    navLinkVariants({
+                        variant,
+                        platform,
+                        active: isActive,
+                        disabled,
+                    }),
+                    isCollapsed ? 'justify-start' : 'w-full justify-start',
+                    className
+                )}
+            >
+                {icon && iconAlt && (
+                    <div
+                        className={cn(
+                            'flex h-6 w-6 items-center justify-center transition-colors',
+                            iconStyles
+                        )}
+                    >
+                        <div className="h-6 w-6 [&>svg]:h-full [&>svg]:w-full">
+                            {icon}
+                        </div>
                     </div>
-                </div>
-            )}
-            {!isCollapsed && <span className="leading-none">{label}</span>}
-        </Link>
+                )}
+                {!isCollapsed ? (
+                    <motion.span
+                        className="leading-none whitespace-nowrap"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        {label}
+                    </motion.span>
+                ) : null}
+            </Link>
+        </motion.div>
     );
 }

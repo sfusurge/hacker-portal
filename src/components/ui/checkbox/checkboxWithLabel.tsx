@@ -4,7 +4,11 @@ import style from './checkbox.module.css';
 
 export const CheckBoxWithLabel = forwardRef<
     HTMLInputElement,
-    ComponentProps<'input'> & { defaultChecked?: boolean; other?: boolean }
+    ComponentProps<'input'> & {
+        defaultChecked?: boolean;
+        other?: boolean;
+        inline?: boolean;
+    }
 >(
     (
         {
@@ -17,6 +21,7 @@ export const CheckBoxWithLabel = forwardRef<
             children,
             id,
             onChange,
+            inline = false,
             ...props
         },
         ref
@@ -24,7 +29,11 @@ export const CheckBoxWithLabel = forwardRef<
         return (
             <label
                 style={{ ...externalStyle } as CSSProperties}
-                className={cn(style.label, className)}
+                className={cn(
+                    style.label,
+                    inline && style.inlineLabel,
+                    className
+                )}
                 htmlFor={id ?? name}
             >
                 <input
@@ -39,9 +48,16 @@ export const CheckBoxWithLabel = forwardRef<
                     {...props}
                 ></input>
                 {name}
-                <div style={{ flexBasis: '100%', marginLeft: '1.75rem' }}>
-                    {children}
-                </div>
+                {children && (
+                    <div
+                        style={{
+                            flexBasis: inline ? 'auto' : '100%',
+                            marginLeft: '1.75rem',
+                        }}
+                    >
+                        {children}
+                    </div>
+                )}
             </label>
         );
     }

@@ -21,13 +21,13 @@ export function EventCard({ event, children }: EventCardProps) {
         >
             <h3 className={cn(style.title, style.line)}>{event.title}</h3>
             <span className={style.line}>
-                <ClockIcon style={{ width: '1rem' }} />{' '}
+                <ClockIcon style={{ width: '18px' }} />
                 {getEventDurationString(event)}
             </span>
 
             {event.location && (
                 <span className={style.line}>
-                    <MapPinIcon style={{ width: '24px' }} />
+                    <MapPinIcon style={{ width: '18px' }} />
                     {event.location}
                 </span>
             )}

@@ -1,14 +1,17 @@
-import { publicProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
+import { publicProcedure, router } from '../trpc';
 
 import {
-    insertUserSchema,
+    addUser,
     deleteUserSchema,
+    getUserData,
+    insertUserSchema,
     updateUserSchema,
     user,
-    addUser,
 } from '@/db/schema/users/users';
-import { eq } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
+import { z } from 'zod';
+import { UnauthorizedError } from '../exceptions';
 
 export const usersRouter = router({
     /**
@@ -29,6 +32,41 @@ export const usersRouter = router({
             .from(user);
         return res;
     }),
+
+    getUserById: publicProcedure
+        .input(z.object({ userId: z.union([z.number(), z.string()]) }))
+        .query(async ({ input }) => {
+            const userData = await getUserData();
+
+            if (userData?.userRole !== 'admin') {
+                throw new UnauthorizedError({
+                    email: userData?.email,
+                    role: userData?.userRole,
+                });
+            }
+
+            const [res] = await databaseClient
+                .select({
+                    id: user.id,
+                    email: user.email,
+                    image: user.image,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    phoneNumber: user.phoneNumber,
+                    userRole: user.userRole,
+                    displayId: user.displayId,
+                })
+                .from(user)
+                .where(
+                    or(
+                        eq(user.id, Number(input.userId)),
+                        eq(user.displayId, `${input.userId}`)
+                    )
+                );
+
+            return res;
+        }),
+
     addUser: publicProcedure.input(insertUserSchema).mutation(async (opts) => {
         const res = await addUser(opts.input);
         return res;
