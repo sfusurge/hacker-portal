@@ -11,6 +11,7 @@ import {
     ListObjectsV2Command,
 } from '@aws-sdk/client-s3';
 import mime from 'mime-types';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 export const MAX_FILE_SIZE_IMAGE = 2 * 1024 * 1024;
 export const MAX_FILE_SIZE_DOCUMENT = 10 * 1024 * 1024;
@@ -200,6 +201,44 @@ export async function getFileFromR2(key: string, bucketName: string) {
         console.error('Error fetching file:', error);
         throw new InternalServerError(
             `An exception occured getting file ${key}`,
+            error
+        );
+    }
+}
+
+export async function getURLFromR2(
+    key: string,
+    bucketName: string,
+    expiresIn: number = 3600
+) {
+    try {
+        //check if file exists
+        const headCommand = new GetObjectCommand({
+            Bucket: bucketName,
+            Key: key,
+        });
+
+        try {
+            await s3Client.send(headCommand);
+        } catch (error) {
+            throw new ResourceNotFoundError({ id: key, resourceType: 'image' });
+        }
+
+        //generate presigned URL
+        const url = await getSignedUrl(s3Client, headCommand, {
+            expiresIn,
+        });
+
+        return {
+            success: true,
+            key,
+            url,
+            expiresIn,
+        };
+    } catch (error) {
+        console.error('Error generating pre-signed URL:', error);
+        throw new InternalServerError(
+            `An exception occurred generating URL for file ${key}`,
             error
         );
     }

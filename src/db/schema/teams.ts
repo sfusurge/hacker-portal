@@ -10,6 +10,10 @@ import { hackathons } from './hackathons';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { user } from './users/users';
+import { auth } from '@/auth/auth';
+import { databaseClient } from '@/db/client';
+import { eq, inArray } from 'drizzle-orm';
+import { members } from '@/db/schema/members';
 
 const DEFAULT_MAX_MEMBERS_COUNT = 4;
 
@@ -49,3 +53,35 @@ export const createTeamSchema = createInsertSchema(teams).pick({
 export const getCurrentTeamSchema = z.object({
     hackathonId: z.number().int(),
 });
+
+export async function getTeamData(tid: number) {
+    const memberIds = await getMemberIds(tid);
+
+    if (!memberIds || memberIds.length === 0) {
+        return [];
+    }
+
+    const memberEmails = await databaseClient
+        .select({ email: user.email })
+        .from(user)
+        .where(inArray(user.id, memberIds));
+
+    return memberEmails;
+}
+
+export async function getMemberIds(tid: number): Promise<number[]> {
+    const session = await auth();
+
+    if (!session || !session.user || !session.user.email) {
+        return [];
+    }
+
+    const dbMembers = await databaseClient
+        .select({ userId: members.userId })
+        .from(members)
+        .where(eq(members.teamId, tid));
+
+    return dbMembers.map((m) => m.userId);
+}
+
+export type UserData = Awaited<ReturnType<typeof getTeamData>>;

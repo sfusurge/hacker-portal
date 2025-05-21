@@ -9,6 +9,7 @@ import { usersRouter } from './routers/usersRouter';
 import { teamsRouter } from './routers/teamsRouter';
 import { filesRouter } from './routers/filesRouter';
 import { emailsRouter } from './routers/emailTemplateRouter';
+import { submissionsRouter } from './routers/submissionsRouter';
 
 import { judgingRouter } from './routers/judgingRouter';
 
@@ -29,6 +30,7 @@ export const appRouter = router({
 
     teams: teamsRouter,
     files: filesRouter,
+    submissions: submissionsRouter,
 });
 
 // For server side call in unit test
