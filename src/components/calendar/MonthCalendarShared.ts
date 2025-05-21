@@ -181,6 +181,50 @@ export function DayjsifyEvents(
     });
 }
 
+export interface MonthInfoType {
+    year: number;
+    month: number;
+    displayName: string;
+    daysInMonth: number;
+    firstDayOffset: number;
+    weeksInMonth: number;
+    weekdayNames: string[];
+    firstDay: Dayjs;
+}
+
+export function getMonthInfo(year: number, month: number): MonthInfoType {
+    const target = dayjs(new Date(year, month, 1));
+
+    return {
+        month,
+        year,
+        daysInMonth: target.daysInMonth(),
+        displayName: target.format('MMMM DD, YYYY'), // November 23, 2024
+        firstDayOffset: target.day(), // day in week of the first day.
+        firstDay: target,
+        weeksInMonth: weeksInMonth(target),
+        weekdayNames: [
+            'Sunday',
+            'Monday',
+            'Tuesday',
+            'Wednesday',
+            'Thursday',
+            'Friday',
+            'Saturday',
+        ],
+    } as MonthInfoType;
+}
+
+export function range(count: number) {
+    const out = Array(count);
+
+    for (let i = 0; i < count; i++) {
+        out[i] = i;
+    }
+
+    return out;
+}
+
 // TODO remove debug code
 export function getDebugLongDescription(eventId: string) {
     // gpt generated example event description

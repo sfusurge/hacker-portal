@@ -1,7 +1,9 @@
 import {
     currentYearMonthAtom,
     getEventsOfMonth,
+    getMonthInfo,
     InternalCalendarEventType,
+    range,
     selectedDayAtom,
 } from '@/components/calendar/MonthCalendarShared';
 import { useAtom, useAtomValue } from 'jotai';
@@ -14,7 +16,7 @@ import { DaySchedule } from '@/components/calendar/DaySchedule/DaySchedule';
 import dayjs from 'dayjs';
 import clsx from 'clsx';
 
-export function MobileCalendar({
+export function ImprovedMobileCalendar({
     events,
 }: {
     events: InternalCalendarEventType[];
@@ -74,12 +76,12 @@ export function MobileCalendar({
             </Drawer>
 
             <div className={style.MCPage}>
-                <div></div>
+                <CalenderDays daysWithEvent={daysWithEvents} />
 
                 <LinearTimeline
                     events={filteredEvents}
                     daySelected={(eventsOfDay) => {
-                        setDayEvents(dayEvents);
+                        setDayEvents(eventsOfDay);
                     }}
                 />
             </div>
@@ -90,18 +92,56 @@ export function MobileCalendar({
 interface MobileCalendarProps {
     daysWithEvent: Set<number>;
 }
-function MobileCalender({ daysWithEvent }: MobileCalendarProps) {
+function CalenderDays({ daysWithEvent }: MobileCalendarProps) {
     const [selectedDay, setSelectedDay] = useAtom(selectedDayAtom);
     const { year, month } = useAtomValue(currentYearMonthAtom);
+    const monthInfo = useMemo(() => {
+        return getMonthInfo(year, month);
+    }, [year, month]);
 
     return (
         <div className={style.Container}>
+            <span>{selectedDay?.format('MMM-DD')}</span>
             <div className={style.DayRow}>
                 {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(
-                    (item) => (
-                        <span className={style.DayRowItem}>{item}</span>
+                    (item, idx) => (
+                        <span key={idx} className={style.DayRowItem}>
+                            {item}
+                        </span>
                     )
                 )}
+                {range(monthInfo.weeksInMonth).map((weekidx) => (
+                    <div key={weekidx} className={style.DateRow}>
+                        {range(7).map((dayidx) => {
+                            const d =
+                                weekidx * 7 +
+                                dayidx +
+                                1 -
+                                monthInfo.firstDayOffset;
+                            const OOB = d < 1 || d > monthInfo.daysInMonth;
+
+                            return (
+                                <button
+                                    key={d}
+                                    className={clsx(
+                                        style.DateButton,
+                                        OOB && style.OOB,
+                                        !OOB &&
+                                            d === selectedDay?.date() &&
+                                            style.selected
+                                    )}
+                                    onClick={() => {
+                                        setSelectedDay(
+                                            dayjs(new Date(year, month, d))
+                                        );
+                                    }}
+                                >
+                                    {d}
+                                </button>
+                            );
+                        })}
+                    </div>
+                ))}
             </div>
         </div>
     );

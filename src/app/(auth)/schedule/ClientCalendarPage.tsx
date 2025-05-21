@@ -27,6 +27,7 @@ import {
 import { useWindowSize } from '@/lib/utils';
 import { MobileMonthCalendar } from '@/components/calendar/MobileMonthCalendar/MobileMonthCalendar';
 import { trpc } from '@/trpc/client';
+import { ImprovedMobileCalendar } from '@/components/calendar/MobileMonthCalendar/ImprovedMobileCalendar';
 
 export function ClientCalendarPage({
     events: _events,
@@ -211,7 +212,7 @@ export function ClientCalendarPage({
                     )}
 
                     {/* Mobile */}
-                    {isMobile && <MobileMonthCalendar events={events} />}
+                    {isMobile && <ImprovedMobileCalendar events={events} />}
                 </div>
             </div>
         </>
