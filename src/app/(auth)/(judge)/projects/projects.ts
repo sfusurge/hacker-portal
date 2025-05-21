@@ -1,5 +1,5 @@
 export interface Project {
-    [key: number]: string | number;
+    [key: number]: string;
 }
 
 export const projectsData: Project[] = [

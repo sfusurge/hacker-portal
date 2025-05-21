@@ -49,7 +49,7 @@ export default function ProjectCard({
                     <h3 className="line-clamp-2 font-semibold text-pretty text-white">
                         {project[1]}
                     </h3>
-                    <p className="line-clamp-3 text-sm text-white/60">
+                    <p className="line-clamp-2 text-sm text-white/60">
                         {project[2]}
                     </p>
                 </div>

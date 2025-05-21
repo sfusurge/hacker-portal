@@ -89,8 +89,8 @@ export default async function ProjectPage({ params }: PageProps) {
 
     return (
         <div className="grid h-full grid-cols-1 lg:grid-cols-3">
-            <div className="h-full overflow-y-auto p-6 pb-20 md:p-10 lg:col-span-2">
-                <div className="flex flex-col gap-10">
+            <div className="h-full overflow-y-auto pb-20 lg:col-span-2">
+                <div className="flex flex-col gap-10 pr-6 lg:pr-10">
                     {projectSections.map((section, index) => (
                         <SectionRenderer
                             key={index}
@@ -101,7 +101,7 @@ export default async function ProjectPage({ params }: PageProps) {
                 </div>
             </div>
 
-            <div className="relative overflow-y-auto bg-neutral-900 p-6 pb-20 md:p-10 md:pb-0 lg:col-span-1">
+            <div className="relative overflow-y-auto bg-neutral-900 pb-20 md:pb-0 lg:col-span-1">
                 <JudgingForm
                     hackathonId={hackathonId}
                     user={user}

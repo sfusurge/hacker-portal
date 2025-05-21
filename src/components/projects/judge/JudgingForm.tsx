@@ -453,7 +453,7 @@ export default function JudgingForm({
     return (
         <>
             {isLoading || questionsLoading || judgeCheckLoading ? (
-                <div className="flex h-[calc(100vh-200px)] items-center justify-center">
+                <div className="flex h-full flex-col items-center justify-center">
                     <Loader2 className="text-brand-400 h-8 w-8 animate-spin" />
                 </div>
             ) : didJudge ? (
@@ -476,7 +476,7 @@ export default function JudgingForm({
                 <form
                     ref={formRef}
                     onSubmit={handleSubmitClick}
-                    className="relative -m-10 flex h-max flex-col gap-8 p-10 pb-0"
+                    className="relative flex h-full flex-col gap-8"
                     noValidate
                 >
                     <h2 className="text-2xl font-semibold">Evaluate project</h2>
