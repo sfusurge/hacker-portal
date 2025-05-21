@@ -23,7 +23,7 @@ const ToastViewport = React.forwardRef<
     <ToastPrimitives.Viewport
         ref={ref}
         className={cn(
-            'fixed top-20 z-[300] flex max-h-screen w-full flex-col-reverse p-4 sm:top-auto sm:right-0 sm:bottom-0 sm:flex-col md:max-w-[360px]',
+            'fixed top-20 z-[300] flex max-h-screen w-full flex-col-reverse p-4 md:top-auto md:right-0 md:bottom-0 md:max-w-[360px] md:flex-col',
             className
         )}
         {...props}
@@ -38,11 +38,11 @@ const toastVariants = cva(
             variant: {
                 default: 'border-neutral-700/30 bg-neutral-900 text-white',
                 success:
-                    'border-success-500/30 bg-gradient-to-l from-neutral-900 to-success-950/30 text-white',
-                error: 'border-danger-500/30 bg-gradient-to-l from-neutral-900 to-danger-950/30 text-white',
+                    'border-success-500/30 bg-gradient-to-l from-neutral-900 via-neutral-900 to-success-950 text-white',
+                error: 'border-danger-500/30 bg-gradient-to-l from-neutral-900 via-neutral-900 to-danger-950 text-white',
                 warning:
-                    'border-caution-500/30 bg-gradient-to-l from-neutral-900 to-caution-950/30 text-white',
-                info: 'border-brand-500/30 bg-gradient-to-l from-neutral-900 to-brand-950/30 text-white',
+                    'border-caution-500/30 bg-gradient-to-l from-neutral-900 via-neutral-900 to-caution-950 text-white',
+                info: 'border-brand-500/30 bg-gradient-to-l from-neutral-900 via-neutral-900 to-brand-950 text-white',
             },
             hierarchy: {
                 cozy: 'p-4',
@@ -140,15 +140,15 @@ const Toast = React.forwardRef<
             ref={ref}
             className={cn(
                 toastVariants({ variant }),
-                'p-3 text-sm sm:p-4 sm:text-base',
+                'p-3 text-sm md:p-4 md:text-base',
                 className
             )}
             {...props}
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
-                    <div className="mt-0.5 block sm:hidden">{MobileIcon}</div>
-                    <div className="mt-0.5 hidden sm:block">{DesktopIcon}</div>
+                    <div className="mt-0.5 block md:hidden">{MobileIcon}</div>
+                    <div className="mt-0.5 hidden md:block">{DesktopIcon}</div>
                     <div className="flex-1">{props.children}</div>
                 </div>
                 <ToastPrimitives.Close

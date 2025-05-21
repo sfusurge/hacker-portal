@@ -1,0 +1,114 @@
+import JudgingForm from '@/components/projects/judge/JudgingForm';
+import { FullPageInfo } from '@/components/ui/FullPageInfo';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { projectsData } from '../projects';
+import { SectionRenderer } from '@/components/projects/ProjectSection';
+import { getUserData } from '@/db/schema/users/users';
+import { createCaller } from '@/server/appRouter';
+interface PageProps {
+    params: {
+        id: string;
+    };
+}
+
+const projectSections = [
+    {
+        type: 'title',
+        title: 'Project Title',
+        field: 1,
+    },
+    {
+        type: 'badge',
+        title: 'Project Track',
+        field: 4,
+    },
+    {
+        type: 'image',
+        title: 'Project Header',
+        src: '/hacker-portal-preview.webp',
+        field: 1,
+    },
+    {
+        type: 'text',
+        title: 'Description',
+        field: 2,
+    },
+    {
+        type: 'video',
+        title: 'Video Pitch',
+        field: 3,
+    },
+    {
+        type: 'pdf',
+        title: 'Process Documentation',
+        // https://pub-:).r2.dev/SparkJam%20Submission%20Form.pdf
+        url: 'https://file-examples.com/storage/fe36a1c5cf349bfec90f9e0/2017/10/file-sample_150kB.pdf',
+    },
+    {
+        type: 'text',
+        title: 'Did the team use AI to generate any visuals for this project?',
+        field: 5,
+    },
+    {
+        type: 'text',
+        title: 'Did the team properly cite all external resources (e.g. fonts, icons libraries, component libraries) used for this project in the process documentation deliverable?',
+        field: 6,
+    },
+    {
+        type: 'text',
+        title: 'Did the team clearly cite all AI tools or services used in this project and identify what they were used for (e.g. ideation, brainstorming)?',
+        field: 7,
+    },
+];
+
+export default async function ProjectPage({ params }: PageProps) {
+    const { id } = await params;
+
+    // TODO: select project from route
+    const project = projectsData.find((p) => p[0] === id);
+
+    if (!project) {
+        return (
+            <FullPageInfo
+                src="/teams/alone-otter.webp"
+                title={'Sorry, we cannot find this project.'}
+                body="Stay tuned."
+            >
+                <Button size="cozy" variant="brand" hierarchy="primary">
+                    <Link href="/projects">Return to home</Link>
+                </Button>
+            </FullPageInfo>
+        );
+    }
+
+    const user = await getUserData();
+    const trpcClient = createCaller({});
+    const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
+    const hackathonId = activeHackathon.id;
+
+    return (
+        <div className="grid h-full grid-cols-1 lg:grid-cols-3">
+            <div className="h-full overflow-y-auto p-6 pb-20 md:p-10 lg:col-span-2">
+                <div className="flex flex-col gap-10">
+                    {projectSections.map((section, index) => (
+                        <SectionRenderer
+                            key={index}
+                            section={section}
+                            data={project}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            <div className="relative overflow-y-auto bg-neutral-900 p-6 pb-20 md:p-10 md:pb-0 lg:col-span-1">
+                <JudgingForm
+                    hackathonId={hackathonId}
+                    user={user}
+                    projectId={id}
+                    projectTitle={project[1]}
+                />
+            </div>
+        </div>
+    );
+}
