@@ -15,8 +15,6 @@ import {
     DayjsifyEvents,
 } from '../MonthCalendarShared';
 
-import { Calendar } from '@/components/ui/calendar';
-
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { DialogTitle } from '@/components/ui/dialog';
 import { DaySchedule } from '@/components/calendar/DaySchedule/DaySchedule';
@@ -93,7 +91,7 @@ export function MobileMonthCalendar({
                     } as CSSProperties
                 }
             >
-                <Calendar
+                {/* <Calendar
                     style={{
                         width: 'min-content',
                     }}
@@ -120,7 +118,7 @@ export function MobileMonthCalendar({
                             month: m.getMonth(),
                         });
                     }}
-                />
+                /> */}
 
                 <LinearTimeline
                     events={filteredEvents}

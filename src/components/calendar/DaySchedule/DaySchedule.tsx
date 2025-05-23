@@ -391,7 +391,8 @@ function TimelineMarker({
                 });
             } else {
                 markerRef.current!.scrollIntoView({
-                    block: 'end', // vertical
+                    block: 'center', // vertical
+                    inline: 'center', // horizontal
                     behavior: 'smooth',
                 });
             }

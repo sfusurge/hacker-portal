@@ -1,10 +1,9 @@
 'use client';
 
 import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
-import { MonthInfoType } from '../types';
 import dayjs, { Dayjs } from 'dayjs';
 import style from './MonthCalendar.module.css';
-import { atom, Provider, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
     getEventsOfMonth,
     groupEventsByDay,
@@ -12,9 +11,9 @@ import {
     selectedDayAtom,
     yearMonthDay,
     currentYearMonthAtom,
-    DayjsifyEvents,
     InternalCalendarEventType,
-    weeksInMonth,
+    getMonthInfo,
+    range,
 } from '../MonthCalendarShared';
 import { DynamicMessage } from '../DynamicMessage/DynamicMessage';
 
@@ -24,40 +23,6 @@ import { EventCard } from '../EventCard/EventCard';
 
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { LongDescriptionModal } from '../EventLongDescription/EventLongDescription';
-import { CalendarEvent } from '@/server/routers/eventsRouter';
-
-function getMonthInfo(year: number, month: number): MonthInfoType {
-    const target = dayjs(new Date(year, month, 1));
-
-    return {
-        month,
-        year,
-        daysInMonth: target.daysInMonth(),
-        displayName: target.format('MMMM DD, YYYY'), // November 23, 2024
-        firstDayOffset: target.day(), // day in week of the first day.
-        firstDay: target,
-        weeksInMonth: weeksInMonth(target),
-        weekdayNames: [
-            'Sunday',
-            'Monday',
-            'Tuesday',
-            'Wednesday',
-            'Thursday',
-            'Friday',
-            'Saturday',
-        ],
-    } as MonthInfoType;
-}
-
-function range(count: number) {
-    const out = Array(count);
-
-    for (let i = 0; i < count; i++) {
-        out[i] = i;
-    }
-
-    return out;
-}
 
 const rowHeightAtom = atom(170);
 export function MonthCalendar({
@@ -82,7 +47,7 @@ export function MonthCalendar({
             dayjs(),
             0
         );
-    }, [year, month]);
+    }, [year, month, events]);
 
     const [prevMonth, currMonth, nextMonth] = useMemo(
         () => [
