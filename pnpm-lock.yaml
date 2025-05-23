@@ -92,9 +92,6 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
-      date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
       dayjs:
         specifier: ^1.11.13
         version: 1.11.13
@@ -104,9 +101,6 @@ importers:
       drizzle-zod:
         specifier: ^0.7.1
         version: 0.7.1(drizzle-orm@0.42.0(@electric-sql/pglite@0.2.17)(@types/pg@8.11.10)(gel@2.0.2)(mysql2@3.10.1)(pg@8.13.1)(postgres@3.4.5))(zod@3.24.2)
-      google:
-        specifier: link:@next/third-parties/google
-        version: link:@next/third-parties/google
       input-otp:
         specifier: ^1.4.2
         version: 1.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
