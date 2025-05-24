@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { projectsData } from '../projects';
 import { SectionRenderer } from '@/components/projects/ProjectSection';
-import { getUserData } from '@/db/schema/users/users';
 import { createCaller } from '@/server/appRouter';
+import { getUserData } from '@/server/routers/usersRouter';
 interface PageProps {
     params: {
         id: string;
@@ -106,7 +106,7 @@ export default async function ProjectPage({ params }: PageProps) {
                 <JudgingForm
                     hackathonId={hackathonId}
                     user={user}
-                    projectId={id}
+                    projectId={parseInt(id)}
                     projectTitle={project[1]}
                 />
             </div>

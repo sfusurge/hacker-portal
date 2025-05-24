@@ -33,11 +33,7 @@ export default function SubmissionCard({
     }, [questions, formData, setFormData]);
     return (
         <div className="space-y-4">
-            <SubmissionForm
-                questions={questions}
-                teamId={teamId || 0}
-                hackathonId={hackathonId || 0}
-            />
+            <SubmissionForm questions={questions} />
         </div>
     );
 }

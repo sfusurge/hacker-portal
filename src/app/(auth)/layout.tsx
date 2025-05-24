@@ -5,11 +5,10 @@ import DesktopNav from '@/components/sidebar/DesktopNav';
 
 import { ReactNode } from 'react';
 
-import { getUserData } from '@/db/schema/users/users';
-
 import { CacheClearer } from '@/app/(auth)/CacheClear';
 import { redirect } from 'next/navigation';
 import { ClientAuthContext } from './ClientAuthContext';
+import { getUserData } from '@/server/routers/usersRouter';
 
 export default async function Layout({ children }: { children: ReactNode }) {
     const initialUserData = await getUserData();

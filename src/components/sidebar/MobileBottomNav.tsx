@@ -11,8 +11,8 @@ import { InboxStackIcon } from '@heroicons/react/24/outline';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { QrCodeIcon } from '@heroicons/react/24/solid';
-import { UserData } from '@/db/schema/users/users';
 import SelectOption from '@/app/(auth)/admin/qr/checkin_components/SelectOption';
+import { UserData } from '@/server/routers/usersRouter';
 
 interface MobileBottomNavProps {
     className?: string;

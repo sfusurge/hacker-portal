@@ -1,10 +1,10 @@
-import { getUserData } from '@/db/schema/users/users';
 import { redirect } from 'next/navigation';
 import { createCaller } from '@/server/appRouter';
 import SubmissionInfoCard from '@/components/team/submit/SubmissionInfoCard';
 import SubmissionCard from '@/components/team/submit/SubmissionCard';
 import TeamListSubmit from '@/components/team/submit/TeamListSubmit';
 import SubmitButton from '@/components/team/submit/SubmitButton';
+import { getUserData } from '@/server/routers/usersRouter';
 
 export default async function SubmitPage() {
     const user = await getUserData();

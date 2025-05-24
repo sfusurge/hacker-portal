@@ -1,7 +1,7 @@
 import { publicProcedure, router } from '../trpc';
 import { z } from 'zod';
 import { databaseClient } from '@/db/client';
-import { getUserData, UserRoleEnum } from '@/db/schema/users/users';
+import { UserRoleEnum } from '@/db/schema/users/users';
 import { UnauthorizedError, InternalServerError } from '../exceptions';
 import {
     judgingScores,
@@ -11,6 +11,7 @@ import {
 } from '@/db/schema/judge';
 import { eq, and, desc } from 'drizzle-orm';
 import { hackathons } from '@/db/schema/hackathons';
+import { getUserData } from '@/server/routers/usersRouter';
 
 export interface JudgingScoreResponse {
     hackathonId: number;

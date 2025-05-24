@@ -15,6 +15,8 @@ export const submissionStatusEnum = pgEnum('submission_status', [
     'Awaiting Review',
     'Reviewed',
 ]);
+export type SubmissionStatusEnumType =
+    (typeof submissionStatusEnum)['enumValues'][number];
 
 export const submissions = pgTable(
     'submissions',

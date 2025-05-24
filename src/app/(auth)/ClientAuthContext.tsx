@@ -1,6 +1,6 @@
 'use client';
 
-import { UserData } from '@/db/schema/users/users';
+import { UserData } from '@/server/routers/usersRouter';
 import { atom, useSetAtom } from 'jotai';
 import { useLayoutEffect } from 'react';
 

@@ -10,11 +10,12 @@ import {
 import { publicProcedure, router } from '../trpc';
 import { InternalServerError, UnauthorizedError } from '../exceptions';
 
-import { getUserData, UserRoleEnum } from '@/db/schema/users/users';
+import { UserRoleEnum } from '@/db/schema/users/users';
 import { databaseClient } from '@/db/client';
 import { and, asc, eq, getTableColumns } from 'drizzle-orm';
 import { checkIns } from '@/db/schema/checkIn';
 import { z } from 'zod';
+import { getUserData } from '@/server/routers/usersRouter';
 
 export interface CalendarEvent {
     id: number;

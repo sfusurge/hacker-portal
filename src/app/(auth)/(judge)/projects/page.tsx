@@ -1,7 +1,7 @@
-import { getUserData } from '@/db/schema/users/users';
 import ProjectList from '@/components/projects/ProjectList';
 import { projectsData } from './projects';
 import { createCaller } from '@/server/appRouter';
+import { getUserData } from '@/server/routers/usersRouter';
 
 export default async function JudgePage() {
     const data = await getUserData();

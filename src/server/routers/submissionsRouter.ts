@@ -5,18 +5,18 @@ import {
     insertSubmissionSchema,
     getSubmissionQuestionsSchema,
     submissions,
-    type submissionStatusEnum,
-    querySubmissionSchema,
+    submissionStatusEnum,
+    SubmissionStatusEnumType,
 } from '@/db/schema/submissions';
 import { hackathons } from '@/db/schema/hackathons';
-import { eq, and, asc, getTableColumns } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 export interface SubmitSubmissionResponse {
     hackathonId: number;
     userId: number;
     response: Record<string, unknown>;
     createdDate: Date;
-    currentStatus: typeof submissionStatusEnum;
+    currentStatus: SubmissionStatusEnumType;
 }
 
 export interface SubmissionWithTeamInfo {

@@ -20,11 +20,10 @@ import { EnvelopeIcon } from '@heroicons/react/24/outline';
 import { trpc } from '@/trpc/client';
 
 import { signOut } from 'next-auth/react';
-import { redirect, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { UserData } from '@/db/schema/users/users';
 import {
     Popover,
     PopoverContent,
@@ -33,6 +32,7 @@ import {
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { cn } from '@/lib/utils';
 import { navLinkVariants, NavLink } from './NavLink';
+import { UserData } from '@/server/routers/usersRouter';
 
 interface DesktopNavProps {
     className?: string;

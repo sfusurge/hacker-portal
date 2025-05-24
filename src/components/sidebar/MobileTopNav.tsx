@@ -13,10 +13,10 @@ import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
-import { redirect, usePathname } from 'next/navigation';
-import { UserData } from '@/db/schema/users/users';
+import { usePathname } from 'next/navigation';
 
 import { trpc } from '@/trpc/client';
+import { UserData } from '@/server/routers/usersRouter';
 
 interface MobileTopNavProps {
     className?: string;
