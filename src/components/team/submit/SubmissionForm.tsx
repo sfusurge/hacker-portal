@@ -12,13 +12,11 @@ import { NumberInput } from '@/app/(auth)/application/application_components/app
 import { TextAreaInput } from '@/app/(auth)/application/application_components/application_question_fields/TextAreaInput';
 import { TextLineInput } from '@/app/(auth)/application/application_components/application_question_fields/TextLineInput';
 
-//atoms for form state
 export const formDataAtom = atom<Record<string, any>>({});
 export const isSubmittingAtom = atom(false);
 export const submitSuccessAtom = atom(false);
 export const submitErrorAtom = atom<string | null>(null);
 
-//create atoms for each question to match the application form pattern
 export const createQuestionAtom = (question: any) => {
     return atom(
         (get) => {
@@ -162,7 +160,9 @@ export default function SubmissionForm({ questions }: { questions: any[] }) {
     return (
         <Card className="p-6">
             <form ref={formRef} noValidate>
-                <h2 className="mb-6 text-xl font-bold">Submission Form</h2>
+                <h2 className="mb-6 text-xl font-bold">
+                    Submit your team's project
+                </h2>
 
                 {questionsList.map((question: any, index: number) => (
                     <div

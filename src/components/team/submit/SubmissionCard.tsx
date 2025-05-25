@@ -11,21 +11,9 @@ import {
 import SubmissionForm from './SubmissionForm';
 import { useEffect } from 'react';
 
-export default function SubmissionCard({
-    questions,
-    teamId,
-    hackathonId,
-}: {
-    questions: any[];
-    teamId?: number;
-    hackathonId?: number;
-}) {
+export default function SubmissionCard({ questions }: { questions: any[] }) {
     const [formData, setFormData] = useAtom(formDataAtom);
-    const [isSubmitting, setIsSubmitting] = useAtom(isSubmittingAtom);
-    const [submitSuccess, setSubmitSuccess] = useAtom(submitSuccessAtom);
-    const [submitError, setSubmitError] = useAtom(submitErrorAtom);
 
-    //initialize form data when component mounts
     useEffect(() => {
         if (Object.keys(formData).length === 0) {
             setFormData(initializeFormData(questions));

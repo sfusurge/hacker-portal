@@ -47,16 +47,8 @@ export default async function SubmitPage() {
 
     return (
         <div className="flex w-full flex-col items-center justify-center">
-            <div className="mb-6 flex w-full flex-col justify-start">
-                <h1 className="text-2xl font-bold">Enter Submission Details</h1>
-                <p className="text-muted-foreground">
-                    Please make sure all required information, relevant links,
-                    and assets are included.
-                </p>
-            </div>
-
             <div className="flex w-full flex-col gap-6 md:flex-row">
-                <div className="flex max-w-1/4 flex-col">
+                <div className="flex max-w-1/4 flex-col gap-8">
                     <SubmissionInfoCard
                         date={'May 28, 2025'}
                         time={'11:59pm'}
@@ -73,13 +65,14 @@ export default async function SubmitPage() {
                         teamId={currentTeam?.id}
                         hackathonId={hackathon.id}
                     />
+                    <div className="mt-4 flex w-full items-center justify-between">
+                        <div>Last Saved: Whenever</div>
+                        <SubmitButton
+                            teamId={currentTeam?.id}
+                            hackathonId={hackathon.id}
+                        />
+                    </div>
                 </div>
-            </div>
-            <div className="justify-right flex items-end">
-                <SubmitButton
-                    teamId={currentTeam?.id}
-                    hackathonId={hackathon.id}
-                />
             </div>
         </div>
     );
