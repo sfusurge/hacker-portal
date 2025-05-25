@@ -24,10 +24,6 @@ export function LongDescriptionModal({
     event: InternalCalendarEventType;
     onClose: () => void;
 }) {
-    const longDescription = trpc.events.getEventLongDescription.useQuery({
-        eventId: event.id,
-    });
-
     function closeModal() {
         onClose();
         window.history.back();
@@ -78,32 +74,50 @@ export function LongDescriptionModal({
                 }}
                 className={style.longDescriptionContainer}
             >
-                <div className={style.contentHolder}>
-                    <h1 className={style.title}>
-                        {event.title}
-
-                        <button onClick={closeModal}>
-                            <XMarkIcon style={{ width: '24px' }} />
-                        </button>
-                    </h1>
-
-                    <span className={style.line}>
-                        <ClockIcon style={{ width: '24px' }} />
-                        {getEventDurationString(event)}
-                    </span>
-
-                    {event.location && (
-                        <span className={style.line}>
-                            <MapPinIcon style={{ width: '24px' }} />
-                            {event.location}
-                        </span>
-                    )}
-
-                    <MarkdownDisplay
-                        content={longDescription.data?.longDescription ?? 'N/A'}
-                    />
-                </div>
+                <EventLongDescriptionContent
+                    event={event}
+                    closeModal={closeModal}
+                />
             </motion.div>
         </>
+    );
+}
+export function EventLongDescriptionContent({
+    event,
+    closeModal,
+}: {
+    event: InternalCalendarEventType;
+    closeModal?: () => void;
+}) {
+    const longDescription = trpc.events.getEventLongDescription.useQuery({
+        eventId: event.id,
+    });
+    return (
+        <div className={style.contentHolder}>
+            {closeModal && (
+                <h1 className={style.title}>
+                    {event.title}
+                    <button onClick={closeModal}>
+                        <XMarkIcon style={{ width: '24px' }} />
+                    </button>
+                </h1>
+            )}
+
+            <span className={style.line}>
+                <ClockIcon style={{ width: '24px' }} />
+                {getEventDurationString(event)}
+            </span>
+
+            {event.location && (
+                <span className={style.line}>
+                    <MapPinIcon style={{ width: '24px' }} />
+                    {event.location}
+                </span>
+            )}
+
+            <MarkdownDisplay
+                content={longDescription.data?.longDescription ?? 'N/A'}
+            />
+        </div>
     );
 }

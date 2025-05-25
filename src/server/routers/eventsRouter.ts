@@ -1,6 +1,7 @@
 import {
     deleteEventSchema,
     events as eventsTable,
+    EventType,
     getEventLongDescriptionSchema,
     getEventsSchema,
     insertEventSchema,
@@ -9,10 +10,12 @@ import {
 import { publicProcedure, router } from '../trpc';
 import { InternalServerError, UnauthorizedError } from '../exceptions';
 
-import { getUserData, UserRoleEnum } from '@/db/schema/users/users';
+import { UserRoleEnum } from '@/db/schema/users/users';
 import { databaseClient } from '@/db/client';
 import { and, asc, eq, getTableColumns } from 'drizzle-orm';
 import { checkIns } from '@/db/schema/checkIn';
+import { z } from 'zod';
+import { getUserData } from '@/server/routers/usersRouter';
 
 export interface CalendarEvent {
     id: number;
@@ -26,6 +29,8 @@ export interface CalendarEvent {
     location: string;
     description?: string | undefined;
     checkInTime?: string | undefined;
+    hasCheckIn: boolean;
+    eventType: EventType;
 }
 
 export const eventsRouter = router({
@@ -54,10 +59,16 @@ export const eventsRouter = router({
                     color: input.color,
                     description: input.description,
                     longDescription: input.longDescription,
+                    eventType: input.eventType as EventType,
+                    hasCheckIn: input.hasCheckIn,
                 })
                 .returning();
 
-            // return event;
+            return {
+                ...event,
+                startDate: event.startDate?.toUTCString(),
+                endDate: event.endDate?.toUTCString(),
+            };
         }),
 
     getEvents: publicProcedure
@@ -95,8 +106,6 @@ export const eventsRouter = router({
                 // endDate comes first
                 .orderBy(asc(eventsTable.startDate), asc(eventsTable.endDate));
 
-            console.log(`Returned rows: ${JSON.stringify(rows)}`);
-
             const events = rows.map(({ checkIn, event: _event }) => {
                 const { longDescription, ...event } = { ..._event };
                 return {
@@ -112,6 +121,32 @@ export const eventsRouter = router({
             });
 
             return events as CalendarEvent[];
+        }),
+
+    getHackathonCheckInEvents: publicProcedure
+        .input(z.object({ hackathonId: z.number() }))
+        .query(async ({ input }) => {
+            const { longDescription, ...columns } =
+                getTableColumns(eventsTable);
+
+            const events = await databaseClient
+                .select(columns)
+                .from(eventsTable)
+                .where(
+                    and(
+                        eq(eventsTable.hackathonId, input.hackathonId),
+                        eq(eventsTable.hasCheckIn, true)
+                    )
+                )
+                .orderBy(asc(eventsTable.startDate));
+
+            return events.map((event) => {
+                return {
+                    ...event,
+                    startDate: event.startDate.toISOString(),
+                    endDate: event.endDate.toISOString(),
+                };
+            });
         }),
 
     getEventLongDescription: publicProcedure

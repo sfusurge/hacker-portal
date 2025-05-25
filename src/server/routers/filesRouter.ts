@@ -7,8 +7,8 @@ import {
     getFileFromR2,
     FileValidationType,
 } from '@/lib/cloudflare/r2';
-import { getUserData, user } from '@/db/schema/users/users';
 import { InternalServerError } from '../exceptions';
+import { getUserData } from '@/server/routers/usersRouter';
 
 // Input validation schemas
 const uploadFileSchema = z.object({
@@ -60,7 +60,7 @@ export const filesRouter = router({
                 key,
                 mimeType,
                 fileContent: fileBuffer,
-                userId: userData.id,
+                userId: `${userData.id}`,
                 bucketName: input.bucketName,
             });
         }),

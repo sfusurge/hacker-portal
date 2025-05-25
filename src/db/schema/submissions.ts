@@ -11,12 +11,12 @@ import { user } from './users/users';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
-export const submissionStatusEnum = pgEnum('application_status', [
-    'Winner',
-    'Loser',
-    'Finalist',
+export const submissionStatusEnum = pgEnum('submission_status', [
     'Awaiting Review',
+    'Reviewed',
 ]);
+export type SubmissionStatusEnumType =
+    (typeof submissionStatusEnum)['enumValues'][number];
 
 export const submissions = pgTable(
     'submissions',

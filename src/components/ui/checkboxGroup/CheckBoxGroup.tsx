@@ -147,7 +147,7 @@ export function CheckboxGroup({
                 {
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '12px',
+                    gap: '8px',
                     '--errMsg': "'Invalid selections'",
                 } as CSSProperties
             }

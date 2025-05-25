@@ -5,11 +5,10 @@ import DesktopNav from '@/components/sidebar/DesktopNav';
 
 import { ReactNode } from 'react';
 
-import { getUserData } from '@/db/schema/users/users';
-
 import { CacheClearer } from '@/app/(auth)/CacheClear';
 import { redirect } from 'next/navigation';
 import { ClientAuthContext } from './ClientAuthContext';
+import { getUserData } from '@/server/routers/usersRouter';
 
 export default async function Layout({ children }: { children: ReactNode }) {
     const initialUserData = await getUserData();
@@ -20,31 +19,25 @@ export default async function Layout({ children }: { children: ReactNode }) {
 
     return (
         <>
-            <ClientAuthContext userData={initialUserData}></ClientAuthContext>
+            <ClientAuthContext userData={initialUserData} />
             <div
-                className="bg-neutral-950 p-6 md:flex md:p-0 md:pr-5"
+                className="bg-neutral-950 p-0 md:flex md:p-5"
                 style={{ height: '100dvh' }}
             >
-                <CacheClearer initialData={initialUserData}></CacheClearer>
+                <CacheClearer initialData={initialUserData} />
                 <MobileTopNav
                     initialData={initialUserData}
                     className="fixed top-0 left-0 z-100 md:hidden"
-                ></MobileTopNav>
+                />
                 <MobileBottomNav
                     initialData={initialUserData}
                     className="fixed bottom-0 left-0 z-100 md:hidden"
-                ></MobileBottomNav>
+                />
                 <DesktopNav
                     initialData={initialUserData}
                     className="hidden md:block"
-                ></DesktopNav>
-                <main
-                    style={{
-                        marginTop: 'var(--paddingTop)',
-                        height: 'calc(100% - var(--paddingTop))',
-                    }}
-                    className="md:bg-neutral-925 mt-20 pb-20 md:my-5 md:max-h-screen md:flex-1 md:overflow-y-auto md:rounded-2xl md:border md:border-neutral-600/30 md:p-10"
-                >
+                />
+                <main className="md:bg-neutral-925 mt-20 max-h-screen flex-1 p-6 md:mt-0 md:overflow-y-auto md:rounded-2xl md:border md:border-neutral-600/30 md:p-10">
                     {children}
                 </main>
             </div>

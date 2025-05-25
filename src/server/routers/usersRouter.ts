@@ -1,14 +1,17 @@
-import { publicProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
+import { publicProcedure, router } from '../trpc';
 
 import {
-    insertUserSchema,
     deleteUserSchema,
+    insertUserSchema,
     updateUserSchema,
     user,
-    addUser,
 } from '@/db/schema/users/users';
-import { eq } from 'drizzle-orm';
+import { eq, or, sql } from 'drizzle-orm';
+import { z } from 'zod';
+import { UnauthorizedError } from '../exceptions';
+import { auth } from '@/auth/auth';
+import { getSixDigitId, userRNGParams } from '@/lib/PRNG/LCG';
 
 export const usersRouter = router({
     /**
@@ -29,6 +32,41 @@ export const usersRouter = router({
             .from(user);
         return res;
     }),
+
+    getUserById: publicProcedure
+        .input(z.object({ userId: z.union([z.number(), z.string()]) }))
+        .query(async ({ input }) => {
+            const userData = await getUserData();
+
+            if (userData?.userRole !== 'admin') {
+                throw new UnauthorizedError({
+                    email: userData?.email,
+                    role: userData?.userRole,
+                });
+            }
+
+            const [res] = await databaseClient
+                .select({
+                    id: user.id,
+                    email: user.email,
+                    image: user.image,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    phoneNumber: user.phoneNumber,
+                    userRole: user.userRole,
+                    displayId: user.displayId,
+                })
+                .from(user)
+                .where(
+                    or(
+                        eq(user.id, Number(input.userId)),
+                        eq(user.displayId, `${input.userId}`)
+                    )
+                );
+
+            return res;
+        }),
+
     addUser: publicProcedure.input(insertUserSchema).mutation(async (opts) => {
         const res = await addUser(opts.input);
         return res;
@@ -59,4 +97,63 @@ export interface UserType {
     phoneNumber?: string | undefined;
     userRole: string;
     displayId: string;
+}
+
+export async function getUserData() {
+    const session = await auth();
+
+    if (!session || !session.user || !session.user.email) {
+        return undefined;
+    }
+    const normalizedEmail = session.user.email.toLowerCase();
+
+    const dbUser = (
+        await databaseClient
+            .select()
+            .from(user)
+            .limit(1)
+            .where(eq(user.email, normalizedEmail))
+    )[0];
+    if (!dbUser) {
+        return undefined;
+    }
+
+    return {
+        ...dbUser,
+    };
+}
+export type UserData = Awaited<ReturnType<typeof getUserData>>;
+
+export async function addUser(vals: z.infer<typeof insertUserSchema>) {
+    // create the user, and catch their id
+    const res = await databaseClient.transaction(async (tx) => {
+        const [_index] = await tx.execute(
+            sql`select (last_value + 1) as "last_value" from user_id_seq`
+        );
+        const index = parseInt(`${_index['last_value']}`, 10);
+        console.log('creating user at index: ', index);
+
+        if (isNaN(index)) {
+            // update failed.
+            console.log(`Insert user failed, index fetch failed: ${index}`);
+            console.log(
+                await tx.execute(sql`select (last_value + 1) from user_id_seq`)
+            );
+
+            return undefined;
+        }
+
+        const displayId = getSixDigitId(index, userRNGParams);
+
+        const [insertResult] = await tx
+            .insert(user)
+            .values({
+                ...vals,
+                displayId,
+            })
+            .returning();
+
+        return insertResult;
+    });
+    return res;
 }

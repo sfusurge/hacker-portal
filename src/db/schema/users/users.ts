@@ -13,16 +13,17 @@ import { z } from 'zod';
 import { databaseClient } from '../../client';
 
 import { getSixDigitId, userRNGParams } from '@/lib/PRNG/LCG';
-import { auth } from '@/auth/auth';
 
 export const UserRoleEnum = {
     user: 'user',
     admin: 'admin',
+    judge: 'judge',
 };
 
 export const userRoleDbEnum = pgEnum('user_role', [
     UserRoleEnum.admin,
     UserRoleEnum.user,
+    UserRoleEnum.judge,
 ]);
 
 export const user = pgTable(
@@ -81,62 +82,3 @@ export {
     updateUserSchema,
 };
 export type { UserTableType };
-
-export async function addUser(vals: z.infer<typeof insertUserSchema>) {
-    // create the user, and catch their id
-    const res = await databaseClient.transaction(async (tx) => {
-        const [_index] = await tx.execute(
-            sql`select (last_value + 1) as "last_value" from user_id_seq`
-        );
-        const index = parseInt(`${_index['last_value']}`, 10);
-        console.log('creating user at index: ', index);
-
-        if (isNaN(index)) {
-            // update failed.
-            console.log(`Insert user failed, index fetch failed: ${index}`);
-            console.log(
-                await tx.execute(sql`select (last_value + 1) from user_id_seq`)
-            );
-
-            return undefined;
-        }
-
-        const displayId = getSixDigitId(index, userRNGParams);
-
-        const [insertResult] = await tx
-            .insert(user)
-            .values({
-                ...vals,
-                displayId,
-            })
-            .returning();
-
-        return insertResult;
-    });
-    return res;
-}
-
-export async function getUserData() {
-    const session = await auth();
-
-    if (!session || !session.user || !session.user.email) {
-        return undefined;
-    }
-    const normalizedEmail = session.user.email.toLowerCase();
-
-    const dbUser = (
-        await databaseClient
-            .select()
-            .from(user)
-            .limit(1)
-            .where(eq(user.email, normalizedEmail))
-    )[0];
-    if (!dbUser) {
-        return undefined;
-    }
-
-    return {
-        ...dbUser,
-    };
-}
-export type UserData = Awaited<ReturnType<typeof getUserData>>;

@@ -13,8 +13,6 @@ export async function updateUserInfo(
     'use server';
 
     const session = await auth();
-    console.log('user image', formdata.get('profilePictureId'));
-
     await databaseClient
         .update(user)
         .set({

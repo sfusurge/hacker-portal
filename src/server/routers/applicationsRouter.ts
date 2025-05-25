@@ -6,7 +6,7 @@ import {
     StatusEnum,
     updateApplicationStatusSchema,
 } from '@/db/schema/applications';
-import { getUserData, user } from '@/db/schema/users/users';
+import { user } from '@/db/schema/users/users';
 import { and, asc, eq, getTableColumns, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { InternalServerError } from '../exceptions';
@@ -16,6 +16,7 @@ import { welcomeSparkhacksTemplate } from '@/server/routers/templates';
 import { transporter } from '@/server/nodemailerTransporter';
 import { teams } from '@/db/schema/teams';
 import { members } from '@/db/schema/members';
+import { getUserData } from '@/server/routers/usersRouter';
 
 export interface SubmitApplicationResponse {
     hackathonId: number;

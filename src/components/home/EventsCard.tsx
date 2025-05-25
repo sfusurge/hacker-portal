@@ -1,9 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
+
 import { useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { LongDescriptionModal } from '@/components/calendar/EventLongDescription/EventLongDescription';
@@ -19,11 +17,12 @@ import {
     CardHeaderTitle,
     CardHeaderDescription,
     CardContent,
-    CardFooter,
     CardHeaderColumn,
 } from '@/components/ui/card';
+import { CalendarEvent } from '@/server/routers/eventsRouter';
+import dayjs from 'dayjs';
 
-export default function EventsCard({ events }: { events: any[] }) {
+export default function EventsCard({ events }: { events: CalendarEvent[] }) {
     const [selectedEvent, setSelectedEvent] =
         useState<InternalCalendarEventType | null>(null);
     const [showModal, setShowModal] = useState(false);
@@ -83,10 +82,10 @@ export default function EventsCard({ events }: { events: any[] }) {
                             >
                                 <div className="flex min-w-12 flex-col items-center justify-start overflow-hidden rounded-lg bg-neutral-800 pt-2 text-center font-mono text-white">
                                     <span className="pb-1 text-xs font-medium uppercase">
-                                        {format(event.startDate, 'MMM')}
+                                        {dayjs(event.startDate).format('MMM')}
                                     </span>
                                     <span className="w-full bg-neutral-950 px-3 py-1 text-lg font-bold">
-                                        {format(event.startDate, 'd')}
+                                        {dayjs(event.startDate).format('d')}
                                     </span>
                                 </div>
                                 <div className="flex h-full flex-col justify-center gap-2">
@@ -94,10 +93,9 @@ export default function EventsCard({ events }: { events: any[] }) {
                                         {event.title}
                                     </h3>
                                     <p className="text-sm text-white/60">
-                                        {format(
-                                            event.startDate,
+                                        {dayjs(event.startDate).format(
                                             'MMMM d, h:mm a'
-                                        )}{' '}
+                                        )}
                                         · {event.location}
                                     </p>
                                 </div>

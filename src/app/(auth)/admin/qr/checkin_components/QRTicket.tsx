@@ -21,7 +21,6 @@ export default function QRTicket({
     image,
     closeTicket,
 }: QRTicketProps) {
-    //const userList = await databaseClient.select().from(users);
     const pfp = '/favicon.png';
     // const opts: QROptions = {
     //     margin: 1,

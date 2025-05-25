@@ -11,6 +11,8 @@ import { filesRouter } from './routers/filesRouter';
 import { emailsRouter } from './routers/emailTemplateRouter';
 import { submissionsRouter } from './routers/submissionsRouter';
 
+import { judgingRouter } from './routers/judgingRouter';
+
 export const appRouter = router({
     health_check: publicProcedure.query(() => {
         return 'app router endpoint reached!';
@@ -23,6 +25,8 @@ export const appRouter = router({
     emailTemplates: emailsRouter,
     events: eventsRouter,
     checkIn: checkInRouter,
+
+    judging: judgingRouter,
 
     teams: teamsRouter,
     files: filesRouter,

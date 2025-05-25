@@ -1,7 +1,7 @@
 import { publicProcedure, router } from '../trpc';
 import { z } from 'zod';
 import { databaseClient } from '@/db/client';
-import { getUserData, UserRoleEnum } from '@/db/schema/users/users';
+import { UserRoleEnum } from '@/db/schema/users/users';
 import { UnauthorizedError, InternalServerError } from '../exceptions';
 import {
     emailTemplates,
@@ -10,6 +10,7 @@ import {
     deleteEmailTemplateSchema,
 } from '@/db/schema/emails';
 import { eq, desc } from 'drizzle-orm';
+import { getUserData } from '@/server/routers/usersRouter';
 
 export const emailsRouter = router({
     createEmailTemplate: publicProcedure

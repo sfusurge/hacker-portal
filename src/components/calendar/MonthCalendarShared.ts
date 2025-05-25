@@ -77,22 +77,36 @@ function groupBy<K extends PropertyKey, T>(
 
 export function groupEventsByDay(
     events: InternalCalendarEventType[],
-    firstDayOfMonth: Dayjs
+    firstDayOfMonth: Dayjs,
+    startDate?: Dayjs,
+    days?: number
 ) {
+    function dateId(time: Dayjs) {
+        return `${Math.floor(time.diff(firstDayOfMonth, 'hour') / 24) + 1}`;
+    }
+
     const grouped = {
-        ...groupBy(
-            events,
-            (item) =>
-                Math.floor(item.startTime.diff(firstDayOfMonth, 'hour') / 24) +
-                1
-        ),
+        ...groupBy(events, (item) => dateId(item.startTime)),
     };
 
     for (const [key, val] of Object.entries(grouped)) {
         val.sort((a, b) => a.startTime.unix() - b.startTime.unix());
-        grouped[parseInt(key)] = val;
+        grouped[key] = val;
     }
 
+    if (startDate === undefined || days === undefined) {
+        // startDate and total days are optional, used to fill miss days with empty array.
+        return grouped;
+    }
+    // fill missing days with empty group
+    for (let i = 0; i < days; i++) {
+        const id = dateId(startDate);
+
+        if (grouped[id] === undefined) {
+            grouped[id] = [];
+        }
+        startDate = startDate.add(1, 'day');
+    }
     return grouped;
 }
 
@@ -138,7 +152,7 @@ function getHour(t: Dayjs) {
 }
 
 export function getEventDurationString(event: InternalCalendarEventType) {
-    return `${event.startTime.format('ddd, MMM D')} - ${getHour(event.startTime)} to ${getHour(event.endTime)}`;
+    return `${getHour(event.startTime)} to ${getHour(event.endTime)}`;
 }
 
 export type InternalCalendarEventType = Omit<
@@ -165,6 +179,50 @@ export function DayjsifyEvents(
         );
         return res;
     });
+}
+
+export interface MonthInfoType {
+    year: number;
+    month: number;
+    displayName: string;
+    daysInMonth: number;
+    firstDayOffset: number;
+    weeksInMonth: number;
+    weekdayNames: string[];
+    firstDay: Dayjs;
+}
+
+export function getMonthInfo(year: number, month: number): MonthInfoType {
+    const target = dayjs(new Date(year, month, 1));
+
+    return {
+        month,
+        year,
+        daysInMonth: target.daysInMonth(),
+        displayName: target.format('MMMM DD, YYYY'), // November 23, 2024
+        firstDayOffset: target.day(), // day in week of the first day.
+        firstDay: target,
+        weeksInMonth: weeksInMonth(target),
+        weekdayNames: [
+            'Sunday',
+            'Monday',
+            'Tuesday',
+            'Wednesday',
+            'Thursday',
+            'Friday',
+            'Saturday',
+        ],
+    } as MonthInfoType;
+}
+
+export function range(count: number) {
+    const out = Array(count);
+
+    for (let i = 0; i < count; i++) {
+        out[i] = i;
+    }
+
+    return out;
 }
 
 // TODO remove debug code

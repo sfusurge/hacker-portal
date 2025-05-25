@@ -29,6 +29,9 @@ const hackathons = pgTable('hackathons', {
     version: integer('version').notNull().default(1),
     isActive: boolean('is_active').notNull().default(false),
     submissionQuestions: jsonb('submissionQuestions').notNull().default([]),
+
+    judgeQuestions: jsonb('judgeQuestions').notNull().default([]),
+    judgeRubric: jsonb('judgeRubric').notNull().default([]),
 });
 
 const insertHackathonSchema = createInsertSchema(hackathons, {

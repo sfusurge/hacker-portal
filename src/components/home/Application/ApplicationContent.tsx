@@ -6,11 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Conditional } from '@/lib/Conditional';
 import QRTicket from '@/app/(auth)/admin/qr/checkin_components/QRTicket';
 import WithdrawPrompt from '@/components/home/Application/WithdrawPrompt';
-import { UserData } from '@/db/schema/users/users';
 import CountdownTimer from '../Application/Countdown';
 import { CardTitle, CardDescription } from '@/components/ui/card';
 import { useHackathon } from '@/hooks/use-hackathon';
 import dayjs from 'dayjs';
+import { UserData } from '@/server/routers/usersRouter';
 
 export function CountdownContent() {
     const [currentTime, setime] = useState(dayjs());
@@ -22,9 +22,14 @@ export function CountdownContent() {
         [currentTime]
     );
     useEffect(() => {
-        setTimeout(() => {
+        const interval = setInterval(() => {
             setime(dayjs());
-        }, 1000);
+            // 10 seconds
+        }, 10_000);
+
+        return () => {
+            clearInterval(interval);
+        };
     }, []);
 
     if (overdue) {

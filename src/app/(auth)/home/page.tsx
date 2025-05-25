@@ -2,11 +2,11 @@ import ApplicationCard from '@/components/home/Application/ApplicationCard';
 import DiscordCard from '@/components/home/DiscordCard';
 import EventsCard from '@/components/home/EventsCard';
 import TeamCard from '@/components/home/TeamCard';
-import { getUserData } from '@/db/schema/users/users';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
 import { createCaller } from '@/server/appRouter';
 import { Suspense } from 'react';
 import { ApplicationCardSkeleton } from '@/components/home/Skeletons';
+import { getUserData } from '@/server/routers/usersRouter';
 
 export default async function Home() {
     const data = await getUserData();

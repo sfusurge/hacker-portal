@@ -225,6 +225,7 @@ export async function getURLFromR2(
         }
 
         //generate presigned URL
+        // @ts-ignore
         const url = await getSignedUrl(s3Client, headCommand, {
             expiresIn,
         });

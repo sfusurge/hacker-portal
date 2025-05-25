@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { getStatusVariant, getTextVariant } from '@/lib/application-status';
 import Link from 'next/link';
 import { LinkIcon } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import {
     Card,
@@ -19,10 +19,11 @@ import {
 } from '@/components/ui/card';
 import Image from 'next/image';
 import JoinTeam from '@/components/team/NoTeam/TeamOption';
-import { UserData } from '@/db/schema/users/users';
 import { inferProcedureOutput } from '@trpc/server';
 import { AppRouter } from '@/server/appRouter';
 import { copyToClipboard } from '@/lib/copy-to-clipboard';
+import { trpc } from '@/trpc/client';
+import { UserData } from '@/server/routers/usersRouter';
 
 type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
 
@@ -36,13 +37,33 @@ function TeamMemberItem({
     member: TeamMemberType;
     userData: UserData;
 }) {
+    const fetchedImage = trpc.files.getUserImages.useQuery(
+        {},
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
+
+    const [avatarUrl, setAvatarUrl] = useState<string>(
+        '/sidebar/default-avatar.webp'
+    );
+
+    useEffect(() => {
+        if (fetchedImage.data && fetchedImage.data.length > 0) {
+            const dataUrl = `data:image/png;base64,${fetchedImage.data}`;
+            setAvatarUrl(dataUrl);
+        } else {
+            setAvatarUrl('/sidebar/default-avatar.webp');
+        }
+    }, [fetchedImage.data]);
+
     return (
         <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 flex-1 items-center gap-3">
                 <img
                     src={
                         // member.image ||
-                        '/teams/single-otter.webp'
+                        avatarUrl
                     }
                     alt={`${member.firstName || 'Team member'}`}
                     className="h-7 w-7 shrink-0 rounded-full bg-neutral-700 object-cover"

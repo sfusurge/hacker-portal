@@ -1,6 +1,6 @@
 'use client';
 
-import { UserData } from '@/db/schema/users/users';
+import { UserData } from '@/server/routers/usersRouter';
 import { useEffect } from 'react';
 
 export function CacheClearer({ initialData }: { initialData: UserData }) {
