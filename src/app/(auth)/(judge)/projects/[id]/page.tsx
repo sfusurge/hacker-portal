@@ -42,7 +42,6 @@ const projectSections = [
     {
         type: 'pdf',
         title: 'Process Documentation',
-        // https://pub-:).r2.dev/SparkJam%20Submission%20Form.pdf
         url: 'https://pub-65990e7b450b4832886d09e5cef12aff.r2.dev/SparkJam%20Submission%20Form.pdf',
         // url: 'https://file-examples.com/storage/fe36a1c5cf349bfec90f9e0/2017/10/file-sample_150kB.pdf',
     },
@@ -102,13 +101,15 @@ export default async function ProjectPage({ params }: PageProps) {
                 </div>
             </div>
 
-            <div className="relative h-[-webkit-fill-available] w-[-webkit-fill-available] overflow-y-auto bg-neutral-900 p-6 pb-20 md:pb-0 xl:col-span-1 xl:p-10 xl:pb-0 xl:pl-10">
-                <JudgingForm
-                    hackathonId={hackathonId}
-                    user={user}
-                    projectId={parseInt(id)}
-                    projectTitle={project[1]}
-                />
+            <div className="relative -m-10 mr-0 mb-0 ml-0 h-[-webkit-fill-available] h-[fill-available] overflow-hidden bg-neutral-900 py-10 xl:-mr-10 xl:-mb-10">
+                <div className="mb-10 h-full w-[-webkit-fill-available] w-[fill-available] overflow-y-auto p-6 py-0 xl:col-span-1 xl:p-10 xl:py-0">
+                    <JudgingForm
+                        hackathonId={hackathonId}
+                        user={user}
+                        projectId={id}
+                        projectTitle={project[1]}
+                    />
+                </div>
             </div>
         </div>
     );

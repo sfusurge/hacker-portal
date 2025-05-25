@@ -90,7 +90,7 @@ export function VideoSection({
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                className="aspect-video max-w-3xl rounded-xl"
+                className="aspect-video max-w-4xl rounded-xl"
             ></iframe>
         </div>
     );
