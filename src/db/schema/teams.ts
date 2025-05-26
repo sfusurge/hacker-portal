@@ -10,9 +10,6 @@ import { hackathons } from './hackathons';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { user } from './users/users';
-import { databaseClient } from '@/db/client';
-import { eq, inArray } from 'drizzle-orm';
-import { members } from '@/db/schema/members';
 
 const DEFAULT_MAX_MEMBERS_COUNT = 4;
 
