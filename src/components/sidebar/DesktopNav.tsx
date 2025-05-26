@@ -392,10 +392,10 @@ export default function DesktopNav({
                         {isLargeScreen && (
                             <motion.button
                                 onClick={() => setCollapsed(!collapsed)}
-                                className="hover:bg-neutral-750/30 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-white transition-colors"
+                                className="hover:bg-neutral-750/30 flex w-full items-center justify-start gap-2 rounded-lg px-3 py-2 text-white transition-colors"
                                 initial={false}
                                 animate={{
-                                    width: '100%',
+                                    width: collapsed ? '48px' : '100%',
                                 }}
                                 transition={{
                                     duration: 0.3,
@@ -406,7 +406,7 @@ export default function DesktopNav({
                                     <ChevronDoubleRightIcon className="h-4 w-4" />
                                 ) : (
                                     <motion.div
-                                        className="flex w-full items-center justify-center gap-2"
+                                        className="flex w-full items-center gap-2"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{

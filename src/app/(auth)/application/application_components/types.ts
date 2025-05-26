@@ -31,6 +31,24 @@ export interface HackathonData {
     endDate: dayjs.Dayjs;
 
     pages: ApplicationPage[];
+    judgeQuestions: JudgeQuestion[];
+    judgeRubric: SubmissionJudgeRubric[];
+}
+
+export interface JudgeQuestion extends Question {
+    type: 'judge-question';
+    value?: number;
+    min?: number;
+    max?: number;
+}
+
+export interface SubmissionJudgeRubric {
+    questionId: number;
+    title: string;
+    description: string[];
+    rubric: {
+        [score: string]: string[];
+    };
 }
 
 export interface ApplicationPage extends Entry {
@@ -46,7 +64,8 @@ export type ApplicationQuestion =
     | QuestionMultipleChoice
     | QuestionSchoolName
     | QuestionMultipleCheckBox
-    | QuestionNameInput;
+    | QuestionNameInput
+    | JudgeQuestion;
 
 export type ApplicationQuestionType = ApplicationQuestion['type'];
 
@@ -137,4 +156,51 @@ export interface QuestionSchoolName extends Question {
 export interface QuestionDatePicker extends Question {
     type: 'date';
     value?: string;
+}
+
+// Judging form types
+export type ScoreItem = {
+    questionId: number;
+    title: string;
+    description?: string;
+};
+
+export interface ScoreGroupQuestion {
+    type: 'score-group';
+    questionId: number;
+    title: string;
+    required: boolean;
+    description?: string;
+    items: ScoreItem[];
+}
+
+export interface MultipleChoiceQuestion {
+    type: 'multiple-choice';
+    questionId: number;
+    title: string;
+    required: boolean;
+    description?: string;
+    choices: {
+        id: string;
+        name: string;
+        data: string;
+    }[];
+}
+
+export interface TextAreaQuestion {
+    type: 'text-area';
+    questionId: number;
+    title: string;
+    required: boolean;
+    description?: string;
+    placeholder?: string;
+}
+
+export type JudgingFormQuestion =
+    | ScoreGroupQuestion
+    | MultipleChoiceQuestion
+    | TextAreaQuestion;
+
+export interface FormResponse {
+    [key: string]: string | null;
 }

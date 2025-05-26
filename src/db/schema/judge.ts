@@ -1,11 +1,9 @@
 import {
     integer,
     json,
-    pgEnum,
     pgTable,
     primaryKey,
     timestamp,
-    text,
 } from 'drizzle-orm/pg-core';
 import { hackathons } from './hackathons';
 import { user } from './users/users';
@@ -22,10 +20,6 @@ export const judgingScores = pgTable(
         teamId: integer('team_id')
             .references(() => teams.id)
             .notNull(),
-        projectId: integer('project_id')
-            // TODO: ProjectID
-            .references(() => teams.id)
-            .notNull(),
         userId: integer('user_id')
             .references(() => user.id, { onDelete: 'no action' })
             .notNull(),
@@ -35,12 +29,7 @@ export const judgingScores = pgTable(
     (table) => {
         return [
             primaryKey({
-                columns: [
-                    table.hackathonId,
-                    table.teamId,
-                    table.projectId,
-                    table.userId,
-                ],
+                columns: [table.hackathonId, table.teamId, table.userId],
             }),
         ];
     }
@@ -49,7 +38,6 @@ export const judgingScores = pgTable(
 export const insertJudgingScoreSchema = createInsertSchema(judgingScores).pick({
     hackathonId: true,
     teamId: true,
-    projectId: true,
     userId: true,
     response: true,
 });

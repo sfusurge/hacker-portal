@@ -426,6 +426,12 @@ export function useHackathon() {
                     id: data.id,
                     pages: data.questions,
                     submissionDeadline: dayjs(data.submissionDeadline),
+                    judgeQuestions: Array.isArray(data.judgeQuestions)
+                        ? data.judgeQuestions
+                        : [],
+                    judgeRubric: Array.isArray(data.judgeRubric)
+                        ? data.judgeRubric
+                        : [],
                     startDate: dayjs(data.startDate),
                     endDate: dayjs(data.endDate),
                     version: 1,

@@ -2,6 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Project {
     [key: number]: string;
@@ -17,6 +19,7 @@ interface ProjectCardProps {
     index: number;
     statusInfo: StatusInfo;
     projectId?: string | number;
+    isLoading?: boolean;
 }
 
 export default function ProjectCard({
@@ -24,8 +27,44 @@ export default function ProjectCard({
     index,
     statusInfo,
     projectId,
+    isLoading = false,
 }: ProjectCardProps) {
     const linkId = projectId !== undefined ? projectId : index;
+    const titleRef = useRef<HTMLHeadingElement>(null);
+    const [titleLines, setTitleLines] = useState(1);
+
+    useEffect(() => {
+        const checkTitleHeight = () => {
+            if (titleRef.current) {
+                const titleHeight = titleRef.current.clientHeight;
+                const lineHeight = parseInt(
+                    window.getComputedStyle(titleRef.current).lineHeight
+                );
+                const estimatedLines = Math.round(titleHeight / lineHeight);
+                setTitleLines(estimatedLines > 1 ? 2 : 1);
+            }
+        };
+
+        checkTitleHeight();
+        window.addEventListener('resize', checkTitleHeight);
+        return () => window.removeEventListener('resize', checkTitleHeight);
+    }, [project]);
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-col overflow-hidden rounded-xl">
+                <div className="relative">
+                    <Skeleton className="absolute top-3 left-3 h-6 w-24 rounded-xl" />
+                    <Skeleton className="aspect-video w-full" />
+                    <div className="bg-neutral-850 flex flex-col gap-2 p-4">
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-2/3" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <Link
@@ -45,11 +84,16 @@ export default function ProjectCard({
                     height={281}
                     className="aspect-video w-full object-cover"
                 />
-                <div className="bg-neutral-850 flex h-full flex-col space-y-2 p-4 transition-colors group-hover:bg-neutral-800">
-                    <h3 className="line-clamp-2 font-semibold text-pretty text-white">
+                <div className="bg-neutral-850 flex flex-col gap-2 p-4 transition-colors group-hover:bg-neutral-800">
+                    <h3
+                        ref={titleRef}
+                        className="mb-0 line-clamp-2 leading-tight font-semibold text-pretty text-white"
+                    >
                         {project[1]}
                     </h3>
-                    <p className="line-clamp-2 text-sm text-white/60">
+                    <p
+                        className={`${titleLines === 1 ? 'line-clamp-3' : 'line-clamp-2'} text-sm text-white/60`}
+                    >
                         {project[2]}
                     </p>
                 </div>

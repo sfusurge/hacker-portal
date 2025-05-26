@@ -27,6 +27,7 @@ const FILTERS_KEY = 'judging_filters_data';
 
 interface Project {
     [key: number]: string;
+    id: number;
 }
 
 interface ProjectListProps {
@@ -47,7 +48,6 @@ export default function ProjectList({
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredProjects, setFilteredProjects] = useState(projects);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
     const defaultStatusFilters = ['not_started', 'in_progress'];
     const [statusFilters, setStatusFilters] = useState<Set<string>>(
         new Set(defaultStatusFilters)
@@ -55,82 +55,6 @@ export default function ProjectList({
     const [initialStatusFilters, setInitialStatusFilters] = useState<
         Set<string>
     >(new Set(defaultStatusFilters));
-
-    // TODO: Fetch project submitted and compare with current user submissions and add to localstorage
-    useEffect(() => {
-        try {
-            const savedFilters = localStorage.getItem(FILTERS_KEY);
-            if (savedFilters) {
-                const parsedFilters = JSON.parse(savedFilters);
-                if (Array.isArray(parsedFilters) && parsedFilters.length > 0) {
-                    const filtersSet = new Set(parsedFilters);
-                    setStatusFilters(filtersSet);
-                    setInitialStatusFilters(filtersSet);
-                }
-            }
-        } catch (error) {
-            console.error('Error loading saved filters:', error);
-            setStatusFilters(new Set(defaultStatusFilters));
-            setInitialStatusFilters(new Set(defaultStatusFilters));
-        }
-    }, []);
-
-    useEffect(() => {
-        const loadProjectStatuses = () => {
-            try {
-                const savedData = localStorage.getItem(STATUS_KEY);
-                if (savedData) {
-                    setProjectStatuses(JSON.parse(savedData));
-                }
-            } catch (error) {
-                console.error('Error loading project statuses:', error);
-            }
-        };
-
-        loadProjectStatuses();
-
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible') {
-                loadProjectStatuses();
-            }
-        };
-
-        window.addEventListener('focus', loadProjectStatuses);
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-
-        return () => {
-            window.removeEventListener('focus', loadProjectStatuses);
-            document.removeEventListener(
-                'visibilitychange',
-                handleVisibilityChange
-            );
-        };
-    }, []);
-
-    useEffect(() => {
-        if (!searchQuery.trim() && statusFilters.size === 0) {
-            setFilteredProjects(projects);
-            return;
-        }
-
-        const query = searchQuery.toLowerCase();
-        const filtered = projects.filter((project, index) => {
-            const projectId = project[0] || String(index);
-            const matchesSearch =
-                !query.trim() ||
-                project[1]?.toLowerCase().includes(query) ||
-                project[2]?.toLowerCase().includes(query) ||
-                project[4]?.toLowerCase().includes(query);
-
-            const projectStatus = projectStatuses[projectId] || 'not_started';
-            const matchesStatus =
-                statusFilters.size === 0 || statusFilters.has(projectStatus);
-
-            return matchesSearch && matchesStatus;
-        });
-
-        setFilteredProjects(filtered);
-    }, [searchQuery, projects, statusFilters, projectStatuses]);
 
     const handleStatusFilterChange = (selected: Set<string>) => {
         setStatusFilters(selected);
@@ -217,6 +141,140 @@ export default function ProjectList({
     const handleCancel = () => {
         resetStatusFilters();
     };
+
+    const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // TODO: Remove this fake loader
+    useEffect(() => {
+        if (isLoading) {
+            const timer = setTimeout(() => {
+                setIsLoading(false);
+            }, 800);
+            return () => clearTimeout(timer);
+        }
+    }, [isLoading]);
+
+    // Saved filters from local
+    useEffect(() => {
+        try {
+            const savedFilters = localStorage.getItem(FILTERS_KEY);
+            if (savedFilters) {
+                const parsedFilters = JSON.parse(savedFilters);
+                if (Array.isArray(parsedFilters) && parsedFilters.length > 0) {
+                    const filtersSet = new Set(parsedFilters);
+                    setStatusFilters(filtersSet);
+                    setInitialStatusFilters(filtersSet);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading saved filters:', error);
+            setStatusFilters(new Set(defaultStatusFilters));
+            setInitialStatusFilters(new Set(defaultStatusFilters));
+        }
+    }, []);
+
+    useEffect(() => {
+        const loadProjectStatuses = () => {
+            try {
+                const savedData = localStorage.getItem(STATUS_KEY);
+                if (savedData) {
+                    setProjectStatuses(JSON.parse(savedData));
+                }
+            } catch (error) {
+                console.error('Error loading project statuses:', error);
+            }
+        };
+
+        loadProjectStatuses();
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                loadProjectStatuses();
+            }
+        };
+
+        window.addEventListener('focus', loadProjectStatuses);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            window.removeEventListener('focus', loadProjectStatuses);
+            document.removeEventListener(
+                'visibilitychange',
+                handleVisibilityChange
+            );
+        };
+    }, []);
+
+    useEffect(() => {
+        if (
+            Object.keys(projectStatuses).length > 0 ||
+            localStorage.getItem(STATUS_KEY) === null
+        ) {
+            setInitialLoadComplete(true);
+        }
+    }, [projectStatuses]);
+
+    useEffect(() => {
+        if (!initialLoadComplete) return;
+
+        if (judgedProjects && judgedProjects.length > 0) {
+            const newStatuses = { ...projectStatuses };
+            const judgedProjectIds = new Set(
+                judgedProjects.map((project) => project.teamId)
+            );
+            let hasChanges = false;
+
+            projects.forEach((project) => {
+                const projectId = project.id || project[0];
+
+                if (
+                    judgedProjectIds.has(Number(projectId)) &&
+                    newStatuses[projectId] !== 'completed'
+                ) {
+                    newStatuses[projectId] = 'completed';
+                    hasChanges = true;
+                }
+            });
+
+            if (hasChanges) {
+                try {
+                    localStorage.setItem(
+                        STATUS_KEY,
+                        JSON.stringify(newStatuses)
+                    );
+                    setProjectStatuses(newStatuses);
+                } catch (error) {
+                    console.error('Error saving project statuses:', error);
+                }
+            }
+        }
+    }, [judgedProjects, projects, projectStatuses, initialLoadComplete]);
+
+    useEffect(() => {
+        if (!searchQuery.trim() && statusFilters.size === 0) {
+            setFilteredProjects(projects);
+            return;
+        }
+
+        const query = searchQuery.toLowerCase();
+        const filtered = projects.filter((project, index) => {
+            const projectId = project[0] || String(index);
+            const matchesSearch =
+                !query.trim() ||
+                project[1]?.toLowerCase().includes(query) ||
+                project[2]?.toLowerCase().includes(query) ||
+                project[4]?.toLowerCase().includes(query);
+
+            const projectStatus = projectStatuses[projectId] || 'not_started';
+            const matchesStatus =
+                statusFilters.size === 0 || statusFilters.has(projectStatus);
+
+            return matchesSearch && matchesStatus;
+        });
+
+        setFilteredProjects(filtered);
+    }, [searchQuery, projects, statusFilters, projectStatuses]);
 
     return (
         <>
@@ -319,6 +377,7 @@ export default function ProjectList({
                                 </DrawerContent>
                             </Drawer>
                         </div>
+
                         <div className="hidden md:block">
                             <DropdownMenu onOpenChange={setIsDropdownOpen}>
                                 <DropdownMenuTrigger asChild>
@@ -373,38 +432,54 @@ export default function ProjectList({
 
             <div className="@container">
                 <div className="mb-24 grid grid-cols-1 gap-8 md:mb-0 @[450px]:grid-cols-2 @[625px]:grid-cols-3 @[875px]:grid-cols-4">
-                    {filteredProjects
-                        .sort((a, b) => {
-                            const projectIdA = a[0] || '';
-                            const projectIdB = b[0] || '';
-                            const statusA =
-                                projectStatuses[projectIdA] || 'not_started';
-                            const statusB =
-                                projectStatuses[projectIdB] || 'not_started';
+                    {isLoading
+                        ? Array(6)
+                              .fill(0)
+                              .map((_, index) => (
+                                  <ProjectCard
+                                      key={`skeleton-${index}`}
+                                      project={{}}
+                                      index={index}
+                                      statusInfo={{ label: '', className: '' }}
+                                      isLoading={true}
+                                  />
+                              ))
+                        : filteredProjects
+                              .sort((a, b) => {
+                                  const projectIdA = a[0] || '';
+                                  const projectIdB = b[0] || '';
+                                  const statusA =
+                                      projectStatuses[projectIdA] ||
+                                      'not_started';
+                                  const statusB =
+                                      projectStatuses[projectIdB] ||
+                                      'not_started';
 
-                            const order = {
-                                in_progress: 0,
-                                not_started: 1,
-                                completed: 2,
-                            };
-                            return (
-                                (order[statusA as keyof typeof order] ?? 0) -
-                                (order[statusB as keyof typeof order] ?? 0)
-                            );
-                        })
-                        .map((project, index) => {
-                            const projectId = project[0] || String(index);
-                            const statusInfo = getStatusInfo(projectId);
-                            return (
-                                <ProjectCard
-                                    key={index}
-                                    project={project}
-                                    index={index}
-                                    projectId={projectId}
-                                    statusInfo={statusInfo}
-                                />
-                            );
-                        })}
+                                  const order = {
+                                      in_progress: 0,
+                                      not_started: 1,
+                                      completed: 2,
+                                  };
+                                  return (
+                                      (order[statusA as keyof typeof order] ??
+                                          0) -
+                                      (order[statusB as keyof typeof order] ??
+                                          0)
+                                  );
+                              })
+                              .map((project, index) => {
+                                  const projectId = project[0] || String(index);
+                                  const statusInfo = getStatusInfo(projectId);
+                                  return (
+                                      <ProjectCard
+                                          key={index}
+                                          project={project}
+                                          index={index}
+                                          projectId={projectId}
+                                          statusInfo={statusInfo}
+                                      />
+                                  );
+                              })}
                 </div>
             </div>
         </>

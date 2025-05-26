@@ -16,7 +16,6 @@ import { getUserData } from '@/server/routers/usersRouter';
 export interface JudgingScoreResponse {
     hackathonId: number;
     teamId: number;
-    projectId: number;
     userId: number;
     response: any;
     createdDate: Date;
@@ -52,7 +51,6 @@ export const judgingRouter = router({
                 .values({
                     hackathonId: input.hackathonId,
                     teamId: input.teamId,
-                    projectId: input.projectId,
                     userId: user.id,
                     response: input.response,
                 })
@@ -60,7 +58,6 @@ export const judgingRouter = router({
                     target: [
                         judgingScores.hackathonId,
                         judgingScores.teamId,
-                        judgingScores.projectId,
                         judgingScores.userId,
                     ],
                     set: {
@@ -72,7 +69,6 @@ export const judgingRouter = router({
             return {
                 hackathonId: score.hackathonId,
                 teamId: score.teamId,
-                projectId: score.projectId,
                 userId: score.userId,
                 response: score.response,
                 createdDate: score.createdDate,
@@ -110,7 +106,7 @@ export const judgingRouter = router({
         .input(
             z.object({
                 hackathonId: z.number().int(),
-                projectId: z.number(),
+                teamId: z.number(),
             })
         )
         .query(async ({ input }) => {
@@ -125,7 +121,7 @@ export const judgingRouter = router({
                 .where(
                     and(
                         eq(judgingScores.hackathonId, input.hackathonId),
-                        eq(judgingScores.projectId, input.projectId),
+                        eq(judgingScores.teamId, input.teamId),
                         eq(judgingScores.userId, user.id)
                     )
                 )
@@ -158,7 +154,6 @@ export const judgingRouter = router({
             const judgeId = input.judgeId || user.id;
             const projects = await databaseClient
                 .select({
-                    projectId: judgingScores.projectId,
                     teamId: judgingScores.teamId,
                     userId: judgingScores.userId,
                     createdDate: judgingScores.createdDate,
@@ -198,7 +193,6 @@ export const judgingRouter = router({
                 .where(
                     and(
                         eq(judgingScores.hackathonId, input.hackathonId),
-                        eq(judgingScores.projectId, input.projectId),
                         eq(judgingScores.userId, judgeId)
                     )
                 )

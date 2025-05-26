@@ -11,18 +11,26 @@ export default async function JudgePage() {
 
     const trpcClient = createCaller({});
     const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
+
+    // Fetch all projects that need to be judged
+    // const projects = await trpcClient.projects.getProjectsForJudge({
+    //     hackathonId: activeHackathon.id,
+    //     judgeId: data.id
+    // });
+
     const judgedProjects = await trpcClient.judging.getJudgedProjects({
         judgeId: data.id,
         hackathonId: activeHackathon.id,
     });
 
-    // Todo: fetch only projects that need to be judged by current judge
-
     return (
-        <ProjectList
-            projects={projectsData}
-            userData={data}
-            judgedProjects={judgedProjects}
-        />
+        <>
+            <ProjectList
+                projects={projectsData}
+                userData={data}
+                judgedProjects={judgedProjects}
+                hackathonId={activeHackathon.id}
+            />
+        </>
     );
 }
