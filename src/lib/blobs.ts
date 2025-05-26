@@ -29,7 +29,7 @@ export async function submitProject({
     teamId,
 }: SubmitProjectProps): Promise<PutBlobResult> {
     const blob = await upload(
-        `hackathon-${hackathonId}/team-${teamId}/${fileName}`,
+        `submissions/hackathon-${hackathonId}/team-${teamId}/${fileName}`,
         fileContent,
         {
             handleUploadUrl: '/api/blob/project',
@@ -49,13 +49,17 @@ export async function uploadTeamPhot({
     fileContent,
     teamId,
 }: UploadTeamPhotoProps): Promise<PutBlobResult> {
-    const blob = await upload(`team-${teamId}/${fileName}`, fileContent, {
-        handleUploadUrl: '/api/blob/team',
-        access: 'public',
-        clientPayload: JSON.stringify({
-            teamId,
-        }),
-    });
+    const blob = await upload(
+        `team-photos/team-${teamId}/${fileName}`,
+        fileContent,
+        {
+            handleUploadUrl: '/api/blob/team',
+            access: 'public',
+            clientPayload: JSON.stringify({
+                teamId,
+            }),
+        }
+    );
 
     return blob;
 }
