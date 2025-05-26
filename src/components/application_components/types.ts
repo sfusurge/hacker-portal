@@ -18,26 +18,30 @@ type ChoiceOption = {
  * It's the client's responsibility to send an ApplicationData that makes sense, complete and up to date.
  * The server api can reject the request for any reason, so client modifying the question set is not a concern.
  */
-export interface HackathonData {
-    id: number;
-    title?: string;
-    version: number; // version must match, discard the application otherwise. Increment version with every change please.
-
+export interface HackathonData extends InputFormData {
     hackathonName: string; // should this be hackathon id in table instead?
     submissionTime?: string;
 
     submissionDeadline: dayjs.Dayjs;
     startDate: dayjs.Dayjs;
     endDate: dayjs.Dayjs;
-
-    pages: ApplicationPage[];
 }
 
-export interface ApplicationPage extends Entry {
-    questions: ApplicationQuestion[];
+export interface InputFormData {
+    id: number;
+    title: string;
+    version: number;
+
+    pages: InputFormPageData[];
 }
 
-export type ApplicationQuestion =
+export interface TransformedInputFormData extends InputFormData {}
+
+export interface InputFormPageData extends Entry {
+    questions: InputFormQuestion[];
+}
+
+export type InputFormQuestion =
     | QuestionCheckBoxInput
     | QuestionDatePicker
     | QuestionTextAreaInput
@@ -46,9 +50,10 @@ export type ApplicationQuestion =
     | QuestionMultipleChoice
     | QuestionSchoolName
     | QuestionMultipleCheckBox
-    | QuestionNameInput;
+    | QuestionNameInput
+    | QuestionFileUploads;
 
-export type ApplicationQuestionType = ApplicationQuestion['type'];
+export type ApplicationQuestionType = InputFormQuestion['type'];
 
 interface Question extends Entry {
     questionId: number; // must be unique to the application.
@@ -123,6 +128,24 @@ export interface QuestionMultipleCheckBox extends Question {
     }[];
     allowOther?: boolean;
     otherValue?: string;
+}
+
+export type MimeTypes =
+    | 'image/jpeg'
+    | 'image/png'
+    | 'image/gif'
+    | 'image/webp'
+    | 'text/plain'
+    | 'application/pdf';
+
+export interface QuestionFileUploads extends Question {
+    type: 'file-upload';
+    allowedTypes: MimeTypes[];
+    allowMultiple: boolean;
+    maxSize: number; // in mbs
+    fileList?: File[];
+    fileLinks?: string[];
+    fileUploadPath: string; //path save the data, should !not! start with a slash
 }
 
 /**

@@ -1,7 +1,7 @@
 import {
-    ApplicationPage,
+    InputFormPageData,
     HackathonData,
-} from '@/app/(auth)/application/application_components/types';
+} from '@/components/application_components/types';
 import { trpc } from '@/trpc/client';
 import dayjs from 'dayjs';
 import { useAtom } from 'jotai';

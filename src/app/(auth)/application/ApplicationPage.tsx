@@ -4,19 +4,20 @@ import { trpc } from '@/trpc/client';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import { useEffect } from 'react';
-import { ApplicationForm } from './application_components/ApplicationForm';
+import { InputForm } from '../../../components/application_components/InputForm';
 import { hackathonAtom } from '@/hooks/use-hackathon';
 import { useHackathon } from '@/hooks/use-hackathon';
 import { atom, useAtomValue } from 'jotai';
 import {
-    ApplicationPage,
+    InputFormPageData,
     HackathonData,
-} from '@/app/(auth)/application/application_components/types';
+    InputFormData,
+} from '@/components/application_components/types';
 import dayjs from 'dayjs';
 import {
     getResponseMap,
     loadResponseIntoSchema,
-} from '@/app/(auth)/application/application_components/utils';
+} from '@/components/application_components/utils';
 import { atomWithStorage } from 'jotai/utils';
 import { userInfoAtom } from '@/app/(auth)/ClientAuthContext';
 
@@ -31,14 +32,10 @@ const hackathonWithLocalAtom = atom(
         const local = get(localAppResponseAtom);
         const unReadyValue = {
             pages: [],
-            endDate: dayjs(),
             id: -1,
-            hackathonName: '',
-            startDate: dayjs(),
-            submissionDeadline: dayjs(),
             version: -1,
             title: '',
-        } as HackathonData;
+        } as InputFormData;
 
         const hackathon = get(hackathonAtom);
 
@@ -57,7 +54,7 @@ const hackathonWithLocalAtom = atom(
         loadResponseIntoSchema(pages, local.response);
         return { ...hackathon, pages: pages };
     },
-    (get, set, val: HackathonData) => {
+    (get, set, val: InputFormData) => {
         const userInfo = get(userInfoAtom);
         if (!userInfo || !userInfo.email) {
             return;
@@ -68,8 +65,8 @@ const hackathonWithLocalAtom = atom(
             email: userInfo.email,
             response: getResponseMap(val.pages),
         });
-
-        set(hackathonAtom, { ...val });
+        const data = get(hackathonAtom)!;
+        set(hackathonAtom, { ...data, pages: val.pages });
     }
 );
 
@@ -119,7 +116,7 @@ export default function ApplicationPageComponent() {
     }, []);
 
     return (
-        <ApplicationForm
+        <InputForm
             appDataAtom={hackathonWithLocalAtom}
             submitApplication={() => {
                 if (application.data) {
@@ -127,9 +124,6 @@ export default function ApplicationPageComponent() {
                 }
 
                 const response = getResponseMap(hackathonWithResponse.pages);
-
-                console.log(`Submitting ${JSON.stringify(response)}`);
-
                 submitApplication.mutate({
                     hackathonId: hackathon!.id,
                     response: response,
@@ -137,6 +131,6 @@ export default function ApplicationPageComponent() {
 
                 redirect('/application/submitted');
             }}
-        ></ApplicationForm>
+        ></InputForm>
     );
 }

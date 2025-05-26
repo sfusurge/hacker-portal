@@ -12,33 +12,34 @@ import {
 } from 'jotai';
 import type {
     HackathonData,
-    ApplicationPage,
-    ApplicationQuestion,
+    InputFormPageData,
+    InputFormQuestion,
     QuestionCheckBoxInput,
     QuestionMultipleCheckBox,
     QuestionMultipleChoice,
     QuestionNumberInput,
     QuestionTextAreaInput,
     QuestionTextLineInput,
+    QuestionFileUploads,
+    InputFormData,
 } from './types';
-import { atomWithStorage, splitAtom } from 'jotai/utils';
-import style from './ApplicationForm.module.css';
-import { TextLineInput } from './application_question_fields/TextLineInput';
+import { splitAtom } from 'jotai/utils';
+import style from './InputForm.module.css';
+import { TextLineInput } from './InputFormComponents/TextLineInput';
 import {
     type ComponentProps,
-    useCallback,
     useEffect,
     useMemo,
     useRef,
     useState,
 } from 'react';
 import { Label } from '@/components/ui/label/label';
-import { isApplicationQuestionFilled } from './application_question_fields/shared';
-import { NumberInput } from './application_question_fields/NumberInput';
-import { RadioInput } from './application_question_fields/RadioInput';
-import { CheckBoxInput } from './application_question_fields/CheckboxInput';
-import { CheckBoxGroupInput } from './application_question_fields/CheckboxGroupInput';
-import { TextAreaInput } from './application_question_fields/TextAreaInput';
+import { isApplicationQuestionFilled } from './InputFormComponents/shared';
+import { NumberInput } from './InputFormComponents/NumberInput';
+import { RadioInput } from './InputFormComponents/RadioInput';
+import { CheckBoxInput } from './InputFormComponents/CheckboxInput';
+import { CheckBoxGroupInput } from './InputFormComponents/CheckboxGroupInput';
+import { TextAreaInput } from './InputFormComponents/TextAreaInput';
 import { ReviewPage } from './ReviewPage';
 import {
     type PageFormState,
@@ -51,6 +52,7 @@ import { useRouter } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { cn } from '@/lib/utils';
 import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
+import { FileUploadInput } from '@/components/application_components/InputFormComponents/FileUploadInput';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -71,8 +73,8 @@ function ClientOnly({ children, ...delegated }: ComponentProps<'div'>) {
 export const pageIndexAtom = atom(0); // defining the state
 export const finalErrCheckAtom = atom(false); // when the user clicks the review & submit for the first time,
 
-interface ApplicationFormProps {
-    appDataAtom: WritableAtom<HackathonData, [val: HackathonData], void>;
+interface InputFormProps {
+    appDataAtom: WritableAtom<InputFormData, [val: InputFormData], void>;
     submitApplication: () => void;
 }
 
@@ -80,10 +82,7 @@ interface ApplicationFormProps {
  *
  * appData can be locally cached or a new empty one.
  */
-export function ApplicationForm({
-    appDataAtom,
-    submitApplication,
-}: ApplicationFormProps) {
+export function InputForm({ appDataAtom, submitApplication }: InputFormProps) {
     const router = useRouter();
     const pagesAtom = useMemo(
         () =>
@@ -91,7 +90,7 @@ export function ApplicationForm({
                 (get) => {
                     return get(appDataAtom).pages;
                 },
-                (get, set, val: ApplicationPage[]) => {
+                (get, set, val: InputFormPageData[]) => {
                     set(appDataAtom, {
                         ...get(appDataAtom),
                         pages: val,
@@ -243,7 +242,7 @@ function Page({
     hidden,
     pageStateAtom,
 }: {
-    pageAtom: PrimitiveAtom<ApplicationPage>;
+    pageAtom: PrimitiveAtom<InputFormPageData>;
     hidden: boolean;
     pageStateAtom: PrimitiveAtom<PageFormState>;
 }) {
@@ -256,7 +255,7 @@ function Page({
         () =>
             atom(
                 (get) => get(pageAtom).questions,
-                (get, set, newQuestion: ApplicationQuestion[]) => {
+                (get, set, newQuestion: InputFormQuestion[]) => {
                     set(pageAtom, { ...get(pageAtom), questions: newQuestion });
                 }
             ),
@@ -351,14 +350,14 @@ function Page({
 function Question({
     questionAtom,
 }: {
-    questionAtom: PrimitiveAtom<ApplicationQuestion>;
+    questionAtom: PrimitiveAtom<InputFormQuestion>;
 }) {
     const question = useAtomValue(questionAtom);
     const error = useMemo(() => atom<string | undefined>(undefined), []);
 
     function getInnerInput(
-        type: ApplicationQuestion['type'],
-        _questionAtom: PrimitiveAtom<ApplicationQuestion>,
+        type: InputFormQuestion['type'],
+        _questionAtom: PrimitiveAtom<InputFormQuestion>,
         _errorAtom: PrimitiveAtom<string | undefined>
     ) {
         switch (type) {
@@ -413,6 +412,15 @@ function Question({
                     <TextAreaInput
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionTextAreaInput>
+                        }
+                    />
+                );
+
+            case 'file-upload':
+                return (
+                    <FileUploadInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionFileUploads>
                         }
                     />
                 );

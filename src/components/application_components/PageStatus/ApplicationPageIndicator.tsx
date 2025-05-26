@@ -1,6 +1,6 @@
 import { PrimitiveAtom, useAtomValue, useSetAtom, useAtom, Atom } from 'jotai';
 import style from './ApplicationPageIndicator.module.css';
-import { finalErrCheckAtom } from '../ApplicationForm';
+import { finalErrCheckAtom } from '../InputForm';
 import {
     ArrowLeftIcon,
     ArrowRightIcon,

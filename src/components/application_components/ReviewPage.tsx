@@ -1,8 +1,8 @@
 'use client';
 
 import type {
-    ApplicationQuestion,
-    ApplicationPage,
+    InputFormQuestion,
+    InputFormPageData,
     QuestionTextLineInput,
     QuestionTextAreaInput,
     QuestionNumberInput,
@@ -20,7 +20,7 @@ import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/Skewmorphic
 export interface ReviewPageProps {
     submit: () => void;
     mobileMode?: boolean;
-    response: ApplicationPage[];
+    response: InputFormPageData[];
 }
 
 /**
@@ -33,7 +33,7 @@ export function ReviewPage({
 }: ReviewPageProps) {
     // Add this debug log at the beginning of the component
 
-    function getQuestionResponse(question: ApplicationQuestion) {
+    function getQuestionResponse(question: InputFormQuestion) {
         // Type-specific handling based on question type
         switch (question.type) {
             case 'text-line':

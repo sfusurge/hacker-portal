@@ -4,7 +4,7 @@ import { PrimitiveAtom, useAtom, useAtomValue, WritableAtom } from 'jotai';
 import type { QuestionMultipleCheckBox } from '../types';
 import { CheckboxGroup } from '@/components/ui/checkboxGroup/CheckBoxGroup';
 
-import { finalErrCheckAtom } from '../ApplicationForm';
+import { finalErrCheckAtom } from '../InputForm';
 
 export function CheckBoxGroupInput({
     dataAtom,

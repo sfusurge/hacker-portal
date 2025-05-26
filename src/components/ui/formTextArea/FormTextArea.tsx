@@ -12,7 +12,7 @@ import { Textarea } from '../textarea';
 import { cn } from '@/lib/utils';
 import style from './FormTextArea.module.css';
 
-export const FormTextArea = forwardRef<
+const FormTextArea = forwardRef<
     HTMLTextAreaElement,
     ComponentProps<'textarea'> & {
         maxLength?: number;
@@ -94,3 +94,6 @@ export const FormTextArea = forwardRef<
         );
     }
 );
+
+FormTextArea.displayName = 'FormTextArea';
+export { FormTextArea };
