@@ -44,7 +44,7 @@ export async function submitProject({
     return blob;
 }
 
-export async function uploadTeamPhot({
+export async function uploadTeamPhoto({
     fileName,
     fileContent,
     teamId,
