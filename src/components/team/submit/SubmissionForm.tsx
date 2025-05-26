@@ -5,20 +5,18 @@ import { atom, useAtom } from 'jotai';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { CheckBoxGroupInput } from '@/app/(auth)/application/application_components/application_question_fields/CheckboxGroupInput';
-import { CheckBoxInput } from '@/app/(auth)/application/application_components/application_question_fields/CheckboxInput';
-import { RadioInput } from '@/app/(auth)/application/application_components/application_question_fields/RadioInput';
-import { NumberInput } from '@/app/(auth)/application/application_components/application_question_fields/NumberInput';
-import { TextAreaInput } from '@/app/(auth)/application/application_components/application_question_fields/TextAreaInput';
-import { TextLineInput } from '@/app/(auth)/application/application_components/application_question_fields/TextLineInput';
+import { CheckBoxGroupInput } from '@/components/application_components/InputFormComponents/CheckboxGroupInput';
+import { CheckBoxInput } from '@/components/application_components/InputFormComponents/CheckboxInput';
+import { RadioInput } from '@/components/application_components/InputFormComponents/RadioInput';
+import { NumberInput } from '@/components/application_components/InputFormComponents/NumberInput';
+import { TextAreaInput } from '@/components/application_components/InputFormComponents/TextAreaInput';
+import { TextLineInput } from '@/components/application_components/InputFormComponents/TextLineInput';
 
-//atoms for form state
 export const formDataAtom = atom<Record<string, any>>({});
 export const isSubmittingAtom = atom(false);
 export const submitSuccessAtom = atom(false);
 export const submitErrorAtom = atom<string | null>(null);
 
-//create atoms for each question to match the application form pattern
 export const createQuestionAtom = (question: any) => {
     return atom(
         (get) => {
@@ -162,7 +160,9 @@ export default function SubmissionForm({ questions }: { questions: any[] }) {
     return (
         <Card className="p-6">
             <form ref={formRef} noValidate>
-                <h2 className="mb-6 text-xl font-bold">Submission Form</h2>
+                <h2 className="mb-6 text-xl font-bold">
+                    Submit your team's project
+                </h2>
 
                 {questionsList.map((question: any, index: number) => (
                     <div

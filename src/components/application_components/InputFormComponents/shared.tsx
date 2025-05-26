@@ -1,8 +1,8 @@
 'use client';
 
-import type { ApplicationQuestion } from '../types';
+import type { InputFormQuestion } from '../types';
 
-export function isApplicationQuestionFilled(question: ApplicationQuestion) {
+export function isApplicationQuestionFilled(question: InputFormQuestion) {
     try {
         switch (question.type) {
             case 'text-area':

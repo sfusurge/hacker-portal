@@ -18,11 +18,7 @@ type ChoiceOption = {
  * It's the client's responsibility to send an ApplicationData that makes sense, complete and up to date.
  * The server api can reject the request for any reason, so client modifying the question set is not a concern.
  */
-export interface HackathonData {
-    id: number;
-    title?: string;
-    version: number; // version must match, discard the application otherwise. Increment version with every change please.
-
+export interface HackathonData extends InputFormData {
     hackathonName: string; // should this be hackathon id in table instead?
     submissionTime?: string;
 
@@ -30,32 +26,25 @@ export interface HackathonData {
     startDate: dayjs.Dayjs;
     endDate: dayjs.Dayjs;
 
-    pages: ApplicationPage[];
     judgeQuestions: JudgeQuestion[];
     judgeRubric: SubmissionJudgeRubric[];
 }
 
-export interface JudgeQuestion extends Question {
-    type: 'judge-question';
-    value?: number;
-    min?: number;
-    max?: number;
-}
-
-export interface SubmissionJudgeRubric {
-    questionId: number;
+export interface InputFormData {
+    id: number;
     title: string;
-    description: string[];
-    rubric: {
-        [score: string]: string[];
-    };
+    version: number;
+
+    pages: InputFormPageData[];
 }
 
-export interface ApplicationPage extends Entry {
-    questions: ApplicationQuestion[];
+export interface TransformedInputFormData extends InputFormData {}
+
+export interface InputFormPageData extends Entry {
+    questions: InputFormQuestion[];
 }
 
-export type ApplicationQuestion =
+export type InputFormQuestion =
     | QuestionCheckBoxInput
     | QuestionDatePicker
     | QuestionTextAreaInput
@@ -65,9 +54,9 @@ export type ApplicationQuestion =
     | QuestionSchoolName
     | QuestionMultipleCheckBox
     | QuestionNameInput
-    | JudgeQuestion;
+    | QuestionFileUploads;
 
-export type ApplicationQuestionType = ApplicationQuestion['type'];
+export type ApplicationQuestionType = InputFormQuestion['type'];
 
 interface Question extends Entry {
     questionId: number; // must be unique to the application.
@@ -144,6 +133,24 @@ export interface QuestionMultipleCheckBox extends Question {
     otherValue?: string;
 }
 
+export type MimeTypes =
+    | 'image/jpeg'
+    | 'image/png'
+    | 'image/gif'
+    | 'image/webp'
+    | 'text/plain'
+    | 'application/pdf';
+
+export interface QuestionFileUploads extends Question {
+    type: 'file-upload';
+    allowedTypes: MimeTypes[];
+    allowMultiple: boolean;
+    maxSize: number; // in mbs
+    fileList?: File[];
+    fileLinks?: string[];
+    fileUploadPath: string; //path save the data, should !not! start with a slash
+}
+
 /**
  * Auto completes based on user input, from a near infinite list of uni names.
  */
@@ -156,6 +163,22 @@ export interface QuestionSchoolName extends Question {
 export interface QuestionDatePicker extends Question {
     type: 'date';
     value?: string;
+}
+
+export interface JudgeQuestion extends Question {
+    type: 'judge-question';
+    value?: number;
+    min?: number;
+    max?: number;
+}
+
+export interface SubmissionJudgeRubric {
+    questionId: number;
+    title: string;
+    description: string[];
+    rubric: {
+        [score: string]: string[];
+    };
 }
 
 // Judging form types

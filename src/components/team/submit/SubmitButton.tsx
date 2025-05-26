@@ -11,6 +11,9 @@ import {
 } from './SubmissionForm';
 import { useState, useEffect } from 'react';
 import { trpc } from '@/trpc/client';
+import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
+import { cn } from '@/lib/utils';
+import style from '@/app/(auth)/application/application_components/ApplicationForm.module.css';
 
 export default function SubmitButton({
     teamId,
@@ -68,31 +71,12 @@ export default function SubmitButton({
     };
 
     return (
-        <Card className="p-4">
-            <div className="space-y-4">
-                <h3 className="font-medium">Ready to submit?</h3>
-                {submitError && (
-                    <div className="rounded border border-red-400 bg-red-100 p-3 text-sm text-red-700">
-                        {submitError}
-                    </div>
-                )}
-                <Button
-                    onClick={handleSubmit}
-                    disabled={isSubmitting || !isFormValid || submitSuccess}
-                    className="w-full"
-                >
-                    {isSubmitting
-                        ? 'Submitting...'
-                        : submitSuccess
-                          ? 'Submitted!'
-                          : 'Submit Project'}
-                </Button>
-                {!teamId && (
-                    <p className="text-xs text-amber-600">
-                        You need to join or create a team first
-                    </p>
-                )}
-            </div>
-        </Card>
+        <SkewmorphicButton
+            onClick={handleSubmit}
+            disabled={isSubmitting || !isFormValid || submitSuccess}
+            className={cn(style.nextButton)}
+        >
+            Submit
+        </SkewmorphicButton>
     );
 }

@@ -1,13 +1,10 @@
 'use client';
 import { useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { ArrowLeftStartOnRectangleIcon } from '@heroicons/react/16/solid';
-import { Card, CardFooter, CardContent } from '@/components/ui/card';
-import { DialogTrigger, Dialog } from '@/components/ui/dialog';
+import { Card, CardContent } from '@/components/ui/card';
 import { ApplicationStatus } from '@/lib/application-status';
 import { UserType } from '@/server/routers/usersRouter';
 import TeammateItem from '@/components/team/InTeam/TeammateItem';
-import LeaveTeamForm from '@/components/team/InTeam/LeaveTeamForm';
+import TeammateItemSubmit from '@/components/team/submit/TeammateItemSubmit';
 
 type TeamMember = {
     userId: number;
@@ -36,7 +33,6 @@ export default function TeamListSubmit({
     currentUserEmail,
     team,
 }: TeamListSubmitProps) {
-    // Map TeamMember to UserType
     const mappedTeammates = useMemo(() => {
         return team.members.map(
             (member) =>
@@ -82,10 +78,11 @@ export default function TeamListSubmit({
                     Your Team ({mappedTeammates.length}/{team.maxMembersCount}{' '}
                     members)
                 </span>
+                <span className="text-left text-lg font-bold">{team.name}</span>
 
                 <ul className="flex flex-col gap-4">
                     {paddedTeammates.map((teammate, i) => (
-                        <TeammateItem
+                        <TeammateItemSubmit
                             key={i}
                             index={i}
                             {...teammate}

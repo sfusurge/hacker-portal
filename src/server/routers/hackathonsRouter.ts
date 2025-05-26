@@ -1,4 +1,4 @@
-import { ApplicationPage } from '@/app/(auth)/application/application_components/types';
+import { InputFormPageData } from '@/components/application_components/types';
 import { publicProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
 import {
@@ -39,7 +39,7 @@ export const hackathonsRouter = router({
                     startDate: input.startDate,
                     endDate: input.endDate,
                     isActive: input.isActive,
-                    questions: input.questions as ApplicationPage[],
+                    questions: input.questions as InputFormPageData[],
                     version: input.version,
                 })
                 .returning();

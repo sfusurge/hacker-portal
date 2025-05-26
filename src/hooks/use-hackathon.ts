@@ -1,7 +1,8 @@
 import {
-    ApplicationPage,
     HackathonData,
-} from '@/app/(auth)/application/application_components/types';
+    JudgeQuestion,
+    SubmissionJudgeRubric,
+} from '@/components/application_components/types';
 import { trpc } from '@/trpc/client';
 import dayjs from 'dayjs';
 import { useAtom } from 'jotai';
@@ -424,13 +425,14 @@ export function useHackathon() {
                 setHackathon({
                     hackathonName: data.name,
                     id: data.id,
+                    title: data.name,
                     pages: data.questions,
                     submissionDeadline: dayjs(data.submissionDeadline),
-                    judgeQuestions: Array.isArray(data.judgeQuestions)
-                        ? data.judgeQuestions
+                    judgeQuestions: data.judgeQuestions
+                        ? (data.judgeQuestions as JudgeQuestion[])
                         : [],
-                    judgeRubric: Array.isArray(data.judgeRubric)
-                        ? data.judgeRubric
+                    judgeRubric: data.judgeRubric
+                        ? (data.judgeRubric as SubmissionJudgeRubric[])
                         : [],
                     startDate: dayjs(data.startDate),
                     endDate: dayjs(data.endDate),
