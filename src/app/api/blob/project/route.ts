@@ -42,6 +42,9 @@ export async function POST(request: Request): Promise<NextResponse> {
                         'image/jpeg',
                         'image/png',
                         'application/pdf',
+                        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types/Common_types
+                        'application/vnd.ms-powerpoint',
+                        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
                     ],
                     addRandomSuffix: true,
                     tokenPayload: JSON.stringify({
