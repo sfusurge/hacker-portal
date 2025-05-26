@@ -6,6 +6,7 @@ import { projectsData } from '../projects';
 import { SectionRenderer } from '@/components/projects/ProjectSection';
 import { createCaller } from '@/server/appRouter';
 import { getUserData } from '@/server/routers/usersRouter';
+import slugify from '@/utils/slugify';
 interface PageProps {
     params: {
         id: string;
@@ -64,8 +65,9 @@ const projectSections = [
 export default async function ProjectPage({ params }: PageProps) {
     const { id } = await params;
 
-    // TODO: select project from route
-    const project = projectsData.find((p) => p[0] === id);
+    // TODO: Route to team name or team display Id or add team identifer
+    const decodedId = slugify(id);
+    const project = projectsData.find((p) => slugify(p[1]) === decodedId);
 
     if (!project) {
         return (
@@ -105,7 +107,7 @@ export default async function ProjectPage({ params }: PageProps) {
                     <JudgingForm
                         hackathonId={hackathonId}
                         user={user}
-                        teamId={Number(id)}
+                        teamId={Number(project[0])}
                         projectTitle={project[1]}
                     />
                 </div>

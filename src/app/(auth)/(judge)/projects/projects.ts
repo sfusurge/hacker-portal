@@ -25,7 +25,7 @@ export const projectsData: Project[] = [
     },
     {
         0: '1003',
-        1: 'Battle Buddy',
+        1: 'Battle Buddy 5',
         2: 'A desktop app that displays the top tier compositions in the meta along with the best units to run and their best-in-slot items. Updated each patch with data gathered from challenger tier lists!',
         3: 'https://www.youtube.com/watch?v=1O-i-wH-rhc&pp=ygUNYnJpYW4gcmFoYWRhaQ%3D%3D',
         4: 'Reimagine the Future',
