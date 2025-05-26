@@ -31,8 +31,7 @@ import {
     TextAreaQuestion,
     JudgingFormQuestion,
     FormResponse,
-} from '@/app/(auth)/application/application_components/types';
-
+} from '@/components/application_components/types';
 interface JudgingFormProps {
     teamId: number;
     projectTitle?: string;
@@ -43,8 +42,6 @@ interface JudgingFormProps {
 const STATUS_KEY = 'judging_status_data';
 const JUDGING_DATA_KEY = 'judging_data';
 const DONT_SHOW_DIALOG_KEY = 'judging_dont_show_dialog';
-
-// Remove the type definitions that are now imported
 
 const judgingDataAtom = atomWithStorage<{
     hackathonId: number;
@@ -114,7 +111,7 @@ export default function JudgingForm({
     };
 
     const updateFormState = (questionId: string, value: string | null) => {
-        setFormState((prev) => {
+        setFormState((prev: any) => {
             const updated = {
                 ...prev,
                 [questionId]: value,
@@ -418,9 +415,9 @@ export default function JudgingForm({
                 <div className="relative">
                     {didJudge && (
                         <>
-                            <div className="absolute inset-0 z-40 bg-neutral-900/50 select-none"></div>
+                            <div className="absolute inset-0 z-40 bg-neutral-900/70 select-none"></div>
 
-                            <div className="items pointer-events-none sticky top-10 z-50 -mb-44 flex justify-center">
+                            <div className="items pointer-events-none sticky top-10 z-50 -mb-40 flex justify-center">
                                 <div className="pointer-events-auto flex w-full max-w-md flex-col items-center justify-center gap-1 rounded-xl bg-neutral-800/90 p-6 text-center shadow-lg">
                                     <h2 className="text-2xl font-semibold text-white">
                                         Already Judged
