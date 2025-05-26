@@ -1,4 +1,4 @@
-import { ApplicationPage } from '@/app/(auth)/application/application_components/types';
+import { InputFormPageData } from '@/components/application_components/types';
 import {
     boolean,
     integer,
@@ -23,7 +23,7 @@ const hackathons = pgTable('hackathons', {
         .notNull()
         .default(JOURNEY_HACK_2025_DEADLINE),
     questions: jsonb('questions')
-        .$type<ApplicationPage[]>()
+        .$type<InputFormPageData[]>()
         .notNull()
         .default([]),
     version: integer('version').notNull().default(1),

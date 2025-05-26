@@ -1,12 +1,17 @@
-import { ApplicationPage } from '@/app/(auth)/application/application_components/types.js';
+import { InputFormPageData } from '@/components/application_components/types.js';
 
-export function flattenQuestions(pages: ApplicationPage[]) {
+export function flattenQuestions(pages: InputFormPageData[]) {
     return pages.flatMap((page) => {
         return page.questions;
     });
 }
 
-export function getResponseMap(pages: ApplicationPage[]) {
+export async function processResponseForServer(
+    rootPath: string,
+    pages: InputFormPageData
+) {}
+
+export function getResponseMap(pages: InputFormPageData[]) {
     const flattened = flattenQuestions(pages);
 
     const res: Record<string, any> = {};
@@ -27,6 +32,9 @@ export function getResponseMap(pages: ApplicationPage[]) {
             case 'name':
                 res[id] = `${question.firstName} ${question.lastName}`;
                 break;
+            case 'file-upload':
+                res[id] = question.fileLinks;
+                break;
 
             default:
                 res[id] = question.value;
@@ -37,7 +45,7 @@ export function getResponseMap(pages: ApplicationPage[]) {
 }
 
 export function loadResponseIntoSchema(
-    pages: ApplicationPage[],
+    pages: InputFormPageData[],
     dataSource: Record<string, any>
 ) {
     // load question
@@ -64,7 +72,9 @@ export function loadResponseIntoSchema(
                             }
                         }
                         break;
-
+                    case 'file-upload':
+                        question.fileLinks = dataSource[id];
+                        break;
                     default:
                         question.value = dataSource[id];
                 }
