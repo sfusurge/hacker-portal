@@ -6,7 +6,6 @@ import InviteCard from '@/components/team/InTeam/InviteCard';
 import { inferProcedureOutput } from '@trpc/server';
 import { AppRouter } from '@/server/appRouter';
 import Image from 'next/image';
-import SubmissionCountdown from '@/components/team/InTeam/SubmissionCountdown';
 import { UserData } from '@/server/routers/usersRouter';
 type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
 type HackathonType = inferProcedureOutput<
@@ -68,10 +67,6 @@ export default function TeamDisplay({
                         team={currentTeam}
                     />
                     <InviteCard teamId={currentTeam.displayId} />
-
-                    <SubmissionCountdown
-                        targetDate={new Date(2025, 5, 1, 28)}
-                    />
                 </div>
             </div>
         </div>

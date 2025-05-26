@@ -76,13 +76,18 @@ export const finalErrCheckAtom = atom(false); // when the user clicks the review
 interface InputFormProps {
     appDataAtom: WritableAtom<InputFormData, [val: InputFormData], void>;
     submitApplication: () => void;
+    disablePageTab?: boolean;
 }
 
 /**
  *
  * appData can be locally cached or a new empty one.
  */
-export function InputForm({ appDataAtom, submitApplication }: InputFormProps) {
+export function InputForm({
+    appDataAtom,
+    submitApplication,
+    disablePageTab = false,
+}: InputFormProps) {
     const router = useRouter();
     const pagesAtom = useMemo(
         () =>

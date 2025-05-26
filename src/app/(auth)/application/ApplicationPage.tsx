@@ -20,6 +20,7 @@ import {
 } from '@/components/application_components/utils';
 import { atomWithStorage } from 'jotai/utils';
 import { userInfoAtom } from '@/app/(auth)/ClientAuthContext';
+import { focusAtom } from 'jotai-optics';
 
 const localAppResponseAtom = atomWithStorage('application_response', {
     hackathonId: -1,

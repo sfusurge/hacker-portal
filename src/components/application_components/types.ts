@@ -29,7 +29,6 @@ export interface HackathonData extends InputFormData {
 
 export interface InputFormData {
     id: number;
-    title: string;
     version: number;
 
     pages: InputFormPageData[];
