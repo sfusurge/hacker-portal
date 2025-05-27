@@ -140,7 +140,7 @@ export function FileUpload({
                                     className={style.img}
                                 />
                             ) : (
-                                <DocumentIcon />
+                                <DocumentIcon style={{ width: '1.5rem' }} />
                             )}
 
                             <button role="button" type="button">

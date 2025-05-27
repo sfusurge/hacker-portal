@@ -17,7 +17,7 @@ export function RichTextInput({
     return (
         <RichText
             onChange={(d) => {
-                console.log(d);
+                setQuestion({ ...question, value: d });
             }}
             readOnly={false}
             initialData={question.value}

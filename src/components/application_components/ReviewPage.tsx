@@ -12,10 +12,14 @@ import type {
     QuestionDatePicker,
     QuestionSchoolName,
     QuestionNameInput,
+    QuestionFileUploads,
 } from './types';
-import style from './InputForm.module.css';
-import { useMemo, useEffect } from 'react';
+import style from './ReviewPage.module.css';
+import { CSSProperties, useMemo } from 'react';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
+import { Card, CardContent } from '@/components/ui/card';
+import { DocumentIcon } from '@heroicons/react/20/solid';
+import { getFileSize } from '@/components/ui/FileUpload/FileUpload';
 
 export interface ReviewPageProps {
     submit: () => void;
@@ -93,6 +97,57 @@ export function ReviewPage({
                     return `${nameQuestion.firstName || ''} ${nameQuestion.lastName || ''}`.trim();
                 }
                 return 'N/A';
+
+            case 'file-upload':
+                const fileQuestion = question as QuestionFileUploads;
+                return (
+                    <div className={style.fileList}>
+                        {fileQuestion.fileList?.map((f, index) => {
+                            if (f.type.startsWith('image')) {
+                                return (
+                                    <img
+                                        className={style.displayImage}
+                                        style={
+                                            {
+                                                '--imageName': f.name,
+                                            } as CSSProperties
+                                        }
+                                        key={`${index}${f.name}`}
+                                        src={URL.createObjectURL(f)}
+                                        alt={f.name}
+                                    />
+                                );
+                            }
+                            return (
+                                <Card key={f.name}>
+                                    <CardContent>
+                                        <div className={style.hor}>
+                                            <DocumentIcon
+                                                style={{ width: '2rem' }}
+                                            />
+                                            <div className={style.ver}>
+                                                <span
+                                                    style={{
+                                                        color: 'var(--text-secondary)',
+                                                    }}
+                                                >
+                                                    {f.name}
+                                                </span>
+                                                <span
+                                                    style={{
+                                                        color: 'var(--text-secondary)',
+                                                    }}
+                                                >
+                                                    {getFileSize(f.size)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
+                    </div>
+                );
 
             default:
                 return 'N/A';

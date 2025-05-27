@@ -26,6 +26,9 @@ export function RichText({ readOnly, initialData, onChange }: RichTextProps) {
         const editor = new Quill(editorContainerRef.current!, {
             readOnly,
             theme: 'snow',
+            modules: {
+                toolbar: !readOnly,
+            },
         });
         editor.setContents((initialData as Delta) ?? []);
         editor.on(Quill.events.TEXT_CHANGE, (delta) => {
