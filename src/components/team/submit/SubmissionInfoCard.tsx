@@ -1,4 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
 
 type SubmissionInfoCardProps = {
     date: string;
@@ -9,7 +10,28 @@ export default function SubmissionInfoCard({
     date,
     time,
 }: SubmissionInfoCardProps) {
-    const hours_until = 2;
+    const calculateHoursLeft = (): number => {
+        const targetDate = new Date('2025-05-28T23:59:00-08:00');
+        const now = new Date();
+
+        const msDiff = targetDate.getTime() - now.getTime();
+        const hoursLeft = msDiff / (1000 * 60 * 60);
+
+        return Math.max(0, Math.floor(hoursLeft));
+    };
+
+    const hoursUntil = calculateHoursLeft();
+
+    const hourOrHours = (hours_until: number): string => {
+        if (hours_until > 1) {
+            return 'hours';
+        } else {
+            return 'hour';
+        }
+    };
+
+    const hourOrHoursText = hourOrHours(hoursUntil);
+
     return (
         <Card className="overflow-hidden">
             <CardContent className="p-6">
@@ -17,7 +39,7 @@ export default function SubmissionInfoCard({
                     <div className="flex flex-row gap-2">
                         <div className="text-md font-bold">Due Date</div>
                         <div className="rounded-md bg-yellow-950 px-2 pt-0.5 text-sm text-yellow-300">
-                            Due in {hours_until} hours
+                            Due in {hoursUntil} {hourOrHoursText}
                         </div>
                     </div>
 

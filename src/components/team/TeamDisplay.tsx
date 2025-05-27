@@ -70,7 +70,7 @@ export default function TeamDisplay({
                     <InviteCard teamId={currentTeam.displayId} />
 
                     <SubmissionCountdown
-                        targetDate={new Date(2025, 5, 1, 28)}
+                        targetDate={new Date('2025-05-28T23:59:00-08:00')}
                     />
                 </div>
             </div>
