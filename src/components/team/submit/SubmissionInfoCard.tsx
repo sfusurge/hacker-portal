@@ -43,13 +43,13 @@ export default function SubmissionInfoCard({
                         </div>
                     </div>
 
-                    <div className="text-md text-gray-500">
+                    <div className="text-md text-white/60">
                         {date} at {time}
                     </div>
                 </div>
 
                 <div className="text-md font-bold">Rules</div>
-                <ol className="text-md ml-4 list-decimal text-neutral-500">
+                <ol className="text-md ml-4 list-decimal text-white/60">
                     <li>
                         Only one submission is allowed per team. This submission
                         counts for all team members.
