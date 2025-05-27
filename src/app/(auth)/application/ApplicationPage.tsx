@@ -13,14 +13,12 @@ import {
     HackathonData,
     InputFormData,
 } from '@/components/application_components/types';
-import dayjs from 'dayjs';
 import {
     getResponseMap,
     loadResponseIntoSchema,
 } from '@/components/application_components/utils';
 import { atomWithStorage } from 'jotai/utils';
 import { userInfoAtom } from '@/app/(auth)/ClientAuthContext';
-import { focusAtom } from 'jotai-optics';
 
 const localAppResponseAtom = atomWithStorage('application_response', {
     hackathonId: -1,
@@ -28,7 +26,7 @@ const localAppResponseAtom = atomWithStorage('application_response', {
     response: {} as Record<string, any>,
 });
 
-const hackathonWithLocalAtom = atom(
+const applicationWithLocalAtom = atom(
     (get) => {
         const local = get(localAppResponseAtom);
         const unReadyValue = {
@@ -45,15 +43,24 @@ const hackathonWithLocalAtom = atom(
         }
 
         const user = get(userInfoAtom);
+        const pages = hackathon.applicationQuestionPages;
 
-        if (!user || user.email !== local.email) {
-            return { ...hackathon };
+        if (!user) {
+            return unReadyValue;
         }
 
-        const pages = hackathon.pages;
-
-        loadResponseIntoSchema(pages, local.response);
-        return { ...hackathon, pages: pages };
+        if (
+            local.hackathonId !== -1 &&
+            local.hackathonId === hackathon.id &&
+            user.email === local.email
+        ) {
+            loadResponseIntoSchema(pages, local.response);
+        }
+        return {
+            id: hackathon.id,
+            pages,
+            version: hackathon.version,
+        } as InputFormData;
     },
     (get, set, val: InputFormData) => {
         const userInfo = get(userInfoAtom);
@@ -67,7 +74,7 @@ const hackathonWithLocalAtom = atom(
             response: getResponseMap(val.pages),
         });
         const data = get(hackathonAtom)!;
-        set(hackathonAtom, { ...data, pages: val.pages });
+        set(hackathonAtom, { ...data, applicationQuestionPages: val.pages });
     }
 );
 
@@ -79,7 +86,7 @@ const hackathonWithLocalAtom = atom(
  */
 export default function ApplicationPageComponent() {
     const { hackathon } = useHackathon();
-    const hackathonWithResponse = useAtomValue(hackathonWithLocalAtom);
+    const hackathonWithResponse = useAtomValue(applicationWithLocalAtom);
     const submitApplication = trpc.applications.submitApplication.useMutation();
 
     const application = trpc.applications.getCurrentApplication.useQuery(
@@ -118,8 +125,8 @@ export default function ApplicationPageComponent() {
 
     return (
         <InputForm
-            appDataAtom={hackathonWithLocalAtom}
-            submitApplication={() => {
+            appDataAtom={applicationWithLocalAtom}
+            onSubmit={() => {
                 if (application.data) {
                     return;
                 }

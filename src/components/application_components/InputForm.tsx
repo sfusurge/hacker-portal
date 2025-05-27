@@ -22,6 +22,7 @@ import type {
     QuestionTextLineInput,
     QuestionFileUploads,
     InputFormData,
+    QuestionRichTextInput,
 } from './types';
 import { splitAtom } from 'jotai/utils';
 import style from './InputForm.module.css';
@@ -53,6 +54,7 @@ import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/Skewmorphic
 import { cn } from '@/lib/utils';
 import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
 import { FileUploadInput } from '@/components/application_components/InputFormComponents/FileUploadInput';
+import { RichTextInput } from '@/components/application_components/InputFormComponents/RichTextInput';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -75,7 +77,7 @@ export const finalErrCheckAtom = atom(false); // when the user clicks the review
 
 interface InputFormProps {
     appDataAtom: WritableAtom<InputFormData, [val: InputFormData], void>;
-    submitApplication: () => void;
+    onSubmit: () => void;
     disablePageTab?: boolean;
 }
 
@@ -85,7 +87,7 @@ interface InputFormProps {
  */
 export function InputForm({
     appDataAtom,
-    submitApplication,
+    onSubmit,
     disablePageTab = false,
 }: InputFormProps) {
     const router = useRouter();
@@ -190,24 +192,25 @@ export function InputForm({
             )}
             <div className={style.appFormWrapper}>
                 <div className={style.appFormContent} ref={pageContainerRef}>
-                    {isMobile ? (
-                        <MobilePageIndicator
-                            pageStateAtoms={pageStatesAtom}
-                            indexAtom={pageIndexAtom}
-                        />
-                    ) : (
-                        <DesktopPageIndicator
-                            pageStateAtoms={pageStatesAtom}
-                            indexAtom={pageIndexAtom}
-                        />
-                    )}
+                    {!disablePageTab &&
+                        (isMobile ? (
+                            <MobilePageIndicator
+                                pageStateAtoms={pageStatesAtom}
+                                indexAtom={pageIndexAtom}
+                            />
+                        ) : (
+                            <DesktopPageIndicator
+                                pageStateAtoms={pageStatesAtom}
+                                indexAtom={pageIndexAtom}
+                            />
+                        ))}
 
                     <div className={style.formContainer}>
                         {currentPageIndex === pagesAtoms.length && (
                             <ReviewPage
                                 response={pages}
                                 submit={() => {
-                                    submitApplication();
+                                    onSubmit();
                                 }}
                                 mobileMode={isMobile}
                             />
@@ -233,7 +236,7 @@ export function InputForm({
                         pageCount={pagesAtoms.length}
                         pageStatesAtom={pageStatesAtom}
                         submit={() => {
-                            submitApplication();
+                            onSubmit();
                         }}
                     />
                 )
@@ -429,6 +432,14 @@ function Question({
                         }
                     />
                 );
+            case 'rich-text':
+                return (
+                    <RichTextInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionRichTextInput>
+                        }
+                    />
+                );
             default:
                 return <div>Unsupported input type: {type}</div>;
         }
@@ -440,7 +451,7 @@ function Question({
                 <Label required={question.required}>{question.title}</Label>
             )}
             {question.description && (
-                <span className={cn(style.description, 'mb-1.5 max-w-96')}>
+                <span className={cn(style.description, 'max-w-96')}>
                     {question.description}
                 </span>
             )}

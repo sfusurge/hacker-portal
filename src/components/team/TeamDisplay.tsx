@@ -7,6 +7,9 @@ import { inferProcedureOutput } from '@trpc/server';
 import { AppRouter } from '@/server/appRouter';
 import Image from 'next/image';
 import { UserData } from '@/server/routers/usersRouter';
+import { SubmitCard } from '@/components/team/InTeam/SubmitCard';
+import { useState } from 'react';
+import { SubmitFormCard } from '@/components/team/InTeam/SubmitFormCard';
 type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
 type HackathonType = inferProcedureOutput<
     AppRouter['hackathons']['getActiveHackathon']
@@ -25,6 +28,8 @@ export default function TeamDisplay({
     user,
     imageData = '/teams/default.webp',
 }: TeamDisplayProps) {
+    const [showSubmit, setShowSubmit] = useState(false);
+
     // If user is not in a team for the current hackathon, show join team UI
     if (!currentTeam) {
         return (
@@ -67,6 +72,13 @@ export default function TeamDisplay({
                         team={currentTeam}
                     />
                     <InviteCard teamId={currentTeam.displayId} />
+                    <SubmitCard
+                        onShowSubmit={() => {
+                            setShowSubmit(true);
+                        }}
+                    />
+
+                    {showSubmit && <SubmitFormCard />}
                 </div>
             </div>
         </div>

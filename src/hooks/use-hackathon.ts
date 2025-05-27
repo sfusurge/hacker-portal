@@ -391,6 +391,10 @@ export const hackathonAtom = atomWithStorage<HackathonData | undefined>(
                 ? JSON.parse(item)
                 : initialValue;
 
+            hackahton.startDate = dayjs(hackahton.startDate);
+            hackahton.endDate = dayjs(hackahton.endDate);
+            hackahton.submissionDeadline = dayjs(hackahton.submissionDeadline);
+
             return hackahton;
         },
 
@@ -424,7 +428,8 @@ export function useHackathon() {
                 setHackathon({
                     hackathonName: data.name,
                     id: data.id,
-                    pages: data.questions,
+                    applicationQuestionPages: data.applicationQuestions,
+                    submissionQuestionPages: data.submissionQuestions ?? [],
                     submissionDeadline: dayjs(data.submissionDeadline),
                     startDate: dayjs(data.startDate),
                     endDate: dayjs(data.endDate),

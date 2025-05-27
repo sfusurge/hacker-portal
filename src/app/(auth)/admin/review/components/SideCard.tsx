@@ -98,7 +98,7 @@ export default function SideCard({
             return map;
         }
 
-        for (const page of hackathon.pages) {
+        for (const page of hackathon.applicationQuestionPages) {
             for (const question of page.questions) {
                 map.set(`${question.questionId}`, question);
             }

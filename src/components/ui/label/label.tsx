@@ -7,7 +7,7 @@ import style from './label.module.css';
 import { cn } from '@/lib/utils';
 
 const labelVariants = cva(
-    'max-w-[400px] text-white/60 mb-1.5 block text-sm font-medium leading-tight peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+    'max-w-[400px] text-white/60  block text-sm font-medium leading-tight peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
 );
 
 const Label = React.forwardRef<
@@ -21,6 +21,7 @@ const Label = React.forwardRef<
             [style.required]: required,
         })}
         {...props}
+        style={{ color: 'white' }}
     />
 ));
 Label.displayName = LabelPrimitive.Root.displayName;

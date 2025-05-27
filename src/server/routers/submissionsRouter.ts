@@ -9,7 +9,12 @@ import {
     SubmissionStatusEnumType,
 } from '@/db/schema/submissions';
 import { hackathons } from '@/db/schema/hackathons';
-import { eq } from 'drizzle-orm';
+import { eq, getTableColumns } from 'drizzle-orm';
+import { Z } from 'vitest/dist/chunks/reporters.nr4dxCkA.js';
+import { z } from 'zod';
+import { getUserData } from '@/server/routers/usersRouter';
+import { teams } from '@/db/schema/teams';
+import { members } from '@/db/schema/members';
 
 export interface SubmitSubmissionResponse {
     hackathonId: number;
@@ -31,6 +36,19 @@ export interface SubmissionWithTeamInfo {
 }
 
 export const submissionsRouter = router({
+    getUserTeamSubmission: publicProcedure
+        .input(z.object({}))
+        .query(async ({ input }) => {
+            const userInfo = await getUserData();
+            const [submission] = await databaseClient
+                .select(getTableColumns(submissions))
+                .from(submissions)
+                .innerJoin(members, eq(members.teamId, submissions.teamId))
+                .where(eq(members.userId, userInfo?.id ?? -1))
+                .limit(1);
+
+            return submission ?? null;
+        }),
     getSubmissionQuestions: publicProcedure
         .input(getSubmissionQuestionsSchema)
         .query(async ({ input }) => {

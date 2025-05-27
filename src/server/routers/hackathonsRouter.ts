@@ -39,7 +39,8 @@ export const hackathonsRouter = router({
                     startDate: input.startDate,
                     endDate: input.endDate,
                     isActive: input.isActive,
-                    questions: input.questions as InputFormPageData[],
+                    questions:
+                        input.applicationQuestions as InputFormPageData[],
                     version: input.version,
                 })
                 .returning();

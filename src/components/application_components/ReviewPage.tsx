@@ -13,7 +13,7 @@ import type {
     QuestionSchoolName,
     QuestionNameInput,
 } from './types';
-import style from './ApplicationForm.module.css';
+import style from './InputForm.module.css';
 import { useMemo, useEffect } from 'react';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 

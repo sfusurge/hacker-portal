@@ -18,9 +18,14 @@ type ChoiceOption = {
  * It's the client's responsibility to send an ApplicationData that makes sense, complete and up to date.
  * The server api can reject the request for any reason, so client modifying the question set is not a concern.
  */
-export interface HackathonData extends InputFormData {
+export interface HackathonData {
+    id: number;
+    version: number;
     hackathonName: string; // should this be hackathon id in table instead?
     submissionTime?: string;
+
+    applicationQuestionPages: InputFormPageData[];
+    submissionQuestionPages: InputFormPageData[];
 
     submissionDeadline: dayjs.Dayjs;
     startDate: dayjs.Dayjs;
@@ -50,7 +55,8 @@ export type InputFormQuestion =
     | QuestionSchoolName
     | QuestionMultipleCheckBox
     | QuestionNameInput
-    | QuestionFileUploads;
+    | QuestionFileUploads
+    | QuestionRichTextInput;
 
 export type ApplicationQuestionType = InputFormQuestion['type'];
 
@@ -115,6 +121,11 @@ export interface QuestionMultipleChoice extends Question {
     choices: ChoiceOption[];
 }
 
+export interface QuestionRichTextInput extends Question {
+    type: 'rich-text';
+    value?: Record<any, any>;
+}
+
 export interface QuestionMultipleCheckBox extends Question {
     type: 'multiple-checkbox';
     min?: number;
@@ -160,3 +171,22 @@ export interface QuestionDatePicker extends Question {
     type: 'date';
     value?: string;
 }
+
+const submitTemplate: InputFormPageData[] = [
+    {
+        title: 'Test page',
+        description: 'yeah yeah yeah',
+        questions: [
+            {
+                type: 'file-upload',
+                allowedTypes: ['image/jpeg', 'image/png'],
+                allowMultiple: false,
+                fileUploadPath: 'test inner',
+                maxSize: 5,
+                questionId: 1,
+                title: 'test file upload',
+                description: 'blah blah',
+            },
+        ],
+    },
+];
