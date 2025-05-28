@@ -19,10 +19,10 @@ export default async function SubmitPage() {
     const trpcClient = createCaller({});
     const hackathon = await trpcClient.hackathons.getActiveHackathon();
 
-    const application = await trpcClient.applications.getApplicationByEmail({
-        email: user.email,
+    const application = await trpcClient.applications.getCurrentApplication({
+        hackathonId: hackathon.id,
     });
-    if (application.currentStatus !== 'Accepted') {
+    if (!application || application.currentStatus !== 'Accepted') {
         return <GoHome title="You were not accepted in this event!" />;
     }
 
