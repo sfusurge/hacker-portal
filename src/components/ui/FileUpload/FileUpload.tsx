@@ -107,7 +107,7 @@ export function FileUpload({
                         {accept
                             .split(',')
                             .map((item) => getMimeTypeName(item.trim()))
-                            .join(', ')}
+                            .join(', ')}{' '}
                         files up to {maxSize} MB
                     </span>
                 </div>

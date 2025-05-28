@@ -551,7 +551,7 @@ function PageButtons({
                     onClick={tryReview}
                     className={style.nextButton}
                 >
-                    Review Application
+                    Review
                 </SkewmorphicButton>
             )}
             {index === pageCount && (
