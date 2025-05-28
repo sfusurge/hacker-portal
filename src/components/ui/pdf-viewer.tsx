@@ -9,13 +9,7 @@ export default function PdfViewer({ url }: PdfViewerProps) {
 
     return (
         <div className="flex w-full flex-col items-center">
-            <embed
-                src={urlWithZoom}
-                type="application/pdf"
-                width="100%"
-                height="100%"
-                className="h-[600px] rounded-md"
-            />
+            <iframe src={url} width="100%" height="600" />
         </div>
     );
 }

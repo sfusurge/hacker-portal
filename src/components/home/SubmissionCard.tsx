@@ -51,12 +51,10 @@ export default function SubmissionCardHomepage({ teamName }) {
         //         />
         //     </CardContent>
         // </Card>
-        <div>
-            <SubmitCard
-                onShowSubmit={() => {
-                    redirect('/team/submit');
-                }}
-            />
-        </div>
+        <SubmitCard
+            onShowSubmit={() => {
+                redirect('/team/submit');
+            }}
+        />
     );
 }

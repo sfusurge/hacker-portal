@@ -30,6 +30,7 @@ import {
 
 interface TeamViewProps {
     filteredTeams: any[];
+    filteredJudges: any[];
     assignments: any[];
     judges: any[];
     teamSearchQuery: string;
@@ -44,6 +45,7 @@ interface TeamViewProps {
 
 export default function TeamView({
     filteredTeams,
+    filteredJudges,
     assignments,
     judges,
     teamSearchQuery,
@@ -167,7 +169,7 @@ export default function TeamView({
                                                     }}
                                                 />
                                             </div>
-                                            {judges.map((judge) => (
+                                            {filteredJudges.map((judge) => (
                                                 <SelectItem
                                                     key={judge.id}
                                                     value={judge.id.toString()}

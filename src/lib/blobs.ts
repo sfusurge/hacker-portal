@@ -14,6 +14,7 @@ export interface UploadFileVercelProps {
     // Buffer or File string
     fileContent: Buffer | File | Blob;
     onUploadProgress?: OnUploadProgressCallback;
+    contentType?: string;
 }
 
 export interface SubmitProjectProps extends UploadFileVercelProps {
@@ -32,18 +33,24 @@ export async function submitProject({
     fileName,
     fileContent,
     onUploadProgress,
+    contentType,
     teamId,
 }: SubmitProjectProps): Promise<PutBlobResult> {
     validateFileSize(fileContent);
 
-    const blob = await upload(fileName, fileContent, {
-        onUploadProgress,
-        handleUploadUrl: '/api/blob/project',
-        access: 'public',
-        clientPayload: JSON.stringify({
-            teamId,
-        }),
-    });
+    const blob = await upload(
+        `/submissions/team-${teamId}/${fileName}`,
+        fileContent,
+        {
+            onUploadProgress,
+            contentType,
+            handleUploadUrl: '/api/blob/project',
+            access: 'public',
+            clientPayload: JSON.stringify({
+                teamId,
+            }),
+        }
+    );
 
     return blob;
 }

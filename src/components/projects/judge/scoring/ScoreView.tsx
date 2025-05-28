@@ -102,6 +102,33 @@ export default function ScoreView({
         });
     }, [filteredAssignments]);
 
+    const calculateTotals = (assignments: any[]) => {
+        const totals: { [key: string]: number } = {};
+        const counts: { [key: string]: number } = {};
+        const averages: { [key: string]: number } = {};
+
+        allQuestions.forEach((questionKey) => {
+            totals[questionKey] = 0;
+            counts[questionKey] = 0;
+
+            assignments.forEach((assignment) => {
+                const value = assignment.response?.[questionKey];
+                if (value && ['1', '2', '3', '4', '5'].includes(value)) {
+                    const numeric = parseInt(value);
+                    totals[questionKey] += numeric;
+                    counts[questionKey] += 1;
+                }
+            });
+
+            averages[questionKey] =
+                counts[questionKey] > 0
+                    ? totals[questionKey] / counts[questionKey]
+                    : 0;
+        });
+
+        return { totals, averages };
+    };
+
     const renderScoreValue = (value: string) => {
         if (!value) return '-';
 
@@ -125,6 +152,11 @@ export default function ScoreView({
             );
         }
         return value.length > 50 ? `${value.substring(0, 50)}...` : value;
+    };
+
+    const renderTotalValue = (total: number) => {
+        if (total === 0) return '-';
+        return <div className="text-brand-400 font-semibold">{total}</div>;
     };
 
     return (
@@ -168,98 +200,142 @@ export default function ScoreView({
                 <div className="py-8 text-center">No scores found</div>
             ) : (
                 <div className="space-y-6">
-                    {assignmentsByTeam.map(({ team, assignments }) => (
-                        <Card
-                            key={team?.id || 'unknown'}
-                            className="bg-neutral-850 p-4"
-                        >
-                            <h3 className="mb-4 text-lg font-medium">
-                                {team ? team.teamName : 'Unknown Team'}
-                                {team && (
-                                    <span className="text-sm text-gray-400">
-                                        ({team.id || team.teamId})
-                                    </span>
-                                )}
-                            </h3>
-                            <CardContent>
-                                <div className="overflow-x-auto">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead className="min-w-[150px]">
-                                                    Judge
-                                                </TableHead>
-                                                <TableHead className="min-w-[120px]">
-                                                    Status
-                                                </TableHead>
-                                                {allQuestions.map(
-                                                    (questionKey) => (
-                                                        <TableHead
-                                                            key={questionKey}
-                                                            className="min-w-[120px]"
-                                                        >
-                                                            Question{' '}
-                                                            {questionKey}
-                                                        </TableHead>
-                                                    )
-                                                )}
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {assignments.map(
-                                                (assignment: any) => {
-                                                    const judge = judges.find(
-                                                        (j) =>
-                                                            j.id ===
-                                                            assignment.userId
-                                                    );
+                    {assignmentsByTeam.map(({ team, assignments }) => {
+                        const { totals, averages } =
+                            calculateTotals(assignments);
 
-                                                    return (
-                                                        <TableRow
-                                                            key={`${assignment.teamId}-${assignment.userId}`}
-                                                        >
-                                                            <TableCell className="font-medium">
-                                                                {judge
-                                                                    ? `${judge.firstName} ${judge.lastName}`
-                                                                    : `Judge #${assignment.userId}`}
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <div className="flex items-center text-sm text-white/60">
-                                                                    <CheckCircle className="text-success-500 mr-1 h-3 w-3" />
-                                                                    {new Date(
-                                                                        assignment.updatedDate
-                                                                    ).toLocaleDateString()}
+                        return (
+                            <Card
+                                key={team?.id || 'unknown'}
+                                className="bg-neutral-850 p-4"
+                            >
+                                <h3 className="mb-4 text-lg font-medium">
+                                    {team ? team.teamName : 'Unknown Team'}{' '}
+                                    {team && (
+                                        <span className="">
+                                            ({team.id || team.teamId})
+                                        </span>
+                                    )}
+                                </h3>
+                                <CardContent className="p-0">
+                                    <div className="overflow-x-auto">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="min-w-[150px]">
+                                                        Judge
+                                                    </TableHead>
+                                                    <TableHead className="min-w-[120px]">
+                                                        Status
+                                                    </TableHead>
+                                                    {allQuestions.map(
+                                                        (questionKey) => (
+                                                            <TableHead
+                                                                key={
+                                                                    questionKey
+                                                                }
+                                                                className="min-w-[120px]"
+                                                            >
+                                                                Question{' '}
+                                                                {questionKey}
+                                                            </TableHead>
+                                                        )
+                                                    )}
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {assignments.map(
+                                                    (assignment: any) => {
+                                                        const judge =
+                                                            judges.find(
+                                                                (j) =>
+                                                                    j.id ===
+                                                                    assignment.userId
+                                                            );
+
+                                                        return (
+                                                            <TableRow
+                                                                key={`${assignment.teamId}-${assignment.userId}`}
+                                                            >
+                                                                <TableCell className="font-medium">
+                                                                    {judge
+                                                                        ? `${judge.firstName} ${judge.lastName}`
+                                                                        : `Judge #${assignment.userId}`}
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    <div className="flex items-center text-sm text-white/60">
+                                                                        <CheckCircle className="text-success-500 mr-1 h-3 w-3" />
+                                                                        {new Date(
+                                                                            assignment.updatedDate
+                                                                        ).toLocaleDateString()}
+                                                                    </div>
+                                                                </TableCell>
+                                                                {allQuestions.map(
+                                                                    (
+                                                                        questionKey
+                                                                    ) => (
+                                                                        <TableCell
+                                                                            key={
+                                                                                questionKey
+                                                                            }
+                                                                        >
+                                                                            {renderScoreValue(
+                                                                                assignment
+                                                                                    .response?.[
+                                                                                    questionKey
+                                                                                ] ||
+                                                                                    ''
+                                                                            )}
+                                                                        </TableCell>
+                                                                    )
+                                                                )}
+                                                            </TableRow>
+                                                        );
+                                                    }
+                                                )}
+                                                <TableRow className="border-t border-neutral-700 bg-neutral-800/30">
+                                                    <TableCell className="text-brand-500 font-bold">
+                                                        Average
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <span className="text-sm text-white/60">
+                                                            {assignments.length}{' '}
+                                                            judge
+                                                            {assignments.length !==
+                                                            1
+                                                                ? 's'
+                                                                : ''}
+                                                        </span>
+                                                    </TableCell>
+                                                    {allQuestions.map(
+                                                        (questionKey) => (
+                                                            <TableCell
+                                                                key={
+                                                                    questionKey
+                                                                }
+                                                            >
+                                                                <div className="text-brand-300 font-medium">
+                                                                    {averages[
+                                                                        questionKey
+                                                                    ] > 0
+                                                                        ? averages[
+                                                                              questionKey
+                                                                          ].toFixed(
+                                                                              2
+                                                                          )
+                                                                        : '-'}
                                                                 </div>
                                                             </TableCell>
-                                                            {allQuestions.map(
-                                                                (
-                                                                    questionKey
-                                                                ) => (
-                                                                    <TableCell
-                                                                        key={
-                                                                            questionKey
-                                                                        }
-                                                                    >
-                                                                        {renderScoreValue(
-                                                                            assignment
-                                                                                .response?.[
-                                                                                questionKey
-                                                                            ] ||
-                                                                                ''
-                                                                        )}
-                                                                    </TableCell>
-                                                                )
-                                                            )}
-                                                        </TableRow>
-                                                    );
-                                                }
-                                            )}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                                                        )
+                                                    )}
+                                                </TableRow>
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
                 </div>
             )}
         </div>

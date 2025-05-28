@@ -1,6 +1,7 @@
 'use client';
 import { HackathonData } from '@/components/application_components/types';
 import CountdownTimer from '@/components/home/Application/Countdown';
+import { SubmitCardSkeleton } from '@/components/home/Skeletons';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -20,7 +21,11 @@ export function SubmitCard({ onShowSubmit }: { onShowSubmit: () => void }) {
     const { hackathon } = useHackathon();
     if (!hackathon || hackathon.startDate.isAfter(dayjs())) {
         // if current day is before hackathon start day, then submit is not available.
-        return <></>;
+        return (
+            <>
+                <SubmitCardSkeleton />
+            </>
+        );
     }
     return (
         <SubmitCardContent
@@ -62,6 +67,7 @@ function SubmitCardContent({
                     variant={'brand'}
                     hierarchy={'primary'}
                     style={{ width: 'fit-content', marginLeft: 'auto' }}
+                    size="cozy"
                 >
                     Loading...
                 </Button>
@@ -74,6 +80,7 @@ function SubmitCardContent({
                     onClick={onShowSubmit}
                     variant={'caution'}
                     hierarchy={'primary'}
+                    size="cozy"
                     style={{ width: 'fit-content', marginLeft: 'auto' }}
                     trailingIconChild={
                         <ArrowRightIcon
@@ -89,6 +96,7 @@ function SubmitCardContent({
         return (
             <Button
                 onClick={onShowSubmit}
+                size="cozy"
                 variant={'brand'}
                 hierarchy={'primary'}
                 style={{ width: 'fit-content', marginLeft: 'auto' }}
@@ -130,7 +138,7 @@ function SubmitCardContent({
     }
 
     return (
-        <Card>
+        <Card className="h-full">
             <CardHeader>
                 <CardHeaderColumn>
                     <CardHeaderTitle>Submit Your Project</CardHeaderTitle>
