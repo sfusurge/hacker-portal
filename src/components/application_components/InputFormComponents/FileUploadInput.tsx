@@ -17,6 +17,8 @@ export function FileUploadInput({
             allowMultiple={question.allowMultiple}
             maxSize={question.maxSize}
             onFileChange={(files) => {
+                console.log('files', files);
+
                 setQuestion({ ...question, fileList: files });
             }}
         />

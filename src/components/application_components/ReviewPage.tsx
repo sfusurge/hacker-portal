@@ -14,7 +14,7 @@ import type {
     QuestionNameInput,
     QuestionFileUploads,
 } from './types';
-import style from './InputForm.module.css';
+import style from './ReviewPage.module.css';
 import { useMemo, useEffect, CSSProperties } from 'react';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { Card, CardContent } from '@/components/ui/card';
@@ -105,17 +105,20 @@ export function ReviewPage({
                         {fileQuestion.fileList?.map((f, index) => {
                             if (f.type.startsWith('image')) {
                                 return (
-                                    <img
+                                    <div
                                         className={style.displayImage}
                                         style={
                                             {
-                                                '--imageName': f.name,
+                                                '--imageName': `"${f.name}"`,
                                             } as CSSProperties
                                         }
                                         key={`${index}${f.name}`}
-                                        src={URL.createObjectURL(f)}
-                                        alt={f.name}
-                                    />
+                                    >
+                                        <img
+                                            src={URL.createObjectURL(f)}
+                                            alt={f.name}
+                                        />
+                                    </div>
                                 );
                             }
                             return (
@@ -168,7 +171,7 @@ export function ReviewPage({
                 flattenedQuestions.map((question, index) => {
                     const response = getQuestionResponse(question);
                     return (
-                        <div key={index} className="border-b pb-4">
+                        <div key={index}>
                             <h3 className={style.title}>{question.title}</h3>
                             <span className={`${style.description} mt-2 block`}>
                                 {response}
