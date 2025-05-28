@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import Quill, { Delta } from 'quill';
+import { type Delta } from 'quill';
+import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
 
 interface RichTextProps {

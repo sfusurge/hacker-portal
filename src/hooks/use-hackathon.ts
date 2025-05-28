@@ -396,6 +396,10 @@ export const hackathonAtom = atomWithStorage<HackathonData | undefined>(
 
             const hackathon: HackathonData = JSON.parse(item);
 
+            if (!hackathon) {
+                return undefined;
+            }
+
             const foo = {
                 ...hackathon,
                 startDate: dayjs(hackathon.startDate),
@@ -423,7 +427,6 @@ export function useHackathon() {
     );
 
     const [hackathon, setHackathon] = useAtom(hackathonAtom);
-
     useEffect(() => {
         const item = sessionStorage.getItem(HACKATHON_KEY);
 

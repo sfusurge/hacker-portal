@@ -62,6 +62,8 @@ export const submissionsRouter = router({
         .input(insertSubmissionSchema)
         .mutation(async ({ input }): Promise<SubmitSubmissionResponse> => {
             // const teamEmails = await getTeamData(input.teamId)
+            console.log('received submission', input);
+
             const [submission] = await databaseClient
                 .insert(submissions)
                 .values({
