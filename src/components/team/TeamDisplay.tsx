@@ -28,8 +28,6 @@ export default function TeamDisplay({
     user,
     imageData = '/teams/default.webp',
 }: TeamDisplayProps) {
-    const [showSubmit, setShowSubmit] = useState(false);
-
     // If user is not in a team for the current hackathon, show join team UI
     if (!currentTeam) {
         return (

@@ -3,11 +3,10 @@ import { createCaller } from '@/server/appRouter';
 import SubmissionInfoCard from '@/components/team/submit/SubmissionInfoCard';
 import SubmissionCard from '@/components/team/submit/SubmissionCard';
 import TeamListSubmit from '@/components/team/submit/TeamListSubmit';
-import SubmitButton from '@/components/team/submit/SubmitButton';
+
 import { getUserData } from '@/server/routers/usersRouter';
 import { SubmitFormCard } from '@/components/team/InTeam/SubmitFormCard';
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
+
 import { GoHome } from '@/components/home/GoHome';
 
 export default async function SubmitPage() {
@@ -20,23 +19,29 @@ export default async function SubmitPage() {
     const trpcClient = createCaller({});
     const hackathon = await trpcClient.hackathons.getActiveHackathon();
 
+    const application = await trpcClient.applications.getCurrentApplication({
+        hackathonId: hackathon.id,
+    });
+    if (!application || application.currentStatus !== 'Accepted') {
+        return <GoHome title="You were not accepted in this event!" />;
+    }
+
     const currentTeam = await trpcClient.teams.getCurrentTeam({
         hackathonId: hackathon.id,
     });
 
     const teamPictureUrl = currentTeam?.teamPictureUrl;
 
-    const image = teamPictureUrl
-        ? await trpcClient.files
-              .getFile({
-                  key: teamPictureUrl,
-                  bucketName: 'team-pictures',
-              })
-              .catch((error) => {
-                  console.error('Error fetching image:', error);
-                  return null;
-              })
-        : null;
+    // const image = teamPictureUrl
+    //               .getFile({
+    //               key: teamPictureUrl,
+    //               bucketName: 'team-pictures',
+    //           })
+    //           .catch((error) => {
+    //               console.error('Error fetching image:', error);
+    //               return null;
+    //           })
+    //     : null;
 
     const questions = await trpcClient.submissions.getSubmissionQuestions({
         hackathonId: hackathon.id,
