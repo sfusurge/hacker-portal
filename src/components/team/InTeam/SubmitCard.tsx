@@ -78,7 +78,7 @@ function SubmitCardContent({
             return <></>;
         }
 
-        if (!teamdata) {
+        if (!teamdata.data) {
             return <></>;
         }
 
@@ -159,7 +159,7 @@ function SubmitCardContent({
         } else {
             return (
                 <>
-                    {!teamdata && <p>You are not in a team yet!</p>}
+                    {!teamdata.data && <p>You are not in a team yet!</p>}
                     <span
                         className={'text-sm text-white/60'}
                     >{`Projects are due on ${hackathon.submissionDeadline.format('MMM DD, hh:mm')}!`}</span>
