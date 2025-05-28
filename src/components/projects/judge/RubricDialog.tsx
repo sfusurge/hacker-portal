@@ -1,13 +1,13 @@
 'use client';
 
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter,
-} from '@/components/ui/dialog';
+    ResponsiveDialog,
+    ResponsiveDialogContent,
+    ResponsiveDialogHeader,
+    ResponsiveDialogTitle,
+    ResponsiveDialogDescription,
+    ResponsiveDialogFooter,
+} from '@/components/ui/responsive-dialog';
 import { Label } from '@/components/ui/label/label';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -60,10 +60,10 @@ export default function RubricDialog({
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent
-                className="flex h-[75%] flex-col gap-0 border-none bg-neutral-900 p-0 sm:h-[90%] sm:max-w-300"
-                hideCloseIcon={true}
+        <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+            <ResponsiveDialogContent
+                hideCloseIcon
+                className="flex h-[80vh] flex-col gap-0 border-none bg-neutral-900 p-0 sm:max-w-300"
             >
                 {isLoading || !rubric ? (
                     <div className="flex h-full flex-col items-center justify-center">
@@ -71,17 +71,27 @@ export default function RubricDialog({
                     </div>
                 ) : (
                     <>
-                        <div className="flex items-center justify-between border-b border-neutral-700 p-6">
-                            <DialogHeader>
-                                <DialogDescription className="font-medium">
+                        <div className="flex flex-col justify-between border-b border-neutral-700 p-6 md:flex-row">
+                            <ResponsiveDialogHeader className="">
+                                <ResponsiveDialogDescription className="font-medium">
                                     Judging Rubric
-                                </DialogDescription>
-                                <DialogTitle className="text-2xl font-semibold">
-                                    Criterion {currentCriterion?.questionId}:{' '}
-                                    {currentCriterion?.title}
-                                </DialogTitle>
-                            </DialogHeader>
-                            <div className="flex flex-col items-end gap-2.5 sm:flex-row">
+                                </ResponsiveDialogDescription>
+                                <ResponsiveDialogTitle className="text-2xl leading-tight font-semibold">
+                                    <div className="flex flex-wrap items-center gap-1">
+                                        <span className="hidden whitespace-nowrap md:inline-flex">
+                                            Criterion{' '}
+                                            {currentCriterion?.questionId}:
+                                        </span>
+                                        <span className="inline-flex whitespace-nowrap md:hidden">
+                                            #{currentCriterion?.questionId}.
+                                        </span>
+                                        <span className="break-words">
+                                            {currentCriterion?.title}
+                                        </span>
+                                    </div>
+                                </ResponsiveDialogTitle>
+                            </ResponsiveDialogHeader>
+                            <div className="flex items-end gap-2.5 sm:flex-row">
                                 <Button
                                     hierarchy={'primary'}
                                     size={'cozy'}
@@ -91,8 +101,8 @@ export default function RubricDialog({
                                 >
                                     <ArrowLeftIcon className="h-6 w-6 text-white" />
                                 </Button>
-                                <div className="flex flex-col gap-2">
-                                    <Label className="mb-0 leading-none">
+                                <div className="flex w-full flex-col gap-2 pt-4 md:block md:w-auto md:pt-0">
+                                    <Label className="mb-0 hidden leading-none">
                                         Select criterion
                                     </Label>
                                     <Select
@@ -103,10 +113,10 @@ export default function RubricDialog({
                                             )
                                         }
                                     >
-                                        <SelectTrigger className="h-11 min-h-11 w-32 bg-neutral-700 sm:w-64">
+                                        <SelectTrigger className="h-11 min-h-11 w-full bg-neutral-700 md:w-64">
                                             <SelectValue placeholder="Select criterion" />
                                         </SelectTrigger>
-                                        <SelectContent className="w-32 space-y-0.5 bg-neutral-800 text-white sm:w-64">
+                                        <SelectContent className="z-[200] w-full space-y-0.5 bg-neutral-800 text-white md:w-64">
                                             {rubric.map((criterion, index) => (
                                                 <SelectItem
                                                     key={criterion.questionId}
@@ -136,7 +146,7 @@ export default function RubricDialog({
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-auto p-8 sm:pr-12">
+                        <div className="flex-1 overflow-y-auto p-8 sm:pr-12">
                             {currentCriterion && (
                                 <div className="mx-auto w-full space-y-8">
                                     <div className="space-y-4">
@@ -165,11 +175,11 @@ export default function RubricDialog({
                                                     key={score}
                                                     className="border-neutral-750 flex border"
                                                 >
-                                                    <div className="border-neutral-750 flex w-20 min-w-20 flex-col items-center justify-center gap-2 border-r p-4 text-center sm:w-45 sm:min-w-45">
+                                                    <div className="border-neutral-750 flex w-12 min-w-12 flex-col items-center justify-center gap-2 border-r p-4 text-center sm:w-45 sm:min-w-45 md:w-20 md:min-w-20">
                                                         <div className="flex items-center justify-center text-xl font-semibold">
                                                             {score}
                                                         </div>
-                                                        <div className="font-semibold">
+                                                        <div className="hidden font-semibold md:block">
                                                             {score === '5' &&
                                                                 'Excellent'}
                                                             {score === '4' &&
@@ -203,7 +213,7 @@ export default function RubricDialog({
                                 </div>
                             )}
                         </div>
-                        <DialogFooter className="bg-neutral-800/60 px-8 py-6">
+                        <ResponsiveDialogFooter className="bg-neutral-800/60 px-8 py-6">
                             <div className="flex justify-end">
                                 <Button
                                     variant="default"
@@ -214,10 +224,10 @@ export default function RubricDialog({
                                     Return to scoring
                                 </Button>
                             </div>
-                        </DialogFooter>
+                        </ResponsiveDialogFooter>
                     </>
                 )}
-            </DialogContent>
-        </Dialog>
+            </ResponsiveDialogContent>
+        </ResponsiveDialog>
     );
 }
