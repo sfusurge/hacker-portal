@@ -24,14 +24,7 @@ export default async function Home() {
     const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
 
     const hackathonId = activeHackathon.id;
-    const userId = data.id;
-    const currentUserTeam = await trpcClient.teams.getCurrentTeam({
-        hackathonId: hackathonId,
-    });
-
-    const hasSubmission = await trpcClient.submissions.getHasSubmissions({
-        userId: userId,
-    });
+    // const userId = data.id;
 
     const [application, team, events] = await Promise.all([
         trpcClient.applications.getCurrentApplication({
@@ -71,9 +64,7 @@ export default async function Home() {
                     {/*    applicationSubmitted={application !== null}*/}
                     {/*/>*/}
                     <div className="col-span-7 flex flex-col gap-6 md:gap-8">
-                        <SubmissionCardHomepage
-                            teamName={currentUserTeam.name}
-                        />
+                        <SubmissionCardHomepage />
                     </div>
                 </Suspense>
 

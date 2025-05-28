@@ -1,36 +1,46 @@
+'use client';
+
 import { Card, CardContent } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
+import { useHackathon } from '@/hooks/use-hackathon';
 
-type SubmissionInfoCardProps = {
-    date: string;
-    time: string;
-};
+export default function SubmissionInfoCard() {
+    const { hackathon } = useHackathon();
+    const [hoursUntil, setHoursUntil] = useState<number | null>(null);
+    const [formattedDate, setFormattedDate] = useState<string>('');
+    const [formattedTime, setFormattedTime] = useState<string>('');
 
-export default function SubmissionInfoCard({
-    date,
-    time,
-}: SubmissionInfoCardProps) {
-    const calculateHoursLeft = (): number => {
-        const targetDate = new Date('2025-05-28T23:59:00-08:00');
-        const now = new Date();
+    useEffect(() => {
+        if (!hackathon) return;
 
-        const msDiff = targetDate.getTime() - now.getTime();
-        const hoursLeft = msDiff / (1000 * 60 * 60);
+        const deadline = hackathon.submissionDeadline.toDate();
 
-        return Math.max(0, Math.floor(hoursLeft));
+        const calculateHoursLeft = (targetDate: Date): number => {
+            const now = new Date();
+            const msDiff = targetDate.getTime() - now.getTime();
+            const hoursLeft = msDiff / (1000 * 60 * 60);
+            return Math.max(0, Math.floor(hoursLeft));
+        };
+
+        setHoursUntil(calculateHoursLeft(deadline));
+        setFormattedDate(
+            deadline.toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            })
+        );
+        setFormattedTime(
+            deadline.toLocaleTimeString(undefined, {
+                hour: '2-digit',
+                minute: '2-digit',
+            })
+        );
+    }, [hackathon]);
+
+    const hourOrHours = (hours: number): string => {
+        return hours === 1 ? 'hour' : 'hours';
     };
-
-    const hoursUntil = calculateHoursLeft();
-
-    const hourOrHours = (hours_until: number): string => {
-        if (hours_until > 1) {
-            return 'hours';
-        } else {
-            return 'hour';
-        }
-    };
-
-    const hourOrHoursText = hourOrHours(hoursUntil);
 
     return (
         <Card className="overflow-hidden">
@@ -38,13 +48,15 @@ export default function SubmissionInfoCard({
                 <div>
                     <div className="flex flex-row gap-2">
                         <div className="text-md font-bold">Due Date</div>
-                        <div className="rounded-md bg-yellow-950 px-2 pt-0.5 text-sm text-yellow-300">
-                            Due in {hoursUntil} {hourOrHoursText}
-                        </div>
+                        {hoursUntil !== null && (
+                            <div className="rounded-md bg-yellow-950 px-2 pt-0.5 text-sm text-yellow-300">
+                                Due in {hoursUntil} {hourOrHours(hoursUntil)}
+                            </div>
+                        )}
                     </div>
 
                     <div className="text-md text-white/60">
-                        {date} at {time}
+                        {formattedDate} at {formattedTime}
                     </div>
                 </div>
 
