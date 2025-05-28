@@ -71,9 +71,7 @@ export default async function Home() {
                     {/*    applicationSubmitted={application !== null}*/}
                     {/*/>*/}
                     <div className="col-span-7 flex flex-col gap-6 md:gap-8">
-                        <SubmissionCardHomepage
-                            teamName={currentUserTeam.name}
-                        />
+                        <SubmissionCardHomepage />
                     </div>
                 </Suspense>
 
