@@ -16,18 +16,25 @@ import type {
     QuestionRichTextInput,
 } from './types';
 import style from './ReviewPage.module.css';
-import { useMemo, useEffect, CSSProperties } from 'react';
+import { useMemo, useEffect, CSSProperties, useState } from 'react';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { Card, CardContent } from '@/components/ui/card';
 import { DocumentIcon } from '@heroicons/react/20/solid';
 import { getFileSize } from '@/components/ui/FileUpload/FileUpload';
 import { RichText } from '@/components/ui/RichText/RichText';
+import { atom } from 'jotai';
 
 export interface ReviewPageProps {
     submit: () => void;
     mobileMode?: boolean;
     response: InputFormPageData[];
+    disableSubmitBtn?: boolean;
 }
+
+export const submitMessageAtom = atom({
+    title: 'Confirm Submission',
+    content: 'This form cannot be edited after submission.',
+});
 
 /**
  * Review Page Gets a submit button if mobile mode.
@@ -36,6 +43,7 @@ export function ReviewPage({
     submit,
     response,
     mobileMode = false,
+    disableSubmitBtn = false,
 }: ReviewPageProps) {
     // Add this debug log at the beginning of the component
 
@@ -175,7 +183,7 @@ export function ReviewPage({
     }, [response]);
 
     return (
-        <div className="mb-28 flex flex-col gap-6 p-6">
+        <div className="mb-28 flex flex-col gap-6 p-6 pb-10">
             <h1 className="text-2xl font-medium">Review Application</h1>
 
             {flattenedQuestions.length === 0 ? (
@@ -194,7 +202,7 @@ export function ReviewPage({
                 })
             )}
 
-            {mobileMode && (
+            {mobileMode && !disableSubmitBtn && (
                 <SkewmorphicButton
                     onClick={submit}
                     className="mt-4"

@@ -35,7 +35,10 @@ import {
     useState,
 } from 'react';
 import { Label } from '@/components/ui/label/label';
-import { isApplicationQuestionFilled } from './InputFormComponents/shared';
+import {
+    isApplicationQuestionFilled,
+    submittedAtom,
+} from './InputFormComponents/shared';
 import { NumberInput } from './InputFormComponents/NumberInput';
 import { RadioInput } from './InputFormComponents/RadioInput';
 import { CheckBoxInput } from './InputFormComponents/CheckboxInput';
@@ -90,6 +93,7 @@ export function InputForm({
     onSubmit,
     disablePageTab = false,
 }: InputFormProps) {
+    const [submitted, setSubmitted] = useAtom(submittedAtom);
     const router = useRouter();
     const pagesAtom = useMemo(
         () =>
@@ -153,21 +157,21 @@ export function InputForm({
 
     const pageContainerRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
-        if (pageContainerRef.current) {
-            setTimeout(() => {
-                if (isMobile) {
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth',
-                    });
-                } else {
-                    pageContainerRef.current?.scrollTo({
-                        behavior: 'smooth',
-                        top: 0,
-                    });
-                }
-            }, 0);
-        }
+        // if (pageContainerRef.current) {
+        //     setTimeout(() => {
+        //         if (isMobile) {
+        //             window.scrollTo({
+        //                 top: 0,
+        //                 behavior: 'smooth',
+        //             });
+        //         } else {
+        //             pageContainerRef.current?.scrollTo({
+        //                 behavior: 'smooth',
+        //                 top: 0,
+        //             });
+        //         }
+        //     }, 0);
+        // }
     }, [currentPageIndex, isMobile]);
 
     // Guard against empty pages
@@ -213,6 +217,7 @@ export function InputForm({
                                     onSubmit();
                                 }}
                                 mobileMode={isMobile}
+                                disableSubmitBtn={disablePageTab}
                             />
                         )}
 
@@ -230,7 +235,7 @@ export function InputForm({
 
             {
                 // mobile page status indicator also includes buttons.
-                !isMobile && (
+                (!isMobile || disablePageTab) && !submitted && (
                     <PageButtons
                         indexAtom={pageIndexAtom}
                         pageCount={pagesAtoms.length}

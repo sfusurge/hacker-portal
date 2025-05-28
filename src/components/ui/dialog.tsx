@@ -85,6 +85,12 @@ const DialogFooter = ({
             'flex w-full flex-col-reverse text-base font-medium',
             className
         )}
+        style={{
+            marginTop: 'auto',
+            flexDirection: 'row',
+            justifyContent: 'flex-end',
+            gap: '1rem',
+        }}
         {...props}
     />
 );

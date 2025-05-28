@@ -1,7 +1,8 @@
 'use client';
 
+import { atom } from 'jotai';
 import type { InputFormQuestion } from '../types';
-
+export const submittedAtom = atom(false);
 export function isApplicationQuestionFilled(question: InputFormQuestion) {
     try {
         switch (question.type) {

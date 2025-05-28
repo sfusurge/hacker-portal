@@ -8,6 +8,10 @@
     max-width: 1200px;
     color: white;
     box-sizing: border-box;
+
+    @media only screen and (max-width: 768px) {
+        margin-bottom: 6rem;
+    }
 }
 
 .mainTitle {
