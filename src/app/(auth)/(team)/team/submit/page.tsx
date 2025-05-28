@@ -54,8 +54,8 @@ export default async function SubmitPage() {
 
     return (
         <div className="flex w-full flex-col gap-6 md:flex-row md:items-start">
-            <div className="flex w-full flex-col gap-6 md:flex-row">
-                <div className="flex max-w-1/4 flex-col gap-8 md:self-start">
+            <div className="flex w-full flex-col gap-6 lg:flex-row">
+                <div className="flex flex-col gap-8 lg:max-w-1/4 lg:self-start">
                     <SubmissionInfoCard
                         date={'May 28, 2025'}
                         time={'11:59pm'}
