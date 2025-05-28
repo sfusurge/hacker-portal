@@ -9,7 +9,7 @@ export default function PdfViewer({ url }: PdfViewerProps) {
 
     return (
         <div className="flex w-full flex-col items-center">
-            <iframe src={url} width="100%" height="600" className="border" />
+            <iframe src={url} width="100%" height="600" />
         </div>
     );
 }
