@@ -136,6 +136,8 @@ function SubmitCardContent({
     }
 
     function getContent() {
+        console.log(hackathon.submissionDeadline.format('MMM DD, hh:mm'));
+
         if (
             !userapplication.isLoading &&
             (!userapplication.data ||
@@ -164,7 +166,7 @@ function SubmitCardContent({
                         className={'text-sm text-white/60'}
                     >{`Projects are due on ${hackathon.submissionDeadline.format('MMM DD, hh:mm')}!`}</span>
                     <CountdownTimer
-                        targetDate={hackathon.submissionDeadline.toDate()}
+                        targetDate={new Date(2025, 4, 28, 23, 59, 59)}
                     />
                 </>
             );

@@ -13,7 +13,7 @@ export default function SubmissionInfoCard() {
     useEffect(() => {
         if (!hackathon) return;
 
-        const deadline = hackathon.submissionDeadline.toDate();
+        const deadline = new Date(2025, 4, 28, 23, 59, 59);
 
         const calculateHoursLeft = (targetDate: Date): number => {
             const now = new Date();
