@@ -390,17 +390,20 @@ export const hackathonAtom = atomWithStorage<HackathonData | undefined>(
         getItem(key, initialValue) {
             const item = sessionStorage.getItem(key);
 
-            if (!item) return initialValue;
+            if (!item) {
+                return initialValue;
+            }
 
-            const hackathon: HackathonData = item
-                ? JSON.parse(item)
-                : initialValue;
+            const hackathon: HackathonData = JSON.parse(item);
 
-            hackathon.startDate = dayjs(hackathon.startDate);
-            hackathon.endDate = dayjs(hackathon.endDate);
-            hackathon.submissionDeadline = dayjs(hackathon.submissionDeadline);
+            const foo = {
+                ...hackathon,
+                startDate: dayjs(hackathon.startDate),
+                endDate: dayjs(hackathon.endDate),
+                submissionDeadline: dayjs(hackathon.submissionTime),
+            };
 
-            return hackathon;
+            return foo;
         },
 
         setItem(key, newValue) {
@@ -420,6 +423,23 @@ export function useHackathon() {
     );
 
     const [hackathon, setHackathon] = useAtom(hackathonAtom);
+
+    useEffect(() => {
+        const item = sessionStorage.getItem(HACKATHON_KEY);
+
+        if (item) {
+            const hackathon: HackathonData = JSON.parse(item);
+
+            const foo = {
+                ...hackathon,
+                startDate: dayjs(hackathon.startDate),
+                endDate: dayjs(hackathon.endDate),
+                submissionDeadline: dayjs(hackathon.submissionTime),
+            };
+
+            setHackathon(foo);
+        }
+    }, []);
 
     useEffect(() => {
         const fetchActiveHackathon = async () => {
@@ -444,7 +464,7 @@ export function useHackathon() {
                         : [],
                     startDate: dayjs(data.startDate),
                     endDate: dayjs(data.endDate),
-                    version: 1,
+                    version: data.version,
                 });
             }
         };
@@ -455,6 +475,6 @@ export function useHackathon() {
     return {
         hackathon,
         setHackathon,
-        hackathonLoaded: getActiveHackathon.isSuccess,
+        hackathonLoaded: hackathon !== undefined,
     };
 }

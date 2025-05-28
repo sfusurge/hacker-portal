@@ -80,6 +80,7 @@ const submitWithLocalAtom = atom(
 
 export function SubmitFormCard({ teamId }: { teamId: number }) {
     const submitData = useAtomValue(submitWithLocalAtom);
+
     const submitSubmission = trpc.submissions.submitSubmission.useMutation();
     return (
         <InputForm

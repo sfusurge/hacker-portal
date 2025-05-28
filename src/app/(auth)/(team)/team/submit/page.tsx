@@ -45,6 +45,12 @@ export default async function SubmitPage() {
     // })
     //
     // console.log(presignurl)
+    //
+
+    // just to be safe
+    if (!currentTeam) {
+        return false;
+    }
 
     return (
         <div className="flex w-full flex-col gap-6 md:flex-row md:items-start">
@@ -62,7 +68,7 @@ export default async function SubmitPage() {
 
                 <div className="flex flex-1 flex-col">
                     <div className="flex-1 md:max-h-[calc(100vh)] md:overflow-y-auto">
-                        <SubmitFormCard teamId={currentTeam?.id ?? -1} />
+                        <SubmitFormCard teamId={currentTeam.id} />
                     </div>
                 </div>
             </div>
