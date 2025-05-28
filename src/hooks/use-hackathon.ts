@@ -390,15 +390,17 @@ export const hackathonAtom = atomWithStorage<HackathonData | undefined>(
         getItem(key, initialValue) {
             const item = sessionStorage.getItem(key);
 
-            const hackahton: HackathonData = item
+            if (!item) return initialValue;
+
+            const hackathon: HackathonData = item
                 ? JSON.parse(item)
                 : initialValue;
 
-            hackahton.startDate = dayjs(hackahton.startDate);
-            hackahton.endDate = dayjs(hackahton.endDate);
-            hackahton.submissionDeadline = dayjs(hackahton.submissionDeadline);
+            hackathon.startDate = dayjs(hackathon.startDate);
+            hackathon.endDate = dayjs(hackathon.endDate);
+            hackathon.submissionDeadline = dayjs(hackathon.submissionDeadline);
 
-            return hackahton;
+            return hackathon;
         },
 
         setItem(key, newValue) {
