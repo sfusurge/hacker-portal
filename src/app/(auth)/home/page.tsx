@@ -7,9 +7,14 @@ import { createCaller } from '@/server/appRouter';
 import { Suspense } from 'react';
 import { ApplicationCardSkeleton } from '@/components/home/Skeletons';
 import { getUserData } from '@/server/routers/usersRouter';
-
+import { redirect } from 'next/navigation';
 export default async function Home() {
     const data = await getUserData();
+
+    // todo/temp: improve redirect for judge
+    if (data?.userRole === 'judge') {
+        redirect('/projects');
+    }
 
     const trpcClient = createCaller({});
 
