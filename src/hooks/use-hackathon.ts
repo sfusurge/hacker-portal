@@ -1,6 +1,7 @@
 import {
-    InputFormPageData,
     HackathonData,
+    JudgeQuestion,
+    SubmissionJudgeRubric,
 } from '@/components/application_components/types';
 import { trpc } from '@/trpc/client';
 import dayjs from 'dayjs';
@@ -391,6 +392,10 @@ export const hackathonAtom = atomWithStorage<HackathonData | undefined>(
                 ? JSON.parse(item)
                 : initialValue;
 
+            hackahton.startDate = dayjs(hackahton.startDate);
+            hackahton.endDate = dayjs(hackahton.endDate);
+            hackahton.submissionDeadline = dayjs(hackahton.submissionDeadline);
+
             return hackahton;
         },
 
@@ -424,8 +429,15 @@ export function useHackathon() {
                 setHackathon({
                     hackathonName: data.name,
                     id: data.id,
-                    pages: data.questions,
+                    applicationQuestionPages: data.applicationQuestions,
+                    submissionQuestionPages: data.submissionQuestions ?? [],
                     submissionDeadline: dayjs(data.submissionDeadline),
+                    judgeQuestions: data.judgeQuestions
+                        ? (data.judgeQuestions as JudgeQuestion[])
+                        : [],
+                    judgeRubric: data.judgeRubric
+                        ? (data.judgeRubric as SubmissionJudgeRubric[])
+                        : [],
                     startDate: dayjs(data.startDate),
                     endDate: dayjs(data.endDate),
                     version: 1,

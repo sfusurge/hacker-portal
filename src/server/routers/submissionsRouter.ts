@@ -1,20 +1,19 @@
 import { databaseClient } from '@/db/client';
-import { publicProcedure, router } from '../trpc';
-
+import { hackathons } from '@/db/schema/hackathons';
+import { members } from '@/db/schema/members';
 import {
-    insertSubmissionSchema,
+    getHasSubmissionSchema,
     getSubmissionQuestionsSchema,
+    insertSubmissionSchema,
     submissions,
     submissionStatusEnum,
     SubmissionStatusEnumType,
-    getHasSubmissionSchema,
 } from '@/db/schema/submissions';
-import { hackathons } from '@/db/schema/hackathons';
-import { and, eq, getTableColumns } from 'drizzle-orm';
-import { members } from '@/db/schema/members';
-import { z } from 'zod';
-import { projectAttachments } from '@/db/schema/project-attachments';
 import { teams } from '@/db/schema/teams';
+import { and, eq, getTableColumns } from 'drizzle-orm';
+import { z } from 'zod';
+import { publicProcedure, router } from '../trpc';
+import { getUserData } from './usersRouter';
 
 export interface SubmitSubmissionResponse {
     userId: number;
@@ -35,6 +34,19 @@ export interface SubmissionWithTeamInfo {
 }
 
 export const submissionsRouter = router({
+    getUserTeamSubmission: publicProcedure
+        .input(z.object({}))
+        .query(async ({ input }) => {
+            const userInfo = await getUserData();
+            const [submission] = await databaseClient
+                .select(getTableColumns(submissions))
+                .from(submissions)
+                .innerJoin(members, eq(members.teamId, submissions.teamId))
+                .where(eq(members.userId, userInfo?.id ?? -1))
+                .limit(1);
+
+            return submission ?? null;
+        }),
     getSubmissionQuestions: publicProcedure
         .input(getSubmissionQuestionsSchema)
         .query(async ({ input }) => {

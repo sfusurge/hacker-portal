@@ -18,18 +18,25 @@ type ChoiceOption = {
  * It's the client's responsibility to send an ApplicationData that makes sense, complete and up to date.
  * The server api can reject the request for any reason, so client modifying the question set is not a concern.
  */
-export interface HackathonData extends InputFormData {
+export interface HackathonData {
+    id: number;
+    version: number;
     hackathonName: string; // should this be hackathon id in table instead?
     submissionTime?: string;
+
+    applicationQuestionPages: InputFormPageData[];
+    submissionQuestionPages: InputFormPageData[];
 
     submissionDeadline: dayjs.Dayjs;
     startDate: dayjs.Dayjs;
     endDate: dayjs.Dayjs;
+
+    judgeQuestions: JudgeQuestion[];
+    judgeRubric: SubmissionJudgeRubric[];
 }
 
 export interface InputFormData {
     id: number;
-    title: string;
     version: number;
 
     pages: InputFormPageData[];
@@ -51,7 +58,8 @@ export type InputFormQuestion =
     | QuestionSchoolName
     | QuestionMultipleCheckBox
     | QuestionNameInput
-    | QuestionFileUploads;
+    | QuestionFileUploads
+    | QuestionRichTextInput;
 
 export type ApplicationQuestionType = InputFormQuestion['type'];
 
@@ -116,6 +124,11 @@ export interface QuestionMultipleChoice extends Question {
     choices: ChoiceOption[];
 }
 
+export interface QuestionRichTextInput extends Question {
+    type: 'rich-text';
+    value?: Record<any, any>;
+}
+
 export interface QuestionMultipleCheckBox extends Question {
     type: 'multiple-checkbox';
     min?: number;
@@ -160,4 +173,67 @@ export interface QuestionSchoolName extends Question {
 export interface QuestionDatePicker extends Question {
     type: 'date';
     value?: string;
+}
+
+export interface JudgeQuestion extends Question {
+    type: 'judge-question';
+    value?: number;
+    min?: number;
+    max?: number;
+}
+
+export interface SubmissionJudgeRubric {
+    questionId: number;
+    title: string;
+    description: string[];
+    rubric: {
+        [score: string]: string[];
+    };
+}
+
+// Judging form types
+export type ScoreItem = {
+    questionId: number;
+    title: string;
+    description?: string;
+};
+
+export interface ScoreGroupQuestion {
+    type: 'score-group';
+    questionId: number;
+    title: string;
+    required: boolean;
+    description?: string;
+    items: ScoreItem[];
+}
+
+export interface MultipleChoiceQuestion {
+    type: 'multiple-choice';
+    questionId: number;
+    title: string;
+    required: boolean;
+    description?: string;
+    choices: {
+        id: string;
+        name: string;
+        data: string;
+    }[];
+}
+
+export interface TextAreaQuestion {
+    type: 'text-area';
+    questionId: number;
+    title: string;
+    required: boolean;
+    description?: string;
+    placeholder?: string;
+}
+
+export type JudgingFormQuestion =
+    | ScoreGroupQuestion
+    | MultipleChoiceQuestion
+    | TextAreaQuestion;
+
+export interface FormResponse {
+    [key: string]: string | null;
 }

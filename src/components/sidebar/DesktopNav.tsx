@@ -15,7 +15,7 @@ import {
 import { HomeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
-import { QrCodeIcon } from '@heroicons/react/24/solid';
+import { IdentificationIcon, QrCodeIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
 import { trpc } from '@/trpc/client';
 
@@ -79,6 +79,12 @@ const adminLinks = [
         label: 'Email Templates (Admin)',
         icon: <EnvelopeIcon className="h-6 w-6" />,
         iconAlt: 'email',
+    },
+    {
+        href: '/admin/judge',
+        label: 'Judge Assignment',
+        icon: <IdentificationIcon className="h-6 w-6" />,
+        iconAlt: 'judge',
     },
     {
         href: '/admin/qr',
@@ -392,10 +398,10 @@ export default function DesktopNav({
                         {isLargeScreen && (
                             <motion.button
                                 onClick={() => setCollapsed(!collapsed)}
-                                className="hover:bg-neutral-750/30 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-white transition-colors"
+                                className="hover:bg-neutral-750/30 flex w-full items-center justify-start gap-2 rounded-lg px-3 py-2 text-white transition-colors"
                                 initial={false}
                                 animate={{
-                                    width: '100%',
+                                    width: collapsed ? '48px' : '100%',
                                 }}
                                 transition={{
                                     duration: 0.3,
@@ -406,7 +412,7 @@ export default function DesktopNav({
                                     <ChevronDoubleRightIcon className="h-4 w-4" />
                                 ) : (
                                     <motion.div
-                                        className="flex w-full items-center justify-center gap-2"
+                                        className="flex w-full items-center gap-2"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{

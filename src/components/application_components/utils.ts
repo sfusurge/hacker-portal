@@ -37,6 +37,7 @@ export function getResponseMap(pages: InputFormPageData[]) {
                 break;
 
             default:
+                ``;
                 res[id] = question.value;
         }
     }

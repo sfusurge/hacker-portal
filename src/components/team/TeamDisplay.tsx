@@ -6,13 +6,10 @@ import InviteCard from '@/components/team/InTeam/InviteCard';
 import { inferProcedureOutput } from '@trpc/server';
 import { AppRouter } from '@/server/appRouter';
 import Image from 'next/image';
-import SubmissionCountdown from '@/components/team/InTeam/SubmissionCountdown';
 import { UserData } from '@/server/routers/usersRouter';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { redirect } from 'next/navigation';
-import { ArrowRightIcon } from 'lucide-react';
-import * as React from 'react';
+import { SubmitCard } from '@/components/team/InTeam/SubmitCard';
+import { useState } from 'react';
+import { SubmitFormCard } from '@/components/team/InTeam/SubmitFormCard';
 type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
 type HackathonType = inferProcedureOutput<
     AppRouter['hackathons']['getActiveHackathon']
@@ -31,6 +28,8 @@ export default function TeamDisplay({
     user,
     imageData = '/teams/default.webp',
 }: TeamDisplayProps) {
+    const [showSubmit, setShowSubmit] = useState(false);
+
     // If user is not in a team for the current hackathon, show join team UI
     if (!currentTeam) {
         return (
@@ -73,28 +72,13 @@ export default function TeamDisplay({
                         team={currentTeam}
                     />
                     <InviteCard teamId={currentTeam.displayId} />
+                    <SubmitCard
+                        onShowSubmit={() => {
+                            setShowSubmit(true);
+                        }}
+                    />
 
-                    <Card>
-                        <CardContent>
-                            <SubmissionCountdown
-                                targetDate={
-                                    new Date('2025-05-28T23:59:00-08:00')
-                                }
-                            />
-                            <Button
-                                size="cozy"
-                                variant="brand"
-                                hierarchy="primary"
-                                className="hidden md:block"
-                                onClick={() => redirect('/team/submit')}
-                                trailingIconChild={
-                                    <ArrowRightIcon className="inline-flex h-4 w-4" />
-                                }
-                            >
-                                Start Project
-                            </Button>
-                        </CardContent>
-                    </Card>
+                    {showSubmit && <SubmitFormCard />}
                 </div>
             </div>
         </div>

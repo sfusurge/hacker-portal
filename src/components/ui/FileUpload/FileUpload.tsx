@@ -1,8 +1,9 @@
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { DocumentIcon, XCircleIcon } from '@heroicons/react/24/outline';
-import Image from 'next/image';
-import { MimeTypes } from '@/components/application_components/types';
 
+import { MimeTypes } from '@/components/application_components/types';
+import style from './FileUpload.module.css';
+import { Button } from '@/components/ui/button';
 export interface FileUploadProps {
     id: string;
     accept: string;
@@ -81,22 +82,38 @@ export function FileUpload({
                         console.log(e);
                     }}
                     size={maxSizeBytes}
-                >
-                    Upload
-                </input>
+                    style={{ display: 'none' }}
+                />
 
-                <div>
-                    <span>
+                <div className={style.inputContainer}>
+                    <Button
+                        variant={'default'}
+                        hierarchy={'primary'}
+                        type="button"
+                        role="button"
+                        onClick={() => {
+                            ref.current?.click();
+                        }}
+                    >
+                        Upload
+                    </Button>
+
+                    <span
+                        style={{
+                            fontSize: '12px',
+                            color: 'var(--text-secondary)',
+                        }}
+                    >
                         {accept
                             .split(',')
                             .map((item) => getMimeTypeName(item.trim()))
-                            .join(', ')}{' '}
+                            .join(', ')}
                         files up to {maxSize} MB
                     </span>
                 </div>
             </div>
 
-            <div>
+            <div className={style.uploadedItemContainer}>
                 {Object.entries(uploadedFiles).map(([key, value], index) => {
                     if (!value.file) {
                         return <></>;
@@ -108,18 +125,33 @@ export function FileUpload({
                     }
 
                     return (
-                        <div key={`${index}${key}`}>
-                            <span>{key}</span>
+                        <div
+                            key={`${index}${key}`}
+                            className={style.uploadedItem}
+                        >
+                            <span className={style.filename}>{key}</span>
 
                             <span>{getFileSize(value.file.size)}</span>
 
                             {isImage ? (
-                                <Image src={imageUrl} alt={`${key}`} />
+                                <img
+                                    src={imageUrl}
+                                    alt={`${key}`}
+                                    className={style.img}
+                                />
                             ) : (
-                                <DocumentIcon />
+                                <DocumentIcon style={{ width: '1.5rem' }} />
                             )}
 
-                            <XCircleIcon />
+                            <button role="button" type="button">
+                                <XCircleIcon
+                                    style={{ width: '1.5rem' }}
+                                    onClick={() => {
+                                        delete uploadedFiles[key];
+                                        setUploadedFiles({ ...uploadedFiles });
+                                    }}
+                                />
+                            </button>
                         </div>
                     );
                 })}
