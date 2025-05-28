@@ -431,7 +431,7 @@ export function useHackathon() {
                 setHackathon({
                     hackathonName: data.name,
                     id: data.id,
-                    applicationQuestionPages: data.applicationQuestions,
+                    applicationQuestionPages: data.applicationQuestions ?? [],
                     submissionQuestionPages: data.submissionQuestions ?? [],
                     submissionDeadline: dayjs(data.submissionDeadline),
                     judgeQuestions: data.judgeQuestions

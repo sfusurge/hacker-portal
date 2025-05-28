@@ -157,7 +157,7 @@ export interface QuestionFileUploads extends Question {
     allowMultiple: boolean;
     singleFileName?: string;
     maxSize: number; // in mbs
-    fileList?: File[];
+    fileList?: File[] | any[];
     fileLinks?: string[];
     fileUploadPath?: string; //path save the data, should !not! start with a slash
 }

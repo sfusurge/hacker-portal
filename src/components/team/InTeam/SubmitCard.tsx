@@ -19,6 +19,7 @@ import { useEffect, useState } from 'react';
 
 export function SubmitCard({ onShowSubmit }: { onShowSubmit: () => void }) {
     const { hackathon } = useHackathon();
+
     if (!hackathon || hackathon.startDate.isAfter(dayjs())) {
         // if current day is before hackathon start day, then submit is not available.
         return (

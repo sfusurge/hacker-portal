@@ -61,15 +61,8 @@ export default async function SubmitPage() {
                 </div>
 
                 <div className="flex flex-1 flex-col">
-                    <div className="flex-1 md:max-h-[calc(100vh-180px)] md:overflow-y-auto">
+                    <div className="flex-1 md:max-h-[calc(100vh)] md:overflow-y-auto">
                         <SubmitFormCard teamId={currentTeam?.id ?? -1} />
-                    </div>
-                    <div className="mt-4 flex w-full items-center justify-between">
-                        <div>Last Saved: Whenever</div>
-                        <SubmitButton
-                            teamId={currentTeam?.id}
-                            hackathonId={hackathon.id}
-                        />
                     </div>
                 </div>
             </div>

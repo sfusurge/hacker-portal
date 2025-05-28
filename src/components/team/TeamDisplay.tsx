@@ -9,7 +9,6 @@ import Image from 'next/image';
 import { UserData } from '@/server/routers/usersRouter';
 import { SubmitCard } from '@/components/team/InTeam/SubmitCard';
 import { useState } from 'react';
-import { SubmitFormCard } from '@/components/team/InTeam/SubmitFormCard';
 import { redirect } from 'next/navigation';
 type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
 type HackathonType = inferProcedureOutput<

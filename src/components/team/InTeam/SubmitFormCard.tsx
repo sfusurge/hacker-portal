@@ -9,6 +9,7 @@ import {
     processResponseForServer,
 } from '@/components/application_components/utils';
 import { hackathonAtom } from '@/hooks/use-hackathon';
+import { submitProject } from '@/lib/blobs';
 import { trpc } from '@/trpc/client';
 import { atom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
@@ -77,7 +78,7 @@ const submitWithLocalAtom = atom(
     }
 );
 
-export function SubmitFormCard({ teamId: _teamId }: { teamId: number }) {
+export function SubmitFormCard({ teamId }: { teamId: number }) {
     const submitData = useAtomValue(submitWithLocalAtom);
     const submitSubmission = trpc.submissions.submitSubmission.useMutation();
     return (
@@ -87,14 +88,20 @@ export function SubmitFormCard({ teamId: _teamId }: { teamId: number }) {
                 const processedPage = await processResponseForServer(
                     submitData.pages,
                     async (filename, file) => {
-                        ///
-                        return 'htttp://';
+                        const blob = await submitProject({
+                            fileName: filename,
+                            fileContent: file,
+                            onUploadProgress: (e) => {},
+                            contentType: file.type,
+                            teamId,
+                        });
+                        return blob.url;
                     }
                 );
 
                 const response = getResponseMap(processedPage);
                 submitSubmission.mutate({
-                    teamId: _teamId,
+                    teamId,
                     response,
                 });
             }}

@@ -22,7 +22,7 @@ export async function processResponseForServer(
                     if (!question.allowMultiple && question.singleFileName) {
                         filename = `${question.singleFileName}${filename.slice(filename.lastIndexOf('.'))}`;
                     }
-                    const uploadedUrl = uploadCallback(filename, f);
+                    const uploadedUrl = await uploadCallback(filename, f);
 
                     if (uploadedUrl) {
                         if (!question.fileLinks) {
