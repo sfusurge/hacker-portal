@@ -52,3 +52,8 @@ export const insertSubmissionSchema = createInsertSchema(submissions).pick({
 export const getSubmissionQuestionsSchema = z.object({
     hackathonId: z.number().int(),
 });
+
+export const getHasSubmissionSchema = z.object({
+    userId: z.number().int(),
+    hackathonId: z.number().int(),
+});

@@ -8,6 +8,11 @@ import { AppRouter } from '@/server/appRouter';
 import Image from 'next/image';
 import SubmissionCountdown from '@/components/team/InTeam/SubmissionCountdown';
 import { UserData } from '@/server/routers/usersRouter';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { redirect } from 'next/navigation';
+import { ArrowRightIcon } from 'lucide-react';
+import * as React from 'react';
 type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
 type HackathonType = inferProcedureOutput<
     AppRouter['hackathons']['getActiveHackathon']
@@ -69,9 +74,27 @@ export default function TeamDisplay({
                     />
                     <InviteCard teamId={currentTeam.displayId} />
 
-                    <SubmissionCountdown
-                        targetDate={new Date('2025-05-28T23:59:00-08:00')}
-                    />
+                    <Card>
+                        <CardContent>
+                            <SubmissionCountdown
+                                targetDate={
+                                    new Date('2025-05-28T23:59:00-08:00')
+                                }
+                            />
+                            <Button
+                                size="cozy"
+                                variant="brand"
+                                hierarchy="primary"
+                                className="hidden md:block"
+                                onClick={() => redirect('/team/submit')}
+                                trailingIconChild={
+                                    <ArrowRightIcon className="inline-flex h-4 w-4" />
+                                }
+                            >
+                                Start Project
+                            </Button>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </div>
