@@ -31,7 +31,6 @@ export function ScoreSection({
                 type="single"
                 value={value}
                 onValueChange={(value) => onChange(category, value)}
-                className={hasError ? 'ring-danger-500 rounded-md ring-1' : ''}
             >
                 {[1, 2, 3, 4, 5].map((num) => (
                     <ToggleGroupItem

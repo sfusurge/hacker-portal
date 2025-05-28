@@ -30,6 +30,9 @@ export interface HackathonData {
     submissionDeadline: dayjs.Dayjs;
     startDate: dayjs.Dayjs;
     endDate: dayjs.Dayjs;
+
+    judgeQuestions: JudgeQuestion[];
+    judgeRubric: SubmissionJudgeRubric[];
 }
 
 export interface InputFormData {
@@ -172,21 +175,65 @@ export interface QuestionDatePicker extends Question {
     value?: string;
 }
 
-const submitTemplate: InputFormPageData[] = [
-    {
-        title: 'Test page',
-        description: 'yeah yeah yeah',
-        questions: [
-            {
-                type: 'file-upload',
-                allowedTypes: ['image/jpeg', 'image/png'],
-                allowMultiple: false,
-                fileUploadPath: 'test inner',
-                maxSize: 5,
-                questionId: 1,
-                title: 'test file upload',
-                description: 'blah blah',
-            },
-        ],
-    },
-];
+export interface JudgeQuestion extends Question {
+    type: 'judge-question';
+    value?: number;
+    min?: number;
+    max?: number;
+}
+
+export interface SubmissionJudgeRubric {
+    questionId: number;
+    title: string;
+    description: string[];
+    rubric: {
+        [score: string]: string[];
+    };
+}
+
+// Judging form types
+export type ScoreItem = {
+    questionId: number;
+    title: string;
+    description?: string;
+};
+
+export interface ScoreGroupQuestion {
+    type: 'score-group';
+    questionId: number;
+    title: string;
+    required: boolean;
+    description?: string;
+    items: ScoreItem[];
+}
+
+export interface MultipleChoiceQuestion {
+    type: 'multiple-choice';
+    questionId: number;
+    title: string;
+    required: boolean;
+    description?: string;
+    choices: {
+        id: string;
+        name: string;
+        data: string;
+    }[];
+}
+
+export interface TextAreaQuestion {
+    type: 'text-area';
+    questionId: number;
+    title: string;
+    required: boolean;
+    description?: string;
+    placeholder?: string;
+}
+
+export type JudgingFormQuestion =
+    | ScoreGroupQuestion
+    | MultipleChoiceQuestion
+    | TextAreaQuestion;
+
+export interface FormResponse {
+    [key: string]: string | null;
+}

@@ -14,8 +14,8 @@ import type {
     QuestionNameInput,
     QuestionFileUploads,
 } from './types';
-import style from './ReviewPage.module.css';
-import { CSSProperties, useMemo } from 'react';
+import style from './InputForm.module.css';
+import { useMemo, useEffect, CSSProperties } from 'react';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { Card, CardContent } from '@/components/ui/card';
 import { DocumentIcon } from '@heroicons/react/20/solid';

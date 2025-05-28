@@ -46,9 +46,9 @@ export default async function SubmitPage() {
     // console.log(presignurl)
 
     return (
-        <div className="flex w-full flex-col items-center justify-center">
+        <div className="flex w-full flex-col gap-6 md:flex-row md:items-start">
             <div className="flex w-full flex-col gap-6 md:flex-row">
-                <div className="flex max-w-1/4 flex-col gap-8">
+                <div className="flex max-w-1/4 flex-col gap-8 md:self-start">
                     <SubmissionInfoCard
                         date={'May 28, 2025'}
                         time={'11:59pm'}
@@ -59,12 +59,14 @@ export default async function SubmitPage() {
                     />
                 </div>
 
-                <div className="flex-1 md:max-h-[calc(100vh-120px)] md:overflow-y-auto">
-                    <SubmissionCard
-                        questions={questions}
-                        teamId={currentTeam?.id}
-                        hackathonId={hackathon.id}
-                    />
+                <div className="flex flex-1 flex-col">
+                    <div className="flex-1 md:max-h-[calc(100vh-180px)] md:overflow-y-auto">
+                        <SubmissionCard
+                            questions={questions}
+                            teamId={currentTeam?.id}
+                            hackathonId={hackathon.id}
+                        />
+                    </div>
                     <div className="mt-4 flex w-full items-center justify-between">
                         <div>Last Saved: Whenever</div>
                         <SubmitButton

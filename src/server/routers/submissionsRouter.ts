@@ -7,13 +7,13 @@ import {
     submissions,
     submissionStatusEnum,
     SubmissionStatusEnumType,
+    getHasSubmissionSchema,
 } from '@/db/schema/submissions';
 import { hackathons } from '@/db/schema/hackathons';
-import { eq, getTableColumns } from 'drizzle-orm';
-import { Z } from 'vitest/dist/chunks/reporters.nr4dxCkA.js';
+
+import { and, eq, getTableColumns } from 'drizzle-orm';
 import { z } from 'zod';
 import { getUserData } from '@/server/routers/usersRouter';
-import { teams } from '@/db/schema/teams';
 import { members } from '@/db/schema/members';
 
 export interface SubmitSubmissionResponse {
@@ -101,6 +101,40 @@ export const submissionsRouter = router({
                 response: submission.response as Record<string, unknown>,
                 createdDate: submission.createdDate,
                 currentStatus: submission.currentStatus,
+            };
+        }),
+    getHasSubmissions: publicProcedure
+        .input(getHasSubmissionSchema)
+        .query(async ({ input }) => {
+            const { userId, hackathonId } = input;
+
+            // Step 1: Find the user's team
+            const membership = await databaseClient
+                .select({ teamId: members.teamId })
+                .from(members)
+                .where(eq(members.userId, userId))
+                .limit(1);
+
+            if (membership.length === 0) {
+                return { hasSubmission: false };
+            }
+
+            const teamId = membership[0].teamId;
+
+            // Step 2: Check for submission by that team to the given hackathon
+            const submission = await databaseClient
+                .select()
+                .from(submissions)
+                .where(
+                    and(
+                        eq(submissions.teamId, teamId),
+                        eq(submissions.hackathonId, hackathonId)
+                    )
+                )
+                .limit(1);
+
+            return {
+                hasSubmission: submission.length > 0,
             };
         }),
 

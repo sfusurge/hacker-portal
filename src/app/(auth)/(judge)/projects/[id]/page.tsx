@@ -6,6 +6,7 @@ import { projectsData } from '../projects';
 import { SectionRenderer } from '@/components/projects/ProjectSection';
 import { createCaller } from '@/server/appRouter';
 import { getUserData } from '@/server/routers/usersRouter';
+import slugify from '@/utils/slugify';
 interface PageProps {
     params: {
         id: string;
@@ -43,7 +44,6 @@ const projectSections = [
         type: 'pdf',
         title: 'Process Documentation',
         url: 'https://pub-65990e7b450b4832886d09e5cef12aff.r2.dev/SparkJam%20Submission%20Form.pdf',
-        // url: 'https://file-examples.com/storage/fe36a1c5cf349bfec90f9e0/2017/10/file-sample_150kB.pdf',
     },
     {
         type: 'text',
@@ -65,8 +65,9 @@ const projectSections = [
 export default async function ProjectPage({ params }: PageProps) {
     const { id } = await params;
 
-    // TODO: select project from route
-    const project = projectsData.find((p) => p[0] === id);
+    // TODO: Route to team name or team display Id or add team identifer
+    const decodedId = slugify(id);
+    const project = projectsData.find((p) => slugify(p[1]) === decodedId);
 
     if (!project) {
         return (
@@ -90,7 +91,7 @@ export default async function ProjectPage({ params }: PageProps) {
     return (
         <div className="grid h-full grid-cols-1 xl:grid-cols-3">
             <div className="h-full overflow-y-auto pb-20 xl:col-span-2">
-                <div className="flex flex-col gap-10 pr-6 xl:pr-10">
+                <div className="flex flex-col gap-10 md:pr-6 xl:pr-10">
                     {projectSections.map((section, index) => (
                         <SectionRenderer
                             key={index}
@@ -101,12 +102,12 @@ export default async function ProjectPage({ params }: PageProps) {
                 </div>
             </div>
 
-            <div className="relative -m-10 mr-0 mb-0 ml-0 h-[-webkit-fill-available] h-[fill-available] overflow-hidden bg-neutral-900 py-10 xl:-mr-10 xl:-mb-10">
-                <div className="mb-10 h-full w-[-webkit-fill-available] w-[fill-available] overflow-y-auto p-6 py-0 xl:col-span-1 xl:p-10 xl:py-0">
+            <div className="h-fill relative m-0 overflow-hidden bg-neutral-900 pt-10 pb-0 xl:-mt-10 xl:-mr-10 xl:-mb-10 xl:py-10">
+                <div className="w-fill mb-16 h-full overflow-y-auto p-6 py-0 xl:col-span-1 xl:p-10 xl:py-0">
                     <JudgingForm
                         hackathonId={hackathonId}
                         user={user}
-                        projectId={id}
+                        teamId={Number(project[0])}
                         projectTitle={project[1]}
                     />
                 </div>

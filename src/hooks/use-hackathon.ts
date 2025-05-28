@@ -1,6 +1,7 @@
 import {
-    InputFormPageData,
     HackathonData,
+    JudgeQuestion,
+    SubmissionJudgeRubric,
 } from '@/components/application_components/types';
 import { trpc } from '@/trpc/client';
 import dayjs from 'dayjs';
@@ -431,6 +432,12 @@ export function useHackathon() {
                     applicationQuestionPages: data.applicationQuestions,
                     submissionQuestionPages: data.submissionQuestions ?? [],
                     submissionDeadline: dayjs(data.submissionDeadline),
+                    judgeQuestions: data.judgeQuestions
+                        ? (data.judgeQuestions as JudgeQuestion[])
+                        : [],
+                    judgeRubric: data.judgeRubric
+                        ? (data.judgeRubric as SubmissionJudgeRubric[])
+                        : [],
                     startDate: dayjs(data.startDate),
                     endDate: dayjs(data.endDate),
                     version: 1,

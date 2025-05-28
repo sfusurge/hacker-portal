@@ -13,7 +13,7 @@ import { useState, useEffect } from 'react';
 import { trpc } from '@/trpc/client';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { cn } from '@/lib/utils';
-import style from '@/app/(auth)/application/application_components/ApplicationForm.module.css';
+import style from '@/components/application_components/InputForm.module.css';
 
 export default function SubmitButton({
     teamId,
