@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useHackathon } from '@/hooks/use-hackathon';
 import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
 import {
     Dialog,
     DialogContent,
@@ -17,7 +16,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-
 import TeamView from '@/components/projects/judge/scoring/TeamView';
 import JudgeView from '@/components/projects/judge/scoring/JudgeView';
 import ScoreView from '@/components/projects/judge/scoring/ScoreView';
@@ -243,7 +241,7 @@ export default function JudgeAssignmentPage() {
     };
 
     return (
-        <Card className="mb-20 h-max pb-0 md:pb-20">
+        <Card className="h-max pb-20 md:pb-0">
             <CardHeader>
                 <CardTitle className="text-2xl font-bold">
                     Judge Project Assignment
@@ -256,7 +254,7 @@ export default function JudgeAssignmentPage() {
                     </div>
                 ) : (
                     <>
-                        <div className="mb-4 flex justify-between">
+                        <div className="flex justify-between">
                             <h2 className="text-xl">
                                 Assignments for{' '}
                                 {hackathon?.hackathonName ||
@@ -279,7 +277,7 @@ export default function JudgeAssignmentPage() {
                         </div>
 
                         <Tabs defaultValue="teams">
-                            <TabsList className="mb-4">
+                            <TabsList className="mb-2">
                                 <TabsTrigger value="teams">
                                     Teams View
                                 </TabsTrigger>
@@ -293,6 +291,7 @@ export default function JudgeAssignmentPage() {
 
                             <TabsContent value="teams">
                                 <TeamView
+                                    filteredJudges={filteredJudges}
                                     filteredTeams={filteredTeams}
                                     assignments={assignments}
                                     judges={judges}
@@ -312,6 +311,7 @@ export default function JudgeAssignmentPage() {
                             <TabsContent value="judges">
                                 <JudgeView
                                     filteredJudges={filteredJudges}
+                                    filteredTeams={filteredTeams}
                                     assignments={assignments}
                                     teams={teams}
                                     judgeSearchQuery={judgeSearchQuery}
@@ -324,7 +324,6 @@ export default function JudgeAssignmentPage() {
                                     }
                                     assigning={assigning}
                                     isProjectAssigned={isProjectAssigned}
-                                    filteredTeams={filteredTeams}
                                 />
                             </TabsContent>
 

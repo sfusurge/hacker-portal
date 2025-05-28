@@ -62,6 +62,7 @@ function SubmitCardContent({
                     variant={'brand'}
                     hierarchy={'primary'}
                     style={{ width: 'fit-content', marginLeft: 'auto' }}
+                    size="cozy"
                 >
                     Loading...
                 </Button>
@@ -74,6 +75,7 @@ function SubmitCardContent({
                     onClick={onShowSubmit}
                     variant={'caution'}
                     hierarchy={'primary'}
+                    size="cozy"
                     style={{ width: 'fit-content', marginLeft: 'auto' }}
                     trailingIconChild={
                         <ArrowRightIcon
@@ -89,6 +91,7 @@ function SubmitCardContent({
         return (
             <Button
                 onClick={onShowSubmit}
+                size="cozy"
                 variant={'brand'}
                 hierarchy={'primary'}
                 style={{ width: 'fit-content', marginLeft: 'auto' }}
@@ -130,7 +133,7 @@ function SubmitCardContent({
     }
 
     return (
-        <Card>
+        <Card className="h-full">
             <CardHeader>
                 <CardHeaderColumn>
                     <CardHeaderTitle>Submit Your Project</CardHeaderTitle>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -32,6 +32,7 @@ import {
     JudgingFormQuestion,
     FormResponse,
 } from '@/components/application_components/types';
+
 interface JudgingFormProps {
     teamId: number;
     projectTitle?: string;
@@ -72,15 +73,17 @@ export default function JudgingForm({
     const [formErrors, setFormErrors] = useAtom(formErrorsAtom);
     const [questions, setQuestions] = useAtom(questionsAtom);
     const [formState, setFormState] = useAtom(formStateAtom);
-    const [isFormValid, setIsFormValid] = useState(false);
 
+    const [isFormValid, setIsFormValid] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [dontShowAgain, setDontShowAgain] = useState(false);
     const [isRubricOpen, setIsRubricOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [isInitialized, setIsInitialized] = useState(false);
 
     const formRef = useRef<HTMLFormElement>(null);
+    const validationTimeoutRef = useRef<NodeJS.Timeout>();
     const { toast } = useToast();
     const router = useRouter();
 
@@ -89,155 +92,8 @@ export default function JudgingForm({
         teamId,
     });
 
-    const updateStatusInLocalStorage = (
-        status: 'in_progress' | 'completed'
-    ) => {
-        try {
-            const statusData = localStorage.getItem(STATUS_KEY);
-            const existingStatus = statusData ? JSON.parse(statusData) : {};
-            existingStatus[teamId] = status;
-            localStorage.setItem(STATUS_KEY, JSON.stringify(existingStatus));
-        } catch (error) {
-            console.error('Error saving status data:', error);
-        }
-    };
-
-    const getUserData = () => {
-        setJudgingData((prevData) => ({
-            ...prevData,
-            email: user!.email,
-            hackathonId,
-        }));
-    };
-
-    const updateFormState = (questionId: string, value: string | null) => {
-        setFormState((prev: any) => {
-            const updated = {
-                ...prev,
-                [questionId]: value,
-            };
-
-            setJudgingData((prevData) => ({
-                ...prevData,
-                responses: {
-                    ...prevData.responses,
-                    [teamId]: updated,
-                },
-            }));
-
-            setTimeout(() => validateForm(), 100);
-
-            return updated;
-        });
-    };
-
-    const handleScoreChange = (questionId: string, value: string) => {
-        updateFormState(questionId.toString(), value);
-    };
-
-    const createJudgeScore = trpc.judging.submitJudgingScore.useMutation({
-        onSuccess: () => {
-            toast({
-                title: 'Success!',
-                description: `Your evaluation for the project ${projectTitle} has been submitted.`,
-                variant: 'success',
-            });
-            router.push('/projects');
-        },
-        onError: (error) => {
-            toast({
-                title: 'Error',
-                description: `Error submission: ${error.message}`,
-                variant: 'default',
-                icon: <ExclamationCircleIcon />,
-            });
-        },
-    });
-
-    const renderFormSection = (section: JudgingFormQuestion) => {
-        switch (section.type) {
-            case 'score-group':
-                return (
-                    <div key={section.title} className="space-y-6">
-                        {section.items.map((item: ScoreItem) => (
-                            <div key={item.questionId}>
-                                <ScoreSection
-                                    title={item.title}
-                                    category={item.questionId.toString()}
-                                    value={
-                                        formState[item.questionId.toString()] ||
-                                        ''
-                                    }
-                                    onChange={handleScoreChange}
-                                    required={section.required}
-                                    hasError={
-                                        formErrors[`score_${item.questionId}`]
-                                    }
-                                />
-                            </div>
-                        ))}
-                    </div>
-                );
-            case 'multiple-choice':
-                return (
-                    <div>
-                        <CheckboxSection
-                            key={section.questionId}
-                            title={section.title}
-                            description={section.description}
-                            options={section.choices.map((choice) => ({
-                                id: choice.id,
-                                label: choice.name,
-                                value: choice.data,
-                            }))}
-                            selectedValue={
-                                formState[
-                                    section.questionId.toString()
-                                ] as string
-                            }
-                            onChange={(value) =>
-                                updateFormState(
-                                    section.questionId.toString(),
-                                    value
-                                )
-                            }
-                            required={section.required}
-                            hasError={
-                                formErrors[`choice_${section.questionId}`]
-                            }
-                        />
-                    </div>
-                );
-            case 'text-area':
-                return (
-                    <div>
-                        <TextAreaSection
-                            key={section.questionId}
-                            title={section.title}
-                            value={
-                                formState[section.questionId.toString()] || ''
-                            }
-                            onChange={(value) =>
-                                updateFormState(
-                                    section.questionId.toString(),
-                                    value
-                                )
-                            }
-                            required={section.required}
-                            placeholder={section.placeholder}
-                            hasError={
-                                formErrors[`textarea_${section.questionId}`]
-                            }
-                        />
-                    </div>
-                );
-            default:
-                return null;
-        }
-    };
-
-    const validateForm = (): boolean => {
-        if (!formRef.current) return false;
+    const validateForm = useCallback((): boolean => {
+        if (!formRef.current || questions.length === 0) return false;
 
         const errors: Record<string, boolean> = {};
         let isValid = true;
@@ -264,37 +120,211 @@ export default function JudgingForm({
         setFormErrors(errors);
         setIsFormValid(isValid);
         return isValid;
-    };
+    }, [formState, questions, setFormErrors]);
 
-    const handleSubmitClick = (e: React.FormEvent) => {
-        e.preventDefault();
+    const debouncedValidateForm = useCallback(() => {
+        if (validationTimeoutRef.current) {
+            clearTimeout(validationTimeoutRef.current);
+        }
+        validationTimeoutRef.current = setTimeout(() => {
+            validateForm();
+        }, 100);
+    }, [validateForm]);
 
-        if (validateForm()) {
-            const skipDialog =
-                localStorage.getItem(DONT_SHOW_DIALOG_KEY) === 'true';
-            if (skipDialog) {
-                handleConfirmSubmit();
-            } else {
-                setIsDialogOpen(true);
+    const updateStatusInLocalStorage = useCallback(
+        (status: 'in_progress' | 'completed') => {
+            try {
+                const statusData = localStorage.getItem(STATUS_KEY);
+                const existingStatus = statusData ? JSON.parse(statusData) : {};
+                existingStatus[teamId] = status;
+                localStorage.setItem(
+                    STATUS_KEY,
+                    JSON.stringify(existingStatus)
+                );
+            } catch (error) {
+                console.error('Error saving status data:', error);
             }
-        } else {
+        },
+        [teamId]
+    );
+
+    const updateFormState = useCallback(
+        (questionId: string, value: string | null) => {
+            setFormState((prev: FormResponse) => {
+                const updated = {
+                    ...prev,
+                    [questionId]: value,
+                };
+
+                setJudgingData((prevData) => ({
+                    ...prevData,
+                    responses: {
+                        ...prevData.responses,
+                        [teamId]: updated,
+                    },
+                }));
+
+                return updated;
+            });
+
+            debouncedValidateForm();
+        },
+        [setFormState, setJudgingData, teamId, debouncedValidateForm]
+    );
+
+    const handleScoreChange = useCallback(
+        (questionId: string, value: string) => {
+            updateFormState(questionId.toString(), value);
+        },
+        [updateFormState]
+    );
+
+    const createJudgeScore = trpc.judging.submitJudgingScore.useMutation({
+        onSuccess: () => {
+            updateStatusInLocalStorage('completed');
             toast({
-                title: 'Form Incomplete',
-                description:
-                    'Please fill in all required fields before submitting.',
+                title: 'Success!',
+                description: `Your evaluation for the project ${projectTitle} has been submitted.`,
+                variant: 'success',
+            });
+            router.push('/projects');
+        },
+        onError: (error) => {
+            toast({
+                title: 'Error',
+                description: `Error submission: ${error.message}`,
                 variant: 'default',
                 icon: <ExclamationCircleIcon />,
             });
-        }
-    };
+        },
+    });
 
-    const handleConfirmSubmit = async () => {
+    const renderFormSection = useCallback(
+        (section: JudgingFormQuestion) => {
+            switch (section.type) {
+                case 'score-group':
+                    return (
+                        <div key={section.title} className="space-y-6">
+                            {section.items?.map((item: ScoreItem) => (
+                                <div key={item.questionId}>
+                                    <ScoreSection
+                                        title={item.title}
+                                        category={item.questionId.toString()}
+                                        value={
+                                            formState[
+                                                item.questionId.toString()
+                                            ] || ''
+                                        }
+                                        onChange={handleScoreChange}
+                                        required={section.required}
+                                        hasError={
+                                            formErrors[
+                                                `score_${item.questionId}`
+                                            ]
+                                        }
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    );
+                case 'multiple-choice':
+                    return (
+                        <div key={section.questionId}>
+                            <CheckboxSection
+                                title={section.title}
+                                description={section.description}
+                                options={
+                                    section.choices?.map((choice) => ({
+                                        id: choice.id,
+                                        label: choice.name,
+                                        value: choice.data,
+                                    })) || []
+                                }
+                                selectedValue={
+                                    formState[
+                                        section.questionId.toString()
+                                    ] as string
+                                }
+                                onChange={(value) =>
+                                    updateFormState(
+                                        section.questionId.toString(),
+                                        value
+                                    )
+                                }
+                                required={section.required}
+                                hasError={
+                                    formErrors[`choice_${section.questionId}`]
+                                }
+                            />
+                        </div>
+                    );
+                case 'text-area':
+                    return (
+                        <div key={section.questionId}>
+                            <TextAreaSection
+                                title={section.title}
+                                value={
+                                    formState[section.questionId.toString()] ||
+                                    ''
+                                }
+                                onChange={(value) =>
+                                    updateFormState(
+                                        section.questionId.toString(),
+                                        value
+                                    )
+                                }
+                                required={section.required}
+                                placeholder={section.placeholder}
+                                hasError={
+                                    formErrors[`textarea_${section.questionId}`]
+                                }
+                            />
+                        </div>
+                    );
+                default:
+                    return null;
+            }
+        },
+        [formState, formErrors, handleScoreChange, updateFormState]
+    );
+
+    const handleSubmitClick = useCallback(
+        (e: React.FormEvent) => {
+            e.preventDefault();
+
+            if (validateForm()) {
+                const skipDialog =
+                    localStorage.getItem(DONT_SHOW_DIALOG_KEY) === 'true';
+                if (skipDialog) {
+                    handleConfirmSubmit();
+                } else {
+                    setIsDialogOpen(true);
+                }
+            } else {
+                toast({
+                    title: 'Form Incomplete',
+                    description:
+                        'Please fill in all required fields before submitting.',
+                    variant: 'default',
+                    icon: <ExclamationCircleIcon />,
+                });
+            }
+        },
+        [validateForm, toast]
+    );
+
+    const handleConfirmSubmit = useCallback(async () => {
         if (dontShowAgain) {
-            localStorage.setItem(DONT_SHOW_DIALOG_KEY, 'true');
+            try {
+                localStorage.setItem(DONT_SHOW_DIALOG_KEY, 'true');
+            } catch (error) {
+                console.error('Error saving dialog preference:', error);
+            }
         }
 
         setIsDialogOpen(false);
         setIsSubmitting(true);
+
         try {
             await createJudgeScore.mutateAsync({
                 hackathonId: hackathonId,
@@ -302,9 +332,6 @@ export default function JudgingForm({
                 userId: user.id,
                 response: formState,
             });
-
-            updateStatusInLocalStorage('completed');
-            router.push('/projects');
         } catch (error) {
             console.error('Error submitting evaluation:', error);
             toast({
@@ -316,28 +343,52 @@ export default function JudgingForm({
         } finally {
             setIsSubmitting(false);
         }
-    };
+    }, [
+        dontShowAgain,
+        createJudgeScore,
+        hackathonId,
+        teamId,
+        user.id,
+        formState,
+        toast,
+    ]);
 
     useEffect(() => {
-        const dontShowDialogPreference =
-            localStorage.getItem(DONT_SHOW_DIALOG_KEY);
-        if (dontShowDialogPreference === 'true') {
-            setDontShowAgain(true);
+        if (!isInitialized && user?.email) {
+            setJudgingData((prevData) => ({
+                ...prevData,
+                email: user.email,
+                hackathonId,
+            }));
+
+            try {
+                const dontShowDialogPreference =
+                    localStorage.getItem(DONT_SHOW_DIALOG_KEY);
+                if (dontShowDialogPreference === 'true') {
+                    setDontShowAgain(true);
+                }
+            } catch (error) {
+                console.error('Error loading dialog preference:', error);
+            }
+
+            setIsInitialized(true);
         }
-    }, []);
+    }, [user?.email, hackathonId, setJudgingData, isInitialized]);
 
     useEffect(() => {
-        if (hackathonLoaded && hackathon) {
+        if (hackathonLoaded && hackathon && isInitialized) {
             const judgeQuestions = hackathon.judgeQuestions || [];
             setQuestions(judgeQuestions as unknown as JudgingFormQuestion[]);
 
             const savedFormState = judgingData.responses?.[teamId];
-            if (!savedFormState) {
+
+            if (savedFormState && Object.keys(savedFormState).length > 0) {
+                setFormState(savedFormState);
+            } else {
                 const initialState: FormResponse = {};
                 judgeQuestions.forEach((section: any) => {
                     if (section.type === 'score-group') {
-                        if (!section.items) return;
-                        section.items.forEach((item: any) => {
+                        section.items?.forEach((item: any) => {
                             initialState[item.questionId.toString()] = '';
                         });
                     } else {
@@ -345,65 +396,43 @@ export default function JudgingForm({
                     }
                 });
                 setFormState(initialState);
-            } else {
-                setFormState(savedFormState);
             }
-            setIsLoading(false);
 
-            setTimeout(() => validateForm(), 0);
+            setIsLoading(false);
         }
     }, [
         hackathonLoaded,
         hackathon,
-        teamId,
+        isInitialized,
         judgingData.responses,
-        setFormState,
+        teamId,
         setQuestions,
+        setFormState,
     ]);
 
     useEffect(() => {
-        const savedData = localStorage.getItem(JUDGING_DATA_KEY);
-        if (savedData) {
-            const parsedData = JSON.parse(savedData);
-            setJudgingData(parsedData);
-            if (parsedData.responses && parsedData.responses[teamId]) {
-                setFormState(parsedData.responses[teamId]);
-
-                setTimeout(() => validateForm(), 0);
-            }
+        if (didJudge !== undefined) {
+            updateStatusInLocalStorage(didJudge ? 'completed' : 'in_progress');
         }
-
-        getUserData();
-
-        const statusData = localStorage.getItem(STATUS_KEY);
-        const existingStatus = statusData ? JSON.parse(statusData) : {};
-
-        if (existingStatus[teamId] !== 'completed') {
-            try {
-                existingStatus[teamId] = 'in_progress';
-                localStorage.setItem(
-                    STATUS_KEY,
-                    JSON.stringify(existingStatus)
-                );
-            } catch (error) {
-                console.error('Error saving status data:', error);
-            }
-        }
-
-        setIsLoading(false);
-    }, [teamId, user, hackathonId]);
+    }, [didJudge, updateStatusInLocalStorage]);
 
     useEffect(() => {
-        if (didJudge) {
-            updateStatusInLocalStorage('completed');
-        } else {
-            updateStatusInLocalStorage('in_progress');
+        if (
+            !isLoading &&
+            questions.length > 0 &&
+            Object.keys(formState).length > 0
+        ) {
+            debouncedValidateForm();
         }
-    }, [didJudge]);
+    }, [formState, questions, isLoading, debouncedValidateForm]);
 
     useEffect(() => {
-        validateForm();
-    }, [formState, questions]);
+        return () => {
+            if (validationTimeoutRef.current) {
+                clearTimeout(validationTimeoutRef.current);
+            }
+        };
+    }, []);
 
     return (
         <>
@@ -413,33 +442,6 @@ export default function JudgingForm({
                 </div>
             ) : (
                 <div className="relative">
-                    {didJudge && (
-                        <>
-                            <div className="absolute inset-0 z-40 bg-neutral-900/70 select-none"></div>
-
-                            <div className="items pointer-events-none sticky top-10 z-50 -mb-40 flex justify-center">
-                                <div className="pointer-events-auto flex w-full max-w-md flex-col items-center justify-center gap-1 rounded-xl bg-neutral-800/90 p-6 text-center shadow-lg">
-                                    <h2 className="text-2xl font-semibold text-white">
-                                        Already Judged
-                                    </h2>
-                                    <p className="text-white/60">
-                                        You have already submitted your
-                                        evaluation.
-                                    </p>
-                                    <Button
-                                        variant="brand"
-                                        hierarchy="primary"
-                                        size="cozy"
-                                        className="mt-2"
-                                        onClick={() => router.push('/projects')}
-                                    >
-                                        Return to projects
-                                    </Button>
-                                </div>
-                            </div>
-                        </>
-                    )}
-
                     <form
                         ref={formRef}
                         onSubmit={handleSubmitClick}
@@ -460,8 +462,8 @@ export default function JudgingForm({
                             ))}
                         </div>
 
-                        <div className="sticky bottom-0 left-0 z-10 -mx-6 bg-neutral-800/60 px-10 py-6 xl:-mx-10">
-                            <div className="mx-auto flex w-full max-w-md flex-col items-start justify-between gap-4">
+                        <div className="sticky bottom-0 left-0 z-10 -mx-6 bg-neutral-800/60 px-10 py-6 backdrop-blur-lg xl:-mx-10">
+                            <div className="mx-auto flex w-full max-w-md flex-col items-center justify-between gap-4">
                                 <div className="grid w-full grid-cols-2 gap-4">
                                     <Button
                                         type="button"
@@ -499,6 +501,12 @@ export default function JudgingForm({
                                         )}
                                     </Button>
                                 </div>
+                                {!!didJudge && (
+                                    <p className="text-center">
+                                        Your evaluation for this project has
+                                        been submitted.
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </form>

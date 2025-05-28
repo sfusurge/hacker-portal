@@ -14,7 +14,6 @@ import { trpc } from '@/trpc/client';
 
 type UserType = InferSelectModel<typeof user>;
 
-// Extended props for the placeholder
 interface TeammateItemProps extends Partial<UserType> {
     name?: string;
     image?: string;

@@ -21,7 +21,6 @@ const Label = React.forwardRef<
             [style.required]: required,
         })}
         {...props}
-        style={{ color: 'white' }}
     />
 ));
 Label.displayName = LabelPrimitive.Root.displayName;

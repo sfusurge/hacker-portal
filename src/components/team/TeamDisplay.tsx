@@ -67,17 +67,18 @@ export default function TeamDisplay({
             </div>
 
             <div className="flex flex-col gap-4">
-                <div className="grid grid-cols-1 gap-6 pb-24 md:pb-0 xl:grid-cols-[1fr_clamp(29rem,33vw,30.5rem)]">
-                    <TeamList
-                        currentUserEmail={user!.email}
-                        team={currentTeam}
-                    />
-                    <InviteCard teamId={currentTeam.displayId} />
+                <div className="grid grid-cols-1 gap-6 pb-24 md:pb-0 xl:grid-cols-2">
+                    {/* <div className="grid grid-cols-1 gap-6 pb-24 md:pb-0 xl:grid-cols-[1fr_clamp(29rem,33vw,30.5rem)]"> */}
                     <SubmitCard
                         onShowSubmit={() => {
                             redirect('/team/submit');
                         }}
                     />
+                    <TeamList
+                        currentUserEmail={user!.email}
+                        team={currentTeam}
+                    />
+                    <InviteCard teamId={currentTeam.displayId} />
                 </div>
             </div>
         </div>
