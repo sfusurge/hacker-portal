@@ -12,7 +12,9 @@ import { NumberInput } from '@/components/application_components/InputFormCompon
 import { TextAreaInput } from '@/components/application_components/InputFormComponents/TextAreaInput';
 import { TextLineInput } from '@/components/application_components/InputFormComponents/TextLineInput';
 
+// Store files separately from other form data
 export const formDataAtom = atom<Record<string, any>>({});
+export const formFilesAtom = atom<Record<string, File[]>>({});
 export const isSubmittingAtom = atom(false);
 export const submitSuccessAtom = atom(false);
 export const submitErrorAtom = atom<string | null>(null);
@@ -41,6 +43,7 @@ export const createQuestionAtom = (question: any) => {
 export const initializeFormData = (questions: any[]) => {
     const questionsList = questions[0]?.questions || [];
     const initialData: Record<string, any> = {};
+    const initialFiles: Record<string, File[]> = {};
 
     questionsList.forEach((question: any) => {
         if (question.type === 'multiple-checkbox') {
@@ -48,13 +51,14 @@ export const initializeFormData = (questions: any[]) => {
         } else if (question.type === 'checkbox') {
             initialData[question.questionId] = false;
         } else if (question.type === 'file-upload') {
-            initialData[question.questionId] = [];
+            initialData[question.questionId] = []; // Store file names for display
+            initialFiles[question.questionId] = []; // Store actual File objects
         } else {
             initialData[question.questionId] = '';
         }
     });
 
-    return initialData;
+    return { initialData, initialFiles };
 };
 
 export default function SubmissionForm({ questions }: { questions: any[] }) {
@@ -62,14 +66,17 @@ export default function SubmissionForm({ questions }: { questions: any[] }) {
     const formRef = useRef<HTMLFormElement>(null);
 
     const [formData, setFormData] = useAtom(formDataAtom);
+    const [formFiles, setFormFiles] = useAtom(formFilesAtom);
     const [submitSuccess] = useAtom(submitSuccessAtom);
     const [submitError] = useAtom(submitErrorAtom);
 
     useEffect(() => {
         if (Object.keys(formData).length === 0) {
-            setFormData(initializeFormData(questions));
+            const { initialData, initialFiles } = initializeFormData(questions);
+            setFormData(initialData);
+            setFormFiles(initialFiles);
         }
-    }, [questions, formData, setFormData]);
+    }, [questions, formData, setFormData, setFormFiles]);
 
     // Create question atoms for each question
     const questionAtoms = React.useMemo(() => {
@@ -78,14 +85,46 @@ export default function SubmissionForm({ questions }: { questions: any[] }) {
         );
     }, [questionsList]);
 
-    // Fallback handlers for input types not supported by application form components
+    // Enhanced file upload handler that stores both File objects and names
     const handleFileUpload = (questionId: string, files: FileList | null) => {
         if (!files) return;
 
-        const fileNames = Array.from(files).map((file) => file.name);
+        const fileArray = Array.from(files);
+        const fileNames = fileArray.map((file) => file.name);
+
+        // Store file names in formData for display
         setFormData((prev) => ({
             ...prev,
             [questionId]: fileNames,
+        }));
+
+        // Store actual File objects in formFiles for upload
+        setFormFiles((prev) => ({
+            ...prev,
+            [questionId]: fileArray,
+        }));
+    };
+
+    // Helper function to remove a specific file
+    const removeFile = (questionId: string, fileIndex: number) => {
+        const currentFiles = formFiles[questionId] || [];
+        const currentFileNames = formData[questionId] || [];
+
+        const updatedFiles = currentFiles.filter(
+            (_, index) => index !== fileIndex
+        );
+        const updatedFileNames = currentFileNames.filter(
+            (_, index) => index !== fileIndex
+        );
+
+        setFormFiles((prev) => ({
+            ...prev,
+            [questionId]: updatedFiles,
+        }));
+
+        setFormData((prev) => ({
+            ...prev,
+            [questionId]: updatedFileNames,
         }));
     };
 
@@ -140,13 +179,44 @@ export default function SubmissionForm({ questions }: { questions: any[] }) {
                                 )
                             }
                             className="bg-neutral-850 border-neutral-600 text-neutral-500"
+                            accept={question.acceptedFileTypes}
                         />
                         {(formData[question.questionId] || []).length > 0 && (
-                            <div className="text-sm text-gray-500">
-                                Selected files:{' '}
-                                {(formData[question.questionId] || []).join(
-                                    ', '
+                            <div className="space-y-1">
+                                <div className="text-sm text-gray-500">
+                                    Selected files:
+                                </div>
+                                {(formData[question.questionId] || []).map(
+                                    (fileName: string, index: number) => (
+                                        <div
+                                            key={index}
+                                            className="flex items-center justify-between rounded bg-gray-50 p-2 text-sm"
+                                        >
+                                            <span className="text-gray-700">
+                                                {fileName}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    removeFile(
+                                                        question.questionId,
+                                                        index
+                                                    )
+                                                }
+                                                className="ml-2 text-red-500 hover:text-red-700"
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    )
                                 )}
+                                <div className="text-xs text-gray-400">
+                                    Total files:{' '}
+                                    {
+                                        (formFiles[question.questionId] || [])
+                                            .length
+                                    }
+                                </div>
                             </div>
                         )}
                     </div>
@@ -161,7 +231,7 @@ export default function SubmissionForm({ questions }: { questions: any[] }) {
         <Card className="p-6">
             <form ref={formRef} noValidate>
                 <h2 className="pl-4 text-2xl font-semibold">
-                    Submit your team's SparkJam project
+                    Submit your team&#39;s SparkJam project
                 </h2>
 
                 {questionsList.map((question: any, index: number) => (

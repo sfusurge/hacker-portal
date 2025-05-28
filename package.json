@@ -50,6 +50,7 @@
         "ably": "^2.6.3",
         "beautiful-react-hooks": "^5.0.3",
         "class-variance-authority": "^0.7.0",
+        "client": "link:@vercel/blob/client",
         "clsx": "^2.1.1",
         "dayjs": "^1.11.13",
         "drizzle-orm": "^0.42.0",

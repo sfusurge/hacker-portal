@@ -10,6 +10,7 @@ import { hackathons } from './hackathons';
 import { user } from './users/users';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
+import { teams } from '@/db/schema/teams';
 
 export const submissionStatusEnum = pgEnum('submission_status', [
     'Awaiting Review',
@@ -25,7 +26,7 @@ export const submissions = pgTable(
             .references(() => hackathons.id)
             .notNull(),
         teamId: integer('team_id')
-            .references(() => user.id, { onDelete: 'no action' })
+            .references(() => teams.id, { onDelete: 'no action' })
             .notNull(),
         currentStatus: submissionStatusEnum('current_status')
             .default('Awaiting Review')
