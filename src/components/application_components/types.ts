@@ -59,7 +59,8 @@ export type InputFormQuestion =
     | QuestionMultipleCheckBox
     | QuestionNameInput
     | QuestionFileUploads
-    | QuestionRichTextInput;
+    | QuestionRichTextInput
+    | QuestionTextLinkInput;
 
 export type ApplicationQuestionType = InputFormQuestion['type'];
 
@@ -72,6 +73,18 @@ interface Question extends Entry {
 
 export interface QuestionTextLineInput extends Question {
     type: 'text-line';
+    placeHolder?: string;
+    value?: string;
+    maxCount?: number;
+
+    validator?: {
+        pattern: string; //regex pattern
+        errorMsg: string; // message to display if the pattern fails
+    };
+}
+
+export interface QuestionTextLinkInput extends Question {
+    type: 'link';
     placeHolder?: string;
     value?: string;
     maxCount?: number;

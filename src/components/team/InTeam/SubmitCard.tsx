@@ -122,8 +122,8 @@ function SubmitCardContent({
             // FIXME replace with dynamic text in the future
             return (
                 <>
-                    <h3>{`${teamdata.data?.name}'s project has been successfully submitted!`}</h3>
-                    <span>
+                    <h3 className="text-xl font-semibold text-pretty">{`${teamdata.data?.name}'s project has been successfully submitted!`}</h3>
+                    <span className="text-sm text-pretty text-white/60 lg:max-w-[550px]">
                         Judges will evaluate the projects from May 29th to 30th,
                         2025. Winners will be announced during the closing
                         ceremony on May 31st, 2025.
@@ -157,12 +157,7 @@ function SubmitCardContent({
                 <CardHeaderColumn>{getBtn()}</CardHeaderColumn>
             </CardHeader>
 
-            <CardContent
-                style={{
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                }}
-            >
+            <CardContent className="items-center justify-center gap-3 text-center">
                 {getContent()}
             </CardContent>
         </Card>
