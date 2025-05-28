@@ -7,6 +7,7 @@ import { SectionRenderer } from '@/components/projects/ProjectSection';
 import { createCaller } from '@/server/appRouter';
 import { getUserData } from '@/server/routers/usersRouter';
 import slugify from '@/utils/slugify';
+import JudgingDrawer from '@/components/projects/judge/JudgingDrawer';
 interface PageProps {
     params: {
         id: string;
@@ -90,7 +91,7 @@ export default async function ProjectPage({ params }: PageProps) {
 
     return (
         <div className="grid h-full grid-cols-1 xl:grid-cols-3">
-            <div className="h-full overflow-y-auto pb-20 md:pb-10 xl:col-span-2">
+            <div className="h-full overflow-y-auto pb-32 md:pb-10 xl:col-span-2 xl:pb-10">
                 <div className="flex flex-col gap-10 md:pr-6 xl:pr-10">
                     {projectSections.map((section, index) => (
                         <SectionRenderer
@@ -102,7 +103,16 @@ export default async function ProjectPage({ params }: PageProps) {
                 </div>
             </div>
 
-            <div className="h-fill relative m-0 overflow-hidden bg-neutral-900 pt-10 pb-0 xl:-mt-10 xl:-mr-10 xl:-mb-10">
+            <div className="block xl:hidden">
+                <JudgingDrawer
+                    hackathonId={hackathonId}
+                    user={user}
+                    teamId={Number(project[0])}
+                    projectTitle={project[1]}
+                />
+            </div>
+
+            <div className="h-fill relative m-0 hidden overflow-hidden bg-neutral-900 pt-10 pb-0 xl:-mt-10 xl:-mr-10 xl:-mb-10 xl:inline-flex">
                 <div className="w-fill mb-20 h-full overflow-y-auto p-6 py-0 md:mb-0 xl:col-span-1 xl:p-10 xl:py-0">
                     <JudgingForm
                         hackathonId={hackathonId}

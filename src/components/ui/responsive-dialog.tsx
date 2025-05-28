@@ -38,6 +38,7 @@ interface RootResponsiveProps extends BaseProps {
 interface ResponsiveProps extends BaseProps {
     className?: string;
     asChild?: true;
+    hideCloseIcon?: boolean;
 }
 
 const ResponsiveContext = React.createContext<{
@@ -125,15 +126,24 @@ const ResponsiveDialogClose = ({
 const ResponsiveDialogContent = ({
     className,
     children,
+    hideCloseIcon,
     ...props
 }: ResponsiveProps) => {
     const { isDesktop } = useResponsiveContext();
     const ContentComponent = isDesktop ? DialogContent : DrawerContent;
 
-    return (
-        <ContentComponent className={className} {...props}>
+    return isDesktop ? (
+        <DialogContent
+            className={className}
+            hideCloseIcon={hideCloseIcon}
+            {...props}
+        >
             {children}
-        </ContentComponent>
+        </DialogContent>
+    ) : (
+        <DrawerContent className={className} {...props}>
+            {children}
+        </DrawerContent>
     );
 };
 
