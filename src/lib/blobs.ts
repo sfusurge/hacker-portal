@@ -17,9 +17,7 @@ export interface UploadFileVercelProps {
 }
 
 export interface SubmitProjectProps extends UploadFileVercelProps {
-    hackathonId: number;
     teamId: number;
-    userId: number;
 }
 
 export interface UploadTeamPhotoProps extends UploadFileVercelProps {
@@ -34,26 +32,18 @@ export async function submitProject({
     fileName,
     fileContent,
     onUploadProgress,
-    hackathonId,
     teamId,
 }: SubmitProjectProps): Promise<PutBlobResult> {
     validateFileSize(fileContent);
 
-    const baseFileName = basename(fileName);
-
-    const blob = await upload(
-        `submissions/hackathon-${hackathonId}/team-${teamId}/${baseFileName}`,
-        fileContent,
-        {
-            onUploadProgress,
-            handleUploadUrl: '/api/blob/project',
-            access: 'public',
-            clientPayload: JSON.stringify({
-                hackathonId,
-                teamId,
-            }),
-        }
-    );
+    const blob = await upload(fileName, fileContent, {
+        onUploadProgress,
+        handleUploadUrl: '/api/blob/project',
+        access: 'public',
+        clientPayload: JSON.stringify({
+            teamId,
+        }),
+    });
 
     return blob;
 }
