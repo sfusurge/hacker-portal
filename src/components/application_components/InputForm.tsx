@@ -185,7 +185,7 @@ export function InputForm({
 
     return (
         <div className={style.appFormRoot}>
-            {isMobile && (
+            {isMobile && !disablePageTab && (
                 <button
                     className={cn(style.homeButton, 'md:hidden')}
                     onClick={() => {
