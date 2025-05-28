@@ -9,7 +9,7 @@ import { ApplicationCardSkeleton } from '@/components/home/Skeletons';
 import { getUserData } from '@/server/routers/usersRouter';
 import { redirect } from 'next/navigation';
 import SubmissionCard from '@/components/team/submit/SubmissionCard';
-import SubmissionCardHomepage from '@/components/home/SubmissionCard';
+// import SubmissionCardHomepage from '@/components/home/SubmissionCard';
 
 export default async function Home() {
     const data = await getUserData();
@@ -71,7 +71,7 @@ export default async function Home() {
                     {/*    applicationStatus={application?.currentStatus}*/}
                     {/*    applicationSubmitted={application !== null}*/}
                     {/*/>*/}
-                    <SubmissionCardHomepage teamName={currentUserTeam.name} />
+                    {/* <SubmissionCardHomepage teamName={currentUserTeam.name} /> */}
                 </Suspense>
 
                 <TeamCard

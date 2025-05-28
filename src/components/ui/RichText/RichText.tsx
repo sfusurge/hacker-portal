@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import Quill, { Delta } from 'quill';
+import Quill, { Delta, Op } from 'quill';
 import 'quill/dist/quill.snow.css';
 
 interface RichTextProps {
@@ -31,11 +31,18 @@ export function RichText({ readOnly, initialData, onChange }: RichTextProps) {
             },
         });
         editor.setContents((initialData as Delta) ?? []);
-        editor.on(Quill.events.TEXT_CHANGE, (delta) => {
+        editor.on(Quill.events.TEXT_CHANGE, (delta: Delta) => {
             onChange(editor.getContents());
         });
         richeditorRef.current = editor;
     }, []);
+
+    useEffect(() => {
+        if (richeditorRef.current?.getLength() === 1) {
+            // counts eof as a char for some reason
+            richeditorRef.current?.setContents((initialData as Delta) ?? []);
+        }
+    }, [initialData]);
 
     return (
         <div>

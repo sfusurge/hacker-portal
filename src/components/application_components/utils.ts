@@ -33,14 +33,14 @@ export function getResponseMap(pages: InputFormPageData[]) {
                 res[id] = `${question.firstName} ${question.lastName}`;
                 break;
             case 'file-upload':
-                res[id] = question.fileLinks;
+                res[id] = question.fileLinks ?? [];
                 break;
-
             default:
-                ``;
                 res[id] = question.value;
         }
     }
+
+    console.log('??', res);
 
     return res;
 }
@@ -76,10 +76,22 @@ export function loadResponseIntoSchema(
                     case 'file-upload':
                         question.fileLinks = dataSource[id];
                         break;
+                    case 'rich-text':
+                        question.value = dataSource[id];
+                        console.log(
+                            'in rich text',
+                            dataSource,
+                            id,
+                            dataSource[id]
+                        );
+
+                        break;
                     default:
                         question.value = dataSource[id];
                 }
             }
         }
     }
+
+    console.log('done', pages);
 }

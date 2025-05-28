@@ -24,12 +24,18 @@
 
 .displayImage::before {
     content: var(--imageName);
+    display: block;
     position: absolute;
     top: 0;
     left: 0;
+    width: fit-content;
+    max-width: 80%;
+    text-wrap: wrap;
+    height: fit-content;
+    padding: 0.5rem 0.25rem;
     border-bottom-right-radius: 6px;
-    color: var(--text-secondary);
-    background-color: var(--background-neutral-secondary);
+    color: var(--color-neutral-400);
+    background-color: var(--neutral-800);
 }
 
 .hor {

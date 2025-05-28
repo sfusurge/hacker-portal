@@ -5,10 +5,10 @@ import {
     loadResponseIntoSchema,
     getResponseMap,
 } from '@/components/application_components/utils';
-import { Card, CardContent } from '@/components/ui/card';
 import { hackathonAtom } from '@/hooks/use-hackathon';
 import { atom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
+import { useEffect } from 'react';
 
 const localAppResponseAtom = atomWithStorage('submit_response', {
     hackathonId: -1,
@@ -63,6 +63,13 @@ const submitWithLocalAtom = atom(
             email: userInfo.email,
             response: getResponseMap(val.pages),
         });
+
+        console.log('settingh', {
+            hackathonId: val.id,
+            email: userInfo.email,
+            response: getResponseMap(val.pages),
+        });
+
         const data = get(hackathonAtom)!;
         set(hackathonAtom, { ...data, submissionQuestionPages: val.pages });
     }
@@ -70,7 +77,6 @@ const submitWithLocalAtom = atom(
 
 export function SubmitFormCard() {
     const submitData = useAtomValue(submitWithLocalAtom);
-    console.log(submitData);
 
     return (
         <InputForm

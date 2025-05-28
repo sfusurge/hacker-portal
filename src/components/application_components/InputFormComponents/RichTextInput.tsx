@@ -13,7 +13,6 @@ export function RichTextInput({
         | WritableAtom<QuestionRichTextInput, [QuestionRichTextInput], void>;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
-
     return (
         <RichText
             onChange={(d) => {
