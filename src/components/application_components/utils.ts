@@ -13,21 +13,18 @@ export async function processResponseForServer(
     for (const page of pages) {
         for (const question of page.questions) {
             if (question.type === 'file-upload') {
+                question.fileLinks = []; // flush previous links if any
                 for (const f of question.fileList ?? []) {
                     let filename = f.name;
                     if (question.allowMultiple && question.fileUploadPath) {
                         filename = `${question.fileUploadPath}${filename}`;
                     }
-
                     if (!question.allowMultiple && question.singleFileName) {
                         filename = `${question.singleFileName}${filename.slice(filename.lastIndexOf('.'))}`;
                     }
                     const uploadedUrl = await uploadCallback(filename, f);
 
                     if (uploadedUrl) {
-                        if (!question.fileLinks) {
-                            question.fileLinks = [];
-                        }
                         question.fileLinks.push(uploadedUrl);
                     }
                 }
@@ -65,9 +62,6 @@ export function getResponseMap(pages: InputFormPageData[]) {
                 res[id] = question.value;
         }
     }
-
-    console.log('??', res);
-
     return res;
 }
 
@@ -104,12 +98,6 @@ export function loadResponseIntoSchema(
                         break;
                     case 'rich-text':
                         question.value = dataSource[id];
-                        console.log(
-                            'in rich text',
-                            dataSource,
-                            id,
-                            dataSource[id]
-                        );
 
                         break;
                     default:
@@ -118,6 +106,4 @@ export function loadResponseIntoSchema(
             }
         }
     }
-
-    console.log('done', pages);
 }

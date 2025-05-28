@@ -394,6 +394,10 @@ export const hackathonAtom = atomWithStorage<HackathonData | undefined>(
                 ? JSON.parse(item)
                 : initialValue;
 
+            if (!hackahton) {
+                return undefined;
+            }
+
             hackahton.startDate = dayjs(hackahton.startDate);
             hackahton.endDate = dayjs(hackahton.endDate);
             hackahton.submissionDeadline = dayjs(hackahton.submissionDeadline);
@@ -418,7 +422,6 @@ export function useHackathon() {
     );
 
     const [hackathon, setHackathon] = useAtom(hackathonAtom);
-
     useEffect(() => {
         const fetchActiveHackathon = async () => {
             if (hackathon) {
