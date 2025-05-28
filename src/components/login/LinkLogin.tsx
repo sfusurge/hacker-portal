@@ -30,7 +30,6 @@ export default function LinkLogin({
     }, [email]);
 
     const handleSubmit = async (formData: FormData) => {
-        setIsLoading(true);
         try {
             const result = await action(formData);
             if (result && result.success && onSuccess) {
@@ -42,7 +41,14 @@ export default function LinkLogin({
     };
 
     return (
-        <form action={handleSubmit} className="w-full space-y-4" ref={formRef}>
+        <form
+            onSubmit={() => {
+                setIsLoading(true);
+            }}
+            action={handleSubmit}
+            className="w-full space-y-4"
+            ref={formRef}
+        >
             <div className="space-y-2">
                 <Label>Email</Label>
                 <FormTextInput

@@ -15,7 +15,7 @@ export default async function ApplicationPage({
     dayjs.extend(timezone);
     const currentTime = dayjs();
     const cutoffTime = dayjs
-        .tz('2025-05-01', 'Canada/Pacific')
+        .tz('2025-05-30', 'Canada/Pacific')
         .startOf('day')
         .add(1, 'hour');
     const params = await searchParams;
