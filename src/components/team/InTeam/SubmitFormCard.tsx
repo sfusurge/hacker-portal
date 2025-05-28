@@ -143,7 +143,7 @@ export function SubmitFormCard({ teamId }: { teamId: number }) {
                             alignItems: 'center',
                         }}
                     >
-                        <span>Your team's project was already submitted!</span>
+                        <span>Your team's project was submitted!</span>
                         <Button
                             variant={'brand'}
                             hierarchy={'primary'}

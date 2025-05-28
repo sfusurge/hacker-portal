@@ -6,6 +6,9 @@ import TeamListSubmit from '@/components/team/submit/TeamListSubmit';
 import SubmitButton from '@/components/team/submit/SubmitButton';
 import { getUserData } from '@/server/routers/usersRouter';
 import { SubmitFormCard } from '@/components/team/InTeam/SubmitFormCard';
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { GoHome } from '@/components/home/GoHome';
 
 export default async function SubmitPage() {
     const user = await getUserData();
@@ -38,6 +41,16 @@ export default async function SubmitPage() {
     const questions = await trpcClient.submissions.getSubmissionQuestions({
         hackathonId: hackathon.id,
     });
+
+    const submitted = await trpcClient.submissions.getHasSubmissions({
+        userId: user.id,
+    });
+
+    console.log(submitted);
+
+    if (submitted.hasSubmission) {
+        return <GoHome title="Your team submitted a project already!" />;
+    }
 
     // const presignurl = await trpcClient.files.getFile({
     //     key: "77386352-1c41-4c0b-acb8-f2a17215fe41",

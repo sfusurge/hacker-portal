@@ -19,6 +19,7 @@ export function FileUploadInput({
             onFileChange={(files) => {
                 setQuestion({ ...question, fileList: files });
             }}
+            required={question.required ?? false}
         />
     );
 }

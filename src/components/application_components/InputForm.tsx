@@ -283,7 +283,7 @@ function Page({
         if (formRef.current) {
             // Check form validity
             let error = finalErrCheck
-                ? !formRef.current.reportValidity()
+                ? !formRef.current.checkValidity() // was report
                 : !formRef.current.checkValidity();
 
             // Count required questions and filled required questions

@@ -10,6 +10,7 @@ export interface FileUploadProps {
     maxSize: number; //mbs
     allowMultiple: boolean;
     onFileChange: (files: File[]) => void;
+    required?: boolean;
 }
 
 interface FileUploadItem {
@@ -24,10 +25,10 @@ export function FileUpload({
     id,
     allowMultiple,
     onFileChange,
+    required = false,
 }: FileUploadProps) {
     const maxSizeBytes = maxSize * 1024 * 1024;
     const ref = useRef<HTMLInputElement>(null);
-
     const [uploadedFiles, setUploadedFiles] = useState<
         Record<string, FileUploadItem>
     >({});
@@ -65,13 +66,21 @@ export function FileUpload({
         }
     }
 
-    function FileUploadProgress(e: ProgressEvent<HTMLInputElement>) {
-        console.log(e);
-    }
+    useEffect(() => {
+        if (required && Object.values(uploadedFiles).length === 0) {
+            ref.current?.setCustomValidity('no file');
+        } else {
+            ref.current?.setCustomValidity('');
+        }
+    }, [uploadedFiles]);
+
+    // function FileUploadProgress(e: ProgressEvent<HTMLInputElement>) {
+    //     console.log(e);
+    // }
 
     return (
         <div>
-            <div>
+            <div className={style.inputRoot}>
                 <input
                     id={`${id}_fileuplad`}
                     ref={ref}
@@ -83,6 +92,7 @@ export function FileUpload({
                     }}
                     size={maxSizeBytes}
                     style={{ display: 'none' }}
+                    required={required}
                 />
 
                 <div className={style.inputContainer}>

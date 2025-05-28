@@ -1,3 +1,11 @@
+.inputRoot:has(input:invalid)::after {
+    content: 'invalid';
+    display: block;
+    content: var(--errMsg);
+    color: var(--color-danger-400);
+    font-size: smaller;
+}
+
 .inputContainer {
     display: flex;
     gap: 0.5rem;
