@@ -38,14 +38,15 @@ export async function POST(request: Request): Promise<NextResponse> {
                 checkUserInTeam(user.id, teamId);
 
                 return {
-                    allowedContentTypes: [
-                        'image/jpeg',
-                        'image/png',
-                        'application/pdf',
-                        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types/Common_types
-                        'application/vnd.ms-powerpoint',
-                        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                    ],
+                    // TODO(scottdlai): restrict file types later :P
+                    // allowedContentTypes: [
+                    //     'image/jpeg',
+                    //     'image/png',
+                    //     'application/pdf',
+                    //     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types/Common_types
+                    //     'application/vnd.ms-powerpoint',
+                    //     'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                    // ],
                     addRandomSuffix: true,
                     tokenPayload: JSON.stringify({
                         teamId,
