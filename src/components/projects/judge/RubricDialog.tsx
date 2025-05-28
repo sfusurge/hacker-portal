@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label/label';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRightIcon, ArrowLeftIcon } from '@heroicons/react/24/solid';
-import { SubmissionJudgeRubric } from '@/app/(auth)/application/application_components/types';
+import { SubmissionJudgeRubric } from '@/components/application_components/types';
 import { Loader2 } from 'lucide-react';
 import {
     Select,

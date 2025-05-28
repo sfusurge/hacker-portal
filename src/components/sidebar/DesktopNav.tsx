@@ -15,7 +15,7 @@ import {
 import { HomeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
-import { QrCodeIcon } from '@heroicons/react/24/solid';
+import { IdentificationIcon, QrCodeIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
 import { trpc } from '@/trpc/client';
 
@@ -79,6 +79,12 @@ const adminLinks = [
         label: 'Email Templates (Admin)',
         icon: <EnvelopeIcon className="h-6 w-6" />,
         iconAlt: 'email',
+    },
+    {
+        href: '/admin/judge',
+        label: 'Judge Assignment',
+        icon: <IdentificationIcon className="h-6 w-6" />,
+        iconAlt: 'judge',
     },
     {
         href: '/admin/qr',

@@ -33,6 +33,23 @@ export const usersRouter = router({
         return res;
     }),
 
+    getJudges: publicProcedure.query(async () => {
+        const res = await databaseClient
+            .select({
+                id: user.id,
+                email: user.email,
+                image: user.image,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                phoneNumber: user.phoneNumber,
+                userRole: user.userRole,
+                displayId: user.displayId,
+            })
+            .from(user)
+            .where(eq(user.userRole, 'judge'));
+        return res;
+    }),
+
     getUserById: publicProcedure
         .input(z.object({ userId: z.union([z.number(), z.string()]) }))
         .query(async ({ input }) => {

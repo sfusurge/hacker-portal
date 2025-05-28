@@ -313,6 +313,56 @@ export const teamsRouter = router({
                 members,
             };
         }),
+    getTeams: publicProcedure
+        .input(
+            z.object({
+                hackathonId: z.number().int().optional(),
+            })
+        )
+        .query(async ({ input }) => {
+            const user = await getUserData();
+
+            if (!user) {
+                throw new InternalServerError('User not authenticated');
+            }
+
+            let query = databaseClient
+                .select({
+                    id: teams.id,
+                    teamName: teams.name,
+                    hackathonId: teams.hackathonId,
+                    displayId: teams.displayId,
+                    teamPictureUrl: teams.teamPictureUrl,
+                    createdBy: teams.createdBy,
+                    createdAt: teams.createdAt,
+                    maxMembersCount: teams.maxMembersCount,
+                })
+                .from(teams);
+
+            if (input.hackathonId) {
+                query = query.where(
+                    eq(teams.hackathonId, input.hackathonId)
+                ) as typeof query;
+            }
+
+            const allTeams = await query.orderBy(asc(teams.name));
+
+            const teamsWithMemberCount = await Promise.all(
+                allTeams.map(async (team) => {
+                    const members = await databaseClient
+                        .select({ count: sql<number>`count(*)` })
+                        .from(membersTable)
+                        .where(eq(membersTable.teamId, team.id));
+
+                    return {
+                        ...team,
+                        memberCount: members[0]?.count || 0,
+                    };
+                })
+            );
+
+            return teamsWithMemberCount;
+        }),
 });
 
 async function checkIfUserInExistingTeam<

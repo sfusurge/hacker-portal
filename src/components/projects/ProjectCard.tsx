@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-
+import slugify from '@/utils/slugify';
 interface Project {
     [key: number]: string;
 }
@@ -29,7 +29,6 @@ export default function ProjectCard({
     projectId,
     isLoading = false,
 }: ProjectCardProps) {
-    const linkId = projectId !== undefined ? projectId : index;
     const titleRef = useRef<HTMLHeadingElement>(null);
     const [titleLines, setTitleLines] = useState(1);
 
@@ -66,9 +65,10 @@ export default function ProjectCard({
         );
     }
 
+    // TODO: Route to team name or team display Id or add team identifer
     return (
         <Link
-            href={`/projects/${linkId}`}
+            href={`/projects/${slugify(project[1])}`}
             className="group flex flex-col overflow-hidden rounded-xl transition-shadow hover:shadow-lg"
         >
             <div className="relative" title={project[1]}>
