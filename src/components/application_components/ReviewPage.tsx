@@ -14,6 +14,7 @@ import type {
     QuestionNameInput,
     QuestionFileUploads,
     QuestionRichTextInput,
+    QuestionTextLinkInput,
 } from './types';
 import style from './ReviewPage.module.css';
 import { useMemo, useEffect, CSSProperties, useState } from 'react';
@@ -23,6 +24,7 @@ import { DocumentIcon } from '@heroicons/react/20/solid';
 import { getFileSize } from '@/components/ui/FileUpload/FileUpload';
 import { RichText } from '@/components/ui/RichText/RichText';
 import { atom } from 'jotai';
+import { IframeEmbed } from './IframeEmbed';
 
 export interface ReviewPageProps {
     submit: () => void;
@@ -45,8 +47,6 @@ export function ReviewPage({
     mobileMode = false,
     disableSubmitBtn = false,
 }: ReviewPageProps) {
-    // Add this debug log at the beginning of the component
-
     function getQuestionResponse(question: InputFormQuestion) {
         // Type-specific handling based on question type
         switch (question.type) {
@@ -56,6 +56,14 @@ export function ReviewPage({
                     | QuestionTextLineInput
                     | QuestionTextAreaInput;
                 return textQuestion.value?.trim() || 'N/A';
+
+            case 'link': {
+                const linkQuestion = question as QuestionTextLinkInput;
+                const rawUrl = linkQuestion.value?.trim();
+
+                if (!rawUrl) return 'N/A';
+                return <IframeEmbed url={rawUrl} />;
+            }
 
             case 'number':
                 const numQuestion = question as QuestionNumberInput;
@@ -91,7 +99,18 @@ export function ReviewPage({
 
             case 'multiple-choice':
                 const multiChoiceQuestion = question as QuestionMultipleChoice;
-                return multiChoiceQuestion.value || 'N/A';
+
+                if (multiChoiceQuestion.value) {
+                    const selectedChoice = multiChoiceQuestion.choices.find(
+                        (choice) => choice.data === multiChoiceQuestion.value
+                    );
+
+                    return selectedChoice
+                        ? selectedChoice.name
+                        : multiChoiceQuestion.value;
+                }
+
+                return 'N/A';
 
             case 'date':
                 const dateQuestion = question as QuestionDatePicker;

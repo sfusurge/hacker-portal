@@ -21,8 +21,6 @@ interface TeammateItemProps extends Partial<UserType> {
     index?: number;
     isPlaceholder?: boolean;
     maxMembersCount?: number;
-    isLastItem?: boolean;
-    currentStatus?: ApplicationStatus;
 }
 
 export default function TeammateItemSubmit({
@@ -36,8 +34,6 @@ export default function TeammateItemSubmit({
     index = 0,
     isPlaceholder = false,
     maxMembersCount = 4,
-    isLastItem = false,
-    currentStatus = null,
 }: TeammateItemProps) {
     const isMobile = useMediaQuery('(max-width: 767px)');
 
@@ -67,9 +63,6 @@ export default function TeammateItemSubmit({
         ((firstName || '') + ' ' + (lastName || '')).trim() ||
         'Unknown User';
 
-    const statusVariant = getStatusVariant(currentStatus);
-    const textVariant = getTextVariant(currentStatus);
-
     // Placeholder is hidden on mobile
     if (isPlaceholder && isMobile) {
         return null;
@@ -91,13 +84,13 @@ export default function TeammateItemSubmit({
     return (
         <>
             <li className="flex justify-between gap-4">
-                <div className="flex flex-1 items-center gap-3 overflow-hidden md:gap-4">
+                <div className="flex flex-1 items-center gap-3 overflow-hidden">
                     <img
                         alt={displayName + ' profile picture'}
                         src={avatarUrl}
                         width={32}
                         height={32}
-                        className="h-8 w-8 rounded-full object-cover md:h-11 md:w-11"
+                        className="h-7 w-7 rounded-full object-cover"
                     />
                     <div className="flex flex-1 flex-col justify-around gap-1 overflow-hidden">
                         <p className="truncate text-sm font-medium md:text-base">
@@ -113,12 +106,6 @@ export default function TeammateItemSubmit({
                     </div>
                 </div>
             </li>
-            {!isLastItem && isMobile && (
-                <hr className="border-neutral-700/20" />
-            )}
-            {index !== maxMembersCount - 1 && !isMobile && (
-                <hr className="border-neutral-700/20" />
-            )}
         </>
     );
 }

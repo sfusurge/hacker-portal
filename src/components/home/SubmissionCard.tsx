@@ -18,7 +18,7 @@ import { ArrowRightIcon } from 'lucide-react';
 import * as React from 'react';
 import { SubmitCard } from '@/components/team/InTeam/SubmitCard';
 
-export default function SubmissionCardHomepage({ teamName }) {
+export default function SubmissionCardHomepage() {
     return (
         // <Card className="col-span-7 h-full">
         //     <CardHeader>

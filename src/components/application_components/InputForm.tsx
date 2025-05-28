@@ -23,6 +23,7 @@ import type {
     QuestionFileUploads,
     InputFormData,
     QuestionRichTextInput,
+    QuestionTextLinkInput,
 } from './types';
 import { splitAtom } from 'jotai/utils';
 import style from './InputForm.module.css';
@@ -44,6 +45,7 @@ import { RadioInput } from './InputFormComponents/RadioInput';
 import { CheckBoxInput } from './InputFormComponents/CheckboxInput';
 import { CheckBoxGroupInput } from './InputFormComponents/CheckboxGroupInput';
 import { TextAreaInput } from './InputFormComponents/TextAreaInput';
+import { TextLinkInput } from './InputFormComponents/TextLinkInput';
 import { ReviewPage } from './ReviewPage';
 import {
     type PageFormState,
@@ -381,6 +383,15 @@ function Question({
                     <TextLineInput
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionTextLineInput>
+                        }
+                    />
+                );
+
+            case 'link':
+                return (
+                    <TextLinkInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionTextLinkInput>
                         }
                     />
                 );
