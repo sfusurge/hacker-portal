@@ -1,3 +1,4 @@
+'use client';
 import { HackathonData } from '@/components/application_components/types';
 import CountdownTimer from '@/components/home/Application/Countdown';
 import { Button } from '@/components/ui/button';
@@ -108,7 +109,7 @@ function SubmitCardContent({
                 <>
                     <h3>{`${teamdata.data?.name}'s project has been successfully submitted!`}</h3>
                     <span>
-                        Judges will evaluate the proejcts from May 29th to 30th,
+                        Judges will evaluate the projects from May 29th to 30th,
                         2025. Winners will be announced during the closing
                         ceremony on May 31st, 2025.
                     </span>
@@ -117,7 +118,9 @@ function SubmitCardContent({
         } else {
             return (
                 <>
-                    <span>{`Projects are due on ${hackathon.submissionDeadline.format('MMM DD at hh:mm A')}!`}</span>
+                    <span
+                        className={'text-sm text-white/60'}
+                    >{`Projects are due on ${hackathon.submissionDeadline.format('MMM DD, hh:mm')}!`}</span>
                     <CountdownTimer
                         targetDate={hackathon.submissionDeadline.toDate()}
                     />

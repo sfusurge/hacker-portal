@@ -13,7 +13,7 @@ export function FileUploadInput({
     return (
         <FileUpload
             id={question.questionId + ''}
-            accept={question.allowedTypes.join(',')}
+            accept={question.allowedTypes?.join(',') || ''}
             allowMultiple={question.allowMultiple}
             maxSize={question.maxSize}
             onFileChange={(files) => {

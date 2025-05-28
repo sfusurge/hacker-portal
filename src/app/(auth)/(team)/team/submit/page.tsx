@@ -5,6 +5,7 @@ import SubmissionCard from '@/components/team/submit/SubmissionCard';
 import TeamListSubmit from '@/components/team/submit/TeamListSubmit';
 import SubmitButton from '@/components/team/submit/SubmitButton';
 import { getUserData } from '@/server/routers/usersRouter';
+import { SubmitFormCard } from '@/components/team/InTeam/SubmitFormCard';
 
 export default async function SubmitPage() {
     const user = await getUserData();
@@ -61,11 +62,7 @@ export default async function SubmitPage() {
 
                 <div className="flex flex-1 flex-col">
                     <div className="flex-1 md:max-h-[calc(100vh-180px)] md:overflow-y-auto">
-                        <SubmissionCard
-                            questions={questions}
-                            teamId={currentTeam?.id}
-                            hackathonId={hackathon.id}
-                        />
+                        <SubmitFormCard />
                     </div>
                     <div className="mt-4 flex w-full items-center justify-between">
                         <div>Last Saved: Whenever</div>

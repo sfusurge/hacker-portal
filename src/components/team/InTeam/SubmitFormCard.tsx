@@ -1,3 +1,5 @@
+'use client';
+
 import { userInfoAtom } from '@/app/(auth)/ClientAuthContext';
 import { InputForm } from '@/components/application_components/InputForm';
 import { InputFormData } from '@/components/application_components/types';
