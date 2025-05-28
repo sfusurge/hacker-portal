@@ -33,5 +33,4 @@ export const getSubmissionQuestionsSchema = z.object({
 
 export const getHasSubmissionSchema = z.object({
     userId: z.number().int(),
-    hackathonId: z.number().int(),
 });

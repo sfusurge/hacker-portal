@@ -10,11 +10,13 @@ import {
     getHasSubmissionSchema,
 } from '@/db/schema/submissions';
 import { hackathons } from '@/db/schema/hackathons';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, getTableColumns } from 'drizzle-orm';
 import { members } from '@/db/schema/members';
+import { z } from 'zod';
+import { projectAttachments } from '@/db/schema/project-attachments';
+import { teams } from '@/db/schema/teams';
 
 export interface SubmitSubmissionResponse {
-    hackathonId: number;
     userId: number;
     response: Record<string, unknown>;
     createdDate: Date;
@@ -43,6 +45,7 @@ export const submissionsRouter = router({
 
             return applicationsWithTeamInfo[0]?.submissionQuestions || null;
         }),
+
     submitSubmission: publicProcedure
         .input(insertSubmissionSchema)
         .mutation(async ({ input }): Promise<SubmitSubmissionResponse> => {
@@ -51,11 +54,10 @@ export const submissionsRouter = router({
                 .insert(submissions)
                 .values({
                     teamId: input.teamId,
-                    hackathonId: input.hackathonId,
                     response: input.response,
                 })
                 .onConflictDoNothing({
-                    target: [submissions.hackathonId, submissions.teamId],
+                    target: [submissions.teamId],
                 })
                 .returning();
 
@@ -79,8 +81,8 @@ export const submissionsRouter = router({
             //         }
             //     })
             // }
+
             return {
-                hackathonId: submission.hackathonId,
                 userId: 0, // Optional: change if you track the user
                 response: submission.response as Record<string, unknown>,
                 createdDate: submission.createdDate,
@@ -91,7 +93,7 @@ export const submissionsRouter = router({
     getHasSubmissions: publicProcedure
         .input(getHasSubmissionSchema)
         .query(async ({ input }) => {
-            const { userId, hackathonId } = input;
+            const { userId } = input;
 
             // Step 1: Find the user's team
             const membership = await databaseClient
@@ -110,17 +112,41 @@ export const submissionsRouter = router({
             const submission = await databaseClient
                 .select()
                 .from(submissions)
-                .where(
-                    and(
-                        eq(submissions.teamId, teamId),
-                        eq(submissions.hackathonId, hackathonId)
-                    )
-                )
+                .where(and(eq(submissions.teamId, teamId)))
                 .limit(1);
 
             return {
                 hasSubmission: submission.length > 0,
             };
+        }),
+
+    getAllSubmissions: publicProcedure
+        .input(z.object({ hackathonId: z.number() }))
+        .query(async ({ input }) => {
+            const allSubmissions = await databaseClient
+                .select(getTableColumns(submissions))
+                .from(hackathons)
+                .innerJoin(
+                    teams,
+                    and(
+                        eq(hackathons.id, input.hackathonId),
+                        eq(hackathons.id, teams.hackathonId)
+                    )
+                )
+                .innerJoin(submissions, eq(teams.id, submissions.teamId));
+
+            return allSubmissions;
+        }),
+
+    getSubmissionForTeam: publicProcedure
+        .input(z.object({ teamId: z.number() }))
+        .query(async ({ input }) => {
+            const [submission] = await databaseClient
+                .select()
+                .from(submissions)
+                .where(eq(submissions.teamId, input.teamId));
+
+            return submission ?? null;
         }),
 
     // getSubmissions: publicProcedure.input(querySubmissionSchema).query(async ({ input }) => {

@@ -25,7 +25,6 @@ export default async function Home() {
 
     const hasSubmission = await trpcClient.submissions.getHasSubmissions({
         userId: userId,
-        hackathonId: hackathonId,
     });
 
     const [application, team, events] = await Promise.all([
