@@ -64,6 +64,9 @@ export function FileUpload({
             }
             setUploadedFiles({ ...uploadedFiles });
         }
+        if (ref.current?.files) {
+            ref.current.value = '';
+        }
     }
 
     useEffect(() => {
@@ -87,12 +90,8 @@ export function FileUpload({
                     type="file"
                     accept={accept}
                     onChange={HandleFileUpload}
-                    onProgress={(e) => {
-                        console.log(e);
-                    }}
                     size={maxSizeBytes}
                     style={{ display: 'none' }}
-                    required={required}
                 />
 
                 <div className={style.inputContainer}>
