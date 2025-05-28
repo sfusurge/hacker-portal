@@ -139,7 +139,17 @@ export function FileUpload({
                             key={`${index}${key}`}
                             className={style.uploadedItem}
                         >
-                            <span className={style.filename}>{key}</span>
+                            <a
+                                href={
+                                    imageUrl || URL.createObjectURL(value.file)
+                                }
+                                download={value.filename}
+                                className={style.filename}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                {key}
+                            </a>
 
                             <span>{getFileSize(value.file.size)}</span>
 
