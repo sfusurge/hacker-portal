@@ -48,7 +48,7 @@ function SubmitCardContent({
     });
     const submitData = trpc.submissions.getUserTeamSubmission.useQuery({});
 
-    const hasSubmit = submitData != undefined;
+    const hasSubmit = submitData.data != undefined;
 
     const [loadingLocal, setLoadingLocal] = useState(true);
     const [hasLocal, setHasLocal] = useState(false);
