@@ -10,6 +10,24 @@ import {
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
+export function SubmitCardSkeleton() {
+    return (
+        <Card className="col-span-7 h-full">
+            <CardHeader>
+                <div className="flex flex-col gap-2">
+                    <Skeleton className="h-5 w-40" />
+                    <Skeleton className="h-6 w-3/4" />
+                </div>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+                <Skeleton className="h-10 w-full rounded-md" />
+                <Skeleton className="h-5 w-1/2" />
+                <Skeleton className="h-10 w-40" />
+            </CardContent>
+        </Card>
+    );
+}
+
 export function ApplicationCardSkeleton() {
     return (
         <Card className="col-span-7 h-full">

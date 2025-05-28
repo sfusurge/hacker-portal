@@ -1,6 +1,7 @@
 'use client';
 import { HackathonData } from '@/components/application_components/types';
 import CountdownTimer from '@/components/home/Application/Countdown';
+import { SubmitCardSkeleton } from '@/components/home/Skeletons';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -20,7 +21,11 @@ export function SubmitCard({ onShowSubmit }: { onShowSubmit: () => void }) {
     const { hackathon } = useHackathon();
     if (!hackathon || hackathon.startDate.isAfter(dayjs())) {
         // if current day is before hackathon start day, then submit is not available.
-        return <></>;
+        return (
+            <>
+                <SubmitCardSkeleton />
+            </>
+        );
     }
     return (
         <SubmitCardContent
