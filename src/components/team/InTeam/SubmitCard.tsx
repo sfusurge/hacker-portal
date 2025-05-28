@@ -78,6 +78,10 @@ function SubmitCardContent({
             return <></>;
         }
 
+        if (!teamdata) {
+            return <></>;
+        }
+
         if (loadingLocal) {
             return (
                 <Button
@@ -133,8 +137,9 @@ function SubmitCardContent({
 
     function getContent() {
         if (
-            !userapplication.data ||
-            userapplication.data?.currentStatus !== 'Accepted'
+            !userapplication.isLoading &&
+            (!userapplication.data ||
+                userapplication.data?.currentStatus !== 'Accepted')
         ) {
             return <span>You were not accepted in this event.</span>;
         }
@@ -154,6 +159,7 @@ function SubmitCardContent({
         } else {
             return (
                 <>
+                    {!teamdata && <p>You are not in a team yet!</p>}
                     <span
                         className={'text-sm text-white/60'}
                     >{`Projects are due on ${hackathon.submissionDeadline.format('MMM DD, hh:mm')}!`}</span>

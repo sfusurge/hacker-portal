@@ -22,13 +22,18 @@ export default async function SubmitPage() {
     const application = await trpcClient.applications.getCurrentApplication({
         hackathonId: hackathon.id,
     });
-    if (!application || application.currentStatus !== 'Accepted') {
-        return <GoHome title="You were not accepted in this event!" />;
-    }
 
     const currentTeam = await trpcClient.teams.getCurrentTeam({
         hackathonId: hackathon.id,
     });
+
+    if (!currentTeam) {
+        return <GoHome title="You are not in a team yet!" />;
+    }
+
+    if (!application || application.currentStatus !== 'Accepted') {
+        return <GoHome title="You were not accepted in this event!" />;
+    }
 
     const teamPictureUrl = currentTeam?.teamPictureUrl;
 
@@ -50,9 +55,6 @@ export default async function SubmitPage() {
     const submitted = await trpcClient.submissions.getHasSubmissions({
         userId: user.id,
     });
-
-    console.log(submitted);
-
     if (submitted.hasSubmission) {
         return <GoHome title="Your team submitted a project already!" />;
     }
