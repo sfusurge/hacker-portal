@@ -91,7 +91,18 @@ export function ReviewPage({
 
             case 'multiple-choice':
                 const multiChoiceQuestion = question as QuestionMultipleChoice;
-                return multiChoiceQuestion.value || 'N/A';
+
+                if (multiChoiceQuestion.value) {
+                    const selectedChoice = multiChoiceQuestion.choices.find(
+                        (choice) => choice.data === multiChoiceQuestion.value
+                    );
+
+                    return selectedChoice
+                        ? selectedChoice.name
+                        : multiChoiceQuestion.value;
+                }
+
+                return 'N/A';
 
             case 'date':
                 const dateQuestion = question as QuestionDatePicker;

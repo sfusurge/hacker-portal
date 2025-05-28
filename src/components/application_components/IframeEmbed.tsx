@@ -213,12 +213,13 @@ export function IframeEmbed({ url }: { url: string }) {
     }
 
     return (
-        <EmbedContainer
-            src={url}
-            originalUrl={url}
-            title="Embedded Link"
-            linkText="Open in new tab →"
-            height="h-96"
-        />
+        <Link
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-brand-400 hover:text-brand-500 text-sm break-all underline"
+        >
+            {url}
+        </Link>
     );
 }
