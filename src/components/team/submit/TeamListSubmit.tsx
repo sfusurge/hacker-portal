@@ -41,8 +41,8 @@ export default function TeamListSubmit({
                     firstName: member.firstName,
                     lastName: member.lastName,
                     email: member.email,
-                    currentStatus: member.currentStatus,
-                }) as UserType & { currentStatus?: string | null }
+                    currentStatus: member.currentStatus ?? undefined,
+                }) as UserType & { currentStatus?: ApplicationStatus }
         );
     }, [team.members]);
 

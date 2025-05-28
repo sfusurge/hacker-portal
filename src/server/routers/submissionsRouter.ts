@@ -75,27 +75,6 @@ export const submissionsRouter = router({
                 })
                 .returning();
 
-            // const template = Handlebars.compile(welcomeSparkhacksTemplate)
-            // const htmlContent = template({
-            //     // firstName: tempDummy(input).name,
-            // })
-            // for (let i = 0; i < teamEmails.length; i++) {
-            //     const oAuthMailOptions = {
-            //         from: process.env.SENDINGEMAIL,
-            //         to: teamEmails[i].email,
-            //         subject: "Your SparkJam Application Has Been Received!",
-            //         text: "Your SparkJam Application Has Been Received!",
-            //         html: htmlContent,
-            //     }
-            //     transporter.sendMail(oAuthMailOptions, (error, info) => {
-            //         if (error) {
-            //             console.error("Error sending email:", error)
-            //         } else {
-            //             console.log("Email sent:", info.response)
-            //         }
-            //     })
-            // }
-
             return {
                 userId: 0, // Optional: change if you track the user
                 response: submission.response as Record<string, unknown>,

@@ -47,6 +47,9 @@ function SubmitCardContent({
         hackathonId: hackathon.id,
     });
     const submitData = trpc.submissions.getUserTeamSubmission.useQuery({});
+
+    const hasSubmit = submitData.data != undefined;
+
     const [loadingLocal, setLoadingLocal] = useState(true);
     const [hasLocal, setHasLocal] = useState(false);
 
@@ -73,6 +76,10 @@ function SubmitCardContent({
                     Loading...
                 </Button>
             );
+        }
+
+        if (hasSubmit) {
+            return false;
         }
 
         if (hasLocal) {
@@ -111,7 +118,6 @@ function SubmitCardContent({
     }
 
     function getContent() {
-        const hasSubmit = submitData.data === undefined;
         if (hasSubmit) {
             // FIXME replace with dynamic text in the future
             return (
