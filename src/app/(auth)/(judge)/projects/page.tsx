@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-export default async function JudgePage() {
+export default async function JudgeProjectsPage() {
     const data = await getUserData();
     if (!data) {
         return <div>Loading...</div>;
@@ -49,7 +49,8 @@ export default async function JudgePage() {
             />
             <div className="container mx-auto py-6">
                 <h1 className="mb-6 text-2xl font-bold">
-                    ACTUAL PROJECTS (TEMP)
+                    Projects Assigned to Judge{' '}
+                    {/* TODO: DONT DISPLAY UNSUBMITTED PROJECTS */}
                 </h1>
 
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -79,7 +80,7 @@ export default async function JudgePage() {
                                     </p>
                                 </div>
 
-                                <div className="mt-auto pt-4">
+                                <div className="mt-auto">
                                     {project.submission ? (
                                         <Link
                                             href={`/projects/${project.teamId}`}

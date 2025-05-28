@@ -28,33 +28,35 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 
-interface TeamViewProps {
-    filteredTeams: any[];
+interface JudgeViewProps {
+    filteredJudges: any[];
     assignments: any[];
-    judges: any[];
-    teamSearchQuery: string;
+    teams: any[];
     judgeSearchQuery: string;
-    setTeamSearchQuery: (query: string) => void;
+    teamSearchQuery: string;
     setJudgeSearchQuery: (query: string) => void;
-    handleAssignProject: (teamId: number, judgeId: number) => void;
-    handleRemoveAssignment: (teamId: number, judgeId: number) => void;
+    setTeamSearchQuery: (query: string) => void;
+    handleAssignProject: (judgeId: number, teamId: number) => void;
+    handleRemoveAssignment: (judgeId: number, teamId: number) => void;
     assigning: string | null;
-    isProjectAssigned: (teamId: number, judgeId: number) => boolean;
+    isProjectAssigned: (judgeId: number, teamId: number) => boolean;
+    filteredTeams: any[];
 }
 
-export default function TeamView({
-    filteredTeams,
+export default function JudgeView({
+    filteredJudges,
     assignments,
-    judges,
-    teamSearchQuery,
+    teams,
     judgeSearchQuery,
-    setTeamSearchQuery,
+    teamSearchQuery,
     setJudgeSearchQuery,
+    setTeamSearchQuery,
     handleAssignProject,
     handleRemoveAssignment,
     assigning,
     isProjectAssigned,
-}: TeamViewProps) {
+    filteredTeams,
+}: JudgeViewProps) {
     const [scoreDialogOpen, setScoreDialogOpen] = useState(false);
     const [selectedScore, setSelectedScore] = useState<any>(null);
     const [selectedTeamName, setSelectedTeamName] = useState<string>('');
@@ -63,10 +65,10 @@ export default function TeamView({
     const handleViewScore = (assignment: any) => {
         if (!assignment.response) return;
 
-        const team = filteredTeams.find(
+        const team = teams.find(
             (t) => t.id === assignment.teamId || t.teamId === assignment.teamId
         );
-        const judge = judges.find((j) => j.id === assignment.userId);
+        const judge = filteredJudges.find((j) => j.id === assignment.userId);
 
         setSelectedScore(assignment.response);
         setSelectedTeamName(
@@ -101,90 +103,83 @@ export default function TeamView({
             );
         }
 
-        if (value.toLowerCase().startsWith('yes')) {
-            return <span className="text-success-500">✓ {value}</span>;
-        }
-        if (value.toLowerCase().startsWith('no')) {
-            return <span className="text-danger-500">✗ {value}</span>;
-        }
-
         return value;
     };
+
     return (
         <div>
             <div className="mb-4">
                 <FormTextInput
-                    name="global-team-search"
-                    id="global-team-search"
+                    name="global-judge-search"
+                    id="global-judge-search"
                     type="search"
-                    placeholder="Search teams..."
+                    placeholder="Search judges..."
                     icon={
                         <MagnifyingGlassIcon className="h-4 w-4 text-white/60" />
                     }
-                    defaultValue={teamSearchQuery}
+                    defaultValue={judgeSearchQuery}
                     lazy
                     onLazyChange={(text) => {
-                        setTeamSearchQuery(text);
+                        setJudgeSearchQuery(text);
                     }}
                 />
             </div>
             <div className="space-y-6">
-                {filteredTeams.length === 0 ? (
-                    <div className="py-8 text-center">No teams found</div>
+                {filteredJudges.length === 0 ? (
+                    <div className="py-8 text-center">No judges found</div>
                 ) : (
-                    filteredTeams.map((team) => (
-                        <Card
-                            key={team.id || team.teamId}
-                            className="bg-neutral-850 p-4"
-                        >
+                    filteredJudges.map((judge) => (
+                        <Card key={judge.id} className="bg-neutral-850 p-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-medium">
-                                    {team.teamName} ({team.id || team.teamId})
+                                    {judge.firstName} {judge.lastName}
                                 </h3>
                                 <div className="flex items-center gap-2">
                                     <Select
                                         onValueChange={(value) =>
                                             handleAssignProject(
-                                                parseInt(value),
-                                                team.id || team.teamId
+                                                judge.id,
+                                                parseInt(value)
                                             )
                                         }
                                     >
                                         <SelectTrigger className="w-40 md:w-[220px]">
-                                            <SelectValue placeholder="Assign a judge" />
+                                            <SelectValue placeholder="Assign a team" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <div className="px-2 py-2">
                                                 <FormTextInput
-                                                    name="judge-search"
-                                                    id="judge-search"
+                                                    name="team-search"
+                                                    id="team-search"
                                                     type="search"
-                                                    placeholder="Search judges..."
+                                                    placeholder="Search teams..."
                                                     icon={
                                                         <MagnifyingGlassIcon className="h-4 w-4 text-white/60" />
                                                     }
                                                     defaultValue={
-                                                        judgeSearchQuery
+                                                        teamSearchQuery
                                                     }
                                                     lazy
                                                     onLazyChange={(text) => {
-                                                        setJudgeSearchQuery(
+                                                        setTeamSearchQuery(
                                                             text
                                                         );
                                                     }}
                                                 />
                                             </div>
-                                            {judges.map((judge) => (
+                                            {filteredTeams.map((team) => (
                                                 <SelectItem
-                                                    key={judge.id}
-                                                    value={judge.id.toString()}
+                                                    key={team.id || team.teamId}
+                                                    value={(
+                                                        team.id || team.teamId
+                                                    ).toString()}
                                                     disabled={isProjectAssigned(
                                                         judge.id,
                                                         team.id || team.teamId
                                                     )}
                                                 >
-                                                    {judge.firstName}{' '}
-                                                    {judge.lastName}
+                                                    {team.teamName} (
+                                                    {team.id || team.teamId})
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -195,7 +190,7 @@ export default function TeamView({
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Judge</TableHead>
+                                        <TableHead>Team</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead>Last Updated</TableHead>
                                         <TableHead className="w-[150px]">
@@ -205,33 +200,28 @@ export default function TeamView({
                                 </TableHeader>
                                 <TableBody>
                                     {assignments
-                                        .filter((a) => {
-                                            const teamIdentifier =
-                                                team.id || team.teamId;
-                                            return (
-                                                a.teamId === teamIdentifier ||
-                                                a.projectId === teamIdentifier
-                                            );
-                                        })
-                                        .map((assignment, index) => {
-                                            const judgeId = assignment.userId;
-                                            const judge = judges.find(
-                                                (j) => j.id === judgeId
+                                        .filter((a) => a.userId === judge.id)
+                                        .map((assignment) => {
+                                            const teamId =
+                                                assignment.teamId ||
+                                                assignment.projectId;
+                                            const team = teams.find(
+                                                (t) =>
+                                                    t.id === teamId ||
+                                                    t.teamId === teamId
                                             );
 
-                                            const uniqueKey = assignment.id
-                                                ? `${team.id || team.teamId}-${judgeId}-${assignment.id}`
-                                                : `${team.id || team.teamId}-${judgeId}-unassigned-${index}`;
+                                            const uniqueKey = `${judge.id}-${teamId}-${assignment.id || Date.now()}`;
                                             const isRemoving =
                                                 assigning ===
-                                                `${team.id || team.teamId}-${judgeId}`;
+                                                `${judge.id}-${teamId}`;
 
                                             return (
                                                 <TableRow key={uniqueKey}>
                                                     <TableCell>
-                                                        {judge
-                                                            ? `${judge.firstName} ${judge.lastName}`
-                                                            : `Judge #${judgeId}`}
+                                                        {team
+                                                            ? `${team.teamName} (${team.id || team.teamId})`
+                                                            : `Team #${teamId}`}
                                                     </TableCell>
                                                     <TableCell>
                                                         {assignment.status ===
@@ -270,13 +260,12 @@ export default function TeamView({
                                                                         onClick={() =>
                                                                             handleRemoveAssignment(
                                                                                 judge.id,
-                                                                                team.id
+                                                                                teamId
                                                                             )
                                                                         }
                                                                     >
                                                                         <Trash2 className="text-danger-500 h-4 w-4" />
                                                                     </Button>
-
                                                                     {assignment.response && (
                                                                         <Button
                                                                             variant="default"
@@ -298,20 +287,15 @@ export default function TeamView({
                                                 </TableRow>
                                             );
                                         })}
-                                    {assignments.filter((a) => {
-                                        const teamIdentifier =
-                                            team.id || team.teamId;
-                                        return (
-                                            a.teamId === teamIdentifier ||
-                                            a.projectId === teamIdentifier
-                                        );
-                                    }).length === 0 && (
+                                    {assignments.filter(
+                                        (a) => a.userId === judge.id
+                                    ).length === 0 && (
                                         <TableRow>
                                             <TableCell
                                                 colSpan={4}
                                                 className="py-4 text-center"
                                             >
-                                                No judges assigned
+                                                No teams assigned
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -321,6 +305,7 @@ export default function TeamView({
                     ))
                 )}
             </div>
+
             <Dialog open={scoreDialogOpen} onOpenChange={setScoreDialogOpen}>
                 <DialogContent className="max-w-3xl">
                     <DialogHeader>

@@ -18,9 +18,9 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 
-import TeamView from './components/TeamView';
-import JudgeView from './components/JudgeView';
-// import ScoreView from './components/ScoreView';
+import TeamView from '@/components/projects/judge/scoring/TeamView';
+import JudgeView from '@/components/projects/judge/scoring/JudgeView';
+import ScoreView from '@/components/projects/judge/scoring/ScoreView';
 
 export default function JudgeAssignmentPage() {
     const [judges, setJudges] = useState<any[]>([]);
@@ -329,7 +329,7 @@ export default function JudgeAssignmentPage() {
                             </TabsContent>
 
                             <TabsContent value="scores">
-                                {/* <ScoreView 
+                                <ScoreView
                                     assignments={assignments}
                                     teams={teams}
                                     judges={judges}
@@ -337,7 +337,7 @@ export default function JudgeAssignmentPage() {
                                     judgeSearchQuery={judgeSearchQuery}
                                     setTeamSearchQuery={setTeamSearchQuery}
                                     setJudgeSearchQuery={setJudgeSearchQuery}
-                                /> */}
+                                />
                             </TabsContent>
                         </Tabs>
                     </>
