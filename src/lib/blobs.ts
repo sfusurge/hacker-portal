@@ -4,6 +4,7 @@ import {
     OnUploadProgressCallback,
 } from '@vercel/blob';
 import { upload } from '@vercel/blob/client';
+import { basename } from './basename';
 
 const PROJECT_MAX_FILE_SIZE = 16 * 1024 * 1024; // 16 MB
 
@@ -38,8 +39,10 @@ export async function submitProject({
 }: SubmitProjectProps): Promise<PutBlobResult> {
     validateFileSize(fileContent);
 
+    const baseFileName = basename(fileName);
+
     const blob = await upload(
-        `submissions/hackathon-${hackathonId}/team-${teamId}/${fileName}`,
+        `submissions/hackathon-${hackathonId}/team-${teamId}/${baseFileName}`,
         fileContent,
         {
             onUploadProgress,
@@ -61,8 +64,10 @@ export async function uploadTeamPhoto({
     onUploadProgress,
     teamId,
 }: UploadTeamPhotoProps): Promise<PutBlobResult> {
+    const baseFileName = basename(fileName);
+
     const blob = await upload(
-        `team-photos/team-${teamId}/${fileName}`,
+        `team-photos/team-${teamId}/${baseFileName}`,
         fileContent,
         {
             onUploadProgress,

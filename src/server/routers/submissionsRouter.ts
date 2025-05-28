@@ -87,6 +87,7 @@ export const submissionsRouter = router({
                 currentStatus: submission.currentStatus,
             };
         }),
+
     getHasSubmissions: publicProcedure
         .input(getHasSubmissionSchema)
         .query(async ({ input }) => {
