@@ -1,4 +1,5 @@
 'use client';
+import { userInfoAtom } from '@/app/(auth)/ClientAuthContext';
 import { HackathonData } from '@/components/application_components/types';
 import CountdownTimer from '@/components/home/Application/Countdown';
 import { SubmitCardSkeleton } from '@/components/home/Skeletons';
@@ -15,6 +16,7 @@ import { useHackathon } from '@/hooks/use-hackathon';
 import { trpc } from '@/trpc/client';
 import { ArrowRightIcon } from '@heroicons/react/24/solid';
 import dayjs from 'dayjs';
+import { useAtomValue } from 'jotai';
 import { useEffect, useState } from 'react';
 
 export function SubmitCard({ onShowSubmit }: { onShowSubmit: () => void }) {
@@ -53,6 +55,11 @@ function SubmitCardContent({
     const [loadingLocal, setLoadingLocal] = useState(true);
     const [hasLocal, setHasLocal] = useState(false);
 
+    const userinfo = useAtomValue(userInfoAtom);
+    const userapplication = trpc.applications.getCurrentApplication.useQuery({
+        hackathonId: hackathon.id,
+    });
+
     useEffect(() => {
         if (localStorage.getItem(`submit_response`)) {
             // local storage found
@@ -64,6 +71,13 @@ function SubmitCardContent({
     }, [hackathon]);
 
     function getBtn() {
+        if (
+            !userapplication.data ||
+            userapplication.data?.currentStatus !== 'Accepted'
+        ) {
+            return <></>;
+        }
+
         if (loadingLocal) {
             return (
                 <Button
@@ -118,6 +132,13 @@ function SubmitCardContent({
     }
 
     function getContent() {
+        if (
+            !userapplication.data ||
+            userapplication.data?.currentStatus !== 'Accepted'
+        ) {
+            return <span>You were not accepted in this event.</span>;
+        }
+
         if (hasSubmit) {
             // FIXME replace with dynamic text in the future
             return (

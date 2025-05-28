@@ -1,3 +1,4 @@
+import { GoHome } from '@/components/home/GoHome';
 import TeamDisplay from '@/components/team/TeamDisplay';
 import { createCaller } from '@/server/appRouter';
 import { getUserData } from '@/server/routers/usersRouter';
