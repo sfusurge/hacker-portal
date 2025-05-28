@@ -155,10 +155,11 @@ export interface QuestionFileUploads extends Question {
     type: 'file-upload';
     allowedTypes: MimeTypes[];
     allowMultiple: boolean;
+    singleFileName?: string;
     maxSize: number; // in mbs
     fileList?: File[];
     fileLinks?: string[];
-    fileUploadPath: string; //path save the data, should !not! start with a slash
+    fileUploadPath?: string; //path save the data, should !not! start with a slash
 }
 
 /**

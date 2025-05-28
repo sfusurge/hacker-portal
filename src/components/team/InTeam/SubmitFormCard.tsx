@@ -6,12 +6,12 @@ import { InputFormData } from '@/components/application_components/types';
 import {
     loadResponseIntoSchema,
     getResponseMap,
+    processResponseForServer,
 } from '@/components/application_components/utils';
 import { hackathonAtom } from '@/hooks/use-hackathon';
+import { trpc } from '@/trpc/client';
 import { atom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import { useEffect } from 'react';
-
 const localAppResponseAtom = atomWithStorage('submit_response', {
     hackathonId: -1,
     email: '',
@@ -77,14 +77,26 @@ const submitWithLocalAtom = atom(
     }
 );
 
-export function SubmitFormCard() {
+export function SubmitFormCard({ teamId: _teamId }: { teamId: number }) {
     const submitData = useAtomValue(submitWithLocalAtom);
-
+    const submitSubmission = trpc.submissions.submitSubmission.useMutation();
     return (
         <InputForm
             appDataAtom={submitWithLocalAtom}
-            onSubmit={() => {
-                console.log(submitData);
+            onSubmit={async () => {
+                const processedPage = await processResponseForServer(
+                    submitData.pages,
+                    async (filename, file) => {
+                        ///
+                        return 'htttp://';
+                    }
+                );
+
+                const response = getResponseMap(processedPage);
+                submitSubmission.mutate({
+                    teamId: _teamId,
+                    response,
+                });
             }}
             disablePageTab
         />

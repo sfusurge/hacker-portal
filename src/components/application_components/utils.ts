@@ -7,9 +7,35 @@ export function flattenQuestions(pages: InputFormPageData[]) {
 }
 
 export async function processResponseForServer(
-    rootPath: string,
-    pages: InputFormPageData
-) {}
+    pages: InputFormPageData[],
+    uploadCallback: (filename: string, file: File) => Promise<string> // returns uploaded url
+) {
+    for (const page of pages) {
+        for (const question of page.questions) {
+            if (question.type === 'file-upload') {
+                for (const f of question.fileList ?? []) {
+                    let filename = f.name;
+                    if (question.allowMultiple && question.fileUploadPath) {
+                        filename = `${question.fileUploadPath}${filename}`;
+                    }
+
+                    if (!question.allowMultiple && question.singleFileName) {
+                        filename = `${question.singleFileName}${filename.slice(filename.lastIndexOf('.'))}`;
+                    }
+                    const uploadedUrl = uploadCallback(filename, f);
+
+                    if (uploadedUrl) {
+                        if (!question.fileLinks) {
+                            question.fileLinks = [];
+                        }
+                        question.fileLinks.push(uploadedUrl);
+                    }
+                }
+            }
+        }
+    }
+    return pages;
+}
 
 export function getResponseMap(pages: InputFormPageData[]) {
     const flattened = flattenQuestions(pages);

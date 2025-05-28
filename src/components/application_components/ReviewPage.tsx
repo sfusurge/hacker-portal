@@ -13,6 +13,7 @@ import type {
     QuestionSchoolName,
     QuestionNameInput,
     QuestionFileUploads,
+    QuestionRichTextInput,
 } from './types';
 import style from './ReviewPage.module.css';
 import { useMemo, useEffect, CSSProperties } from 'react';
@@ -20,6 +21,7 @@ import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/Skewmorphic
 import { Card, CardContent } from '@/components/ui/card';
 import { DocumentIcon } from '@heroicons/react/20/solid';
 import { getFileSize } from '@/components/ui/FileUpload/FileUpload';
+import { RichText } from '@/components/ui/RichText/RichText';
 
 export interface ReviewPageProps {
     submit: () => void;
@@ -97,6 +99,17 @@ export function ReviewPage({
                     return `${nameQuestion.firstName || ''} ${nameQuestion.lastName || ''}`.trim();
                 }
                 return 'N/A';
+
+            case 'rich-text':
+                const richQuestion = question as QuestionRichTextInput;
+
+                return (
+                    <RichText
+                        onChange={() => {}}
+                        readOnly
+                        initialData={richQuestion.value}
+                    />
+                );
 
             case 'file-upload':
                 const fileQuestion = question as QuestionFileUploads;
