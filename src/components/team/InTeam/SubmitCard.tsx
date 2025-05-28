@@ -176,9 +176,11 @@ function SubmitCardContent({
             <CardHeader>
                 <CardHeaderColumn>
                     <CardHeaderTitle>Submit Your Project</CardHeaderTitle>
-                    <CardHeaderDescription>
-                        {`${teamdata.data?.name}'s Project`}
-                    </CardHeaderDescription>
+                    {teamdata.data && (
+                        <CardHeaderDescription>
+                            {`${teamdata.data?.name}'s Project`}
+                        </CardHeaderDescription>
+                    )}
                 </CardHeaderColumn>
 
                 <CardHeaderColumn>{getBtn()}</CardHeaderColumn>
