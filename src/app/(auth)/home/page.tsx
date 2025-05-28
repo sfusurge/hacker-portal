@@ -8,6 +8,9 @@ import { Suspense } from 'react';
 import { ApplicationCardSkeleton } from '@/components/home/Skeletons';
 import { getUserData } from '@/server/routers/usersRouter';
 import { redirect } from 'next/navigation';
+import SubmissionCard from '@/components/team/submit/SubmissionCard';
+import SubmissionCardHomepage from '@/components/home/SubmissionCard';
+
 export default async function Home() {
     const data = await getUserData();
 
@@ -21,6 +24,15 @@ export default async function Home() {
     const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
 
     const hackathonId = activeHackathon.id;
+    const userId = data.id;
+    const currentUserTeam = await trpcClient.teams.getCurrentTeam({
+        hackathonId: hackathonId,
+    });
+
+    const hasSubmission = await trpcClient.submissions.getHasSubmissions({
+        userId: userId,
+        hackathonId: hackathonId,
+    });
 
     const [application, team, events] = await Promise.all([
         trpcClient.applications.getCurrentApplication({
@@ -53,12 +65,13 @@ export default async function Home() {
 
             <div className="flex flex-col gap-6 md:gap-8 xl:grid xl:grid-cols-11">
                 <Suspense fallback={<ApplicationCardSkeleton />}>
-                    <ApplicationCard
-                        userData={data}
-                        image={userQR}
-                        applicationStatus={application?.currentStatus}
-                        applicationSubmitted={application !== null}
-                    />
+                    {/*<ApplicationCard*/}
+                    {/*    userData={data}*/}
+                    {/*    image={userQR}*/}
+                    {/*    applicationStatus={application?.currentStatus}*/}
+                    {/*    applicationSubmitted={application !== null}*/}
+                    {/*/>*/}
+                    <SubmissionCardHomepage teamName={currentUserTeam.name} />
                 </Suspense>
 
                 <TeamCard

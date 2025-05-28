@@ -53,51 +53,40 @@ const SubmissionCountdown: React.FC<SubmissionTimerProps> = ({
     };
 
     return (
-        <Card>
-            <CardContent>
-                <div className="flex flex-col items-center justify-center">
-                    <div className="flex flex-col items-center justify-center p-4">
-                        <h1 className="text-xl leading-tight font-semibold">
-                            Hi team, are you ready for submission?
-                        </h1>
-                        <h2 className={'text-md leading-tight font-semibold'}>
-                            Final submission due on May 28, 11:59 PM.
-                        </h2>
+        <div className="flex flex-col items-center justify-center">
+            <div className="flex flex-col items-center justify-center p-4 text-sm font-normal text-white/60">
+                Projects are due on May 28 at 11:59 PM!
+            </div>
+
+            <div className="grid w-full max-w-96 grid-cols-3 gap-4">
+                <div className="bg-neutral-850 rounded-lg border border-neutral-600/30">
+                    <div className="bg-neutral-750 mx-auto flex h-10 items-center justify-center rounded-md rounded-br-none rounded-bl-none font-mono text-sm font-medium text-white">
+                        <span className="block leading-none">DAYS</span>
                     </div>
-
-                    <div className="grid w-full max-w-96 grid-cols-3 gap-4">
-                        <div className="bg-neutral-850 rounded-lg border border-neutral-600/30">
-                            <div className="bg-neutral-750 mx-auto flex h-10 items-center justify-center rounded-md rounded-br-none rounded-bl-none font-mono text-sm font-medium text-white">
-                                <span className="block leading-none">DAYS</span>
-                            </div>
-                            <div className="mx-auto w-[2ch] py-4 text-center text-4xl font-semibold text-white sm:text-5xl">
-                                {formatTime(timeLeft.days)}
-                            </div>
-                        </div>
-
-                        <div className="bg-neutral-850 rounded-lg border border-neutral-600/30">
-                            <div className="bg-neutral-750 mx-auto flex h-10 items-center justify-center rounded-md rounded-br-none rounded-bl-none font-mono text-sm font-medium text-white">
-                                <span className="block leading-none">
-                                    HOURS
-                                </span>
-                            </div>
-                            <div className="mx-auto w-[2ch] py-4 text-center text-4xl font-semibold text-white sm:text-5xl">
-                                {formatTime(timeLeft.hours)}
-                            </div>
-                        </div>
-
-                        <div className="bg-neutral-850 rounded-lg border border-neutral-600/30">
-                            <div className="bg-neutral-750 mx-auto flex h-10 items-center justify-center rounded-md rounded-br-none rounded-bl-none font-mono text-sm font-medium text-white">
-                                <span className="block leading-none">MINS</span>
-                            </div>
-                            <div className="mx-auto w-[2ch] py-4 text-center text-4xl font-semibold text-white sm:text-5xl">
-                                {formatTime(timeLeft.minutes)}
-                            </div>
-                        </div>
+                    <div className="mx-auto w-[2ch] py-4 text-center text-4xl font-semibold text-white sm:text-5xl">
+                        {formatTime(timeLeft.days)}
                     </div>
                 </div>
-            </CardContent>
-        </Card>
+
+                <div className="bg-neutral-850 rounded-lg border border-neutral-600/30">
+                    <div className="bg-neutral-750 mx-auto flex h-10 items-center justify-center rounded-md rounded-br-none rounded-bl-none font-mono text-sm font-medium text-white">
+                        <span className="block leading-none">HOURS</span>
+                    </div>
+                    <div className="mx-auto w-[2ch] py-4 text-center text-4xl font-semibold text-white sm:text-5xl">
+                        {formatTime(timeLeft.hours)}
+                    </div>
+                </div>
+
+                <div className="bg-neutral-850 rounded-lg border border-neutral-600/30">
+                    <div className="bg-neutral-750 mx-auto flex h-10 items-center justify-center rounded-md rounded-br-none rounded-bl-none font-mono text-sm font-medium text-white">
+                        <span className="block leading-none">MINS</span>
+                    </div>
+                    <div className="mx-auto w-[2ch] py-4 text-center text-4xl font-semibold text-white sm:text-5xl">
+                        {formatTime(timeLeft.minutes)}
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 };
 

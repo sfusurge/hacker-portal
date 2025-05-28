@@ -16,25 +16,48 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             server: process.env.AUTH_MAIL_SERVER ?? '',
             from: process.env.SENDINGEMAIL,
             sendVerificationRequest: async ({ url, expires, identifier }) => {
-                const host = new URL(url).host;
-                const emailSignInRes = await transporter.sendMail(
-                    {
-                        to: identifier,
-                        from: process.env.SENDINGEMAIL,
-                        subject: 'Sign in!',
-                        text: `sign in to ${host}`,
-                        html: html({ url, host }),
-                    },
-                    (error, info) => {
-                        if (error) {
-                            console.log('auth email error: ', error);
+                await new Promise((resolve, reject) => {
+                    transporter.verify((err, suc) => {
+                        if (err) {
+                            console.log('verify transporter failed', err);
+                            reject(err);
+                        } else if (suc) {
+                            console.log('verify transporter success', err);
+                            resolve(suc);
                         } else {
-                            console.log('auth email success: ', info);
+                            console.log(
+                                'verify transporter bad result',
+                                err,
+                                suc
+                            );
                         }
-                    }
-                );
+                    });
+                });
 
-                console.log('email results:', emailSignInRes);
+                await new Promise((resolve, reject) => {
+                    const host = new URL(url).host;
+                    transporter.sendMail(
+                        {
+                            to: identifier,
+                            from: process.env.SENDINGEMAIL,
+                            subject: 'Sign in!',
+                            text: `sign in to ${host}`,
+                            html: html({ url, host }),
+                        },
+                        (error, info) => {
+                            if (error) {
+                                console.log('auth email error: ', error);
+                                reject(error);
+                            } else if (info) {
+                                console.log('auth email success: ', info);
+                                resolve(info);
+                            } else {
+                                console.log('bad send result', error, info);
+                                reject('bad send result');
+                            }
+                        }
+                    );
+                });
             },
         }),
     ],

@@ -72,8 +72,8 @@ export default function TeamListSubmit({
     }, [paddedTeammates]);
 
     return (
-        <Card>
-            <CardContent className="">
+        <Card className="flex-none overflow-hidden">
+            <CardContent>
                 <span className="text-left text-xs font-normal text-white/60 md:text-sm">
                     Your Team ({mappedTeammates.length}/{team.maxMembersCount}{' '}
                     members)
@@ -81,15 +81,15 @@ export default function TeamListSubmit({
                 <span className="text-left text-lg font-bold">{team.name}</span>
 
                 <ul className="flex flex-col gap-4">
-                    {paddedTeammates.map((teammate, i) => (
+                    {mappedTeammates.map((teammate, i) => (
                         <TeammateItemSubmit
-                            key={i}
+                            key={teammate.id}
                             index={i}
                             {...teammate}
                             currentUser={teammate.email === currentUserEmail}
-                            isPlaceholder={teammate.placeholder}
+                            isPlaceholder={false}
                             maxMembersCount={team.maxMembersCount}
-                            isLastItem={i === lastVisibleIndex}
+                            isLastItem={i === mappedTeammates.length - 1}
                         />
                     ))}
                 </ul>

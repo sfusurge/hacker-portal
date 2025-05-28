@@ -47,6 +47,7 @@
         "@trpc/next": "11.0.0-rc.413",
         "@trpc/react-query": "11.0.0-rc.413",
         "@trpc/server": "11.0.0-rc.413",
+        "@vercel/blob": "^1.1.1",
         "ably": "^2.6.3",
         "beautiful-react-hooks": "^5.0.3",
         "class-variance-authority": "^0.7.0",
