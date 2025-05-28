@@ -1,0 +1,52 @@
+.fileList {
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    max-width: 100%;
+    gap: 0.5rem;
+}
+
+.title {
+    font-size: 14px;
+}
+
+.description {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.displayImage {
+    position: relative;
+    width: auto;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.displayImage::before {
+    content: var(--imageName);
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: fit-content;
+    max-width: 80%;
+    text-wrap: wrap;
+    height: fit-content;
+    padding: 0.5rem 0.25rem;
+    border-bottom-right-radius: 6px;
+    color: var(--color-neutral-400);
+    background-color: var(--neutral-800);
+}
+
+.hor {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.ver {
+    display: flex;
+    gap: 0.5rem;
+    flex-direction: column;
+    align-items: center;
+}

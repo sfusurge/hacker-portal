@@ -31,7 +31,8 @@ export type ResourceType =
     | 'team'
     | 'hackathon'
     | 'application'
-    | 'image';
+    | 'image'
+    | 'file';
 
 export interface ResourceNotFoundErrorProps {
     id: Id;

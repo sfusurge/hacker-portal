@@ -2,6 +2,7 @@ import { databaseClient } from '@/db/client';
 import {
     joinTeamSchema,
     leaveTeamSchema,
+    members,
     members as membersTable,
 } from '@/db/schema/members';
 import {
@@ -17,6 +18,7 @@ import {
     asc,
     TablesRelationalConfig,
     sql,
+    inArray,
 } from 'drizzle-orm';
 import {
     BadRequestError,
@@ -24,7 +26,7 @@ import {
     ResourceNotFoundError,
 } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
-import { getUserData, user } from '@/db/schema/users/users';
+import { user } from '@/db/schema/users/users';
 import { PgQueryResultHKT, PgTransaction } from 'drizzle-orm/pg-core';
 
 import { user as userTable } from '@/db/schema/users/users';
@@ -32,6 +34,8 @@ import { user as userTable } from '@/db/schema/users/users';
 import { getSixDigitId, teamRNGParams } from '@/lib/PRNG/LCG';
 import { z } from 'zod';
 import { deleteFileFromR2 } from '@/lib/cloudflare/r2';
+import { getUserData } from '@/server/routers/usersRouter';
+import { auth } from '@/auth/auth';
 
 export const teamsRouter = router({
     createTeam: publicProcedure
@@ -265,7 +269,7 @@ export const teamsRouter = router({
                     `Last member left the team, removing ${teamPictureUrl} from R2`
                 );
 
-                await deleteFileFromR2(teamPictureUrl);
+                await deleteFileFromR2('team-pictures', teamPictureUrl);
             }
 
             return true;
@@ -309,6 +313,56 @@ export const teamsRouter = router({
                 members,
             };
         }),
+    getTeams: publicProcedure
+        .input(
+            z.object({
+                hackathonId: z.number().int().optional(),
+            })
+        )
+        .query(async ({ input }) => {
+            const user = await getUserData();
+
+            if (!user) {
+                throw new InternalServerError('User not authenticated');
+            }
+
+            let query = databaseClient
+                .select({
+                    id: teams.id,
+                    teamName: teams.name,
+                    hackathonId: teams.hackathonId,
+                    displayId: teams.displayId,
+                    teamPictureUrl: teams.teamPictureUrl,
+                    createdBy: teams.createdBy,
+                    createdAt: teams.createdAt,
+                    maxMembersCount: teams.maxMembersCount,
+                })
+                .from(teams);
+
+            if (input.hackathonId) {
+                query = query.where(
+                    eq(teams.hackathonId, input.hackathonId)
+                ) as typeof query;
+            }
+
+            const allTeams = await query.orderBy(asc(teams.name));
+
+            const teamsWithMemberCount = await Promise.all(
+                allTeams.map(async (team) => {
+                    const members = await databaseClient
+                        .select({ count: sql<number>`count(*)` })
+                        .from(membersTable)
+                        .where(eq(membersTable.teamId, team.id));
+
+                    return {
+                        ...team,
+                        memberCount: members[0]?.count || 0,
+                    };
+                })
+            );
+
+            return teamsWithMemberCount;
+        }),
 });
 
 async function checkIfUserInExistingTeam<
@@ -339,4 +393,34 @@ async function checkIfUserInExistingTeam<
             `user ${userId} has already joined another team ${existingTeam.teamId}`
         );
     }
+}
+
+export async function getTeamData(tid: number) {
+    const memberIds = await getMemberIds(tid);
+
+    if (!memberIds || memberIds.length === 0) {
+        return [];
+    }
+
+    const memberEmails = await databaseClient
+        .select({ email: user.email })
+        .from(user)
+        .where(inArray(user.id, memberIds));
+
+    return memberEmails;
+}
+
+export async function getMemberIds(tid: number): Promise<number[]> {
+    const session = await auth();
+
+    if (!session || !session.user || !session.user.email) {
+        return [];
+    }
+
+    const dbMembers = await databaseClient
+        .select({ userId: members.userId })
+        .from(members)
+        .where(eq(members.teamId, tid));
+
+    return dbMembers.map((m) => m.userId);
 }

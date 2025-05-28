@@ -4,7 +4,6 @@ import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { UserData } from '@/db/schema/users/users';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -28,6 +27,7 @@ import {
 } from './ApplicationContent';
 import { ArrowRightIcon } from 'lucide-react';
 import { useHackathon } from '@/hooks/use-hackathon';
+import { UserData } from '@/server/routers/usersRouter';
 
 export type AppStatus =
     | 'Not Yet Started'

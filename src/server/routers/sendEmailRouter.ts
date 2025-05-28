@@ -7,6 +7,7 @@ import { emailTemplates } from '@/db/schema/emails';
 import { user } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
 import { prepareEmailContent } from '@/app/(auth)/admin/email/emailPreview';
+import { getFileFromR2 } from '@/lib/cloudflare/r2';
 const env = process.env;
 
 export const sendEmailRouter = router({
@@ -73,6 +74,31 @@ export const sendEmailRouter = router({
                     }
                 }
 
+                if (
+                    template.attachments &&
+                    Array.isArray(template.attachments)
+                ) {
+                    for (const attachment of template.attachments) {
+                        try {
+                            const fileData = await getFileFromR2(
+                                attachment.key,
+                                process.env.NEXT_PUBLIC_R2_BUCKET_EMAILS ?? ''
+                            );
+
+                            attachments.push({
+                                filename: attachment.fileName,
+                                content: Buffer.from(fileData.buffer),
+                                contentType: fileData.contentType,
+                            });
+                        } catch (error) {
+                            console.error(
+                                `Error retrieving attachment ${attachment.key}:`,
+                                error
+                            );
+                        }
+                    }
+                }
+
                 const [userData] = await databaseClient
                     .select()
                     .from(user)
@@ -92,7 +118,6 @@ export const sendEmailRouter = router({
                     templateData
                 );
 
-                // --- Prepare Mail Options ---
                 const mailOptions = {
                     from: env.SENDINGEMAIL,
                     to: input.user.email,

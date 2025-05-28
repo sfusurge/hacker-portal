@@ -1,4 +1,4 @@
-import { ApplicationPage } from '@/app/(auth)/application/application_components/types';
+import { InputFormPageData } from '@/components/application_components/types';
 import {
     boolean,
     integer,
@@ -22,12 +22,19 @@ const hackathons = pgTable('hackathons', {
     submissionDeadline: timestamp('submission_deadline')
         .notNull()
         .default(JOURNEY_HACK_2025_DEADLINE),
-    questions: jsonb('questions')
-        .$type<ApplicationPage[]>()
+    applicationQuestions: jsonb('questions')
+        .$type<InputFormPageData[]>()
         .notNull()
         .default([]),
     version: integer('version').notNull().default(1),
     isActive: boolean('is_active').notNull().default(false),
+    submissionQuestions: jsonb('submissionQuestions')
+        .$type<InputFormPageData[]>()
+        .notNull()
+        .default([]),
+
+    judgeQuestions: jsonb('judgeQuestions').notNull().default([]),
+    judgeRubric: jsonb('judgeRubric').notNull().default([]),
 });
 
 const insertHackathonSchema = createInsertSchema(hackathons, {

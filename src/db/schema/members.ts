@@ -8,6 +8,8 @@ import {
 import { teams } from './teams';
 import { user } from './users/users';
 import { z } from 'zod';
+import { and, eq } from 'drizzle-orm';
+import { databaseClient } from '../client';
 
 export const members = pgTable(
     'memberships',
@@ -37,3 +39,17 @@ export const joinTeamSchema = z.object({
 export const leaveTeamSchema = z.object({
     teamId: z.number(),
 });
+
+export async function checkUserInTeam(
+    userId: number,
+    teamId: number
+): Promise<void> {
+    const entries = await databaseClient
+        .select({ userId: members.userId })
+        .from(members)
+        .where(and(eq(members.userId, userId), eq(members.teamId, teamId)));
+
+    if (entries.length === 0) {
+        throw new Error(`User ${userId} is not in team ${teamId}`);
+    }
+}

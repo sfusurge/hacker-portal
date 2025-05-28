@@ -1,11 +1,15 @@
+'use client';
+
 import CurrentStateUI from '@/components/team/NoTeam/CurrentState';
 import TeamList from '@/components/team/InTeam/TeamList';
 import InviteCard from '@/components/team/InTeam/InviteCard';
-import { UserData } from '@/db/schema/users/users';
 import { inferProcedureOutput } from '@trpc/server';
 import { AppRouter } from '@/server/appRouter';
 import Image from 'next/image';
-
+import { UserData } from '@/server/routers/usersRouter';
+import { SubmitCard } from '@/components/team/InTeam/SubmitCard';
+import { useState } from 'react';
+import { redirect } from 'next/navigation';
 type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
 type HackathonType = inferProcedureOutput<
     AppRouter['hackathons']['getActiveHackathon']
@@ -60,7 +64,13 @@ export default function TeamDisplay({
             </div>
 
             <div className="flex flex-col gap-4">
-                <div className="grid grid-cols-1 gap-6 pb-24 md:pb-0 xl:grid-cols-[1fr_clamp(29rem,33vw,30.5rem)]">
+                <div className="grid grid-cols-1 gap-6 pb-24 md:pb-0 xl:grid-cols-2">
+                    {/* <div className="grid grid-cols-1 gap-6 pb-24 md:pb-0 xl:grid-cols-[1fr_clamp(29rem,33vw,30.5rem)]"> */}
+                    <SubmitCard
+                        onShowSubmit={() => {
+                            redirect('/team/submit');
+                        }}
+                    />
                     <TeamList
                         currentUserEmail={user!.email}
                         team={currentTeam}

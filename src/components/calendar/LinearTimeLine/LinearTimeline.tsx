@@ -94,9 +94,9 @@ function TimeLineDayWrapper({
 
     useEffect(() => {
         if (selectedDay?.isSame(dayId, 'date')) {
-            ref.current!.parentElement!.scrollTo({
+            ref.current?.scrollIntoView({
                 behavior: 'smooth',
-                top: ref.current!.offsetTop,
+                block: 'center',
             });
         }
     }, [selectedDay]);

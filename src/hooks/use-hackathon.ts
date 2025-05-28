@@ -1,381 +1,218 @@
+'use client';
+
 import {
-    ApplicationPage,
     HackathonData,
-} from '@/app/(auth)/application/application_components/types';
+    InputFormPageData,
+    JudgeQuestion,
+    SubmissionJudgeRubric,
+} from '@/components/application_components/types';
 import { trpc } from '@/trpc/client';
 import dayjs from 'dayjs';
 import { useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { useEffect } from 'react';
 
-// const QUESTIONS: ApplicationPage[] = [
+// const QUESTIONS: InputFormPageData[] = [
 //     {
-//         title: 'Application Fee',
-//         questions: [
+//         "questions": [
 //             {
-//                 questionId: 1,
-//                 type: 'checkbox',
-//                 required: true,
-//                 title: 'I understand that this design jam is a paid event, and upon acceptance, I agree to pay a fee of $15, excluding taxes and fees, to reserve my spot in the design jam',
-//                 label: 'I agree',
-//             },
-//         ],
-//     },
-//     {
-//         title: 'Basic Information',
-//         questions: [
-//             {
-//                 questionId: 2,
-//                 type: 'text-line',
-//                 title: 'First Name',
-//                 maxCount: 50,
-//                 required: true,
-//                 placeHolder: 'First Name',
+//                 "type": "text-line",
+//                 "title": "Title",
+//                 "maxCount": 50,
+//                 "required": true,
+//                 "questionId": 1,
+//                 "placeHolder": "Title"
 //             },
 //             {
-//                 questionId: 3,
-//                 type: 'text-line',
-//                 title: 'Last Name',
-//                 maxCount: 50,
-//                 required: true,
-//                 placeHolder: 'Last Name',
-//             },
-//             {
-//                 questionId: 4,
-//                 type: 'multiple-choice',
-//                 title: 'Pronouns',
-//                 choices: [
+//                 "type": "multiple-choice",
+//                 "title": "Which project track does your submission fall under?",
+//                 "choices": [
 //                     {
-//                         data: 'she/her/hers',
-//                         name: 'she/her/hers',
+//                         "data": "Digitize the Past",
+//                         "name": "Digitize the Past"
 //                     },
 //                     {
-//                         data: 'he/him/his',
-//                         name: 'he/him/his',
+//                         "data": "Improve the Present",
+//                         "name": "Improve the Present"
 //                     },
 //                     {
-//                         data: 'they/them/theirs',
-//                         name: 'they/them/theirs',
-//                     },
+//                         "data": "Envision the Future",
+//                         "name": "Envision the Future"
+//                     }
 //                 ],
-//                 allowCustom: true,
+//                 "required": true,
+//                 "questionId": 2,
+//                 "allowCustom": false
 //             },
 //             {
-//                 questionId: 5,
-//                 type: 'text-line',
-//                 title: 'Email Address',
-//                 placeHolder: 'Email Address',
-//                 required: true,
-//             },
-//             {
-//                 questionId: 6,
-//                 type: 'text-line',
-//                 title: 'Phone Number',
-//                 placeHolder: 'Phone Number',
-//                 required: true,
-//             },
-//             {
-//                 questionId: 7,
-//                 type: 'multiple-choice',
-//                 title: 'School',
-//                 choices: [
-//                     {
-//                         data: 'Simon Fraser University',
-//                         name: 'Simon Fraser University',
-//                     },
-//                     {
-//                         data: 'University of British Columbia',
-//                         name: 'University of British Columbia',
-//                     },
-//                     {
-//                         data: 'British Columbia Institute of Technology',
-//                         name: 'British Columbia Institute of Technology',
-//                     },
-//                     {
-//                         data: 'Capilano University',
-//                         name: 'Capilano University',
-//                     },
-//                     {
-//                         data: 'Emily Carr University of Art + Design',
-//                         name: 'Emily Carr University of Art + Design',
-//                     },
-//                     {
-//                         data: 'Kwantlen Polytechnic University',
-//                         name: 'Kwantlen Polytechnic University',
-//                     },
+//                 "type": "file-upload",
+//                 "title": "Header Image",
+//                 "allowMultiple": false,
+//                 "singleFileName": "banner",
+//                 "allowedTypes": [
+//                     "image/png",
+//                     "image/jpeg"
 //                 ],
-//                 required: true,
-//                 allowCustom: true,
+//                 "maxSize": 4,
+//                 "required": true,
+//                 "questionId": 3,
+//                 "description": "Recommended: 16:9 aspect ratio"
 //             },
 //             {
-//                 questionId: 8,
-//                 type: 'multiple-choice',
-//                 title: 'Major',
-//                 choices: [
-//                     {
-//                         name: 'Interactive Arts and Technology',
-//                         data: 'Interactive Arts and Technology',
-//                     },
-//                     {
-//                         name: 'Interaction Design',
-//                         data: 'Interaction Design',
-//                     },
-//                     {
-//                         name: 'Computer Science',
-//                         data: 'Computer Science',
-//                     },
-//                     {
-//                         name: 'Human-Computer Interaction',
-//                         data: 'Human-Computer Interaction',
-//                     },
-//                     {
-//                         name: 'Business',
-//                         data: 'Business',
-//                     },
-//                     {
-//                         name: 'Cognitive Science',
-//                         data: 'Cognitive Science',
-//                     },
-//                     {
-//                         name: 'Psychology',
-//                         data: 'Psychology',
-//                     },
+//                 "type": "rich-text",
+//                 "title": "Description of your project",
+//                 "required": true,
+//                 "questionId": 4,
+//                 "description": "A short summary (2–3 sentences) of what your project is, what problem it solves, and who its intended target audience is."
+//             },
+//             {
+//                 "type": "file-upload",
+//                 "title": "Process documentation",
+//                 "allowMultiple": false,
+//                 "singleFileName": "documentation",
+//                 "allowedTypes": [
+//                     "application/pdf"
 //                 ],
-//                 allowCustom: true,
-//                 required: true,
+//                 "maxSize": 16,
+//                 "required": true,
+//                 "questionId": 5
 //             },
 //             {
-//                 questionId: 9,
-//                 type: 'multiple-choice',
-//                 title: 'Current Year of Study',
-//                 choices: [
-//                     {
-//                         name: '1',
-//                         data: '1',
-//                     },
-//                     {
-//                         name: '2',
-//                         data: '2',
-//                     },
-//                     {
-//                         name: '3',
-//                         data: '3',
-//                     },
-//                     {
-//                         name: '4',
-//                         data: '4',
-//                     },
-//                     {
-//                         name: '5-7',
-//                         data: '5-7',
-//                     },
-//                     {
-//                         name: '8+',
-//                         data: '8+',
-//                     },
+//                 "type": "link",
+//                 "title": "Video pitch",
+//                 "required": true,
+//                 "validator": {
+//                     "pattern": "^(https?:\\/\\/)?(www\\.)?(youtube\\.com\\/watch\\?v=|youtu\\.be\\/)[\\w\\-]{11}$",
+//                     "errorMsg": "Please enter a valid YouTube video link (e.g. https://youtu.be/abc123defgh)."
+//                 },
+//                 "questionId": 6,
+//                 "description": "A link to your video pitch presenting your project, no longer than 5 minutes."
+//             },
+//             {
+//                 "type": "link",
+//                 "title": "Prototype link",
+//                 "required": true,
+//                 "validator": {
+//                     "pattern": "^(https?:\\/\\/)?([\\w\\-]+\\.)+[\\w\\-]+(\\/[\\w\\-./?%&=]*)?$",
+//                     "errorMsg": "Please enter a valid URL (e.g. https://example.com)"
+//                 },
+//                 "questionId": 7
+//             },
+//             {
+//                 "type": "file-upload",
+//                 "title": "Slide Deck (optional)",
+//                 "allowMultiple": false,
+//                 "singleFileName": "slide_deck",
+//                 "allowedTypes": [
+//                     "application/pdf"
 //                 ],
+//                 "maxSize": 8,
+//                 "questionId": 8
 //             },
-//         ],
-//     },
-//     {
-//         title: 'Design Skills and Experience',
-//         questions: [
 //             {
-//                 questionId: 10,
-//                 type: 'multiple-choice',
-//                 required: true,
-//                 title: 'Have you attended a design jam before?',
-//                 choices: [
+//                 "type": "rich-text",
+//                 "title": "Comments (Optional)",
+//                 "questionId": 9,
+//                 "description": "(e.g. any instructions for navigating the prototype, any passwords to the prototype link, if applicable)"
+//             },
+//             {
+//                 "type": "multiple-choice",
+//                 "title": "Did the team use Protopie to create their interactive prototype?",
+//                 "choices": [
 //                     {
-//                         name: 'Yes',
-//                         data: 'Yes',
+//                         "data": "Yes",
+//                         "name": "Yes, the team used Protopie"
 //                     },
 //                     {
-//                         name: 'No',
-//                         data: 'No',
-//                     },
+//                         "data": "No",
+//                         "name": "No, the team did not use Protopie"
+//                     }
 //                 ],
+//                 "required": true,
+//                 "questionId": 10
 //             },
 //             {
-//                 questionId: 11,
-//                 type: 'text-line',
-//                 required: true,
-//                 title: 'How many design jams have you previously attended',
-//             },
-//             {
-//                 questionId: 12,
-//                 type: 'multiple-checkbox',
-//                 required: true,
-//                 title: 'What design-related topics or areas are you most passionate about? Select all that apply.',
-//                 choices: [
+//                 "type": "multiple-choice",
+//                 "title": "Did the team use AI to generate any visuals for this project?",
+//                 "choices": [
 //                     {
-//                         data: 'User Interface Design',
-//                         name: 'User Interface Design',
+//                         "data": "Yes",
+//                         "name": "Yes, we used AI to generate some or all visuals"
 //                     },
 //                     {
-//                         data: 'User Experience Design',
-//                         name: 'User Experience Design',
-//                     },
-//                     {
-//                         data: 'Interaction Design',
-//                         name: 'Interaction Design',
-//                     },
-//                     {
-//                         data: 'User Experience Research',
-//                         name: 'User Experience Research',
-//                     },
-//                     {
-//                         data: 'Product Design',
-//                         name: 'Product Design',
-//                     },
-//                     {
-//                         data: 'Branding',
-//                         name: 'Branding',
-//                     },
-//                     {
-//                         data: 'Motion Design',
-//                         name: 'Motion Design',
-//                     },
-//                     {
-//                         data: 'Graphic Design',
-//                         name: 'Graphic Design',
-//                     },
-//                     {
-//                         data: 'Service Design',
-//                         name: 'Service Design',
-//                     },
-//                     {
-//                         data: 'Design Engineering',
-//                         name: 'Design Engineering',
-//                     },
-//                     {
-//                         data: 'Design Systems',
-//                         name: 'Design Systems',
-//                     },
+//                         "data": "No",
+//                         "name": "No, all visuals were created without AI"
+//                     }
 //                 ],
-//                 allowOther: true,
-//             },
-//         ],
-//     },
-//     {
-//         title: 'Personal Statement',
-//         questions: [
-//             {
-//                 questionId: 13,
-//                 type: 'text-area',
-//                 title: 'Why are you interested in participating in this design jam? (max. 300 words)',
-//                 required: true,
+//                 "required": true,
+//                 "questionId": 11
 //             },
 //             {
-//                 questionId: 14,
-//                 type: 'text-area',
-//                 title: 'What do you hope to learn or achieve during this event? (max. 300 words)',
-//                 required: true,
-//             },
-//         ],
-//     },
-//     {
-//         title: 'Additional Information',
-//         questions: [
-//             {
-//                 questionId: 15,
-//                 type: 'multiple-checkbox',
-//                 title: 'Do you have any dietary needs the organizing team should be aware of? Select all that apply. (Optional)',
-//                 required: false,
-//                 choices: [
+//                 "type": "multiple-choice",
+//                 "title": "Did the team properly cite all external resources (e.g. fonts, icon libraries, component libraries) used for this project in the process documentation deliverable?",
+//                 "choices": [
 //                     {
-//                         data: 'Halal',
-//                         name: 'Halal',
+//                         "data": "Yes",
+//                         "name": "Yes, all external resources are properly cited"
 //                     },
 //                     {
-//                         data: 'Vegetarian',
-//                         name: 'Vegetarian',
+//                         "data": "Some",
+//                         "name": "Some resources are cited, but not all"
 //                     },
 //                     {
-//                         data: 'Vegan',
-//                         name: 'Vegan',
+//                         "data": "No",
+//                         "name": "No, external resources were not cited"
 //                     },
 //                     {
-//                         data: 'Pescetarian',
-//                         name: 'Pescetarian',
-//                     },
-//                     {
-//                         data: 'Gluten-free',
-//                         name: 'Gluten-free',
-//                     },
-//                     {
-//                         data: 'Kosher',
-//                         name: 'Kosher',
-//                     },
-//                     {
-//                         data: 'Dairy Free',
-//                         name: 'Dairy Free',
-//                     },
-//                     {
-//                         data: 'Egg Allergy',
-//                         name: 'Egg Allergy',
-//                     },
-//                     {
-//                         data: 'Nut Allergy',
-//                         name: 'Nut Allergy',
-//                     },
-//                     {
-//                         data: 'Seafood Allergy',
-//                         name: 'Seafood Allergy',
-//                     },
+//                         "data": "N/A",
+//                         "name": "Not applicable, the team did not use external resources in this project"
+//                     }
 //                 ],
-//                 allowOther: true,
+//                 "required": true,
+//                 "questionId": 12
 //             },
 //             {
-//                 questionId: 16,
-//                 type: 'multiple-choice',
-//                 title: 'Do you consent to being photographed, filmed, or recorded during this event for promotional and archival purposes?',
-//                 required: true,
-//                 choices: [
+//                 "type": "multiple-choice",
+//                 "title": "Did the team clearly cite all AI tools or services used in this project and identify what they were used for (e.g. ideation, brainstorming)?",
+//                 "choices": [
 //                     {
-//                         data: 'Yes',
-//                         name: 'Yes',
+//                         "data": "Yes",
+//                         "name": "Yes, all AI tools are cited and their usage is clearly explained"
 //                     },
 //                     {
-//                         data: 'No',
-//                         name: 'No',
+//                         "data": "Some",
+//                         "name": "Some AI tools or usage contexts are cited, but not all"
 //                     },
+//                     {
+//                         "data": "No",
+//                         "name": "No, AI tools or their usage are not cited"
+//                     },
+//                     {
+//                         "data": "N/A",
+//                         "name": "Not applicable, no AI tools were used in the creation of this project"
+//                     }
 //                 ],
+//                 "required": true,
+//                 "questionId": 13
 //             },
 //             {
-//                 questionId: 17,
-//                 type: 'multiple-checkbox',
-//                 title: 'How did you hear about us',
-//                 choices: [
+//                 "type": "multiple-choice",
+//                 "title": "Do you consent to us sharing your project title, description, and visuals on our website and social media platforms to showcase your work? Don’t worry, SFU Surge will always credit you and your team when sharing your project!",
+//                 "choices": [
 //                     {
-//                         data: 'Social media (Instagram, LinkedIn, Discord, etc.)',
-//                         name: 'Social media (Instagram, LinkedIn, Discord, etc.)',
+//                         "data": "Yes",
+//                         "name": "Yes, I give permission to share our project and credit my team"
 //                     },
 //                     {
-//                         data: 'Word of mouth',
-//                         name: 'Word of mouth',
-//                     },
-//                     {
-//                         data: 'Website',
-//                         name: 'Website',
-//                     },
-//                     {
-//                         data: 'Flyer or poster',
-//                         name: 'Flyer or poster',
-//                     },
-//                     {
-//                         data: 'Collaborating organization (Partner or sponsor)',
-//                         name: 'Collaborating organization (Partner or sponsor)',
-//                     },
-//                     {
-//                         data: 'Online forum or community (e.g., Reddit, LinkedIn)',
-//                         name: 'Online forum or community (e.g., Reddit, LinkedIn)',
-//                     },
+//                         "data": "No",
+//                         "name": "No, I do not give permission to share our project"
+//                     }
 //                 ],
-//                 allowOther: true,
-//             },
-//         ],
-//     },
+//                 "required": true,
+//                 "questionId": 14
+//             }
+//         ]
+//     }
 // ];
 
 const HACKATHON_KEY = 'active_hackathon';
@@ -387,11 +224,24 @@ export const hackathonAtom = atomWithStorage<HackathonData | undefined>(
         getItem(key, initialValue) {
             const item = sessionStorage.getItem(key);
 
-            const hackahton: HackathonData = item
-                ? JSON.parse(item)
-                : initialValue;
+            if (!item) {
+                return initialValue;
+            }
 
-            return hackahton;
+            const hackathon: HackathonData = JSON.parse(item);
+
+            if (!hackathon) {
+                return undefined;
+            }
+
+            const foo = {
+                ...hackathon,
+                startDate: dayjs(hackathon.startDate),
+                endDate: dayjs(hackathon.endDate),
+                submissionDeadline: dayjs(hackathon.submissionTime),
+            };
+
+            return foo;
         },
 
         setItem(key, newValue) {
@@ -411,6 +261,22 @@ export function useHackathon() {
     );
 
     const [hackathon, setHackathon] = useAtom(hackathonAtom);
+    useEffect(() => {
+        const item = sessionStorage.getItem(HACKATHON_KEY);
+
+        if (item) {
+            const hackathon: HackathonData = JSON.parse(item);
+
+            const foo = {
+                ...hackathon,
+                startDate: dayjs(hackathon.startDate),
+                endDate: dayjs(hackathon.endDate),
+                submissionDeadline: dayjs(hackathon.submissionTime),
+            };
+
+            setHackathon(foo);
+        }
+    }, []);
 
     useEffect(() => {
         const fetchActiveHackathon = async () => {
@@ -424,11 +290,18 @@ export function useHackathon() {
                 setHackathon({
                     hackathonName: data.name,
                     id: data.id,
-                    pages: data.questions,
+                    applicationQuestionPages: data.applicationQuestions ?? [],
+                    submissionQuestionPages: data.submissionQuestions ?? [],
                     submissionDeadline: dayjs(data.submissionDeadline),
+                    judgeQuestions: data.judgeQuestions
+                        ? (data.judgeQuestions as JudgeQuestion[])
+                        : [],
+                    judgeRubric: data.judgeRubric
+                        ? (data.judgeRubric as SubmissionJudgeRubric[])
+                        : [],
                     startDate: dayjs(data.startDate),
                     endDate: dayjs(data.endDate),
-                    version: 1,
+                    version: data.version,
                 });
             }
         };
@@ -439,6 +312,6 @@ export function useHackathon() {
     return {
         hackathon,
         setHackathon,
-        hackathonLoaded: getActiveHackathon.isSuccess,
+        hackathonLoaded: hackathon !== undefined,
     };
 }

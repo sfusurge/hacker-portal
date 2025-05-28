@@ -6,12 +6,13 @@ import { HomeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
+import { InboxStackIcon } from '@heroicons/react/24/outline';
 
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { QrCodeIcon } from '@heroicons/react/24/solid';
-import { UserData } from '@/db/schema/users/users';
 import SelectOption from '@/app/(auth)/admin/qr/checkin_components/SelectOption';
+import { UserData } from '@/server/routers/usersRouter';
 
 interface MobileBottomNavProps {
     className?: string;
@@ -19,6 +20,68 @@ interface MobileBottomNavProps {
 }
 
 const excludedUrls = ['/application', '/admin/qr'];
+
+const judgeNavLinks = [
+    {
+        href: '/projects',
+        label: 'Projects',
+        icon: <InboxStackIcon />,
+        iconAlt: 'Projects logo',
+    },
+    {
+        href: '/schedule',
+        label: 'Schedule',
+        icon: <CalendarDaysIcon />,
+        iconAlt: 'Schedule logo',
+    },
+];
+
+const navLinks = [
+    {
+        href: '/home',
+        label: 'Home',
+        icon: <HomeIcon />,
+        iconAlt: 'Home logo',
+        active: true,
+        disabled: false,
+    },
+    {
+        href: '/team',
+        label: 'Team',
+        icon: <UserGroupIcon />,
+        iconAlt: 'Team logo',
+        active: false,
+        disabled: false,
+    },
+    {
+        href: '/schedule',
+        label: 'Schedule',
+        icon: <CalendarDaysIcon />,
+        iconAlt: 'Schedule logo',
+        active: false,
+        disabled: false,
+    },
+    {
+        href: '#',
+        label: 'Alerts',
+        icon: <BellAlertIcon />,
+        iconAlt: 'Alerts logo',
+        active: false,
+        disabled: true,
+    },
+];
+
+const adminLinks = [
+    {
+        href: '',
+        label: 'Check-In',
+        icon: <QrCodeIcon />,
+        iconAlt: 'QR logo',
+        active: false,
+        disabled: false,
+        onClick: true,
+    },
+];
 
 export default function MobileBottomNav({
     initialData,
@@ -56,53 +119,54 @@ export default function MobileBottomNav({
                         className
                     )}
                 >
-                    <NavLink
-                        href="/home"
-                        label="Home"
-                        icon={<HomeIcon></HomeIcon>}
-                        iconAlt="Home logo"
-                        platform="mobile"
-                        active={url.startsWith('/home')}
-                    ></NavLink>
+                    {initialData?.userRole === 'judge' ? (
+                        <>
+                            {judgeNavLinks.map((link) => (
+                                <NavLink
+                                    key={link.href}
+                                    href={link.href}
+                                    label={link.label}
+                                    icon={link.icon}
+                                    iconAlt={link.iconAlt}
+                                    platform="mobile"
+                                    active={url.startsWith(link.href)}
+                                />
+                            ))}
+                        </>
+                    ) : (
+                        <>
+                            {navLinks.map((link) => (
+                                <NavLink
+                                    key={link.href}
+                                    href={link.href}
+                                    label={link.label}
+                                    icon={link.icon}
+                                    iconAlt={link.iconAlt}
+                                    platform="mobile"
+                                    active={url.startsWith(link.href)}
+                                    disabled={link.disabled}
+                                />
+                            ))}
 
-                    <NavLink
-                        href="/team"
-                        label="Team"
-                        icon={<UserGroupIcon></UserGroupIcon>}
-                        iconAlt="Team logo"
-                        platform="mobile"
-                    ></NavLink>
-
-                    <NavLink
-                        href="/schedule"
-                        label="Schedule"
-                        icon={<CalendarDaysIcon></CalendarDaysIcon>}
-                        iconAlt="Schedule logo"
-                        platform="mobile"
-                        disabled={false}
-                    ></NavLink>
-
-                    <NavLink
-                        href="#"
-                        label="Alerts"
-                        icon={<BellAlertIcon></BellAlertIcon>}
-                        iconAlt="Alerts logo"
-                        platform="mobile"
-                        active={false}
-                        disabled={true}
-                    ></NavLink>
-
-                    {initialData?.userRole === 'admin' && (
-                        <NavLink
-                            href=""
-                            onClick={openSelectEventTypeOptions}
-                            label="Check-In"
-                            icon={<QrCodeIcon></QrCodeIcon>}
-                            iconAlt="QR logo"
-                            platform="mobile"
-                            active={false}
-                            disabled={false}
-                        ></NavLink>
+                            {initialData?.userRole === 'admin' &&
+                                adminLinks.map((link) => (
+                                    <NavLink
+                                        key={link.href}
+                                        href={link.href}
+                                        onClick={
+                                            link.onClick
+                                                ? openSelectEventTypeOptions
+                                                : undefined
+                                        }
+                                        label={link.label}
+                                        icon={link.icon}
+                                        iconAlt={link.iconAlt}
+                                        platform="mobile"
+                                        active={link.active}
+                                        disabled={link.disabled}
+                                    />
+                                ))}
+                        </>
                     )}
                 </div>
             )}

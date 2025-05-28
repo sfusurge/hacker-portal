@@ -2,20 +2,29 @@ import ApplicationCard from '@/components/home/Application/ApplicationCard';
 import DiscordCard from '@/components/home/DiscordCard';
 import EventsCard from '@/components/home/EventsCard';
 import TeamCard from '@/components/home/TeamCard';
-import { getUserData } from '@/db/schema/users/users';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
 import { createCaller } from '@/server/appRouter';
 import { Suspense } from 'react';
 import { ApplicationCardSkeleton } from '@/components/home/Skeletons';
+import { getUserData } from '@/server/routers/usersRouter';
+import { redirect } from 'next/navigation';
+import SubmissionCard from '@/components/team/submit/SubmissionCard';
+import SubmissionCardHomepage from '@/components/home/SubmissionCard';
 
 export default async function Home() {
     const data = await getUserData();
+
+    // todo/temp: improve redirect for judge
+    if (data?.userRole === 'judge') {
+        redirect('/projects');
+    }
 
     const trpcClient = createCaller({});
 
     const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
 
     const hackathonId = activeHackathon.id;
+    // const userId = data.id;
 
     const [application, team, events] = await Promise.all([
         trpcClient.applications.getCurrentApplication({
@@ -48,12 +57,15 @@ export default async function Home() {
 
             <div className="flex flex-col gap-6 md:gap-8 xl:grid xl:grid-cols-11">
                 <Suspense fallback={<ApplicationCardSkeleton />}>
-                    <ApplicationCard
-                        userData={data}
-                        image={userQR}
-                        applicationStatus={application?.currentStatus}
-                        applicationSubmitted={application !== null}
-                    />
+                    {/*<ApplicationCard*/}
+                    {/*    userData={data}*/}
+                    {/*    image={userQR}*/}
+                    {/*    applicationStatus={application?.currentStatus}*/}
+                    {/*    applicationSubmitted={application !== null}*/}
+                    {/*/>*/}
+                    <div className="col-span-7 flex flex-col gap-6 md:gap-8">
+                        <SubmissionCardHomepage />
+                    </div>
                 </Suspense>
 
                 <TeamCard

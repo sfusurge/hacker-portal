@@ -13,10 +13,10 @@ import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
-import { redirect, usePathname } from 'next/navigation';
-import { UserData } from '@/db/schema/users/users';
+import { usePathname } from 'next/navigation';
 
 import { trpc } from '@/trpc/client';
+import { UserData } from '@/server/routers/usersRouter';
 
 interface MobileTopNavProps {
     className?: string;
@@ -84,10 +84,10 @@ export default function MobileTopNav({
 
                             <div className="flex flex-col gap-2">
                                 <span className="line-clamp-1 text-sm leading-none font-medium text-white">
-                                    SparkJam
+                                    SparkJam 2025
                                 </span>
                                 <span className="line-clamp-1 text-sm leading-none text-white/60">
-                                    May 17, 2025
+                                    May 17–31, 2025
                                 </span>
                             </div>
                         </div>

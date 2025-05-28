@@ -1,0 +1,50 @@
+.inputRoot:has(input:invalid)::after {
+    content: 'invalid';
+    display: block;
+    content: var(--errMsg);
+    color: var(--color-danger-400);
+    font-size: smaller;
+}
+
+.inputContainer {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+.uploadedItemContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0.5rem;
+    margin-left: 0;
+}
+.uploadedItem {
+    display: flex;
+    height: fit-content;
+    border: 1px solid var(--border-neutral-secondary);
+    background-color: var(--background-neutral-secondary);
+
+    padding: 0.5rem;
+    width: 100%;
+    max-width: 500px;
+
+    color: var(--text-secondary);
+    font-size: 14px;
+
+    gap: 0.5rem;
+
+    align-items: center;
+
+    border-radius: 8px;
+}
+
+.img {
+    max-width: 4rem;
+    max-height: 3rem;
+    object-fit: contain;
+}
+
+.filename {
+    margin-right: auto;
+    text-wrap: wrap;
+}

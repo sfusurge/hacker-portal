@@ -1,11 +1,12 @@
 import NextAuth from 'next-auth';
-import { user, addUser } from '@/db/schema/users/users';
+import { user } from '@/db/schema/users/users';
 import { authConfig } from './authConfig';
 import NodeMailerProvider from 'next-auth/providers/nodemailer';
 
 import { eq } from 'drizzle-orm';
 import { databaseClient } from '@/db/client';
 import { transporter } from '@/server/nodemailerTransporter';
+import { addUser } from '@/server/routers/usersRouter';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     ...authConfig,

@@ -64,6 +64,13 @@ const buttonVariants = cva(
             },
             {
                 variant: 'default',
+                hierarchy: 'primary',
+                disabled: true,
+                className:
+                    'bg-neutral-800 text-white/40 shadow-none pointer-events-none',
+            },
+            {
+                variant: 'default',
                 hierarchy: 'secondary',
                 className:
                     'bg-neutral-800/60 hover:bg-neutral-750/60 border-neutral-600/60',

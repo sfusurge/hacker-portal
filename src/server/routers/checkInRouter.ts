@@ -4,10 +4,11 @@ import {
     insertCheckInSchema,
     isCheckInSchema,
 } from '@/db/schema/checkIn';
-import { getUserData, UserRoleEnum } from '@/db/schema/users/users';
+import { UserRoleEnum } from '@/db/schema/users/users';
 import { UnauthorizedError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
 import { and, eq } from 'drizzle-orm';
+import { getUserData } from '@/server/routers/usersRouter';
 
 export const checkInRouter = router({
     checkIn: publicProcedure

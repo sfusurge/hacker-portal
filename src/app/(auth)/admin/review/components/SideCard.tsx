@@ -5,15 +5,15 @@ import style from './SideCard.module.css';
 import { useMemo, useState } from 'react';
 import { useHackathon } from '@/hooks/use-hackathon';
 import {
-    ApplicationQuestion,
+    InputFormQuestion,
     QuestionMultipleCheckBox,
-} from '@/app/(auth)/application/application_components/types';
-import { CheckBoxInput } from '@/app/(auth)/application/application_components/application_question_fields/CheckboxInput';
-import { NumberInput } from '@/app/(auth)/application/application_components/application_question_fields/NumberInput';
-import { TextLineInput } from '@/app/(auth)/application/application_components/application_question_fields/TextLineInput';
-import { TextAreaInput } from '@/app/(auth)/application/application_components/application_question_fields/TextAreaInput';
-import { RadioInput } from '@/app/(auth)/application/application_components/application_question_fields/RadioInput';
-import { CheckBoxGroupInput } from '@/app/(auth)/application/application_components/application_question_fields/CheckboxGroupInput';
+} from '@/components/application_components/types';
+import { CheckBoxInput } from '@/components/application_components/InputFormComponents/CheckboxInput';
+import { NumberInput } from '@/components/application_components/InputFormComponents/NumberInput';
+import { TextLineInput } from '@/components/application_components/InputFormComponents/TextLineInput';
+import { TextAreaInput } from '@/components/application_components/InputFormComponents/TextAreaInput';
+import { RadioInput } from '@/components/application_components/InputFormComponents/RadioInput';
+import { CheckBoxGroupInput } from '@/components/application_components/InputFormComponents/CheckboxGroupInput';
 import { Label } from '@/components/ui/label/label';
 import { XMarkIcon } from '@heroicons/react/20/solid';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
@@ -92,13 +92,13 @@ export default function SideCard({
 
     const questionTypeMap = useMemo(() => {
         // converts question id to Application question type
-        const map = new Map<string, ApplicationQuestion>();
+        const map = new Map<string, InputFormQuestion>();
 
         if (!hackathon) {
             return map;
         }
 
-        for (const page of hackathon.pages) {
+        for (const page of hackathon.applicationQuestionPages) {
             for (const question of page.questions) {
                 map.set(`${question.questionId}`, question);
             }
@@ -108,7 +108,7 @@ export default function SideCard({
     }, [hackathon]);
 
     function getGenericInputAtom<
-        Q extends ApplicationQuestion & { value: unknown },
+        Q extends InputFormQuestion & { value: unknown },
     >(question: Q, dataAtom: WritableAtom<any, [any], void>) {
         return atom(
             (get) => {

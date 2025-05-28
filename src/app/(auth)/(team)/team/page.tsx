@@ -1,6 +1,7 @@
+import { GoHome } from '@/components/home/GoHome';
 import TeamDisplay from '@/components/team/TeamDisplay';
-import { getUserData } from '@/db/schema/users/users';
 import { createCaller } from '@/server/appRouter';
+import { getUserData } from '@/server/routers/usersRouter';
 import { redirect } from 'next/navigation';
 
 export default async function Team() {
