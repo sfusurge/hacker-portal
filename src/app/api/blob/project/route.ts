@@ -38,15 +38,14 @@ export async function POST(request: Request): Promise<NextResponse> {
                 checkUserInTeam(user.id, teamId);
 
                 return {
-                    // TODO(scottdlai): restrict file types later :P
-                    // allowedContentTypes: [
-                    //     'image/jpeg',
-                    //     'image/png',
-                    //     'application/pdf',
-                    //     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types/Common_types
-                    //     'application/vnd.ms-powerpoint',
-                    //     'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                    // ],
+                    allowedContentTypes: [
+                        'image/jpeg',
+                        'image/png',
+                        'application/pdf',
+                        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types/Common_types
+                        'application/vnd.ms-powerpoint',
+                        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                    ],
                     addRandomSuffix: true,
                     tokenPayload: JSON.stringify({
                         teamId,
@@ -57,14 +56,32 @@ export async function POST(request: Request): Promise<NextResponse> {
             onUploadCompleted: async ({ blob, tokenPayload }) => {
                 console.log('blob upload completed', blob, tokenPayload);
 
-                try {
-                    // TODO update project url in db
-                    // const { userId, teamId, hackathonId }: ClientPayload =
-                    //     JSON.parse(tokenPayload!);
-                    // await db.update({ avatar: blob.url, userId });
-                } catch (error) {
-                    throw new Error('Could not update user');
-                }
+                // try {
+                //     const { teamId }: ClientPayload = JSON.parse(tokenPayload!);
+                //
+                //     const baseFileName = basename(blob.pathname);
+                //
+                //     await databaseClient
+                //         .insert(projectAttachments)
+                //         .values({
+                //             teamId: teamId!,
+                //             name: baseFileName,
+                //             url: blob.url,
+                //             downloadUrl: blob.downloadUrl,
+                //         })
+                //         .onConflictDoUpdate({
+                //             target: [
+                //                 projectAttachments.teamId,
+                //                 projectAttachments.name,
+                //             ],
+                //             set: {
+                //                 url: blob.url,
+                //                 downloadUrl: blob.downloadUrl,
+                //             },
+                //         });
+                // } catch (error) {
+                //     throw new Error('Could not update user');
+                // }
             },
         });
 

@@ -4,6 +4,7 @@ import {
     OnUploadProgressCallback,
 } from '@vercel/blob';
 import { upload } from '@vercel/blob/client';
+import { basename } from './basename';
 
 const PROJECT_MAX_FILE_SIZE = 16 * 1024 * 1024; // 16 MB
 
@@ -16,9 +17,7 @@ export interface UploadFileVercelProps {
 }
 
 export interface SubmitProjectProps extends UploadFileVercelProps {
-    hackathonId: number;
     teamId: number;
-    userId: number;
 }
 
 export interface UploadTeamPhotoProps extends UploadFileVercelProps {
@@ -33,24 +32,18 @@ export async function submitProject({
     fileName,
     fileContent,
     onUploadProgress,
-    hackathonId,
     teamId,
 }: SubmitProjectProps): Promise<PutBlobResult> {
     validateFileSize(fileContent);
 
-    const blob = await upload(
-        `submissions/hackathon-${hackathonId}/team-${teamId}/${fileName}`,
-        fileContent,
-        {
-            onUploadProgress,
-            handleUploadUrl: '/api/blob/project',
-            access: 'public',
-            clientPayload: JSON.stringify({
-                hackathonId,
-                teamId,
-            }),
-        }
-    );
+    const blob = await upload(fileName, fileContent, {
+        onUploadProgress,
+        handleUploadUrl: '/api/blob/project',
+        access: 'public',
+        clientPayload: JSON.stringify({
+            teamId,
+        }),
+    });
 
     return blob;
 }
@@ -61,8 +54,10 @@ export async function uploadTeamPhoto({
     onUploadProgress,
     teamId,
 }: UploadTeamPhotoProps): Promise<PutBlobResult> {
+    const baseFileName = basename(fileName);
+
     const blob = await upload(
-        `team-photos/team-${teamId}/${fileName}`,
+        `team-photos/team-${teamId}/${baseFileName}`,
         fileContent,
         {
             onUploadProgress,
