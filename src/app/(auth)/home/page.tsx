@@ -24,14 +24,7 @@ export default async function Home() {
     const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
 
     const hackathonId = activeHackathon.id;
-    const userId = data.id;
-    const currentUserTeam = await trpcClient.teams.getCurrentTeam({
-        hackathonId: hackathonId,
-    });
-
-    const hasSubmission = await trpcClient.submissions.getHasSubmissions({
-        userId: userId,
-    });
+    // const userId = data.id;
 
     const [application, team, events] = await Promise.all([
         trpcClient.applications.getCurrentApplication({
