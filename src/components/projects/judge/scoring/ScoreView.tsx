@@ -1,6 +1,6 @@
 'use client';
 
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { FormTextInput } from '@/components/ui/input/input';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
 import {
@@ -181,73 +181,83 @@ export default function ScoreView({
                                     </span>
                                 )}
                             </h3>
-
-                            <div className="overflow-x-auto">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="min-w-[150px]">
-                                                Judge
-                                            </TableHead>
-                                            <TableHead className="min-w-[120px]">
-                                                Status
-                                            </TableHead>
-                                            {allQuestions.map((questionKey) => (
-                                                <TableHead
-                                                    key={questionKey}
-                                                    className="min-w-[120px]"
-                                                >
-                                                    Question {questionKey}
+                            <CardContent>
+                                <div className="overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead className="min-w-[150px]">
+                                                    Judge
                                                 </TableHead>
-                                            ))}
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {assignments.map((assignment: any) => {
-                                            const judge = judges.find(
-                                                (j) =>
-                                                    j.id === assignment.userId
-                                            );
+                                                <TableHead className="min-w-[120px]">
+                                                    Status
+                                                </TableHead>
+                                                {allQuestions.map(
+                                                    (questionKey) => (
+                                                        <TableHead
+                                                            key={questionKey}
+                                                            className="min-w-[120px]"
+                                                        >
+                                                            Question{' '}
+                                                            {questionKey}
+                                                        </TableHead>
+                                                    )
+                                                )}
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {assignments.map(
+                                                (assignment: any) => {
+                                                    const judge = judges.find(
+                                                        (j) =>
+                                                            j.id ===
+                                                            assignment.userId
+                                                    );
 
-                                            return (
-                                                <TableRow
-                                                    key={`${assignment.teamId}-${assignment.userId}`}
-                                                >
-                                                    <TableCell className="font-medium">
-                                                        {judge
-                                                            ? `${judge.firstName} ${judge.lastName}`
-                                                            : `Judge #${assignment.userId}`}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="flex items-center text-sm text-white/60">
-                                                            <CheckCircle className="text-success-500 mr-1 h-3 w-3" />
-                                                            {new Date(
-                                                                assignment.updatedDate
-                                                            ).toLocaleDateString()}
-                                                        </div>
-                                                    </TableCell>
-                                                    {allQuestions.map(
-                                                        (questionKey) => (
-                                                            <TableCell
-                                                                key={
-                                                                    questionKey
-                                                                }
-                                                            >
-                                                                {renderScoreValue(
-                                                                    assignment
-                                                                        .response?.[
-                                                                        questionKey
-                                                                    ] || ''
-                                                                )}
+                                                    return (
+                                                        <TableRow
+                                                            key={`${assignment.teamId}-${assignment.userId}`}
+                                                        >
+                                                            <TableCell className="font-medium">
+                                                                {judge
+                                                                    ? `${judge.firstName} ${judge.lastName}`
+                                                                    : `Judge #${assignment.userId}`}
                                                             </TableCell>
-                                                        )
-                                                    )}
-                                                </TableRow>
-                                            );
-                                        })}
-                                    </TableBody>
-                                </Table>
-                            </div>
+                                                            <TableCell>
+                                                                <div className="flex items-center text-sm text-white/60">
+                                                                    <CheckCircle className="text-success-500 mr-1 h-3 w-3" />
+                                                                    {new Date(
+                                                                        assignment.updatedDate
+                                                                    ).toLocaleDateString()}
+                                                                </div>
+                                                            </TableCell>
+                                                            {allQuestions.map(
+                                                                (
+                                                                    questionKey
+                                                                ) => (
+                                                                    <TableCell
+                                                                        key={
+                                                                            questionKey
+                                                                        }
+                                                                    >
+                                                                        {renderScoreValue(
+                                                                            assignment
+                                                                                .response?.[
+                                                                                questionKey
+                                                                            ] ||
+                                                                                ''
+                                                                        )}
+                                                                    </TableCell>
+                                                                )
+                                                            )}
+                                                        </TableRow>
+                                                    );
+                                                }
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </CardContent>
                         </Card>
                     ))}
                 </div>

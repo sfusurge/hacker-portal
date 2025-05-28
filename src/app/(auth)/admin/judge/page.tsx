@@ -243,7 +243,7 @@ export default function JudgeAssignmentPage() {
     };
 
     return (
-        <Card className="mb-20 h-full pb-20">
+        <Card className="mb-20 h-max pb-0 md:pb-20">
             <CardHeader>
                 <CardTitle className="text-2xl font-bold">
                     Judge Project Assignment
