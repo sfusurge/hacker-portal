@@ -18,15 +18,10 @@ export async function POST(request: Request): Promise<NextResponse> {
                     throw new Error('unexpected clientPayload is empty');
                 }
 
-                const { teamId, hackathonId }: ClientPayload =
-                    JSON.parse(clientPayload);
+                const { teamId }: ClientPayload = JSON.parse(clientPayload);
 
                 if (teamId == null) {
                     throw new Error('Missing required teamId');
-                }
-
-                if (hackathonId == null) {
-                    throw new Error('Missing required hackathonId');
                 }
 
                 const user = await getUserData();
@@ -49,7 +44,6 @@ export async function POST(request: Request): Promise<NextResponse> {
                     addRandomSuffix: true,
                     tokenPayload: JSON.stringify({
                         teamId,
-                        hackathonId,
                     }),
                 };
             },
