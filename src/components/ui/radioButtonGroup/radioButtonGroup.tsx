@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FormTextInput } from '../input/input';
 import style from './radioButtonGroup.module.css';
+import { useAtomValue } from 'jotai';
+import { finalErrCheckAtom } from '@/components/application_components/InputForm';
+import clsx from 'clsx';
 
 export interface RadioButtonGroupProps {
     options: { data: string; name: string }[];
@@ -29,6 +32,7 @@ export function RadioButtonGroup({
     const [selection, _setSelection] = useState<string | undefined>(
         defaultSelection
     );
+    const finalcheck = useAtomValue(finalErrCheckAtom);
 
     const datas = useMemo(() => {
         const set = new Set<string | undefined>(
@@ -69,7 +73,12 @@ export function RadioButtonGroup({
     }, [defaultSelection]);
 
     return (
-        <fieldset className={style.optionsContainer}>
+        <fieldset
+            className={clsx(
+                style.optionsContainer,
+                finalcheck && style.finalcheck
+            )}
+        >
             {options.map((item, index) => {
                 // Create a unique ID for each radio input
                 const inputId = `${name}-${item.data.replace(/\s+/g, '-')}-${index}`;

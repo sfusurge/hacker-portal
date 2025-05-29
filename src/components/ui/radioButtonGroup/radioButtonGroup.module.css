@@ -8,9 +8,11 @@
     padding-bottom: 20px;
 }
 
+.finalcheck.optionsContainer:invalid::after,
 .optionsContainer:user-invalid::after {
     content: 'Required, please make a selection';
-    color: var(--danger-500);
+    color: var(--color-danger-400);
+    font-size: smaller;
 }
 
 .optionLabel {
