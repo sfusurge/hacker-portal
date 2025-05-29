@@ -434,6 +434,12 @@ export default function JudgingForm({
         };
     }, []);
 
+    useEffect(() => {
+        if (!isRubricOpen && !isLoading) {
+            validateForm();
+        }
+    }, [isRubricOpen, isLoading, validateForm]);
+
     return (
         <>
             {isLoading || questions.length === 0 ? (

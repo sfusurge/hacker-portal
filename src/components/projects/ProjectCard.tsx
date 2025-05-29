@@ -16,7 +16,6 @@ interface StatusInfo {
 
 interface ProjectCardProps {
     project: Project;
-    index: number;
     statusInfo: StatusInfo;
     projectId?: string | number;
     isLoading?: boolean;
@@ -24,7 +23,6 @@ interface ProjectCardProps {
 
 export default function ProjectCard({
     project,
-    index,
     statusInfo,
     projectId,
     isLoading = false,
@@ -65,10 +63,9 @@ export default function ProjectCard({
         );
     }
 
-    // TODO: Route to team name or team display Id or add team identifer
     return (
         <Link
-            href={`/projects/${slugify(project[1])}`}
+            href={`/projects/${projectId}`}
             className="group flex flex-col overflow-hidden rounded-xl transition-shadow hover:shadow-lg"
         >
             <div className="relative" title={project[1]}>
@@ -78,7 +75,7 @@ export default function ProjectCard({
                     {statusInfo.label}
                 </p>
                 <Image
-                    src="/hacker-portal-preview.webp"
+                    src={project[3] || '/hacker-portal-preview.webp'}
                     alt={`Project: ${project[1]}`}
                     width={500}
                     height={281}
@@ -94,7 +91,7 @@ export default function ProjectCard({
                     <p
                         className={`${titleLines === 1 ? 'line-clamp-3' : 'line-clamp-2'} text-sm text-white/60`}
                     >
-                        {project[2]}
+                        {project[4]}
                     </p>
                 </div>
             </div>
