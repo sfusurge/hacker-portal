@@ -20,6 +20,8 @@ export function RichTextInput({
             }}
             readOnly={false}
             initialData={question.value}
+            maxLength={question.maxLength ?? 99999}
+            required={question.required ?? false}
         />
     );
 }

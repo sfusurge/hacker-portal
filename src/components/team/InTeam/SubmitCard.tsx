@@ -55,6 +55,8 @@ function SubmitCardContent({
     const [loadingLocal, setLoadingLocal] = useState(true);
     const [hasLocal, setHasLocal] = useState(false);
 
+    const [isPastDeadline, setIsPastDeadline] = useState(false);
+
     const userinfo = useAtomValue(userInfoAtom);
     const userapplication = trpc.applications.getCurrentApplication.useQuery({
         hackathonId: hackathon.id,
@@ -68,6 +70,13 @@ function SubmitCardContent({
             setHasLocal(false);
         }
         setLoadingLocal(false);
+
+        const now = new Date();
+        const pstNow = new Date(
+            now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
+        );
+        const deadline = new Date('2025-05-28T23:59:59');
+        setIsPastDeadline(pstNow > deadline);
     }, [hackathon]);
 
     function getBtn() {
@@ -98,6 +107,10 @@ function SubmitCardContent({
 
         if (hasSubmit) {
             return false;
+        }
+
+        if (isPastDeadline) {
+            return <></>;
         }
 
         if (hasLocal) {
@@ -158,13 +171,26 @@ function SubmitCardContent({
                     </span>
                 </>
             );
+        } else if (isPastDeadline) {
+            return (
+                <>
+                    <h3 className="text-xl font-semibold text-pretty">
+                        Submission deadline has passed!
+                    </h3>
+                    <span className="text-sm text-pretty text-white/60 lg:max-w-[550px]">
+                        The submission period ended on May 28th at 11:59 PM PST.
+                        Judges will evaluate the projects from May 29th to 30th,
+                        2025.
+                    </span>
+                </>
+            );
         } else {
             return (
                 <>
                     {!teamdata.data && <p>You are not in a team yet!</p>}
                     <span
                         className={'text-sm text-white/60'}
-                    >{`Projects are due on ${hackathon.submissionDeadline.format('MMM DD, hh:mm')}!`}</span>
+                    >{`Projects are due on ${dayjs(new Date(2025, 4, 28, 23, 59, 59)).format('MMM DD, hh:mm')}!`}</span>
                     <CountdownTimer
                         targetDate={new Date(2025, 4, 28, 23, 59, 59)}
                     />

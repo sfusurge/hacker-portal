@@ -59,14 +59,15 @@ export function FileUpload({
                 });
             }
         } else {
+            const newUploadedFiles = { ...uploadedFiles };
             for (const f of files) {
-                uploadedFiles[f.name] = {
+                newUploadedFiles[f.name] = {
                     file: f,
                     filename: f.name,
                     progress: 1,
                 };
             }
-            setUploadedFiles({ ...uploadedFiles });
+            setUploadedFiles(newUploadedFiles);
         }
         if (ref.current?.files) {
             ref.current.value = '';
@@ -209,8 +210,15 @@ export function FileUpload({
                                 <XCircleIcon
                                     style={{ width: '1.5rem' }}
                                     onClick={() => {
-                                        delete uploadedFiles[key];
-                                        setUploadedFiles({ ...uploadedFiles });
+                                        const newUploadedFiles = {
+                                            ...uploadedFiles,
+                                        };
+                                        delete newUploadedFiles[key];
+                                        setUploadedFiles(newUploadedFiles);
+
+                                        if (ref.current) {
+                                            ref.current.value = '';
+                                        }
                                     }}
                                 />
                             </button>

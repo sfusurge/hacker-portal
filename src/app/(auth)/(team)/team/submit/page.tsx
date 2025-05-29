@@ -16,6 +16,16 @@ export default async function SubmitPage() {
         redirect('/login');
     }
 
+    const now = new Date();
+    const pstNow = new Date(
+        now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
+    );
+    const deadline = new Date('2025-05-28T23:59:59');
+
+    if (pstNow > deadline) {
+        return <GoHome title="Submission deadline has passed!" />;
+    }
+
     const trpcClient = createCaller({});
     const hackathon = await trpcClient.hackathons.getActiveHackathon();
 
