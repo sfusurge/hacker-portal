@@ -143,19 +143,7 @@ export default function ProjectList({
     };
 
     const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
 
-    // TODO: Remove this fake loader
-    useEffect(() => {
-        if (isLoading) {
-            const timer = setTimeout(() => {
-                setIsLoading(false);
-            }, 800);
-            return () => clearTimeout(timer);
-        }
-    }, [isLoading]);
-
-    // Saved filters from local
     useEffect(() => {
         try {
             const savedFilters = localStorage.getItem(FILTERS_KEY);
@@ -257,14 +245,13 @@ export default function ProjectList({
             return;
         }
 
-        const query = searchQuery.toLowerCase();
+        const query = searchQuery ? searchQuery.toLowerCase() : '';
         const filtered = projects.filter((project, index) => {
-            const projectId = project[0] || String(index);
+            const projectId = project.id;
             const matchesSearch =
                 !query.trim() ||
-                project[1]?.toLowerCase().includes(query) ||
-                project[2]?.toLowerCase().includes(query) ||
-                project[4]?.toLowerCase().includes(query);
+                (project[1] && project[1].toLowerCase().includes(query)) ||
+                (project[4] && project[4].toLowerCase().includes(query));
 
             const projectStatus = projectStatuses[projectId] || 'not_started';
             const matchesStatus =
@@ -433,61 +420,70 @@ export default function ProjectList({
             <div className="h-fill mt-6 flex-grow overflow-y-auto pb-12 sm:-mx-6 sm:p-10 md:-mx-10 md:mt-10">
                 <div className="@container">
                     <div className="mb-24 grid grid-cols-1 gap-8 sm:mb-0 @[450px]:grid-cols-2 @[650px]:grid-cols-3 @[925px]:grid-cols-4">
-                        {isLoading
-                            ? Array(6)
-                                  .fill(0)
-                                  .map((_, index) => (
-                                      <ProjectCard
-                                          key={`skeleton-${index}`}
-                                          project={{}}
-                                          index={index}
-                                          statusInfo={{
-                                              label: '',
-                                              className: '',
-                                          }}
-                                          isLoading={true}
-                                      />
-                                  ))
-                            : filteredProjects
-                                  .sort((a, b) => {
-                                      const projectIdA = a[0] || '';
-                                      const projectIdB = b[0] || '';
-                                      const statusA =
-                                          projectStatuses[projectIdA] ||
-                                          'not_started';
-                                      const statusB =
-                                          projectStatuses[projectIdB] ||
-                                          'not_started';
+                        {!initialLoadComplete ? (
+                            Array(6)
+                                .fill(0)
+                                .map((_, index) => (
+                                    <ProjectCard
+                                        key={`skeleton-${index}`}
+                                        project={{}}
+                                        statusInfo={{
+                                            label: '',
+                                            className: '',
+                                        }}
+                                        isLoading={true}
+                                    />
+                                ))
+                        ) : filteredProjects.length === 0 ? (
+                            <div className="col-span-full py-12 text-center">
+                                <p className="text-lg text-white">
+                                    No projects match your current filters.
+                                </p>
+                                {(searchQuery.trim() !== '' ||
+                                    statusFilters.size > 0) && (
+                                    <p className="mt-2 text-sm text-white/60">
+                                        Try clearing your filters or adjusting
+                                        your search query.
+                                    </p>
+                                )}
+                            </div>
+                        ) : (
+                            filteredProjects
+                                .sort((a, b) => {
+                                    const projectIdA = a[0] || '';
+                                    const projectIdB = b[0] || '';
+                                    const statusA =
+                                        projectStatuses[projectIdA] ||
+                                        'not_started';
+                                    const statusB =
+                                        projectStatuses[projectIdB] ||
+                                        'not_started';
 
-                                      const order = {
-                                          in_progress: 0,
-                                          not_started: 1,
-                                          completed: 2,
-                                      };
-                                      return (
-                                          (order[
-                                              statusA as keyof typeof order
-                                          ] ?? 0) -
-                                          (order[
-                                              statusB as keyof typeof order
-                                          ] ?? 0)
-                                      );
-                                  })
-                                  .map((project, index) => {
-                                      const projectId =
-                                          project[0] || String(index);
-                                      const statusInfo =
-                                          getStatusInfo(projectId);
-                                      return (
-                                          <ProjectCard
-                                              key={index}
-                                              project={project}
-                                              index={index}
-                                              projectId={projectId}
-                                              statusInfo={statusInfo}
-                                          />
-                                      );
-                                  })}
+                                    const order = {
+                                        in_progress: 0,
+                                        not_started: 1,
+                                        completed: 2,
+                                    };
+                                    return (
+                                        (order[statusA as keyof typeof order] ??
+                                            0) -
+                                        (order[statusB as keyof typeof order] ??
+                                            0)
+                                    );
+                                })
+                                .map((project, index) => {
+                                    const projectId = project.id;
+                                    const statusInfo = getStatusInfo(projectId);
+                                    return (
+                                        <ProjectCard
+                                            key={index}
+                                            project={project}
+                                            projectId={projectId}
+                                            statusInfo={statusInfo}
+                                        />
+                                    );
+                                })
+                        )}
                     </div>
                 </div>
             </div>

@@ -2,80 +2,26 @@ import JudgingForm from '@/components/projects/judge/JudgingForm';
 import { FullPageInfo } from '@/components/ui/FullPageInfo';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { projectsData } from '../projects';
 import { SectionRenderer } from '@/components/projects/ProjectSection';
 import { createCaller } from '@/server/appRouter';
 import { getUserData } from '@/server/routers/usersRouter';
-import slugify from '@/utils/slugify';
 import JudgingDrawer from '@/components/projects/judge/JudgingDrawer';
+
 interface PageProps {
     params: {
         id: string;
     };
 }
 
-const projectSections = [
-    {
-        type: 'title',
-        title: 'Project Title',
-        field: 1,
-    },
-    {
-        type: 'badge',
-        title: 'Project Track',
-        field: 4,
-    },
-    {
-        type: 'image',
-        title: 'Project Header',
-        src: '/hacker-portal-preview.webp',
-        field: 1,
-    },
-    {
-        type: 'text',
-        title: 'Description',
-        field: 2,
-    },
-    {
-        type: 'video',
-        title: 'Video Pitch',
-        field: 3,
-    },
-    {
-        type: 'pdf',
-        title: 'Process Documentation',
-        url: 'https://pub-65990e7b450b4832886d09e5cef12aff.r2.dev/SparkJam%20Submission%20Form.pdf',
-    },
-    {
-        type: 'text',
-        title: 'Did the team use AI to generate any visuals for this project?',
-        field: 5,
-    },
-    {
-        type: 'text',
-        title: 'Did the team properly cite all external resources (e.g. fonts, icons libraries, component libraries) used for this project in the process documentation deliverable?',
-        field: 6,
-    },
-    {
-        type: 'text',
-        title: 'Did the team clearly cite all AI tools or services used in this project and identify what they were used for (e.g. ideation, brainstorming)?',
-        field: 7,
-    },
-];
-
 export default async function ProjectPage({ params }: PageProps) {
-    const { id } = await params;
-
-    // TODO: Route to team name or team display Id or add team identifer
-    const decodedId = slugify(id);
-    const project = projectsData.find((p) => slugify(p[1]) === decodedId);
-
-    if (!project) {
+    const awaitedParams = await params;
+    const teamId = parseInt(awaitedParams.id);
+    if (isNaN(teamId)) {
         return (
             <FullPageInfo
                 src="/teams/alone-otter.webp"
-                title={'Sorry, we cannot find this project.'}
-                body="Stay tuned."
+                title={'Invalid team ID'}
+                body="Please provide a valid team ID."
             >
                 <Button size="cozy" variant="brand" hierarchy="primary">
                     <Link href="/projects">Return to home</Link>
@@ -89,6 +35,114 @@ export default async function ProjectPage({ params }: PageProps) {
     const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
     const hackathonId = activeHackathon.id;
 
+    const submission = await trpcClient.judging.getTeamSubmission({
+        hackathonId,
+        teamId: teamId,
+    });
+
+    if (!submission) {
+        return (
+            <FullPageInfo
+                src="/teams/alone-otter.webp"
+                title={'No submission found'}
+                body="This team has not submitted their project yet."
+            >
+                <Button size="cozy" variant="brand" hierarchy="primary">
+                    <Link href="/projects">Return to home</Link>
+                </Button>
+            </FullPageInfo>
+        );
+    }
+
+    if (!submission.response) {
+        return (
+            <FullPageInfo
+                src="/teams/alone-otter.webp"
+                title={'No submission data found'}
+                body="This team's submission is empty."
+            >
+                <Button size="cozy" variant="brand" hierarchy="primary">
+                    <Link href="/projects">Return to home</Link>
+                </Button>
+            </FullPageInfo>
+        );
+    }
+
+    const submissionData = submission.response as Record<string, any>;
+
+    const projectSections = [
+        {
+            type: 'title' as const,
+            title: 'Project Title',
+            field: 1,
+        },
+        {
+            type: 'badge' as const,
+            title: 'Project Track',
+            field: 2,
+        },
+        {
+            type: 'image' as const,
+            title: 'Project Header',
+            field: 3,
+        },
+        {
+            type: 'rich-text' as const,
+            title: 'Description',
+            field: 4,
+        },
+        {
+            type: 'embed' as const,
+            title: 'Video Pitch',
+            field: 6,
+        },
+        {
+            type: 'pdf' as const,
+            title: 'Process Documentation',
+            field: 5,
+        },
+        {
+            type: 'embed' as const,
+            title: 'Prototype Link',
+            field: 7,
+        },
+        {
+            type: 'pdf' as const,
+            title: 'Slide Deck',
+            field: 8,
+        },
+        {
+            type: 'rich-text' as const,
+            title: 'Additional comments',
+            field: 9,
+        },
+        {
+            type: 'text' as const,
+            title: 'Did the team use Protopie to create their interactive prototype?',
+            field: 10,
+        },
+        {
+            type: 'text' as const,
+            title: 'Did the team use AI to generate any visuals for this project?',
+            field: 11,
+        },
+        {
+            type: 'text' as const,
+            title: 'Did the team properly cite all external resources (e.g. fonts, icon libraries, component libraries) used for this project in the process documentation deliverable?',
+            field: 12,
+        },
+        {
+            type: 'text' as const,
+            title: 'Did the team clearly cite all AI tools or services used in this project and identify what they were used for (e.g. ideation, brainstorming)?',
+            field: 13,
+        },
+        {
+            type: 'text' as const,
+            title: 'Do you consent to us sharing your project title, description, and visuals on our website and social media platforms to showcase your work?',
+            field: 14,
+        },
+    ];
+
     return (
         <div className="grid h-full grid-cols-1 xl:grid-cols-3">
             <div className="h-full overflow-y-auto pb-32 md:pb-10 xl:col-span-2 xl:pb-10">
@@ -97,7 +151,7 @@ export default async function ProjectPage({ params }: PageProps) {
                         <SectionRenderer
                             key={index}
                             section={section}
-                            data={project}
+                            data={submissionData}
                         />
                     ))}
                 </div>
@@ -107,8 +161,8 @@ export default async function ProjectPage({ params }: PageProps) {
                 <JudgingDrawer
                     hackathonId={hackathonId}
                     user={user}
-                    teamId={Number(project[0])}
-                    projectTitle={project[1]}
+                    teamId={teamId}
+                    projectTitle={submissionData[1] || `Team #${teamId}`}
                 />
             </div>
 
@@ -117,8 +171,8 @@ export default async function ProjectPage({ params }: PageProps) {
                     <JudgingForm
                         hackathonId={hackathonId}
                         user={user}
-                        teamId={Number(project[0])}
-                        projectTitle={project[1]}
+                        teamId={teamId}
+                        projectTitle={submissionData[1] || `Team #${teamId}`}
                     />
                 </div>
             </div>

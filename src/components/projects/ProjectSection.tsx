@@ -5,9 +5,30 @@ import Image from 'next/image';
 import PdfViewer from '@/components/ui/pdf-viewer';
 import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 import { useState } from 'react';
+import { IframeEmbed } from '@/components/application_components/IframeEmbed';
+import { RichText } from '@/components/ui/RichText/RichText';
 
 interface BaseSectionProps {
     title: string;
+    required?: boolean;
+}
+
+interface Section {
+    type:
+        | 'title'
+        | 'badge'
+        | 'text'
+        | 'rich-text'
+        | 'image'
+        | 'video'
+        | 'pdf'
+        | 'embed'
+        | 'checkbox'
+        | 'text-input';
+    title: string;
+    field: number;
+    options?: string[];
+    questionId?: string;
     required?: boolean;
 }
 
@@ -31,6 +52,18 @@ export function TitleSection({
         <div className="flex flex-col gap-3">
             <Label className="mb-0">{title}</Label>
             <h1 className="text-4xl font-bold">{content}</h1>
+        </div>
+    );
+}
+
+export function RichTextSection({
+    title,
+    content,
+}: BaseSectionProps & { content: any }): JSX.Element {
+    return (
+        <div className="flex flex-col gap-3">
+            <Label className="mb-0">{title}</Label>
+            <RichText onChange={() => {}} readOnly initialData={content} />
         </div>
     );
 }
@@ -101,6 +134,18 @@ export function PdfSection({ title, url }: BaseSectionProps & { url: string }) {
         <div className="flex flex-col gap-3">
             <Label className="mb-0">{title}</Label>
             <PdfViewer url={url} />
+        </div>
+    );
+}
+
+export function EmbedSection({
+    title,
+    url,
+}: BaseSectionProps & { url: string }) {
+    return (
+        <div className="flex flex-col gap-3">
+            <Label className="mb-0">{title}</Label>
+            <IframeEmbed url={url} />
         </div>
     );
 }
@@ -185,57 +230,42 @@ export function SectionRenderer({
     section,
     data,
 }: {
-    section: any;
-    data: any;
+    section: Section;
+    data: Record<string, any>;
     onChange?: (id: string, value: any) => void;
 }) {
+    const content = data[section.field];
+    if (!content) return null;
+
     switch (section.type) {
         case 'title':
-            return (
-                <TitleSection
-                    title={section.title}
-                    content={data[section.field]}
-                />
-            );
+            return <TitleSection title={section.title} content={content} />;
         case 'badge':
-            return (
-                <BadgeSection
-                    title={section.title}
-                    content={data[section.field]}
-                />
-            );
+            return <BadgeSection title={section.title} content={content} />;
         case 'text':
-            return (
-                <TextSection
-                    title={section.title}
-                    content={data[section.field]}
-                />
-            );
+            return <TextSection title={section.title} content={content} />;
+        case 'rich-text':
+            return <RichTextSection title={section.title} content={content} />;
         case 'image':
             return (
                 <ImageSection
                     title={section.title}
-                    src={section.src || '/hacker-portal-preview.webp'}
-                    alt={data[section.field] || section.title}
+                    src={content[0] || '/hacker-portal-preview.webp'}
+                    alt={section.title}
                 />
             );
         case 'video':
-            return (
-                <VideoSection title={section.title} url={data[section.field]} />
-            );
+            return <VideoSection title={section.title} url={content} />;
         case 'pdf':
-            return (
-                <PdfSection
-                    title={section.title}
-                    url={section.url || data[section.field]}
-                />
-            );
+            return <PdfSection title={section.title} url={content[0]} />;
+        case 'embed':
+            return <EmbedSection title={section.title} url={content} />;
         case 'checkbox':
             return (
                 <CheckboxSection
                     title={section.title}
-                    options={section.options}
-                    questionId={section.questionId}
+                    options={section.options || []}
+                    questionId={section.questionId || ''}
                     required={section.required}
                 />
             );
@@ -243,7 +273,7 @@ export function SectionRenderer({
             return (
                 <TextInputSection
                     title={section.title}
-                    questionId={section.questionId}
+                    questionId={section.questionId || ''}
                     required={section.required}
                 />
             );

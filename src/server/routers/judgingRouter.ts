@@ -488,12 +488,7 @@ export const judgingRouter = router({
             const [submission] = await databaseClient
                 .select()
                 .from(submissions)
-                .where(
-                    and(
-                        eq(submissions.hackathonId, input.hackathonId),
-                        eq(submissions.teamId, input.teamId)
-                    )
-                )
+                .where(and(eq(submissions.teamId, input.teamId)))
                 .limit(1);
 
             if (!submission) {
@@ -501,7 +496,6 @@ export const judgingRouter = router({
             }
 
             return {
-                hackathonId: submission.hackathonId,
                 teamId: submission.teamId,
                 response: submission.response,
                 createdDate: submission.createdDate,
