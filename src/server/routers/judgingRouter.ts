@@ -170,60 +170,60 @@ export const judgingRouter = router({
             // If admin, get all projects, otherwise get only projects assigned to the user
             let projectsQuery;
             if (user.userRole === UserRoleEnum.admin) {
-                let res: {
-                    hackathonId?: number;
-                    teamId: number;
-                    userId?: number;
-                    status?: string;
-                    createdDate: Date;
-                    updatedDate?: Date;
-                    response: unknown;
-                    teamName: string;
-                }[] = await databaseClient
-                    .select({
-                        teamId: teams.id,
-                        teamName: teams.name,
-                        response: submissions.response,
-                        createdDate: submissions.createdDate,
-                    })
-                    .from(teams)
-                    .innerJoin(submissions, eq(teams.id, submissions.teamId));
-
-                for (const r of res) {
-                    r.hackathonId = 2; // FIXME hardcoded hackathon number
-                    r.userId = user.id;
-                    r.status = 'unjudged';
-                    r.updatedDate = new Date();
-                }
-
-                return res;
-
-                // projectsQuery = databaseClient
+                // let res: {
+                //     hackathonId?: number;
+                //     teamId: number;
+                //     userId?: number;
+                //     status?: string;
+                //     createdDate: Date;
+                //     updatedDate?: Date;
+                //     response: unknown;
+                //     teamName: string;
+                // }[] = await databaseClient
                 //     .select({
-                //         hackathonId: judgingAssignments.hackathonId,
-                //         teamId: judgingAssignments.teamId,
-                //         userId: judgingAssignments.userId,
-                //         status: judgingAssignments.status,
-                //         createdDate: judgingAssignments.createdDate,
-                //         updatedDate: judgingAssignments.updatedDate,
+                //         teamId: teams.id,
                 //         teamName: teams.name,
-                //         response: judgingAssignments.response,
+                //         response: submissions.response,
+                //         createdDate: submissions.createdDate,
                 //     })
-                //     .from(judgingAssignments)
-                //     .leftJoin(
-                //         teams,
-                //         and(
-                //             eq(teams.id, judgingAssignments.teamId),
-                //             eq(
-                //                 teams.hackathonId,
-                //                 judgingAssignments.hackathonId
-                //             )
-                //         )
-                //     )
-                //     .where(
-                //         eq(judgingAssignments.hackathonId, input.hackathonId)
-                //     )
-                //     .orderBy(desc(judgingAssignments.updatedDate));
+                //     .from(teams)
+                //     .innerJoin(submissions, eq(teams.id, submissions.teamId));
+
+                // for (const r of res) {
+                //     r.hackathonId = 2; // FIXME hardcoded hackathon number
+                //     r.userId = user.id;
+                //     r.status = 'unjudged';
+                //     r.updatedDate = new Date();
+                // }
+
+                // return res;
+
+                projectsQuery = databaseClient
+                    .select({
+                        hackathonId: judgingAssignments.hackathonId,
+                        teamId: judgingAssignments.teamId,
+                        userId: judgingAssignments.userId,
+                        status: judgingAssignments.status,
+                        createdDate: judgingAssignments.createdDate,
+                        updatedDate: judgingAssignments.updatedDate,
+                        teamName: teams.name,
+                        response: judgingAssignments.response,
+                    })
+                    .from(judgingAssignments)
+                    .leftJoin(
+                        teams,
+                        and(
+                            eq(teams.id, judgingAssignments.teamId),
+                            eq(
+                                teams.hackathonId,
+                                judgingAssignments.hackathonId
+                            )
+                        )
+                    )
+                    .where(
+                        eq(judgingAssignments.hackathonId, input.hackathonId)
+                    )
+                    .orderBy(desc(judgingAssignments.updatedDate));
             } else {
                 projectsQuery = databaseClient
                     .select({
