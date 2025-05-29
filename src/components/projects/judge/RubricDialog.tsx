@@ -63,7 +63,7 @@ export default function RubricDialog({
         <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
             <ResponsiveDialogContent
                 hideCloseIcon
-                className="flex h-[80vh] flex-col gap-0 border-none bg-neutral-900 p-0 sm:max-w-300"
+                className="z-500 flex h-[80vh] flex-col gap-0 border-none bg-neutral-900 p-0 sm:max-w-300"
             >
                 {isLoading || !rubric ? (
                     <div className="flex h-full flex-col items-center justify-center">

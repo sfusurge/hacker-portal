@@ -246,31 +246,32 @@ export default function JudgingDrawer({
                     );
                 case 'multiple-choice':
                     return (
-                        <div key={section.questionId}>
+                        <div key={`section-${section.questionId}`}>
                             <CheckboxSection
                                 title={section.title}
                                 description={section.description}
                                 options={
-                                    section.choices?.map((choice) => ({
-                                        id: choice.id,
+                                    section.choices?.map((choice, index) => ({
+                                        id: `${choice.id}-${index}`,
                                         label: choice.name,
                                         value: choice.data,
                                     })) || []
                                 }
                                 selectedValue={
-                                    formState[
-                                        section.questionId.toString()
-                                    ] as string
+                                    formState[section.questionId.toString()] ||
+                                    ''
                                 }
-                                onChange={(value) =>
-                                    updateFormState(
-                                        section.questionId.toString(),
-                                        value
-                                    )
-                                }
+                                onChange={(value) => {
+                                    const questionKey =
+                                        section.questionId.toString();
+
+                                    updateFormState(questionKey, value);
+                                }}
                                 required={section.required}
                                 hasError={
-                                    formErrors[`choice_${section.questionId}`]
+                                    formErrors[
+                                        `multiple-choice_${section.questionId}`
+                                    ]
                                 }
                             />
                         </div>
