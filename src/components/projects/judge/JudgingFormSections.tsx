@@ -19,7 +19,7 @@ export function ScoreSection({
     value,
     onChange,
     required = false,
-    didJudge = false,
+    didJudge,
 }: ScoreSectionProps) {
     return (
         <div className="space-y-2">

@@ -213,6 +213,7 @@ export default function JudgingForm({
                                             ] || ''
                                         }
                                         onChange={handleScoreChange}
+                                        didJudge={didJudge}
                                         required={section.required}
                                     />
                                 </div>
