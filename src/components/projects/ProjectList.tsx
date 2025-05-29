@@ -154,7 +154,14 @@ export default function ProjectList({
                     const filtersSet = new Set(parsedFilters);
                     setStatusFilters(filtersSet);
                     setInitialStatusFilters(filtersSet);
+                } else {
+                    localStorage.removeItem(FILTERS_KEY);
+                    setStatusFilters(new Set(defaultStatusFilters));
+                    setInitialStatusFilters(new Set(defaultStatusFilters));
                 }
+            } else {
+                setStatusFilters(new Set(defaultStatusFilters));
+                setInitialStatusFilters(new Set(defaultStatusFilters));
             }
         } catch (error) {
             console.error('Error loading saved filters:', error);
@@ -168,10 +175,19 @@ export default function ProjectList({
             try {
                 const savedData = localStorage.getItem(STATUS_KEY);
                 if (savedData) {
-                    setProjectStatuses(JSON.parse(savedData));
+                    const parsedData = JSON.parse(savedData);
+                    if (parsedData && typeof parsedData === 'object') {
+                        setProjectStatuses(parsedData);
+                    } else {
+                        localStorage.removeItem(STATUS_KEY);
+                        setProjectStatuses({});
+                    }
+                } else {
+                    setProjectStatuses({});
                 }
             } catch (error) {
                 console.error('Error loading project statuses:', error);
+                setProjectStatuses({});
             }
         };
 
@@ -215,14 +231,16 @@ export default function ProjectList({
             let hasChanges = false;
 
             projects.forEach((project) => {
-                const projectId = project.id || project[0];
+                if (project && project.id !== undefined) {
+                    const projectId = project.id;
 
-                if (
-                    judgedProjectIds.has(Number(projectId)) &&
-                    newStatuses[projectId] !== 'completed'
-                ) {
-                    newStatuses[projectId] = 'completed';
-                    hasChanges = true;
+                    if (
+                        judgedProjectIds.has(Number(projectId)) &&
+                        projectStatuses[projectId] !== 'completed'
+                    ) {
+                        newStatuses[projectId] = 'completed';
+                        hasChanges = true;
+                    }
                 }
             });
 
@@ -241,18 +259,33 @@ export default function ProjectList({
     }, [judgedProjects, projects, projectStatuses, initialLoadComplete]);
 
     useEffect(() => {
-        if (!searchQuery.trim() && statusFilters.size === 0) {
+        if (!initialLoadComplete) {
+            setFilteredProjects([]);
+            return;
+        }
+
+        if (
+            !searchQuery.trim() &&
+            statusFilters.size === 0 &&
+            Object.keys(projectStatuses).length === 0
+        ) {
             setFilteredProjects(projects);
             return;
         }
 
         const query = searchQuery ? searchQuery.toLowerCase() : '';
         const filtered = projects.filter((project, index) => {
+            if (!project || project.id === undefined) {
+                return false;
+            }
+
             const projectId = project.id;
             const matchesSearch =
                 !query.trim() ||
-                (project[1] && project[1].toLowerCase().includes(query)) ||
-                (project[4] && project[4].toLowerCase().includes(query));
+                (project[1] &&
+                    String(project[1]).toLowerCase().includes(query)) ||
+                (project[4] &&
+                    String(project[4]).toLowerCase().includes(query));
 
             const projectStatus = projectStatuses[projectId] || 'not_started';
             const matchesStatus =
@@ -262,7 +295,13 @@ export default function ProjectList({
         });
 
         setFilteredProjects(filtered);
-    }, [searchQuery, projects, statusFilters, projectStatuses]);
+    }, [
+        searchQuery,
+        projects,
+        statusFilters,
+        projectStatuses,
+        initialLoadComplete,
+    ]);
 
     return (
         <div className="flex h-full flex-col">

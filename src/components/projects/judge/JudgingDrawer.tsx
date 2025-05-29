@@ -373,20 +373,34 @@ export default function JudgingDrawer({
 
     useEffect(() => {
         if (!isInitialized && user?.email) {
-            setJudgingData((prevData) => ({
-                ...prevData,
-                email: user.email,
-                hackathonId,
-            }));
-
             try {
+                const savedData = localStorage.getItem(JUDGING_DATA_KEY);
+                const initialData = savedData
+                    ? JSON.parse(savedData)
+                    : {
+                          hackathonId: 0,
+                          email: '',
+                          responses: {},
+                      };
+
+                setJudgingData({
+                    ...initialData,
+                    email: user.email,
+                    hackathonId,
+                });
+
                 const dontShowDialogPreference =
                     localStorage.getItem(DONT_SHOW_DIALOG_KEY);
                 if (dontShowDialogPreference === 'true') {
                     setDontShowAgain(true);
                 }
             } catch (error) {
-                console.error('Error loading dialog preference:', error);
+                console.error('Error loading saved data:', error);
+                setJudgingData({
+                    hackathonId,
+                    email: user.email,
+                    responses: {},
+                });
             }
 
             setIsInitialized(true);
@@ -395,25 +409,33 @@ export default function JudgingDrawer({
 
     useEffect(() => {
         if (hackathonLoaded && hackathon && isInitialized) {
-            const judgeQuestions = hackathon.judgeQuestions || [];
-            setQuestions(judgeQuestions as unknown as JudgingFormQuestion[]);
+            try {
+                const judgeQuestions = hackathon.judgeQuestions || [];
+                setQuestions(
+                    judgeQuestions as unknown as JudgingFormQuestion[]
+                );
 
-            const savedFormState = judgingData.responses?.[teamId];
+                const savedFormState = judgingData.responses?.[teamId];
 
-            if (savedFormState && Object.keys(savedFormState).length > 0) {
-                setFormState(savedFormState);
-            } else {
-                const initialState: FormResponse = {};
-                judgeQuestions.forEach((section: any) => {
-                    if (section.type === 'score-group') {
-                        section.items?.forEach((item: any) => {
-                            initialState[item.questionId.toString()] = '';
-                        });
-                    } else {
-                        initialState[section.questionId.toString()] = null;
-                    }
-                });
-                setFormState(initialState);
+                if (savedFormState && Object.keys(savedFormState).length > 0) {
+                    setFormState(savedFormState);
+                } else {
+                    const initialState: FormResponse = {};
+                    judgeQuestions.forEach((section: any) => {
+                        if (section.type === 'score-group') {
+                            section.items?.forEach((item: any) => {
+                                initialState[item.questionId.toString()] = '';
+                            });
+                        } else {
+                            initialState[section.questionId.toString()] = null;
+                        }
+                    });
+                    setFormState(initialState);
+                }
+            } catch (error) {
+                console.error('Error initializing form state:', error);
+                // Initialize with empty state if there's an error
+                setFormState({});
             }
 
             setIsLoading(false);
