@@ -55,6 +55,8 @@ function SubmitCardContent({
     const [loadingLocal, setLoadingLocal] = useState(true);
     const [hasLocal, setHasLocal] = useState(false);
 
+    const [isPastDeadline, setIsPastDeadline] = useState(false);
+
     const userinfo = useAtomValue(userInfoAtom);
     const userapplication = trpc.applications.getCurrentApplication.useQuery({
         hackathonId: hackathon.id,
@@ -68,6 +70,13 @@ function SubmitCardContent({
             setHasLocal(false);
         }
         setLoadingLocal(false);
+
+        const now = new Date();
+        const pstNow = new Date(
+            now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
+        );
+        const deadline = new Date('2025-05-28T23:59:59');
+        setIsPastDeadline(pstNow > deadline);
     }, [hackathon]);
 
     function getBtn() {
@@ -98,6 +107,10 @@ function SubmitCardContent({
 
         if (hasSubmit) {
             return false;
+        }
+
+        if (isPastDeadline) {
+            return <></>;
         }
 
         if (hasLocal) {
@@ -155,6 +168,19 @@ function SubmitCardContent({
                         Judges will evaluate the projects from May 29th to 30th,
                         2025. Winners will be announced during the closing
                         ceremony on May 31st, 2025.
+                    </span>
+                </>
+            );
+        } else if (isPastDeadline) {
+            return (
+                <>
+                    <h3 className="text-xl font-semibold text-pretty">
+                        Submission deadline has passed!
+                    </h3>
+                    <span className="text-sm text-pretty text-white/60 lg:max-w-[550px]">
+                        The submission period ended on May 28th at 11:59 PM PST.
+                        Judges will evaluate the projects from May 29th to 30th,
+                        2025.
                     </span>
                 </>
             );
