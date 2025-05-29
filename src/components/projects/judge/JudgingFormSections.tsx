@@ -3,6 +3,7 @@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 import { Label } from '@/components/ui/label/label';
+import { RadioButtonGroup } from '@/components/ui/radioButtonGroup/radioButtonGroup';
 
 interface ScoreSectionProps {
     title: string;
@@ -19,7 +20,7 @@ export function ScoreSection({
     value,
     onChange,
     required = false,
-    didJudge = false,
+    didJudge,
 }: ScoreSectionProps) {
     return (
         <div className="space-y-2">
@@ -100,7 +101,17 @@ export function CheckboxSection({
             {description && (
                 <p className="mb-2 text-sm text-white/60">{description}</p>
             )}
-            <div className="space-y-2">
+            <RadioButtonGroup
+                options={options.map((item) => ({
+                    data: item.value,
+                    name: item.label,
+                }))}
+                name={title}
+                onSelection={(s) => {
+                    onChange(s!);
+                }}
+            />
+            {/* <div className="space-y-2">
                 {options.map((option) => (
                     <CheckBoxWithLabel
                         key={option.id}
@@ -112,7 +123,7 @@ export function CheckboxSection({
                         disabled={didJudge}
                     />
                 ))}
-            </div>
+            </div> */}
         </div>
     );
 }
