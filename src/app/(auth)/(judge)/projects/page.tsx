@@ -24,9 +24,17 @@ export default async function JudgeProjectsPage() {
     const trpcClient = createCaller({});
     const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
 
-    const assignments = await trpcClient.judging.getJudgingProjects({
+    let assignments = await trpcClient.judging.getJudgingProjects({
         hackathonId: activeHackathon.id,
     });
+
+    if (data.userRole === 'admin') {
+        // @ts-ignore
+        // FIXME
+        assignments = await trpcClient.judging.getAllJudgingProjects({
+            hackathonId: activeHackathon.id,
+        });
+    }
 
     const projectsWithSubmissions = await Promise.all(
         assignments.map(async (assignment) => {
@@ -64,8 +72,6 @@ export default async function JudgeProjectsPage() {
         judgeId: data.id,
         hackathonId: activeHackathon.id,
     });
-
-    console.log('valid', assignments);
 
     return (
         <ProjectList

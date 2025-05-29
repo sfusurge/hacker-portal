@@ -148,6 +148,43 @@ export const judgingRouter = router({
             };
         }),
 
+    getAllJudgingProjects: publicProcedure
+        .input(getJudgingProjectsSchema)
+        .query(async ({ input }) => {
+            type DummyProject = {
+                hackathonId?: number;
+                teamId: number;
+                userId?: number;
+                status?: string;
+                createdDate: Date;
+                updatedDate?: Date;
+                response: unknown;
+                teamName: string;
+            };
+            const user = await getUserData();
+            if (!user) {
+                return [{}] as DummyProject[];
+            }
+            let res: DummyProject[] = await databaseClient
+                .select({
+                    teamId: teams.id,
+                    teamName: teams.name,
+                    response: submissions.response,
+                    createdDate: submissions.createdDate,
+                })
+                .from(teams)
+                .innerJoin(submissions, eq(teams.id, submissions.teamId));
+
+            for (const r of res) {
+                r.hackathonId = input.hackathonId;
+                r.userId = user.id;
+                r.status = 'unjudged';
+                r.updatedDate = new Date();
+            }
+
+            return res;
+        }),
+
     getJudgingProjects: publicProcedure
         .input(getJudgingProjectsSchema)
         .query(async ({ input }) => {
@@ -170,34 +207,6 @@ export const judgingRouter = router({
             // If admin, get all projects, otherwise get only projects assigned to the user
             let projectsQuery;
             if (user.userRole === UserRoleEnum.admin) {
-                // let res: {
-                //     hackathonId?: number;
-                //     teamId: number;
-                //     userId?: number;
-                //     status?: string;
-                //     createdDate: Date;
-                //     updatedDate?: Date;
-                //     response: unknown;
-                //     teamName: string;
-                // }[] = await databaseClient
-                //     .select({
-                //         teamId: teams.id,
-                //         teamName: teams.name,
-                //         response: submissions.response,
-                //         createdDate: submissions.createdDate,
-                //     })
-                //     .from(teams)
-                //     .innerJoin(submissions, eq(teams.id, submissions.teamId));
-
-                // for (const r of res) {
-                //     r.hackathonId = 2; // FIXME hardcoded hackathon number
-                //     r.userId = user.id;
-                //     r.status = 'unjudged';
-                //     r.updatedDate = new Date();
-                // }
-
-                // return res;
-
                 projectsQuery = databaseClient
                     .select({
                         hackathonId: judgingAssignments.hackathonId,
