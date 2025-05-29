@@ -10,7 +10,7 @@ interface ScoreSectionProps {
     value: string;
     onChange: (category: string, value: string) => void;
     required?: boolean;
-    hasError?: boolean;
+    didJudge?: boolean;
 }
 
 export function ScoreSection({
@@ -19,18 +19,26 @@ export function ScoreSection({
     value,
     onChange,
     required = false,
-    hasError = false,
+    didJudge = false,
 }: ScoreSectionProps) {
     return (
         <div className="space-y-2">
-            <h4 className="font-medium text-white">
-                {title}
-                {required && <span className="text-brand-500 ml-1">*</span>}
-            </h4>
+            <div className="justify-content flex w-full">
+                <h4 className="font-medium text-white">
+                    {title}
+                    {required && <span className="text-brand-500 ml-1">*</span>}
+                </h4>
+                {didJudge && (
+                    <span className="ml-auto font-semibold text-nowrap text-white">
+                        {value || 'Not scored'} / 5
+                    </span>
+                )}
+            </div>
             <ToggleGroup
                 type="single"
                 value={value}
                 onValueChange={(value) => onChange(category, value)}
+                readOnly={didJudge}
             >
                 {[1, 2, 3, 4, 5].map((num) => (
                     <ToggleGroupItem
@@ -43,7 +51,7 @@ export function ScoreSection({
                     </ToggleGroupItem>
                 ))}
             </ToggleGroup>
-            <div className="flex justify-between px-1 text-xs text-neutral-400">
+            <div className="flex justify-between px-1 text-xs text-white/60">
                 {['Poor', 'Fair', 'Good', 'Very good', 'Excellent'].map(
                     (label, index) => (
                         <span
@@ -71,7 +79,7 @@ interface CheckboxSectionProps {
     selectedValue: string | null;
     onChange: (value: string) => void;
     required?: boolean;
-    hasError?: boolean;
+    didJudge?: boolean;
 }
 
 export function CheckboxSection({
@@ -81,18 +89,16 @@ export function CheckboxSection({
     selectedValue,
     onChange,
     required = false,
-    hasError = false,
+    didJudge = false,
 }: CheckboxSectionProps) {
     return (
-        <div
-            className={hasError ? 'ring-danger-500 rounded-md p-3 ring-1' : ''}
-        >
+        <div>
             <h4 className="mb-2 font-medium text-white">
                 {title}
                 {required && <span className="text-brand-500 ml-1">*</span>}
             </h4>
             {description && (
-                <p className="mb-2 text-sm text-neutral-400">{description}</p>
+                <p className="mb-2 text-sm text-white/60">{description}</p>
             )}
             <div className="space-y-2">
                 {options.map((option) => (
@@ -103,6 +109,7 @@ export function CheckboxSection({
                         checked={selectedValue === option.value}
                         onChange={() => onChange(option.value)}
                         inline={true}
+                        disabled={didJudge}
                     />
                 ))}
             </div>
@@ -117,7 +124,8 @@ interface TextAreaSectionProps {
     required?: boolean;
     placeholder?: string;
     rows?: number;
-    hasError?: boolean;
+    description?: string;
+    didJudge?: boolean;
 }
 
 export function TextAreaSection({
@@ -127,11 +135,15 @@ export function TextAreaSection({
     required = false,
     placeholder = 'Additional comments...',
     rows = 6,
-    hasError = false,
+    description,
+    didJudge = false,
 }: TextAreaSectionProps) {
     return (
         <div className="space-y-2">
-            <Label htmlFor={title.toLowerCase().replace(/\s+/g, '-')}>
+            <Label
+                htmlFor={title.toLowerCase().replace(/\s+/g, '-')}
+                className="text-base text-white"
+            >
                 {title}
                 {required ? (
                     <span className="text-brand-500 ml-1">*</span>
@@ -139,14 +151,18 @@ export function TextAreaSection({
                     ' (Optional)'
                 )}
             </Label>
+            {description && (
+                <p className="mb-2 text-sm text-white/60">{description}</p>
+            )}
             <textarea
                 id={title.toLowerCase().replace(/\s+/g, '-')}
-                className={`w-full rounded-md border ${hasError ? 'border-danger-500' : 'border-neutral-700'} bg-neutral-800 px-3 py-2`}
+                className={`w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2`}
                 rows={rows}
                 placeholder={placeholder}
                 value={value || ''}
                 onChange={(e) => onChange(e.target.value)}
                 required={required}
+                disabled={didJudge}
             />
         </div>
     );

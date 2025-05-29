@@ -8,17 +8,22 @@ import { cn } from '@/lib/utils';
 import { toggleVariants } from './toggle';
 
 const ToggleGroupContext = React.createContext<
-    VariantProps<typeof toggleVariants>
+    VariantProps<typeof toggleVariants> & {
+        readOnly?: boolean;
+    }
 >({
     size: 'default',
     variant: 'default',
+    readOnly: false,
 });
 
 const ToggleGroup = React.forwardRef<
     React.ElementRef<typeof ToggleGroupPrimitive.Root>,
     React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> &
-        VariantProps<typeof toggleVariants>
->(({ className, variant, size, children, ...props }, ref) => (
+        VariantProps<typeof toggleVariants> & {
+            readOnly?: boolean;
+        }
+>(({ className, variant, size, children, readOnly, ...props }, ref) => (
     <ToggleGroupPrimitive.Root
         ref={ref}
         className={cn(
@@ -27,7 +32,7 @@ const ToggleGroup = React.forwardRef<
         )}
         {...props}
     >
-        <ToggleGroupContext.Provider value={{ variant, size }}>
+        <ToggleGroupContext.Provider value={{ variant, size, readOnly }}>
             {children}
         </ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
@@ -52,6 +57,8 @@ const ToggleGroupItem = React.forwardRef<
                 }),
                 className
             )}
+            disabled={context.readOnly}
+            style={context.readOnly ? { pointerEvents: 'none' } : undefined}
             {...props}
         >
             {children}

@@ -6,6 +6,7 @@ import { SectionRenderer } from '@/components/projects/ProjectSection';
 import { createCaller } from '@/server/appRouter';
 import { getUserData } from '@/server/routers/usersRouter';
 import JudgingDrawer from '@/components/projects/judge/JudgingDrawer';
+// import JudgingSideDrawer from '@/components/projects/judge/JudgingSideDrawer';
 
 interface PageProps {
     params: {
@@ -38,6 +39,13 @@ export default async function ProjectPage({ params }: PageProps) {
         hackathonId,
         teamId: teamId,
     });
+
+    const judgedProject = await trpcClient.judging.getJudgedProject({
+        hackathonId,
+        teamId,
+    });
+
+    const didJudge = judgedProject?.status === 'judged';
 
     if (!submission) {
         return (
@@ -165,6 +173,16 @@ export default async function ProjectPage({ params }: PageProps) {
                 />
             </div>
 
+            {/* <div className="hidden md:block xl:hidden">
+                <JudgingSideDrawer
+                    hackathonId={hackathonId}
+                    user={user}
+                    teamId={teamId}
+                    projectTitle={submissionData[1] || `Team #${teamId}`}
+                    didJudge={didJudge}
+                />
+            </div> */}
+
             <div className="h-fill relative m-0 hidden overflow-hidden bg-neutral-900 pt-10 pb-0 xl:-mt-10 xl:-mr-10 xl:-mb-10 xl:inline-flex">
                 <div className="w-fill mb-20 h-full overflow-y-auto p-6 py-0 md:mb-0 xl:col-span-1 xl:p-10 xl:py-0">
                     <JudgingForm
@@ -172,6 +190,7 @@ export default async function ProjectPage({ params }: PageProps) {
                         user={user}
                         teamId={teamId}
                         projectTitle={submissionData[1] || `Team #${teamId}`}
+                        didJudge={didJudge}
                     />
                 </div>
             </div>
