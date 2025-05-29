@@ -1,0 +1,29 @@
+input:invalid ~ .inputContainer {
+    border-color: var(--color-danger-400) !important;
+    position: relative;
+}
+
+.inputRoot:has(input:invalid):after {
+    content: var(--errorMsg);
+    font-size: small;
+    color: var(--color-danger-400);
+}
+
+.inputContainer::before {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    content: var(--lengthText);
+
+    background-color: var(--background-neutral-secondary);
+    border-top-left-radius: 4px;
+
+    padding: 0.25rem;
+    font-size: 12px;
+    color: grey;
+}
+
+.inputContainer {
+    position: relative;
+    overflow: hidden;
+}

@@ -140,6 +140,7 @@ export interface QuestionMultipleChoice extends Question {
 export interface QuestionRichTextInput extends Question {
     type: 'rich-text';
     value?: Record<any, any>;
+    maxLength?: number;
 }
 
 export interface QuestionMultipleCheckBox extends Question {
