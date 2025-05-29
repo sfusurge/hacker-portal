@@ -110,47 +110,99 @@ export default function JudgingForm({
     const { toast } = useToast();
     const router = useRouter();
 
+    const { data: didJudge } = trpc.judging.getJudgedProject.useQuery({
+        hackathonId,
+        teamId,
+    });
+
     useEffect(() => {
         setIsHydrated(true);
     }, []);
 
     useEffect(() => {
-        if (!isHydrated) return;
+        if (!isInitialized && user?.email) {
+            try {
+                const savedData = localStorage.getItem(JUDGING_DATA_KEY);
+                const initialData = savedData
+                    ? JSON.parse(savedData)
+                    : {
+                          hackathonId: 0,
+                          email: '',
+                          responses: {},
+                      };
 
-        try {
-            const savedData = safeLocalStorage.getItem(JUDGING_DATA_KEY);
-            if (savedData) {
-                const parsedData = JSON.parse(savedData);
-                setJudgingData(parsedData);
+                setJudgingData({
+                    ...initialData,
+                    email: user.email,
+                    hackathonId,
+                });
+
+                const dontShowDialogPreference =
+                    localStorage.getItem(DONT_SHOW_DIALOG_KEY);
+                if (dontShowDialogPreference === 'true') {
+                    setDontShowAgain(true);
+                }
+            } catch (error) {
+                console.error(
+                    'Error loading saved data from localStorage:',
+                    error
+                );
+                setJudgingData({
+                    hackathonId,
+                    email: user.email,
+                    responses: {},
+                });
             }
 
-            const dontShowDialogPreference =
-                safeLocalStorage.getItem(DONT_SHOW_DIALOG_KEY);
-            if (dontShowDialogPreference === 'true') {
-                setDontShowAgain(true);
-            }
-        } catch (error) {
-            console.error('Error loading from localStorage:', error);
+            setIsInitialized(true);
         }
-    }, [isHydrated, setJudgingData]);
+    }, [user?.email, hackathonId, setJudgingData, isInitialized]);
 
     useEffect(() => {
-        if (!isHydrated || !isInitialized) return;
+        if (hackathonLoaded && hackathon && isInitialized) {
+            try {
+                const judgeQuestions = hackathon.judgeQuestions || [];
+                setQuestions(
+                    judgeQuestions as unknown as JudgingFormQuestion[]
+                );
 
-        try {
-            safeLocalStorage.setItem(
-                JUDGING_DATA_KEY,
-                JSON.stringify(judgingData)
-            );
-        } catch (error) {
-            console.error('Error saving judging data:', error);
+                const savedFormState = judgingData.responses?.[teamId];
+
+                if (savedFormState && Object.keys(savedFormState).length > 0) {
+                    setFormState(savedFormState);
+                } else {
+                    const initialState: FormResponse = {};
+                    judgeQuestions.forEach((section: any) => {
+                        if (section.type === 'score-group') {
+                            section.items?.forEach((item: any) => {
+                                initialState[item.questionId.toString()] = '';
+                            });
+                        } else {
+                            initialState[section.questionId.toString()] = null;
+                        }
+                    });
+                    setFormState(initialState);
+                }
+            } catch (error) {
+                console.error(
+                    'Error initializing form state from hackathon data:',
+                    error
+                );
+                // Initialize with empty state if there's an error
+                setFormState({});
+            }
+
+            setIsLoading(false);
         }
-    }, [judgingData, isHydrated, isInitialized]);
-
-    const { data: didJudge } = trpc.judging.getJudgedProject.useQuery({
-        hackathonId,
+    }, [
+        hackathonLoaded,
+        hackathon,
+        isInitialized,
+        judgingData.responses,
         teamId,
-    });
+        setQuestions,
+        setFormState,
+    ]);
 
     const validateForm = useCallback((): boolean => {
         if (!formRef.current || questions.length === 0) return false;
@@ -409,54 +461,6 @@ export default function JudgingForm({
         user.id,
         formState,
         toast,
-    ]);
-
-    useEffect(() => {
-        if (!isInitialized && user?.email && isHydrated) {
-            setJudgingData((prevData) => ({
-                ...prevData,
-                email: user.email,
-                hackathonId,
-            }));
-
-            setIsInitialized(true);
-        }
-    }, [user?.email, hackathonId, setJudgingData, isInitialized, isHydrated]);
-
-    useEffect(() => {
-        if (hackathonLoaded && hackathon && isInitialized && isHydrated) {
-            const judgeQuestions = hackathon.judgeQuestions || [];
-            setQuestions(judgeQuestions as unknown as JudgingFormQuestion[]);
-
-            const savedFormState = judgingData.responses?.[teamId];
-
-            if (savedFormState && Object.keys(savedFormState).length > 0) {
-                setFormState(savedFormState);
-            } else {
-                const initialState: FormResponse = {};
-                judgeQuestions.forEach((section: any) => {
-                    if (section.type === 'score-group') {
-                        section.items?.forEach((item: any) => {
-                            initialState[item.questionId.toString()] = '';
-                        });
-                    } else {
-                        initialState[section.questionId.toString()] = null;
-                    }
-                });
-                setFormState(initialState);
-            }
-
-            setIsLoading(false);
-        }
-    }, [
-        hackathonLoaded,
-        hackathon,
-        isInitialized,
-        isHydrated,
-        judgingData.responses,
-        teamId,
-        setQuestions,
-        setFormState,
     ]);
 
     useEffect(() => {

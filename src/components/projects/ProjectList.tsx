@@ -274,22 +274,27 @@ export default function ProjectList({
         }
 
         const query = searchQuery ? searchQuery.toLowerCase() : '';
-        const filtered = projects.filter((project, index) => {
+        const filtered = projects.filter((project) => {
             if (!project || project.id === undefined) {
                 return false;
             }
 
             const projectId = project.id;
+            const projectStatus =
+                projectStatuses && typeof projectStatuses === 'object'
+                    ? projectStatuses[projectId] || 'not_started'
+                    : 'not_started';
+            const matchesStatus =
+                statusFilters instanceof Set
+                    ? statusFilters.size === 0 ||
+                      statusFilters.has(projectStatus)
+                    : true;
             const matchesSearch =
                 !query.trim() ||
                 (project[1] &&
                     String(project[1]).toLowerCase().includes(query)) ||
                 (project[4] &&
                     String(project[4]).toLowerCase().includes(query));
-
-            const projectStatus = projectStatuses[projectId] || 'not_started';
-            const matchesStatus =
-                statusFilters.size === 0 || statusFilters.has(projectStatus);
 
             return matchesSearch && matchesStatus;
         });
