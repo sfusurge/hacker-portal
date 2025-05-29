@@ -245,9 +245,9 @@ export default function ProjectList({
             return;
         }
 
-        const query = searchQuery.toLowerCase();
+        const query = searchQuery ? searchQuery.toLowerCase() : '';
         const filtered = projects.filter((project, index) => {
-            const projectId = project[0] || String(index);
+            const projectId = project.id;
             const matchesSearch =
                 !query.trim() ||
                 (project[1] && project[1].toLowerCase().includes(query)) ||

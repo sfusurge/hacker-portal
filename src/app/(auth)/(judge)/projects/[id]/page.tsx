@@ -14,7 +14,8 @@ interface PageProps {
 }
 
 export default async function ProjectPage({ params }: PageProps) {
-    const teamId = parseInt(params.id);
+    const awaitedParams = await params;
+    const teamId = parseInt(awaitedParams.id);
     if (isNaN(teamId)) {
         return (
             <FullPageInfo

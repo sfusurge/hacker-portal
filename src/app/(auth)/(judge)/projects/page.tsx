@@ -44,7 +44,7 @@ export default async function JudgeProjectsPage() {
             const project: Project = {
                 id: assignment.teamId,
                 0: assignment.teamId.toString(),
-                1: assignment.teamName || `Team #${assignment.teamId}`,
+                1: response[1] || `Team #${assignment.teamId}`,
                 2: response[2] || 'No track selected',
                 3: response[3]?.[0] || '/hacker-portal-preview.webp',
                 4:
