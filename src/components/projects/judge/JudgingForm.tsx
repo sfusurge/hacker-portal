@@ -38,6 +38,7 @@ interface JudgingFormProps {
     projectTitle?: string;
     hackathonId: number;
     user: any;
+    didJudge: boolean;
 }
 
 const STATUS_KEY = 'judging_status_data';
@@ -67,6 +68,7 @@ export default function JudgingForm({
     projectTitle = 'this project',
     hackathonId,
     user,
+    didJudge,
 }: JudgingFormProps) {
     const { hackathon, hackathonLoaded } = useHackathon();
     const [judgingData, setJudgingData] = useAtom(judgingDataAtom);
@@ -86,11 +88,6 @@ export default function JudgingForm({
     const validationTimeoutRef = useRef<NodeJS.Timeout>();
     const { toast } = useToast();
     const router = useRouter();
-
-    const { data: didJudge } = trpc.judging.getJudgedProject.useQuery({
-        hackathonId,
-        teamId,
-    });
 
     const validateForm = useCallback((): boolean => {
         if (!formRef.current || questions.length === 0) return false;
