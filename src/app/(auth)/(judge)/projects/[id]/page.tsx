@@ -36,7 +36,7 @@ export default async function ProjectPage({ params }: PageProps) {
 
     const submission = await trpcClient.judging.getTeamSubmission({
         hackathonId,
-        teamId,
+        teamId: teamId,
     });
 
     if (!submission) {

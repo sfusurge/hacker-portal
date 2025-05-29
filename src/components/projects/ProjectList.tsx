@@ -472,8 +472,7 @@ export default function ProjectList({
                                     );
                                 })
                                 .map((project, index) => {
-                                    const projectId =
-                                        project.id || String(index);
+                                    const projectId = project.id;
                                     const statusInfo = getStatusInfo(projectId);
                                     return (
                                         <ProjectCard
