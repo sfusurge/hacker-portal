@@ -233,6 +233,7 @@ export default function JudgingDrawer({
                                             ] || ''
                                         }
                                         onChange={handleScoreChange}
+                                        didJudge={didJudge}
                                         required={section.required}
                                     />
                                 </div>
