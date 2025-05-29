@@ -69,6 +69,12 @@ const navLinks = [
 
 const adminLinks = [
     {
+        href: '/projects',
+        label: 'Projects',
+        icon: <InboxStackIcon className="h-6 w-6" />,
+        iconAlt: 'Projects logo',
+    },
+    {
         href: '/admin/review',
         label: 'Review Applications',
         icon: <BellAlertIcon className="h-6 w-6" />,

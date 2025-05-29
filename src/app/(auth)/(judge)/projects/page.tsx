@@ -65,6 +65,8 @@ export default async function JudgeProjectsPage() {
         hackathonId: activeHackathon.id,
     });
 
+    console.log('valid', assignments);
+
     return (
         <ProjectList
             projects={validProjects}
