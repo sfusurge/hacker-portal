@@ -164,7 +164,7 @@ function SubmitCardContent({
                     {!teamdata.data && <p>You are not in a team yet!</p>}
                     <span
                         className={'text-sm text-white/60'}
-                    >{`Projects are due on ${hackathon.submissionDeadline.format('MMM DD, hh:mm')}!`}</span>
+                    >{`Projects are due on ${dayjs(new Date(2025, 4, 28, 23, 59, 59)).format('MMM DD, hh:mm')}!`}</span>
                     <CountdownTimer
                         targetDate={new Date(2025, 4, 28, 23, 59, 59)}
                     />
