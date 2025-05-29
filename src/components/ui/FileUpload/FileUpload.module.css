@@ -1,7 +1,6 @@
-.inputRoot:has(input:invalid)::after {
-    content: 'invalid';
+.inputRoot:has(div > input:invalid)::after {
     display: block;
-    content: var(--errMsg);
+    content: var(--errorMsg);
     color: var(--color-danger-400);
     font-size: smaller;
 }

@@ -29,6 +29,10 @@ export function isApplicationQuestionFilled(question: InputFormQuestion) {
                         !!question.otherValue &&
                         question.otherValue.trim() !== '')
                 );
+            case 'file-upload':
+                return question.fileList && question.fileList.length > 0;
+            case 'rich-text':
+                return question.value;
 
             case 'multiple-choice':
                 return question.value !== undefined;
