@@ -23,6 +23,7 @@ import { trpc } from '@/trpc/client';
 import { Loader2 } from 'lucide-react';
 import { useHackathon } from '@/hooks/use-hackathon';
 import { atom, useAtom } from 'jotai';
+import { atomWithStorage, createJSONStorage } from 'jotai/utils';
 import {
     ScoreItem,
     ScoreGroupQuestion,
@@ -43,42 +44,19 @@ const STATUS_KEY = 'judging_status_data';
 const JUDGING_DATA_KEY = 'judging_data';
 const DONT_SHOW_DIALOG_KEY = 'judging_dont_show_dialog';
 
-const safeLocalStorage = {
-    getItem: (key: string): string | null => {
-        if (typeof window === 'undefined') return null;
-        try {
-            return localStorage.getItem(key);
-        } catch {
-            return null;
-        }
-    },
-    setItem: (key: string, value: string): void => {
-        if (typeof window === 'undefined') return;
-        try {
-            localStorage.setItem(key, value);
-        } catch (error) {
-            console.error('Error saving to localStorage:', error);
-        }
-    },
-    removeItem: (key: string): void => {
-        if (typeof window === 'undefined') return;
-        try {
-            localStorage.removeItem(key);
-        } catch (error) {
-            console.error('Error removing from localStorage:', error);
-        }
-    },
-};
-
-const judgingDataAtom = atom<{
+const judgingDataAtom = atomWithStorage<{
     hackathonId: number;
     email: string;
     responses: Record<string, FormResponse>;
-}>({
-    hackathonId: 0,
-    email: '',
-    responses: {},
-});
+}>(
+    JUDGING_DATA_KEY,
+    {
+        hackathonId: 0,
+        email: '',
+        responses: {},
+    },
+    createJSONStorage(() => localStorage)
+);
 
 const formStateAtom = atom<FormResponse>({});
 const questionsAtom = atom<JudgingFormQuestion[]>([]);
@@ -103,7 +81,6 @@ export default function JudgingForm({
     const [isRubricOpen, setIsRubricOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isInitialized, setIsInitialized] = useState(false);
-    const [isHydrated, setIsHydrated] = useState(false);
 
     const formRef = useRef<HTMLFormElement>(null);
     const validationTimeoutRef = useRef<NodeJS.Timeout>();
@@ -114,95 +91,6 @@ export default function JudgingForm({
         hackathonId,
         teamId,
     });
-
-    useEffect(() => {
-        setIsHydrated(true);
-    }, []);
-
-    useEffect(() => {
-        if (!isInitialized && user?.email) {
-            try {
-                const savedData = localStorage.getItem(JUDGING_DATA_KEY);
-                const initialData = savedData
-                    ? JSON.parse(savedData)
-                    : {
-                          hackathonId: 0,
-                          email: '',
-                          responses: {},
-                      };
-
-                setJudgingData({
-                    ...initialData,
-                    email: user.email,
-                    hackathonId,
-                });
-
-                const dontShowDialogPreference =
-                    localStorage.getItem(DONT_SHOW_DIALOG_KEY);
-                if (dontShowDialogPreference === 'true') {
-                    setDontShowAgain(true);
-                }
-            } catch (error) {
-                console.error(
-                    'Error loading saved data from localStorage:',
-                    error
-                );
-                setJudgingData({
-                    hackathonId,
-                    email: user.email,
-                    responses: {},
-                });
-            }
-
-            setIsInitialized(true);
-        }
-    }, [user?.email, hackathonId, setJudgingData, isInitialized]);
-
-    useEffect(() => {
-        if (hackathonLoaded && hackathon && isInitialized) {
-            try {
-                const judgeQuestions = hackathon.judgeQuestions || [];
-                setQuestions(
-                    judgeQuestions as unknown as JudgingFormQuestion[]
-                );
-
-                const savedFormState = judgingData.responses?.[teamId];
-
-                if (savedFormState && Object.keys(savedFormState).length > 0) {
-                    setFormState(savedFormState);
-                } else {
-                    const initialState: FormResponse = {};
-                    judgeQuestions.forEach((section: any) => {
-                        if (section.type === 'score-group') {
-                            section.items?.forEach((item: any) => {
-                                initialState[item.questionId.toString()] = '';
-                            });
-                        } else {
-                            initialState[section.questionId.toString()] = null;
-                        }
-                    });
-                    setFormState(initialState);
-                }
-            } catch (error) {
-                console.error(
-                    'Error initializing form state from hackathon data:',
-                    error
-                );
-                // Initialize with empty state if there's an error
-                setFormState({});
-            }
-
-            setIsLoading(false);
-        }
-    }, [
-        hackathonLoaded,
-        hackathon,
-        isInitialized,
-        judgingData.responses,
-        teamId,
-        setQuestions,
-        setFormState,
-    ]);
 
     const validateForm = useCallback((): boolean => {
         if (!formRef.current || questions.length === 0) return false;
@@ -245,13 +133,11 @@ export default function JudgingForm({
 
     const updateStatusInLocalStorage = useCallback(
         (status: 'in_progress' | 'completed') => {
-            if (!isHydrated) return;
-
             try {
-                const statusData = safeLocalStorage.getItem(STATUS_KEY);
+                const statusData = localStorage.getItem(STATUS_KEY);
                 const existingStatus = statusData ? JSON.parse(statusData) : {};
                 existingStatus[teamId] = status;
-                safeLocalStorage.setItem(
+                localStorage.setItem(
                     STATUS_KEY,
                     JSON.stringify(existingStatus)
                 );
@@ -259,7 +145,7 @@ export default function JudgingForm({
                 console.error('Error saving status data:', error);
             }
         },
-        [teamId, isHydrated]
+        [teamId]
     );
 
     const updateFormState = useCallback(
@@ -408,7 +294,7 @@ export default function JudgingForm({
 
             if (validateForm()) {
                 const skipDialog =
-                    safeLocalStorage.getItem(DONT_SHOW_DIALOG_KEY) === 'true';
+                    localStorage.getItem(DONT_SHOW_DIALOG_KEY) === 'true';
                 if (skipDialog) {
                     handleConfirmSubmit();
                 } else {
@@ -429,7 +315,11 @@ export default function JudgingForm({
 
     const handleConfirmSubmit = useCallback(async () => {
         if (dontShowAgain) {
-            safeLocalStorage.setItem(DONT_SHOW_DIALOG_KEY, 'true');
+            try {
+                localStorage.setItem(DONT_SHOW_DIALOG_KEY, 'true');
+            } catch (error) {
+                console.error('Error saving dialog preference:', error);
+            }
         }
 
         setIsDialogOpen(false);
@@ -464,6 +354,63 @@ export default function JudgingForm({
     ]);
 
     useEffect(() => {
+        if (!isInitialized && user?.email) {
+            setJudgingData((prevData) => ({
+                ...prevData,
+                email: user.email,
+                hackathonId,
+            }));
+
+            try {
+                const dontShowDialogPreference =
+                    localStorage.getItem(DONT_SHOW_DIALOG_KEY);
+                if (dontShowDialogPreference === 'true') {
+                    setDontShowAgain(true);
+                }
+            } catch (error) {
+                console.error('Error loading dialog preference:', error);
+            }
+
+            setIsInitialized(true);
+        }
+    }, [user?.email, hackathonId, setJudgingData, isInitialized]);
+
+    useEffect(() => {
+        if (hackathonLoaded && hackathon && isInitialized) {
+            const judgeQuestions = hackathon.judgeQuestions || [];
+            setQuestions(judgeQuestions as unknown as JudgingFormQuestion[]);
+
+            const savedFormState = judgingData.responses?.[teamId];
+
+            if (savedFormState && Object.keys(savedFormState).length > 0) {
+                setFormState(savedFormState);
+            } else {
+                const initialState: FormResponse = {};
+                judgeQuestions.forEach((section: any) => {
+                    if (section.type === 'score-group') {
+                        section.items?.forEach((item: any) => {
+                            initialState[item.questionId.toString()] = '';
+                        });
+                    } else {
+                        initialState[section.questionId.toString()] = null;
+                    }
+                });
+                setFormState(initialState);
+            }
+
+            setIsLoading(false);
+        }
+    }, [
+        hackathonLoaded,
+        hackathon,
+        isInitialized,
+        judgingData.responses,
+        teamId,
+        setQuestions,
+        setFormState,
+    ]);
+
+    useEffect(() => {
         if (didJudge !== undefined) {
             updateStatusInLocalStorage(didJudge ? 'completed' : 'in_progress');
         }
@@ -473,12 +420,11 @@ export default function JudgingForm({
         if (
             !isLoading &&
             questions.length > 0 &&
-            Object.keys(formState).length > 0 &&
-            isHydrated
+            Object.keys(formState).length > 0
         ) {
             debouncedValidateForm();
         }
-    }, [formState, questions, isLoading, debouncedValidateForm, isHydrated]);
+    }, [formState, questions, isLoading, debouncedValidateForm]);
 
     useEffect(() => {
         return () => {
@@ -489,18 +435,10 @@ export default function JudgingForm({
     }, []);
 
     useEffect(() => {
-        if (!isRubricOpen && !isLoading && isHydrated) {
+        if (!isRubricOpen && !isLoading) {
             validateForm();
         }
-    }, [isRubricOpen, isLoading, validateForm, isHydrated]);
-
-    if (!isHydrated) {
-        return (
-            <div className="flex h-full flex-col items-center justify-center">
-                <Loader2 className="text-brand-400 h-8 w-8 animate-spin" />
-            </div>
-        );
-    }
+    }, [isRubricOpen, isLoading, validateForm]);
 
     return (
         <>

@@ -235,7 +235,8 @@ export function SectionRenderer({
     onChange?: (id: string, value: any) => void;
 }) {
     const content = data[section.field];
-    if (!content) return null;
+    if (!content || (Array.isArray(content) && content.length === 0))
+        return null;
 
     switch (section.type) {
         case 'title':

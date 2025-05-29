@@ -41,39 +41,6 @@ const STATUS_KEY = 'judging_status_data';
 const JUDGING_DATA_KEY = 'judging_data';
 const DONT_SHOW_DIALOG_KEY = 'judging_dont_show_dialog';
 
-const safeLocalStorage = {
-    getItem: (key: string): string | null => {
-        if (typeof window === 'undefined') return null;
-        try {
-            return localStorage.getItem(key);
-        } catch (error) {
-            console.error('Error accessing localStorage:', error);
-            return null;
-        }
-    },
-    setItem: (key: string, value: string): void => {
-        if (typeof window === 'undefined') return;
-        try {
-            localStorage.setItem(key, value);
-        } catch (error) {
-            console.error('Error setting localStorage:', error);
-        }
-    },
-};
-
-const safeStorage = createJSONStorage(() => ({
-    getItem: safeLocalStorage.getItem,
-    setItem: safeLocalStorage.setItem,
-    removeItem: (key: string) => {
-        if (typeof window === 'undefined') return;
-        try {
-            localStorage.removeItem(key);
-        } catch (error) {
-            console.error('Error removing from localStorage:', error);
-        }
-    },
-}));
-
 const judgingDataAtom = atomWithStorage<{
     hackathonId: number;
     email: string;
@@ -85,7 +52,7 @@ const judgingDataAtom = atomWithStorage<{
         email: '',
         responses: {},
     },
-    safeStorage
+    createJSONStorage(() => localStorage)
 );
 
 const formStateAtom = atom<FormResponse>({});
@@ -110,7 +77,6 @@ export default function JudgingDrawer({
     const [isRubricOpen, setIsRubricOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isInitialized, setIsInitialized] = useState(false);
-    const [isClientReady, setIsClientReady] = useState(false);
 
     const [isEvaluationDrawerOpen, setIsEvaluationDrawerOpen] = useState(false);
     const [isConfirmationDrawerOpen, setIsConfirmationDrawerOpen] =
@@ -128,10 +94,6 @@ export default function JudgingDrawer({
         teamId,
     });
 
-    useEffect(() => {
-        setIsClientReady(true);
-    }, []);
-
     const validateForm = useCallback((): boolean => {
         if (!formRef.current || questions.length === 0) return false;
 
@@ -143,14 +105,14 @@ export default function JudgingDrawer({
                 if (!section.items) return;
                 section.items.forEach((item: ScoreItem) => {
                     const value = formState[item.questionId.toString()];
-                    if (!value) {
+                    if (!value || value.trim() === '') {
                         errors[`score_${item.questionId}`] = true;
                         isValid = false;
                     }
                 });
             } else if (section.required) {
                 const value = formState[section.questionId.toString()];
-                if (!value) {
+                if (!value || value.trim() === '') {
                     errors[`${section.type}_${section.questionId}`] = true;
                     isValid = false;
                 }
@@ -186,13 +148,11 @@ export default function JudgingDrawer({
 
     const updateStatusInLocalStorage = useCallback(
         (status: 'in_progress' | 'completed') => {
-            if (!isClientReady) return;
-
             try {
-                const statusData = safeLocalStorage.getItem(STATUS_KEY);
+                const statusData = localStorage.getItem(STATUS_KEY);
                 const existingStatus = statusData ? JSON.parse(statusData) : {};
                 existingStatus[teamId] = status;
-                safeLocalStorage.setItem(
+                localStorage.setItem(
                     STATUS_KEY,
                     JSON.stringify(existingStatus)
                 );
@@ -200,7 +160,7 @@ export default function JudgingDrawer({
                 console.error('Error saving status data:', error);
             }
         },
-        [teamId, isClientReady]
+        [teamId]
     );
 
     const updateFormState = useCallback(
@@ -274,11 +234,6 @@ export default function JudgingDrawer({
                                         }
                                         onChange={handleScoreChange}
                                         required={section.required}
-                                        hasError={
-                                            formErrors[
-                                                `score_${item.questionId}`
-                                            ]
-                                        }
                                     />
                                 </div>
                             ))}
@@ -308,11 +263,6 @@ export default function JudgingDrawer({
                                     updateFormState(questionKey, value);
                                 }}
                                 required={section.required}
-                                hasError={
-                                    formErrors[
-                                        `multiple-choice_${section.questionId}`
-                                    ]
-                                }
                             />
                         </div>
                     );
@@ -333,9 +283,6 @@ export default function JudgingDrawer({
                                 }
                                 required={section.required}
                                 placeholder={section.placeholder}
-                                hasError={
-                                    formErrors[`textarea_${section.questionId}`]
-                                }
                             />
                         </div>
                     );
@@ -352,7 +299,7 @@ export default function JudgingDrawer({
 
             if (validateForm()) {
                 const skipDialog =
-                    safeLocalStorage.getItem(DONT_SHOW_DIALOG_KEY) === 'true';
+                    localStorage.getItem(DONT_SHOW_DIALOG_KEY) === 'true';
                 if (skipDialog) {
                     handleConfirmSubmit();
                 } else {
@@ -372,8 +319,12 @@ export default function JudgingDrawer({
     );
 
     const handleConfirmSubmit = useCallback(async () => {
-        if (dontShowAgain && isClientReady) {
-            safeLocalStorage.setItem(DONT_SHOW_DIALOG_KEY, 'true');
+        if (dontShowAgain) {
+            try {
+                localStorage.setItem(DONT_SHOW_DIALOG_KEY, 'true');
+            } catch (error) {
+                console.error('Error saving dialog preference:', error);
+            }
         }
 
         setIsConfirmationDrawerOpen(false);
@@ -399,7 +350,6 @@ export default function JudgingDrawer({
         }
     }, [
         dontShowAgain,
-        isClientReady,
         createJudgeScore,
         hackathonId,
         teamId,
@@ -409,83 +359,78 @@ export default function JudgingDrawer({
     ]);
 
     useEffect(() => {
-        if (!isClientReady || !user?.email || isInitialized) return;
+        if (!isInitialized && user?.email) {
+            try {
+                const savedData = localStorage.getItem(JUDGING_DATA_KEY);
+                const initialData = savedData
+                    ? JSON.parse(savedData)
+                    : {
+                          hackathonId: 0,
+                          email: '',
+                          responses: {},
+                      };
 
-        try {
-            const savedData = safeLocalStorage.getItem(JUDGING_DATA_KEY);
-            const initialData = savedData
-                ? JSON.parse(savedData)
-                : {
-                      hackathonId: 0,
-                      email: '',
-                      responses: {},
-                  };
+                setJudgingData({
+                    ...initialData,
+                    email: user.email,
+                    hackathonId,
+                });
 
-            setJudgingData({
-                ...initialData,
-                email: user.email,
-                hackathonId,
-            });
-
-            const dontShowDialogPreference =
-                safeLocalStorage.getItem(DONT_SHOW_DIALOG_KEY);
-            if (dontShowDialogPreference === 'true') {
-                setDontShowAgain(true);
+                const dontShowDialogPreference =
+                    localStorage.getItem(DONT_SHOW_DIALOG_KEY);
+                if (dontShowDialogPreference === 'true') {
+                    setDontShowAgain(true);
+                }
+            } catch (error) {
+                console.error('Error loading saved data:', error);
+                setJudgingData({
+                    hackathonId,
+                    email: user.email,
+                    responses: {},
+                });
             }
-        } catch (error) {
-            console.error('Error loading saved data:', error);
-            setJudgingData({
-                hackathonId,
-                email: user.email,
-                responses: {},
-            });
-        }
 
-        setIsInitialized(true);
-    }, [
-        isClientReady,
-        user?.email,
-        hackathonId,
-        setJudgingData,
-        isInitialized,
-    ]);
+            setIsInitialized(true);
+        }
+    }, [user?.email, hackathonId, setJudgingData, isInitialized]);
 
     useEffect(() => {
-        if (!hackathonLoaded || !hackathon || !isInitialized || !isClientReady)
-            return;
+        if (hackathonLoaded && hackathon && isInitialized) {
+            try {
+                const judgeQuestions = hackathon.judgeQuestions || [];
+                setQuestions(
+                    judgeQuestions as unknown as JudgingFormQuestion[]
+                );
 
-        try {
-            const judgeQuestions = hackathon.judgeQuestions || [];
-            setQuestions(judgeQuestions as unknown as JudgingFormQuestion[]);
+                const savedFormState = judgingData.responses?.[teamId];
 
-            const savedFormState = judgingData.responses?.[teamId];
-
-            if (savedFormState && Object.keys(savedFormState).length > 0) {
-                setFormState(savedFormState);
-            } else {
-                const initialState: FormResponse = {};
-                judgeQuestions.forEach((section: any) => {
-                    if (section.type === 'score-group') {
-                        section.items?.forEach((item: any) => {
-                            initialState[item.questionId.toString()] = '';
-                        });
-                    } else {
-                        initialState[section.questionId.toString()] = null;
-                    }
-                });
-                setFormState(initialState);
+                if (savedFormState && Object.keys(savedFormState).length > 0) {
+                    setFormState(savedFormState);
+                } else {
+                    const initialState: FormResponse = {};
+                    judgeQuestions.forEach((section: any) => {
+                        if (section.type === 'score-group') {
+                            section.items?.forEach((item: any) => {
+                                initialState[item.questionId.toString()] = '';
+                            });
+                        } else {
+                            initialState[section.questionId.toString()] = null;
+                        }
+                    });
+                    setFormState(initialState);
+                }
+            } catch (error) {
+                console.error('Error initializing form state:', error);
+                // Initialize with empty state if there's an error
+                setFormState({});
             }
-        } catch (error) {
-            console.error('Error initializing form state:', error);
-            setFormState({});
-        }
 
-        setIsLoading(false);
+            setIsLoading(false);
+        }
     }, [
         hackathonLoaded,
         hackathon,
         isInitialized,
-        isClientReady,
         judgingData.responses,
         teamId,
         setQuestions,
@@ -493,10 +438,10 @@ export default function JudgingDrawer({
     ]);
 
     useEffect(() => {
-        if (didJudge !== undefined && isClientReady) {
+        if (didJudge !== undefined) {
             updateStatusInLocalStorage(didJudge ? 'completed' : 'in_progress');
         }
-    }, [didJudge, isClientReady, updateStatusInLocalStorage]);
+    }, [didJudge, updateStatusInLocalStorage]);
 
     useEffect(() => {
         if (
@@ -515,14 +460,6 @@ export default function JudgingDrawer({
             }
         };
     }, []);
-
-    if (!isClientReady) {
-        return (
-            <div className="flex h-full flex-col items-center justify-center">
-                <Loader2 className="text-brand-400 h-8 w-8 animate-spin" />
-            </div>
-        );
-    }
 
     return (
         <>
