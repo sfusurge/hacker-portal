@@ -20,7 +20,7 @@ export default async function SubmitPage() {
     const pstNow = new Date(
         now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
     );
-    const deadline = new Date('2025-05-29T00:30:00');
+    const deadline = new Date('2025-05-28T23:59:59');
 
     if (pstNow > deadline) {
         return <GoHome title="Submission deadline has passed!" />;
