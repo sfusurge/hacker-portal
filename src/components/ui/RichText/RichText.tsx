@@ -102,12 +102,12 @@ export function RichText({
     const [initialLoad, setinitialLoad] = useState(true);
 
     useEffect(() => {
-        // if (initialLoad && !finalCheck) {
-        //     setinitialLoad(false);
-        //     return;
-        // }
+        if (initialLoad && !finalCheck) {
+            setinitialLoad(false);
+            return;
+        }
 
-        if (richeditorRef.current?.getLength() === 1) {
+        if (richeditorRef.current?.getLength() === 1 && initialLoad) {
             // counts eof as a char for some reason
             richeditorRef.current?.setContents((initialData as Delta) ?? []);
         }

@@ -16,6 +16,7 @@ import {
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 /**
  * completed: every form field that is required is filled.
@@ -97,7 +98,12 @@ export function DesktopPageIndicator({
                 }
             }
             if (!valid) {
-                alert('Not all pages are valid!');
+                toast({
+                    title: 'Invalid form',
+                    description:
+                        'Some of the questions are not filled correctly.',
+                    variant: 'error',
+                });
                 setIndex(idx);
             } else {
                 setIndex(pageStates.length); // the lastpage + 1 is the review page.
@@ -185,7 +191,11 @@ export function MobilePageIndicator({
         }
 
         if (!valid) {
-            alert('Not all pages are valid!');
+            toast({
+                title: 'Invalid form',
+                description: 'Some of the questions are not filled correctly.',
+                variant: 'error',
+            });
             setErrCheck(true);
         } else {
             setIndex(pageStates.length); // the lastpage + 1 is the review page.

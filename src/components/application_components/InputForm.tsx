@@ -60,6 +60,7 @@ import { cn } from '@/lib/utils';
 import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
 import { FileUploadInput } from '@/components/application_components/InputFormComponents/FileUploadInput';
 import { RichTextInput } from '@/components/application_components/InputFormComponents/RichTextInput';
+import { toast } from '@/hooks/use-toast';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -517,7 +518,12 @@ function PageButtons({
             }
 
             if (!valid) {
-                alert('Not all pages are valid!');
+                toast({
+                    title: 'Invalid form',
+                    description:
+                        'Some of the questions are not filled correctly.',
+                    variant: 'error',
+                });
                 setIndex(idx);
             } else {
                 setIndex(pageCount); // the lastpage + 1 is the review page.
