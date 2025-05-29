@@ -1,9 +1,11 @@
-import { ChangeEvent, useEffect, useRef, useState } from 'react';
+import { ChangeEvent, CSSProperties, useEffect, useRef, useState } from 'react';
 import { DocumentIcon, XCircleIcon } from '@heroicons/react/24/outline';
 
 import { MimeTypes } from '@/components/application_components/types';
 import style from './FileUpload.module.css';
 import { Button } from '@/components/ui/button';
+import { useAtomValue } from 'jotai';
+import { finalErrCheckAtom } from '@/components/application_components/InputForm';
 export interface FileUploadProps {
     id: string;
     accept: string;
@@ -29,6 +31,8 @@ export function FileUpload({
 }: FileUploadProps) {
     const maxSizeBytes = maxSize * 1024 * 1024;
     const ref = useRef<HTMLInputElement>(null);
+    const validityRef = useRef<HTMLInputElement>(null);
+    const [errorMsg, setError] = useState<string>('');
     const [uploadedFiles, setUploadedFiles] = useState<
         Record<string, FileUploadItem>
     >({});
@@ -65,35 +69,73 @@ export function FileUpload({
             }
             setUploadedFiles(newUploadedFiles);
         }
+        if (ref.current?.files) {
+            ref.current.value = '';
+        }
     }
 
-    useEffect(() => {
-        if (required && Object.values(uploadedFiles).length === 0) {
-            ref.current?.setCustomValidity('no file');
-        } else {
-            ref.current?.setCustomValidity('');
-        }
-    }, [uploadedFiles]);
+    const finalCheck = useAtomValue(finalErrCheckAtom);
+    const [interactivedWith, setInteracted] = useState(false);
 
-    // function FileUploadProgress(e: ProgressEvent<HTMLInputElement>) {
-    //     console.log(e);
-    // }
+    useEffect(() => {
+        const count = Object.values(uploadedFiles).length;
+        if (!finalCheck) {
+            if (count > 0) {
+                setInteracted(true);
+            }
+
+            if (!interactivedWith) {
+                validityRef.current?.setCustomValidity('');
+                setInteracted(true);
+                return;
+            }
+        }
+
+        if (count > 10) {
+            validityRef.current?.setCustomValidity('too many files');
+            setError('Too many files! (no more than 10');
+            return;
+        }
+
+        for (const f of Object.values(uploadedFiles)) {
+            if (f.file && f.file.size > maxSizeBytes) {
+                validityRef.current?.setCustomValidity('File too large');
+                setError(
+                    `File too large! (${getFileSize(f.file.size)}, max allowed ${maxSize}MB)`
+                );
+                return;
+            }
+        }
+
+        if (required && count === 0) {
+            validityRef.current?.setCustomValidity('no file');
+            setError('File required');
+            return;
+        }
+        validityRef.current?.setCustomValidity('');
+    }, [uploadedFiles, finalCheck]);
 
     return (
-        <div>
-            <div className={style.inputRoot}>
+        <div
+            className={style.inputRoot}
+            style={{ '--errorMsg': `"${errorMsg}"` } as CSSProperties}
+        >
+            <div>
+                <input
+                    type="text"
+                    ref={validityRef}
+                    value={'dummy'}
+                    style={{ display: 'none' }}
+                    required
+                ></input>
                 <input
                     id={`${id}_fileuplad`}
                     ref={ref}
                     type="file"
                     accept={accept}
                     onChange={HandleFileUpload}
-                    onProgress={(e) => {
-                        console.log(e);
-                    }}
                     size={maxSizeBytes}
                     style={{ display: 'none' }}
-                    required={required}
                 />
 
                 <div className={style.inputContainer}>

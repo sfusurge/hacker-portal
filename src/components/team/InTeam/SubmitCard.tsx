@@ -78,6 +78,10 @@ function SubmitCardContent({
             return <></>;
         }
 
+        if (!teamdata.data) {
+            return <></>;
+        }
+
         if (loadingLocal) {
             return (
                 <Button
@@ -132,9 +136,12 @@ function SubmitCardContent({
     }
 
     function getContent() {
+        console.log(hackathon.submissionDeadline.format('MMM DD, hh:mm'));
+
         if (
-            !userapplication.data ||
-            userapplication.data?.currentStatus !== 'Accepted'
+            !userapplication.isLoading &&
+            (!userapplication.data ||
+                userapplication.data?.currentStatus !== 'Accepted')
         ) {
             return <span>You were not accepted in this event.</span>;
         }
@@ -154,11 +161,12 @@ function SubmitCardContent({
         } else {
             return (
                 <>
+                    {!teamdata.data && <p>You are not in a team yet!</p>}
                     <span
                         className={'text-sm text-white/60'}
                     >{`Projects are due on ${hackathon.submissionDeadline.format('MMM DD, hh:mm')}!`}</span>
                     <CountdownTimer
-                        targetDate={hackathon.submissionDeadline.toDate()}
+                        targetDate={new Date(2025, 4, 28, 23, 59, 59)}
                     />
                 </>
             );
@@ -170,9 +178,11 @@ function SubmitCardContent({
             <CardHeader>
                 <CardHeaderColumn>
                     <CardHeaderTitle>Submit Your Project</CardHeaderTitle>
-                    <CardHeaderDescription>
-                        {`${teamdata.data?.name}'s Project`}
-                    </CardHeaderDescription>
+                    {teamdata.data && (
+                        <CardHeaderDescription>
+                            {`${teamdata.data?.name}'s Project`}
+                        </CardHeaderDescription>
+                    )}
                 </CardHeaderColumn>
 
                 <CardHeaderColumn>{getBtn()}</CardHeaderColumn>

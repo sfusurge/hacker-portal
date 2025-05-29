@@ -28,6 +28,7 @@ const FILTERS_KEY = 'judging_filters_data';
 interface Project {
     [key: number]: string;
     id: number;
+    teamName?: string;
 }
 
 interface ProjectListProps {
@@ -143,19 +144,7 @@ export default function ProjectList({
     };
 
     const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
 
-    // TODO: Remove this fake loader
-    useEffect(() => {
-        if (isLoading) {
-            const timer = setTimeout(() => {
-                setIsLoading(false);
-            }, 800);
-            return () => clearTimeout(timer);
-        }
-    }, [isLoading]);
-
-    // Saved filters from local
     useEffect(() => {
         try {
             const savedFilters = localStorage.getItem(FILTERS_KEY);
@@ -165,7 +154,14 @@ export default function ProjectList({
                     const filtersSet = new Set(parsedFilters);
                     setStatusFilters(filtersSet);
                     setInitialStatusFilters(filtersSet);
+                } else {
+                    localStorage.removeItem(FILTERS_KEY);
+                    setStatusFilters(new Set(defaultStatusFilters));
+                    setInitialStatusFilters(new Set(defaultStatusFilters));
                 }
+            } else {
+                setStatusFilters(new Set(defaultStatusFilters));
+                setInitialStatusFilters(new Set(defaultStatusFilters));
             }
         } catch (error) {
             console.error('Error loading saved filters:', error);
@@ -179,10 +175,19 @@ export default function ProjectList({
             try {
                 const savedData = localStorage.getItem(STATUS_KEY);
                 if (savedData) {
-                    setProjectStatuses(JSON.parse(savedData));
+                    const parsedData = JSON.parse(savedData);
+                    if (parsedData && typeof parsedData === 'object') {
+                        setProjectStatuses(parsedData);
+                    } else {
+                        localStorage.removeItem(STATUS_KEY);
+                        setProjectStatuses({});
+                    }
+                } else {
+                    setProjectStatuses({});
                 }
             } catch (error) {
                 console.error('Error loading project statuses:', error);
+                setProjectStatuses({});
             }
         };
 
@@ -226,14 +231,16 @@ export default function ProjectList({
             let hasChanges = false;
 
             projects.forEach((project) => {
-                const projectId = project.id || project[0];
+                if (project && project.id !== undefined) {
+                    const projectId = project.id;
 
-                if (
-                    judgedProjectIds.has(Number(projectId)) &&
-                    newStatuses[projectId] !== 'completed'
-                ) {
-                    newStatuses[projectId] = 'completed';
-                    hasChanges = true;
+                    if (
+                        judgedProjectIds.has(Number(projectId)) &&
+                        projectStatuses[projectId] !== 'completed'
+                    ) {
+                        newStatuses[projectId] = 'completed';
+                        hasChanges = true;
+                    }
                 }
             });
 
@@ -252,29 +259,54 @@ export default function ProjectList({
     }, [judgedProjects, projects, projectStatuses, initialLoadComplete]);
 
     useEffect(() => {
-        if (!searchQuery.trim() && statusFilters.size === 0) {
+        if (!initialLoadComplete) {
+            setFilteredProjects([]);
+            return;
+        }
+
+        if (
+            !searchQuery.trim() &&
+            statusFilters.size === 0 &&
+            Object.keys(projectStatuses).length === 0
+        ) {
             setFilteredProjects(projects);
             return;
         }
 
-        const query = searchQuery.toLowerCase();
-        const filtered = projects.filter((project, index) => {
-            const projectId = project[0] || String(index);
+        const query = searchQuery ? searchQuery.toLowerCase() : '';
+        const filtered = projects.filter((project) => {
+            if (!project || project.id === undefined) {
+                return false;
+            }
+
+            const projectId = project.id;
+            const projectStatus =
+                projectStatuses && typeof projectStatuses === 'object'
+                    ? projectStatuses[projectId] || 'not_started'
+                    : 'not_started';
+            const matchesStatus =
+                statusFilters instanceof Set
+                    ? statusFilters.size === 0 ||
+                      statusFilters.has(projectStatus)
+                    : true;
             const matchesSearch =
                 !query.trim() ||
-                project[1]?.toLowerCase().includes(query) ||
-                project[2]?.toLowerCase().includes(query) ||
-                project[4]?.toLowerCase().includes(query);
-
-            const projectStatus = projectStatuses[projectId] || 'not_started';
-            const matchesStatus =
-                statusFilters.size === 0 || statusFilters.has(projectStatus);
+                (project[1] &&
+                    String(project[1]).toLowerCase().includes(query)) ||
+                (project[4] &&
+                    String(project[4]).toLowerCase().includes(query));
 
             return matchesSearch && matchesStatus;
         });
 
         setFilteredProjects(filtered);
-    }, [searchQuery, projects, statusFilters, projectStatuses]);
+    }, [
+        searchQuery,
+        projects,
+        statusFilters,
+        projectStatuses,
+        initialLoadComplete,
+    ]);
 
     return (
         <div className="flex h-full flex-col">
@@ -433,61 +465,76 @@ export default function ProjectList({
             <div className="h-fill mt-6 flex-grow overflow-y-auto pb-12 sm:-mx-6 sm:p-10 md:-mx-10 md:mt-10">
                 <div className="@container">
                     <div className="mb-24 grid grid-cols-1 gap-8 sm:mb-0 @[450px]:grid-cols-2 @[650px]:grid-cols-3 @[925px]:grid-cols-4">
-                        {isLoading
-                            ? Array(6)
-                                  .fill(0)
-                                  .map((_, index) => (
-                                      <ProjectCard
-                                          key={`skeleton-${index}`}
-                                          project={{}}
-                                          index={index}
-                                          statusInfo={{
-                                              label: '',
-                                              className: '',
-                                          }}
-                                          isLoading={true}
-                                      />
-                                  ))
-                            : filteredProjects
-                                  .sort((a, b) => {
-                                      const projectIdA = a[0] || '';
-                                      const projectIdB = b[0] || '';
-                                      const statusA =
-                                          projectStatuses[projectIdA] ||
-                                          'not_started';
-                                      const statusB =
-                                          projectStatuses[projectIdB] ||
-                                          'not_started';
+                        {!initialLoadComplete ? (
+                            Array(6)
+                                .fill(0)
+                                .map((_, index) => (
+                                    <ProjectCard
+                                        key={`skeleton-${index}`}
+                                        project={{ id: 0, teamName: '' }}
+                                        projectId={0}
+                                        statusInfo={{
+                                            label: '',
+                                            className: '',
+                                        }}
+                                        isLoading={true}
+                                    />
+                                ))
+                        ) : filteredProjects.length === 0 ? (
+                            <div className="col-span-full py-12 text-center">
+                                <p className="text-lg text-white">
+                                    No projects match your current filters.
+                                </p>
+                                {(searchQuery.trim() !== '' ||
+                                    statusFilters.size > 0) && (
+                                    <p className="mt-2 text-sm text-white/60">
+                                        Try clearing your filters or adjusting
+                                        your search query.
+                                    </p>
+                                )}
+                            </div>
+                        ) : (
+                            filteredProjects
+                                .sort((a, b) => {
+                                    const projectIdA = a[0] || '';
+                                    const projectIdB = b[0] || '';
+                                    const statusA =
+                                        projectStatuses[projectIdA] ||
+                                        'not_started';
+                                    const statusB =
+                                        projectStatuses[projectIdB] ||
+                                        'not_started';
 
-                                      const order = {
-                                          in_progress: 0,
-                                          not_started: 1,
-                                          completed: 2,
-                                      };
-                                      return (
-                                          (order[
-                                              statusA as keyof typeof order
-                                          ] ?? 0) -
-                                          (order[
-                                              statusB as keyof typeof order
-                                          ] ?? 0)
-                                      );
-                                  })
-                                  .map((project, index) => {
-                                      const projectId =
-                                          project[0] || String(index);
-                                      const statusInfo =
-                                          getStatusInfo(projectId);
-                                      return (
-                                          <ProjectCard
-                                              key={index}
-                                              project={project}
-                                              index={index}
-                                              projectId={projectId}
-                                              statusInfo={statusInfo}
-                                          />
-                                      );
-                                  })}
+                                    const order = {
+                                        in_progress: 0,
+                                        not_started: 1,
+                                        completed: 2,
+                                    };
+                                    return (
+                                        (order[statusA as keyof typeof order] ??
+                                            0) -
+                                        (order[statusB as keyof typeof order] ??
+                                            0)
+                                    );
+                                })
+                                .map((project, index) => {
+                                    const projectId = project.id;
+                                    const statusInfo = getStatusInfo(projectId);
+                                    return (
+                                        <ProjectCard
+                                            key={index}
+                                            project={{
+                                                ...project,
+                                                id: projectId,
+                                                teamName:
+                                                    project.teamName || '',
+                                            }}
+                                            projectId={projectId}
+                                            statusInfo={statusInfo}
+                                        />
+                                    );
+                                })
+                        )}
                     </div>
                 </div>
             </div>

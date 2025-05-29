@@ -81,12 +81,6 @@ const submitWithLocalAtom = atom(
             response: getResponseMap(val.pages),
         });
 
-        console.log('settingh', {
-            hackathonId: val.id,
-            email: userInfo.email,
-            response: getResponseMap(val.pages),
-        });
-
         const data = get(hackathonAtom)!;
         set(hackathonAtom, { ...data, submissionQuestionPages: val.pages });
     }

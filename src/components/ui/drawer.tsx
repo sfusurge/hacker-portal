@@ -29,7 +29,10 @@ const DrawerOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
     <DrawerPrimitive.Overlay
         ref={ref}
-        className={cn('fixed inset-0 z-50 bg-black/80', className)}
+        className={cn(
+            'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-[400] bg-black/80',
+            className
+        )}
         {...props}
     />
 ));
@@ -44,13 +47,13 @@ const DrawerContent = React.forwardRef<
         <DrawerPrimitive.Content
             onOpenAutoFocus={(e) => e.preventDefault()}
             ref={ref}
-            className="fixed inset-x-0 bottom-0 z-250 mt-24 flex h-auto flex-col gap-6 rounded-t-[10px] border border-neutral-700/30 bg-neutral-900 text-white"
+            className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom fixed inset-x-0 bottom-0 z-[450] mt-24 flex h-auto flex-col gap-6 rounded-t-[10px] border border-neutral-700/30 bg-neutral-900 text-white"
             {...props}
         >
             <div className="bg-neutral-750 mx-auto mt-4 h-2 w-9 rounded-full" />
             <div
                 className={cn(
-                    'relative z-250 flex flex-col gap-6 p-6 pt-0',
+                    'relative z-[450] flex flex-col gap-6 p-6 pt-0',
                     className
                 )}
             >
