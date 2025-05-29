@@ -217,11 +217,6 @@ export default function JudgingForm({
                                         }
                                         onChange={handleScoreChange}
                                         required={section.required}
-                                        hasError={
-                                            formErrors[
-                                                `score_${item.questionId}`
-                                            ]
-                                        }
                                     />
                                 </div>
                             ))}
@@ -252,9 +247,6 @@ export default function JudgingForm({
                                     )
                                 }
                                 required={section.required}
-                                hasError={
-                                    formErrors[`choice_${section.questionId}`]
-                                }
                             />
                         </div>
                     );
@@ -263,6 +255,7 @@ export default function JudgingForm({
                         <div key={section.questionId}>
                             <TextAreaSection
                                 title={section.title}
+                                description={section.description}
                                 value={
                                     formState[section.questionId.toString()] ||
                                     ''
@@ -275,9 +268,6 @@ export default function JudgingForm({
                                 }
                                 required={section.required}
                                 placeholder={section.placeholder}
-                                hasError={
-                                    formErrors[`textarea_${section.questionId}`]
-                                }
                             />
                         </div>
                     );
