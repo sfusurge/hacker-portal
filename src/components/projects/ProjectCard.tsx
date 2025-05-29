@@ -5,8 +5,11 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import slugify from '@/utils/slugify';
+
 interface Project {
     [key: number]: string;
+    id: number;
+    teamName: string;
 }
 
 interface StatusInfo {
@@ -17,7 +20,7 @@ interface StatusInfo {
 interface ProjectCardProps {
     project: Project;
     statusInfo: StatusInfo;
-    projectId?: string | number;
+    projectId: number;
     isLoading?: boolean;
 }
 

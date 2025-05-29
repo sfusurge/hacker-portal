@@ -41,6 +41,39 @@ const STATUS_KEY = 'judging_status_data';
 const JUDGING_DATA_KEY = 'judging_data';
 const DONT_SHOW_DIALOG_KEY = 'judging_dont_show_dialog';
 
+const safeLocalStorage = {
+    getItem: (key: string): string | null => {
+        if (typeof window === 'undefined') return null;
+        try {
+            return localStorage.getItem(key);
+        } catch (error) {
+            console.error('Error accessing localStorage:', error);
+            return null;
+        }
+    },
+    setItem: (key: string, value: string): void => {
+        if (typeof window === 'undefined') return;
+        try {
+            localStorage.setItem(key, value);
+        } catch (error) {
+            console.error('Error setting localStorage:', error);
+        }
+    },
+};
+
+const safeStorage = createJSONStorage(() => ({
+    getItem: safeLocalStorage.getItem,
+    setItem: safeLocalStorage.setItem,
+    removeItem: (key: string) => {
+        if (typeof window === 'undefined') return;
+        try {
+            localStorage.removeItem(key);
+        } catch (error) {
+            console.error('Error removing from localStorage:', error);
+        }
+    },
+}));
+
 const judgingDataAtom = atomWithStorage<{
     hackathonId: number;
     email: string;
@@ -52,7 +85,7 @@ const judgingDataAtom = atomWithStorage<{
         email: '',
         responses: {},
     },
-    createJSONStorage(() => localStorage)
+    safeStorage
 );
 
 const formStateAtom = atom<FormResponse>({});
@@ -77,6 +110,7 @@ export default function JudgingDrawer({
     const [isRubricOpen, setIsRubricOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isInitialized, setIsInitialized] = useState(false);
+    const [isClientReady, setIsClientReady] = useState(false);
 
     const [isEvaluationDrawerOpen, setIsEvaluationDrawerOpen] = useState(false);
     const [isConfirmationDrawerOpen, setIsConfirmationDrawerOpen] =
@@ -93,6 +127,10 @@ export default function JudgingDrawer({
         hackathonId,
         teamId,
     });
+
+    useEffect(() => {
+        setIsClientReady(true);
+    }, []);
 
     const validateForm = useCallback((): boolean => {
         if (!formRef.current || questions.length === 0) return false;
@@ -148,11 +186,13 @@ export default function JudgingDrawer({
 
     const updateStatusInLocalStorage = useCallback(
         (status: 'in_progress' | 'completed') => {
+            if (!isClientReady) return;
+
             try {
-                const statusData = localStorage.getItem(STATUS_KEY);
+                const statusData = safeLocalStorage.getItem(STATUS_KEY);
                 const existingStatus = statusData ? JSON.parse(statusData) : {};
                 existingStatus[teamId] = status;
-                localStorage.setItem(
+                safeLocalStorage.setItem(
                     STATUS_KEY,
                     JSON.stringify(existingStatus)
                 );
@@ -160,7 +200,7 @@ export default function JudgingDrawer({
                 console.error('Error saving status data:', error);
             }
         },
-        [teamId]
+        [teamId, isClientReady]
     );
 
     const updateFormState = useCallback(
@@ -246,31 +286,32 @@ export default function JudgingDrawer({
                     );
                 case 'multiple-choice':
                     return (
-                        <div key={section.questionId}>
+                        <div key={`section-${section.questionId}`}>
                             <CheckboxSection
                                 title={section.title}
                                 description={section.description}
                                 options={
-                                    section.choices?.map((choice) => ({
-                                        id: choice.id,
+                                    section.choices?.map((choice, index) => ({
+                                        id: `${choice.id}-${index}`,
                                         label: choice.name,
                                         value: choice.data,
                                     })) || []
                                 }
                                 selectedValue={
-                                    formState[
-                                        section.questionId.toString()
-                                    ] as string
+                                    formState[section.questionId.toString()] ||
+                                    ''
                                 }
-                                onChange={(value) =>
-                                    updateFormState(
-                                        section.questionId.toString(),
-                                        value
-                                    )
-                                }
+                                onChange={(value) => {
+                                    const questionKey =
+                                        section.questionId.toString();
+
+                                    updateFormState(questionKey, value);
+                                }}
                                 required={section.required}
                                 hasError={
-                                    formErrors[`choice_${section.questionId}`]
+                                    formErrors[
+                                        `multiple-choice_${section.questionId}`
+                                    ]
                                 }
                             />
                         </div>
@@ -311,7 +352,7 @@ export default function JudgingDrawer({
 
             if (validateForm()) {
                 const skipDialog =
-                    localStorage.getItem(DONT_SHOW_DIALOG_KEY) === 'true';
+                    safeLocalStorage.getItem(DONT_SHOW_DIALOG_KEY) === 'true';
                 if (skipDialog) {
                     handleConfirmSubmit();
                 } else {
@@ -331,12 +372,8 @@ export default function JudgingDrawer({
     );
 
     const handleConfirmSubmit = useCallback(async () => {
-        if (dontShowAgain) {
-            try {
-                localStorage.setItem(DONT_SHOW_DIALOG_KEY, 'true');
-            } catch (error) {
-                console.error('Error saving dialog preference:', error);
-            }
+        if (dontShowAgain && isClientReady) {
+            safeLocalStorage.setItem(DONT_SHOW_DIALOG_KEY, 'true');
         }
 
         setIsConfirmationDrawerOpen(false);
@@ -362,6 +399,7 @@ export default function JudgingDrawer({
         }
     }, [
         dontShowAgain,
+        isClientReady,
         createJudgeScore,
         hackathonId,
         teamId,
@@ -371,29 +409,52 @@ export default function JudgingDrawer({
     ]);
 
     useEffect(() => {
-        if (!isInitialized && user?.email) {
-            setJudgingData((prevData) => ({
-                ...prevData,
+        if (!isClientReady || !user?.email || isInitialized) return;
+
+        try {
+            const savedData = safeLocalStorage.getItem(JUDGING_DATA_KEY);
+            const initialData = savedData
+                ? JSON.parse(savedData)
+                : {
+                      hackathonId: 0,
+                      email: '',
+                      responses: {},
+                  };
+
+            setJudgingData({
+                ...initialData,
                 email: user.email,
                 hackathonId,
-            }));
+            });
 
-            try {
-                const dontShowDialogPreference =
-                    localStorage.getItem(DONT_SHOW_DIALOG_KEY);
-                if (dontShowDialogPreference === 'true') {
-                    setDontShowAgain(true);
-                }
-            } catch (error) {
-                console.error('Error loading dialog preference:', error);
+            const dontShowDialogPreference =
+                safeLocalStorage.getItem(DONT_SHOW_DIALOG_KEY);
+            if (dontShowDialogPreference === 'true') {
+                setDontShowAgain(true);
             }
-
-            setIsInitialized(true);
+        } catch (error) {
+            console.error('Error loading saved data:', error);
+            setJudgingData({
+                hackathonId,
+                email: user.email,
+                responses: {},
+            });
         }
-    }, [user?.email, hackathonId, setJudgingData, isInitialized]);
+
+        setIsInitialized(true);
+    }, [
+        isClientReady,
+        user?.email,
+        hackathonId,
+        setJudgingData,
+        isInitialized,
+    ]);
 
     useEffect(() => {
-        if (hackathonLoaded && hackathon && isInitialized) {
+        if (!hackathonLoaded || !hackathon || !isInitialized || !isClientReady)
+            return;
+
+        try {
             const judgeQuestions = hackathon.judgeQuestions || [];
             setQuestions(judgeQuestions as unknown as JudgingFormQuestion[]);
 
@@ -414,13 +475,17 @@ export default function JudgingDrawer({
                 });
                 setFormState(initialState);
             }
-
-            setIsLoading(false);
+        } catch (error) {
+            console.error('Error initializing form state:', error);
+            setFormState({});
         }
+
+        setIsLoading(false);
     }, [
         hackathonLoaded,
         hackathon,
         isInitialized,
+        isClientReady,
         judgingData.responses,
         teamId,
         setQuestions,
@@ -428,10 +493,10 @@ export default function JudgingDrawer({
     ]);
 
     useEffect(() => {
-        if (didJudge !== undefined) {
+        if (didJudge !== undefined && isClientReady) {
             updateStatusInLocalStorage(didJudge ? 'completed' : 'in_progress');
         }
-    }, [didJudge, updateStatusInLocalStorage]);
+    }, [didJudge, isClientReady, updateStatusInLocalStorage]);
 
     useEffect(() => {
         if (
@@ -450,6 +515,14 @@ export default function JudgingDrawer({
             }
         };
     }, []);
+
+    if (!isClientReady) {
+        return (
+            <div className="flex h-full flex-col items-center justify-center">
+                <Loader2 className="text-brand-400 h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <>
