@@ -105,14 +105,14 @@ export default function JudgingDrawer({
                 if (!section.items) return;
                 section.items.forEach((item: ScoreItem) => {
                     const value = formState[item.questionId.toString()];
-                    if (!value) {
+                    if (!value || value.trim() === '') {
                         errors[`score_${item.questionId}`] = true;
                         isValid = false;
                     }
                 });
             } else if (section.required) {
                 const value = formState[section.questionId.toString()];
-                if (!value) {
+                if (!value || value.trim() === '') {
                     errors[`${section.type}_${section.questionId}`] = true;
                     isValid = false;
                 }
@@ -234,11 +234,6 @@ export default function JudgingDrawer({
                                         }
                                         onChange={handleScoreChange}
                                         required={section.required}
-                                        hasError={
-                                            formErrors[
-                                                `score_${item.questionId}`
-                                            ]
-                                        }
                                     />
                                 </div>
                             ))}
@@ -268,11 +263,6 @@ export default function JudgingDrawer({
                                     updateFormState(questionKey, value);
                                 }}
                                 required={section.required}
-                                hasError={
-                                    formErrors[
-                                        `multiple-choice_${section.questionId}`
-                                    ]
-                                }
                             />
                         </div>
                     );
@@ -293,9 +283,6 @@ export default function JudgingDrawer({
                                 }
                                 required={section.required}
                                 placeholder={section.placeholder}
-                                hasError={
-                                    formErrors[`textarea_${section.questionId}`]
-                                }
                             />
                         </div>
                     );
