@@ -75,7 +75,7 @@ function SubmitCardContent({
         const pstNow = new Date(
             now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
         );
-        const deadline = new Date('2025-05-28T23:59:59');
+        const deadline = new Date('2025-05-29T00:30:00');
         setIsPastDeadline(pstNow > deadline);
     }, [hackathon]);
 
