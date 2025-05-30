@@ -335,7 +335,7 @@ export default async function ProjectPage({ params }: PageProps) {
                             />
                         ))}
                     </div>
-                    <div className="fixed bottom-0 left-0 z-[50] w-full bg-neutral-800/60 px-10 py-6 backdrop-blur-lg md:sticky md:w-auto lg:-mx-10">
+                    <div className="fixed bottom-0 left-0 z-[105] w-full bg-neutral-800/60 px-10 py-6 backdrop-blur-lg md:sticky md:w-auto lg:-mx-10">
                         <div className="mx-auto flex w-full flex-col items-center justify-between gap-4">
                             <div className="flex w-full items-center justify-end">
                                 <VoteButton
