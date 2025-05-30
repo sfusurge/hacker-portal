@@ -20,13 +20,7 @@ import {
 } from '@/components/ui/select';
 import { CheckCircle, AlertCircle, Loader2, Trash2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import { useState, useMemo } from 'react';
 
 interface JudgeViewProps {
     filteredJudges: any[];
@@ -41,6 +35,7 @@ interface JudgeViewProps {
     assigning: string | null;
     isProjectAssigned: (judgeId: number, teamId: number) => boolean;
     filteredTeams: any[];
+    hackathon: any;
 }
 
 export default function JudgeView({
@@ -55,34 +50,37 @@ export default function JudgeView({
     handleRemoveAssignment,
     assigning,
     isProjectAssigned,
+    hackathon: any,
     filteredTeams,
 }: JudgeViewProps) {
     const [scoreDialogOpen, setScoreDialogOpen] = useState(false);
-    const [selectedScore, setSelectedScore] = useState<any>(null);
-    const [selectedTeamName, setSelectedTeamName] = useState<string>('');
-    const [selectedJudgeName, setSelectedJudgeName] = useState<string>('');
 
-    const handleViewScore = (assignment: any) => {
-        if (!assignment.response) return;
-
-        const team = teams.find(
-            (t) => t.id === assignment.teamId || t.teamId === assignment.teamId
-        );
-        const judge = filteredJudges.find((j) => j.id === assignment.userId);
-
-        setSelectedScore(assignment.response);
-        setSelectedTeamName(
-            team ? team.teamName : `Team #${assignment.teamId}`
-        );
-        setSelectedJudgeName(
-            judge
-                ? `${judge.firstName} ${judge.lastName}`
-                : `Judge #${assignment.userId}`
-        );
-        setScoreDialogOpen(true);
-    };
+    const allQuestions = useMemo(() => {
+        const questionSet = new Set<string>();
+        assignments.forEach((assignment) => {
+            if (assignment.response) {
+                Object.keys(assignment.response).forEach((key) =>
+                    questionSet.add(key)
+                );
+            } else if (assignment.team && assignment.team.response) {
+                Object.keys(assignment.team.response).forEach((key) =>
+                    questionSet.add(key)
+                );
+            }
+        });
+        return Array.from(questionSet).sort((a, b) => {
+            const numA = parseInt(a);
+            const numB = parseInt(b);
+            if (!isNaN(numA) && !isNaN(numB)) {
+                return numA - numB;
+            }
+            return a.localeCompare(b);
+        });
+    }, [assignments]);
 
     const renderScoreValue = (value: string) => {
+        if (!value) return '-';
+
         if (['1', '2', '3', '4', '5'].includes(value)) {
             return (
                 <div className="flex">
@@ -102,8 +100,7 @@ export default function JudgeView({
                 </div>
             );
         }
-
-        return value;
+        return value.length > 50 ? `${value.substring(0, 50)}...` : value;
     };
 
     return (
@@ -190,9 +187,23 @@ export default function JudgeView({
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Team</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Last Updated</TableHead>
+                                        <TableHead className="min-w-[150px]">
+                                            Team
+                                        </TableHead>
+                                        <TableHead className="min-w-[120px]">
+                                            Status
+                                        </TableHead>
+                                        <TableHead className="min-w-[120px]">
+                                            Last Updated
+                                        </TableHead>
+                                        {allQuestions.map((questionKey) => (
+                                            <TableHead
+                                                key={questionKey}
+                                                className="min-w-[120px]"
+                                            >
+                                                Question {questionKey}
+                                            </TableHead>
+                                        ))}
                                         <TableHead className="w-[150px]">
                                             Actions
                                         </TableHead>
@@ -216,9 +227,15 @@ export default function JudgeView({
                                                 assigning ===
                                                 `${judge.id}-${teamId}`;
 
+                                            // Determine the response object to use (either from assignment or nested team object)
+                                            const response =
+                                                assignment.response ||
+                                                team?.response ||
+                                                {};
+
                                             return (
                                                 <TableRow key={uniqueKey}>
-                                                    <TableCell>
+                                                    <TableCell className="font-medium">
                                                         {team
                                                             ? `${team.teamName} (${team.id || team.teamId})`
                                                             : `Team #${teamId}`}
@@ -229,11 +246,15 @@ export default function JudgeView({
                                                             <span className="flex items-center">
                                                                 <CheckCircle className="text-success-500 mr-2 h-4 w-4" />
                                                                 Judged
-                                                                {assignment.response && (
-                                                                    <span className="bg-success-900 text-success-100 ml-2 rounded-full px-2 py-0.5 text-xs">
-                                                                        Scored
-                                                                    </span>
-                                                                )}
+                                                                {response &&
+                                                                    Object.keys(
+                                                                        response
+                                                                    ).length >
+                                                                        0 && (
+                                                                        <span className="bg-success-900 text-success-100 ml-2 rounded-full px-2 py-0.5 text-xs">
+                                                                            Scored
+                                                                        </span>
+                                                                    )}
                                                             </span>
                                                         ) : (
                                                             <span className="flex items-center">
@@ -247,40 +268,39 @@ export default function JudgeView({
                                                             assignment.updatedDate
                                                         ).toLocaleString()}
                                                     </TableCell>
+                                                    {allQuestions.map(
+                                                        (questionKey) => (
+                                                            <TableCell
+                                                                key={
+                                                                    questionKey
+                                                                }
+                                                            >
+                                                                {renderScoreValue(
+                                                                    response?.[
+                                                                        questionKey
+                                                                    ] || ''
+                                                                )}
+                                                            </TableCell>
+                                                        )
+                                                    )}
                                                     <TableCell>
                                                         <div className="flex gap-2">
                                                             {isRemoving ? (
                                                                 <Loader2 className="h-4 w-4 animate-spin" />
                                                             ) : (
-                                                                <>
-                                                                    <Button
-                                                                        variant="default"
-                                                                        size="cozy"
-                                                                        hierarchy="primary"
-                                                                        onClick={() =>
-                                                                            handleRemoveAssignment(
-                                                                                judge.id,
-                                                                                teamId
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <Trash2 className="text-danger-500 h-4 w-4" />
-                                                                    </Button>
-                                                                    {assignment.response && (
-                                                                        <Button
-                                                                            variant="default"
-                                                                            size="cozy"
-                                                                            hierarchy="secondary"
-                                                                            onClick={() =>
-                                                                                handleViewScore(
-                                                                                    assignment
-                                                                                )
-                                                                            }
-                                                                        >
-                                                                            View
-                                                                        </Button>
-                                                                    )}
-                                                                </>
+                                                                <Button
+                                                                    variant="default"
+                                                                    size="cozy"
+                                                                    hierarchy="primary"
+                                                                    onClick={() =>
+                                                                        handleRemoveAssignment(
+                                                                            judge.id,
+                                                                            teamId
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <Trash2 className="text-danger-500 h-4 w-4" />
+                                                                </Button>
                                                             )}
                                                         </div>
                                                     </TableCell>
@@ -305,46 +325,6 @@ export default function JudgeView({
                     ))
                 )}
             </div>
-
-            <Dialog open={scoreDialogOpen} onOpenChange={setScoreDialogOpen}>
-                <DialogContent className="max-w-3xl">
-                    <DialogHeader>
-                        <DialogTitle>
-                            Score Details: {selectedTeamName} -{' '}
-                            {selectedJudgeName}
-                        </DialogTitle>
-                    </DialogHeader>
-
-                    {selectedScore && (
-                        <div className="max-h-[70vh] space-y-4 overflow-y-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Question</TableHead>
-                                        <TableHead>Score/Response</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {Object.entries(selectedScore).map(
-                                        ([key, value]) => (
-                                            <TableRow key={key}>
-                                                <TableCell className="font-medium">
-                                                    Question {key}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {renderScoreValue(
-                                                        value as string
-                                                    )}
-                                                </TableCell>
-                                            </TableRow>
-                                        )
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
         </div>
     );
 }

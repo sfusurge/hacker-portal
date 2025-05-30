@@ -304,6 +304,7 @@ export default function JudgeAssignmentPage() {
                                         handleRemoveAssignment
                                     }
                                     assigning={assigning}
+                                    hackathon={hackathon}
                                     isProjectAssigned={isProjectAssigned}
                                 />
                             </TabsContent>
@@ -311,6 +312,7 @@ export default function JudgeAssignmentPage() {
                             <TabsContent value="judges">
                                 <JudgeView
                                     filteredJudges={filteredJudges}
+                                    hackathon={hackathon}
                                     filteredTeams={filteredTeams}
                                     assignments={assignments}
                                     teams={teams}
@@ -329,6 +331,7 @@ export default function JudgeAssignmentPage() {
 
                             <TabsContent value="scores">
                                 <ScoreView
+                                    hackathon={hackathon}
                                     assignments={assignments}
                                     teams={teams}
                                     judges={judges}

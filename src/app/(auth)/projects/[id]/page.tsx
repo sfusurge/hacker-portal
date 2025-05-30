@@ -268,7 +268,7 @@ export default async function ProjectPage({ params }: PageProps) {
 
     return (
         <div className="flex h-full flex-col">
-            <div className="flex flex-grow flex-col gap-10 overflow-hidden lg:flex-row">
+            <div className="m-0 flex flex-grow flex-col overflow-hidden md:-m-10 lg:m-0 lg:flex-row lg:gap-10">
                 <div className="hidden flex-shrink-0 lg:block lg:w-1/4">
                     <Card>
                         <CardHeader>
@@ -317,10 +317,11 @@ export default async function ProjectPage({ params }: PageProps) {
                             )}
                         </CardContent>
                     </Card>
+                    {/* TODO: If this is current user team insert judge feedback card */}
                 </div>
 
-                <div className="lg:border-neutral-750 mb-32 flex-grow overflow-y-auto md:mb-0 lg:rounded-xl lg:border lg:bg-neutral-900 lg:p-10 lg:pb-0">
-                    <div className="space-y-8 pb-8">
+                <div className="lg:border-neutral-750 flex-grow overflow-y-auto p-0 md:mb-0 md:p-10 lg:rounded-xl lg:border lg:bg-neutral-900 lg:pb-0">
+                    <div className="space-y-8 pb-32 md:pb-8">
                         <Link href="/projects" className="mb-8 block md:hidden">
                             <Button
                                 variant={'default'}
@@ -338,7 +339,8 @@ export default async function ProjectPage({ params }: PageProps) {
                             />
                         ))}
                     </div>
-                    <div className="fixed bottom-0 left-0 z-[105] w-full bg-neutral-800/60 px-10 py-6 backdrop-blur-lg md:sticky md:-mx-6 lg:-mx-10 lg:w-auto">
+                    {/* future whoever sorry */}
+                    <div className="fixed bottom-0 left-0 z-[105] block w-full bg-neutral-800/60 px-10 py-6 backdrop-blur-lg md:sticky md:-mx-6 md:hidden lg:-mx-10 lg:block lg:w-auto">
                         <div className="mx-auto flex w-full flex-col items-center justify-between gap-4">
                             <div className="flex w-full items-center justify-end">
                                 <VoteButton
@@ -351,6 +353,19 @@ export default async function ProjectPage({ params }: PageProps) {
                                     alreadyVoted={alreadyVoted}
                                 />
                             </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="sticky bottom-0 left-0 z-[105] hidden w-full bg-neutral-800/60 px-10 py-6 backdrop-blur-lg md:-mx-6 md:block lg:-mx-10 lg:hidden lg:w-auto">
+                    <div className="mx-auto flex w-full flex-col items-center justify-between gap-4">
+                        <div className="flex w-full items-center justify-end">
+                            <VoteButton
+                                projectTitle={response[1] || `Team #${teamId}`}
+                                teamId={teamId}
+                                hackathonId={hackathonId}
+                                userId={user?.id || 0}
+                                alreadyVoted={alreadyVoted}
+                            />
                         </div>
                     </div>
                 </div>

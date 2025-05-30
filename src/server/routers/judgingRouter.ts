@@ -40,22 +40,6 @@ export interface JudgingProjectResponse {
 }
 
 export const judgingRouter = router({
-    getJudgingQuestions: publicProcedure
-        .input(
-            z.object({
-                hackathonId: z.number().int(),
-            })
-        )
-        .query(async ({ input }) => {
-            const judgeQuestions = await databaseClient
-                .select({
-                    judgeQuestions: hackathons.judgeQuestions,
-                })
-                .from(hackathons)
-                .where(eq(hackathons.id, input.hackathonId));
-            return judgeQuestions[0]?.judgeQuestions || null;
-        }),
-
     assignJudgingProject: publicProcedure
         .input(insertJudgingAssignmentSchema)
         .mutation(async ({ input }): Promise<JudgingProjectResponse> => {
