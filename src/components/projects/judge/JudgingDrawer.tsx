@@ -261,6 +261,7 @@ export default function JudgingDrawer({
                                     );
                                 }}
                                 required={section.required}
+                                key={`${section.questionId}-${formState[section.questionId.toString()] || 'empty'}`}
                             />
                         </div>
                     );
