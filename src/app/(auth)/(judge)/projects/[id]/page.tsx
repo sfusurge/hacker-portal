@@ -167,6 +167,7 @@ export default async function ProjectPage({ params }: PageProps) {
             <div className="block xl:hidden">
                 <JudgingDrawer
                     hackathonId={hackathonId}
+                    didJudge={didJudge}
                     user={user}
                     teamId={teamId}
                     projectTitle={submissionData[1] || `Team #${teamId}`}
