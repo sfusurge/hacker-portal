@@ -43,6 +43,10 @@ export default async function PublicProjectsPage() {
                     teamId: project.teamId,
                 });
 
+            if (!submission) {
+                return null;
+            }
+
             const response =
                 (submission?.response as Record<string, any>) || {};
             return {
@@ -60,7 +64,8 @@ export default async function PublicProjectsPage() {
             };
         });
 
-        projects = await Promise.all(projectPromises);
+        const allProjects = await Promise.all(projectPromises);
+        projects = allProjects.filter((project) => project !== null);
     } else {
         const submissions = await trpcClient.submissions.getAllSubmissions({
             hackathonId,
