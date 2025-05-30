@@ -66,7 +66,7 @@ export default function ProjectCard({
 
     return (
         <Link
-            href={`/projects/${project}`}
+            href={`/projects/${project.id}`}
             className="group flex flex-col overflow-hidden rounded-xl transition-shadow hover:shadow-lg"
         >
             <div className="relative" title={project[1]}>
