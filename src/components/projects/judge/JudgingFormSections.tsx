@@ -77,7 +77,7 @@ interface CheckboxSectionProps {
         label: string;
         value: string;
     }>;
-    selectedValue: string | null;
+    selectedValue: string;
     onChange: (value: string) => void;
     required?: boolean;
     didJudge?: boolean;
@@ -102,28 +102,19 @@ export function CheckboxSection({
                 <p className="mb-2 text-sm text-white/60">{description}</p>
             )}
             <RadioButtonGroup
+                key={`radio-${title}-${selectedValue}`}
                 options={options.map((item) => ({
                     data: item.value,
                     name: item.label,
                 }))}
                 name={title}
+                selectedValue={selectedValue}
                 onSelection={(s) => {
-                    onChange(s!);
+                    console.log(`RadioButtonGroup onSelection: "${s}"`);
+                    onChange(s || '');
                 }}
+                disabled={didJudge}
             />
-            {/* <div className="space-y-2">
-                {options.map((option) => (
-                    <CheckBoxWithLabel
-                        key={option.id}
-                        id={option.id}
-                        name={option.label}
-                        checked={selectedValue === option.value}
-                        onChange={() => onChange(option.value)}
-                        inline={true}
-                        disabled={didJudge}
-                    />
-                ))}
-            </div> */}
         </div>
     );
 }

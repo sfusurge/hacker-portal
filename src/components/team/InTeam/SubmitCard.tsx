@@ -205,13 +205,13 @@ function SubmitCardContent({
                 <CardHeaderColumn>
                     <CardHeaderTitle>Submit Your Project</CardHeaderTitle>
                     {teamdata.data && (
-                        <CardHeaderDescription>
+                        <CardHeaderDescription className="leading-tight">
                             {`${teamdata.data?.name}'s Project`}
                         </CardHeaderDescription>
                     )}
                 </CardHeaderColumn>
 
-                <CardHeaderColumn>{getBtn()}</CardHeaderColumn>
+                {getBtn()}
             </CardHeader>
 
             <CardContent className="items-center justify-center gap-3 text-center">

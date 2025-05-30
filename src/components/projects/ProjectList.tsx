@@ -28,6 +28,7 @@ const FILTERS_KEY = 'judging_filters_data';
 interface Project {
     [key: number]: string;
     id: number;
+    displayId: string;
     teamName?: string;
 }
 
@@ -471,8 +472,11 @@ export default function ProjectList({
                                 .map((_, index) => (
                                     <ProjectCard
                                         key={`skeleton-${index}`}
-                                        project={{ id: 0, teamName: '' }}
-                                        projectId={0}
+                                        project={{
+                                            id: 0,
+                                            teamName: '',
+                                            displayId: '123456',
+                                        }}
                                         statusInfo={{
                                             label: '',
                                             className: '',
@@ -526,10 +530,10 @@ export default function ProjectList({
                                             project={{
                                                 ...project,
                                                 id: projectId,
+                                                displayId: project.displayId,
                                                 teamName:
                                                     project.teamName || '',
                                             }}
-                                            projectId={projectId}
                                             statusInfo={statusInfo}
                                         />
                                     );

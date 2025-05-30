@@ -8,8 +8,11 @@ import { cn } from '@/lib/utils';
 
 const Drawer = ({
     shouldScaleBackground = true,
+    overlayZIndex = 50,
     ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
+}: React.ComponentProps<typeof DrawerPrimitive.Root> & {
+    overlayZIndex?: number;
+}) => (
     <DrawerPrimitive.Root
         shouldScaleBackground={shouldScaleBackground}
         {...props}
@@ -30,7 +33,7 @@ const DrawerOverlay = React.forwardRef<
     <DrawerPrimitive.Overlay
         ref={ref}
         className={cn(
-            'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-[400] bg-black/80',
+            'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80',
             className
         )}
         {...props}
@@ -40,14 +43,17 @@ DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
 
 const DrawerContent = React.forwardRef<
     React.ElementRef<typeof DrawerPrimitive.Content>,
-    React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
->(({ className, children, ...props }, ref) => (
+    React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & {
+        overlayZIndex?: number;
+    }
+>(({ className, children, overlayZIndex = 50, ...props }, ref) => (
     <DrawerPortal>
-        <DrawerOverlay />
+        <DrawerOverlay style={{ zIndex: overlayZIndex }} />
         <DrawerPrimitive.Content
             onOpenAutoFocus={(e) => e.preventDefault()}
             ref={ref}
             className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom fixed inset-x-0 bottom-0 z-[450] mt-24 flex h-auto flex-col gap-6 rounded-t-[10px] border border-neutral-700/30 bg-neutral-900 text-white"
+            style={{ zIndex: overlayZIndex + 1 }}
             {...props}
         >
             <div className="bg-neutral-750 mx-auto mt-4 h-2 w-9 rounded-full" />

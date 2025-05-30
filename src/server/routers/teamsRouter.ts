@@ -201,6 +201,7 @@ export const teamsRouter = router({
                     firstName: userTable.firstName,
                     lastName: userTable.lastName,
                     email: userTable.email,
+                    image: userTable.image,
                     currentStatus: applications.currentStatus,
                 })
                 .from(membersTable)
@@ -313,6 +314,58 @@ export const teamsRouter = router({
                 members,
             };
         }),
+
+    /**
+     * Get a team by its internal team ID, including its members.
+     */
+    getTeamById: publicProcedure
+        .input(
+            z.object({
+                teamId: z.number().int(),
+            })
+        )
+        .query(async ({ input }) => {
+            const [team] = await databaseClient
+                .select({
+                    ...getTableColumns(teams),
+                })
+                .from(teams)
+                .where(eq(teams.id, input.teamId))
+                .limit(1);
+
+            if (!team) {
+                throw new ResourceNotFoundError({
+                    id: input.teamId,
+                    resourceType: 'team',
+                });
+            }
+
+            const members = await databaseClient
+                .select({
+                    userId: membersTable.userId,
+                    firstName: userTable.firstName,
+                    lastName: userTable.lastName,
+                    email: userTable.email,
+                    image: userTable.image,
+                    currentStatus: applications.currentStatus,
+                })
+                .from(membersTable)
+                .innerJoin(userTable, eq(userTable.id, membersTable.userId))
+                .leftJoin(
+                    applications,
+                    and(
+                        eq(applications.userId, membersTable.userId),
+                        eq(applications.hackathonId, team.hackathonId)
+                    )
+                )
+                .where(eq(membersTable.teamId, team.id));
+
+            return {
+                ...team,
+                members,
+            };
+        }),
+
     getTeams: publicProcedure
         .input(
             z.object({

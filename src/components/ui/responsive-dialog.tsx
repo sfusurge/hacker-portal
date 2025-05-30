@@ -33,6 +33,7 @@ interface RootResponsiveProps extends BaseProps {
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
     trigger?: React.ReactNode;
+    overlayZIndex?: number;
 }
 
 interface ResponsiveProps extends BaseProps {
@@ -60,6 +61,7 @@ const useResponsiveContext = () => {
 const ResponsiveDialog = ({
     children,
     trigger,
+    overlayZIndex = 50,
     ...props
 }: RootResponsiveProps) => {
     const isDesktop = useMediaQuery('(min-width: 768px)');
@@ -84,6 +86,7 @@ const ResponsiveDialog = ({
                 {...props}
                 open={props.open !== undefined ? props.open : isOpen}
                 onOpenChange={handleOpenChange}
+                overlayZIndex={overlayZIndex}
                 {...(!isDesktop && { autoFocus: true })}
             >
                 {trigger && <Trigger asChild>{trigger}</Trigger>}
@@ -127,8 +130,9 @@ const ResponsiveDialogContent = ({
     className,
     children,
     hideCloseIcon,
+    overlayZIndex = 50,
     ...props
-}: ResponsiveProps) => {
+}: ResponsiveProps & { overlayZIndex?: number }) => {
     const { isDesktop } = useResponsiveContext();
     const ContentComponent = isDesktop ? DialogContent : DrawerContent;
 
@@ -136,12 +140,17 @@ const ResponsiveDialogContent = ({
         <DialogContent
             className={className}
             hideCloseIcon={hideCloseIcon}
+            overlayZIndex={overlayZIndex}
             {...props}
         >
             {children}
         </DialogContent>
     ) : (
-        <DrawerContent className={className} {...props}>
+        <DrawerContent
+            className={className}
+            overlayZIndex={overlayZIndex}
+            {...props}
+        >
             {children}
         </DrawerContent>
     );

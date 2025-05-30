@@ -4,11 +4,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import slugify from '@/utils/slugify';
 
 interface Project {
     [key: number]: string;
     id: number;
+    displayId: string;
     teamName: string;
 }
 
@@ -19,15 +19,13 @@ interface StatusInfo {
 
 interface ProjectCardProps {
     project: Project;
-    statusInfo: StatusInfo;
-    projectId: number;
+    statusInfo?: StatusInfo;
     isLoading?: boolean;
 }
 
 export default function ProjectCard({
     project,
     statusInfo,
-    projectId,
     isLoading = false,
 }: ProjectCardProps) {
     const titleRef = useRef<HTMLHeadingElement>(null);
@@ -68,15 +66,17 @@ export default function ProjectCard({
 
     return (
         <Link
-            href={`/projects/${projectId}`}
+            href={`/projects/${project}`}
             className="group flex flex-col overflow-hidden rounded-xl transition-shadow hover:shadow-lg"
         >
             <div className="relative" title={project[1]}>
-                <p
-                    className={`${statusInfo.className} absolute top-3 left-3 rounded-xl px-3 py-1`}
-                >
-                    {statusInfo.label}
-                </p>
+                {statusInfo && statusInfo.label && (
+                    <p
+                        className={`${statusInfo.className} absolute top-3 left-3 rounded-xl px-3 py-1`}
+                    >
+                        {statusInfo.label}
+                    </p>
+                )}
                 <Image
                     src={project[3] || '/hacker-portal-preview.webp'}
                     alt={`Project: ${project[1]}`}
@@ -84,7 +84,7 @@ export default function ProjectCard({
                     height={281}
                     className="aspect-video w-full object-cover"
                 />
-                <div className="bg-neutral-850 flex flex-col gap-2 p-4 transition-colors group-hover:bg-neutral-800">
+                <div className="bg-neutral-850 flex h-full min-h-28 flex-col gap-2 p-4 transition-colors group-hover:bg-neutral-800">
                     <h3
                         ref={titleRef}
                         className="mb-0 line-clamp-2 leading-tight font-semibold text-pretty text-white"
