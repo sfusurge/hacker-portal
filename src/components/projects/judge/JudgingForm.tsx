@@ -26,9 +26,6 @@ import { atom, useAtom } from 'jotai';
 import { atomWithStorage, createJSONStorage } from 'jotai/utils';
 import {
     ScoreItem,
-    ScoreGroupQuestion,
-    MultipleChoiceQuestion,
-    TextAreaQuestion,
     JudgingFormQuestion,
     FormResponse,
 } from '@/components/application_components/types';
@@ -226,6 +223,7 @@ export default function JudgingForm({
                             <CheckboxSection
                                 title={section.title}
                                 description={section.description}
+                                didJudge={didJudge}
                                 options={
                                     section.choices?.map((choice) => ({
                                         id: choice.id,
@@ -264,6 +262,7 @@ export default function JudgingForm({
                                         value
                                     )
                                 }
+                                didJudge={didJudge}
                                 required={section.required}
                                 placeholder={section.placeholder}
                             />
@@ -379,8 +378,10 @@ export default function JudgingForm({
                         section.items?.forEach((item: any) => {
                             initialState[item.questionId.toString()] = '';
                         });
+                    } else if (section.type === 'multiple-choice') {
+                        initialState[section.questionId.toString()] = '';
                     } else {
-                        initialState[section.questionId.toString()] = null;
+                        initialState[section.questionId.toString()] = '';
                     }
                 });
                 setFormState(initialState);

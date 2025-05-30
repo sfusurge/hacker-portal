@@ -35,6 +35,7 @@ interface JudgingFormProps {
     projectTitle?: string;
     hackathonId: number;
     user: any;
+    didJudge: boolean;
 }
 
 const STATUS_KEY = 'judging_status_data';
@@ -64,6 +65,7 @@ export default function JudgingDrawer({
     projectTitle = 'this project',
     hackathonId,
     user,
+    didJudge,
 }: JudgingFormProps) {
     const { hackathon, hackathonLoaded } = useHackathon();
     const [judgingData, setJudgingData] = useAtom(judgingDataAtom);
@@ -89,11 +91,6 @@ export default function JudgingDrawer({
     const { toast } = useToast();
     const router = useRouter();
 
-    const { data: didJudge } = trpc.judging.getJudgedProject.useQuery({
-        hackathonId,
-        teamId,
-    });
-
     const validateForm = useCallback((): boolean => {
         if (!formRef.current || questions.length === 0) return false;
 
@@ -105,14 +102,14 @@ export default function JudgingDrawer({
                 if (!section.items) return;
                 section.items.forEach((item: ScoreItem) => {
                     const value = formState[item.questionId.toString()];
-                    if (!value || value.trim() === '') {
+                    if (!value) {
                         errors[`score_${item.questionId}`] = true;
                         isValid = false;
                     }
                 });
             } else if (section.required) {
                 const value = formState[section.questionId.toString()];
-                if (!value || value.trim() === '') {
+                if (!value) {
                     errors[`${section.type}_${section.questionId}`] = true;
                     isValid = false;
                 }
@@ -131,10 +128,6 @@ export default function JudgingDrawer({
 
     const handleRubricOpen = useCallback(() => {
         setIsRubricOpen(true);
-    }, []);
-
-    const handleRubricClose = useCallback(() => {
-        setIsRubricOpen(false);
     }, []);
 
     const debouncedValidateForm = useCallback(() => {
@@ -165,21 +158,23 @@ export default function JudgingDrawer({
 
     const updateFormState = useCallback(
         (questionId: string, value: string | null) => {
-            setFormState((prev: FormResponse) => {
-                const updated = {
-                    ...prev,
+            setFormState((prevFormState: FormResponse) => {
+                const updatedFormState = {
+                    ...prevFormState,
                     [questionId]: value,
                 };
 
-                setJudgingData((prevData) => ({
-                    ...prevData,
-                    responses: {
-                        ...prevData.responses,
-                        [teamId]: updated,
-                    },
-                }));
+                setTimeout(() => {
+                    setJudgingData((prevJudgingData) => ({
+                        ...prevJudgingData,
+                        responses: {
+                            ...prevJudgingData.responses,
+                            [teamId]: updatedFormState,
+                        },
+                    }));
+                }, 0);
 
-                return updated;
+                return updatedFormState;
             });
 
             debouncedValidateForm();
@@ -242,13 +237,14 @@ export default function JudgingDrawer({
                     );
                 case 'multiple-choice':
                     return (
-                        <div key={`section-${section.questionId}`}>
+                        <div key={section.questionId}>
                             <CheckboxSection
                                 title={section.title}
                                 description={section.description}
+                                didJudge={didJudge}
                                 options={
-                                    section.choices?.map((choice, index) => ({
-                                        id: `${choice.id}-${index}`,
+                                    section.choices?.map((choice) => ({
+                                        id: choice.id,
                                         label: choice.name,
                                         value: choice.data,
                                     })) || []
@@ -258,12 +254,13 @@ export default function JudgingDrawer({
                                     ''
                                 }
                                 onChange={(value) => {
-                                    const questionKey =
-                                        section.questionId.toString();
-
-                                    updateFormState(questionKey, value);
+                                    updateFormState(
+                                        section.questionId.toString(),
+                                        value
+                                    );
                                 }}
                                 required={section.required}
+                                key={`${section.questionId}-${formState[section.questionId.toString()] || 'empty'}`}
                             />
                         </div>
                     );
@@ -271,6 +268,8 @@ export default function JudgingDrawer({
                     return (
                         <div key={section.questionId}>
                             <TextAreaSection
+                                didJudge={didJudge}
+                                description={section.description}
                                 title={section.title}
                                 value={
                                     formState[section.questionId.toString()] ||
@@ -291,7 +290,7 @@ export default function JudgingDrawer({
                     return null;
             }
         },
-        [formState, formErrors, handleScoreChange, updateFormState]
+        [formState, formErrors, handleScoreChange, updateFormState, didJudge]
     );
 
     const handleSubmitClick = useCallback(
@@ -346,7 +345,6 @@ export default function JudgingDrawer({
                 variant: 'default',
                 icon: <ExclamationCircleIcon />,
             });
-        } finally {
             setIsSubmitting(false);
         }
     }, [
@@ -358,6 +356,14 @@ export default function JudgingDrawer({
         formState,
         toast,
     ]);
+
+    const handleConfirmationCancel = useCallback(() => {
+        setIsConfirmationDrawerOpen(false);
+    }, [isEvaluationDrawerOpen]);
+
+    const handleEvaluationDrawerClose = useCallback((open: boolean) => {
+        setIsEvaluationDrawerOpen(open);
+    }, []);
 
     useEffect(() => {
         if (!isInitialized && user?.email) {
@@ -422,7 +428,6 @@ export default function JudgingDrawer({
                 }
             } catch (error) {
                 console.error('Error initializing form state:', error);
-                // Initialize with empty state if there's an error
                 setFormState({});
             }
 
@@ -452,7 +457,14 @@ export default function JudgingDrawer({
         ) {
             debouncedValidateForm();
         }
-    }, [formState, questions, isLoading, debouncedValidateForm]);
+    }, [
+        formState,
+        questions,
+        isLoading,
+        debouncedValidateForm,
+        isEvaluationDrawerOpen,
+        isConfirmationDrawerOpen,
+    ]);
 
     useEffect(() => {
         return () => {
@@ -462,6 +474,18 @@ export default function JudgingDrawer({
         };
     }, []);
 
+    useEffect(() => {
+        if (!isRubricOpen && !isLoading) {
+            validateForm();
+        }
+    }, [isRubricOpen, isLoading, validateForm]);
+
+    // Determine if the footer is visible idk man
+    const shouldShowMobileFooter =
+        !isEvaluationDrawerOpen &&
+        !isConfirmationDrawerOpen &&
+        !isGlobalRubricOpen;
+
     return (
         <>
             {isLoading || questions.length === 0 ? (
@@ -470,92 +494,106 @@ export default function JudgingDrawer({
                 </div>
             ) : (
                 <>
-                    <div className="fixed right-0 bottom-0 left-0 z-[200] border-t border-neutral-600/60 bg-neutral-800/80 px-6 py-4 backdrop-blur-lg md:hidden">
-                        <div className="mx-auto flex w-full max-w-md flex-col items-center justify-between gap-4">
-                            <div className="grid w-full grid-cols-2 gap-4">
-                                <Button
-                                    type="button"
-                                    variant="default"
-                                    hierarchy="primary"
-                                    size="cozy"
-                                    className="w-full"
-                                    onClick={() => setIsGlobalRubricOpen(true)}
-                                >
-                                    View rubric
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="brand"
-                                    hierarchy="primary"
-                                    size="cozy"
-                                    className="w-full"
-                                    onClick={handleDrawerOpen}
-                                    disabled={
-                                        !!didJudge ||
-                                        (isEvaluationDrawerOpen &&
-                                            (!isFormValid || isSubmitting))
-                                    }
-                                >
-                                    {isEvaluationDrawerOpen
-                                        ? 'Submit Evaluation'
-                                        : 'View evaluation'}
-                                </Button>
+                    {shouldShowMobileFooter && (
+                        <div className="fixed right-0 bottom-0 left-0 z-[105] border-t border-neutral-600/60 bg-neutral-800/80 px-6 py-4 backdrop-blur-lg md:hidden">
+                            <div className="mx-auto flex w-full max-w-md flex-col items-center justify-between gap-4">
+                                <div className="grid w-full grid-cols-2 gap-4">
+                                    <Button
+                                        type="button"
+                                        variant="default"
+                                        hierarchy="primary"
+                                        size="cozy"
+                                        className="w-full"
+                                        onClick={() =>
+                                            setIsGlobalRubricOpen(true)
+                                        }
+                                    >
+                                        View rubric
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant={didJudge ? 'default' : 'brand'}
+                                        hierarchy="primary"
+                                        size="cozy"
+                                        className="w-full"
+                                        onClick={handleDrawerOpen}
+                                        disabled={
+                                            isEvaluationDrawerOpen &&
+                                            (!isFormValid || isSubmitting)
+                                        }
+                                    >
+                                        {isEvaluationDrawerOpen
+                                            ? 'Submit Evaluation'
+                                            : didJudge
+                                              ? 'Review Submission'
+                                              : 'View evaluation'}
+                                    </Button>
+                                </div>
+                                {!!didJudge && (
+                                    <p className="text-center text-sm text-white/60">
+                                        Your evaluation for this project has
+                                        been submitted.
+                                    </p>
+                                )}
                             </div>
-                            {!!didJudge && (
-                                <p className="text-center text-sm text-white/60">
-                                    Your evaluation for this project has been
-                                    submitted.
-                                </p>
-                            )}
                         </div>
-                    </div>
+                    )}
 
-                    <div className="mt-6 hidden rounded-lg border border-neutral-600/60 bg-neutral-800/80 px-6 py-4 md:block xl:hidden">
-                        <div className="mx-auto flex w-full flex-col items-center justify-between gap-4">
-                            <div className="grid w-full grid-cols-2 gap-4">
-                                <Button
-                                    type="button"
-                                    variant="default"
-                                    hierarchy="primary"
-                                    size="cozy"
-                                    className="w-full"
-                                    onClick={() => setIsGlobalRubricOpen(true)}
-                                >
-                                    View rubric
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="brand"
-                                    hierarchy="primary"
-                                    size="cozy"
-                                    className="w-full"
-                                    onClick={handleDrawerOpen}
-                                    disabled={
-                                        !!didJudge ||
-                                        (isEvaluationDrawerOpen &&
-                                            (!isFormValid || isSubmitting))
-                                    }
-                                >
-                                    {isEvaluationDrawerOpen
-                                        ? 'Submit Evaluation'
-                                        : 'View evaluation'}
-                                </Button>
+                    {!isEvaluationDrawerOpen && !isConfirmationDrawerOpen && (
+                        <div className="mt-6 hidden w-full rounded-lg border border-neutral-600/60 bg-neutral-800/80 px-6 py-4 md:block xl:hidden">
+                            <div className="mx-auto flex w-full flex-col items-center justify-between gap-4">
+                                <div className="grid w-full grid-cols-2 gap-4">
+                                    <Button
+                                        type="button"
+                                        variant="default"
+                                        hierarchy="primary"
+                                        size="cozy"
+                                        className="w-full"
+                                        onClick={() =>
+                                            setIsGlobalRubricOpen(true)
+                                        }
+                                    >
+                                        View rubric
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant={didJudge ? 'default' : 'brand'}
+                                        hierarchy="primary"
+                                        size="cozy"
+                                        className="w-full"
+                                        onClick={handleDrawerOpen}
+                                        disabled={
+                                            isEvaluationDrawerOpen &&
+                                            (!isFormValid || isSubmitting)
+                                        }
+                                    >
+                                        {isEvaluationDrawerOpen
+                                            ? 'Submit Evaluation'
+                                            : didJudge
+                                              ? 'Review Submission'
+                                              : 'View evaluation'}
+                                    </Button>
+                                </div>
+                                {!!didJudge && (
+                                    <p className="text-center text-sm text-white/60">
+                                        Your evaluation for this project has
+                                        been submitted.
+                                    </p>
+                                )}
                             </div>
-                            {!!didJudge && (
-                                <p className="text-center text-sm text-white/60">
-                                    Your evaluation for this project has been
-                                    submitted.
-                                </p>
-                            )}
                         </div>
-                    </div>
-
+                    )}
                     <Drawer
                         open={isEvaluationDrawerOpen}
-                        onOpenChange={setIsEvaluationDrawerOpen}
+                        onOpenChange={handleEvaluationDrawerClose}
                     >
                         <DrawerContent
-                            className={`h-[85vh] ${isRubricOpen || isConfirmationDrawerOpen ? 'blur-sm transition-all duration-200' : ''}`}
+                            overlayZIndex={105}
+                            className={`h-[85vh] ${
+                                isRubricOpen || isConfirmationDrawerOpen
+                                    ? 'blur-sm transition-all duration-200'
+                                    : ''
+                            }`}
                         >
                             <DrawerHeader>
                                 <DrawerTitle>Evaluation Form</DrawerTitle>
@@ -592,15 +630,16 @@ export default function JudgingDrawer({
                                     >
                                         View rubric
                                     </Button>
+
                                     <Button
                                         type="submit"
-                                        variant="brand"
+                                        variant={didJudge ? 'default' : 'brand'}
                                         hierarchy="primary"
                                         size="cozy"
                                         disabled={
                                             isSubmitting ||
                                             !isFormValid ||
-                                            !!didJudge
+                                            didJudge
                                         }
                                         className="w-full"
                                         onClick={handleSubmitClick}
@@ -621,7 +660,7 @@ export default function JudgingDrawer({
                                 open={isConfirmationDrawerOpen}
                                 onOpenChange={setIsConfirmationDrawerOpen}
                             >
-                                <DrawerContent>
+                                <DrawerContent className="" overlayZIndex={106}>
                                     <DrawerHeader>
                                         <DrawerTitle>
                                             Submit your evaluation for{' '}
@@ -629,11 +668,11 @@ export default function JudgingDrawer({
                                         </DrawerTitle>
                                         <DrawerDescription>
                                             Once you submit your evaluation for
-                                            this project, it can't be changed or
-                                            edited.
+                                            this project, it can&apos;t be
+                                            changed or edited.
                                         </DrawerDescription>
                                     </DrawerHeader>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3 p-6">
                                         <input
                                             type="checkbox"
                                             id="dontShowAgain"
@@ -659,10 +698,8 @@ export default function JudgingDrawer({
                                                 size="cozy"
                                                 hierarchy="secondary"
                                                 className="flex-1"
-                                                onClick={() =>
-                                                    setIsConfirmationDrawerOpen(
-                                                        false
-                                                    )
+                                                onClick={
+                                                    handleConfirmationCancel
                                                 }
                                             >
                                                 Cancel

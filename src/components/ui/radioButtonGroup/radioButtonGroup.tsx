@@ -15,6 +15,8 @@ export interface RadioButtonGroupProps {
     onSelection?: (data: string | undefined) => void;
     defaultSelection?: string;
     name: string;
+    selectedValue?: string | null;
+    disabled?: boolean;
 }
 
 /**
@@ -28,9 +30,11 @@ export function RadioButtonGroup({
     defaultSelection = undefined,
     onSelection,
     name,
+    selectedValue,
+    disabled = false,
 }: RadioButtonGroupProps) {
     const [selection, _setSelection] = useState<string | undefined>(
-        defaultSelection
+        selectedValue || defaultSelection
     );
     const finalcheck = useAtomValue(finalErrCheckAtom);
 
@@ -82,31 +86,41 @@ export function RadioButtonGroup({
             {options.map((item, index) => {
                 // Create a unique ID for each radio input
                 const inputId = `${name}-${item.data.replace(/\s+/g, '-')}-${index}`;
+                const isSelected = item.data === selection;
 
                 return (
                     <label
                         key={index}
                         htmlFor={inputId}
-                        className={style.optionLabel}
+                        className={clsx(
+                            style.optionLabel,
+                            disabled && 'cursor-not-allowed opacity-50'
+                        )}
                     >
                         <input
                             type="radio"
                             id={inputId}
                             name={name}
-                            value={item.data}
                             required={required}
-                            checked={item.data === selection}
+                            checked={isSelected}
                             onChange={() => {
-                                setSelection(item.data);
+                                if (!disabled) {
+                                    setSelection(item.data);
+                                }
                             }}
                             className={style.radio}
                             onClick={(e) => {
-                                // Prevent the default radio behavior to handle deselection manually
+                                if (disabled) {
+                                    e.preventDefault();
+                                    return;
+                                }
                                 if (allowDeselect && item.data === selection) {
                                     e.preventDefault();
                                     clearSelection(item.data);
                                 }
                             }}
+                            disabled={disabled}
+                            readOnly={disabled}
                         />
                         {item.name}
                     </label>
@@ -117,7 +131,10 @@ export function RadioButtonGroup({
                 allowCustomInput && (
                     <label
                         htmlFor={`${name}-other`}
-                        className={style.optionLabel}
+                        className={clsx(
+                            style.optionLabel,
+                            disabled && 'cursor-not-allowed opacity-50'
+                        )}
                         style={{
                             flexFlow: 'wrap',
                         }}
@@ -128,9 +145,13 @@ export function RadioButtonGroup({
                             name={name}
                             checked={usingCustomInput}
                             onChange={() => {
-                                setSelection('');
+                                if (!disabled) {
+                                    setSelection('');
+                                }
                             }}
                             className={style.radio}
+                            disabled={disabled}
+                            readOnly={disabled}
                         />
                         Other
                         {
@@ -140,7 +161,9 @@ export function RadioButtonGroup({
                                     type="text"
                                     lazy
                                     onLazyChange={(val) => {
-                                        setSelection(val as string);
+                                        if (!disabled) {
+                                            setSelection(val as string);
+                                        }
                                     }}
                                     placeholder="Please specify"
                                     errorMsg="Required!"
@@ -151,6 +174,7 @@ export function RadioButtonGroup({
                                     }}
                                     defaultValue={selection}
                                     hideBackground
+                                    disabled={disabled}
                                 />
                             )
                         }
