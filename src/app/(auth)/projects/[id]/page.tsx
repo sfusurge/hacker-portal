@@ -93,6 +93,30 @@ export default async function ProjectPage({ params }: PageProps) {
             </FullPageInfo>
         );
     }
+    const membersWithImages = teamData?.members
+        ? await Promise.all(
+              teamData.members.map(async (member) => {
+                  let avatarUrl = '/sidebar/default-avatar.webp';
+                  if (member.image) {
+                      try {
+                          const image = await trpcClient.files.getFile({
+                              key: member.image,
+                              bucketName: 'profile-pictures',
+                          });
+                          if (image && image.buffer) {
+                              avatarUrl = `data:${image.contentType};base64,${Buffer.from(image.buffer).toString('base64')}`;
+                          }
+                      } catch (error) {
+                          console.error(
+                              `Error fetching image for user ${member.userId}:`,
+                              error
+                          );
+                      }
+                  }
+                  return { ...member, avatarUrl };
+              })
+          )
+        : [];
 
     const response = submission.response as Record<string, any>;
     response[0] = `${teamData?.name || 'Unnamed Team'}\n${
@@ -195,6 +219,15 @@ export default async function ProjectPage({ params }: PageProps) {
             <div className="grid h-full grid-cols-1 xl:grid-cols-3">
                 <div className="h-full overflow-y-auto pb-32 md:pb-10 xl:col-span-2 xl:pb-10">
                     <div className="flex flex-col gap-10 md:pr-6 xl:pr-10">
+                        <Link href="/projects" className="block md:hidden">
+                            <Button
+                                variant={'default'}
+                                hierarchy={'secondary'}
+                                size="cozy"
+                            >
+                                Return to Projects
+                            </Button>
+                        </Link>
                         {projectSections.map((section, index) => (
                             <SectionRenderer
                                 key={index}
@@ -254,60 +287,30 @@ export default async function ProjectPage({ params }: PageProps) {
                                 <>
                                     <div className="flex flex-col gap-3">
                                         <ul className="flex flex-col gap-3">
-                                            {teamData.members.map(
-                                                async (member) => {
-                                                    let avatarUrl =
-                                                        '/sidebar/default-avatar.webp';
-                                                    if (member.image) {
-                                                        try {
-                                                            const image =
-                                                                await trpcClient.files.getFile(
-                                                                    {
-                                                                        key: member.image,
-                                                                        bucketName:
-                                                                            'profile-pictures',
-                                                                    }
-                                                                );
-                                                            if (
-                                                                image &&
-                                                                image.buffer
-                                                            ) {
-                                                                avatarUrl = `data:${image.contentType};base64,${Buffer.from(image.buffer).toString('base64')}`;
+                                            {membersWithImages.map((member) => (
+                                                <li
+                                                    key={member.userId}
+                                                    className="flex justify-between gap-4"
+                                                >
+                                                    <div className="flex flex-1 items-center gap-3 overflow-hidden">
+                                                        <img
+                                                            alt={`${member.firstName || ''} ${member.lastName || ''} profile picture`}
+                                                            src={
+                                                                member.avatarUrl
                                                             }
-                                                        } catch (error) {
-                                                            console.error(
-                                                                `Error fetching image for user ${member.userId}:`,
-                                                                error
-                                                            );
-                                                        }
-                                                    }
-
-                                                    return (
-                                                        <li
-                                                            key={member.userId}
-                                                            className="flex justify-between gap-4"
-                                                        >
-                                                            <div className="flex flex-1 items-center gap-3 overflow-hidden">
-                                                                <img
-                                                                    alt={`${member.firstName || ''} ${member.lastName || ''} profile picture`}
-                                                                    src={
-                                                                        avatarUrl
-                                                                    }
-                                                                    width={32}
-                                                                    height={32}
-                                                                    className="h-7 w-7 rounded-full object-cover"
-                                                                />
-                                                                <div className="flex flex-1 flex-col justify-around gap-1 overflow-hidden">
-                                                                    <p className="truncate text-sm font-medium md:text-base">
-                                                                        {`${member.firstName || ''}`.trim() ||
-                                                                            'Unknown User'}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </li>
-                                                    );
-                                                }
-                                            )}
+                                                            width={32}
+                                                            height={32}
+                                                            className="h-7 w-7 rounded-full object-cover"
+                                                        />
+                                                        <div className="flex flex-1 flex-col justify-around gap-1 overflow-hidden">
+                                                            <p className="truncate text-sm font-medium md:text-base">
+                                                                {`${member.firstName || ''}`.trim() ||
+                                                                    'Unknown User'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            ))}
                                         </ul>
                                     </div>
                                 </>
@@ -324,7 +327,7 @@ export default async function ProjectPage({ params }: PageProps) {
                                 hierarchy={'secondary'}
                                 size="cozy"
                             >
-                                Go Back
+                                Return to Projects
                             </Button>
                         </Link>
                         {projectSections.map((section, index) => (
@@ -335,7 +338,7 @@ export default async function ProjectPage({ params }: PageProps) {
                             />
                         ))}
                     </div>
-                    <div className="fixed bottom-0 left-0 z-[105] w-full bg-neutral-800/60 px-10 py-6 backdrop-blur-lg md:sticky md:w-auto lg:-mx-10">
+                    <div className="fixed bottom-0 left-0 z-[105] w-full bg-neutral-800/60 px-10 py-6 backdrop-blur-lg md:sticky md:-mx-6 lg:-mx-10 lg:w-auto">
                         <div className="mx-auto flex w-full flex-col items-center justify-between gap-4">
                             <div className="flex w-full items-center justify-end">
                                 <VoteButton
