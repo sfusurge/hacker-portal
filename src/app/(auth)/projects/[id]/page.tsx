@@ -47,6 +47,7 @@ export default async function ProjectPage({ params }: PageProps) {
     }
 
     const user = await getUserData();
+    const userId = user?.id;
     const trpcClient = createCaller({});
     const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
     const hackathonId = activeHackathon.id;
@@ -58,6 +59,10 @@ export default async function ProjectPage({ params }: PageProps) {
 
     submission = await trpcClient.submissions.getSubmissionForTeam({
         teamId,
+    });
+    const voted = await trpcClient.userVote.getHasUserVoted({
+        userId,
+        hackathonId,
     });
 
     if (user?.userRole === 'judge' || user?.userRole === 'admin') {
@@ -263,8 +268,7 @@ export default async function ProjectPage({ params }: PageProps) {
         );
     }
 
-    // TODO: Fetch if they have a vote already
-    const alreadyVoted = true;
+    const alreadyVoted = voted?.hasVoted || false;
 
     return (
         <div className="flex h-full flex-col">

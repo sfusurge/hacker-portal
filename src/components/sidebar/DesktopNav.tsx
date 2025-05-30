@@ -59,6 +59,12 @@ const navLinks = [
         iconAlt: 'Schedule logo',
     },
     {
+        href: '/projects',
+        label: 'Projects',
+        icon: <InboxStackIcon className="h-6 w-6" />,
+        iconAlt: 'Projects logo',
+    },
+    {
         href: '/notifications',
         label: 'Notifications',
         icon: <BellAlertIcon className="h-6 w-6" />,
