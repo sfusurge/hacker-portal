@@ -33,10 +33,11 @@ export default function VoteButton({
         now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
     );
     const startTime = new Date('2025-05-31T10:00:00');
+    const endTime = new Date('2025-05-31T14:00:00');
 
     const isOnSameTeam = userTeam.data?.id === teamId;
 
-    const isVotingTimeActive = pstNow >= startTime;
+    const isVotingTimeActive = pstNow >= startTime && pstNow <= endTime;
 
     const isUserRoleAccepted = applicationStatus === 'Accepted';
 
