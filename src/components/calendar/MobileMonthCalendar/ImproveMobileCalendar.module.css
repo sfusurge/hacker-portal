@@ -1,19 +1,85 @@
 .Page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.Page > * {
+    width: 100%;
 }
 
 .Container {
+    aspect-ratio: 1;
+    max-width: 500px;
+    gap: 0;
+    margin: 0.5rem;
+}
+
+.ContainerContent {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 16px;
+}
+
+.monthIndicator {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+
+    @media screen and (max-width: 450px) {
+        font-size: 16px;
+    }
+}
+
+.arrowButtons {
+    padding: 0.5rem;
+
+    @media screen and (max-width: 450px) {
+        padding: 0.25rem;
+    }
 }
 
 .DayRow {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-around;
 }
 
 .DayRowItem {
+    min-width: 3rem;
+    text-align: center;
+    font-size: 16px;
+    color: var(--text-secondary);
+    @media screen and (max-width: 450px) {
+        min-width: 2rem;
+        font-size: 12px;
+    }
 }
 
 .DateRow {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-around;
 }
 
 .DateButton {
+    min-width: 3rem;
+    aspect-ratio: 1;
+    font-size: 18px;
+    padding-bottom: 1rem;
+    @media screen and (max-width: 450px) {
+        min-width: 2rem;
+        font-size: 14px;
+    }
 }
 
 .DateButton.selected {
