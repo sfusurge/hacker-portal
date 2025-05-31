@@ -379,7 +379,9 @@ export default async function ProjectPage({ params }: PageProps) {
                                     hackathonId={hackathonId}
                                     userId={user?.id || 0}
                                     alreadyVoted={alreadyVoted}
-                                    userRole={application.currentStatus}
+                                    applicationStatus={
+                                        application.currentStatus
+                                    }
                                 />
                             </div>
                         </div>
@@ -394,7 +396,7 @@ export default async function ProjectPage({ params }: PageProps) {
                                 hackathonId={hackathonId}
                                 userId={user?.id || 0}
                                 alreadyVoted={alreadyVoted}
-                                userRole={application.currentStatus}
+                                applicationStatus={application.currentStatus}
                             />
                         </div>
                     </div>

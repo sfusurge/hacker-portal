@@ -11,7 +11,7 @@ interface VoteButtonProps {
     hackathonId: number;
     userId: number;
     alreadyVoted: boolean;
-    userRole: string | undefined;
+    applicationStatus: string | undefined;
 }
 
 export default function VoteButton({
@@ -20,7 +20,7 @@ export default function VoteButton({
     hackathonId,
     userId,
     alreadyVoted,
-    userRole,
+    applicationStatus,
 }: VoteButtonProps) {
     const [isVoteDialogOpen, setIsVoteDialogOpen] = useState(false);
     const [hasVoted, setHasVoted] = useState(alreadyVoted);
@@ -38,7 +38,7 @@ export default function VoteButton({
 
     const isVotingTimeActive = pstNow >= startTime;
 
-    const isUserRoleAccepted = userRole === 'Accepted';
+    const isUserRoleAccepted = applicationStatus === 'Accepted';
 
     const isDisabled =
         hasVoted || isOnSameTeam || !isVotingTimeActive || !isUserRoleAccepted;
