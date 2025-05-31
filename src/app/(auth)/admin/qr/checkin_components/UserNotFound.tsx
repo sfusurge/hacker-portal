@@ -1,4 +1,12 @@
 import { ExclamationCircleIcon, QrCodeIcon } from '@heroicons/react/24/solid';
+import {
+    Drawer,
+    DrawerContent,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerDescription,
+} from '@/components/ui/drawer';
+import { useState, useEffect } from 'react';
 
 type UserNotFoundProps = {
     userId: string;
@@ -13,45 +21,54 @@ export default function UserNotFound({
     backToManual,
     show,
 }: UserNotFoundProps) {
-    if (!show) {
-        return false;
-    }
+    const [isOpen, setIsOpen] = useState(false);
+
+    // Handle delayed opening for proper animation
+    useEffect(() => {
+        if (show) {
+            // Small delay to ensure proper animation
+            const timer = setTimeout(() => setIsOpen(true), 50);
+            return () => clearTimeout(timer);
+        } else {
+            setIsOpen(false);
+        }
+    }, [show]);
+
+    const handleOpenChange = (isOpen: boolean) => {
+        if (!isOpen) {
+            closeAll();
+        }
+    };
 
     return (
-        <div
-            className={`bg-opacity-50 fixed inset-0 z-50 bg-black opacity-100 transition-opacity duration-300`}
-            onClick={closeAll}
-        >
-            <div
-                className={`fixed right-0 bottom-0 left-0 translate-y-0 transform transition-transform duration-300 ease-in-out`}
-            >
+        <Drawer open={isOpen} onOpenChange={handleOpenChange}>
+            <DrawerContent className="max-h-[90vh]">
                 <div className="flex items-center justify-center overflow-hidden">
-                    <div className="inline-flex h-96 max-w-sm flex-col items-start justify-start self-stretch overflow-hidden rounded-tl-xl rounded-tr-xl border-t border-neutral-600/30 bg-neutral-900">
-                        <div className="flex flex-col items-start justify-start gap-1 self-stretch p-2">
-                            <div className="ml-3 inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-[#7f1c1d]/30">
-                                <ExclamationCircleIcon className="size-6 fill-red-600" />
-                            </div>
-                        </div>
-
-                        <div className="flex h-80 flex-col items-start justify-start gap-8 self-stretch bg-neutral-900 px-6 pb-10">
-                            <div className="flex h-28 flex-col items-start justify-start gap-2 self-stretch">
-                                <div className="self-stretch text-base font-semibold text-white">
-                                    User not found
+                    <div className="inline-flex h-96 max-w-sm flex-col items-start justify-start self-stretch overflow-hidden">
+                        <DrawerHeader>
+                            <div className="mb-3 flex flex-col items-start justify-start gap-1 self-stretch">
+                                <div className="inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-[#7f1c1d]/30">
+                                    <ExclamationCircleIcon className="fill-danger-600 size-6" />
                                 </div>
+                            </div>
+                        </DrawerHeader>
 
-                                <div className="self-stretch">
-                                    <span className="text-sm leading-tight font-normal text-white/60">
-                                        No user was found with the ID
-                                    </span>
-                                    <span className="text-sm leading-none font-medium text-white">
+                        <div className="flex h-80 flex-col items-start justify-start gap-6 self-stretch bg-neutral-900">
+                            <div className="flex h-28 flex-col items-start justify-start gap-2 self-stretch">
+                                <DrawerTitle>User not found</DrawerTitle>
+
+                                <DrawerDescription>
+                                    <span>No user was found with the ID</span>
+                                    <span className="text-white">
+                                        {' '}
                                         {' ' + userId + '. '}
                                     </span>
-                                    <span className="text-sm leading-tight font-normal text-white/60">
+                                    <span>
                                         Try scanning the QR code again or input
                                         the ID manually. If this issue persists,
                                         contact an organizer.
                                     </span>
-                                </div>
+                                </DrawerDescription>
                             </div>
 
                             <div className="flex h-32 flex-col items-end justify-end gap-4 self-stretch">
@@ -81,7 +98,7 @@ export default function UserNotFound({
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </DrawerContent>
+        </Drawer>
     );
 }
