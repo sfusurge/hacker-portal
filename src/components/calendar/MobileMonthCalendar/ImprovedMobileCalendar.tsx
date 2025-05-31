@@ -39,7 +39,7 @@ export function ImprovedMobileCalendar({
     const daysWithEvents = useMemo(() => {
         const out = new Set<number>();
         for (const e of filteredEvents) {
-            const dayid = Math.floor(e.startTime.diff(firstDay, 'day', true));
+            const dayid = Math.ceil(e.startTime.diff(firstDay, 'day', true));
             if (!out.has(dayid)) {
                 out.add(dayid);
             }
@@ -156,7 +156,7 @@ function CalenderDays({ daysWithEvent }: MobileCalendarProps) {
                             if (d < 1) {
                                 d += lastMonth.daysInMonth();
                             } else if (d > monthInfo.daysInMonth) {
-                                d -= monthInfo.daysInMonth + 1;
+                                d -= monthInfo.daysInMonth;
                             }
                             return (
                                 <button
@@ -167,6 +167,7 @@ function CalenderDays({ daysWithEvent }: MobileCalendarProps) {
                                         OOB && style.OOB,
 
                                         d === selectedDay?.date() &&
+                                            !OOB &&
                                             style.selected,
 
                                         daysWithEvent.has(d) && style.hasEvent
