@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
     ScoreSection,
     CheckboxSection,
@@ -30,12 +31,13 @@ import {
     DrawerFooter,
 } from '@/components/ui/drawer';
 
-interface JudgingFormProps {
+interface JudgingDrawerProps {
     teamId: number;
     projectTitle?: string;
     hackathonId: number;
     user: any;
     didJudge: boolean;
+    isAssignedToJudge?: boolean;
 }
 
 const STATUS_KEY = 'judging_status_data';
@@ -66,7 +68,8 @@ export default function JudgingDrawer({
     hackathonId,
     user,
     didJudge,
-}: JudgingFormProps) {
+    isAssignedToJudge = true,
+}: JudgingDrawerProps) {
     const { hackathon, hackathonLoaded } = useHackathon();
     const [judgingData, setJudgingData] = useAtom(judgingDataAtom);
     const [formErrors, setFormErrors] = useAtom(formErrorsAtom);
@@ -367,6 +370,12 @@ export default function JudgingDrawer({
     }, []);
 
     useEffect(() => {
+        if (didJudge !== undefined && isAssignedToJudge) {
+            updateStatusInLocalStorage(didJudge ? 'completed' : 'in_progress');
+        }
+    }, [didJudge, updateStatusInLocalStorage, isAssignedToJudge]);
+
+    useEffect(() => {
         if (!isInitialized && user?.email) {
             try {
                 const savedData = localStorage.getItem(JUDGING_DATA_KEY);
@@ -445,12 +454,6 @@ export default function JudgingDrawer({
     ]);
 
     useEffect(() => {
-        if (didJudge !== undefined) {
-            updateStatusInLocalStorage(didJudge ? 'completed' : 'in_progress');
-        }
-    }, [didJudge, updateStatusInLocalStorage]);
-
-    useEffect(() => {
         if (
             !isLoading &&
             questions.length > 0 &&
@@ -498,7 +501,13 @@ export default function JudgingDrawer({
                     {shouldShowMobileFooter && (
                         <div className="fixed right-0 bottom-0 left-0 z-[105] border-t border-neutral-600/60 bg-neutral-800/80 px-6 py-4 backdrop-blur-lg md:hidden">
                             <div className="mx-auto flex w-full max-w-md flex-col items-center justify-between gap-4">
-                                <div className="grid w-full grid-cols-2 gap-4">
+                                <div
+                                    className={
+                                        !isAssignedToJudge
+                                            ? 'flex w-full flex-col gap-4'
+                                            : 'grid w-full grid-cols-2 gap-4'
+                                    }
+                                >
                                     <Button
                                         type="button"
                                         variant="default"
@@ -511,26 +520,45 @@ export default function JudgingDrawer({
                                     >
                                         View rubric
                                     </Button>
-                                    <Button
-                                        type="button"
-                                        variant={didJudge ? 'default' : 'brand'}
-                                        hierarchy="primary"
-                                        size="cozy"
-                                        className="w-full"
-                                        onClick={handleDrawerOpen}
-                                        disabled={
-                                            isEvaluationDrawerOpen &&
-                                            (!isFormValid || isSubmitting)
-                                        }
-                                    >
-                                        {isEvaluationDrawerOpen
-                                            ? 'Submit Evaluation'
-                                            : didJudge
-                                              ? 'Review Submission'
-                                              : 'View evaluation'}
-                                    </Button>
+                                    {isAssignedToJudge ? (
+                                        <Button
+                                            type="button"
+                                            variant={
+                                                didJudge ? 'default' : 'brand'
+                                            }
+                                            hierarchy="primary"
+                                            size="cozy"
+                                            className="w-full"
+                                            onClick={handleDrawerOpen}
+                                            disabled={
+                                                isEvaluationDrawerOpen &&
+                                                (!isFormValid || isSubmitting)
+                                            }
+                                        >
+                                            {isEvaluationDrawerOpen
+                                                ? 'Submit Evaluation'
+                                                : didJudge
+                                                  ? 'Review Submission'
+                                                  : 'View evaluation'}
+                                        </Button>
+                                    ) : (
+                                        <Link
+                                            href="/projects"
+                                            className="w-full"
+                                        >
+                                            <Button
+                                                type="button"
+                                                variant="brand"
+                                                hierarchy="primary"
+                                                size="cozy"
+                                                className="w-full"
+                                            >
+                                                Go back to home
+                                            </Button>
+                                        </Link>
+                                    )}
                                 </div>
-                                {!!didJudge && (
+                                {!!didJudge && isAssignedToJudge && (
                                     <p className="text-center text-sm text-white/60">
                                         Your evaluation for this project has
                                         been submitted.
@@ -556,26 +584,45 @@ export default function JudgingDrawer({
                                     >
                                         View rubric
                                     </Button>
-                                    <Button
-                                        type="button"
-                                        variant={didJudge ? 'default' : 'brand'}
-                                        hierarchy="primary"
-                                        size="cozy"
-                                        className="w-full"
-                                        onClick={handleDrawerOpen}
-                                        disabled={
-                                            isEvaluationDrawerOpen &&
-                                            (!isFormValid || isSubmitting)
-                                        }
-                                    >
-                                        {isEvaluationDrawerOpen
-                                            ? 'Submit Evaluation'
-                                            : didJudge
-                                              ? 'Review Submission'
-                                              : 'View evaluation'}
-                                    </Button>
+                                    {isAssignedToJudge ? (
+                                        <Button
+                                            type="button"
+                                            variant={
+                                                didJudge ? 'default' : 'brand'
+                                            }
+                                            hierarchy="primary"
+                                            size="cozy"
+                                            className="w-full"
+                                            onClick={handleDrawerOpen}
+                                            disabled={
+                                                isEvaluationDrawerOpen &&
+                                                (!isFormValid || isSubmitting)
+                                            }
+                                        >
+                                            {isEvaluationDrawerOpen
+                                                ? 'Submit Evaluation'
+                                                : didJudge
+                                                  ? 'Review Submission'
+                                                  : 'View evaluation'}
+                                        </Button>
+                                    ) : (
+                                        <Link
+                                            href="/projects"
+                                            className="w-full"
+                                        >
+                                            <Button
+                                                type="button"
+                                                variant="brand"
+                                                hierarchy="primary"
+                                                size="cozy"
+                                                className="w-full"
+                                            >
+                                                Go back to home
+                                            </Button>
+                                        </Link>
+                                    )}
                                 </div>
-                                {!!didJudge && (
+                                {!!didJudge && isAssignedToJudge && (
                                     <p className="text-center text-sm text-white/60">
                                         Your evaluation for this project has
                                         been submitted.
