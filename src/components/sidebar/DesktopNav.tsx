@@ -58,12 +58,12 @@ const navLinks = [
         icon: <CalendarDaysIcon className="h-6 w-6" />,
         iconAlt: 'Schedule logo',
     },
-    {
-        href: '/projects',
-        label: 'Projects',
-        icon: <InboxStackIcon className="h-6 w-6" />,
-        iconAlt: 'Projects logo',
-    },
+    // {
+    //     href: '/projects',
+    //     label: 'Projects',
+    //     icon: <InboxStackIcon className="h-6 w-6" />,
+    //     iconAlt: 'Projects logo',
+    // },
     {
         href: '/notifications',
         label: 'Notifications',
@@ -74,12 +74,13 @@ const navLinks = [
 ];
 
 const adminLinks = [
-    // {
-    //     href: '/projects',
-    //     label: 'Projects',
-    //     icon: <InboxStackIcon className="h-6 w-6" />,
-    //     iconAlt: 'Projects logo',
-    // },
+    // swap to public day of
+    {
+        href: '/projects',
+        label: 'Projects',
+        icon: <InboxStackIcon className="h-6 w-6" />,
+        iconAlt: 'Projects logo',
+    },
     {
         href: '/admin/review',
         label: 'Review Applications',
@@ -105,13 +106,15 @@ const adminLinks = [
         iconAlt: 'QR logo',
     },
 ];
+
+// JUDGES CAN ONLY SEE THESE LINKS
 const judgeNavLinks = [
-    // {
-    //     href: '/projects',
-    //     label: 'Projects',
-    //     icon: <InboxStackIcon className="h-6 w-6" />,
-    //     iconAlt: 'Projects logo',
-    // },
+    {
+        href: '/projects',
+        label: 'Projects',
+        icon: <InboxStackIcon className="h-6 w-6" />,
+        iconAlt: 'Projects logo',
+    },
     {
         href: '/schedule',
         label: 'Schedule',
