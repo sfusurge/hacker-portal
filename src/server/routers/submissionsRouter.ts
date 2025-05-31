@@ -117,7 +117,10 @@ export const submissionsRouter = router({
         .input(z.object({ hackathonId: z.number() }))
         .query(async ({ input }) => {
             const allSubmissions = await databaseClient
-                .select(getTableColumns(submissions))
+                .select({
+                    ...getTableColumns(submissions),
+                    teamName: teams.name,
+                })
                 .from(hackathons)
                 .innerJoin(
                     teams,

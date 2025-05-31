@@ -30,6 +30,7 @@ export default async function PublicProjectsPage() {
 
     let projects = null;
     let judgedProjects: JudgeAssignedProject[] | null = null;
+    let allProjectsData = null;
 
     if (user?.userRole === 'judge') {
         const assignedProjects = await trpcClient.judging.getJudgingProjects({
@@ -37,6 +38,38 @@ export default async function PublicProjectsPage() {
         });
         judgedProjects = assignedProjects || [];
 
+        const assignedProjectMap = new Map(
+            assignedProjects.map((project) => [project.teamId, project])
+        );
+
+        // fetch all projects
+        const submissions = await trpcClient.submissions.getAllSubmissions({
+            hackathonId,
+        });
+
+        allProjectsData = submissions.map((submission) => {
+            const response = submission.response as Record<string, any>;
+            const assignedProject = assignedProjectMap.get(submission.teamId);
+            return {
+                id: submission.teamId,
+                teamName: submission.teamName || `Team #${submission.teamId}`,
+                displayId:
+                    assignedProject?.displayId ||
+                    response[0] ||
+                    submission.teamId.toString(),
+                0: submission.teamId.toString(),
+                1: response[1] || `Team #${submission.teamId}`,
+                2: response[2] || 'No track selected',
+                3: response[3]?.[0] || '/hacker-portal-preview.webp',
+                4:
+                    getPlainTextFromRichText(response[4]) ||
+                    'No description available',
+                fullSubmissionResponse: response,
+                status: assignedProject ? assignedProject.status : 'unassigned',
+            };
+        });
+
+        // else just fetch the projects available for judging
         const projectPromises = assignedProjects.map(async (project) => {
             const submission =
                 await trpcClient.submissions.getSubmissionForTeam({
@@ -61,6 +94,7 @@ export default async function PublicProjectsPage() {
                     ? getPlainTextFromRichText(response[4])
                     : 'No description available',
                 fullSubmissionResponse: response,
+                status: project.status,
             };
         });
 
@@ -75,7 +109,7 @@ export default async function PublicProjectsPage() {
             const response = submission.response as Record<string, any>;
             return {
                 id: submission.teamId,
-                teamName: response[1] || `Team #${submission.teamId}`,
+                teamName: submission.teamName || `Team #${submission.teamId}`,
                 displayId: response[0] || submission.teamId.toString(),
                 0: submission.teamId.toString(),
                 1: response[1] || `Team #${submission.teamId}`,
@@ -97,6 +131,7 @@ export default async function PublicProjectsPage() {
                         projects={projects || []}
                         userData={user}
                         judgedProjects={judgedProjects || []}
+                        allProjects={allProjectsData || undefined}
                     />
                 )}
             </div>

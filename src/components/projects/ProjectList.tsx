@@ -36,12 +36,14 @@ interface ProjectListProps {
     projects: Project[];
     userData: any;
     judgedProjects: any[];
+    allProjects?: Project[];
 }
 
 export default function ProjectList({
     projects,
     userData,
     judgedProjects,
+    allProjects,
 }: ProjectListProps) {
     const { toast } = useToast();
     const [projectStatuses, setProjectStatuses] = useState<
@@ -50,6 +52,7 @@ export default function ProjectList({
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredProjects, setFilteredProjects] = useState(projects);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [showAllProjects, setShowAllProjects] = useState(false);
     const defaultStatusFilters = ['not_started', 'in_progress'];
     const [statusFilters, setStatusFilters] = useState<Set<string>>(
         new Set(defaultStatusFilters)
@@ -57,6 +60,31 @@ export default function ProjectList({
     const [initialStatusFilters, setInitialStatusFilters] = useState<
         Set<string>
     >(new Set(defaultStatusFilters));
+
+    useEffect(() => {
+        // check if all assigned projects are judged, if they are, add unassigned and add to localstorage and select it to display
+        const allAssignedProjectsJudged = projects.every((project) => {
+            const judgedStatus = judgedProjects?.find(
+                (jp) => jp.teamId === project.id
+            )?.status;
+            return judgedStatus === 'judged';
+        });
+
+        if (allAssignedProjectsJudged && allProjects) {
+            setShowAllProjects(true);
+            try {
+                const newFilters = new Set<string>(['completed', 'unassigned']);
+                setStatusFilters(newFilters);
+                setInitialStatusFilters(newFilters);
+                localStorage.setItem(
+                    FILTERS_KEY,
+                    JSON.stringify(Array.from(newFilters))
+                );
+            } catch (error) {
+                console.error('Error updating filters:', error);
+            }
+        }
+    }, [projects, judgedProjects, allProjects]);
 
     const handleStatusFilterChange = (selected: Set<string>) => {
         setStatusFilters(selected);
@@ -99,7 +127,14 @@ export default function ProjectList({
 
     const getStatusInfo = (projectId: string | number) => {
         const status = projectStatuses[projectId];
+        const isAssigned = projects.some((p) => p.id === projectId);
 
+        if (!isAssigned) {
+            return {
+                label: 'Not Judging',
+                className: 'bg-neutral-800 text-white/60',
+            };
+        }
         if (status === 'completed') {
             return {
                 label: 'Completed',
@@ -265,31 +300,45 @@ export default function ProjectList({
             return;
         }
 
+        const projectsToFilter =
+            showAllProjects && allProjects ? allProjects : projects;
+
         if (
             !searchQuery.trim() &&
             statusFilters.size === 0 &&
             Object.keys(projectStatuses).length === 0
         ) {
-            setFilteredProjects(projects);
+            setFilteredProjects(projectsToFilter);
             return;
         }
 
         const query = searchQuery ? searchQuery.toLowerCase() : '';
-        const filtered = projects.filter((project) => {
+        const assignedProjectIds = new Set(projects.map((p) => p.id));
+
+        const filtered = projectsToFilter.filter((project) => {
             if (!project || project.id === undefined) {
                 return false;
             }
 
             const projectId = project.id;
-            const projectStatus =
-                projectStatuses && typeof projectStatuses === 'object'
-                    ? projectStatuses[projectId] || 'not_started'
-                    : 'not_started';
+            const isAssigned = assignedProjectIds.has(projectId);
+
+            let projectStatus: string;
+            if (!isAssigned) {
+                projectStatus = 'unassigned';
+            } else {
+                projectStatus =
+                    projectStatuses && typeof projectStatuses === 'object'
+                        ? projectStatuses[projectId] || 'not_started'
+                        : 'not_started';
+            }
+
             const matchesStatus =
                 statusFilters instanceof Set
                     ? statusFilters.size === 0 ||
                       statusFilters.has(projectStatus)
                     : true;
+
             const matchesSearch =
                 !query.trim() ||
                 (project[1] &&
@@ -307,18 +356,21 @@ export default function ProjectList({
         statusFilters,
         projectStatuses,
         initialLoadComplete,
+        showAllProjects,
+        allProjects,
     ]);
 
     return (
         <div className="flex h-full flex-col">
-            <div className="sticky z-10 -m-6 mb-0 bg-neutral-900 p-10 sm:-m-6 md:-m-10 md:border-b md:border-b-neutral-600/30">
+            <div className="sticky z-10 -m-6 mb-0 bg-neutral-900 p-6 sm:-m-6 sm:p-10 md:-m-10 md:border-b md:border-b-neutral-600/30">
                 <div className="mb-6 flex flex-col gap-4">
                     <h1 className="text-3xl font-semibold text-white">
                         Hi, {userData?.firstName} {userData?.lastName}! 👋
                     </h1>
                     <p className="text-white/60">
-                        Here are the projects you&apos;ve been assigned to
-                        judge.
+                        {showAllProjects
+                            ? 'Thank you for being a judge for SparkJam 2025! You can now view every project 💖.'
+                            : "Here are the projects you've been assigned to judge."}
                     </p>
                 </div>
 
@@ -360,18 +412,31 @@ export default function ProjectList({
                                         <CheckboxGroup
                                             id="status-filters-mobile"
                                             choices={[
-                                                {
-                                                    name: 'Not Yet Started',
-                                                    data: 'not_started',
-                                                },
-                                                {
-                                                    name: 'In Progress',
-                                                    data: 'in_progress',
-                                                },
-                                                {
-                                                    name: 'Completed',
-                                                    data: 'completed',
-                                                },
+                                                ...(showAllProjects
+                                                    ? [
+                                                          {
+                                                              name: 'Completed',
+                                                              data: 'completed',
+                                                          },
+                                                          {
+                                                              name: 'Unassigned',
+                                                              data: 'unassigned',
+                                                          },
+                                                      ]
+                                                    : [
+                                                          {
+                                                              name: 'Not Yet Started',
+                                                              data: 'not_started',
+                                                          },
+                                                          {
+                                                              name: 'In Progress',
+                                                              data: 'in_progress',
+                                                          },
+                                                          {
+                                                              name: 'Completed',
+                                                              data: 'completed',
+                                                          },
+                                                      ]),
                                             ]}
                                             selected={Array.from(statusFilters)}
                                             onSelection={(selected) =>
@@ -379,7 +444,7 @@ export default function ProjectList({
                                                     selected
                                                 )
                                             }
-                                            max={3}
+                                            max={4}
                                         />
                                     </div>
                                     <DrawerFooter className="grid grid-cols-2 gap-4">
@@ -434,18 +499,31 @@ export default function ProjectList({
                                         <CheckboxGroup
                                             id="status-filters-desktop"
                                             choices={[
-                                                {
-                                                    name: 'Not Yet Started',
-                                                    data: 'not_started',
-                                                },
-                                                {
-                                                    name: 'In Progress',
-                                                    data: 'in_progress',
-                                                },
-                                                {
-                                                    name: 'Completed',
-                                                    data: 'completed',
-                                                },
+                                                ...(showAllProjects
+                                                    ? [
+                                                          {
+                                                              name: 'Completed',
+                                                              data: 'completed',
+                                                          },
+                                                          {
+                                                              name: 'Unassigned',
+                                                              data: 'unassigned',
+                                                          },
+                                                      ]
+                                                    : [
+                                                          {
+                                                              name: 'Not Yet Started',
+                                                              data: 'not_started',
+                                                          },
+                                                          {
+                                                              name: 'In Progress',
+                                                              data: 'in_progress',
+                                                          },
+                                                          {
+                                                              name: 'Completed',
+                                                              data: 'completed',
+                                                          },
+                                                      ]),
                                             ]}
                                             selected={Array.from(statusFilters)}
                                             onSelection={(selected) => {
@@ -453,7 +531,7 @@ export default function ProjectList({
                                                     selected
                                                 );
                                             }}
-                                            max={3}
+                                            max={4}
                                         />
                                     </div>
                                 </DropdownMenuContent>

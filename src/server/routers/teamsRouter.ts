@@ -36,6 +36,7 @@ import { z } from 'zod';
 import { deleteFileFromR2 } from '@/lib/cloudflare/r2';
 import { getUserData } from '@/server/routers/usersRouter';
 import { auth } from '@/auth/auth';
+import slugify from '@/utils/slugify';
 
 export const teamsRouter = router({
     createTeam: publicProcedure
@@ -415,6 +416,83 @@ export const teamsRouter = router({
             );
 
             return teamsWithMemberCount;
+        }),
+
+    resolveTeamIdentifier: publicProcedure
+        .input(
+            z.object({
+                identifier: z.string(),
+                hackathonId: z.number().int(),
+            })
+        )
+        .query(async ({ input }) => {
+            const { identifier, hackathonId } = input;
+
+            // try a slugified name
+            const allTeams = await databaseClient
+                .select({
+                    ...getTableColumns(teams),
+                })
+                .from(teams)
+                .where(eq(teams.hackathonId, hackathonId));
+
+            const matchingTeam = allTeams.find(
+                (team) => slugify(team.name) === slugify(identifier)
+            );
+
+            if (matchingTeam) {
+                return matchingTeam;
+            }
+
+            // try display ID
+            if (identifier.length === 6) {
+                try {
+                    const team = await databaseClient
+                        .select({
+                            ...getTableColumns(teams),
+                        })
+                        .from(teams)
+                        .where(
+                            and(
+                                eq(teams.displayId, identifier),
+                                eq(teams.hackathonId, hackathonId)
+                            )
+                        )
+                        .limit(1);
+
+                    if (team.length > 0) {
+                        return team[0];
+                    }
+                } catch (error) {
+                    // continue to next method if display ID fails
+                }
+            }
+
+            // try as numeric ID
+            const numericId = parseInt(identifier);
+            if (!isNaN(numericId)) {
+                const team = await databaseClient
+                    .select({
+                        ...getTableColumns(teams),
+                    })
+                    .from(teams)
+                    .where(
+                        and(
+                            eq(teams.id, numericId),
+                            eq(teams.hackathonId, hackathonId)
+                        )
+                    )
+                    .limit(1);
+
+                if (team.length > 0) {
+                    return team[0];
+                }
+            }
+
+            throw new ResourceNotFoundError({
+                id: identifier,
+                resourceType: 'team',
+            });
         }),
 });
 

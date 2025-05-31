@@ -31,13 +31,24 @@ interface PageProps {
 }
 
 export default async function ProjectPage({ params }: PageProps) {
-    const teamId = parseInt(params.id);
-    if (isNaN(teamId)) {
+    const trpcClient = createCaller({});
+    const user = await getUserData();
+    const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
+    const hackathonId = activeHackathon.id;
+
+    let teamId: number;
+    try {
+        const team = await trpcClient.teams.resolveTeamIdentifier({
+            identifier: params.id,
+            hackathonId,
+        });
+        teamId = team.id;
+    } catch (error) {
         return (
             <FullPageInfo
                 src="/teams/alone-otter.webp"
-                title={'Invalid team ID'}
-                body="Please provide a valid team ID."
+                title={'Team not found'}
+                body="The team you're looking for doesn't exist."
             >
                 <Button size="cozy" variant="brand" hierarchy="primary">
                     <Link href="/projects">Return to projects</Link>
@@ -46,16 +57,13 @@ export default async function ProjectPage({ params }: PageProps) {
         );
     }
 
-    const user = await getUserData();
     const userId = user?.id;
-    const trpcClient = createCaller({});
-    const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
-    const hackathonId = activeHackathon.id;
 
     let submission: GetSubmissionForTeamOutput | undefined;
     let judgedProject;
     let didJudge = false;
     let teamData: GetTeamByIdOutput | undefined;
+    let isAssignedToJudge = false;
 
     submission = await trpcClient.submissions.getSubmissionForTeam({
         teamId,
@@ -65,13 +73,20 @@ export default async function ProjectPage({ params }: PageProps) {
         hackathonId,
     });
 
-    if (user?.userRole === 'judge' || user?.userRole === 'admin') {
+    if (user?.userRole === 'judge') {
         judgedProject = await trpcClient.judging.getJudgedProject({
             hackathonId,
             teamId,
         });
 
         didJudge = judgedProject?.status === 'judged';
+
+        const assignedProjects = await trpcClient.judging.getJudgingProjects({
+            hackathonId,
+        });
+        isAssignedToJudge = assignedProjects.some(
+            (project) => project.teamId === teamId
+        );
     }
 
     try {
@@ -98,6 +113,7 @@ export default async function ProjectPage({ params }: PageProps) {
             </FullPageInfo>
         );
     }
+
     const membersWithImages = teamData?.members
         ? await Promise.all(
               teamData.members.map(async (member) => {
@@ -215,14 +231,14 @@ export default async function ProjectPage({ params }: PageProps) {
     ];
 
     const projectSections =
-        user?.userRole === 'judge'
+        user?.userRole === 'judge' || user?.userRole === 'admin'
             ? [...baseSections, ...judgeOnlySections]
             : baseSections;
 
     if (user?.userRole === 'judge') {
         return (
             <div className="grid h-full grid-cols-1 xl:grid-cols-3">
-                <div className="h-full overflow-y-auto pb-32 md:pb-10 xl:col-span-2 xl:pb-10">
+                <div className="h-full overflow-y-auto pb-48 md:pb-10 xl:col-span-2 xl:pb-10">
                     <div className="flex flex-col gap-10 md:pr-6 xl:pr-10">
                         <Link href="/projects" className="block md:hidden">
                             <Button
@@ -250,6 +266,7 @@ export default async function ProjectPage({ params }: PageProps) {
                         user={user}
                         teamId={teamId}
                         projectTitle={response[1] || `Team #${teamId}`}
+                        isAssignedToJudge={isAssignedToJudge}
                     />
                 </div>
 
@@ -261,6 +278,7 @@ export default async function ProjectPage({ params }: PageProps) {
                             teamId={teamId}
                             projectTitle={response[1] || `Team #${teamId}`}
                             didJudge={didJudge}
+                            isAssignedToJudge={isAssignedToJudge}
                         />
                     </div>
                 </div>

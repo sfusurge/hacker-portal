@@ -29,6 +29,7 @@ import {
     JudgingFormQuestion,
     FormResponse,
 } from '@/components/application_components/types';
+import Link from 'next/link';
 
 interface JudgingFormProps {
     teamId: number;
@@ -36,6 +37,7 @@ interface JudgingFormProps {
     hackathonId: number;
     user: any;
     didJudge: boolean;
+    isAssignedToJudge?: boolean;
 }
 
 const STATUS_KEY = 'judging_status_data';
@@ -66,6 +68,7 @@ export default function JudgingForm({
     hackathonId,
     user,
     didJudge,
+    isAssignedToJudge = true,
 }: JudgingFormProps) {
     const { hackathon, hackathonLoaded } = useHackathon();
     const [judgingData, setJudgingData] = useAtom(judgingDataAtom);
@@ -341,6 +344,12 @@ export default function JudgingForm({
     ]);
 
     useEffect(() => {
+        if (didJudge !== undefined && isAssignedToJudge) {
+            updateStatusInLocalStorage(didJudge ? 'completed' : 'in_progress');
+        }
+    }, [didJudge, updateStatusInLocalStorage, isAssignedToJudge]);
+
+    useEffect(() => {
         if (!isInitialized && user?.email) {
             setJudgingData((prevData) => ({
                 ...prevData,
@@ -400,12 +409,6 @@ export default function JudgingForm({
     ]);
 
     useEffect(() => {
-        if (didJudge !== undefined) {
-            updateStatusInLocalStorage(didJudge ? 'completed' : 'in_progress');
-        }
-    }, [didJudge, updateStatusInLocalStorage]);
-
-    useEffect(() => {
         if (
             !isLoading &&
             questions.length > 0 &&
@@ -428,6 +431,22 @@ export default function JudgingForm({
             validateForm();
         }
     }, [isRubricOpen, isLoading, validateForm]);
+
+    if (!isAssignedToJudge) {
+        return (
+            <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+                <h2 className="text-2xl font-semibold">View Only</h2>
+                <p className="text-white/60">
+                    You are not assigned to judge this project.
+                </p>
+                <Link href="/projects" className="mt-2">
+                    <Button hierarchy={'primary'} size="cozy" variant={'brand'}>
+                        Go back to projects
+                    </Button>
+                </Link>
+            </div>
+        );
+    }
 
     return (
         <>

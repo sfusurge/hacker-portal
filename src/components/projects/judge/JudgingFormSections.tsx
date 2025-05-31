@@ -110,7 +110,6 @@ export function CheckboxSection({
                 name={title}
                 selectedValue={selectedValue}
                 onSelection={(s) => {
-                    console.log(`RadioButtonGroup onSelection: "${s}"`);
                     onChange(s || '');
                 }}
                 disabled={didJudge}
@@ -158,7 +157,9 @@ export function TextAreaSection({
             )}
             <textarea
                 id={title.toLowerCase().replace(/\s+/g, '-')}
-                className={`w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2`}
+                className={`w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 ${
+                    didJudge ? 'cursor-not-allowed opacity-50' : ''
+                }`}
                 rows={rows}
                 placeholder={placeholder}
                 value={value || ''}
