@@ -290,6 +290,10 @@ export default async function ProjectPage({ params }: PageProps) {
 
     const alreadyVoted = voted?.hasVoted || false;
 
+    const application = await trpcClient.applications.getCurrentApplication({
+        hackathonId: hackathonId,
+    });
+
     return (
         <div className="flex h-full flex-col">
             <div className="m-0 flex flex-grow flex-col overflow-hidden md:-m-10 lg:m-0 lg:flex-row lg:gap-10">
@@ -375,7 +379,7 @@ export default async function ProjectPage({ params }: PageProps) {
                                     hackathonId={hackathonId}
                                     userId={user?.id || 0}
                                     alreadyVoted={alreadyVoted}
-                                    userRole={userRole}
+                                    userRole={application.currentStatus}
                                 />
                             </div>
                         </div>
@@ -390,7 +394,7 @@ export default async function ProjectPage({ params }: PageProps) {
                                 hackathonId={hackathonId}
                                 userId={user?.id || 0}
                                 alreadyVoted={alreadyVoted}
-                                userRole={userRole}
+                                userRole={application.currentStatus}
                             />
                         </div>
                     </div>
