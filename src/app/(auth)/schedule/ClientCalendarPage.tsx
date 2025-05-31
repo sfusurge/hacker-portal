@@ -80,14 +80,19 @@ export function ClientCalendarPage({
 
     const [weekOffset, setWeekOffset] = useState(0);
     function getStartDate() {
+        const dayOffset = weekOffset * 7;
         const today = dayjs();
         const firstDay = dayjs(hackathon.startDate);
-
+        const lastDay = dayjs(hackathon.endDate);
         if (today.isBefore(firstDay)) {
-            return firstDay.add(weekOffset, 'week');
+            return firstDay.add(dayOffset, 'day');
         }
 
-        return today.add(weekOffset, 'week');
+        if (today.isBefore(lastDay)) {
+            return lastDay.subtract(dayOffset, 'day').subtract(7, 'day');
+        }
+
+        return today.add(dayOffset, 'day');
     }
 
     useEffect(() => {
@@ -204,7 +209,7 @@ export function ClientCalendarPage({
                     {!isMobile && showSchedule && (
                         <DaySchedule
                             days={7}
-                            minColumnWidth={300}
+                            minColumnWidth={250}
                             startDate={getStartDate()}
                             events={events}
                         />
