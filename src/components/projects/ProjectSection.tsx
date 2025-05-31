@@ -7,6 +7,7 @@ import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 import { useState } from 'react';
 import { IframeEmbed } from '@/components/application_components/IframeEmbed';
 import { RichText } from '@/components/ui/RichText/RichText';
+import React from 'react';
 
 interface BaseSectionProps {
     title: string;
@@ -36,10 +37,19 @@ export function TextSection({
     title,
     content,
 }: BaseSectionProps & { content: string }) {
+    const lines = content.split('\n');
+
     return (
         <div className="flex flex-col gap-3">
             <Label className="mb-0 leading-normal">{title}</Label>
-            <p className="max-w-120 text-pretty">{content}</p>
+            <p className="max-w-120 text-pretty">
+                {lines.map((line, index) => (
+                    <React.Fragment key={index}>
+                        {line}
+                        {index < lines.length - 1 && <br />}
+                    </React.Fragment>
+                ))}
+            </p>
         </div>
     );
 }

@@ -36,6 +36,7 @@ import { z } from 'zod';
 import { deleteFileFromR2 } from '@/lib/cloudflare/r2';
 import { getUserData } from '@/server/routers/usersRouter';
 import { auth } from '@/auth/auth';
+import slugify from '@/utils/slugify';
 
 export const teamsRouter = router({
     createTeam: publicProcedure
@@ -201,6 +202,7 @@ export const teamsRouter = router({
                     firstName: userTable.firstName,
                     lastName: userTable.lastName,
                     email: userTable.email,
+                    image: userTable.image,
                     currentStatus: applications.currentStatus,
                 })
                 .from(membersTable)
@@ -313,6 +315,58 @@ export const teamsRouter = router({
                 members,
             };
         }),
+
+    /**
+     * Get a team by its internal team ID, including its members.
+     */
+    getTeamById: publicProcedure
+        .input(
+            z.object({
+                teamId: z.number().int(),
+            })
+        )
+        .query(async ({ input }) => {
+            const [team] = await databaseClient
+                .select({
+                    ...getTableColumns(teams),
+                })
+                .from(teams)
+                .where(eq(teams.id, input.teamId))
+                .limit(1);
+
+            if (!team) {
+                throw new ResourceNotFoundError({
+                    id: input.teamId,
+                    resourceType: 'team',
+                });
+            }
+
+            const members = await databaseClient
+                .select({
+                    userId: membersTable.userId,
+                    firstName: userTable.firstName,
+                    lastName: userTable.lastName,
+                    email: userTable.email,
+                    image: userTable.image,
+                    currentStatus: applications.currentStatus,
+                })
+                .from(membersTable)
+                .innerJoin(userTable, eq(userTable.id, membersTable.userId))
+                .leftJoin(
+                    applications,
+                    and(
+                        eq(applications.userId, membersTable.userId),
+                        eq(applications.hackathonId, team.hackathonId)
+                    )
+                )
+                .where(eq(membersTable.teamId, team.id));
+
+            return {
+                ...team,
+                members,
+            };
+        }),
+
     getTeams: publicProcedure
         .input(
             z.object({
@@ -362,6 +416,83 @@ export const teamsRouter = router({
             );
 
             return teamsWithMemberCount;
+        }),
+
+    resolveTeamIdentifier: publicProcedure
+        .input(
+            z.object({
+                identifier: z.string(),
+                hackathonId: z.number().int(),
+            })
+        )
+        .query(async ({ input }) => {
+            const { identifier, hackathonId } = input;
+
+            // try a slugified name
+            const allTeams = await databaseClient
+                .select({
+                    ...getTableColumns(teams),
+                })
+                .from(teams)
+                .where(eq(teams.hackathonId, hackathonId));
+
+            const matchingTeam = allTeams.find(
+                (team) => slugify(team.name) === slugify(identifier)
+            );
+
+            if (matchingTeam) {
+                return matchingTeam;
+            }
+
+            // try display ID
+            if (identifier.length === 6) {
+                try {
+                    const team = await databaseClient
+                        .select({
+                            ...getTableColumns(teams),
+                        })
+                        .from(teams)
+                        .where(
+                            and(
+                                eq(teams.displayId, identifier),
+                                eq(teams.hackathonId, hackathonId)
+                            )
+                        )
+                        .limit(1);
+
+                    if (team.length > 0) {
+                        return team[0];
+                    }
+                } catch (error) {
+                    // continue to next method if display ID fails
+                }
+            }
+
+            // try as numeric ID
+            const numericId = parseInt(identifier);
+            if (!isNaN(numericId)) {
+                const team = await databaseClient
+                    .select({
+                        ...getTableColumns(teams),
+                    })
+                    .from(teams)
+                    .where(
+                        and(
+                            eq(teams.id, numericId),
+                            eq(teams.hackathonId, hackathonId)
+                        )
+                    )
+                    .limit(1);
+
+                if (team.length > 0) {
+                    return team[0];
+                }
+            }
+
+            throw new ResourceNotFoundError({
+                id: identifier,
+                resourceType: 'team',
+            });
         }),
 });
 

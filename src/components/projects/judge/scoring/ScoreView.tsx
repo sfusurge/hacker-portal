@@ -22,6 +22,7 @@ interface ScoreViewProps {
     judgeSearchQuery: string;
     setTeamSearchQuery: (query: string) => void;
     setJudgeSearchQuery: (query: string) => void;
+    hackathon: any;
 }
 
 export default function ScoreView({
@@ -30,6 +31,7 @@ export default function ScoreView({
     judges,
     teamSearchQuery,
     judgeSearchQuery,
+    hackathon,
     setTeamSearchQuery,
     setJudgeSearchQuery,
 }: ScoreViewProps) {
@@ -152,11 +154,6 @@ export default function ScoreView({
             );
         }
         return value.length > 50 ? `${value.substring(0, 50)}...` : value;
-    };
-
-    const renderTotalValue = (total: number) => {
-        if (total === 0) return '-';
-        return <div className="text-brand-400 font-semibold">{total}</div>;
     };
 
     return (

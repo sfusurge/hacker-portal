@@ -12,6 +12,7 @@ import { emailsRouter } from './routers/emailTemplateRouter';
 import { submissionsRouter } from './routers/submissionsRouter';
 
 import { judgingRouter } from './routers/judgingRouter';
+import { userVoteRouter } from '@/server/routers/userVoteRouter';
 
 export const appRouter = router({
     health_check: publicProcedure.query(() => {
@@ -27,6 +28,7 @@ export const appRouter = router({
     checkIn: checkInRouter,
 
     judging: judgingRouter,
+    userVote: userVoteRouter,
 
     teams: teamsRouter,
     files: filesRouter,

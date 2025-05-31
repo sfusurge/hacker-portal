@@ -2,7 +2,11 @@ import { publicProcedure, router } from '../trpc';
 import { z } from 'zod';
 import { databaseClient } from '@/db/client';
 import { UserRoleEnum } from '@/db/schema/users/users';
-import { UnauthorizedError, InternalServerError } from '../exceptions';
+import {
+    UnauthorizedError,
+    InternalServerError,
+    ResourceNotFoundError,
+} from '../exceptions';
 import {
     judgingAssignments,
     insertJudgingAssignmentSchema,
@@ -36,22 +40,6 @@ export interface JudgingProjectResponse {
 }
 
 export const judgingRouter = router({
-    getJudgingQuestions: publicProcedure
-        .input(
-            z.object({
-                hackathonId: z.number().int(),
-            })
-        )
-        .query(async ({ input }) => {
-            const judgeQuestions = await databaseClient
-                .select({
-                    judgeQuestions: hackathons.judgeQuestions,
-                })
-                .from(hackathons)
-                .where(eq(hackathons.id, input.hackathonId));
-            return judgeQuestions[0]?.judgeQuestions || null;
-        }),
-
     assignJudgingProject: publicProcedure
         .input(insertJudgingAssignmentSchema)
         .mutation(async ({ input }): Promise<JudgingProjectResponse> => {
@@ -216,6 +204,7 @@ export const judgingRouter = router({
                         createdDate: judgingAssignments.createdDate,
                         updatedDate: judgingAssignments.updatedDate,
                         teamName: teams.name,
+                        displayId: teams.displayId,
                         response: judgingAssignments.response,
                     })
                     .from(judgingAssignments)
@@ -238,6 +227,7 @@ export const judgingRouter = router({
                     .select({
                         hackathonId: judgingAssignments.hackathonId,
                         teamId: judgingAssignments.teamId,
+                        displayId: teams.displayId,
                         userId: judgingAssignments.userId,
                         status: judgingAssignments.status,
                         createdDate: judgingAssignments.createdDate,
@@ -475,10 +465,15 @@ export const judgingRouter = router({
 
     getTeamSubmission: publicProcedure
         .input(
-            z.object({
-                hackathonId: z.number().int(),
-                teamId: z.number().int(),
-            })
+            z
+                .object({
+                    hackathonId: z.number().int(),
+                    teamId: z.number().int().optional(),
+                    displayId: z.string().length(6).optional(),
+                })
+                .refine((data) => data.teamId || data.displayId, {
+                    message: 'Either teamId or displayId must be provided',
+                })
         )
         .query(async ({ input }) => {
             const user = await getUserData();
@@ -497,6 +492,27 @@ export const judgingRouter = router({
                 });
             }
 
+            const whereConditions = [eq(teams.hackathonId, input.hackathonId)];
+
+            if (input.teamId) {
+                whereConditions.push(eq(teams.id, input.teamId));
+            } else if (input.displayId) {
+                whereConditions.push(eq(teams.displayId, input.displayId));
+            }
+
+            const [team] = await databaseClient
+                .select()
+                .from(teams)
+                .where(and(...whereConditions))
+                .limit(1);
+
+            if (!team) {
+                throw new ResourceNotFoundError({
+                    id: input.teamId?.toString() || input.displayId || '',
+                    resourceType: 'team',
+                });
+            }
+
             // If user is a judge, verify they are assigned to this team
             if (user.userRole === UserRoleEnum.judge) {
                 const assignments = await databaseClient
@@ -508,7 +524,7 @@ export const judgingRouter = router({
                                 judgingAssignments.hackathonId,
                                 input.hackathonId
                             ),
-                            eq(judgingAssignments.teamId, input.teamId),
+                            eq(judgingAssignments.teamId, team.id),
                             eq(judgingAssignments.userId, user.id)
                         )
                     )
@@ -525,7 +541,7 @@ export const judgingRouter = router({
             const [submission] = await databaseClient
                 .select()
                 .from(submissions)
-                .where(and(eq(submissions.teamId, input.teamId)))
+                .where(eq(submissions.teamId, team.id))
                 .limit(1);
 
             if (!submission) {
@@ -534,6 +550,7 @@ export const judgingRouter = router({
 
             return {
                 teamId: submission.teamId,
+                team: team,
                 response: submission.response,
                 createdDate: submission.createdDate,
                 currentStatus: submission.currentStatus,

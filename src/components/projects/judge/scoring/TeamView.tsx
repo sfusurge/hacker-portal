@@ -41,6 +41,7 @@ interface TeamViewProps {
     handleRemoveAssignment: (teamId: number, judgeId: number) => void;
     assigning: string | null;
     isProjectAssigned: (teamId: number, judgeId: number) => boolean;
+    hackathon: any;
 }
 
 export default function TeamView({
@@ -56,9 +57,10 @@ export default function TeamView({
     handleRemoveAssignment,
     assigning,
     isProjectAssigned,
+    hackathon,
 }: TeamViewProps) {
     const [scoreDialogOpen, setScoreDialogOpen] = useState(false);
-    const [selectedScore, setSelectedScore] = useState<any>(null);
+    const [selectedScore, setSelectedScore] = useState(null);
     const [selectedTeamName, setSelectedTeamName] = useState<string>('');
     const [selectedJudgeName, setSelectedJudgeName] = useState<string>('');
 
