@@ -17,44 +17,39 @@ import SubmissionCountdown from '@/components/team/InTeam/SubmissionCountdown';
 import { ArrowRightIcon } from 'lucide-react';
 import * as React from 'react';
 import { SubmitCard } from '@/components/team/InTeam/SubmitCard';
+import { useState, useEffect } from 'react';
 
 export default function SubmissionCardHomepage() {
     return (
-        // <Card className="col-span-7 h-full">
-        //     <CardHeader>
-        //         <CardHeaderColumn>
-        //             <CardHeaderDescription>
-        //                 Submit Your Project
-        //             </CardHeaderDescription>
-        //             <CardHeaderTitle>{teamName}'s Project</CardHeaderTitle>
-        //         </CardHeaderColumn>
-        //         <Button
-        //             size="cozy"
-        //             variant="brand"
-        //             hierarchy="primary"
-        //             className="hidden md:block"
-        //             onClick={() => redirect('/team/submit')}
-        //             trailingIconChild={
-        //                 <ArrowRightIcon className="inline-flex h-4 w-4" />
-        //             }
-        //         >
-        //             Start Project
-        //         </Button>
-        //     </CardHeader>
-        //     <CardContent
-        //         className={
-        //             'flex flex-col items-center justify-center gap-6 md:flex-row'
-        //         }
-        //     >
-        //         <SubmissionCountdown
-        //             targetDate={new Date('2025-05-28T23:59:00-08:00')}
-        //         />
-        //     </CardContent>
-        // </Card>
-        <SubmitCard
-            onShowSubmit={() => {
-                redirect('/team/submit');
-            }}
-        />
+        <div className="flex h-full flex-col gap-4">
+            <SubmitCard
+                onShowSubmit={() => {
+                    redirect('/team/submit');
+                }}
+            />
+            {/* <Card className="h-full">
+                <CardHeader>
+                    <CardHeaderColumn>
+                        <CardHeaderTitle>
+                            {isVotingPeriod ? 'Voting Period' : 'Submission Period'}
+                        </CardHeaderTitle>
+                        <CardHeaderDescription>
+                            {isVotingPeriod 
+                                ? 'Time remaining to cast your vote'
+                                : 'Time remaining to submit your project'
+                            }
+                        </CardHeaderDescription>
+                    </CardHeaderColumn>
+                </CardHeader>
+                <CardContent className="flex items-center justify-center">
+                    <SubmissionCountdown
+                        targetDate={isVotingPeriod 
+                            ? new Date('2025-05-30T21:00:00-08:00')
+                            : new Date('2025-05-28T23:59:00-08:00')
+                        }
+                    />
+                </CardContent>
+            </Card> */}
+        </div>
     );
 }

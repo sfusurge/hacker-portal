@@ -28,6 +28,7 @@ import {
 import { ArrowRightIcon } from 'lucide-react';
 import { useHackathon } from '@/hooks/use-hackathon';
 import { UserData } from '@/server/routers/usersRouter';
+import clsx from 'clsx';
 
 export type AppStatus =
     | 'Not Yet Started'
@@ -47,6 +48,7 @@ type ApplicationCardProps = {
     image?: string;
     applicationStatus?: string;
     applicationSubmitted: boolean;
+    className?: string;
 };
 
 export default function ApplicationCard({
@@ -54,6 +56,7 @@ export default function ApplicationCard({
     image,
     applicationStatus,
     applicationSubmitted,
+    className,
 }: ApplicationCardProps) {
     const [questionSetExists, setQuestionSetExists] = useState(false);
     const [isTicketOpen, setIsTicketOpen] = useState(false);
@@ -78,7 +81,7 @@ export default function ApplicationCard({
     );
 
     return (
-        <Card className="col-span-7 h-full">
+        <Card className={clsx(`h-full grid-cols-7`, className)}>
             <CardHeader>
                 <CardHeaderColumn>
                     <CardHeaderDescription>
