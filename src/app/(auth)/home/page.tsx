@@ -4,11 +4,8 @@ import EventsCard from '@/components/home/EventsCard';
 import TeamCard from '@/components/home/TeamCard';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
 import { createCaller } from '@/server/appRouter';
-import { Suspense } from 'react';
-import { ApplicationCardSkeleton } from '@/components/home/Skeletons';
 import { getUserData } from '@/server/routers/usersRouter';
 import { redirect } from 'next/navigation';
-import SubmissionCard from '@/components/team/submit/SubmissionCard';
 import SubmissionCardHomepage from '@/components/home/SubmissionCard';
 
 export default async function Home() {
@@ -55,29 +52,44 @@ export default async function Home() {
                 Hi, {data?.firstName} {data?.lastName}!
             </h1>
 
-            <div className="flex flex-col gap-6 md:gap-8 xl:grid xl:grid-cols-11">
-                <Suspense fallback={<ApplicationCardSkeleton />}>
-                    {/*<ApplicationCard*/}
-                    {/*    userData={data}*/}
-                    {/*    image={userQR}*/}
-                    {/*    applicationStatus={application?.currentStatus}*/}
-                    {/*    applicationSubmitted={application !== null}*/}
-                    {/*/>*/}
-                    <div className="col-span-7 flex flex-col gap-6 md:gap-8">
+            <div className="flex flex-col gap-6 md:gap-8">
+                <div className="flex flex-col gap-6 md:gap-8 xl:hidden">
+                    <SubmissionCardHomepage />
+                    <ApplicationCard
+                        className="col-span-1"
+                        userData={data}
+                        image={userQR}
+                        applicationStatus={application?.currentStatus}
+                        applicationSubmitted={application !== null}
+                    />
+                    <TeamCard
+                        userData={data}
+                        hackathonId={hackathonId}
+                        team={team}
+                    />
+                    <EventsCard events={events} />
+                </div>
+
+                <div className="hidden xl:grid xl:grid-cols-11 xl:gap-8">
+                    <div className="col-span-7 flex flex-col gap-8">
                         <SubmissionCardHomepage />
                     </div>
-                </Suspense>
-
-                <TeamCard
-                    userData={data}
-                    hackathonId={hackathonId}
-                    team={team}
-                />
-
-                <div className="mb-24 flex flex-col gap-6 md:mb-0 md:gap-8 xl:col-span-11 xl:grid xl:grid-cols-2">
-                    <EventsCard events={events} />
-
-                    <DiscordCard />
+                    <TeamCard
+                        userData={data}
+                        hackathonId={hackathonId}
+                        team={team}
+                    />
+                    <div className="col-span-11 grid grid-cols-2 gap-8">
+                        <ApplicationCard
+                            className="col-span-1"
+                            userData={data}
+                            image={userQR}
+                            applicationStatus={application?.currentStatus}
+                            applicationSubmitted={application !== null}
+                        />
+                        <EventsCard events={events} />
+                        {/* <DiscordCard /> */}
+                    </div>
                 </div>
             </div>
         </div>

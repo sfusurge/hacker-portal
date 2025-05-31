@@ -17,24 +17,120 @@ import { trpc } from '@/trpc/client';
 import { ArrowRightIcon } from '@heroicons/react/24/solid';
 import dayjs from 'dayjs';
 import { useAtomValue } from 'jotai';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
+
+export function VotingCard() {
+    const [isVotingOpen, setIsVotingOpen] = useState(false);
+    const [isPastDeadline, setIsPastDeadline] = useState(false);
+
+    useEffect(() => {
+        const now = new Date();
+        const pstNow = new Date(
+            now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
+        );
+        const votingStart = new Date('2025-05-31T10:00:00-08:00');
+        const votingEnd = new Date('2025-05-31T16:00:00-08:00');
+
+        setIsVotingOpen(pstNow >= votingStart && pstNow <= votingEnd);
+        setIsPastDeadline(pstNow > votingEnd);
+    }, []);
+
+    return (
+        <Card className="h-full">
+            <CardHeader>
+                <CardHeaderColumn>
+                    <CardHeaderDescription className="leading-tight">
+                        Project Voting
+                    </CardHeaderDescription>
+                    <CardHeaderTitle>Audience Choice Vote</CardHeaderTitle>
+                </CardHeaderColumn>
+            </CardHeader>
+            <CardContent className="min-h-[250px] items-center justify-center gap-6 px-10 py-8 text-center">
+                {isPastDeadline ? (
+                    <>
+                        <div className="flex flex-col gap-3">
+                            <h3 className="text-xl font-semibold text-pretty">
+                                Voting period has ended!
+                            </h3>
+                            <span className="text-pretty text-white/60 lg:max-w-[550px]">
+                                The Audience Choice Award winner will be
+                                announced during the closing ceremony on May 31,
+                                2025. Please come back tomorrow to see your
+                                feedback from the judges.
+                            </span>
+                        </div>
+                    </>
+                ) : !isVotingOpen ? (
+                    <>
+                        <div className="flex flex-col gap-3">
+                            <h3 className="text-xl font-semibold text-pretty">
+                                Voting will open soon!
+                            </h3>
+                            <span className="text-sm text-pretty text-white/60 lg:max-w-[550px]">
+                                Audience Choice voting will be available on May
+                                31st from 10:00 AM to 4:00 PM PST.
+                            </span>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <div className="flex flex-col gap-3">
+                            <h3 className="text-xl font-semibold text-pretty">
+                                Cast your vote for the Audience Choice Award!
+                            </h3>
+                            <span className="text-sm text-pretty text-white/60 lg:max-w-[550px]">
+                                Winners will be announced during the closing
+                                ceremony on May 31, 2025. Teams are not allowed
+                                to vote for their own projects.
+                            </span>
+                        </div>
+                        <Link href="/projects">
+                            <Button
+                                variant={'brand'}
+                                size="cozy"
+                                hierarchy={'primary'}
+                            >
+                                View all projects
+                            </Button>
+                        </Link>
+                    </>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
 
 export function SubmitCard({ onShowSubmit }: { onShowSubmit: () => void }) {
     const { hackathon } = useHackathon();
+    const [isVotingPeriod, setIsVotingPeriod] = useState(false);
+
+    useEffect(() => {
+        const now = new Date();
+        const pstNow = new Date(
+            now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
+        );
+        const submissionDeadline = new Date('2025-05-28T23:59:00-08:00');
+        const votingStart = new Date('2025-05-31T10:00:00-08:00');
+        const votingEnd = new Date('2025-05-31T16:00:00-08:00');
+
+        setIsVotingPeriod(
+            pstNow > submissionDeadline &&
+                pstNow >= votingStart &&
+                pstNow <= votingEnd
+        );
+    }, []);
 
     if (!hackathon || hackathon.startDate.isAfter(dayjs())) {
-        // if current day is before hackathon start day, then submit is not available.
-        return (
-            <>
-                <SubmitCardSkeleton />
-            </>
-        );
+        return <SubmitCardSkeleton />;
     }
+
+    if (isVotingPeriod) {
+        return <VotingCard />;
+    }
+
     return (
-        <SubmitCardContent
-            hackathon={hackathon}
-            onShowSubmit={onShowSubmit}
-        ></SubmitCardContent>
+        <SubmitCardContent hackathon={hackathon} onShowSubmit={onShowSubmit} />
     );
 }
 
