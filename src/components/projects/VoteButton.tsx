@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import AudienceChoiceDialog from './judge/AudienceChoiceDialog';
+import { trpc } from '@/trpc/client';
 
 interface VoteButtonProps {
     projectTitle: string;
@@ -21,20 +22,41 @@ export default function VoteButton({
 }: VoteButtonProps) {
     const [isVoteDialogOpen, setIsVoteDialogOpen] = useState(false);
     const [hasVoted, setHasVoted] = useState(alreadyVoted);
+    const userTeam = trpc.teams.getCurrentTeam.useQuery({
+        hackathonId: hackathonId,
+    });
+
+    const now = new Date();
+    const pstNow = new Date(
+        now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
+    );
+    const startTime = new Date('2025-05-31T10:00:00');
+
+    const isOnSameTeam = userTeam.data?.id === teamId;
+
+    const isVotingTimeActive = pstNow >= startTime;
+
+    const isDisabled = hasVoted || isOnSameTeam || !isVotingTimeActive;
 
     return (
         <>
             <Button
                 variant="brand"
-                disabled={hasVoted}
+                disabled={isDisabled}
                 hierarchy="primary"
                 size="cozy"
                 className="w-full whitespace-nowrap md:w-max"
-                onClick={hasVoted ? undefined : () => setIsVoteDialogOpen(true)}
+                onClick={
+                    isDisabled ? undefined : () => setIsVoteDialogOpen(true)
+                }
             >
                 {hasVoted
                     ? "You've already voted!"
-                    : 'Vote for audience choice!'}
+                    : isOnSameTeam
+                      ? "Can't vote for your own team!"
+                      : !isVotingTimeActive
+                        ? "Voting hasn't started yet!"
+                        : 'Vote for audience choice!'}
             </Button>
 
             <AudienceChoiceDialog

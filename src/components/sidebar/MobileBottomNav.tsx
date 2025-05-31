@@ -61,14 +61,22 @@ const navLinks = [
         active: false,
         disabled: false,
     },
-    {
-        href: '#',
-        label: 'Alerts',
-        icon: <BellAlertIcon />,
-        iconAlt: 'Alerts logo',
-        active: false,
-        disabled: true,
-    },
+    // {
+    //     href: '/projects',
+    //     label: 'Projects',
+    //     icon: <InboxStackIcon />,
+    //     iconAlt: 'Projects logo',
+    //     active: false,
+    //     disabled: false,
+    // },
+    // {
+    //     href: '#',
+    //     label: 'Alerts',
+    //     icon: <BellAlertIcon />,
+    //     iconAlt: 'Alerts logo',
+    //     active: false,
+    //     disabled: true,
+    // },
 ];
 
 const adminLinks = [
