@@ -11,6 +11,7 @@ interface VoteButtonProps {
     hackathonId: number;
     userId: number;
     alreadyVoted: boolean;
+    userRole: string | undefined;
 }
 
 export default function VoteButton({
@@ -19,6 +20,7 @@ export default function VoteButton({
     hackathonId,
     userId,
     alreadyVoted,
+    userRole,
 }: VoteButtonProps) {
     const [isVoteDialogOpen, setIsVoteDialogOpen] = useState(false);
     const [hasVoted, setHasVoted] = useState(alreadyVoted);
@@ -36,7 +38,10 @@ export default function VoteButton({
 
     const isVotingTimeActive = pstNow >= startTime;
 
-    const isDisabled = hasVoted || isOnSameTeam || !isVotingTimeActive;
+    const isUserRoleAccepted = userRole === 'Accepted';
+
+    const isDisabled =
+        hasVoted || isOnSameTeam || !isVotingTimeActive || !isUserRoleAccepted;
 
     return (
         <>
@@ -56,7 +61,9 @@ export default function VoteButton({
                       ? "Can't vote for your own team!"
                       : !isVotingTimeActive
                         ? "Voting hasn't started yet!"
-                        : 'Vote for audience choice!'}
+                        : !isUserRoleAccepted
+                          ? 'Only accepted participants can vote!'
+                          : 'Vote for audience choice!'}
             </Button>
 
             <AudienceChoiceDialog

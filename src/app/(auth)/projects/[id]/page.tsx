@@ -72,6 +72,8 @@ export default async function ProjectPage({ params }: PageProps) {
         userId,
         hackathonId,
     });
+    const userData = await getUserData();
+    const userRole = userData?.userRole;
 
     if (user?.userRole === 'judge') {
         judgedProject = await trpcClient.judging.getJudgedProject({
@@ -373,6 +375,7 @@ export default async function ProjectPage({ params }: PageProps) {
                                     hackathonId={hackathonId}
                                     userId={user?.id || 0}
                                     alreadyVoted={alreadyVoted}
+                                    userRole={userRole}
                                 />
                             </div>
                         </div>
@@ -387,6 +390,7 @@ export default async function ProjectPage({ params }: PageProps) {
                                 hackathonId={hackathonId}
                                 userId={user?.id || 0}
                                 alreadyVoted={alreadyVoted}
+                                userRole={userRole}
                             />
                         </div>
                     </div>
