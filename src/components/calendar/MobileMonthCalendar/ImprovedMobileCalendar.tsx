@@ -15,6 +15,8 @@ import { DialogTitle } from '@radix-ui/react-dialog';
 import { DaySchedule } from '@/components/calendar/DaySchedule/DaySchedule';
 import dayjs from 'dayjs';
 import clsx from 'clsx';
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
+import { Card, CardContent } from '@/components/ui/card';
 
 export function ImprovedMobileCalendar({
     events,
@@ -22,23 +24,28 @@ export function ImprovedMobileCalendar({
     events: InternalCalendarEventType[];
 }) {
     const [{ year, month }, updateYearMonth] = useAtom(currentYearMonthAtom);
+    const firstDay = useMemo(
+        () => dayjs(new Date(year, month, 1)),
+        [year, month]
+    );
     const [selectedDay, setSelectedDay] = useAtom(selectedDayAtom);
 
     const filteredEvents = useMemo(
         () => getEventsOfMonth(events, month, year, false),
-        [year, month]
+        [year, month, events]
     );
 
     // filters to get a set of days that has an event.
     const daysWithEvents = useMemo(() => {
         const out = new Set<number>();
         for (const e of filteredEvents) {
-            if (!out.has(e.startTime.get('day'))) {
-                out.add(e.startTime.get('day'));
+            const dayid = Math.floor(e.startTime.diff(firstDay, 'day', true));
+            if (!out.has(dayid)) {
+                out.add(dayid);
             }
         }
         return out;
-    }, [filteredEvents]);
+    }, [filteredEvents, firstDay]);
 
     const [dayEvents, setDayEvents] = useState<
         InternalCalendarEventType[] | undefined
@@ -75,7 +82,7 @@ export function ImprovedMobileCalendar({
                 </DrawerContent>
             </Drawer>
 
-            <div className={style.MCPage}>
+            <div className={style.Page}>
                 <CalenderDays daysWithEvent={daysWithEvents} />
 
                 <LinearTimeline
@@ -94,41 +101,75 @@ interface MobileCalendarProps {
 }
 function CalenderDays({ daysWithEvent }: MobileCalendarProps) {
     const [selectedDay, setSelectedDay] = useAtom(selectedDayAtom);
-    const { year, month } = useAtomValue(currentYearMonthAtom);
+    const [{ year, month }, updateYearMonth] = useAtom(currentYearMonthAtom);
+
     const monthInfo = useMemo(() => {
         return getMonthInfo(year, month);
     }, [year, month]);
 
+    const lastMonth = useMemo(() => {
+        return monthInfo.firstDay.subtract(1, 'month');
+    }, [monthInfo]);
+
+    console.log(daysWithEvent);
+
     return (
-        <div className={style.Container}>
-            <span>{selectedDay?.format('MMM-DD')}</span>
-            <div className={style.DayRow}>
-                {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(
-                    (item, idx) => (
-                        <span key={idx} className={style.DayRowItem}>
-                            {item}
-                        </span>
-                    )
-                )}
+        <Card className={style.Container}>
+            <div className={style.ContainerContent}>
+                <div className={style.monthIndicator}>
+                    <button
+                        className={style.arrowButtons}
+                        onClick={() => {
+                            updateYearMonth('-1 month');
+                        }}
+                    >
+                        <ChevronLeftIcon style={{ width: '1.5rem' }} />
+                    </button>
+                    <span>{monthInfo.firstDay.format('MMMM YYYY')}</span>
+                    <button
+                        className={style.arrowButtons}
+                        onClick={() => {
+                            updateYearMonth('+1 month');
+                        }}
+                    >
+                        <ChevronRightIcon style={{ width: '1.5rem' }} />
+                    </button>
+                </div>
+                <div className={style.DayRow}>
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(
+                        (item, idx) => (
+                            <span key={idx} className={style.DayRowItem}>
+                                {item}
+                            </span>
+                        )
+                    )}
+                </div>
                 {range(monthInfo.weeksInMonth).map((weekidx) => (
                     <div key={weekidx} className={style.DateRow}>
                         {range(7).map((dayidx) => {
-                            const d =
+                            let d =
                                 weekidx * 7 +
                                 dayidx +
                                 1 -
                                 monthInfo.firstDayOffset;
                             const OOB = d < 1 || d > monthInfo.daysInMonth;
-
+                            if (d < 1) {
+                                d += lastMonth.daysInMonth();
+                            } else if (d > monthInfo.daysInMonth) {
+                                d -= monthInfo.daysInMonth + 1;
+                            }
                             return (
                                 <button
                                     key={d}
                                     className={clsx(
                                         style.DateButton,
+
                                         OOB && style.OOB,
-                                        !OOB &&
-                                            d === selectedDay?.date() &&
-                                            style.selected
+
+                                        d === selectedDay?.date() &&
+                                            style.selected,
+
+                                        daysWithEvent.has(d) && style.hasEvent
                                     )}
                                     onClick={() => {
                                         setSelectedDay(
@@ -143,6 +184,6 @@ function CalenderDays({ daysWithEvent }: MobileCalendarProps) {
                     </div>
                 ))}
             </div>
-        </div>
+        </Card>
     );
 }
