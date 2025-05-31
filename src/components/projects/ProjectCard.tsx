@@ -69,7 +69,7 @@ export default function ProjectCard({
         <Link
             href={`/projects/${slugify(project.teamName)}`}
             className={`group flex flex-col overflow-hidden rounded-xl transition-shadow hover:shadow-lg ${
-                statusInfo?.label === 'Not Judging' ? 'opacity-80' : ''
+                statusInfo?.label === 'Not Judging' ? 'opacity-90' : ''
             }`}
         >
             <div className="relative" title={project[1]}>
@@ -81,7 +81,7 @@ export default function ProjectCard({
                     </p>
                 )}
                 <div
-                    className={`${statusInfo?.label === 'Not Judging' ? 'opacity-80' : ''}`}
+                    className={`${statusInfo?.label === 'Not Judging' ? 'opacity-90' : ''}`}
                 >
                     <Image
                         src={project[3] || '/hacker-portal-preview.webp'}
