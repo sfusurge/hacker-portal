@@ -14,8 +14,6 @@
 }
 
 .Container {
-    position: sticky;
-    top: 5.5rem;
     z-index: 100;
     aspect-ratio: 1;
     max-width: 500px;
