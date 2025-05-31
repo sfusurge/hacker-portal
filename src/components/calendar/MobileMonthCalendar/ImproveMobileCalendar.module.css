@@ -6,6 +6,7 @@
     max-width: 500px;
     margin-left: auto;
     margin-right: auto;
+    padding-bottom: 6rem;
 }
 
 .Page > * {
@@ -13,10 +14,18 @@
 }
 
 .Container {
+    position: sticky;
+    top: 5.5rem;
+    z-index: 100;
     aspect-ratio: 1;
     max-width: 500px;
+    min-width: 245px;
     gap: 0;
     margin: 0.5rem;
+
+    @media screen and (max-width: 350px) {
+        margin: 4px;
+    }
 }
 
 .ContainerContent {
@@ -25,6 +34,10 @@
     flex-direction: column;
     justify-content: space-between;
     padding: 16px;
+
+    @media screen and (max-width: 350px) {
+        padding: 8px;
+    }
 }
 
 .monthIndicator {
@@ -36,6 +49,10 @@
     @media screen and (max-width: 450px) {
         font-size: 16px;
     }
+
+    @media screen and (max-width: 350px) {
+        font-size: 14px;
+    }
 }
 
 .arrowButtons {
@@ -43,6 +60,10 @@
 
     @media screen and (max-width: 450px) {
         padding: 0.25rem;
+    }
+
+    @media screen and (max-width: 450px) {
+        padding: 0.1rem;
     }
 }
 
@@ -58,7 +79,7 @@
     text-align: center;
     font-size: 16px;
     color: var(--text-secondary);
-    @media screen and (max-width: 450px) {
+    @media screen and (max-width: 430px) {
         min-width: 2rem;
         font-size: 12px;
     }
@@ -75,15 +96,54 @@
     min-width: 3rem;
     aspect-ratio: 1;
     font-size: 18px;
-    padding-bottom: 1rem;
-    @media screen and (max-width: 450px) {
+    border-radius: 8px;
+    border: 2px solid transparent;
+
+    transition:
+        border-color 250ms ease-out,
+        background-color 250ms ease-out;
+
+    position: relative;
+
+    @media screen and (max-width: 430px) {
         min-width: 2rem;
         font-size: 14px;
     }
 }
 
 .DateButton.selected {
+    background-color: var(--brand-500);
+}
+.DateButton:active,
+.DateButton:focus,
+.DateButton:hover {
+    border: 2px solid var(--brand-500);
+    outline: none;
+}
+
+.DateButton.hasEvent::after {
+    content: '';
+
+    background-color: var(--brand-400);
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    transform: translate(-50%, -30%);
+
+    @media screen and (max-width: 430px) {
+        width: 0.3rem;
+        height: 0.3rem;
+        transform: translate(-50%, 0%);
+    }
+}
+
+.DateButton.OOB.hasEvent::after {
+    opacity: 0.5;
 }
 
 .DateButton.OOB {
+    color: var(--text-tertiary);
 }
