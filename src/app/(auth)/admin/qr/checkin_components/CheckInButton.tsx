@@ -32,9 +32,9 @@ export default function CheckinButton({
 
     if (!checkInStatus) {
         return (
-            <div className="inline-flex items-center justify-center self-stretch overflow-hidden rounded-lg bg-indigo-700 px-1 py-2">
+            <div className="inline-flex w-full items-center justify-center self-stretch overflow-hidden rounded-lg bg-indigo-700 px-1 py-2">
                 <button
-                    className="flex min-h-9 items-center justify-center px-3"
+                    className="flex min-h-9 w-full items-center justify-center px-3"
                     onClick={toggleCheckInStatus}
                 >
                     <div className="flex flex-row gap-2 text-base font-medium text-white">
@@ -46,8 +46,8 @@ export default function CheckinButton({
         );
     } else {
         return (
-            <div className="inline-flex items-center justify-center self-stretch overflow-hidden rounded-lg bg-indigo-700 px-1 py-2">
-                <div className="flex min-h-9 items-center justify-center">
+            <div className="inline-flex w-full items-center justify-center self-stretch overflow-hidden rounded-lg bg-indigo-700 px-1 py-2">
+                <div className="flex min-h-9 w-full items-center justify-center">
                     <div className="flex flex-row gap-2 text-sm font-medium text-white/60">
                         <Icon className="size-6" />
                         {userName} is already checked in

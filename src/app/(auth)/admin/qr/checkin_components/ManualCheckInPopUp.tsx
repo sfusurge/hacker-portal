@@ -2,6 +2,14 @@
 
 import InputOtp from '@/app/(auth)/admin/qr/checkin_components/six_digit_input-otp';
 import { useState } from 'react';
+import {
+    Drawer,
+    DrawerContent,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerDescription,
+} from '@/components/ui/drawer';
+import { Button } from '@/components/ui/button';
 
 type ManualCheckInProps = {
     onClose: () => void;
@@ -22,49 +30,27 @@ export default function ManualCheckIn({
         toggleCheckInPrompt(input);
     };
 
-    if (!show) {
-        return false;
-    }
-
     return (
-        <div
-            className={`bg-opacity-50 ransition-opacity fixed inset-0 z-50 bg-black opacity-100 duration-300`}
-            onClick={onClose}
-        >
-            <div
-                className={`'translate-y-0 fixed right-0 bottom-0 left-0 h-96 transform transition-transform duration-300 ease-in-out`}
-                onClick={(e) => e.stopPropagation()}
-            >
+        <Drawer open={show} onOpenChange={onClose}>
+            <DrawerContent>
                 <div className="flex items-center justify-center overflow-hidden">
-                    <div className="inline-flex max-w-full flex-col items-start justify-start rounded-xl rounded-tl-xl border-t border-neutral-600/30 bg-neutral-900 sm:max-w-sm">
-                        <div className="flex flex-col items-center justify-start overflow-hidden">
-                            <button
-                                className="pt-3"
-                                onClick={onClose}
-                                aria-label="Close"
-                            >
-                                <div className="bg-neutral-750 relative h-1.5 w-9 rounded-full"></div>
-                            </button>
+                    <div className="flex flex-col items-center justify-start overflow-hidden">
+                        <DrawerHeader>
+                            <DrawerTitle>Manual Check-In</DrawerTitle>
+                            <DrawerDescription>
+                                Enter hacker's 6-digit code to manually check
+                                them into the hackathon.
+                            </DrawerDescription>
+                        </DrawerHeader>
 
-                            <div className="flex h-28 flex-col items-start justify-start gap-2 self-stretch p-6">
-                                <div className="inline-flex items-center justify-between self-stretch pr-2">
-                                    <div className="text-center text-base leading-tight font-semibold text-white">
-                                        Manual Check-In
-                                    </div>
-                                </div>
-
-                                <div className="self-stretch text-sm leading-tight font-normal text-white/60">
-                                    Enter hacker’s 6-digit code to manually
-                                    check them into the hackathon.
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex h-44 flex-col items-center justify-center gap-10 self-stretch bg-neutral-900 px-6 pb-10">
+                        <div className="flex flex-col items-center justify-center gap-10 self-stretch bg-neutral-900 pt-6 pb-10">
                             <InputOtp input={input} setInput={setInput} />
 
-                            <button
-                                className={`inline-flex min-h-9 items-center justify-center self-stretch overflow-hidden rounded-lg px-4 py-2 transition-colors duration-300 ${isInputComplete ? 'bg-brand-700 drop-shadow-lg' : 'bg-brand-950'}`}
+                            <Button
+                                variant={'brand'}
+                                size="cozy"
+                                hierarchy={'primary'}
+                                className="w-full"
                                 onClick={handleClick}
                                 disabled={!isInputComplete}
                             >
@@ -72,14 +58,14 @@ export default function ManualCheckIn({
                                     <div
                                         className={`text-base font-medium ${isInputComplete ? 'text-white' : 'text-indigo-800'}`}
                                     >
-                                        Verify Hacker
+                                        Verify hacker
                                     </div>
                                 </div>
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </DrawerContent>
+        </Drawer>
     );
 }

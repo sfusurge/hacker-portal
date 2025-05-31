@@ -344,7 +344,9 @@ export default function ProjectList({
                 (project[1] &&
                     String(project[1]).toLowerCase().includes(query)) ||
                 (project[4] &&
-                    String(project[4]).toLowerCase().includes(query));
+                    String(project[4]).toLowerCase().includes(query)) ||
+                (project.teamName &&
+                    project.teamName.toLowerCase().includes(query));
 
             return matchesSearch && matchesStatus;
         });

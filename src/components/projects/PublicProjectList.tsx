@@ -26,7 +26,8 @@ export default function PublicProjectList({
         return (
             !query ||
             (project[1] && String(project[1]).toLowerCase().includes(query)) ||
-            (project[4] && String(project[4]).toLowerCase().includes(query))
+            (project[4] && String(project[4]).toLowerCase().includes(query)) ||
+            (project.teamName && project.teamName.toLowerCase().includes(query))
         );
     });
 
@@ -42,7 +43,7 @@ export default function PublicProjectList({
         <div className="flex h-full flex-col">
             <div className="sticky z-10 -m-6 mb-0 flex flex-col gap-10 bg-neutral-900 p-6 sm:-m-6 md:-m-10 md:border-b md:border-b-neutral-600/30 md:p-10">
                 <div className="flex flex-col gap-4">
-                    <h1 className="text-3xl font-semibold text-white">
+                    <h1 className="text-3xl font-semibold text-pretty text-white">
                         SparkJam 2025 project gallery
                     </h1>
                 </div>
@@ -67,7 +68,7 @@ export default function PublicProjectList({
 
             <div className="h-fill mt-6 flex-grow overflow-y-auto pb-12 sm:-mx-6 sm:p-10 md:-mx-10 md:mt-10">
                 <div className="@container">
-                    <div className="mb-24 grid grid-cols-1 gap-8 sm:mb-0 @[450px]:grid-cols-2 @[650px]:grid-cols-3 @[925px]:grid-cols-4">
+                    <div className="mb-16 grid grid-cols-1 gap-8 sm:mb-0 @[450px]:grid-cols-2 @[650px]:grid-cols-3 @[925px]:grid-cols-4">
                         {filteredProjects.length === 0 ? (
                             <div className="col-span-full py-12 text-center">
                                 <p className="text-lg text-white">
