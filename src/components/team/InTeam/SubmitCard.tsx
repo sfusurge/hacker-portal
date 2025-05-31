@@ -26,13 +26,14 @@ export function VotingCard() {
 
     useEffect(() => {
         const now = new Date();
+
         const pstNow = new Date(
             now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
         );
-        const votingStart = new Date('2025-05-31T10:00:00-08:00');
-        const votingEnd = new Date('2025-05-31T16:00:00-08:00');
+        const startTime = new Date('2025-05-31T10:00:00-07:00');
+        const votingEnd = new Date('2025-05-31T16:00:00-07:00');
 
-        setIsVotingOpen(pstNow >= votingStart && pstNow <= votingEnd);
+        setIsVotingOpen(pstNow >= startTime && pstNow <= votingEnd);
         setIsPastDeadline(pstNow > votingEnd);
     }, []);
 
@@ -110,12 +111,12 @@ export function SubmitCard({ onShowSubmit }: { onShowSubmit: () => void }) {
         const pstNow = new Date(
             now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
         );
-        const submissionDeadline = new Date('2025-05-28T23:59:00-08:00');
-        const votingStart = new Date('2025-05-31T10:00:00-08:00');
-        const votingEnd = new Date('2025-05-31T16:00:00-08:00');
+        const submissionDeadline = new Date('2025-05-29T00:00:00-07:00');
+        const votingStart = new Date('2025-05-31T10:00:00-07:00');
+        const votingEnd = new Date('2025-05-31T16:00:00-07:00');
 
         setIsVotingPeriod(
-            pstNow > submissionDeadline &&
+            pstNow >= submissionDeadline &&
                 pstNow >= votingStart &&
                 pstNow <= votingEnd
         );
@@ -171,7 +172,7 @@ function SubmitCardContent({
         const pstNow = new Date(
             now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
         );
-        const deadline = new Date('2025-05-29T00:30:00');
+        const deadline = new Date('2025-05-29T00:00:00-07:00');
         setIsPastDeadline(pstNow > deadline);
     }, [hackathon]);
 
@@ -286,7 +287,9 @@ function SubmitCardContent({
                     {!teamdata.data && <p>You are not in a team yet!</p>}
                     <span
                         className={'text-sm text-white/60'}
-                    >{`Projects are due on ${dayjs(new Date(2025, 4, 28, 23, 59, 59)).format('MMM DD, hh:mm')}!`}</span>
+                    >{`Projects are due on ${dayjs(
+                        new Date(2025, 4, 28, 23, 59, 59)
+                    ).format('MMM DD, hh:mm')}!`}</span>
                     <CountdownTimer
                         targetDate={new Date(2025, 4, 28, 23, 59, 59)}
                     />
