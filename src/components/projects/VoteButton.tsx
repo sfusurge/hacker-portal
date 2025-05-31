@@ -20,36 +20,28 @@ export default function VoteButton({
     alreadyVoted,
 }: VoteButtonProps) {
     const [isVoteDialogOpen, setIsVoteDialogOpen] = useState(false);
+    const [hasVoted, setHasVoted] = useState(alreadyVoted);
 
     return (
         <>
             <Button
                 variant="brand"
-                disabled={alreadyVoted}
+                disabled={hasVoted}
                 hierarchy="primary"
                 size="cozy"
                 className="w-full whitespace-nowrap md:w-max"
-                onClick={() => setIsVoteDialogOpen(true)}
+                onClick={hasVoted ? undefined : () => setIsVoteDialogOpen(true)}
             >
-                Voting is not open yet!
-                {/* {!alreadyVoted ? (
-                    <>
-                        <span className="hidden sm:inline">Vote project for Audience Choice Award!</span>
-                        <span className="hidden sm:inline">Vote project for Audience Choice Award!</span>
-                        <span className="sm:hidden">Vote for Audience Choice</span>
-                    </>
-                ) : (
-                    <>
-                        <span className="hidden sm:inline">You have voted for a project</span>
-                        <span className="sm:hidden">Already voted</span>
-                    </>
-                )} */}
+                {hasVoted
+                    ? "You've already voted!"
+                    : 'Vote for audience choice!'}
             </Button>
 
             <AudienceChoiceDialog
                 open={isVoteDialogOpen}
                 onOpenChange={setIsVoteDialogOpen}
                 projectTitle={projectTitle}
+                setHasVoted={setHasVoted}
                 teamId={teamId}
                 hackathonId={hackathonId}
                 userId={userId}
