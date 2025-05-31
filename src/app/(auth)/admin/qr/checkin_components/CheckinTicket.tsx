@@ -4,9 +4,9 @@ import Image from 'next/image';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
 import { useEffect, useState } from 'react';
 import CheckinButton from '@/app/(auth)/admin/qr/checkin_components/CheckInButton';
-import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { GetUsersOutput, trpc } from '@/trpc/client';
 import { EventType } from '@/db/schema/events';
+import { useToast } from '@/hooks/use-toast';
 import {
     Drawer,
     DrawerContent,
@@ -32,18 +32,13 @@ export default function CheckinTicket({
 }: CheckInTicketProps) {
     const [QRCode, setQRCode] = useState('/qrfinder.svg');
     const pfp = '/favicon.png';
+    const { toast } = useToast();
 
     const submitCheckIn = trpc.checkIn.checkIn.useMutation();
     const isCheckedIn = trpc.checkIn.isCheckedIn;
 
-    const [showToast, setShowToast] = useState(false);
     const [checkInStatus, setCheckInStatus] = useState(false);
     const [checkInTime, setCheckInTime] = useState('N/A');
-
-    const handleShowToast = () => {
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
-    };
 
     const handleOpenChange = (open: boolean) => {
         if (!open) {
@@ -75,7 +70,11 @@ export default function CheckinTicket({
             eventId: eventId,
         });
 
-        handleShowToast();
+        toast({
+            title: 'Successfully checked in!',
+            variant: 'success',
+        });
+
         checked.refetch();
     };
 
@@ -109,16 +108,6 @@ export default function CheckinTicket({
             <DrawerContent className="max-h-[80vh]">
                 {currentHacker?.id && (
                     <div className="relative flex w-full flex-col items-center justify-start gap-2 pb-6">
-                        {/* Toast Notification */}
-                        {showToast && (
-                            <div className="bg-success-950/30 absolute top-4 left-1/2 z-50 w-80 -translate-x-1/2 transform rounded-lg p-4 text-white shadow-lg transition-transform duration-300 ease-in-out">
-                                <div className="flex flex-row items-center gap-2">
-                                    <CheckCircleIcon className="fill-success-500 size-6" />
-                                    <header>Successfully checked in!</header>
-                                </div>
-                            </div>
-                        )}
-
                         <DrawerHeader className="pb-4">
                             <div className="flex flex-col items-center justify-center">
                                 <Image
