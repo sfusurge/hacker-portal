@@ -129,6 +129,9 @@ export function ClientCalendarPage({
                         padding: '0.5rem',
                         flexFlow: 'wrap',
                         gap: '0.25rem',
+                        position: isAdmin && isMobile ? 'sticky' : 'initial',
+                        top: '5rem',
+                        zIndex: 1000,
                     }}
                 >
                     {/* header */}
@@ -170,7 +173,6 @@ export function ClientCalendarPage({
                             size="compact"
                             variant="brand"
                             hierarchy="primary"
-                            style={{ position: 'relative', zIndex: 1000 }}
                         >
                             {selectedEvent?.event ? (
                                 <span>
