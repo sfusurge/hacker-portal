@@ -59,6 +59,12 @@ const navLinks = [
         iconAlt: 'Schedule logo',
     },
     {
+        href: '/projects',
+        label: 'Projects',
+        icon: <InboxStackIcon className="h-6 w-6" />,
+        iconAlt: 'Projects logo',
+    },
+    {
         href: '/notifications',
         label: 'Notifications',
         icon: <BellAlertIcon className="h-6 w-6" />,
@@ -68,12 +74,12 @@ const navLinks = [
 ];
 
 const adminLinks = [
-    {
-        href: '/projects',
-        label: 'Projects',
-        icon: <InboxStackIcon className="h-6 w-6" />,
-        iconAlt: 'Projects logo',
-    },
+    // {
+    //     href: '/projects',
+    //     label: 'Projects',
+    //     icon: <InboxStackIcon className="h-6 w-6" />,
+    //     iconAlt: 'Projects logo',
+    // },
     {
         href: '/admin/review',
         label: 'Review Applications',
@@ -100,12 +106,12 @@ const adminLinks = [
     },
 ];
 const judgeNavLinks = [
-    {
-        href: '/projects',
-        label: 'Projects',
-        icon: <InboxStackIcon className="h-6 w-6" />,
-        iconAlt: 'Projects logo',
-    },
+    // {
+    //     href: '/projects',
+    //     label: 'Projects',
+    //     icon: <InboxStackIcon className="h-6 w-6" />,
+    //     iconAlt: 'Projects logo',
+    // },
     {
         href: '/schedule',
         label: 'Schedule',

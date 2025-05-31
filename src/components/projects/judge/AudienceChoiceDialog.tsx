@@ -12,11 +12,13 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { trpc } from '@/trpc/client';
 
 interface AudienceChoiceDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     projectTitle: string;
+    setHasVoted: React.Dispatch<React.SetStateAction<boolean>>;
     teamId: number;
     hackathonId: number;
     userId: number;
@@ -26,22 +28,30 @@ export default function AudienceChoiceDialog({
     open,
     onOpenChange,
     projectTitle,
+    setHasVoted,
     teamId,
     hackathonId,
     userId,
 }: AudienceChoiceDialogProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
+    const submitUserVote = trpc.userVote.insertUserVote.useMutation({
+        onSuccess: () => {
+            setHasVoted(true);
+        },
+        onError: (error) => {
+            console.error('Error submitting vote:', error);
+        },
+    });
 
     const handleVote = async () => {
         setIsSubmitting(true);
         try {
-            // TODO: Add vote mutation here idk
-            // await trpc.vote.addvoteidk.mutateAsync({
-            //     hackathonId,
-            //     teamId,
-            //     userId,
-            // });
+            await submitUserVote.mutateAsync({
+                vote: teamId,
+                hackathonId: hackathonId,
+                userId: userId,
+            });
 
             toast({
                 title: 'Vote Submitted!',
