@@ -62,7 +62,7 @@ export default function JudgeAssignmentPage() {
         enabled: false,
     });
 
-    const getTeams = trpc.teams.getTeams.useQuery(
+    const getTeams = trpc.teams.getTeamsWithMemberCountWithProject.useQuery(
         { hackathonId: hackathon?.id },
         {
             enabled: false,

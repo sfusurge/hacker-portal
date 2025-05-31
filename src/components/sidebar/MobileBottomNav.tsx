@@ -61,14 +61,14 @@ const navLinks = [
         active: false,
         disabled: false,
     },
-    // {
-    //     href: '/projects',
-    //     label: 'Projects',
-    //     icon: <InboxStackIcon />,
-    //     iconAlt: 'Projects logo',
-    //     active: false,
-    //     disabled: false,
-    // },
+    {
+        href: '/projects',
+        label: 'Projects',
+        icon: <InboxStackIcon />,
+        iconAlt: 'Projects logo',
+        active: false,
+        disabled: false,
+    },
     // {
     //     href: '#',
     //     label: 'Alerts',

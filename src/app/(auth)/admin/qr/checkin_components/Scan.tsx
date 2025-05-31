@@ -139,13 +139,18 @@ export default function Scan({ events, initialEventType }: ScanProps) {
 
         if (user) {
             setHacker(user);
+            if (!eventId) {
+                setEventId(initialEventId);
+            }
         } else {
             setInvalidUserId(`${id}`);
         }
     };
 
     const handleScan = (barCodes: IDetectedBarcode[]) => {
-        findHackerById(barCodes[0]?.rawValue);
+        if (barCodes[0]?.rawValue) {
+            findHackerById(barCodes[0].rawValue);
+        }
     };
 
     const handleEventClick = (eventId: number) => {
@@ -277,14 +282,24 @@ export default function Scan({ events, initialEventType }: ScanProps) {
                 }}
             />
 
-            {isCheckInPromptOpen && (
-                <CheckinTicket
-                    onClose={closeCheckInPrompt}
-                    eventId={eventId!}
-                    currentHacker={hacker!}
-                    eventType={eventType}
-                />
-            )}
+            <CheckinTicket
+                onClose={closeCheckInPrompt}
+                eventId={eventId ?? 0}
+                currentHacker={
+                    hacker ?? {
+                        id: 0,
+                        email: '',
+                        image: null,
+                        firstName: '',
+                        lastName: '',
+                        phoneNumber: null,
+                        userRole: '',
+                        displayId: '',
+                    }
+                }
+                eventType={eventType}
+                open={isCheckInPromptOpen}
+            />
 
             <SelectEvent
                 show={isOtherEventsOpen}
