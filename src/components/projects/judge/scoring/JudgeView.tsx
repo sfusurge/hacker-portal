@@ -237,7 +237,7 @@ export default function JudgeView({
                                                 <TableRow key={uniqueKey}>
                                                     <TableCell className="font-medium">
                                                         {team
-                                                            ? `${team.teamName} (${team.id || team.teamId})`
+                                                            ? `"${team.submission[1]}" - ${team.teamName} (${team.id || team.teamId})`
                                                             : `Team #${teamId}`}
                                                     </TableCell>
                                                     <TableCell>

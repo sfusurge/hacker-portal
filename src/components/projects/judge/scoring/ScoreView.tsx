@@ -207,6 +207,7 @@ export default function ScoreView({
                                 className="bg-neutral-850 p-4"
                             >
                                 <h3 className="mb-4 text-lg font-medium">
+                                    {`"${team.submission[1]}" by `}
                                     {team ? team.teamName : 'Unknown Team'}{' '}
                                     {team && (
                                         <span className="">

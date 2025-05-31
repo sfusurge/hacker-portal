@@ -101,6 +101,7 @@ export default function TeamView({
                             ★
                         </span>
                     ))}
+                    ({value})
                 </div>
             );
         }
@@ -136,6 +137,7 @@ export default function TeamView({
                         >
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-medium">
+                                    {`"${team.submission[1]}" by `}{' '}
                                     {team.teamName} ({team.id || team.teamId})
                                 </h3>
                                 <div className="flex items-center gap-2">

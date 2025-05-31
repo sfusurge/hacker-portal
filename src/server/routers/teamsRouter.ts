@@ -19,6 +19,7 @@ import {
     TablesRelationalConfig,
     sql,
     inArray,
+    count,
 } from 'drizzle-orm';
 import {
     BadRequestError,
@@ -37,6 +38,7 @@ import { deleteFileFromR2 } from '@/lib/cloudflare/r2';
 import { getUserData } from '@/server/routers/usersRouter';
 import { auth } from '@/auth/auth';
 import slugify from '@/utils/slugify';
+import { submissions } from '@/db/schema/submissions';
 
 export const teamsRouter = router({
     createTeam: publicProcedure
@@ -374,48 +376,17 @@ export const teamsRouter = router({
             })
         )
         .query(async ({ input }) => {
-            const user = await getUserData();
+            return getTeamsWithMemberCounts(input.hackathonId ?? -1);
+        }),
 
-            if (!user) {
-                throw new InternalServerError('User not authenticated');
-            }
-
-            let query = databaseClient
-                .select({
-                    id: teams.id,
-                    teamName: teams.name,
-                    hackathonId: teams.hackathonId,
-                    displayId: teams.displayId,
-                    teamPictureUrl: teams.teamPictureUrl,
-                    createdBy: teams.createdBy,
-                    createdAt: teams.createdAt,
-                    maxMembersCount: teams.maxMembersCount,
-                })
-                .from(teams);
-
-            if (input.hackathonId) {
-                query = query.where(
-                    eq(teams.hackathonId, input.hackathonId)
-                ) as typeof query;
-            }
-
-            const allTeams = await query.orderBy(asc(teams.name));
-
-            const teamsWithMemberCount = await Promise.all(
-                allTeams.map(async (team) => {
-                    const members = await databaseClient
-                        .select({ count: sql<number>`count(*)` })
-                        .from(membersTable)
-                        .where(eq(membersTable.teamId, team.id));
-
-                    return {
-                        ...team,
-                        memberCount: members[0]?.count || 0,
-                    };
-                })
-            );
-
-            return teamsWithMemberCount;
+    getTeamsWithMemberCountWithProject: publicProcedure
+        .input(
+            z.object({
+                hackathonId: z.number().int().optional(),
+            })
+        )
+        .query(async ({ input }) => {
+            return getTeamsWithCountWithProject(input.hackathonId ?? -1);
         }),
 
     resolveTeamIdentifier: publicProcedure
@@ -554,4 +525,83 @@ export async function getMemberIds(tid: number): Promise<number[]> {
         .where(eq(members.teamId, tid));
 
     return dbMembers.map((m) => m.userId);
+}
+
+export async function getTeamsWithMemberCounts(hackathonId: number) {
+    const user = await getUserData();
+
+    if (!user) {
+        throw new InternalServerError('User not authenticated');
+    }
+
+    let query = databaseClient
+        .select({
+            id: teams.id,
+            teamName: teams.name,
+            hackathonId: teams.hackathonId,
+            displayId: teams.displayId,
+            teamPictureUrl: teams.teamPictureUrl,
+            createdBy: teams.createdBy,
+            createdAt: teams.createdAt,
+            maxMembersCount: teams.maxMembersCount,
+        })
+        .from(teams);
+
+    if (hackathonId) {
+        query = query.where(eq(teams.hackathonId, hackathonId)) as typeof query;
+    }
+
+    const allTeams = await query.orderBy(asc(teams.name));
+
+    const teamsWithMemberCount = await Promise.all(
+        allTeams.map(async (team) => {
+            const members = await databaseClient
+                .select({ count: sql<number>`count(*)` })
+                .from(membersTable)
+                .where(eq(membersTable.teamId, team.id));
+
+            return {
+                ...team,
+                memberCount: members[0]?.count || 0,
+            };
+        })
+    );
+
+    return teamsWithMemberCount;
+}
+
+export async function getTeamsWithCountWithProject(hackathonId: number) {
+    const user = await getUserData();
+
+    if (!user) {
+        throw new InternalServerError('User not authenticated');
+    }
+
+    let countSubQuery = databaseClient
+        .selectDistinctOn([members.teamId], {
+            teamId: members.teamId,
+            members: sql<number>`count(*)`.as('memberCount'),
+        })
+        .from(members)
+        .groupBy(members.teamId)
+        .as('subquery');
+
+    let query = await databaseClient
+        .select({
+            id: teams.id,
+            teamName: teams.name,
+            hackathonId: teams.hackathonId,
+            displayId: teams.displayId,
+            teamPictureUrl: teams.teamPictureUrl,
+            createdBy: teams.createdBy,
+            createdAt: teams.createdAt,
+            maxMembersCount: teams.maxMembersCount,
+            members: countSubQuery.members,
+            submission: submissions.response,
+        })
+        .from(teams)
+        .innerJoin(submissions, eq(teams.id, submissions.teamId))
+        .innerJoin(countSubQuery, eq(countSubQuery.teamId, teams.id));
+
+    return query;
 }
