@@ -7,12 +7,20 @@ import CheckinButton from '@/app/(auth)/admin/qr/checkin_components/CheckInButto
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { GetUsersOutput, trpc } from '@/trpc/client';
 import { EventType } from '@/db/schema/events';
+import {
+    Drawer,
+    DrawerContent,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerDescription,
+} from '@/components/ui/drawer';
 
 type CheckInTicketProps = {
     currentHacker: GetUsersOutput[0];
     eventType: EventType;
     eventId: number;
     onClose: () => void;
+    open: boolean;
 };
 
 export default function CheckinTicket({
@@ -20,6 +28,7 @@ export default function CheckinTicket({
     eventType,
     eventId,
     onClose,
+    open,
 }: CheckInTicketProps) {
     const [QRCode, setQRCode] = useState('/qrfinder.svg');
     const pfp = '/favicon.png';
@@ -36,12 +45,16 @@ export default function CheckinTicket({
         setTimeout(() => setShowToast(false), 3000);
     };
 
-    const realId = currentHacker?.id;
-    const firstname = currentHacker.firstName;
-    const lastname = currentHacker.lastName;
-    const userId = currentHacker?.id.toString();
+    const handleOpenChange = (open: boolean) => {
+        if (!open) {
+            onClose();
+        }
+    };
 
-    const checked = isCheckedIn.useQuery({ userId: realId, eventId: eventId });
+    const checked = isCheckedIn.useQuery({
+        userId: currentHacker?.id,
+        eventId: eventId,
+    });
 
     useEffect(() => {
         if (checked.data) {
@@ -55,8 +68,10 @@ export default function CheckinTicket({
     }, [checked.data]);
 
     const toggleCheckInStatus = async () => {
+        if (!currentHacker?.id) return;
+
         await submitCheckIn.mutateAsync({
-            userId: realId,
+            userId: currentHacker.id,
             eventId: eventId,
         });
 
@@ -66,7 +81,7 @@ export default function CheckinTicket({
 
     useEffect(() => {
         const fetchQRcode = async () => {
-            if (!userId) {
+            if (!currentHacker?.id) {
                 return;
             }
 
@@ -78,41 +93,34 @@ export default function CheckinTicket({
                     light: '#0000',
                 },
             };
-            const code = await generateQRCode(userId, opts);
+            const code = await generateQRCode(
+                currentHacker.id.toString(),
+                opts
+            );
 
             setQRCode(code);
         };
 
         fetchQRcode();
-    }, [userId]);
+    }, [currentHacker?.id]);
 
     return (
-        <div
-            className={`bg-opacity-50 fixed inset-0 z-50 bg-black opacity-100 transition-opacity duration-300`}
-            onClick={() => onClose()}
-        >
-            <div
-                className={`fixed right-0 bottom-0 left-0 translate-y-0 transform transition-transform duration-300 ease-in-out`}
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div className="relative flex flex-col items-center justify-center gap-2 overflow-hidden">
-                    {/* Toast Notification */}
-                    {showToast && (
-                        <div className="bg-success-950/30 w-96 transform rounded-lg p-4 text-white shadow-lg transition-transform duration-300 ease-in-out">
-                            <div className="flex flex-row items-center gap-2">
-                                <CheckCircleIcon className="fill-success-500 size-6" />
-                                <header>Successfully checked in!</header>
+        <Drawer open={open} onOpenChange={handleOpenChange}>
+            <DrawerContent className="max-h-[80vh]">
+                {currentHacker?.id && (
+                    <div className="relative flex w-full flex-col items-center justify-start gap-2 pb-6">
+                        {/* Toast Notification */}
+                        {showToast && (
+                            <div className="bg-success-950/30 absolute top-4 left-1/2 z-50 w-80 -translate-x-1/2 transform rounded-lg p-4 text-white shadow-lg transition-transform duration-300 ease-in-out">
+                                <div className="flex flex-row items-center gap-2">
+                                    <CheckCircleIcon className="fill-success-500 size-6" />
+                                    <header>Successfully checked in!</header>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    <div className="inline-flex min-w-screen flex-col items-start justify-start rounded-xl rounded-tl-xl border-t border-neutral-600/30 bg-neutral-900 md:max-w-sm">
-                        <div className="inline-flex flex-col items-center justify-center gap-4">
-                            <button className="pt-3" aria-label="Close">
-                                <div className="bg-neutral-750 relative h-1.5 w-9 rounded-full"></div>
-                            </button>
-
-                            <section className="flex flex-col items-center justify-center">
+                        <DrawerHeader className="pb-4">
+                            <div className="flex flex-col items-center justify-center">
                                 <Image
                                     src={pfp}
                                     alt="Profile Picture"
@@ -120,75 +128,79 @@ export default function CheckinTicket({
                                     height={44}
                                     className="mb-4 block rounded-full"
                                 />
-                                <header className="flex h-11 flex-col items-center justify-center gap-0.5 self-stretch">
-                                    <div className="text-center text-xl leading-snug font-semibold text-white">
-                                        {firstname + ' ' + lastname}
-                                    </div>
-                                    <div className="text-sm font-normal text-white/60">
-                                        Hacker
-                                    </div>
-                                </header>
-                            </section>
-
-                            <div className="relative aspect-square h-52 w-52">
-                                <Image
-                                    src={QRCode}
-                                    alt="QR Code"
-                                    fill
-                                    className="object-contain"
-                                />
+                                <DrawerTitle className="mb-1">
+                                    {currentHacker.firstName +
+                                        ' ' +
+                                        currentHacker.lastName}
+                                </DrawerTitle>
+                                <DrawerDescription>Hacker</DrawerDescription>
                             </div>
+                        </DrawerHeader>
 
-                            <div className="flex h-56 w-96 flex-col items-start justify-start overflow-hidden bg-neutral-900 px-6 pb-10">
-                                <div className="flex h-36 flex-col items-start justify-start gap-2 self-stretch pb-10">
-                                    <div className="inline-flex items-center justify-between self-stretch overflow-hidden">
-                                        <div className="text-sm text-white/60">
-                                            Status
-                                        </div>
-                                        <div className="flex h-7 items-center justify-end gap-3">
-                                            <div
-                                                className={`flex items-center justify-center gap-1 overflow-hidden rounded-lg px-3 ${
-                                                    checkInStatus
-                                                        ? 'bg-success-950 text-success-300'
-                                                        : 'bg-brand-950 text-white/60'
-                                                }`}
-                                            >
-                                                <div className="text-center text-sm font-medium">
-                                                    {checkInStatus
-                                                        ? 'Checked In'
-                                                        : 'Not Checked In'}
-                                                </div>
-                                            </div>
-                                        </div>
+                        <div className="relative aspect-square h-48 w-48">
+                            <Image
+                                src={QRCode}
+                                alt="QR Code"
+                                fill
+                                className="object-contain"
+                            />
+                        </div>
+
+                        <div className="mt-4 flex w-full flex-col items-start justify-start overflow-hidden rounded-lg bg-neutral-900 py-4">
+                            <div className="flex w-full flex-col items-start justify-start gap-3">
+                                <div className="flex w-full items-center justify-between">
+                                    <div className="text-sm text-white/60">
+                                        Status
                                     </div>
-
-                                    <div className="h-px self-stretch border border-neutral-700/20" />
-
-                                    <div className="inline-flex items-center justify-between self-stretch overflow-hidden">
-                                        <div className="shrink grow basis-0 text-sm leading-tight font-normal text-white/60">
-                                            Check-in time
-                                        </div>
-                                        <div className="flex h-7 items-center justify-end gap-3">
-                                            <div className="flex items-center justify-center gap-1 rounded-lg bg-neutral-800 px-3">
-                                                <div className="text-center text-sm font-medium text-white/60">
-                                                    {checkInTime}
-                                                </div>
+                                    <div className="flex items-center justify-end">
+                                        <div
+                                            className={`flex items-center justify-center gap-1 rounded-lg px-3 py-1 ${
+                                                checkInStatus
+                                                    ? 'bg-success-950 text-success-300'
+                                                    : 'bg-brand-950 text-white/60'
+                                            }`}
+                                        >
+                                            <div className="text-center text-sm font-medium">
+                                                {checkInStatus
+                                                    ? 'Checked In'
+                                                    : 'Not Checked In'}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
+                                <div className="h-px w-full border-t border-neutral-700/20" />
+
+                                <div className="flex w-full items-center justify-between">
+                                    <div className="text-sm leading-tight font-normal text-white/60">
+                                        Check-in time
+                                    </div>
+                                    <div className="flex items-center justify-end">
+                                        <div className="flex items-center justify-center rounded-lg bg-neutral-800 px-3 py-1">
+                                            <div className="text-center text-sm font-medium text-white/60">
+                                                {checkInTime}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-6 w-full">
                                 <CheckinButton
                                     eventType={eventType}
                                     checkInStatus={checkInStatus}
                                     toggleCheckInStatus={toggleCheckInStatus}
-                                    userName={firstname + ' ' + lastname}
+                                    userName={
+                                        currentHacker.firstName +
+                                        ' ' +
+                                        currentHacker.lastName
+                                    }
                                 />
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
+                )}
+            </DrawerContent>
+        </Drawer>
     );
 }
