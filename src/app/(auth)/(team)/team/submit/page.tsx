@@ -1,13 +1,12 @@
 import { redirect } from 'next/navigation';
 import { createCaller } from '@/server/appRouter';
-import SubmissionInfoCard from '@/components/team/submit/SubmissionInfoCard';
-import SubmissionCard from '@/components/team/submit/SubmissionCard';
-import TeamListSubmit from '@/components/team/submit/TeamListSubmit';
 
 import { getUserData } from '@/server/routers/usersRouter';
-import { SubmitFormCard } from '@/components/team/InTeam/SubmitFormCard';
 
 import { GoHome } from '@/components/home/GoHome';
+import SubmissionInfoCard from '@/app/(auth)/(team)/teamComponents/submit/SubmissionInfoCard';
+import { SubmitFormCard } from '@/app/(auth)/(team)/teamComponents/InTeam/SubmitFormCard';
+import TeamListSubmit from '@/app/(auth)/(team)/teamComponents/submit/TeamListSubmit';
 
 export default async function SubmitPage() {
     const user = await getUserData();

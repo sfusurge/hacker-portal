@@ -1,5 +1,6 @@
+import JoinTeam from '@/app/(auth)/(team)/teamComponents/NoTeam/TeamOption';
 import Image from 'next/image';
-import JoinTeam from '@/components/team/NoTeam/TeamOption';
+
 import { ReactNode } from 'react';
 
 interface TeamFullUIProps {

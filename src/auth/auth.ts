@@ -98,8 +98,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
             return true;
         },
+        session: ({ session, token, user }) => {
+            session.userId = token.sub ?? '-1';
+            session.user.image = token.picture;
+            return session as SessionType;
+        },
     },
 });
+
+export interface SessionType {
+    user: {
+        name: string | null;
+        email: string;
+        image: string | null;
+    };
+    expires: string;
+    userId: string;
+}
 
 function html(params: { url: string; host: string }) {
     const { url, host } = params;

@@ -10,7 +10,7 @@ import {
 import { eq, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { UnauthorizedError } from '../exceptions';
-import { auth } from '@/auth/auth';
+import { auth, SessionType } from '@/auth/auth';
 import { getSixDigitId, userRNGParams } from '@/lib/PRNG/LCG';
 
 export const usersRouter = router({
@@ -122,6 +122,7 @@ export async function getUserData() {
     if (!session || !session.user || !session.user.email) {
         return undefined;
     }
+
     const normalizedEmail = session.user.email.toLowerCase();
 
     const dbUser = (
@@ -139,6 +140,19 @@ export async function getUserData() {
         ...dbUser,
     };
 }
+
+/**
+ * only returns info contained in user's jwt, without making a db fetch
+ */
+export async function getBasicUserInfo() {
+    const session = (await auth()) as SessionType;
+    return {
+        email: session.user.email.toLowerCase(),
+        image: session.user.image ?? '',
+        userId: parseInt(session.userId),
+    };
+}
+
 export type UserData = Awaited<ReturnType<typeof getUserData>>;
 
 export async function addUser(vals: z.infer<typeof insertUserSchema>) {

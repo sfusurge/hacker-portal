@@ -1,15 +1,18 @@
 'use client';
 
-import CurrentStateUI from '@/components/team/NoTeam/CurrentState';
-import TeamList from '@/components/team/InTeam/TeamList';
-import InviteCard from '@/components/team/InTeam/InviteCard';
 import { inferProcedureOutput } from '@trpc/server';
 import { AppRouter } from '@/server/appRouter';
 import Image from 'next/image';
 import { UserData } from '@/server/routers/usersRouter';
-import { SubmitCard } from '@/components/team/InTeam/SubmitCard';
+
 import { useState } from 'react';
 import { redirect } from 'next/navigation';
+import InviteCard from '@/app/(auth)/(team)/teamComponents/InTeam/InviteCard';
+import { SubmitCard } from '@/app/(auth)/(team)/teamComponents/InTeam/SubmitCard';
+import TeamList from '@/app/(auth)/(team)/teamComponents/InTeam/TeamList';
+import CurrentStateUI from '@/app/(auth)/(team)/teamComponents/NoTeam/CurrentState';
+import { Button } from '@/components/ui/button';
+import { FeebackDialog } from '@/app/(auth)/(team)/teamComponents/InTeam/FeedBacksDialog';
 type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
 type HackathonType = inferProcedureOutput<
     AppRouter['hackathons']['getActiveHackathon']
@@ -28,6 +31,8 @@ export default function TeamDisplay({
     user,
     imageData = '/teams/default.webp',
 }: TeamDisplayProps) {
+    const [showFeedBacks, setShowFeedBacks] = useState(false);
+
     // If user is not in a team for the current hackathon, show join team UI
     if (!currentTeam) {
         return (
@@ -61,6 +66,25 @@ export default function TeamDisplay({
                         {currentTeam.name}
                     </h1>
                 </div>
+
+                <Button
+                    onClick={() => {
+                        setShowFeedBacks(true);
+                    }}
+                    variant={'brand'}
+                    hierarchy={'primary'}
+                    style={{ alignSelf: 'center', marginLeft: 'auto' }}
+                >
+                    View Feebacks
+                </Button>
+
+                {showFeedBacks && (
+                    <FeebackDialog
+                        onClose={() => {
+                            setShowFeedBacks(false);
+                        }}
+                    />
+                )}
             </div>
 
             <div className="flex flex-col gap-4">

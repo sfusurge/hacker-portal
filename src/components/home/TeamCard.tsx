@@ -18,12 +18,12 @@ import {
     CardHeaderTitle,
 } from '@/components/ui/card';
 import Image from 'next/image';
-import JoinTeam from '@/components/team/NoTeam/TeamOption';
 import { inferProcedureOutput } from '@trpc/server';
 import { AppRouter } from '@/server/appRouter';
 import { copyToClipboard } from '@/lib/copy-to-clipboard';
 import { trpc } from '@/trpc/client';
 import { UserData } from '@/server/routers/usersRouter';
+import JoinTeam from '@/app/(auth)/(team)/teamComponents/NoTeam/TeamOption';
 
 type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
 

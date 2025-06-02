@@ -1,7 +1,6 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import JoinTeamButton from '@/components/team/NoTeam/JoinTeamButton';
 import { ExclamationTriangleIcon } from '@heroicons/react/16/solid';
 import {
     Dialog,
@@ -15,6 +14,7 @@ import { useState } from 'react';
 import { ExclamationCircleIcon } from '@heroicons/react/24/solid';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import JoinTeamButton from '@/app/(auth)/(team)/teamComponents/NoTeam/JoinTeamButton';
 interface TeamData {
     id: number;
     name: string;

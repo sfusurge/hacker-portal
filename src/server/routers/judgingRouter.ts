@@ -1,7 +1,7 @@
 import { publicProcedure, router } from '../trpc';
 import { z } from 'zod';
 import { databaseClient } from '@/db/client';
-import { UserRoleEnum } from '@/db/schema/users/users';
+import { user, UserRoleEnum } from '@/db/schema/users/users';
 import {
     UnauthorizedError,
     InternalServerError,
@@ -18,9 +18,10 @@ import {
 } from '@/db/schema/judge';
 import { eq, and, desc } from 'drizzle-orm';
 import { hackathons } from '@/db/schema/hackathons';
-import { getUserData } from '@/server/routers/usersRouter';
+import { getBasicUserInfo, getUserData } from '@/server/routers/usersRouter';
 import { submissions } from '@/db/schema/submissions';
 import { teams } from '@/db/schema/teams';
+import { members } from '@/db/schema/members';
 
 export interface JudgingScoreResponse {
     hackathonId: number;
@@ -556,6 +557,52 @@ export const judgingRouter = router({
                 currentStatus: submission.currentStatus,
             };
         }),
+    getUserSubmissionFeedbacks: publicProcedure
+        .input(z.object({}))
+        .query(async ({ input }) => {
+            return await getUserSubmissionFeedbacks();
+        }),
 });
+
+export async function getUserSubmissionFeedbacks() {
+    const userInfo = await getBasicUserInfo();
+
+    if (!user.id) {
+        throw new InternalServerError('User not authenticated');
+    }
+
+    // get judgeassignments of submission in user's team
+    const pastSubmissions = await databaseClient
+        .select({
+            hackathonId: judgingAssignments.hackathonId,
+            hackathonName: hackathons.name,
+            judgeQuestionSchema: hackathons.judgeQuestions,
+            judgeResponse: judgingAssignments.response,
+            judge: {
+                firstName: user.firstName,
+                lastName: user.lastName,
+            },
+            submissionResponse: submissions.response,
+        })
+        .from(judgingAssignments)
+        .innerJoin(
+            members,
+            and(
+                eq(members.teamId, judgingAssignments.teamId),
+                eq(members.userId, userInfo.userId)
+            )
+        )
+        .innerJoin(
+            submissions,
+            eq(submissions.teamId, judgingAssignments.teamId)
+        )
+        .innerJoin(user, eq(judgingAssignments.userId, user.id))
+        .innerJoin(
+            hackathons,
+            eq(judgingAssignments.hackathonId, hackathons.id)
+        );
+
+    return pastSubmissions;
+}
 
 export type JudgingRouter = typeof judgingRouter;

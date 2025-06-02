@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/card';
 import { ApplicationStatus } from '@/lib/application-status';
 import { UserType } from '@/server/routers/usersRouter';
-import TeammateItemSubmit from '@/components/team/submit/TeammateItemSubmit';
+import TeammateItemSubmit from '@/components/teamComponents/submit/TeammateItemSubmit';
 
 type TeamMember = {
     userId: number;
