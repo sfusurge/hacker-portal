@@ -12,7 +12,7 @@ import { SubmitCard } from '@/app/(auth)/(team)/teamComponents/InTeam/SubmitCard
 import TeamList from '@/app/(auth)/(team)/teamComponents/InTeam/TeamList';
 import CurrentStateUI from '@/app/(auth)/(team)/teamComponents/NoTeam/CurrentState';
 import { Button } from '@/components/ui/button';
-import { FeebackDialog } from '@/app/(auth)/(team)/teamComponents/InTeam/FeedBacksDialog';
+import { FeedbackDialog } from '@/app/(auth)/(team)/teamComponents/InTeam/FeedBacksDialog';
 type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
 type HackathonType = inferProcedureOutput<
     AppRouter['hackathons']['getActiveHackathon']
@@ -72,19 +72,19 @@ export default function TeamDisplay({
                         setShowFeedBacks(true);
                     }}
                     variant={'brand'}
+                    size="cozy"
                     hierarchy={'primary'}
                     style={{ alignSelf: 'center', marginLeft: 'auto' }}
                 >
-                    View Feebacks
+                    View feedback
                 </Button>
 
-                {showFeedBacks && (
-                    <FeebackDialog
-                        onClose={() => {
-                            setShowFeedBacks(false);
-                        }}
-                    />
-                )}
+                <FeedbackDialog
+                    open={showFeedBacks}
+                    onClose={() => {
+                        setShowFeedBacks(false);
+                    }}
+                />
             </div>
 
             <div className="flex flex-col gap-4">

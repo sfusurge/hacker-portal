@@ -18,20 +18,31 @@ import {
 import { FormTextArea } from '@/components/ui/formTextArea/FormTextArea';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Textarea } from '@/components/ui/textarea';
 import { trpc } from '@/trpc/client';
-
 import { ArrowLeftIcon } from '@heroicons/react/20/solid';
-
+import { Loader2 } from 'lucide-react';
 import { Suspense, useMemo, useState } from 'react';
+
+function LoadingState() {
+    return (
+        <div className="flex h-[400px] w-full items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+                <Loader2 className="h-8 w-8 animate-spin text-white/60" />
+                <p className="text-sm text-white/60">Loading feedback...</p>
+            </div>
+        </div>
+    );
+}
 
 interface Props {
     onClose: () => void;
+    open?: boolean;
 }
-export function FeebackDialog({ onClose }: Props) {
+
+export function FeedbackDialog({ onClose, open }: Props) {
     return (
         <Dialog
-            open
+            open={open}
             modal
             onOpenChange={(c) => {
                 if (!c) {
@@ -46,7 +57,7 @@ export function FeebackDialog({ onClose }: Props) {
                     <DialogTitle>Past Project Submission Feedbacks</DialogTitle>
                 </DialogHeader>
 
-                <Suspense fallback={<span>Loading...</span>}>
+                <Suspense fallback={<LoadingState />}>
                     <FeedbackDialogContent />
                 </Suspense>
             </DialogContent>
@@ -57,9 +68,12 @@ export function FeebackDialog({ onClose }: Props) {
 function FeedbackDialogContent() {
     const [pastSubmissions, query] =
         trpc.judging.getUserSubmissionFeedbacks.useSuspenseQuery({});
+
     const [selectedFeedback, setSelectedFeedback] = useState<
         FeedBackProps | undefined
     >();
+
+    const [selectedIndex, setSelectedIndex] = useState<number | undefined>();
 
     const filteredSchema = useMemo(() => {
         const out: Record<string, TextAreaQuestion> = {};
@@ -87,8 +101,8 @@ function FeedbackDialogContent() {
             >
                 <div>
                     <h2>
-                        Feedback from{' '}
-                        {`${selectedFeedback.judge.firstName} ${selectedFeedback.judge.lastName}`}
+                        Feedback from Judge #
+                        {selectedIndex !== undefined ? selectedIndex + 1 : 1}
                     </h2>
 
                     {Object.entries(selectedFeedback.judgeResponse)
@@ -98,7 +112,7 @@ function FeedbackDialogContent() {
                         .map(([key, val]) => {
                             const schema = filteredSchema[key];
                             return (
-                                <div>
+                                <div key={key}>
                                     <Label
                                         style={{
                                             color: 'var(--text-secondary)',
@@ -110,6 +124,7 @@ function FeedbackDialogContent() {
                                         lazy={false}
                                         defaultValue={val}
                                         readOnly
+                                        rows={10}
                                     />
                                 </div>
                             );
@@ -120,6 +135,7 @@ function FeedbackDialogContent() {
                     style={{ margin: '0 0 0 auto' }}
                     variant={'default'}
                     hierarchy={'primary'}
+                    size="cozy"
                     leadingIconChild={
                         <ArrowLeftIcon style={{ width: '1rem' }} />
                     }
@@ -137,12 +153,13 @@ function FeedbackDialogContent() {
                 {pastSubmissions.length === 0 && (
                     <Label>No Submissions...</Label>
                 )}
-                {(pastSubmissions as FeedBackProps[]).map((item, index) => (
+                {pastSubmissions.map((item, index) => (
                     <FeedbackCard
                         key={index}
-                        {...item}
+                        {...(item as FeedBackProps)}
                         onClick={() => {
-                            setSelectedFeedback(item);
+                            setSelectedFeedback(item as FeedBackProps);
+                            setSelectedIndex(index);
                         }}
                     />
                 ))}
@@ -152,21 +169,16 @@ function FeedbackDialogContent() {
 }
 
 interface FeedBackProps {
-    judgeResponse: Record<string, any>;
     judgeQuestionSchema: JudgingFormQuestion[];
+    judgeResponse: Record<string, any>;
     hackathonName: string;
-    judge: {
-        firstName: string;
-        lastName: string;
-    };
     submissionResponse: Record<string, any>;
+    judgeId: number;
+    hackathonId: number;
 }
 
 function FeedbackCard({
-    judge,
-    judgeResponse,
     submissionResponse,
-    judgeQuestionSchema,
     hackathonName,
     onClick,
 }: FeedBackProps & { onClick: () => void }) {

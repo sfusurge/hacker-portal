@@ -572,16 +572,13 @@ export async function getUserSubmissionFeedbacks() {
     }
 
     // get judgeassignments of submission in user's team
+
     const pastSubmissions = await databaseClient
         .select({
             hackathonId: judgingAssignments.hackathonId,
             hackathonName: hackathons.name,
             judgeQuestionSchema: hackathons.judgeQuestions,
             judgeResponse: judgingAssignments.response,
-            judge: {
-                firstName: user.firstName,
-                lastName: user.lastName,
-            },
             submissionResponse: submissions.response,
         })
         .from(judgingAssignments)

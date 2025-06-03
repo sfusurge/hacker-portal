@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createCaller } from '@/server/appRouter';
-import InviteDialog from '@/components/teamComponents/InviteDialog';
-import TeamDisplay from '@/components/teamComponents/TeamDisplay';
+import InviteDialog from '../../teamComponents/InviteDialog';
+import TeamDisplay from '../../teamComponents/TeamDisplay';
 import { getUserData } from '@/server/routers/usersRouter';
 
 export default async function InvitePage({
