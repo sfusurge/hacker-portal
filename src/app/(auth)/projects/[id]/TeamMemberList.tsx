@@ -28,12 +28,12 @@ export default function TeamMemberList({ members }: TeamMemberListProps) {
                     let avatarUrl = '/sidebar/default-avatar.webp';
                     if (member.image) {
                         try {
-                            const image = await trpc.files.getFile.useQuery({
+                            const image = await trpc.files.getFile({
                                 key: member.image,
                                 bucketName: 'profile-pictures',
                             });
-                            if (image && image.data?.buffer) {
-                                avatarUrl = `data:${image.data.contentType};base64,${Buffer.from(image.data.buffer).toString('base64')}`;
+                            if (image && image.buffer) {
+                                avatarUrl = `data:${image.contentType};base64,${Buffer.from(image.buffer).toString('base64')}`;
                             }
                         } catch (error) {
                             console.error(
@@ -61,8 +61,9 @@ export default function TeamMemberList({ members }: TeamMemberListProps) {
                         className="h-8 w-8 rounded-full object-cover"
                     />
                     <div>
-                        <p className="text-sm font-medium">
-                            {member.firstName}
+                        <p className="truncate text-sm font-medium md:text-base">
+                            {`${member.firstName || ''}`.trim() ||
+                                'Unknown User'}
                         </p>
                     </div>
                 </div>
