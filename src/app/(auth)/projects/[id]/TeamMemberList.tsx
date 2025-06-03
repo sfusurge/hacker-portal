@@ -28,10 +28,11 @@ export default function TeamMemberList({ members }: TeamMemberListProps) {
                     let avatarUrl = '/sidebar/default-avatar.webp';
                     if (member.image) {
                         try {
-                            const image = await trpc.files.getFile({
-                                key: member.image,
-                                bucketName: 'profile-pictures',
-                            });
+                            const image =
+                                await trpc.files.getFile.useSuspenseQuery({
+                                    key: member.image,
+                                    bucketName: 'profile-pictures',
+                                });
                             if (image && image.buffer) {
                                 avatarUrl = `data:${image.contentType};base64,${Buffer.from(image.buffer).toString('base64')}`;
                             }
