@@ -297,39 +297,39 @@ export default async function ProjectPage({ params }: PageProps) {
                             />
                         ))}
                     </div>
-                    <div className="fixed bottom-0 left-0 z-[105] block w-full bg-neutral-800/60 px-10 py-6 backdrop-blur-lg md:sticky md:-mx-6 md:hidden lg:-mx-10 lg:block lg:w-auto">
-                        <div className="mx-auto flex w-full flex-col items-center justify-between gap-4">
-                            <div className="flex w-full items-center justify-end">
-                                <VoteButton
-                                    projectTitle={
-                                        response[1] || `Team #${teamId}`
-                                    }
-                                    teamId={teamId}
-                                    hackathonId={hackathonId}
-                                    userId={user?.id || 0}
-                                    alreadyVoted={alreadyVoted}
-                                    applicationStatus={
-                                        application?.currentStatus
-                                    }
-                                />
-                            </div>
-                        </div>
-                    </div>
+                    {/*<div className="fixed bottom-0 left-0 z-[105] block w-full bg-neutral-800/60 px-10 py-6 backdrop-blur-lg md:sticky md:-mx-6 md:hidden lg:-mx-10 lg:block lg:w-auto">*/}
+                    {/*    <div className="mx-auto flex w-full flex-col items-center justify-between gap-4">*/}
+                    {/*        <div className="flex w-full items-center justify-end">*/}
+                    {/*            <VoteButton*/}
+                    {/*                projectTitle={*/}
+                    {/*                    response[1] || `Team #${teamId}`*/}
+                    {/*                }*/}
+                    {/*                teamId={teamId}*/}
+                    {/*                hackathonId={hackathonId}*/}
+                    {/*                userId={user?.id || 0}*/}
+                    {/*                alreadyVoted={alreadyVoted}*/}
+                    {/*                applicationStatus={*/}
+                    {/*                    application?.currentStatus*/}
+                    {/*                }*/}
+                    {/*            />*/}
+                    {/*        </div>*/}
+                    {/*    </div>*/}
+                    {/*</div>*/}
                 </div>
-                <div className="sticky bottom-0 left-0 z-[105] hidden w-full bg-neutral-800/60 px-10 py-6 backdrop-blur-lg md:-mx-6 md:block lg:-mx-10 lg:hidden lg:w-auto">
-                    <div className="mx-auto flex w-full flex-col items-center justify-between gap-4">
-                        <div className="flex w-full items-center justify-end">
-                            <VoteButton
-                                projectTitle={response[1] || `Team #${teamId}`}
-                                teamId={teamId}
-                                hackathonId={hackathonId}
-                                userId={user?.id || 0}
-                                alreadyVoted={alreadyVoted}
-                                applicationStatus={application?.currentStatus}
-                            />
-                        </div>
-                    </div>
-                </div>
+                {/*<div className="sticky bottom-0 left-0 z-[105] hidden w-full bg-neutral-800/60 px-10 py-6 backdrop-blur-lg md:-mx-6 md:block lg:-mx-10 lg:hidden lg:w-auto">*/}
+                {/*    <div className="mx-auto flex w-full flex-col items-center justify-between gap-4">*/}
+                {/*        <div className="flex w-full items-center justify-end">*/}
+                {/*            <VoteButton*/}
+                {/*                projectTitle={response[1] || `Team #${teamId}`}*/}
+                {/*                teamId={teamId}*/}
+                {/*                hackathonId={hackathonId}*/}
+                {/*                userId={user?.id || 0}*/}
+                {/*                alreadyVoted={alreadyVoted}*/}
+                {/*                applicationStatus={application?.currentStatus}*/}
+                {/*            />*/}
+                {/*        </div>*/}
+                {/*    </div>*/}
+                {/*</div>*/}
             </div>
         </div>
     );
