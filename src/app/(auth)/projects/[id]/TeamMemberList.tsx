@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { trpc, trpcClient } from '@/trpc/client';
-import { useQueryClient } from '@tanstack/react-query';
+import { trpcClient } from '@/trpc/client';
 
 interface TeamMember {
     userId: number;
@@ -31,14 +30,19 @@ export default function TeamMemberList({ members }: TeamMemberListProps) {
                     return { ...member, avatarUrl };
                 }
 
-                trpcClient.files.getUserImageById
+                const res = await trpcClient.files.getUserImageById
                     .query({
                         imageId: member.image,
                     })
                     .then((image) => {
-                        avatarUrl = `data:${image.contentType};base64,${Buffer.from(image.data).toString('base64')}`;
+                        avatarUrl = `data:${image.contentType};base64,${image.data}`;
+                        return { ...member, avatarUrl };
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                        return { ...member, avatarUrl };
                     });
-                return { ...member, avatarUrl };
+                return res;
             })
         ).then((res) => {
             setMembersWithImages(res);
