@@ -55,7 +55,7 @@ export function FeedbackDialog({ onClose, open, selectedFeedback }: Props) {
                 style={{ width: '700px', maxWidth: 'calc(100dvw - 3rem)' }}
             >
                 <DialogHeader>
-                    <DialogTitle>Past Project Submission Feedbacks</DialogTitle>
+                    <DialogTitle>Project Feedbacks</DialogTitle>
                 </DialogHeader>
 
                 <Suspense fallback={<LoadingState />}>
@@ -158,12 +158,12 @@ function SelectedFeedBackContent({
                     gap: '1rem',
                 }}
             >
-                {selectedFeedback.map((judge) => {
+                {selectedFeedback.map((judge, index) => {
                     return Object.entries(judge.judgeResponse)
                         .filter(
                             ([key, val]) => filteredSchema[key] !== undefined
                         )
-                        .map(([key, val], index) => {
+                        .map(([key, val]) => {
                             const schema = filteredSchema[key];
                             return (
                                 <div key={key}>
