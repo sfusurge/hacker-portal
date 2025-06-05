@@ -37,9 +37,10 @@ function LoadingState() {
 interface Props {
     onClose: () => void;
     open?: boolean;
+    selectedFeedback?: FeedBackProps[];
 }
 
-export function FeedbackDialog({ onClose, open }: Props) {
+export function FeedbackDialog({ onClose, open, selectedFeedback }: Props) {
     return (
         <Dialog
             open={open}
@@ -58,7 +59,14 @@ export function FeedbackDialog({ onClose, open }: Props) {
                 </DialogHeader>
 
                 <Suspense fallback={<LoadingState />}>
-                    <FeedbackDialogContent />
+                    {selectedFeedback ? (
+                        <SelectedFeedBackContent
+                            selectedFeedback={selectedFeedback}
+                            onBack={onClose}
+                        />
+                    ) : (
+                        <FeedbackDialogContent />
+                    )}
                 </Suspense>
             </DialogContent>
         </Dialog>
@@ -70,28 +78,79 @@ function FeedbackDialogContent() {
         trpc.judging.getUserSubmissionFeedbacks.useSuspenseQuery({});
 
     const [selectedFeedback, setSelectedFeedback] = useState<
-        FeedBackProps | undefined
+        FeedBackProps[] | undefined
     >();
 
-    const [selectedIndex, setSelectedIndex] = useState<number | undefined>();
+    const pastSubmissionsList = useMemo(
+        () =>
+            Object.values(pastSubmissions).filter((item) => item !== undefined),
+        [pastSubmissions]
+    );
 
+    if (selectedFeedback) {
+        return (
+            <SelectedFeedBackContent
+                selectedFeedback={selectedFeedback}
+                onBack={() => {
+                    setSelectedFeedback(undefined);
+                }}
+            />
+        );
+    } else {
+        return (
+            <ScrollArea>
+                {pastSubmissionsList.length === 0 && (
+                    <Label>No Submissions...</Label>
+                )}
+                {pastSubmissionsList.map(
+                    (item, index) =>
+                        item &&
+                        item.length > 0 && (
+                            <FeedbackCard
+                                key={index}
+                                {...(item[0] as FeedBackProps)}
+                                onClick={() => {
+                                    setSelectedFeedback(
+                                        item as FeedBackProps[]
+                                    );
+                                }}
+                            />
+                        )
+                )}
+            </ScrollArea>
+        );
+    }
+}
+
+function SelectedFeedBackContent({
+    selectedFeedback,
+    onBack,
+}: {
+    selectedFeedback: FeedBackProps[];
+    onBack: () => void;
+}) {
     const filteredSchema = useMemo(() => {
         const out: Record<string, TextAreaQuestion> = {};
 
-        if (!selectedFeedback) {
+        if (!selectedFeedback || selectedFeedback.length === 0) {
             return out;
         }
 
-        for (const q of selectedFeedback.judgeQuestionSchema) {
+        for (const q of selectedFeedback[0].judgeQuestionSchema) {
             if (q.type === 'text-area') {
                 out[q.questionId] = q;
             }
         }
         return out;
     }, [selectedFeedback]);
-
-    if (selectedFeedback) {
-        return (
+    return (
+        <div
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+            }}
+        >
             <div
                 style={{
                     display: 'flex',
@@ -99,20 +158,16 @@ function FeedbackDialogContent() {
                     gap: '1rem',
                 }}
             >
-                <div>
-                    <h2>
-                        Feedback from Judge #
-                        {selectedIndex !== undefined ? selectedIndex + 1 : 1}
-                    </h2>
-
-                    {Object.entries(selectedFeedback.judgeResponse)
+                {selectedFeedback.map((judge) => {
+                    return Object.entries(judge.judgeResponse)
                         .filter(
                             ([key, val]) => filteredSchema[key] !== undefined
                         )
-                        .map(([key, val]) => {
+                        .map(([key, val], index) => {
                             const schema = filteredSchema[key];
                             return (
                                 <div key={key}>
+                                    <h2>Feedback from Judge #{index + 1}</h2>
                                     <Label
                                         style={{
                                             color: 'var(--text-secondary)',
@@ -128,44 +183,24 @@ function FeedbackDialogContent() {
                                     />
                                 </div>
                             );
-                        })}
-                </div>
-
-                <Button
-                    style={{ margin: '0 0 0 auto' }}
-                    variant={'default'}
-                    hierarchy={'primary'}
-                    size="cozy"
-                    leadingIconChild={
-                        <ArrowLeftIcon style={{ width: '1rem' }} />
-                    }
-                    onClick={() => {
-                        setSelectedFeedback(undefined);
-                    }}
-                >
-                    Back
-                </Button>
+                        });
+                })}
             </div>
-        );
-    } else {
-        return (
-            <ScrollArea>
-                {pastSubmissions.length === 0 && (
-                    <Label>No Submissions...</Label>
-                )}
-                {pastSubmissions.map((item, index) => (
-                    <FeedbackCard
-                        key={index}
-                        {...(item as FeedBackProps)}
-                        onClick={() => {
-                            setSelectedFeedback(item as FeedBackProps);
-                            setSelectedIndex(index);
-                        }}
-                    />
-                ))}
-            </ScrollArea>
-        );
-    }
+
+            <Button
+                style={{ margin: '0 0 0 auto' }}
+                variant={'default'}
+                hierarchy={'primary'}
+                size="cozy"
+                leadingIconChild={<ArrowLeftIcon style={{ width: '1rem' }} />}
+                onClick={() => {
+                    onBack();
+                }}
+            >
+                Back
+            </Button>
+        </div>
+    );
 }
 
 interface FeedBackProps {
@@ -173,7 +208,6 @@ interface FeedBackProps {
     judgeResponse: Record<string, any>;
     hackathonName: string;
     submissionResponse: Record<string, any>;
-    judgeId: number;
     hackathonId: number;
 }
 

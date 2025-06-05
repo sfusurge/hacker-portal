@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { trpc } from '@/trpc/client';
+import { trpc, trpcClient } from '@/trpc/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface TeamMember {
     userId: number;
@@ -22,34 +23,26 @@ export default function TeamMemberList({ members }: TeamMemberListProps) {
     >([]);
 
     useEffect(() => {
-        const fetchMemberImages = async () => {
-            const membersWithAvatars = await Promise.all(
-                members.map(async (member) => {
-                    let avatarUrl = '/sidebar/default-avatar.webp';
-                    if (member.image) {
-                        try {
-                            const image =
-                                await trpc.files.getFile.useSuspenseQuery({
-                                    key: member.image,
-                                    bucketName: 'profile-pictures',
-                                });
-                            if (image && image.buffer) {
-                                avatarUrl = `data:${image.contentType};base64,${Buffer.from(image.buffer).toString('base64')}`;
-                            }
-                        } catch (error) {
-                            console.error(
-                                `Error fetching image for user ${member.userId}:`,
-                                error
-                            );
-                        }
-                    }
-                    return { ...member, avatarUrl };
-                })
-            );
-            setMembersWithImages(membersWithAvatars);
-        };
+        Promise.all(
+            members.map(async (member) => {
+                let avatarUrl = '/sidebar/default-avatar.webp';
 
-        fetchMemberImages();
+                if (!member.image) {
+                    return { ...member, avatarUrl };
+                }
+
+                trpcClient.files.getUserImageById
+                    .query({
+                        imageId: member.image,
+                    })
+                    .then((image) => {
+                        avatarUrl = `data:${image.contentType};base64,${Buffer.from(image.data).toString('base64')}`;
+                    });
+                return { ...member, avatarUrl };
+            })
+        ).then((res) => {
+            setMembersWithImages(res);
+        });
     }, [members]);
 
     return (

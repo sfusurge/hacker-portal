@@ -18,7 +18,7 @@ export const submissions = pgTable('submissions', {
     currentStatus: submissionStatusEnum('current_status')
         .default('Awaiting Review')
         .notNull(),
-    response: json().notNull(),
+    response: json().notNull().$type<Record<string, any>>(),
     createdDate: timestamp('created_date').defaultNow().notNull(),
 });
 

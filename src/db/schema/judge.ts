@@ -32,7 +32,7 @@ export const judgingAssignments = pgTable(
             .references(() => user.id, { onDelete: 'no action' })
             .notNull(),
         status: judgingStatusEnum('status').default('unjudged').notNull(),
-        response: json('response'),
+        response: json('response').$type<Record<string, any>>(),
         createdDate: timestamp('created_date').defaultNow().notNull(),
         updatedDate: timestamp('updated_date').defaultNow().notNull(),
     },

@@ -31,7 +31,7 @@ export interface HackathonData {
     startDate: dayjs.Dayjs;
     endDate: dayjs.Dayjs;
 
-    judgeQuestions: JudgeQuestion[];
+    judgeQuestions: JudgingFormQuestion[];
     judgeRubric: SubmissionJudgeRubric[];
 }
 
