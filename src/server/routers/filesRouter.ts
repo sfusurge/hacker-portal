@@ -156,4 +156,25 @@ export const filesRouter = router({
                 return '';
             }
         }),
+
+    getUserImageById: publicProcedure
+        .input(z.object({ imageId: z.string() }))
+        .query(async ({ input }) => {
+            try {
+                const dataFetch = await getFileFromR2(
+                    input.imageId,
+                    'profile-pictures'
+                );
+                return {
+                    data: Buffer.from(dataFetch.buffer).toString('base64'),
+                    contentType: dataFetch.contentType,
+                };
+            } catch (error) {
+                console.error('error while fetching user image', error);
+                return {
+                    data: '',
+                    contentType: '',
+                };
+            }
+        }),
 });

@@ -1,4 +1,9 @@
-import { InputFormPageData } from '@/components/application_components/types';
+import {
+    InputFormPageData,
+    JudgeQuestion,
+    JudgingFormQuestion,
+    SubmissionJudgeRubric,
+} from '@/components/application_components/types';
 import {
     boolean,
     integer,
@@ -33,8 +38,14 @@ const hackathons = pgTable('hackathons', {
         .notNull()
         .default([]),
 
-    judgeQuestions: jsonb('judgeQuestions').notNull().default([]),
-    judgeRubric: jsonb('judgeRubric').notNull().default([]),
+    judgeQuestions: jsonb('judgeQuestions')
+        .notNull()
+        .default([])
+        .$type<JudgingFormQuestion[]>(),
+    judgeRubric: jsonb('judgeRubric')
+        .notNull()
+        .default([])
+        .$type<SubmissionJudgeRubric[]>(),
 });
 
 const insertHackathonSchema = createInsertSchema(hackathons, {

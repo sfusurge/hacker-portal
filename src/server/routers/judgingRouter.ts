@@ -16,12 +16,13 @@ import {
     updateJudgingAssignmentSchema,
     updateJudgingStatusSchema,
 } from '@/db/schema/judge';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, Query, not, isNull, isNotNull } from 'drizzle-orm';
 import { hackathons } from '@/db/schema/hackathons';
 import { getBasicUserInfo, getUserData } from '@/server/routers/usersRouter';
 import { submissions } from '@/db/schema/submissions';
 import { teams } from '@/db/schema/teams';
 import { members } from '@/db/schema/members';
+import { JudgingFormQuestion } from '@/components/application_components/types';
 
 export interface JudgingScoreResponse {
     hackathonId: number;
@@ -558,13 +559,13 @@ export const judgingRouter = router({
             };
         }),
     getUserSubmissionFeedbacks: publicProcedure
-        .input(z.object({}))
+        .input(z.object({ hackathonId: z.number().optional() }))
         .query(async ({ input }) => {
-            return await getUserSubmissionFeedbacks();
+            return await getUserSubmissionFeedbacks(input.hackathonId);
         }),
 });
 
-export async function getUserSubmissionFeedbacks() {
+export async function getUserSubmissionFeedbacks(hackathonId?: number) {
     const userInfo = await getBasicUserInfo();
 
     if (!user.id) {
@@ -573,7 +574,7 @@ export async function getUserSubmissionFeedbacks() {
 
     // get judgeassignments of submission in user's team
 
-    const pastSubmissions = await databaseClient
+    const query = databaseClient
         .select({
             hackathonId: judgingAssignments.hackathonId,
             hackathonName: hackathons.name,
@@ -598,8 +599,32 @@ export async function getUserSubmissionFeedbacks() {
             hackathons,
             eq(judgingAssignments.hackathonId, hackathons.id)
         );
+    let pastSubmissions;
+    if (hackathonId) {
+        const dynmaicQuery = query
+            .$dynamic()
+            .where(eq(hackathons.id, hackathonId));
+        pastSubmissions = await dynmaicQuery;
+    } else {
+        pastSubmissions = await query;
+    }
 
-    return pastSubmissions;
+    const res = {
+        ...Object.groupBy(
+            pastSubmissions.filter((item) => item.judgeResponse !== null),
+            (item) => item.hackathonId
+        ),
+    };
+
+    return res as {
+        [x: number]: {
+            hackathonId: number;
+            hackathonName: string;
+            judgeQuestionSchema: JudgingFormQuestion[];
+            judgeResponse: Record<string, any>;
+            submissionResponse: Record<string, any>;
+        }[];
+    };
 }
 
 export type JudgingRouter = typeof judgingRouter;

@@ -23,7 +23,8 @@ interface PageProps {
     };
 }
 
-export default async function ProjectPage({ params }: PageProps) {
+export default async function ProjectPage({ params: _params }: PageProps) {
+    const params = await _params;
     const trpcClient = createCaller({});
     const user = await getUserData();
     const activeHackathon = await trpcClient.hackathons.getActiveHackathon();

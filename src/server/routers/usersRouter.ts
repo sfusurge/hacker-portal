@@ -132,6 +132,7 @@ export async function getUserData() {
             .limit(1)
             .where(eq(user.email, normalizedEmail))
     )[0];
+
     if (!dbUser) {
         return undefined;
     }

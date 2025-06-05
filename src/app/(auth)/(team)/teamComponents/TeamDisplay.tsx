@@ -76,7 +76,7 @@ export default function TeamDisplay({
                     hierarchy={'primary'}
                     style={{ alignSelf: 'center', marginLeft: 'auto' }}
                 >
-                    View feedback
+                    View Feedback
                 </Button>
 
                 <FeedbackDialog
