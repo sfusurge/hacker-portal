@@ -20,7 +20,7 @@ import {
     SortingState,
 } from '@tanstack/react-table';
 
-import { atom, useSetAtom } from 'jotai';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 
 import { Input } from '@/components/ui/input';
 import { mkConfig, generateCsv, download } from 'export-to-csv';
@@ -30,9 +30,9 @@ import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import { DocumentArrowDownIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/16/solid';
-import { useHackathon } from '@/hooks/use-hackathon';
 import dayjs from 'dayjs';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 
 export type Applicant = {
     id: number;
@@ -184,17 +184,13 @@ export default function ReviewApplicationsTable({
         }
     };
 
-    const { hackathon, hackathonLoaded } = useHackathon();
+    const hackathon = useAtomValue(hackathonAtom);
 
     // Get data from DB
-    const applicationData = trpc.applications.getApplications.useQuery(
-        {
-            hackathonId: hackathon?.id!,
-            maxResult: 200,
-        },
-        // only load applications data once hackathon has been loaded
-        { enabled: hackathonLoaded }
-    );
+    const applicationData = trpc.applications.getApplications.useQuery({
+        hackathonId: hackathon?.id!,
+        maxResult: 200,
+    });
 
     const applicationDataMap = useMemo(() => {
         const map = new Map<number, ApplicationWithTeamInfo>();

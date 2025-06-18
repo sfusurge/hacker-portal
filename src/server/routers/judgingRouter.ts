@@ -587,7 +587,7 @@ export async function getUserSubmissionFeedbacks(hackathonId?: number) {
             members,
             and(
                 eq(members.teamId, judgingAssignments.teamId),
-                eq(members.userId, userInfo.userId)
+                eq(members.userId, userInfo.id)
             )
         )
         .innerJoin(

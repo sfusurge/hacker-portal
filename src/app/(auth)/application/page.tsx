@@ -5,6 +5,7 @@ import timezone from 'dayjs/plugin/timezone';
 
 import Image from 'next/image';
 import ApplicationPageComponent from '@/app/(auth)/application/ApplicationPage';
+import { createCaller } from '@/server/appRouter';
 
 export default async function ApplicationPage({
     searchParams,
@@ -19,6 +20,8 @@ export default async function ApplicationPage({
         .startOf('day')
         .add(1, 'hour');
     const params = await searchParams;
+
+    const trpcClient = createCaller({});
 
     const bypass =
         process.env.APPLY_BYPASS &&

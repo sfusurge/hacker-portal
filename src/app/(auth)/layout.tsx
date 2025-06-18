@@ -7,7 +7,7 @@ import { ReactNode } from 'react';
 
 import { CacheClearer } from '@/app/(auth)/CacheClear';
 import { redirect } from 'next/navigation';
-import { ClientContext } from './ClientAuthContext';
+import { ClientContext } from './ClientContext';
 import { getUserData } from '@/server/routers/usersRouter';
 import { createCaller } from '@/server/appRouter';
 
@@ -23,9 +23,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
     }
 
     return (
-        <>
-            {/* TODO dejenkify lmao */}
-            <ClientContext userData={userData} hackathonData={hackathon} />
+        <ClientContext userData={userData} hackathonData={hackathon}>
             <div
                 className="bg-neutral-950 p-0 md:flex md:p-5"
                 style={{ height: '100dvh' }}
@@ -47,6 +45,6 @@ export default async function Layout({ children }: { children: ReactNode }) {
                     {children}
                 </main>
             </div>
-        </>
+        </ClientContext>
     );
 }
