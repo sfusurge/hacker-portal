@@ -21,8 +21,7 @@ import { ExclamationCircleIcon } from '@heroicons/react/20/solid';
 import RubricDialog from './RubricDialog';
 import { trpc } from '@/trpc/client';
 import { Loader2 } from 'lucide-react';
-import { useHackathon } from '@/hooks/use-hackathon';
-import { atom, useAtom } from 'jotai';
+import { atom, useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage, createJSONStorage } from 'jotai/utils';
 import {
     ScoreItem,
@@ -30,6 +29,7 @@ import {
     FormResponse,
 } from '@/components/application_components/types';
 import Link from 'next/link';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 
 interface JudgingFormProps {
     teamId: number;
@@ -70,7 +70,7 @@ export default function JudgingForm({
     didJudge,
     isAssignedToJudge = true,
 }: JudgingFormProps) {
-    const { hackathon, hackathonLoaded } = useHackathon();
+    const hackathon = useAtomValue(hackathonAtom);
     const [judgingData, setJudgingData] = useAtom(judgingDataAtom);
     const [formErrors, setFormErrors] = useAtom(formErrorsAtom);
     const [questions, setQuestions] = useAtom(questionsAtom);
@@ -372,7 +372,7 @@ export default function JudgingForm({
     }, [user?.email, hackathonId, setJudgingData, isInitialized]);
 
     useEffect(() => {
-        if (hackathonLoaded && hackathon && isInitialized) {
+        if (hackathon && isInitialized) {
             const judgeQuestions = hackathon.judgeQuestions || [];
             setQuestions(judgeQuestions as unknown as JudgingFormQuestion[]);
 
@@ -399,7 +399,6 @@ export default function JudgingForm({
             setIsLoading(false);
         }
     }, [
-        hackathonLoaded,
         hackathon,
         isInitialized,
         judgingData.responses,

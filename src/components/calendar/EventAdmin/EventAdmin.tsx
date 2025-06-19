@@ -1,5 +1,5 @@
 import { CalendarEvent } from '@/server/routers/eventsRouter';
-import { atom, PrimitiveAtom, useAtom } from 'jotai';
+import { atom, PrimitiveAtom, useAtom, useAtomValue } from 'jotai';
 import {
     DayjsifyEvents,
     InternalCalendarEventType,
@@ -14,7 +14,6 @@ import { trpc } from '@/trpc/client';
 import { FormTextArea } from '@/components/ui/formTextArea/FormTextArea';
 import { Button } from '@/components/ui/button';
 import dayjs from 'dayjs';
-import { useHackathon } from '@/hooks/use-hackathon';
 import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 import {
     Select,
@@ -26,6 +25,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { EVENT_TYPES, EventType } from '@/db/schema/events';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 
 export interface EventAdminProps {
     eventsAtom: PrimitiveAtom<InternalCalendarEventType[]>;
@@ -39,13 +39,9 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
 
     const [event, setEvent] = useState<CalendarEvent>();
 
-    const { hackathon } = useHackathon();
+    const hackathon = useAtomValue(hackathonAtom);
 
     useEffect(() => {
-        if (!hackathon?.id) {
-            return;
-        }
-
         setEvent(convertEvent(hackathon.id, _selectedEvent?.event));
     }, [hackathon?.id, _selectedEvent?.event]);
 

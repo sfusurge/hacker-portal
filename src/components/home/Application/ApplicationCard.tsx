@@ -26,9 +26,10 @@ import {
     WaitlistContent,
 } from './ApplicationContent';
 import { ArrowRightIcon } from 'lucide-react';
-import { useHackathon } from '@/hooks/use-hackathon';
 import { UserData } from '@/server/routers/usersRouter';
 import clsx from 'clsx';
+import { useAtomValue } from 'jotai';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 
 export type AppStatus =
     | 'Not Yet Started'
@@ -60,7 +61,7 @@ export default function ApplicationCard({
 }: ApplicationCardProps) {
     const [questionSetExists, setQuestionSetExists] = useState(false);
     const [isTicketOpen, setIsTicketOpen] = useState(false);
-    const { hackathon } = useHackathon();
+    const hackathon = useAtomValue(hackathonAtom);
     const hackathonName = hackathon?.hackathonName || 'Hackathon';
 
     useEffect(() => {

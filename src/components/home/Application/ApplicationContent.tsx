@@ -8,9 +8,10 @@ import QRTicket from '@/app/(auth)/admin/qr/checkin_components/QRTicket';
 import WithdrawPrompt from '@/components/home/Application/WithdrawPrompt';
 import CountdownTimer from '../Application/Countdown';
 import { CardTitle, CardDescription } from '@/components/ui/card';
-import { useHackathon } from '@/hooks/use-hackathon';
 import dayjs from 'dayjs';
 import { UserData } from '@/server/routers/usersRouter';
+import { useAtomValue } from 'jotai';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 
 export function CountdownContent() {
     const [currentTime, setime] = useState(dayjs());
@@ -54,7 +55,7 @@ export function CountdownContent() {
 }
 
 export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
-    const { hackathon } = useHackathon();
+    const hackathon = useAtomValue(hackathonAtom);
     const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
 
     const handleOpenWithdrawPrompt = () => setIsWithdrawPromptOpen(true);
@@ -119,7 +120,7 @@ export function AcceptedContent({
     isTicketOpen?: boolean;
     setIsTicketOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-    const { hackathon } = useHackathon();
+    const hackathon = useAtomValue(hackathonAtom);
     const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
     const [localTicketOpen, setLocalTicketOpen] = useState(false);
 
@@ -275,8 +276,7 @@ export function ReviewContent({ userData }: { userData: UserData }) {
 }
 
 export function WithdrawnContent() {
-    const { hackathon } = useHackathon();
-
+    const hackathon = useAtomValue(hackathonAtom);
     return (
         <>
             <div className="flex max-w-full flex-col gap-2 text-start">
@@ -310,7 +310,7 @@ export function WithdrawnContent() {
     );
 }
 export function WaitlistContent() {
-    const { hackathon } = useHackathon();
+    const hackathon = useAtomValue(hackathonAtom);
 
     return (
         <>
@@ -338,7 +338,7 @@ export function WaitlistContent() {
     );
 }
 export function RejectedContent() {
-    const { hackathon } = useHackathon();
+    const hackathon = useAtomValue(hackathonAtom);
 
     return (
         <>
