@@ -14,7 +14,8 @@ import {
     DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useHackathon } from '@/hooks/use-hackathon';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { useAtomValue } from 'jotai';
 
 export type WithdrawPromptProps = {
     userId: number;
@@ -33,7 +34,7 @@ export default function WithdrawPrompt({
     const [withdrawn, setWithdrawn] = useState(false);
     const [open, setOpen] = useState(isOpen);
 
-    const { hackathon } = useHackathon();
+    const hackathon = useAtomValue(hackathonAtom);
 
     const updateApplication = trpc.applications.updateApplication.useMutation();
 
@@ -62,11 +63,6 @@ export default function WithdrawPrompt({
             setNotSubmittable(true);
         }
     }, [verifyText]);
-
-    // Wait until hackathon is load
-    if (!hackathon) {
-        return false;
-    }
 
     return (
         <Dialog

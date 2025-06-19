@@ -1,18 +1,17 @@
 'use client';
 
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { Card, CardContent } from '@/components/ui/card';
+import { useAtomValue } from 'jotai';
 import { useEffect, useState } from 'react';
-import { useHackathon } from '@/hooks/use-hackathon';
 
 export default function SubmissionInfoCard() {
-    const { hackathon } = useHackathon();
+    const hackathon = useAtomValue(hackathonAtom);
     const [hoursUntil, setHoursUntil] = useState<number | null>(null);
     const [formattedDate, setFormattedDate] = useState<string>('');
     const [formattedTime, setFormattedTime] = useState<string>('');
 
     useEffect(() => {
-        if (!hackathon) return;
-
         const deadline = new Date(2025, 4, 28, 23, 59, 59);
 
         const calculateHoursLeft = (targetDate: Date): number => {
@@ -66,7 +65,7 @@ export default function SubmissionInfoCard() {
                         Only one submission is allowed per team. This submission
                         counts for all team members.
                     </li>
-                    <li>You can't edit this form once it's submitted.</li>
+                    <li>{"You can't edit this form once it's submitted."}</li>
                 </ol>
             </CardContent>
         </Card>

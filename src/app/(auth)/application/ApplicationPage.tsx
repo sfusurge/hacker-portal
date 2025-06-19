@@ -5,20 +5,16 @@ import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import { useEffect } from 'react';
 import { InputForm } from '../../../components/application_components/InputForm';
-import { hackathonAtom } from '@/hooks/use-hackathon';
-import { useHackathon } from '@/hooks/use-hackathon';
+
 import { atom, useAtomValue } from 'jotai';
-import {
-    InputFormPageData,
-    HackathonData,
-    InputFormData,
-} from '@/components/application_components/types';
+import { InputFormData } from '@/components/application_components/types';
 import {
     getResponseMap,
     loadResponseIntoSchema,
 } from '@/components/application_components/utils';
 import { atomWithStorage } from 'jotai/utils';
-import { userInfoAtom } from '@/app/(auth)/ClientAuthContext';
+import { userInfoAtom } from '@/app/(auth)/ClientContext';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 
 const localAppResponseAtom = atomWithStorage('application_response', {
     hackathonId: -1,
@@ -85,19 +81,12 @@ const applicationWithLocalAtom = atom(
  * https://jotai.org/docs/utilities/storage#server-side-rendering
  */
 export default function ApplicationPageComponent() {
-    const { hackathon } = useHackathon();
+    const hackathon = useAtomValue(hackathonAtom);
     const hackathonWithResponse = useAtomValue(applicationWithLocalAtom);
     const submitApplication = trpc.applications.submitApplication.useMutation();
-
-    const application = trpc.applications.getCurrentApplication.useQuery(
-        {
-            hackathonId: hackathon?.id!,
-        },
-        {
-            enabled: false,
-        }
-    );
-
+    const application = trpc.applications.getCurrentApplication.useQuery({
+        hackathonId: hackathon.id,
+    });
     const session = useSession();
 
     // store user email for local storage user check
@@ -108,15 +97,11 @@ export default function ApplicationPageComponent() {
     }, [session]);
 
     useEffect(() => {
-        if (application.data) {
-            alert('You have already applied! Redirecting to home.');
-            return redirect('/home');
+        if (application.data !== null) {
+            alert('Already applied!');
+            redirect('/home'); // TODO make this look good
         }
-
-        if (hackathon?.id && !application.data) {
-            application.refetch();
-        }
-    }, [application, hackathon]);
+    }, [application]);
 
     // reserve extra top padding for this page
     useEffect(() => {
@@ -127,10 +112,6 @@ export default function ApplicationPageComponent() {
         <InputForm
             appDataAtom={applicationWithLocalAtom}
             onSubmit={() => {
-                if (application.data) {
-                    return;
-                }
-
                 const response = getResponseMap(hackathonWithResponse.pages);
                 submitApplication.mutate({
                     hackathonId: hackathon!.id,

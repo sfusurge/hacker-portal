@@ -14,7 +14,7 @@ import { useState } from 'react';
 import TeamMemberList from './TeamMemberList';
 import { trpc } from '@/trpc/client';
 import { useAtom, useAtomValue } from 'jotai';
-import { hackathonAtom } from '@/app/(auth)/ClientAuthContext';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 
 interface TeamCardProps {
     teamData: {

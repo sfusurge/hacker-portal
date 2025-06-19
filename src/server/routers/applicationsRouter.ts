@@ -16,7 +16,7 @@ import { welcomeSparkhacksTemplate } from '@/server/routers/templates';
 import { transporter } from '@/server/nodemailerTransporter';
 import { teams } from '@/db/schema/teams';
 import { members } from '@/db/schema/members';
-import { getUserData } from '@/server/routers/usersRouter';
+import { getBasicUserInfo, getUserData } from '@/server/routers/usersRouter';
 
 export interface SubmitApplicationResponse {
     hackathonId: number;
@@ -205,7 +205,7 @@ export const applicationsRouter = router({
     getCurrentApplication: publicProcedure
         .input(z.object({ hackathonId: z.number().int() }))
         .query(async ({ input }) => {
-            const user = await getUserData();
+            const user = await getBasicUserInfo();
 
             if (!user) {
                 throw new InternalServerError(
