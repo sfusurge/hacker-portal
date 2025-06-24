@@ -29,13 +29,10 @@ subprocess.run(["vercel", "env", "pull", ".env.local", "-t", vercelToken], shell
 
 
 def fetchExistingImages():
-    client = boto3.client(
-        "s3", endpoint_url=s3_endpoint, aws_access_key_id=acesskey, aws_secret_access_key=secret, region_name=region
-    )
     s3 = boto3.resource(
         "s3", endpoint_url=s3_endpoint, aws_access_key_id=acesskey, aws_secret_access_key=secret, region_name=region
     )
-    bucket = s3.Bucket("profile-pictures")
+    bucket = s3.Bucket("team-pictures")
 
     for obj in bucket.objects.all():
         res = obj.get()
@@ -45,15 +42,20 @@ def fetchExistingImages():
 def process():
     imageProfiles = fetchExistingImages()
 
-    cur = db.execute('select * from public."user"')
+    cur = db.execute('''
+                        SELECT DISTINCT u.id, t.team_picture_url, t.id FROM "user" u
+                        JOIN memberships m ON u.id = m.user_id
+                        JOIN teams t ON m.team_id = t.id
+                        WHERE t.team_picture_url IS NOT NULL
+                    ''')
     items = cur.fetchall()
     cur.close()
 
-    userIdMap = {item[0]: item for item in items}
+    leaderIdMapToImage = {item[0]:(item[1], item[2]) for item in items}
 
     for userId, imageKey, stream, mimeType in imageProfiles:
-        user = userIdMap.get(int(userId), None)
-        print("checking", userId, imageKey)
+        team = leaderIdMapToImage.get(int(userId), None)
+        
         if user and imageKey in user:
             print(f"Converting and uploading {userId}")
             image = Image.open(BytesIO(stream.read()), "r", [mimeType.removeprefix("image/"), 'png', 'jpeg'])
