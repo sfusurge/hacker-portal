@@ -1,3 +1,8 @@
+<a href="https://vercel.com/oss">
+  <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge.svg" />
+</a>
+<br />
+<br />
 The source code repository for hacker portal, SFU Surge's all-in-one hackathon application management system
 
 ## Installation and Setup
