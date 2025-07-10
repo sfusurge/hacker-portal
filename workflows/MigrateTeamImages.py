@@ -36,7 +36,12 @@ def fetchExistingImages():
 
     for obj in bucket.objects.all():
         res = obj.get()
-        yield (res["Metadata"]["userid"], obj.key, res["Body"], res["ContentType"])
+        try:
+            yield (res["Metadata"]["userid"], obj.key, res["Body"], res["ContentType"])
+        except KeyError as e:
+            print(e)
+            print(res["Metadata"], obj.key)
+            continue
 
 
 def process():
@@ -56,21 +61,20 @@ def process():
     for userId, imageKey, stream, mimeType in imageProfiles:
         team = leaderIdMapToImage.get(int(userId), None)
         
-        if user and imageKey in user:
-            print(f"Converting and uploading {userId}")
+        if team:
+            print(f"Converting data for {team}")
             image = Image.open(BytesIO(stream.read()), "r", [mimeType.removeprefix("image/"), 'png', 'jpeg'])
             image = image.convert("RGB")
             image.save(f"temp.jpg", "jpeg", )
-
-            usericonName = f"{imageKey}.jpg"
+            iconName = f"{imageKey}.jpg"
             subprocess.run(
-                ["vercel", "blob", "put", "temp.jpg", "-f", "-p", f"user_icon/{usericonName}", "-t", vercelToken],
+                ["vercel", "blob", "put", "temp.jpg", "-f", "-p", f"team_icon/{iconName}", "-t", vercelToken],
                 shell=True,
             )
 
-            db.execute('update public."user" set image = %s where id = %s', (usericonName, user[0]))
+            db.execute('update public."teams" set team_picture_url = %s where id = %s', (iconName, team[1]))
             db.commit()
-            print(f"Processed: {usericonName}")
+            print(f"Processed: {team}")
 
 
 
