@@ -1,10 +1,11 @@
 import TeamDisplay from '@/app/(auth)/(team)/teamComponents/TeamDisplay';
 import { createCaller } from '@/server/appRouter';
-import { getUserData } from '@/server/routers/usersRouter';
+import { getBasicUserInfo } from '@/server/routers/usersRouter';
+import { getIcon } from '@/utils/iconUrlHelper';
 import { redirect } from 'next/navigation';
 
 export default async function Team() {
-    const user = await getUserData();
+    const user = await getBasicUserInfo();
 
     if (!user) {
         redirect('/login');
@@ -17,30 +18,16 @@ export default async function Team() {
         hackathonId: hackathon.id,
     });
 
-    const teamPictureUrl = currentTeam?.teamPictureUrl;
-
-    const image = teamPictureUrl
-        ? await trpcClient.files
-              .getFile({
-                  key: teamPictureUrl,
-                  bucketName: 'team-pictures',
-              })
-              .catch((error) => {
-                  console.error('Error fetching image:', error);
-                  return null;
-              })
-        : null;
-
-    const imageData = image
-        ? `data:${image.contentType};base64,${Buffer.from(image.buffer).toString('base64')}`
+    const teamIconUrl = currentTeam?.teamPictureUrl
+        ? getIcon('team_icon', currentTeam.teamPictureUrl)
         : undefined;
 
     return (
         <TeamDisplay
             currentTeam={currentTeam}
             currentHackathon={hackathon}
-            user={user}
-            imageData={imageData}
+            userEmail={user.email}
+            imageUrl={teamIconUrl}
         />
     );
 }

@@ -42,26 +42,6 @@ export default function TeammateItem({
 }: TeammateItemProps) {
     const isMobile = useMediaQuery('(max-width: 767px)');
 
-    const fetchedImage = trpc.files.getUserImages.useQuery(
-        {},
-        {
-            refetchOnWindowFocus: false,
-        }
-    );
-
-    const [avatarUrl, setAvatarUrl] = useState<string>(
-        '/sidebar/default-avatar.webp'
-    );
-
-    useEffect(() => {
-        if (fetchedImage.data && fetchedImage.data.length > 0) {
-            const dataUrl = `data:image/png;base64,${fetchedImage.data}`;
-            setAvatarUrl(dataUrl);
-        } else {
-            setAvatarUrl('/sidebar/default-avatar.webp');
-        }
-    }, [fetchedImage.data]);
-
     // Calculate display name
     const displayName =
         name ||
@@ -95,7 +75,7 @@ export default function TeammateItem({
                 <div className="flex flex-1 items-center gap-3 overflow-hidden md:gap-4">
                     <img
                         alt={displayName + ' profile picture'}
-                        src={avatarUrl}
+                        src={image}
                         width={32}
                         height={32}
                         className="h-8 w-8 rounded-full object-cover md:h-11 md:w-11"

@@ -2,63 +2,57 @@ import { redirect } from 'next/navigation';
 import { createCaller } from '@/server/appRouter';
 import InviteDialog from '../../teamComponents/InviteDialog';
 import TeamDisplay from '../../teamComponents/TeamDisplay';
-import { getUserData } from '@/server/routers/usersRouter';
+import { getBasicUserInfo } from '@/server/routers/usersRouter';
+import { getIcon } from '@/utils/iconUrlHelper';
 
 export default async function InvitePage({
     params,
 }: {
     params: Promise<{ id: string }>;
 }) {
-    const { id } = await params;
-    const displayId = id;
-    const user = await getUserData();
+    const trpcClient = createCaller({});
+
+    const [{ id }, user, hackathon] = await Promise.all([
+        params,
+        getBasicUserInfo(),
+        trpcClient.hackathons.getActiveHackathon(),
+    ]);
 
     if (!user) {
         redirect('/login');
     }
-
-    const trpcClient = createCaller({});
-    const hackathon = await trpcClient.hackathons.getActiveHackathon();
-    const currentUserTeam = await trpcClient.teams.getCurrentTeam({
-        hackathonId: hackathon.id,
-    });
+    const displayId = id;
 
     try {
-        const teamURL = await trpcClient.teams.getTeamByDisplayId({
-            teamDisplayId: displayId,
-        });
+        const [currentUserTeam, teamInUrl] = await Promise.all([
+            trpcClient.teams.getCurrentTeam({
+                hackathonId: hackathon.id,
+            }),
+            trpcClient.teams.getTeamByDisplayId({
+                teamDisplayId: displayId,
+            }),
+        ]);
 
-        const teamPictureUrl = teamURL?.teamPictureUrl;
+        let teamIconUrl: string | undefined;
 
-        const image = teamPictureUrl
-            ? await trpcClient.files
-                  .getFile({
-                      key: teamPictureUrl,
-                      bucketName: 'team-pictures',
-                  })
-                  .catch((error) => {
-                      console.error('Error fetching image:', error);
-                      return null;
-                  })
-            : null;
-
-        const imageData = image
-            ? `data:${image.contentType};base64,${Buffer.from(image.buffer).toString('base64')}`
-            : undefined;
-
+        if (currentUserTeam !== undefined) {
+            if (teamInUrl.teamPictureUrl) {
+                teamIconUrl = getIcon('team_icon', teamInUrl.teamPictureUrl);
+            }
+        }
         return (
             <>
                 <TeamDisplay
                     currentTeam={currentUserTeam}
                     currentHackathon={hackathon}
-                    user={user}
-                    imageData={imageData}
+                    userEmail={user.email}
+                    imageUrl={teamIconUrl}
                 />
                 <InviteDialog
-                    team={teamURL}
+                    team={teamInUrl}
                     hasTeam={currentUserTeam}
                     displayId={displayId}
-                    imageData={imageData}
+                    imageUrl={teamIconUrl}
                 />
             </>
         );
@@ -67,14 +61,14 @@ export default async function InvitePage({
         return (
             <>
                 <TeamDisplay
-                    currentTeam={currentUserTeam}
+                    currentTeam={undefined}
                     currentHackathon={hackathon}
-                    user={user}
+                    userEmail={user.email}
                 />
                 <InviteDialog
                     team={null}
                     displayId={displayId}
-                    imageData={undefined}
+                    imageUrl={undefined}
                 />
             </>
         );

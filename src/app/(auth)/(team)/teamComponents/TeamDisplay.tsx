@@ -19,17 +19,17 @@ type HackathonType = inferProcedureOutput<
 >;
 
 type TeamDisplayProps = {
-    currentTeam: TeamType;
+    currentTeam?: TeamType;
     currentHackathon: HackathonType;
-    user: UserData;
-    imageData?: string;
+    userEmail: string;
+    imageUrl?: string;
 };
 
 export default function TeamDisplay({
     currentTeam,
     currentHackathon,
-    user,
-    imageData = '/teams/default.webp',
+    userEmail,
+    imageUrl = '/teams/default.webp',
 }: TeamDisplayProps) {
     const [showFeedBacks, setShowFeedBacks] = useState(false);
 
@@ -53,7 +53,7 @@ export default function TeamDisplay({
                 <Image
                     width={64}
                     height={64}
-                    src={imageData}
+                    src={imageUrl}
                     alt={`${currentTeam.name} logo`}
                     className="inline-block h-11 w-11 rounded-xl md:h-16 md:w-16"
                 />
@@ -95,10 +95,7 @@ export default function TeamDisplay({
                             redirect('/team/submit');
                         }}
                     />
-                    <TeamList
-                        currentUserEmail={user!.email}
-                        team={currentTeam}
-                    />
+                    <TeamList currentUserEmail={userEmail} team={currentTeam} />
                     <InviteCard teamId={currentTeam.displayId} />
                 </div>
             </div>
