@@ -33,7 +33,7 @@ import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { cn } from '@/lib/utils';
 import { navLinkVariants, NavLink } from './NavLink';
 import { UserData } from '@/server/routers/usersRouter';
-import { getIcon } from '@/utils/iconUrlHelper';
+import { getIcon } from '@/utils/blobHelper';
 
 interface DesktopNavProps {
     className?: string;

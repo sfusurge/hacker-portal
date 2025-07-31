@@ -118,6 +118,7 @@ export async function POST(request: Request) {
                 );
             },
         });
+        return NextResponse.json(res);
     } catch (error) {
         return NextResponse.json(
             { error: (error as Error).message },

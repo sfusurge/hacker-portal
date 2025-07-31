@@ -3,7 +3,7 @@ import { createCaller } from '@/server/appRouter';
 import InviteDialog from '../../teamComponents/InviteDialog';
 import TeamDisplay from '../../teamComponents/TeamDisplay';
 import { getBasicUserInfo } from '@/server/routers/usersRouter';
-import { getIcon } from '@/utils/iconUrlHelper';
+import { getIcon } from '@/utils/blobHelper';
 
 export default async function InvitePage({
     params,

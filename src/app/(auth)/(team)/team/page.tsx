@@ -1,7 +1,7 @@
 import TeamDisplay from '@/app/(auth)/(team)/teamComponents/TeamDisplay';
 import { createCaller } from '@/server/appRouter';
 import { getBasicUserInfo } from '@/server/routers/usersRouter';
-import { getIcon } from '@/utils/iconUrlHelper';
+import { getIcon } from '@/utils/blobHelper';
 import { redirect } from 'next/navigation';
 
 export default async function Team() {

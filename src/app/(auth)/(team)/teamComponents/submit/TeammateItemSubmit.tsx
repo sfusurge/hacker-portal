@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Chip } from '@/components/ui/chip';
 import { user } from '@/db/schema/users/users';
 import { InferSelectModel } from 'drizzle-orm';
@@ -11,6 +11,7 @@ import {
     getTextVariant,
 } from '@/lib/application-status';
 import { trpc } from '@/trpc/client';
+import { getIcon } from '@/utils/blobHelper';
 
 type UserType = InferSelectModel<typeof user>;
 
@@ -29,7 +30,7 @@ export default function TeammateItemSubmit({
     lastName = null,
     name,
     email = '',
-    image = '/teams/single-otter.webp',
+    image,
     currentUser = false,
     index = 0,
     isPlaceholder = false,
@@ -37,25 +38,12 @@ export default function TeammateItemSubmit({
 }: TeammateItemProps) {
     const isMobile = useMediaQuery('(max-width: 767px)');
 
-    const fetchedImage = trpc.files.getUserImages.useQuery(
-        {},
-        {
-            refetchOnWindowFocus: false,
+    const avatarUrl = useMemo(() => {
+        if (!image) {
+            return '/teams/single-otter.webp';
         }
-    );
-
-    const [avatarUrl, setAvatarUrl] = useState<string>(
-        '/sidebar/default-avatar.webp'
-    );
-
-    useEffect(() => {
-        if (fetchedImage.data && fetchedImage.data.length > 0) {
-            const dataUrl = `data:image/png;base64,${fetchedImage.data}`;
-            setAvatarUrl(dataUrl);
-        } else {
-            setAvatarUrl('/sidebar/default-avatar.webp');
-        }
-    }, [fetchedImage.data]);
+        return getIcon('user_icon', image);
+    }, [image]);
 
     // Calculate display name
     const displayName =
