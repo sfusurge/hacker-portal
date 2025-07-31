@@ -91,6 +91,7 @@ export default function TeamList({ currentUserEmail, team }: TeamListProps) {
                                 isPlaceholder={teammate.placeholder}
                                 maxMembersCount={team.maxMembersCount}
                                 isLastItem={i === lastVisibleIndex}
+                                image={teammate.image}
                             />
                         ))}
                     </ul>

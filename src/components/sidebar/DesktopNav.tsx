@@ -21,7 +21,7 @@ import { trpc } from '@/trpc/client';
 
 import { signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -33,6 +33,7 @@ import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { cn } from '@/lib/utils';
 import { navLinkVariants, NavLink } from './NavLink';
 import { UserData } from '@/server/routers/usersRouter';
+import { getIcon } from '@/utils/blobHelper';
 
 interface DesktopNavProps {
     className?: string;
@@ -122,9 +123,6 @@ export default function DesktopNav({
 }: DesktopNavProps) {
     const [collapsed, setCollapsed] = useState(false);
     const [isLargeScreen, setIsLargeScreen] = useState(true);
-    const [avatarUrl, setAvatarUrl] = useState<string | null>(
-        '/sidebar/default-avatar.webp'
-    );
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -134,13 +132,6 @@ export default function DesktopNav({
             }
         }
     }, []);
-
-    const image = trpc.files.getUserImages.useQuery(
-        {},
-        {
-            refetchOnWindowFocus: false,
-        }
-    );
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -166,14 +157,12 @@ export default function DesktopNav({
         return () => window.removeEventListener('resize', checkScreenSize);
     }, []);
 
-    useEffect(() => {
-        if (image.data && image.data.length > 0) {
-            const dataUrl = `data:image/png;base64,${image.data}`;
-            setAvatarUrl(dataUrl);
-        } else {
-            setAvatarUrl('/sidebar/default-avatar.webp');
+    const avatarUrl = useMemo(() => {
+        if (initialData && initialData.image) {
+            return getIcon('user_icon', initialData.image);
         }
-    }, [image.data]);
+        return '/sidebar/default-avatar.webp';
+    }, [initialData]);
 
     const url = usePathname();
 
@@ -338,11 +327,7 @@ export default function DesktopNav({
                                             <div className="h-6 w-6 overflow-hidden rounded-full">
                                                 <img
                                                     alt="User avatar"
-                                                    src={
-                                                        avatarUrl ??
-                                                        initialData?.image ??
-                                                        '/sidebar/default-avatar.webp'
-                                                    }
+                                                    src={avatarUrl}
                                                     className="h-full w-full object-cover"
                                                 />
                                             </div>

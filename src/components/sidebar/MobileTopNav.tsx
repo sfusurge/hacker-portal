@@ -12,10 +12,9 @@ import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
 
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { signOut } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
-import { trpc } from '@/trpc/client';
 import { UserData } from '@/server/routers/usersRouter';
 
 interface MobileTopNavProps {
@@ -32,25 +31,12 @@ export default function MobileTopNav({
     const [hideTopNav, setHideTopNav] = useState(false);
     const url = usePathname();
 
-    const image = trpc.files.getUserImages.useQuery(
-        {},
-        {
-            refetchOnWindowFocus: false,
+    const avatarUrl = useMemo(() => {
+        if (initialData && initialData.image) {
+            return `${process.env.NEXT_PUBLIC_BLOB_URL}/user_icon/${initialData.image}`;
         }
-    );
-
-    const [avatarUrl, setAvatarUrl] = useState<string>(
-        '/sidebar/default-avatar.webp'
-    );
-
-    useEffect(() => {
-        if (image.data && image.data.length > 0) {
-            const dataUrl = `data:image/png;base64,${image.data}`;
-            setAvatarUrl(dataUrl);
-        } else {
-            setAvatarUrl('/sidebar/default-avatar.webp');
-        }
-    }, [image.data]);
+        return '/sidebar/default-avatar.webp';
+    }, [initialData]);
 
     useEffect(() => {
         for (const excludeURL of excludedUrls) {
@@ -95,8 +81,6 @@ export default function MobileTopNav({
                         <Popover>
                             <PopoverTrigger asChild>
                                 <img
-                                    width={36}
-                                    height={36}
                                     alt="Default avatar for the user"
                                     src={avatarUrl}
                                     className="aspect-square h-10 w-10 rounded-full"

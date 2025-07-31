@@ -35,7 +35,7 @@ import { user as userTable } from '@/db/schema/users/users';
 import { getSixDigitId, teamRNGParams } from '@/lib/PRNG/LCG';
 import { z } from 'zod';
 import { deleteFileFromR2 } from '@/lib/cloudflare/r2';
-import { getUserData } from '@/server/routers/usersRouter';
+import { getBasicUserInfo, getUserData } from '@/server/routers/usersRouter';
 import { auth } from '@/auth/auth';
 import slugify from '@/utils/slugify';
 import { submissions } from '@/db/schema/submissions';
@@ -171,7 +171,7 @@ export const teamsRouter = router({
     getCurrentTeam: publicProcedure
         .input(getCurrentTeamSchema)
         .query(async ({ input }) => {
-            const user = await getUserData();
+            const user = await getBasicUserInfo();
 
             if (user == null) {
                 throw new InternalServerError('Cannot find user data');
