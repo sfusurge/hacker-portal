@@ -51,13 +51,15 @@ export default function UserInfoForm() {
 
             const file = (fileInputRef.current?.files ?? [])[0];
 
-            const fileName = await uploadFileToBlob(
-                'user_icon',
-                crypto.randomUUID(),
-                file
-            );
+            if (file) {
+                const fileName = await uploadFileToBlob(
+                    'user_icon',
+                    crypto.randomUUID(),
+                    file
+                );
 
-            formData.set('image', fileName);
+                formData.set('image', fileName);
+            }
 
             await updateUserWithRedirect(formData);
             setIsSubmitting(false);
