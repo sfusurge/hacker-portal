@@ -15,7 +15,9 @@ export default async function ProfilePage() {
 
     return (
         <div className="flex flex-col gap-6 md:gap-8">
-            <h1 className="text-3xl font-semibold text-white">Profile</h1>
+            <h1 className="text-3xl font-semibold text-white">
+                Account detail
+            </h1>
             <ProfileContent userData={userData} />
         </div>
     );
