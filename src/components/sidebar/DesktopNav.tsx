@@ -356,7 +356,6 @@ export default function DesktopNav({
                                     <NavLink
                                         href="/profile"
                                         label="Edit profile"
-                                        disabled
                                         icon={
                                             <UserIcon className="h-6 w-6 text-white/60" />
                                         }
