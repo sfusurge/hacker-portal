@@ -167,14 +167,19 @@ export default function DesktopNav({
     const url = usePathname();
 
     return (
-        <div className={clsx('flex h-full flex-col pr-5', className)}>
+        <div
+            className={clsx(
+                'no-scrollbar flex max-h-screen flex-col overflow-y-auto pr-5',
+                className
+            )}
+        >
             <div
                 className={clsx(
                     'relative h-full bg-neutral-950 transition-all duration-300 ease-in-out',
                     collapsed ? 'w-12' : 'w-[280px]'
                 )}
             >
-                <div className="flex h-full flex-col items-center justify-between">
+                <div className="flex flex-col items-center justify-between">
                     <div className={clsx('flex w-full flex-col gap-5')}>
                         <motion.div
                             className="relative overflow-hidden"
