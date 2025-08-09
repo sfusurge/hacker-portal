@@ -8,7 +8,10 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import { NavLink } from './NavLink';
-import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
+import {
+    UserIcon,
+    ArrowLeftEndOnRectangleIcon,
+} from '@heroicons/react/24/outline';
 
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { signOut } from 'next-auth/react';
@@ -91,6 +94,16 @@ export default function MobileTopNav({
                                 side="bottom"
                                 className="z-200"
                             >
+                                <NavLink
+                                    href="/profile"
+                                    label="Edit profile"
+                                    icon={
+                                        <UserIcon className="h-6 w-6 text-white/60" />
+                                    }
+                                    className="px-2"
+                                    iconAlt="Profile"
+                                    platform="desktop"
+                                />
                                 <NavLink
                                     href="#"
                                     label="Sign out"
