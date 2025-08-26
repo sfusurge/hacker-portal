@@ -13,6 +13,7 @@ interface NavLinkProps {
     icon?: ReactNode;
     iconAlt?: string;
     collapsed?: boolean;
+    disabled?: boolean;
 }
 
 export const navLinkVariants = cva(

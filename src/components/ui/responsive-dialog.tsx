@@ -130,7 +130,7 @@ const ResponsiveDialogContent = ({
     className,
     children,
     hideCloseIcon,
-    overlayZIndex = 50,
+    overlayZIndex = 100,
     ...props
 }: ResponsiveProps & { overlayZIndex?: number }) => {
     const { isDesktop } = useResponsiveContext();
