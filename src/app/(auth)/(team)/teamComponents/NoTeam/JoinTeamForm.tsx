@@ -61,7 +61,7 @@ export default function JoinTeamForm() {
                 </ResponsiveDialogDescription>
             </ResponsiveDialogHeader>
 
-            <div className="flex flex-col" onKeyDown={handleKeyDown}>
+            <div className="flex flex-col gap-6" onKeyDown={handleKeyDown}>
                 <div className="flex flex-col gap-2">
                     <label
                         htmlFor="team-code"
