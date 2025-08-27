@@ -11,11 +11,11 @@ export type User = {
     github: string;
     linkedin: string;
     resumeUrl: string;
-    onViewResume?: (index: number) => void;
+    onViewResume?: (id: number) => void;
 };
 
 export const getColumns = (
-    openDialog: (userIndex: number) => void
+    openDialog: (userId: number) => void
 ): ColumnDef<User>[] => [
     {
         id: 'name',
@@ -36,7 +36,8 @@ export const getColumns = (
         ),
         accessorFn: (row) => `${row.firstName} ${row.lastName}`,
         cell: (info) => info.getValue(),
-        size: 100,
+        size: 120,
+        minSize: 100,
     },
     {
         accessorKey: 'school',
@@ -55,7 +56,8 @@ export const getColumns = (
                     : ''}
             </span>
         ),
-        size: 175,
+        size: 150,
+        minSize: 120,
     },
     {
         accessorKey: 'country',
@@ -74,7 +76,8 @@ export const getColumns = (
                     : ''}
             </span>
         ),
-        size: 100,
+        size: 120,
+        minSize: 100,
     },
     {
         accessorKey: 'github',
@@ -92,6 +95,7 @@ export const getColumns = (
             );
         },
         size: 100,
+        minSize: 100,
     },
     {
         accessorKey: 'linkedin',
@@ -109,6 +113,7 @@ export const getColumns = (
             );
         },
         size: 100,
+        minSize: 100,
     },
     {
         id: 'actions',
@@ -119,11 +124,12 @@ export const getColumns = (
                 hierarchy={'primary'}
                 size="cozy"
                 mobileSize="compact"
-                onClick={() => openDialog(row.index)}
+                onClick={() => openDialog(row.original.id)}
             >
                 View Resume
             </Button>
         ),
-        size: 100,
+        size: 140,
+        minSize: 140,
     },
 ];

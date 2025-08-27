@@ -27,9 +27,7 @@ import { Loader2 } from 'lucide-react';
 export default function ResumeBankPage() {
     const [data, setData] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedUserIndex, setSelectedUserIndex] = useState<number | null>(
-        null
-    );
+    const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [pageSize, setPageSize] = useState<number>(20);
     const [pageIndex, setPageIndex] = useState<number>(0);
@@ -53,24 +51,35 @@ export default function ResumeBankPage() {
     const [globalFilter, setGlobalFilter] = useState<string>('');
     const [sorting, setSorting] = useState<SortingState>([]);
 
-    const openDialog = (userIndex: number) => {
-        setSelectedUserIndex(userIndex);
+    const openDialog = (userId: number) => {
+        setSelectedUserId(userId);
         setDialogOpen(true);
     };
 
     const navigateUser = (direction: 'prev' | 'next') => {
-        if (selectedUserIndex === null) return;
-        if (direction === 'prev' && selectedUserIndex > 0) {
-            setSelectedUserIndex(selectedUserIndex - 1);
+        if (selectedUserId === null) return;
+
+        // get processed rows
+        const processedRows = table.getPrePaginationRowModel().rows;
+        const currentIndex = processedRows.findIndex(
+            (row) => row.original.id === selectedUserId
+        );
+
+        if (currentIndex === -1) return;
+
+        if (direction === 'prev' && currentIndex > 0) {
+            const prevUser = processedRows[currentIndex - 1].original;
+            setSelectedUserId(prevUser.id);
         } else if (
             direction === 'next' &&
-            selectedUserIndex < data.length - 1
+            currentIndex < processedRows.length - 1
         ) {
-            setSelectedUserIndex(selectedUserIndex + 1);
+            const nextUser = processedRows[currentIndex + 1].original;
+            setSelectedUserId(nextUser.id);
         }
     };
 
-    const columns = getColumns(openDialog);
+    const columns = getColumns((userId: number) => openDialog(userId));
 
     const table = useReactTable({
         data,
@@ -83,6 +92,8 @@ export default function ResumeBankPage() {
                 pageIndex,
             },
         },
+        columnResizeMode: 'onChange',
+        enableColumnResizing: true,
         getCoreRowModel: getCoreRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
@@ -134,6 +145,7 @@ export default function ResumeBankPage() {
         }
     }, [table, data]);
 
+    // basic loading state, TODO: improve loading anim, add stormy/sparky img
     useEffect(() => {
         if (data.length > 0 && table.getRowModel().rows.length > 0) {
             setLoading(false);
@@ -151,8 +163,13 @@ export default function ResumeBankPage() {
         );
     }
 
+    // get currently open modal user
+    const selectedUser = selectedUserId
+        ? data.find((u) => u.id === selectedUserId)
+        : null;
+
     return (
-        <div className="min-h-screen w-full text-white">
+        <div className="w-full">
             {/* Search */}
             <div className="flex justify-center gap-3 py-4">
                 <Input
@@ -164,18 +181,27 @@ export default function ResumeBankPage() {
                 />
             </div>
 
-            {/* Table */}
+            {/* scrollable table body */}
             <div className="w-full rounded-xl bg-neutral-900 p-1">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                    <table
+                        className="w-full text-left"
+                        style={{ tableLayout: 'fixed', width: '100%' }}
+                    >
                         <thead className="bg-neutral-900 whitespace-nowrap text-gray-200">
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <tr key={headerGroup.id}>
                                     {headerGroup.headers.map((header) => (
                                         <th
                                             key={header.id}
-                                            className="px-4 py-4 text-sm"
-                                            style={{ width: header.getSize() }}
+                                            colSpan={header.colSpan}
+                                            style={{
+                                                width: header.getSize(),
+                                                minWidth:
+                                                    header.column.columnDef
+                                                        .minSize,
+                                            }}
+                                            className="relative px-4 py-4 text-sm"
                                         >
                                             {header.isPlaceholder
                                                 ? null
@@ -184,6 +210,19 @@ export default function ResumeBankPage() {
                                                           .header,
                                                       header.getContext()
                                                   )}
+                                            {/* resizer handler */}
+                                            {header.column.getCanResize() && (
+                                                <div
+                                                    onMouseDown={header.getResizeHandler()}
+                                                    onTouchStart={header.getResizeHandler()}
+                                                    className={`absolute top-0 right-0 bottom-0 w-2 cursor-col-resize ${
+                                                        header.column.getIsResizing()
+                                                            ? 'bg-gray-500'
+                                                            : 'hover:bg-gray-600'
+                                                    }`}
+                                                    style={{ zIndex: 50 }}
+                                                />
+                                            )}
                                         </th>
                                     ))}
                                 </tr>
@@ -195,12 +234,27 @@ export default function ResumeBankPage() {
                                     {row.getVisibleCells().map((cell) => (
                                         <td
                                             key={cell.id}
+                                            style={{
+                                                width: cell.column.getSize(),
+                                                minWidth:
+                                                    cell.column.columnDef
+                                                        .minSize,
+                                            }}
                                             className="border-b border-neutral-600/30 bg-neutral-800 px-4 py-4 text-sm"
                                         >
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
-                                            )}
+                                            <div
+                                                className="truncate"
+                                                style={{
+                                                    whiteSpace: 'nowrap',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                }}
+                                            >
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext()
+                                                )}
+                                            </div>
                                         </td>
                                     ))}
                                 </tr>
@@ -340,15 +394,13 @@ export default function ResumeBankPage() {
                 >
                     <ResponsiveDialogHeader>
                         <ResponsiveDialogTitle>
-                            {selectedUserIndex !== null
-                                ? `${data[selectedUserIndex].firstName} ${data[selectedUserIndex].lastName}'s Resume`
+                            {selectedUser
+                                ? `${selectedUser.firstName} ${selectedUser.lastName}'s Resume`
                                 : ''}
                         </ResponsiveDialogTitle>
                     </ResponsiveDialogHeader>
 
-                    {selectedUserIndex !== null && (
-                        <PdfViewer url={data[selectedUserIndex].resumeUrl} />
-                    )}
+                    {selectedUser && <PdfViewer url={selectedUser.resumeUrl} />}
 
                     <div className="mb-4 flex items-center justify-between">
                         <Button
@@ -356,16 +408,36 @@ export default function ResumeBankPage() {
                             hierarchy={'primary'}
                             size="compact"
                             disabled={
-                                selectedUserIndex === null ||
-                                selectedUserIndex === 0
+                                selectedUserId === null ||
+                                (() => {
+                                    const processedRows =
+                                        table.getPrePaginationRowModel().rows;
+                                    const currentIndex =
+                                        processedRows.findIndex(
+                                            (row) =>
+                                                row.original.id ===
+                                                selectedUserId
+                                        );
+                                    return currentIndex <= 0;
+                                })()
                             }
                             onClick={() => navigateUser('prev')}
                         >
                             Previous
                         </Button>
                         <span className="text-sm text-white/60">
-                            {selectedUserIndex !== null
-                                ? `${selectedUserIndex + 1} of ${data.length}`
+                            {selectedUserId !== null
+                                ? (() => {
+                                      const processedRows =
+                                          table.getPrePaginationRowModel().rows;
+                                      const currentIndex =
+                                          processedRows.findIndex(
+                                              (row) =>
+                                                  row.original.id ===
+                                                  selectedUserId
+                                          );
+                                      return `${currentIndex + 1} of ${processedRows.length}`;
+                                  })()
                                 : ''}
                         </span>
                         <Button
@@ -373,8 +445,20 @@ export default function ResumeBankPage() {
                             hierarchy={'primary'}
                             size="compact"
                             disabled={
-                                selectedUserIndex === null ||
-                                selectedUserIndex === data.length - 1
+                                selectedUserId === null ||
+                                (() => {
+                                    const processedRows =
+                                        table.getPrePaginationRowModel().rows;
+                                    const currentIndex =
+                                        processedRows.findIndex(
+                                            (row) =>
+                                                row.original.id ===
+                                                selectedUserId
+                                        );
+                                    return (
+                                        currentIndex >= processedRows.length - 1
+                                    );
+                                })()
                             }
                             onClick={() => navigateUser('next')}
                         >
