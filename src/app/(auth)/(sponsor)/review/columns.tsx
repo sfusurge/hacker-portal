@@ -35,7 +35,17 @@ export const getColumns = (
             </span>
         ),
         accessorFn: (row) => `${row.firstName} ${row.lastName}`,
-        cell: (info) => info.getValue(),
+        cell: (info) => {
+            const row = info.row;
+            return (
+                <span
+                    className="text-brand-100 cursor-pointer font-bold hover:underline"
+                    onClick={() => openDialog(row.original.id)}
+                >
+                    {String(info.getValue())}
+                </span>
+            );
+        },
         size: 120,
         minSize: 100,
     },

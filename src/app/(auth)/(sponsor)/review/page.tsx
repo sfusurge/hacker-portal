@@ -21,6 +21,7 @@ import {
     SortingState,
 } from '@tanstack/react-table';
 
+import Link from 'next/link';
 import testData from './testData';
 import { Loader2 } from 'lucide-react';
 
@@ -400,7 +401,21 @@ export default function ResumeBankPage() {
                         </ResponsiveDialogTitle>
                     </ResponsiveDialogHeader>
 
-                    {selectedUser && <PdfViewer url={selectedUser.resumeUrl} />}
+                    {selectedUser && (
+                        <div className="flex w-full flex-col gap-3">
+                            <PdfViewer url={selectedUser.resumeUrl} />
+                            <div className="flex w-full justify-end">
+                                <Link
+                                    href={selectedUser?.resumeUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-white/60 hover:underline"
+                                >
+                                    Open Resume in New Tab
+                                </Link>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="mb-4 flex items-center justify-between">
                         <Button

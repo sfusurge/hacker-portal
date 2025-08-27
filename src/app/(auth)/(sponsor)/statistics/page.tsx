@@ -19,11 +19,11 @@ export default function StatisticsPage(props: NotFoundProps) {
                     Gathering data...
                 </p>
                 <h1 className="mb-3 text-3xl leading-tight font-semibold text-balance text-white">
-                    This page will be available after StormHacks 2025.
+                    This page will be available sometime after StormHacks 2025.
                 </h1>
                 <p className="text-base text-balance text-white/60">
-                    Stormy and Sparky are currently working hard to gather the
-                    statistics.
+                    Stormy and Sparky are currently working hard gathering the
+                    statistics!
                 </p>
             </div>
             {props.children}

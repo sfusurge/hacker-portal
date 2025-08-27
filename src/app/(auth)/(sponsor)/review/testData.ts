@@ -6,7 +6,7 @@ const testData = [
         '4': 'Canada',
         '5': 'https://www.github.com/johndoe',
         '6': 'https://www.linkedin.com/in/johndoe',
-        '7': 'https://x7pvefn5lz1gfty3.public.blob.vercel-storage.com/submissions/team-15/documentation-5cHPbbBU9fsXlvonAMnziOgw127juw.pdf',
+        '7': 'https://scottdlai.github.io/resume.pdf',
     },
     {
         '1': 'Jane',
