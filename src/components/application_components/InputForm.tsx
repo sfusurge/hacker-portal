@@ -24,6 +24,7 @@ import type {
     InputFormData,
     QuestionRichTextInput,
     QuestionTextLinkInput,
+    QuestionSchoolName,
 } from './types';
 import { splitAtom } from 'jotai/utils';
 import style from './InputForm.module.css';
@@ -46,6 +47,7 @@ import { CheckBoxInput } from './InputFormComponents/CheckboxInput';
 import { CheckBoxGroupInput } from './InputFormComponents/CheckboxGroupInput';
 import { TextAreaInput } from './InputFormComponents/TextAreaInput';
 import { TextLinkInput } from './InputFormComponents/TextLinkInput';
+import { SchoolNameInput } from './InputFormComponents/SchoolNameInput';
 import { ReviewPage } from './ReviewPage';
 import {
     type PageFormState,
@@ -454,6 +456,14 @@ function Question({
                     <RichTextInput
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionRichTextInput>
+                        }
+                    />
+                );
+            case 'school-name':
+                return (
+                    <SchoolNameInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionSchoolName>
                         }
                     />
                 );

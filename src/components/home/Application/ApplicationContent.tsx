@@ -15,7 +15,7 @@ import { hackathonAtom } from '@/app/(auth)/ClientContext';
 
 export function CountdownContent() {
     const [currentTime, setime] = useState(dayjs());
-    const cutoffTime = dayjs(new Date(2025, 4, 1))
+    const cutoffTime = dayjs(new Date(2025, 9, 4))
         .startOf('day')
         .add(1, 'hour');
     const overdue = useMemo(
@@ -49,7 +49,7 @@ export function CountdownContent() {
                     Hacker registration closes in...
                 </CardDescription>
             </div>
-            <CountdownTimer targetDate={new Date(2025, 4, 1, 1)} />
+            <CountdownTimer targetDate={cutoffTime.toDate()} />
         </>
     );
 }
