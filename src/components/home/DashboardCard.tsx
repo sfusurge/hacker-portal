@@ -13,7 +13,7 @@ import {
     CardHeaderColumn,
 } from '@/components/ui/card';
 
-interface DashboardCardProps {
+export interface DashboardCardProps {
     link: string;
     headerDescription: string;
     title: string;
@@ -38,18 +38,9 @@ interface DashboardCardProps {
         | null;
     buttonHierarchy?: 'primary' | 'secondary' | 'tertiary' | null;
     footerButtonClassName?: string;
-    footerButtonSize?: 'cozy' | 'compact';
-    footerButtonVariant?:
-        | 'default'
-        | 'success'
-        | 'caution'
-        | 'error'
-        | 'brand'
-        | 'danger'
-        | 'social'
-        | null;
-    footerButtonHierarchy?: 'primary' | 'secondary' | 'tertiary' | null;
     children?: React.ReactNode;
+    cardMessageTitle?: React.ReactNode;
+    cardMessageDescription?: React.ReactNode;
 }
 
 export default function DashboardCard({
@@ -64,6 +55,8 @@ export default function DashboardCard({
     buttonHierarchy = 'primary',
     footerButtonClassName = 'w-full',
     children,
+    cardMessageTitle,
+    cardMessageDescription,
 }: DashboardCardProps) {
     return (
         <Card className="h-full">
@@ -85,18 +78,35 @@ export default function DashboardCard({
                     </Button>
                 </Link>
             </CardHeader>
-            <CardContent className="text-center">
-                <Image
-                    src={image.src}
-                    width={image.width}
-                    height={image.height}
-                    alt={image.alt}
-                    className={
-                        image.className ??
-                        'pointer-events-none mx-auto h-auto w-full max-w-96'
-                    }
-                />
-                {children}
+            <CardContent>
+                <div className="flex flex-col items-center justify-center gap-6 md:px-10 md:py-8 md:text-center">
+                    <Image
+                        src={image.src}
+                        width={image.width}
+                        height={image.height}
+                        alt={image.alt}
+                        className={
+                            image.className ??
+                            'pointer-events-none mx-auto h-auto w-full max-w-80'
+                        }
+                    />
+                    {cardMessageTitle || cardMessageDescription ? (
+                        <div className="flex flex-col justify-center gap-2 md:items-center">
+                            {cardMessageTitle && (
+                                <h3 className="text-lg font-semibold text-white">
+                                    {cardMessageTitle}
+                                </h3>
+                            )}
+                            {cardMessageDescription && (
+                                <p className="text-pretty text-white/60 md:w-full md:min-w-80 lg:max-w-6/10">
+                                    {cardMessageDescription}
+                                </p>
+                            )}
+                        </div>
+                    ) : (
+                        children
+                    )}
+                </div>
             </CardContent>
             <CardFooter className="md:hidden">
                 <Link href={link}>

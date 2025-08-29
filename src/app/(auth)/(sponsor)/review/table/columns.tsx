@@ -139,7 +139,7 @@ export const getColumns = (
                 View Resume
             </Button>
         ),
-        size: 140,
-        minSize: 140,
+        size: 150,
+        minSize: 150,
     },
 ];
