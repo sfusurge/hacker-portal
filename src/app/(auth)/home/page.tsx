@@ -54,7 +54,7 @@ export default async function Home() {
 
             <div className="flex flex-col gap-6 md:gap-8">
                 <div className="flex flex-col gap-6 md:gap-8 xl:hidden">
-                    <SubmissionCardHomepage />
+                    {/*<SubmissionCardHomepage />*/}
                     <ApplicationCard
                         className="col-span-1"
                         userData={data}
@@ -72,14 +72,6 @@ export default async function Home() {
 
                 <div className="hidden xl:grid xl:grid-cols-11 xl:gap-8">
                     <div className="col-span-7 flex flex-col gap-8">
-                        <SubmissionCardHomepage />
-                    </div>
-                    <TeamCard
-                        userData={data}
-                        hackathonId={hackathonId}
-                        team={team}
-                    />
-                    <div className="col-span-11 grid grid-cols-2 gap-8">
                         <ApplicationCard
                             className="col-span-1"
                             userData={data}
@@ -87,6 +79,14 @@ export default async function Home() {
                             applicationStatus={application?.currentStatus}
                             applicationSubmitted={application !== null}
                         />
+                        {/*<SubmissionCardHomepage />*/}
+                    </div>
+                    <TeamCard
+                        userData={data}
+                        hackathonId={hackathonId}
+                        team={team}
+                    />
+                    <div className="col-span-11 grid grid-cols-2 gap-8">
                         <EventsCard events={events} />
                         {/* <DiscordCard /> */}
                     </div>

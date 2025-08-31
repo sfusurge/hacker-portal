@@ -161,7 +161,7 @@ export default function SubmissionForm({ questions }: { questions: any[] }) {
         <Card className="p-6">
             <form ref={formRef} noValidate>
                 <h2 className="pl-4 text-2xl font-semibold">
-                    Submit your team's SparkJam project
+                    Submit your team's project
                 </h2>
 
                 {questionsList.map((question: any, index: number) => (

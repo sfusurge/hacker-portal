@@ -59,12 +59,12 @@ const navLinks = [
         icon: <CalendarDaysIcon className="h-6 w-6" />,
         iconAlt: 'Schedule logo',
     },
-    {
-        href: '/projects',
-        label: 'Projects',
-        icon: <InboxStackIcon className="h-6 w-6" />,
-        iconAlt: 'Projects logo',
-    },
+    // {
+    //     href: '/projects',
+    //     label: 'Projects',
+    //     icon: <InboxStackIcon className="h-6 w-6" />,
+    //     iconAlt: 'Projects logo',
+    // },
     {
         href: '/notifications',
         label: 'Notifications',
@@ -230,7 +230,7 @@ export default function DesktopNav({
                                                     <div className="h-6 w-6 shrink-0 opacity-0" />
                                                     <div className="mt-1 flex flex-col gap-2 overflow-hidden">
                                                         <span className="line-clamp-1 text-sm font-medium whitespace-nowrap text-white">
-                                                            SparkJam 2025
+                                                            StormHacks 2025
                                                         </span>
                                                     </div>
                                                 </div>
