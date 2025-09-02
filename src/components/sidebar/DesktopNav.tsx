@@ -17,7 +17,6 @@ import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
 import { IdentificationIcon, QrCodeIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
-import { trpc } from '@/trpc/client';
 
 import { signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
@@ -83,9 +82,13 @@ const adminLinks = [
     },
     {
         href: '/admin/email',
-        label: 'Email Templates (Admin)',
+        label: 'Emails',
         icon: <EnvelopeIcon className="h-6 w-6" />,
-        iconAlt: 'email',
+        iconAlt: 'Emails logo',
+        dropdownItems: [
+            { label: 'Email Templates', href: '/admin/email/templates' },
+            { label: 'Subscribed Emails', href: '/admin/email/subscribed' },
+        ],
     },
     {
         href: '/admin/judge',
@@ -300,6 +303,9 @@ export default function DesktopNav({
                                                     link.href
                                                 )}
                                                 collapsed={collapsed}
+                                                dropdownItems={
+                                                    link.dropdownItems
+                                                }
                                             />
                                         ))}
                                 </>

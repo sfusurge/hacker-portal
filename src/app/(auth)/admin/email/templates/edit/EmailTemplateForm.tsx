@@ -11,7 +11,7 @@ import { trpc } from '@/trpc/client';
 import {
     PlaceholdersSection,
     getDetectedPlaceholders,
-} from './PlaceholdersSection';
+} from '../PlaceholdersSection';
 import {
     AttachmentsSection,
     Attachment,
