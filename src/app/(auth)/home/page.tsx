@@ -68,6 +68,7 @@ export default async function Home() {
                         team={team}
                     />
                     <EventsCard events={events} />
+                    <DiscordCard />
                 </div>
 
                 <div className="hidden xl:grid xl:grid-cols-11 xl:gap-8">
@@ -88,7 +89,7 @@ export default async function Home() {
                     />
                     <div className="col-span-11 grid grid-cols-2 gap-8">
                         <EventsCard events={events} />
-                        {/* <DiscordCard /> */}
+                        <DiscordCard />
                     </div>
                 </div>
             </div>
