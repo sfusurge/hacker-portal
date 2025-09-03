@@ -115,7 +115,7 @@ export function SchoolOptions({
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
-                    role="combobox"
+                    //role="combobox"
                     aria-expanded={open}
                     className="w-[400px] justify-between rounded border bg-neutral-900 px-6 py-4 text-lg text-white"
                     disabled={readOnly}

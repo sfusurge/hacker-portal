@@ -206,7 +206,7 @@ export default function Scan({ events, initialEventType }: ScanProps) {
                     src="/qrfull.svg"
                     fill
                     alt="QR Finder"
-                    className="object-cover"
+                    className="overflow-hidden object-cover"
                 />
 
                 <div className="absolute top-4 left-4">
