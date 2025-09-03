@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
     pgTable,
     text,
@@ -5,6 +6,7 @@ import {
     integer,
     varchar,
     jsonb,
+    uuid,
 } from 'drizzle-orm/pg-core';
 import { createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
@@ -56,6 +58,16 @@ export const emailTemplates = pgTable('email_templates', {
     attachments: jsonb('attachments'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const emails = pgTable('sh_25_emails', {
+    id: uuid('id')
+        .default(sql`uuid_generate_v4()`)
+        .primaryKey(),
+    email: varchar('email', { length: 256 }).notNull().unique(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+        .notNull()
+        .defaultNow(),
 });
 
 export const emailTemplateSchema = z.object({
