@@ -70,7 +70,7 @@ export default function MobileTopNav({
 
                             <div className="flex flex-col gap-2">
                                 <span className="line-clamp-1 text-sm leading-none font-medium text-white">
-                                    SparkJam 2025
+                                    StormHacks 2025
                                 </span>
                                 <span className="line-clamp-1 text-sm leading-none text-white/60">
                                     May 17–31, 2025

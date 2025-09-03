@@ -193,6 +193,10 @@
     }
 }
 
+html::-webkit-scrollbar {
+    display: none;
+}
+
 .large-dashes {
     border-top: 1px dashed rgba(75, 85, 99, 0.5);
     border-left: 2px dashed rgba(75, 85, 99, 0.5);
@@ -324,4 +328,13 @@ button {
     width: -webkit-fill-available;
     width: -moz-available;
     width: fill-available;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }

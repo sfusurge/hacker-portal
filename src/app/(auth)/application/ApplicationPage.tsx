@@ -87,6 +87,7 @@ export default function ApplicationPageComponent() {
     const application = trpc.applications.getCurrentApplication.useQuery({
         hackathonId: hackathon.id,
     });
+    console.log(application.data);
     const session = useSession();
 
     // store user email for local storage user check
@@ -97,7 +98,7 @@ export default function ApplicationPageComponent() {
     }, [session]);
 
     useEffect(() => {
-        if (application.data !== null) {
+        if (application.data !== null && application.data !== undefined) {
             alert('Already applied!');
             redirect('/home'); // TODO make this look good
         }

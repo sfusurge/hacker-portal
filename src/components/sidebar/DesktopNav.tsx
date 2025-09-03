@@ -17,7 +17,6 @@ import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
 import { IdentificationIcon, QrCodeIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
-import { trpc } from '@/trpc/client';
 
 import { signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
@@ -59,12 +58,12 @@ const navLinks = [
         icon: <CalendarDaysIcon className="h-6 w-6" />,
         iconAlt: 'Schedule logo',
     },
-    {
-        href: '/projects',
-        label: 'Projects',
-        icon: <InboxStackIcon className="h-6 w-6" />,
-        iconAlt: 'Projects logo',
-    },
+    // {
+    //     href: '/projects',
+    //     label: 'Projects',
+    //     icon: <InboxStackIcon className="h-6 w-6" />,
+    //     iconAlt: 'Projects logo',
+    // },
     {
         href: '/notifications',
         label: 'Notifications',
@@ -83,9 +82,13 @@ const adminLinks = [
     },
     {
         href: '/admin/email',
-        label: 'Email Templates (Admin)',
+        label: 'Emails',
         icon: <EnvelopeIcon className="h-6 w-6" />,
-        iconAlt: 'email',
+        iconAlt: 'Emails logo',
+        dropdownItems: [
+            { label: 'Email Templates', href: '/admin/email/templates' },
+            { label: 'Subscribed Emails', href: '/admin/email/subscribed' },
+        ],
     },
     {
         href: '/admin/judge',
@@ -167,14 +170,19 @@ export default function DesktopNav({
     const url = usePathname();
 
     return (
-        <div className={clsx('flex h-full flex-col pr-5', className)}>
+        <div
+            className={clsx(
+                'no-scrollbar flex max-h-screen flex-col overflow-y-auto pr-5',
+                className
+            )}
+        >
             <div
                 className={clsx(
                     'relative h-full bg-neutral-950 transition-all duration-300 ease-in-out',
                     collapsed ? 'w-12' : 'w-[280px]'
                 )}
             >
-                <div className="flex h-full flex-col items-center justify-between">
+                <div className="flex flex-col items-center justify-between">
                     <div className={clsx('flex w-full flex-col gap-5')}>
                         <motion.div
                             className="relative overflow-hidden"
@@ -230,7 +238,7 @@ export default function DesktopNav({
                                                     <div className="h-6 w-6 shrink-0 opacity-0" />
                                                     <div className="mt-1 flex flex-col gap-2 overflow-hidden">
                                                         <span className="line-clamp-1 text-sm font-medium whitespace-nowrap text-white">
-                                                            SparkJam 2025
+                                                            StormHacks 2025
                                                         </span>
                                                     </div>
                                                 </div>
@@ -295,6 +303,9 @@ export default function DesktopNav({
                                                     link.href
                                                 )}
                                                 collapsed={collapsed}
+                                                dropdownItems={
+                                                    link.dropdownItems
+                                                }
                                             />
                                         ))}
                                 </>
