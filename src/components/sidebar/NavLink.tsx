@@ -6,6 +6,17 @@ import { cva, VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import { motion } from 'motion/react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+interface DropdownItem {
+    label: string;
+    href: string;
+}
 
 interface NavLinkProps {
     href: string;
@@ -13,6 +24,7 @@ interface NavLinkProps {
     icon?: ReactNode;
     iconAlt?: string;
     collapsed?: boolean;
+    dropdownItems?: DropdownItem[];
 }
 
 export const navLinkVariants = cva(
@@ -48,30 +60,40 @@ export function NavLink({
     disabled,
     iconAlt,
     platform,
-    active: propActive,
+    active: isActive,
     collapsed,
+    dropdownItems,
     ...props
 }: ComponentProps<'a'> & NavLinkProps & VariantProps<typeof navLinkVariants>) {
     const pathname = usePathname();
-
-    const isActive =
-        propActive !== undefined
-            ? propActive
-            : pathname.includes(href) ||
-              (href === '/team' &&
-                  (pathname.includes('/team') || pathname.includes('/invite')));
-
-    const iconStyles = cn({
-        'text-brand-400 group-hover:text-brand-200':
-            isActive && !disabled && icon,
-        'text-white/30 group-hover:text-white/60':
-            !isActive && !disabled && icon,
-        'text-danger-400/60 group-hover:text-danger-400':
-            variant === 'error' && !disabled && icon,
-        'text-white/18': disabled && icon,
-    });
-
     const isCollapsed = collapsed || className?.includes('justify-center');
+
+    const linkContent = (
+        <>
+            {icon && iconAlt && (
+                <div
+                    className={cn(
+                        'flex h-6 w-6 items-center justify-center transition-colors'
+                    )}
+                >
+                    <div className="h-6 w-6 [&>svg]:h-full [&>svg]:w-full">
+                        {icon}
+                    </div>
+                </div>
+            )}
+            {!isCollapsed ? (
+                <motion.span
+                    className="leading-none whitespace-nowrap"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    {label}
+                </motion.span>
+            ) : null}
+        </>
+    );
 
     return (
         <motion.div
@@ -80,49 +102,81 @@ export function NavLink({
                 width: isCollapsed ? '48px' : '100%',
                 height: isCollapsed ? '48px' : 'auto',
             }}
-            transition={{
-                duration: isActive ? 0.15 : 0.3,
-                ease: 'easeInOut',
-            }}
+            transition={{ ease: 'easeInOut' }}
         >
-            <Link
-                href={href}
-                {...props}
-                className={cn(
-                    navLinkVariants({
-                        variant,
-                        platform,
-                        active: isActive,
-                        disabled,
-                    }),
-                    isCollapsed ? 'justify-start' : 'w-full justify-start',
-                    className
-                )}
-            >
-                {icon && iconAlt && (
-                    <div
-                        className={cn(
-                            'flex h-6 w-6 items-center justify-center transition-colors',
-                            iconStyles
-                        )}
+            {dropdownItems && dropdownItems.length > 0 ? (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Link
+                            href={href}
+                            {...props}
+                            className={cn(
+                                navLinkVariants({
+                                    variant,
+                                    platform,
+                                    active:
+                                        isActive ||
+                                        pathname === href ||
+                                        pathname.startsWith(href + '/'),
+                                    disabled,
+                                }),
+                                isCollapsed
+                                    ? 'justify-start'
+                                    : 'w-full justify-start',
+                                className
+                            )}
+                        >
+                            {linkContent}
+                        </Link>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent
+                        side="right"
+                        align="start"
+                        className="w-48"
                     >
-                        <div className="h-6 w-6 [&>svg]:h-full [&>svg]:w-full">
-                            {icon}
-                        </div>
-                    </div>
-                )}
-                {!isCollapsed ? (
-                    <motion.span
-                        className="leading-none whitespace-nowrap"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                    >
-                        {label}
-                    </motion.span>
-                ) : null}
-            </Link>
+                        {dropdownItems.map((item, idx) => {
+                            const isChildActive =
+                                pathname === item.href ||
+                                pathname.startsWith(item.href + '/') ||
+                                (pathname === href && idx === 0);
+
+                            return (
+                                <DropdownMenuItem asChild key={item.href}>
+                                    <Link
+                                        href={item.href}
+                                        className={cn(
+                                            'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm',
+                                            isChildActive
+                                                ? 'bg-brand-950 text-white'
+                                                : 'text-white/80 hover:bg-neutral-800'
+                                        )}
+                                    >
+                                        {item.label}
+                                    </Link>
+                                </DropdownMenuItem>
+                            );
+                        })}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            ) : (
+                <Link
+                    href={href}
+                    {...props}
+                    className={cn(
+                        navLinkVariants({
+                            variant,
+                            platform,
+                            active: isActive,
+                            disabled,
+                        }),
+                        isCollapsed ? 'justify-start' : 'w-full justify-start',
+                        className
+                    )}
+                >
+                    {linkContent}
+                </Link>
+            )}
         </motion.div>
     );
 }
