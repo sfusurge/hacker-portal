@@ -117,31 +117,39 @@ export function SchoolOptions({
                 <Button
                     role="combobox"
                     aria-expanded={open}
-                    className="w-[400px] justify-between rounded border bg-neutral-900 px-6 py-4 text-lg text-white"
+                    className="flex w-[400px] items-center justify-start rounded border bg-neutral-900 px-6 py-4 text-lg text-white hover:bg-neutral-800"
                     disabled={readOnly}
                 >
-                    {value
-                        ? schoolOptions.find((school) => school.value === value)
-                              ?.label || value
-                        : placeholder}
-                    <ChevronsUpDown className="ml-2 opacity-50" />
+                    <div className="flex w-full flex-row items-center justify-between text-left">
+                        <span className="text-left">
+                            {value
+                                ? schoolOptions.find(
+                                      (school) => school.value === value
+                                  )?.label || value
+                                : placeholder}
+                        </span>
+                        <ChevronsUpDown className="ml-2 opacity-50" />
+                    </div>
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[400px] p-0">
-                <Command>
+            <PopoverContent className="w-[400px] border-neutral-700 bg-neutral-900 p-0">
+                <Command className="bg-neutral-900">
                     <CommandInput
                         placeholder={placeholder}
-                        className="h-9"
+                        className="h-9 border-neutral-700 bg-neutral-900 text-white placeholder:text-neutral-400"
                         value={search}
                         onValueChange={setSearch}
                     />
-                    <CommandList>
-                        <CommandEmpty>No school found.</CommandEmpty>
+                    <CommandList className="bg-neutral-900">
+                        <CommandEmpty className="py-6 text-center text-neutral-400">
+                            No school found.
+                        </CommandEmpty>
                         <CommandGroup>
                             {schoolOptions.map((school) => (
                                 <CommandItem
                                     key={school.value}
                                     value={school.value}
+                                    className="cursor-pointer text-white hover:bg-neutral-800 aria-selected:bg-neutral-800"
                                     onSelect={(currentValue) => {
                                         setValue(currentValue);
                                         setOpen(false);
@@ -151,7 +159,7 @@ export function SchoolOptions({
                                     {school.label}
                                     <Check
                                         className={cn(
-                                            'ml-auto',
+                                            'ml-auto text-white',
                                             value === school.value
                                                 ? 'opacity-100'
                                                 : 'opacity-0'
