@@ -12,7 +12,8 @@ function parseCSV(text: string) {
     let ans: schoolOption[] = [];
     const seen = new Set();
 
-    for (const school of schoolNames) {
+    for (let school of schoolNames) {
+        school = school.replaceAll('"', '').trim();
         const key = school.toLowerCase();
         if (seen.has(key)) continue;
         seen.add(key);
