@@ -376,3 +376,7 @@ button {
     border: none !important;
     max-width: 100%;
 }
+
+.no-scrollable {
+    overflow: hidden !important;
+}
