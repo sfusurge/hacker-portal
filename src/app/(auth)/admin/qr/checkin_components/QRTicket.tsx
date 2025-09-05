@@ -41,7 +41,7 @@ export default function QRTicket({
     const role = 'Hacker';
 
     return (
-        <div className="fixed inset-0 z-150 flex items-end justify-center md:items-center">
+        <div className="fixed inset-0 z-150 flex items-end justify-center overflow-hidden md:items-center">
             <div className="border-neutral-750 animate-fadeIn relative w-full max-w-lg rounded-xl border bg-neutral-900 p-8 shadow-lg md:max-w-2xl">
                 <button
                     className="absolute top-2 left-1/2 block -translate-x-1/2 transform rounded-full transition-colors duration-200 md:hidden"
@@ -64,7 +64,7 @@ export default function QRTicket({
                             alt="Profile Picture"
                             width={44}
                             height={44}
-                            className="mb-4 block rounded-full md:hidden"
+                            className="mb-4 block overflow-hidden rounded-full md:hidden"
                         />
 
                         <h2 className="tracking-tightest hidden text-sm leading-5 font-normal text-[#ffffff99] md:block">
