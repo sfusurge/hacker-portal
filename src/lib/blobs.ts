@@ -55,6 +55,37 @@ export async function submitProject({
     return blob;
 }
 
+export interface SubmitFileProps {
+    hackathonId?: number;
+    userId?: number;
+    path: string;
+    file: Buffer | File | Blob;
+    contentType?: string;
+    onUploadProgress?: OnUploadProgressCallback;
+}
+
+export async function submitFile({
+    hackathonId,
+    userId,
+    path,
+    file,
+    onUploadProgress,
+    contentType,
+}: SubmitFileProps): Promise<PutBlobResult> {
+    const blob = await upload(path, file, {
+        onUploadProgress,
+        contentType,
+        access: 'public',
+        handleUploadUrl: '/api/blob/generic',
+        clientPayload: JSON.stringify({
+            hackathonId,
+            userId,
+        }),
+    });
+
+    return blob;
+}
+
 export async function uploadTeamPhoto({
     fileName,
     fileContent,
