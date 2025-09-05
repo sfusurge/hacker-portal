@@ -59,7 +59,7 @@ export const applicationsRouter = router({
 
             //based on code copied from rewviewappplications table lmao
             const tempDummy = (item: any) => {
-                const { '2': name, '5': email } = item.response || {};
+                const { '1': name, '4': email } = item.response || {};
                 return { name, email };
             };
 
@@ -83,16 +83,16 @@ export const applicationsRouter = router({
             let oAuthMailOptions = {
                 from: process.env.SENDINGEMAIL,
                 to: user.email,
-                subject: 'Your SparkJam Application Has Been Received!',
-                text: 'Your SparkJam Application Has Been Received!',
+                subject: 'Your StormHacks Application Has Been Received!',
+                text: 'Your StormHacks Application Has Been Received!',
                 html: htmlContent,
             };
 
             let sfuMailOptions = {
                 from: process.env.SENDINGEMAIL,
                 to: extractedEmail,
-                subject: 'Your SparkJam Application Has Been Received!',
-                text: 'Your SparkJam Application Has Been Received!',
+                subject: 'Your StormHacks Application Has Been Received!',
+                text: 'Your StormHacks Application Has Been Received!',
                 html: htmlContent,
             };
 
