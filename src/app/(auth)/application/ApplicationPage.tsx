@@ -96,12 +96,12 @@ export default function ApplicationPageComponent() {
         }
     }, [session]);
 
-    useEffect(() => {
-        if (application.data !== null) {
-            alert('Already applied!');
-            redirect('/home'); // TODO make this look good
-        }
-    }, [application]);
+    // useEffect(() => {
+    //     if (application.data !== null) {
+    //         alert('Already applied!');
+    //         redirect('/home'); // TODO make this look good
+    //     }
+    // }, [application]);
 
     // reserve extra top padding for this page
     useEffect(() => {

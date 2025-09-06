@@ -32,7 +32,7 @@ export default async function SponsorDashboard() {
             cardMessageTitle: 'Explore hackers 🦦',
             cardMessageDescription:
                 'Browse resumes of skilled developers, designers, and innovators participating in StormHacks 2025.',
-            buttonText: 'View hackers ',
+            buttonText: 'View hackers',
             buttonVariant: 'brand',
         },
         {
@@ -42,12 +42,12 @@ export default async function SponsorDashboard() {
             image: {
                 src: '/dashboard/messy-otters.webp',
                 width: 1444,
-                height: 1276,
+                height: 1300,
                 alt: '2 otters in a messy room playing around',
             },
             cardMessageTitle: 'Our impact by numbers 📊',
             cardMessageDescription:
-                'Dive into the statistics and analytics of StormHacks 2025 to gain valuable insights.',
+                'Dive into the statistics and analytics of StormHacks 2025 to gain valuable insights into participant demographics and representation.',
             buttonText: 'View insights',
             buttonVariant: 'brand',
         },
@@ -62,9 +62,9 @@ export default async function SponsorDashboard() {
                     </h1>
                     <p className="max-w-160 text-pretty text-white/60">
                         Thank you for sponsoring StormHacks 2025! Your support
-                        means the world to our hackers and our team at SFU
-                        Surge. We invite you to explore the sponsor benefits
-                        available on the portal.
+                        means a lot to our hackers and our team at SFU Surge. We
+                        invite you to explore the sponsor benefits available on
+                        the portal.
                     </p>
                 </div>
             </div>
