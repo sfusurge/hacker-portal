@@ -36,6 +36,12 @@ export function isApplicationQuestionFilled(question: InputFormQuestion) {
 
             case 'multiple-choice':
                 return question.value !== undefined;
+
+            case 'school-name':
+                return (
+                    question.selection !== undefined &&
+                    question.selection.length > 0
+                );
         }
     } catch (error) {
         console.error(

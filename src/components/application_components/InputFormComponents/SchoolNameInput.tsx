@@ -13,6 +13,7 @@ export function SchoolNameInput({
         | WritableAtom<QuestionSchoolName, [QuestionSchoolName], void>;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
+
     return (
         <SchoolOptions
             apiUrl={question.apiUrl}

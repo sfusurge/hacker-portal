@@ -1,25 +1,22 @@
+import { createCaller } from '@/server/appRouter';
 import ResumeTable from './table/resumeBank';
 
-// TODO USE DRIZZLE
-import testData from './table/testData';
-
 export default async function ResumeBankPage() {
-    // TODO: CHANGE MAP TO CORRECT FIELDS
-    const transformedData = testData.map((item: any, index: number) => ({
-        id: index + 1,
-        firstName: item['1'],
-        lastName: item['2'],
-        school: item['3'],
-        country: item['4'],
+    const trpcClient = createCaller({});
 
-        github: item['5'],
-        linkedin: item['6'],
-        resumeUrl: item['7'],
-    }));
+    const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
+
+    if (!activeHackathon) {
+        return (
+            <div className="flex h-full items-center justify-center">
+                <p className="text-white">No active hackathon found.</p>
+            </div>
+        );
+    }
 
     return (
         <div className="w-full">
-            <ResumeTable data={transformedData} />
+            <ResumeTable hackathonId={activeHackathon.id} />
         </div>
     );
 }

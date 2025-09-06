@@ -71,6 +71,9 @@ export function getResponseMap(pages: InputFormPageData[]) {
             case 'file-upload':
                 res[id] = question.fileLinks ?? [];
                 break;
+            case 'school-name':
+                res[id] = question.selection;
+                break;
             default:
                 res[id] = question.value;
         }
@@ -111,7 +114,9 @@ export function loadResponseIntoSchema(
                         break;
                     case 'rich-text':
                         question.value = dataSource[id];
-
+                        break;
+                    case 'school-name':
+                        question.selection = dataSource[id];
                         break;
                     default:
                         question.value = dataSource[id];

@@ -7,10 +7,10 @@ export type User = {
     firstName: string;
     lastName: string;
     school: string;
-    country: string;
     github: string;
     linkedin: string;
     resumeUrl: string;
+    email: string;
     onViewResume?: (id: number) => void;
 };
 
@@ -46,8 +46,8 @@ export const getColumns = (
                 </span>
             );
         },
-        size: 120,
-        minSize: 100,
+        size: 175,
+        minSize: 150,
     },
     {
         accessorKey: 'school',
@@ -66,36 +66,24 @@ export const getColumns = (
                     : ''}
             </span>
         ),
-        size: 150,
-        minSize: 120,
-    },
-    {
-        accessorKey: 'country',
-        header: ({ column }) => (
-            <span
-                className="cursor-pointer"
-                onClick={() =>
-                    column.toggleSorting(column.getIsSorted() === 'asc')
-                }
-            >
-                Country{' '}
-                {column.getIsSorted()
-                    ? column.getIsSorted() === 'desc'
-                        ? ' ↓'
-                        : ' ↑'
-                    : ''}
-            </span>
-        ),
-        size: 120,
-        minSize: 100,
+        size: 200,
+        minSize: 200,
     },
     {
         accessorKey: 'github',
         header: 'GitHub',
         cell: (info) => {
+            const githubUrl = info.getValue() as string;
+            if (
+                !githubUrl ||
+                githubUrl === 'N/A' ||
+                !githubUrl.startsWith('http')
+            ) {
+                return <span className="text-neutral-500">N/A</span>;
+            }
             return (
                 <Link
-                    href={info.getValue() as string}
+                    href={githubUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-brand-400 hover:underline"
@@ -104,16 +92,24 @@ export const getColumns = (
                 </Link>
             );
         },
-        size: 100,
+        size: 120,
         minSize: 100,
     },
     {
         accessorKey: 'linkedin',
         header: 'LinkedIn',
         cell: (info) => {
+            const linkedinUrl = info.getValue() as string;
+            if (
+                !linkedinUrl ||
+                linkedinUrl === 'N/A' ||
+                !linkedinUrl.startsWith('http')
+            ) {
+                return <span className="text-neutral-500">N/A</span>;
+            }
             return (
                 <Link
-                    href={info.getValue() as string}
+                    href={linkedinUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-brand-400 hover:underline"
@@ -122,8 +118,28 @@ export const getColumns = (
                 </Link>
             );
         },
-        size: 100,
-        minSize: 100,
+        size: 125,
+        minSize: 125,
+    },
+    {
+        accessorKey: 'email',
+        header: 'Email',
+        cell: (info) => {
+            const email = info.getValue() as string;
+            if (!email || email === 'N/A') {
+                return <span className="text-neutral-500">N/A</span>;
+            }
+            return (
+                <a
+                    href={`mailto:${email}`}
+                    className="text-brand-400 hover:underline"
+                >
+                    {email}
+                </a>
+            );
+        },
+        size: 200,
+        minSize: 150,
     },
     {
         id: 'actions',

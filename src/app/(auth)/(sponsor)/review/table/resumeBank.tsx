@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { getColumns, User } from './columns';
 import {
     ResponsiveDialog,
@@ -24,13 +24,13 @@ import {
 
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
+import { trpc } from '@/trpc/client';
 
 interface ResumeTableProps {
-    data: User[];
+    hackathonId: number;
 }
 
-export default function ResumeTable({ data }: ResumeTableProps) {
-    const [loading, setLoading] = useState(true);
+export default function ResumeTable({ hackathonId }: ResumeTableProps) {
     const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [pageSize, setPageSize] = useState<number>(20);
@@ -39,6 +39,46 @@ export default function ResumeTable({ data }: ResumeTableProps) {
     // table states
     const [globalFilter, setGlobalFilter] = useState<string>('');
     const [sorting, setSorting] = useState<SortingState>([]);
+
+    const {
+        data: applications,
+        isLoading,
+        isError,
+        error,
+    } = trpc.applications.getApplications.useQuery({
+        hackathonId,
+    });
+
+    // Transform the application data to match the expected format
+    const data = useMemo(() => {
+        if (!applications) return [];
+
+        return applications.map((item: any) => {
+            const {
+                '1': firstName,
+                '2': lastName,
+                '4': email,
+                '9': resumeUrls,
+                '12': github,
+                '13': linkedin,
+                '16': school,
+            } = item.response as Record<string, any>;
+
+            return {
+                id: item.userId,
+                firstName: firstName || 'N/A',
+                lastName: lastName || 'N/A',
+                school: school || 'N/A',
+                github: github || 'N/A',
+                linkedin: linkedin || 'N/A',
+                resumeUrl:
+                    Array.isArray(resumeUrls) && resumeUrls.length > 0
+                        ? resumeUrls[0]
+                        : 'N/A',
+                email: email || 'N/A',
+            };
+        });
+    }, [applications]);
 
     const openDialog = (userId: number) => {
         setSelectedUserId(userId);
@@ -154,20 +194,20 @@ export default function ResumeTable({ data }: ResumeTableProps) {
         }
     }, [table, data]);
 
-    // basic loading state, TODO: improve loading anim, add stormy/sparky img
-    useEffect(() => {
-        if (data.length > 0 && table.getRowModel().rows.length > 0) {
-            setLoading(false);
-        } else {
-            setLoading(true);
-        }
-    }, [data, table]);
-
-    if (loading) {
+    if (isLoading) {
         return (
             <div className="flex min-h-screen w-full flex-col items-center justify-center gap-4 text-white">
                 <Loader2 className="text-brand-700 animate-spin text-4xl" />
-                <span>Loading...</span>
+                <span>Loading applications...</span>
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <div className="flex min-h-screen w-full flex-col items-center justify-center gap-4 text-white">
+                <span className="text-red-400">Error loading applications</span>
+                <span className="text-sm text-white/60">{error?.message}</span>
             </div>
         );
     }
@@ -210,7 +250,12 @@ export default function ResumeTable({ data }: ResumeTableProps) {
                                                     header.column.columnDef
                                                         .minSize,
                                             }}
-                                            className="relative px-4 py-4 text-sm"
+                                            className={`relative px-4 py-4 text-sm ${
+                                                header.column.columnDef.id ===
+                                                'actions'
+                                                    ? 'sticky right-0 z-20 border-l border-neutral-600/30 bg-neutral-900'
+                                                    : ''
+                                            }`}
                                         >
                                             {header.isPlaceholder
                                                 ? null
@@ -249,7 +294,12 @@ export default function ResumeTable({ data }: ResumeTableProps) {
                                                     cell.column.columnDef
                                                         .minSize,
                                             }}
-                                            className="border-b border-neutral-600/30 bg-neutral-800 px-4 py-4 text-sm"
+                                            className={`border-b border-neutral-600/30 bg-neutral-800 px-4 py-4 text-sm ${
+                                                cell.column.columnDef.id ===
+                                                'actions'
+                                                    ? 'sticky right-0 z-20 border-l border-neutral-600/30 bg-neutral-800'
+                                                    : ''
+                                            }`}
                                         >
                                             <div
                                                 className="truncate"
@@ -410,8 +460,7 @@ export default function ResumeTable({ data }: ResumeTableProps) {
                         <ResponsiveDialogDescription>
                             {selectedUser ? (
                                 <>
-                                    {selectedUser.school} |{' '}
-                                    {selectedUser.country}
+                                    {selectedUser.school}
                                     {' | '}
                                     <span>
                                         <Link
