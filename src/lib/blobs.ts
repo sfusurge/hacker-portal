@@ -59,6 +59,7 @@ export interface SubmitFileProps {
     hackathonId?: number;
     userId?: number;
     path: string;
+    uploadPath: string;
     file: Buffer | File | Blob;
     contentType?: string;
     onUploadProgress?: OnUploadProgressCallback;
@@ -69,6 +70,7 @@ export async function submitFile({
     userId,
     path,
     file,
+    uploadPath,
     onUploadProgress,
     contentType,
 }: SubmitFileProps): Promise<PutBlobResult> {
@@ -80,6 +82,7 @@ export async function submitFile({
         clientPayload: JSON.stringify({
             hackathonId,
             userId,
+            uploadPath,
         }),
     });
 
