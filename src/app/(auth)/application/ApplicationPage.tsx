@@ -124,14 +124,14 @@ export default function ApplicationPageComponent() {
                             path: fileName,
                             hackathonId: hackathon.id,
                             userId: user.id,
-                            contentType: 'application/pdf',
+                            uploadPath: 'resumes',
                         });
 
                         return blob.url;
                     },
                     (question) =>
                         question.title?.toLowerCase().includes('resume')
-                            ? `resumes/hackathon-${hackathon.id}/user-${user.id}`
+                            ? `resumes/hackathon-${hackathon.id}/user-${user.id}.pdf`
                             : null
                 );
 
