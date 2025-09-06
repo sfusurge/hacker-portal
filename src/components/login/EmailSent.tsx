@@ -25,7 +25,7 @@ export default function EmailSent({
                 <p className="max-w-84 text-pretty text-white/60">
                     We just sent an email to{' '}
                     <span className="text-white">{email}</span> with a magic
-                    link that&apos;ll log you into the SFU Surge portal. 🦦
+                    link that&apos;ll log you into the SFU Surge Portal. 🦦
                 </p>
             </div>
             <p className="w-full text-center text-white/60">

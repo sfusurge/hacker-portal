@@ -371,7 +371,7 @@ export default function ProjectList({
                     </h1>
                     <p className="text-white/60">
                         {showAllProjects
-                            ? 'Thank you for being a judge for SparkJam 2025! You can now view every project 💖.'
+                            ? 'Thank you for being a judge for StormHacks 2025! You can now view every project 💖.'
                             : "Here are the projects you've been assigned to judge."}
                     </p>
                 </div>

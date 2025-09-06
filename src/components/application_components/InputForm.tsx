@@ -24,6 +24,7 @@ import type {
     InputFormData,
     QuestionRichTextInput,
     QuestionTextLinkInput,
+    QuestionSchoolName,
 } from './types';
 import { splitAtom } from 'jotai/utils';
 import style from './InputForm.module.css';
@@ -46,6 +47,7 @@ import { CheckBoxInput } from './InputFormComponents/CheckboxInput';
 import { CheckBoxGroupInput } from './InputFormComponents/CheckboxGroupInput';
 import { TextAreaInput } from './InputFormComponents/TextAreaInput';
 import { TextLinkInput } from './InputFormComponents/TextLinkInput';
+import { SchoolNameInput } from './InputFormComponents/SchoolNameInput';
 import { ReviewPage } from './ReviewPage';
 import {
     type PageFormState,
@@ -83,7 +85,7 @@ export const finalErrCheckAtom = atom(false); // when the user clicks the review
 
 interface InputFormProps {
     appDataAtom: WritableAtom<InputFormData, [val: InputFormData], void>;
-    onSubmit: () => void;
+    onSubmit: () => Promise<void>;
     disablePageTab?: boolean;
 }
 
@@ -216,8 +218,8 @@ export function InputForm({
                         {currentPageIndex === pagesAtoms.length && (
                             <ReviewPage
                                 response={pages}
-                                submit={() => {
-                                    onSubmit();
+                                submit={async () => {
+                                    await onSubmit();
                                 }}
                                 mobileMode={isMobile}
                                 disableSubmitBtn={disablePageTab}
@@ -243,8 +245,8 @@ export function InputForm({
                         indexAtom={pageIndexAtom}
                         pageCount={pagesAtoms.length}
                         pageStatesAtom={pageStatesAtom}
-                        submit={() => {
-                            onSubmit();
+                        submit={async () => {
+                            await onSubmit();
                         }}
                     />
                 )
@@ -457,6 +459,14 @@ function Question({
                         }
                     />
                 );
+            case 'school-name':
+                return (
+                    <SchoolNameInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionSchoolName>
+                        }
+                    />
+                );
             default:
                 return <div>Unsupported input type: {type}</div>;
         }
@@ -491,7 +501,7 @@ function PageButtons({
     indexAtom: PrimitiveAtom<number>;
     pageCount: number;
     pageStatesAtom: Atom<PageFormState[]>;
-    submit?: () => void;
+    submit?: () => void | Promise<void>;
 }) {
     const [index, setIndex] = useAtom(indexAtom);
     const pageStates = useAtomValue(pageStatesAtom);
@@ -579,8 +589,8 @@ function PageButtons({
             {index === pageCount && (
                 <SkewmorphicButton
                     className={cn(style.nextButton)}
-                    onClick={() => {
-                        submit && submit();
+                    onClick={async () => {
+                        submit && (await submit());
                     }}
                 >
                     Submit!

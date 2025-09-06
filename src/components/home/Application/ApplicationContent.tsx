@@ -12,10 +12,17 @@ import dayjs from 'dayjs';
 import { UserData } from '@/server/routers/usersRouter';
 import { useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import utc from 'dayjs/plugin/utc.js';
+import timezone from 'dayjs/plugin/timezone.js';
 
 export function CountdownContent() {
     const [currentTime, setime] = useState(dayjs());
-    const cutoffTime = dayjs(new Date(2025, 9, 21))
+    dayjs.extend(utc);
+    dayjs.extend(timezone);
+
+    const cutoffTime = dayjs
+        .utc('2025-09-21 00:00:00')
+        .utcOffset(-8)
         .startOf('day')
         .add(1, 'hour');
     const overdue = useMemo(
@@ -49,7 +56,7 @@ export function CountdownContent() {
                     Hacker registration closes in...
                 </CardDescription>
             </div>
-            <CountdownTimer targetDate={new Date(2025, 8, 22, 1)} />
+            <CountdownTimer targetDate={cutoffTime.toDate()} />
         </>
     );
 }

@@ -2,7 +2,7 @@ import { getUserData } from '@/server/routers/usersRouter';
 import { redirect } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ExclamationCircleIcon } from '@heroicons/react/24/solid';
-import SponsorConfirmDialog from './components/SponsorConfirmDialog';
+import SponsorConfirmDialog from '../../../components/sponsor/SponsorConfirmDialog';
 
 export default async function SponsorPage({
     searchParams,

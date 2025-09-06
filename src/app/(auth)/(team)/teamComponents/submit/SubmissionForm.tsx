@@ -21,15 +21,15 @@ export const createQuestionAtom = (question: any) => {
     return atom(
         (get) => {
             const formData = get(formDataAtom);
+            // Use questionId as unique key
             return {
                 ...question,
-                value:
-                    formData[question.questionId] ||
-                    (question.type === 'multiple-checkbox' ? [] : ''),
+                value: formData[question.questionId] ?? question.value ?? false,
             };
         },
         (get, set, newValue: any) => {
             const formData = get(formDataAtom);
+            // Ensure we're updating using questionId
             set(formDataAtom, {
                 ...formData,
                 [newValue.questionId]: newValue.value,
@@ -43,14 +43,10 @@ export const initializeFormData = (questions: any[]) => {
     const initialData: Record<string, any> = {};
 
     questionsList.forEach((question: any) => {
-        if (question.type === 'multiple-checkbox') {
-            initialData[question.questionId] = [];
-        } else if (question.type === 'checkbox') {
+        if (question.type === 'checkbox') {
             initialData[question.questionId] = false;
-        } else if (question.type === 'file-upload') {
-            initialData[question.questionId] = [];
         } else {
-            initialData[question.questionId] = '';
+            initialData[question.questionId] = question.value || '';
         }
     });
 
@@ -161,7 +157,7 @@ export default function SubmissionForm({ questions }: { questions: any[] }) {
         <Card className="p-6">
             <form ref={formRef} noValidate>
                 <h2 className="pl-4 text-2xl font-semibold">
-                    Submit your team's SparkJam project
+                    Submit your team's project
                 </h2>
 
                 {questionsList.map((question: any, index: number) => (

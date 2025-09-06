@@ -59,18 +59,18 @@ const navLinks = [
         icon: <CalendarDaysIcon className="h-6 w-6" />,
         iconAlt: 'Schedule logo',
     },
-    {
-        href: '/projects',
-        label: 'Projects',
-        icon: <InboxStackIcon className="h-6 w-6" />,
-        iconAlt: 'Projects logo',
-    },
     // {
     //     href: '/notifications',
     //     label: 'Notifications',
     //     icon: <BellAlertIcon className="h-6 w-6" />,
     //     iconAlt: 'Notifications logo',
     //     disabled: true,
+    // },
+    // {
+    //     href: '/projects',
+    //     label: 'Projects',
+    //     icon: <InboxStackIcon className="h-6 w-6" />,
+    //     iconAlt: 'Projects logo',
     // },
 ];
 
@@ -83,9 +83,13 @@ const adminLinks = [
     },
     {
         href: '/admin/email',
-        label: 'Email Templates (Admin)',
+        label: 'Emails',
         icon: <EnvelopeIcon className="h-6 w-6" />,
-        iconAlt: 'email',
+        iconAlt: 'Emails logo',
+        dropdownItems: [
+            { label: 'Email Templates', href: '/admin/email/templates' },
+            { label: 'Subscribed Emails', href: '/admin/email/subscribed' },
+        ],
     },
     {
         href: '/admin/judge',
@@ -233,8 +237,8 @@ export default function DesktopNav({
                                 )}
                             >
                                 <Image
-                                    src="/dashboard/OtterHead.png"
-                                    alt="Sparky wearing a chef's hat"
+                                    src="/dashboard/sh25head.png"
+                                    alt="StormHacks 2025 Logo"
                                     width={48}
                                     height={48}
                                     className="pointer-events-none h-full w-full rounded-lg object-cover"
@@ -263,13 +267,13 @@ export default function DesktopNav({
                                                     <div className="h-6 w-6 shrink-0 opacity-0" />
                                                     <div className="mt-1 flex flex-col gap-2 overflow-hidden">
                                                         <span className="line-clamp-1 text-sm font-medium whitespace-nowrap text-white">
-                                                            SparkJam 2025
+                                                            StormHacks 2025
                                                         </span>
                                                     </div>
                                                 </div>
                                                 <Image
-                                                    src="/dashboard/SparkJamOtterTableHeader.png"
-                                                    alt="Sparkjam"
+                                                    src="/dashboard/sh25header.png"
+                                                    alt="StormHacks"
                                                     width={200}
                                                     height={150}
                                                     className="h-full w-full object-cover"
@@ -340,6 +344,9 @@ export default function DesktopNav({
                                                     link.href
                                                 )}
                                                 collapsed={collapsed}
+                                                dropdownItems={
+                                                    link.dropdownItems
+                                                }
                                             />
                                         ))}
                                 </>
