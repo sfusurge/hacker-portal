@@ -11,10 +11,12 @@ import { InputFormData } from '@/components/application_components/types';
 import {
     getResponseMap,
     loadResponseIntoSchema,
+    processResponseForServer,
 } from '@/components/application_components/utils';
 import { atomWithStorage } from 'jotai/utils';
 import { userInfoAtom } from '@/app/(auth)/ClientContext';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { submitFile } from '@/lib/blobs';
 
 const localAppResponseAtom = atomWithStorage('application_response', {
     hackathonId: -1,
@@ -82,6 +84,7 @@ const applicationWithLocalAtom = atom(
  */
 export default function ApplicationPageComponent() {
     const hackathon = useAtomValue(hackathonAtom);
+    const user = useAtomValue(userInfoAtom);
     const hackathonWithResponse = useAtomValue(applicationWithLocalAtom);
     const submitApplication = trpc.applications.submitApplication.useMutation();
     const application = trpc.applications.getCurrentApplication.useQuery({
@@ -112,11 +115,31 @@ export default function ApplicationPageComponent() {
     return (
         <InputForm
             appDataAtom={applicationWithLocalAtom}
-            onSubmit={() => {
-                const response = getResponseMap(hackathonWithResponse.pages);
+            onSubmit={async () => {
+                const pagesWithFileUrl = await processResponseForServer(
+                    hackathonWithResponse.pages,
+                    async (fileName, file) => {
+                        const blob = await submitFile({
+                            file,
+                            path: fileName,
+                            hackathonId: hackathon.id,
+                            userId: user.id,
+                            contentType: 'application/pdf',
+                        });
+
+                        return blob.url;
+                    },
+                    (question) =>
+                        question.title?.toLowerCase().includes('resume')
+                            ? `resumes/hackathon-${hackathon.id}/user-${user.id}`
+                            : null
+                );
+
+                const response = getResponseMap(pagesWithFileUrl);
+
                 submitApplication.mutate({
-                    hackathonId: hackathon!.id,
-                    response: response,
+                    hackathonId: hackathon.id,
+                    response,
                 });
 
                 redirect('/application/submitted');

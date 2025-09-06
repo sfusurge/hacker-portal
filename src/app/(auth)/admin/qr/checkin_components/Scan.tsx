@@ -29,6 +29,7 @@ import CheckinTicket from './CheckinTicket';
 import SelectEvent from './SelectEvents';
 import Link from 'next/link';
 import { iconFromEventType } from '@/utils/iconFromEventType';
+import React from 'react';
 
 interface ScanProps {
     events: {
@@ -170,8 +171,16 @@ export default function Scan({ events, initialEventType }: ScanProps) {
 
     const isInvalidUser = useMemo(() => invalidUserId !== '', [invalidUserId]);
 
+    React.useEffect(() => {
+        const main = document.querySelector('main');
+        if (main) main.classList.add('no-scrollable');
+        return () => {
+            if (main) main.classList.remove('no-scrollable');
+        };
+    }, []);
+
     return (
-        <div className="flex min-h-screen flex-col items-center justify-between bg-neutral-900">
+        <div className="no-scrollable flex min-h-screen flex-col items-center justify-between bg-neutral-900">
             {/* HACK */}
             <div
                 style={{
@@ -206,7 +215,7 @@ export default function Scan({ events, initialEventType }: ScanProps) {
                     src="/qrfull.svg"
                     fill
                     alt="QR Finder"
-                    className="object-cover"
+                    className="overflow-hidden object-cover"
                 />
 
                 <div className="absolute top-4 left-4">
@@ -339,4 +348,7 @@ function groupEventsByDate(events: ScanProps['events']) {
         date,
         events: groupedEvents ?? [],
     }));
+}
+function useEffect(arg0: () => () => void, arg1: never[]) {
+    throw new Error('Function not implemented.');
 }
