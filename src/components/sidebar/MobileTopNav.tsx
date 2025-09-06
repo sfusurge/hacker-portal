@@ -61,8 +61,8 @@ export default function MobileTopNav({
                     <div className="flex w-full flex-row items-center justify-between">
                         <div className="my-auto flex flex-row gap-3">
                             <Image
-                                src="/dashboard/OtterHead.png"
-                                alt="Sparky black and white drawing"
+                                src="/dashboard/sh25head.png"
+                                alt="StormHacks 2025 Logo"
                                 width={36}
                                 height={36}
                                 className="h-9 w-9 rounded-lg"

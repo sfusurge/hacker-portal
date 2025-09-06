@@ -208,8 +208,8 @@ export default function DesktopNav({
                                 )}
                             >
                                 <Image
-                                    src="/dashboard/OtterHead.png"
-                                    alt="Sparky wearing a chef's hat"
+                                    src="/dashboard/sh25head.png"
+                                    alt="StormHacks 2025 Logo"
                                     width={48}
                                     height={48}
                                     className="pointer-events-none h-full w-full rounded-lg object-cover"
@@ -243,8 +243,8 @@ export default function DesktopNav({
                                                     </div>
                                                 </div>
                                                 <Image
-                                                    src="/dashboard/SparkJamOtterTableHeader.png"
-                                                    alt="Sparkjam"
+                                                    src="/dashboard/sh25header.png"
+                                                    alt="StormHacks"
                                                     width={200}
                                                     height={150}
                                                     className="h-full w-full object-cover"
