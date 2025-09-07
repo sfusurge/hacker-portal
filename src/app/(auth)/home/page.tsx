@@ -58,6 +58,7 @@ export default async function Home() {
             </h1>
 
             <div className="flex flex-col gap-6 md:gap-8">
+                {/* MOBILE */}
                 <div className="flex flex-col gap-6 pb-24 md:gap-8 md:pb-10 xl:hidden">
                     {/* <SubmissionCardHomepage /> */}
                     <ApplicationCard
@@ -75,6 +76,7 @@ export default async function Home() {
                     <DiscordCard />
                 </div>
 
+                {/* DESKTOP */}
                 <div className="hidden xl:grid xl:grid-cols-11 xl:gap-8">
                     <div className="col-span-7 flex flex-col gap-8">
                         <ApplicationCard

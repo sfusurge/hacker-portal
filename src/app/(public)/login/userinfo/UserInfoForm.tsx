@@ -190,7 +190,7 @@ export default function UserInfoForm() {
                                 </div>
                                 <div className="flex flex-row gap-4 md:gap-6">
                                     <div className="w-full">
-                                        <Label required={true}>
+                                        <Label required={true} className="mb-2">
                                             First name
                                         </Label>
                                         <FormTextInput
@@ -207,7 +207,9 @@ export default function UserInfoForm() {
                                     </div>
 
                                     <div className="w-full">
-                                        <Label required={true}>Last name</Label>
+                                        <Label required={true} className="mb-2">
+                                            Last name
+                                        </Label>
                                         <FormTextInput
                                             name="lastname"
                                             type="search"
@@ -222,7 +224,9 @@ export default function UserInfoForm() {
                                     </div>
                                 </div>
                                 <div className="w-full">
-                                    <Label required={true}>Phone number</Label>
+                                    <Label required={true} className="mb-2">
+                                        Phone number
+                                    </Label>
                                     <FormTextInput
                                         name="phone"
                                         type="tel"

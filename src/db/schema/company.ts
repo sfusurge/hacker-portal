@@ -9,7 +9,12 @@ import {
 import { hackathons } from './hackathons';
 import { user } from './users/users';
 
-export const companyRoleEnum = pgEnum('company_role', ['mentor', 'judge']);
+export const portalRoleEnum = pgEnum('company_role', ['mentor', 'sponsor']);
+export const sponsorTierEnum = pgEnum('sponsor_tier', [
+    'plat',
+    'gold',
+    'title',
+]);
 
 export const company = pgTable(
     'company',
@@ -20,9 +25,9 @@ export const company = pgTable(
         userId: integer('user_id')
             .references(() => user.id, { onDelete: 'no action' })
             .notNull(),
-        role: companyRoleEnum('role').notNull(),
-        companyData: json('company_data').$type<string>(),
-        companyRole: json('company_role_data').$type<string>(),
+        portalRole: portalRoleEnum('role').notNull(),
+        sponsorTierEnum: sponsorTierEnum('sponsor_tier'),
+        companyTitle: json('company_title').$type<string>(),
         skills: json('skills').$type<string[]>(),
         createdDate: timestamp('created_date').defaultNow().notNull(),
         updatedDate: timestamp('updated_date').defaultNow().notNull(),

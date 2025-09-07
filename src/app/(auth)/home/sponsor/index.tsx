@@ -71,16 +71,16 @@ export default async function SponsorDashboard() {
 
             <div className="h-fill mt-10 flex-grow overflow-y-auto pb-12 sm:-mx-6 sm:p-10 md:-mx-10">
                 <div className="flex flex-col gap-6 md:gap-8">
-                    {/* Mobile layout */}
+                    {/* MOBILE */}
                     <div className="flex flex-col gap-6 pb-12 md:gap-8 xl:hidden">
                         {dashboardCards.map((props: DashboardCardProps, i) => (
                             <DashboardCard key={i} {...props} />
                         ))}
-                        <DiscordCard />
                         <EventsCard events={events} />
+                        <DiscordCard />
                     </div>
 
-                    {/* Desktop layout */}
+                    {/* DESKTOP */}
                     <div className="hidden xl:grid xl:grid-cols-11 xl:gap-8">
                         <div className="col-span-6 flex flex-col gap-8">
                             <DashboardCard {...dashboardCards[0]} />

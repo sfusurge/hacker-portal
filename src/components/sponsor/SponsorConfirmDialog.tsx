@@ -1,12 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { ExclamationTriangleIcon } from '@heroicons/react/16/solid';
-import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { convertToSponsor } from '../actions/convertToSponsor';
+import { convertToSponsor } from './convertToSponsor';
+import { trpc } from '@/trpc/client';
+import { FormTextInput, Input } from '../ui/input/input';
+import { Label } from '../ui/label/label';
 
 interface SponsorConfirmDialogProps {
     sponsorType: string;
@@ -27,15 +28,56 @@ export default function SponsorConfirmDialog({
 }: SponsorConfirmDialogProps) {
     const [isConverting, setIsConverting] = useState(false);
     const [isConverted, setIsConverted] = useState(false);
+    const [companyTitle, setCompanyTitle] = useState('');
     const router = useRouter();
 
-    const handleConfirm = async () => {
+    const companyUpsert = trpc.company.upsert.useMutation();
+    const { data: activeHackathon, isLoading: isLoadingHackathon } =
+        trpc.hackathons.getActiveHackathon.useQuery();
+    const utils = trpc.useUtils();
+
+    const isButtonDisabled = isConverting || !companyTitle.trim();
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!companyTitle.trim()) {
+            return;
+        }
+
         setIsConverting(true);
 
         try {
+            // convert acc to sponsor, get tier, get active hackathon, update user company
             const result = await convertToSponsor(userId, bypassCode);
 
             if (result.success) {
+                if (!activeHackathon?.id) {
+                    throw new Error('No active hackathon found');
+                }
+
+                const sponsorTierMap: Record<
+                    string,
+                    'plat' | 'gold' | 'title'
+                > = {
+                    plat: 'plat',
+                    gold: 'gold',
+                    title: 'title',
+                };
+
+                const sponsorTier = sponsorTierMap[sponsorType];
+
+                if (sponsorTier) {
+                    await companyUpsert.mutateAsync({
+                        hackathonId: activeHackathon.id,
+                        portalRole: 'sponsor',
+                        sponsorTier: sponsorTier,
+                        companyTitle: companyTitle.trim(),
+                    });
+                }
+
+                await utils.users.invalidate();
+
                 setIsConverted(true);
             } else {
                 throw new Error(result.error || 'Failed to convert account');
@@ -51,10 +93,10 @@ export default function SponsorConfirmDialog({
     };
 
     const handleGoToDashboard = () => {
-        router.push('/home');
+        // Force a full page refresh to update the layout and navbar with new user role
+        window.location.replace('/home');
     };
 
-    // Success state after conversion
     if (isConverted || isAlreadySponsor) {
         return (
             <div className="flex h-full w-full flex-col items-center justify-center gap-8">
@@ -63,20 +105,20 @@ export default function SponsorConfirmDialog({
                         <Image
                             width={64}
                             height={64}
-                            src="/dashboard/OtterHead.png"
-                            alt="Sponsor logo"
+                            src="/dashboard/sh25head.png"
+                            alt="stormhacks 2025 logo"
                             className="h-16 w-16 rounded-xl"
                         />
                     </div>
                     <div className="flex flex-col items-center justify-center gap-4 text-center">
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-1">
                             <p className="text-white/60">
                                 {isAlreadySponsor
                                     ? "You're already a"
                                     : "Welcome! You're now a"}
                             </p>
-                            <h1 className="text-3xl font-semibold text-white">
-                                {sponsorType}
+                            <h1 className="mb-1 text-2xl font-semibold text-white">
+                                Sponsor
                             </h1>
                             <p className="text-center text-sm leading-normal text-pretty text-white/60">
                                 {isAlreadySponsor
@@ -101,7 +143,6 @@ export default function SponsorConfirmDialog({
         );
     }
 
-    // Confirmation dialog
     return (
         <div className="flex h-full w-full flex-col items-center justify-center gap-8">
             <div className="flex flex-col items-center justify-center gap-6 rounded-2xl border border-neutral-600/30 bg-neutral-900 p-8 sm:max-w-[26.5rem]">
@@ -109,7 +150,7 @@ export default function SponsorConfirmDialog({
                     <Image
                         width={64}
                         height={64}
-                        src="/dashboard/OtterHead.png"
+                        src="/dashboard/sh25head.png"
                         alt="Sponsor logo"
                         className="h-16 w-16 rounded-xl"
                     />
@@ -117,38 +158,62 @@ export default function SponsorConfirmDialog({
                 <div className="flex flex-col items-center justify-center gap-4 text-center">
                     <div className="flex flex-col gap-2">
                         <h1 className="text-2xl font-semibold text-white">
-                            Convert to {sponsorType}?
+                            Convert to Sponsor Account?
                         </h1>
                         <p className="text-sm leading-normal text-white/60">
-                            Hi {userFirstName} {userLastName}! This will convert
-                            your account to a {sponsorType} account, giving you
-                            access to sponsor features, thank you for supporting
-                            us!
+                            Hello, {userFirstName} {userLastName}! This will
+                            convert your account to a sponsor account, giving
+                            you access to sponsor features on the portal, thank
+                            you for supporting us!
                         </p>
                     </div>
                 </div>
-                <div className="grid w-full grid-cols-2 gap-3">
-                    <Button
-                        variant="default"
-                        size="cozy"
-                        hierarchy="secondary"
-                        className="w-full"
-                        onClick={handleCancel}
-                        disabled={isConverting}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="brand"
-                        size="cozy"
-                        hierarchy="primary"
-                        className="w-full"
-                        onClick={handleConfirm}
-                        disabled={isConverting}
-                    >
-                        {isConverting ? 'Converting...' : 'Confirm'}
-                    </Button>
-                </div>
+                <form
+                    onSubmit={handleSubmit}
+                    className="flex w-full flex-col gap-4"
+                >
+                    <div className="flex w-full flex-col gap-2">
+                        <Label htmlFor="company_title" required>
+                            Title
+                        </Label>
+                        <FormTextInput
+                            id="company_title"
+                            name="company_title"
+                            type="text"
+                            defaultValue={companyTitle}
+                            lazy={true}
+                            timeOut={100}
+                            onLazyChange={(value) => setCompanyTitle(value)}
+                            placeholder="e.g. Software Engineer at Asana"
+                            disabled={isConverting}
+                            className="w-full"
+                            required
+                        />
+                    </div>
+                    <div className="grid w-full grid-cols-2 gap-3">
+                        <Button
+                            type="button"
+                            variant="default"
+                            size="cozy"
+                            hierarchy="secondary"
+                            className="w-full"
+                            onClick={handleCancel}
+                            disabled={isConverting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="brand"
+                            size="cozy"
+                            hierarchy="primary"
+                            className="w-full"
+                            disabled={isButtonDisabled}
+                        >
+                            {isConverting ? 'Converting...' : 'Confirm'}
+                        </Button>
+                    </div>
+                </form>
             </div>
         </div>
     );

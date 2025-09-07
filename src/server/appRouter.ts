@@ -10,6 +10,7 @@ import { teamsRouter } from './routers/teamsRouter';
 import { filesRouter } from './routers/filesRouter';
 import { emailTemplatesRouter } from './routers/emailTemplateRouter';
 import { submissionsRouter } from './routers/submissionsRouter';
+import { companyRouter } from './routers/companyRouter';
 
 import { judgingRouter } from './routers/judgingRouter';
 import { userVoteRouter } from '@/server/routers/userVoteRouter';
@@ -28,6 +29,7 @@ export const appRouter = router({
     subscribedEmails: emailsRouter,
     events: eventsRouter,
     checkIn: checkInRouter,
+    company: companyRouter,
 
     judging: judgingRouter,
     userVote: userVoteRouter,

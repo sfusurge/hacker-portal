@@ -2,7 +2,7 @@ import { getUserData } from '@/server/routers/usersRouter';
 import { redirect } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ExclamationCircleIcon } from '@heroicons/react/24/solid';
-import SponsorConfirmDialog from '../../../components/sponsor/SponsorConfirmDialog';
+import SponsorConfirmDialog from '@/components/sponsor/SponsorConfirmDialog';
 
 export default async function SponsorPage({
     searchParams,
@@ -16,33 +16,33 @@ export default async function SponsorPage({
         redirect('/login');
     }
 
-    // Determine sponsor type based on bypass code
+    // determine sponsor type based on bypass code
     let sponsorType: string | null = null;
     let isValidBypass = false;
     let bypassCode: string | null = null;
 
-    if (params['accountType']) {
-        bypassCode = params['accountType'] as string;
+    if (params['tier']) {
+        bypassCode = params['tier'] as string;
 
         if (process.env.PLATSPONSOR && bypassCode === process.env.PLATSPONSOR) {
-            sponsorType = 'Platinum Sponsor';
+            sponsorType = 'plat';
             isValidBypass = true;
         } else if (
             process.env.GOLDSPONSOR &&
             bypassCode === process.env.GOLDSPONSOR
         ) {
-            sponsorType = 'Gold Sponsor';
+            sponsorType = 'gold';
             isValidBypass = true;
         } else if (
             process.env.TITLESPONSOR &&
             bypassCode === process.env.TITLESPONSOR
         ) {
-            sponsorType = 'Title Sponsor';
+            sponsorType = 'title';
             isValidBypass = true;
         }
     }
 
-    // If no valid bypass code, show error
+    // show error, when wrong bypass
     if (!isValidBypass || !sponsorType || !bypassCode) {
         return (
             <div className="flex h-full w-full flex-col items-center justify-center gap-8">
@@ -73,7 +73,6 @@ export default async function SponsorPage({
         );
     }
 
-    // Show confirmation dialog
     return (
         <SponsorConfirmDialog
             sponsorType={sponsorType}
