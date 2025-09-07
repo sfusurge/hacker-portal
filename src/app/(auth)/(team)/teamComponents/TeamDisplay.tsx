@@ -67,24 +67,24 @@ export default function TeamDisplay({
                     </h1>
                 </div>
 
-                <Button
-                    onClick={() => {
-                        setShowFeedBacks(true);
-                    }}
-                    variant={'brand'}
-                    size="cozy"
-                    hierarchy={'primary'}
-                    style={{ alignSelf: 'center', marginLeft: 'auto' }}
-                >
-                    View Feedback
-                </Button>
+                {/*<Button*/}
+                {/*    onClick={() => {*/}
+                {/*        setShowFeedBacks(true);*/}
+                {/*    }}*/}
+                {/*    variant={'brand'}*/}
+                {/*    size="cozy"*/}
+                {/*    hierarchy={'primary'}*/}
+                {/*    style={{ alignSelf: 'center', marginLeft: 'auto' }}*/}
+                {/*>*/}
+                {/*    View Feedback*/}
+                {/*</Button>*/}
 
-                <FeedbackDialog
-                    open={showFeedBacks}
-                    onClose={() => {
-                        setShowFeedBacks(false);
-                    }}
-                />
+                {/*<FeedbackDialog*/}
+                {/*    open={showFeedBacks}*/}
+                {/*    onClose={() => {*/}
+                {/*        setShowFeedBacks(false);*/}
+                {/*    }}*/}
+                {/*/>*/}
             </div>
 
             <div className="flex flex-col gap-4">
