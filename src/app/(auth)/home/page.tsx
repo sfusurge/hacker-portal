@@ -51,6 +51,8 @@ export default async function Home() {
     const displayId = data!.id;
     const userQR: string = await generateQRCode(displayId.toString(), opts);
 
+    const isAdmin = data?.userRole === 'admin';
+
     return (
         <div className="flex flex-col gap-6 md:gap-8">
             <h1 className="text-3xl font-semibold text-white">
@@ -61,37 +63,49 @@ export default async function Home() {
                 {/* MOBILE */}
                 <div className="flex flex-col gap-6 pb-24 md:gap-8 md:pb-10 xl:hidden">
                     {/* <SubmissionCardHomepage /> */}
-                    <ApplicationCard
-                        userData={data}
-                        image={userQR}
-                        applicationStatus={application?.currentStatus}
-                        applicationSubmitted={application !== null}
-                    />
-                    <TeamCard
-                        userData={data}
-                        hackathonId={hackathonId}
-                        team={team}
-                    />
+                    {!isAdmin && (
+                        <>
+                            <ApplicationCard
+                                userData={data}
+                                image={userQR}
+                                applicationStatus={application?.currentStatus}
+                                applicationSubmitted={application !== null}
+                            />
+                            <TeamCard
+                                userData={data}
+                                hackathonId={hackathonId}
+                                team={team}
+                            />
+                        </>
+                    )}
                     <EventsCard events={events} />
                     <DiscordCard />
                 </div>
 
                 {/* DESKTOP */}
                 <div className="hidden xl:grid xl:grid-cols-11 xl:gap-8">
-                    <div className="col-span-7 flex flex-col gap-8">
-                        <ApplicationCard
-                            userData={data}
-                            image={userQR}
-                            applicationStatus={application?.currentStatus}
-                            applicationSubmitted={application !== null}
-                        />
-                    </div>
-                    <TeamCard
-                        userData={data}
-                        hackathonId={hackathonId}
-                        team={team}
-                    />
-                    <div className="col-span-11 grid grid-cols-2 gap-8">
+                    {!isAdmin && (
+                        <>
+                            <div className="col-span-7 flex flex-col gap-8">
+                                <ApplicationCard
+                                    userData={data}
+                                    image={userQR}
+                                    applicationStatus={
+                                        application?.currentStatus
+                                    }
+                                    applicationSubmitted={application !== null}
+                                />
+                            </div>
+                            <TeamCard
+                                userData={data}
+                                hackathonId={hackathonId}
+                                team={team}
+                            />
+                        </>
+                    )}
+                    <div
+                        className={`${isAdmin ? 'col-span-11' : 'col-span-11'} grid grid-cols-2 gap-8`}
+                    >
                         <EventsCard events={events} />
                         <DiscordCard />
                     </div>
