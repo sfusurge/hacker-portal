@@ -83,8 +83,8 @@ export default function UserInfoForm() {
         >
             <div className="block h-full w-full bg-[#C4D086] lg:hidden" />
             <Image
-                src="/login/SparkJamOtterTableHeader.png"
-                alt="Stormy and Sparky are cooking."
+                src="/dashboard/sh25header.png"
+                alt="Sparky studying"
                 fill
                 className="absolute hidden h-full w-full object-cover lg:block"
                 priority
@@ -190,7 +190,7 @@ export default function UserInfoForm() {
                                 </div>
                                 <div className="flex flex-row gap-4 md:gap-6">
                                     <div className="w-full">
-                                        <Label required={true}>
+                                        <Label required={true} className="mb-2">
                                             First name
                                         </Label>
                                         <FormTextInput
@@ -207,7 +207,9 @@ export default function UserInfoForm() {
                                     </div>
 
                                     <div className="w-full">
-                                        <Label required={true}>Last name</Label>
+                                        <Label required={true} className="mb-2">
+                                            Last name
+                                        </Label>
                                         <FormTextInput
                                             name="lastname"
                                             type="search"
@@ -222,7 +224,9 @@ export default function UserInfoForm() {
                                     </div>
                                 </div>
                                 <div className="w-full">
-                                    <Label required={true}>Phone number</Label>
+                                    <Label required={true} className="mb-2">
+                                        Phone number
+                                    </Label>
                                     <FormTextInput
                                         name="phone"
                                         type="tel"

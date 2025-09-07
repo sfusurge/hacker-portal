@@ -28,7 +28,7 @@ export default function SubmitPage() {
                     Submission Successful
                 </p>
                 <h1 className="mb-3 text-3xl leading-tight font-semibold text-balance text-white">
-                    Thank you for applying to SparkJam!
+                    Thank you for applying to StormHacks!
                 </h1>
                 <p className="text-base text-balance text-white/60">
                     Keep an eye on your inbox for any updates regarding your

@@ -92,7 +92,7 @@ export default function EmailTemplatesPage() {
             <div className="w-full py-10">
                 <div className="mb-6 flex items-center justify-between">
                     <h1 className="text-2xl font-bold">Email Templates</h1>
-                    <Link href="/admin/email/edit">
+                    <Link href="/admin/email/templates/edit">
                         <Button variant="brand" hierarchy="primary" size="cozy">
                             Create Template
                         </Button>
@@ -109,7 +109,7 @@ export default function EmailTemplatesPage() {
         <div className="w-full py-10">
             <div className="mb-6 flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Email Templates</h1>
-                <Link href="/admin/email/edit">
+                <Link href="/admin/email/templates/edit">
                     <Button variant="brand" hierarchy="primary" size="cozy">
                         Create Template
                     </Button>
@@ -136,7 +136,7 @@ export default function EmailTemplatesPage() {
                             </div>
                             <div className="flex items-center space-x-2">
                                 <Link
-                                    href={`/admin/email/edit?id=${template.id}`}
+                                    href={`/admin/email/templates/edit?id=${template.id}`}
                                 >
                                     <Button
                                         variant="default"

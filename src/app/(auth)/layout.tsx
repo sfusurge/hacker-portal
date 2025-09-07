@@ -11,6 +11,8 @@ import { ClientContext } from './ClientContext';
 import { getUserData } from '@/server/routers/usersRouter';
 import { createCaller } from '@/server/appRouter';
 
+import ClientLayoutWrapper from './ClientLayoutWrapper';
+
 export default async function Layout({ children }: { children: ReactNode }) {
     const trpcClient = createCaller({});
     const [hackathon, userData] = await Promise.all([
@@ -24,10 +26,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
 
     return (
         <ClientContext userData={userData} hackathonData={hackathon}>
-            <div
-                className="bg-neutral-950 p-0 md:flex md:p-5"
-                style={{ height: '100dvh' }}
-            >
+            <ClientLayoutWrapper>
                 <CacheClearer initialData={userData} />
                 <MobileTopNav
                     initialData={userData}
@@ -44,7 +43,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
                 <main className="md:bg-neutral-925 mt-20 max-h-screen flex-1 p-6 md:mt-0 md:overflow-y-auto md:rounded-2xl md:border md:border-neutral-600/30 md:p-10">
                     {children}
                 </main>
-            </div>
+            </ClientLayoutWrapper>
         </ClientContext>
     );
 }

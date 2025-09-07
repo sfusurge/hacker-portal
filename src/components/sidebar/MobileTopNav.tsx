@@ -8,7 +8,10 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import { NavLink } from './NavLink';
-import { ArrowLeftEndOnRectangleIcon } from '@heroicons/react/24/outline';
+import {
+    UserIcon,
+    ArrowLeftEndOnRectangleIcon,
+} from '@heroicons/react/24/outline';
 
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { signOut } from 'next-auth/react';
@@ -16,6 +19,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 import { UserData } from '@/server/routers/usersRouter';
+import { getIcon } from '@/utils/blobHelper';
 
 interface MobileTopNavProps {
     className?: string;
@@ -29,11 +33,12 @@ export default function MobileTopNav({
     className,
 }: MobileTopNavProps) {
     const [hideTopNav, setHideTopNav] = useState(false);
+    const [popoverOpen, setPopoverOpen] = useState(false);
     const url = usePathname();
 
     const avatarUrl = useMemo(() => {
         if (initialData && initialData.image) {
-            return `${process.env.NEXT_PUBLIC_BLOB_URL}/user_icon/${initialData.image}`;
+            return getIcon('user_icon', initialData.image);
         }
         return '/sidebar/default-avatar.webp';
     }, [initialData]);
@@ -61,36 +66,54 @@ export default function MobileTopNav({
                     <div className="flex w-full flex-row items-center justify-between">
                         <div className="my-auto flex flex-row gap-3">
                             <Image
-                                src="/dashboard/OtterHead.png"
-                                alt="Sparky black and white drawing"
+                                src="/dashboard/sh25head.png"
+                                alt="StormHacks 2025 Logo"
                                 width={36}
                                 height={36}
                                 className="h-9 w-9 rounded-lg"
-                            ></Image>
+                            />
 
                             <div className="flex flex-col gap-2">
                                 <span className="line-clamp-1 text-sm leading-none font-medium text-white">
-                                    SparkJam 2025
+                                    StormHacks 2025
                                 </span>
                                 <span className="line-clamp-1 text-sm leading-none text-white/60">
-                                    May 17–31, 2025
+                                    October 4–5, 2025
                                 </span>
                             </div>
                         </div>
 
-                        <Popover>
+                        <Popover
+                            open={popoverOpen}
+                            onOpenChange={setPopoverOpen}
+                        >
                             <PopoverTrigger asChild>
-                                <img
-                                    alt="Default avatar for the user"
-                                    src={avatarUrl}
-                                    className="aspect-square h-10 w-10 rounded-full"
-                                ></img>
+                                <button className="rounded-full focus:ring-2 focus:ring-white/20 focus:outline-none">
+                                    <img
+                                        alt="Default avatar for the user"
+                                        src={avatarUrl}
+                                        className="aspect-square h-10 w-10 rounded-full"
+                                    />
+                                </button>
                             </PopoverTrigger>
                             <PopoverContent
                                 sideOffset={8}
                                 side="bottom"
+                                align="end"
                                 className="z-200"
                             >
+                                <NavLink
+                                    href="/profile"
+                                    label="Edit profile"
+                                    icon={
+                                        <UserIcon className="h-6 w-6 text-white/60" />
+                                    }
+                                    className="px-2"
+                                    iconAlt="Profile"
+                                    platform="desktop"
+                                    active={url.startsWith('/profile')}
+                                    onClick={() => setPopoverOpen(false)}
+                                />
                                 <NavLink
                                     href="#"
                                     label="Sign out"
@@ -102,6 +125,7 @@ export default function MobileTopNav({
                                     variant="error"
                                     className="px-2"
                                     onClick={async () => {
+                                        setPopoverOpen(false);
                                         await signOut();
                                         if (typeof window !== 'undefined') {
                                             localStorage.removeItem(

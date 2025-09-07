@@ -20,6 +20,7 @@ const allowedPaths = {
     submissions: /^submissions\/team-\d{1,3}\/?$/,
     team_icon: /^team_icon\/?$/,
     user_icon: /^user_icon\/?$/,
+    resumes: /^resumes\/hackathon-\d+\/?$/,
 };
 
 export type AllowedUploadPaths = keyof typeof allowedPaths;
@@ -86,7 +87,7 @@ export async function POST(request: Request) {
                 multipart
             ) => {
                 const { uploadPath } = JSON.parse(
-                    clientPayload ?? ''
+                    clientPayload ?? '{}'
                 ) as UploadPayload;
 
                 validateUploadPath(pathname, uploadPath);

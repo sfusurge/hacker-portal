@@ -171,7 +171,7 @@ function SubmitCardContent({
         const pstNow = new Date(
             now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
         );
-        const deadline = new Date('2025-05-29T00:00:00-07:00');
+        const deadline = new Date('2025-09-29T00:00:00-07:00');
         setIsPastDeadline(pstNow > deadline);
     }, [hackathon]);
 

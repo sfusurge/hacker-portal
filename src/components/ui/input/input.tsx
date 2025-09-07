@@ -14,7 +14,7 @@ const Input = forwardRef<HTMLInputElement, ComponentProps<'input'>>(
             <input
                 type={type}
                 className={cn(
-                    'flex h-10 w-full rounded-md border bg-white px-3 py-2 text-base disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:border-neutral-800 dark:bg-neutral-950 dark:file:text-neutral-50 dark:placeholder:text-neutral-400',
+                    'flex h-10 w-full rounded-md border bg-white px-3 py-2 text-base read-only:cursor-default read-only:opacity-60 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:border-neutral-800 dark:bg-neutral-950 dark:file:text-neutral-50 dark:placeholder:text-neutral-400',
                     className
                 )}
                 ref={ref}

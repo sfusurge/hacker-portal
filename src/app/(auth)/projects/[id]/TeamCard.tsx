@@ -62,27 +62,27 @@ export default function TeamCard({ teamData, isOwnProject }: TeamCardProps) {
                         image: member.image || null,
                     }))}
                 />
-                {isOwnProject &&
-                    feedbacksQuery.data &&
-                    feedbacksQuery.data[hackathon.id] !== undefined && (
-                        <div className="mt-4">
-                            <Button
-                                variant="brand"
-                                hierarchy="primary"
-                                size="cozy"
-                                onClick={() => setShowFeedbacks(true)}
-                            >
-                                View Feedback
-                            </Button>
-                            <FeedbackDialog
-                                open={showFeedbacks}
-                                selectedFeedback={
-                                    feedbacksQuery.data[hackathon.id]!
-                                }
-                                onClose={() => setShowFeedbacks(false)}
-                            />
-                        </div>
-                    )}
+                {/*{isOwnProject &&*/}
+                {/*    feedbacksQuery.data &&*/}
+                {/*    feedbacksQuery.data[hackathon.id] !== undefined && (*/}
+                {/*        <div className="mt-4">*/}
+                {/*            <Button*/}
+                {/*                variant="brand"*/}
+                {/*                hierarchy="primary"*/}
+                {/*                size="cozy"*/}
+                {/*                onClick={() => setShowFeedbacks(true)}*/}
+                {/*            >*/}
+                {/*                View Feedback*/}
+                {/*            </Button>*/}
+                {/*            <FeedbackDialog*/}
+                {/*                open={showFeedbacks}*/}
+                {/*                selectedFeedback={*/}
+                {/*                    feedbacksQuery.data[hackathon.id]!*/}
+                {/*                }*/}
+                {/*                onClose={() => setShowFeedbacks(false)}*/}
+                {/*            />*/}
+                {/*        </div>*/}
+                {/*    )}*/}
             </CardContent>
         </Card>
     );

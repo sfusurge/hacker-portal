@@ -50,11 +50,10 @@ export async function uploadFileToBlob(
         access: 'public',
         handleUploadUrl: '/api/blob/generic',
         clientPayload: JSON.stringify({
-            uploadPath: 'user_icon',
+            uploadPath: filePathType,
         } as UploadPayload),
     });
 
     console.log(`Uploaded blob: ${blob.url}`);
-
     return fileName;
 }
