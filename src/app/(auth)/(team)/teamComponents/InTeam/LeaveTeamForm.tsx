@@ -63,7 +63,7 @@ export default function LeaveTeamForm({
                     You can join a new team before the application deadline:{' '}
                     <span className="font-bold text-white/60">
                         {/* TODO: IMPLEMENT TEAM LOCKS AFTER DATE */}
-                        {new Date(2025, 3, 30, 23, 59, 59).toLocaleDateString(
+                        {new Date(2025, 8, 30, 23, 59, 59).toLocaleDateString(
                             'en-US',
                             {
                                 month: 'long',

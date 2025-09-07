@@ -1,11 +1,4 @@
 import { CSSProperties, useEffect, useRef, useState } from 'react';
-import { type Delta } from 'quill';
-import Quill from 'quill';
-import 'quill/dist/quill.snow.css';
-//import style from './Richtext.module.css';
-import { useAtomValue } from 'jotai';
-import { finalErrCheckAtom } from '@/components/application_components/InputForm';
-import { json } from 'stream/consumers';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';

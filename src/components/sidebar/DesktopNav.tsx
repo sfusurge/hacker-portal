@@ -358,7 +358,7 @@ export default function DesktopNav({
                                             navLinkVariants({
                                                 platform: 'desktop',
                                                 active: url.startsWith(
-                                                    '/profile'
+                                                    '/profile/'
                                                 ),
                                                 disabled: false,
                                             }),
@@ -413,6 +413,7 @@ export default function DesktopNav({
                                         }
                                         iconAlt="Profile"
                                         platform="desktop"
+                                        active={url.startsWith('/profile')}
                                     />
                                     <NavLink
                                         href="#"
