@@ -313,10 +313,13 @@ function Page({
             // Determine page state based on filled questions
             let state: PageFormState['state'] = 'not started';
 
-            // Only mark as completed if ALL required questions are filled
+            // Mark as completed if either:
+            // 1. All required questions are filled (when there are required questions)
+            // 2. At least one optional question is filled (when there are no required questions)
             if (
-                requiredQuestions > 0 &&
-                filledRequiredQuestions === requiredQuestions
+                (requiredQuestions > 0 &&
+                    filledRequiredQuestions === requiredQuestions) ||
+                (requiredQuestions === 0 && atLeastOneFilled)
             ) {
                 state = 'completed';
             } else if (atLeastOneFilled) {

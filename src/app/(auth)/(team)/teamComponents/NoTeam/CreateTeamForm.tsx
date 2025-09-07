@@ -40,7 +40,7 @@ export default function CreateTeamForm({
     const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isCreating, setIsCreating] = useState<boolean>(false);
-    const [imageUrl, setImageUrl] = useState('');
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
     const disabled = useMemo(
         () => !teamInfo.teamName || !imageUrl || isCreating,
         [teamInfo, imageUrl, isCreating]
