@@ -15,6 +15,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
+import styles from './SchoolOptions.module.css';
 
 type SchoolOptionsProps = {
     apiUrl: string;
@@ -75,37 +76,56 @@ export function SchoolOptions({
                 <Button
                     role="combobox"
                     aria-expanded={open}
-                    className="bg-neutral-850 hover:bg-neutral-80 flex h-14 w-full max-w-[400px] items-center justify-start rounded border border-neutral-700 px-6 py-6 text-lg text-white [&>span]:w-full"
+                    className="bg-neutral-850 hover:bg-neutral-80 -p-2 flex h-14 w-full max-w-[400px] items-center justify-start rounded border border-neutral-700 px-6 py-6 text-lg text-white [&>span]:w-full"
                     disabled={readOnly}
                     size="cozy"
                 >
                     <span className="flex w-full items-center justify-between">
-                        {value
-                            ? schoolOptions.find(
-                                  (school) => school.value === value
-                              )?.name || value
-                            : 'Search your School Name'}
-                        <ChevronsUpDown className="ml-2 opacity-50" />
+                        <span className="mr-2 flex-1 truncate text-left">
+                            {value
+                                ? schoolOptions.find(
+                                      (school) => school.value === value
+                                  )?.name || value
+                                : 'Search your School Name'}
+                        </span>
+                        <ChevronsUpDown className="ml-2 flex-shrink-0 opacity-50" />
                     </span>
                 </Button>
             </PopoverTrigger>
             <PopoverContent
-                className="bg-neutral-850 w-full max-w-[400px]"
-                onMouseLeave={() => setOpen(false)}
+                className={cn(
+                    'bg-neutral-850 mr-0 w-full max-w-[400px]',
+                    styles.popperContentWrapper
+                )}
             >
-                <Command className="bg-neutral-850 w-full max-w-[400px]">
+                <Command
+                    className={cn(
+                        'bg-neutral-850 w-full max-w-[400px]',
+                        styles.commandContainer
+                    )}
+                >
                     <CommandInput
                         placeholder={'Search your School Name'}
-                        className="bg-neutral-850 h-9 w-full border-neutral-700 text-white placeholder:text-neutral-400"
+                        className={cn(
+                            'bg-neutral-850 h-9 w-full border-neutral-700 text-white placeholder:text-neutral-400'
+                        )}
                         value={search}
                         onValueChange={setSearch}
                     />
-                    <CommandList className="bg-neutral-850 w-full max-w-[400px] text-white">
+                    <CommandList
+                        className={cn(
+                            'bg-neutral-850 w-full max-w-[400px] text-white',
+                            styles.commandList
+                        )}
+                    >
                         <CommandEmpty>No school found.</CommandEmpty>
                         <CommandGroup>
                             {schoolOptions.map((school) => (
                                 <CommandItem
-                                    className="commandItem text-white"
+                                    className={cn(
+                                        'commandItem text-white',
+                                        styles.commandItem
+                                    )}
                                     key={school.value}
                                     value={school.value}
                                     onSelect={(currentValue) => {
@@ -114,15 +134,9 @@ export function SchoolOptions({
                                         onChange(currentValue);
                                     }}
                                 >
-                                    {school.name}
-                                    <Check
-                                        className={cn(
-                                            'ml-auto text-white',
-                                            value === school.value
-                                                ? 'opacity-100'
-                                                : 'opacity-0'
-                                        )}
-                                    />
+                                    <span className="mr-2 flex-1 truncate text-left">
+                                        {school.name}
+                                    </span>
                                 </CommandItem>
                             ))}
                         </CommandGroup>

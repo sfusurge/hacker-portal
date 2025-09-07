@@ -95,7 +95,7 @@ export default function MobileTopNav({
                             <PopoverContent
                                 sideOffset={8}
                                 side="bottom"
-                                align="bottom"
+                                align="end"
                                 className="z-200"
                             >
                                 <NavLink
