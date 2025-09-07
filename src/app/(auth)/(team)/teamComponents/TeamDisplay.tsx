@@ -36,7 +36,7 @@ export default function TeamDisplay({
     // If user is not in a team for the current hackathon, show join team UI
     if (!currentTeam) {
         return (
-            <div className="flex h-full w-full items-center justify-center">
+            <div className="mt-20 flex h-full w-full items-center justify-center md:mt-0">
                 <CurrentStateUI
                     hackathonId={currentHackathon.id}
                     title="You're not in a team yet! 🥺"

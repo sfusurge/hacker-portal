@@ -33,6 +33,7 @@ export default function MobileTopNav({
     className,
 }: MobileTopNavProps) {
     const [hideTopNav, setHideTopNav] = useState(false);
+    const [popoverOpen, setPopoverOpen] = useState(false);
     const url = usePathname();
 
     const avatarUrl = useMemo(() => {
@@ -82,7 +83,10 @@ export default function MobileTopNav({
                             </div>
                         </div>
 
-                        <Popover>
+                        <Popover
+                            open={popoverOpen}
+                            onOpenChange={setPopoverOpen}
+                        >
                             <PopoverTrigger asChild>
                                 <button className="rounded-full focus:ring-2 focus:ring-white/20 focus:outline-none">
                                     <img
@@ -108,6 +112,7 @@ export default function MobileTopNav({
                                     iconAlt="Profile"
                                     platform="desktop"
                                     active={url.startsWith('/profile')}
+                                    onClick={() => setPopoverOpen(false)}
                                 />
                                 <NavLink
                                     href="#"
@@ -120,6 +125,7 @@ export default function MobileTopNav({
                                     variant="error"
                                     className="px-2"
                                     onClick={async () => {
+                                        setPopoverOpen(false);
                                         await signOut();
                                         if (typeof window !== 'undefined') {
                                             localStorage.removeItem(

@@ -155,6 +155,7 @@ export default function DesktopNav({
 }: DesktopNavProps) {
     const [collapsed, setCollapsed] = useState(false);
     const [isLargeScreen, setIsLargeScreen] = useState(true);
+    const [profilePopoverOpen, setProfilePopoverOpen] = useState(false);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -351,14 +352,17 @@ export default function DesktopNav({
                                         ))}
                                 </>
                             )}
-                            <Popover>
+                            <Popover
+                                open={profilePopoverOpen}
+                                onOpenChange={setProfilePopoverOpen}
+                            >
                                 <PopoverTrigger asChild>
                                     <div
                                         className={cn(
                                             navLinkVariants({
                                                 platform: 'desktop',
                                                 active: url.startsWith(
-                                                    '/profile/'
+                                                    '/profile'
                                                 ),
                                                 disabled: false,
                                             }),
@@ -414,6 +418,9 @@ export default function DesktopNav({
                                         iconAlt="Profile"
                                         platform="desktop"
                                         active={url.startsWith('/profile')}
+                                        onClick={() =>
+                                            setProfilePopoverOpen(false)
+                                        }
                                     />
                                     <NavLink
                                         href="#"
@@ -425,6 +432,7 @@ export default function DesktopNav({
                                         platform="desktop"
                                         variant="error"
                                         onClick={async () => {
+                                            setProfilePopoverOpen(false);
                                             await signOut();
                                             if (typeof window !== 'undefined') {
                                                 localStorage.removeItem(

@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/responsive-dialog';
 import { DialogClose } from '@/components/ui/dialog';
 import JoinTeamButton from './JoinTeamButton';
+import { Label } from '@/components/ui/label/label';
 
 export default function JoinTeamForm() {
     const [input, setInput] = useState<string>('');
@@ -63,12 +64,13 @@ export default function JoinTeamForm() {
 
             <div className="flex flex-col gap-6" onKeyDown={handleKeyDown}>
                 <div className="flex flex-col gap-2">
-                    <label
+                    <Label
+                        required
                         htmlFor="team-code"
                         className="text-sm font-medium text-white/60"
                     >
-                        Team code *
-                    </label>
+                        Team code
+                    </Label>
                     <div>
                         <InputOtp
                             input={input}
