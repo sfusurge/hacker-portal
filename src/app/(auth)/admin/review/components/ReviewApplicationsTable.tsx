@@ -82,6 +82,12 @@ export type Applicant = {
     currentStatus: string;
     pendingStatus: string;
     applicationDate: Date;
+
+    checkIns: {
+        eventId: number;
+        eventTitle: string;
+        checkedIn: boolean;
+    }[];
 };
 
 type ReviewApplicationsTableProps = {
@@ -217,7 +223,7 @@ export default function ReviewApplicationsTable({
     // Get data from DB
     const applicationData = trpc.applications.getApplications.useQuery({
         hackathonId: hackathon?.id!,
-        maxResult: 200,
+        maxResult: 2000,
     });
 
     const applicationDataMap = useMemo(() => {
@@ -251,6 +257,15 @@ export default function ReviewApplicationsTable({
         { id: 'teamName', desc: true },
     ]);
     const [rowSelection, setRowSelection] = useState({});
+
+    const checkedInInfoColumns: ColumnDef<Applicant>[] =
+        data[0]?.checkIns?.map(({ eventTitle, checkedIn }, i) => {
+            return {
+                accessorFn: () => (checkedIn ? 'Yes' : 'No'),
+                header: eventTitle,
+                size: 100,
+            };
+        }) ?? [];
 
     const defaultColumns: ColumnDef<Applicant>[] = [
         {
@@ -296,6 +311,13 @@ export default function ReviewApplicationsTable({
             header: 'Last Name',
             size: 150,
             minSize: 100,
+        },
+        {
+            accessorKey: 'members',
+            header: 'Team Members',
+            size: 200,
+            minSize: 100,
+            cell: (info) => (info.getValue() as string[]).join(', '),
         },
         {
             accessorKey: 'currentStatus',
@@ -389,7 +411,6 @@ export default function ReviewApplicationsTable({
             header: 'Hackathon Experience',
             size: 200,
             minSize: 150,
-            cell: (info) => (info.getValue() as string[]).join(', '),
         },
         {
             accessorKey: 'howHeardAbout',
@@ -432,6 +453,7 @@ export default function ReviewApplicationsTable({
                 );
             },
         },
+        ...checkedInInfoColumns,
     ];
 
     const table = useReactTable({
@@ -479,7 +501,7 @@ export default function ReviewApplicationsTable({
     const exportExcel = () => {
         const selectedRows = table.getSelectedRowModel().rows;
         const tempData = selectedRows.map(({ original }) => {
-            const { applicationDate, ...rest } = original;
+            const { applicationDate, checkIns, ...rest } = original;
             return {
                 ...rest,
                 haveHackathonExperience:
@@ -938,6 +960,8 @@ function IndeterminateCheckbox({
 
 // Function to transform the data received from DB to the json format the table expects
 function transformResponse(response: any[]) {
+    console.log(response);
+
     return response.map((item) => {
         const {
             '1': firstName,
@@ -974,6 +998,9 @@ function transformResponse(response: any[]) {
             '32': photoRelease,
         } = item.response as Record<string, any>;
 
+        const members = item.members;
+        const checkIns = item.checkIns;
+
         const teamName = item.teamName
             ? `${item.teamName} (${item.teamId})`
             : null;
@@ -984,13 +1011,18 @@ function transformResponse(response: any[]) {
             currentStatus: item.currentStatus,
             pendingStatus: item.pendingStatus,
             applicationDate: new Date(item.createdDate),
+            dietaryRestrictions: Array.isArray(dietaryRestrictions)
+                ? dietaryRestrictions
+                : [dietaryRestrictions],
+            howHeardAbout: Array.isArray(howHeardAbout)
+                ? howHeardAbout
+                : [howHeardAbout],
+            members,
             firstName,
             lastName,
             pronouns,
             email,
             haveHackathonExperience,
-            howHeardAbout,
-            dietaryRestrictions,
             tShirtSize,
             resume,
             discord,
@@ -1016,6 +1048,7 @@ function transformResponse(response: any[]) {
             acceptEmails,
             authorizeMLH,
             photoRelease,
+            checkIns,
         };
     });
 }
