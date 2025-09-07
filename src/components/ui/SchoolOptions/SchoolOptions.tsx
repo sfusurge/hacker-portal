@@ -82,10 +82,11 @@ export function SchoolOptions({
                 <Button
                     role="combobox"
                     aria-expanded={open}
-                    className="bg-neutral-850 flex h-14 w-full max-w-[400px] items-center justify-start rounded border border-neutral-700 px-6 py-6 text-lg text-white hover:bg-neutral-800"
+                    className="bg-neutral-850 hover:bg-neutral-80 flex h-14 w-full max-w-[400px] items-center justify-start rounded border border-neutral-700 px-6 py-6 text-lg text-white [&>span]:w-full"
                     disabled={readOnly}
+                    size="cozy"
                 >
-                    <span className="flex w-full items-center">
+                    <span className="flex w-full items-center justify-between">
                         {value
                             ? schoolOptions.find(
                                   (school) => school.value === value

@@ -1,5 +1,4 @@
 import ApplicationCard from '@/components/home/Application/ApplicationCard';
-import DiscordCard from '@/components/home/DiscordCard';
 import EventsCard from '@/components/home/EventsCard';
 import TeamCard from '@/components/home/TeamCard';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
@@ -7,6 +6,8 @@ import { createCaller } from '@/server/appRouter';
 import { getUserData } from '@/server/routers/usersRouter';
 import { redirect } from 'next/navigation';
 import SubmissionCardHomepage from '@/components/home/SubmissionCard';
+import SponsorDashboard from './sponsor/index';
+import DiscordCard from '@/components/home/DiscordCard';
 
 export default async function Home() {
     const data = await getUserData();
@@ -16,12 +17,16 @@ export default async function Home() {
         redirect('/projects');
     }
 
+    // Return sponsor dashboard for sponsors
+    if (data?.userRole === 'sponsor') {
+        return <SponsorDashboard />;
+    }
+
     const trpcClient = createCaller({});
 
     const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
 
     const hackathonId = activeHackathon.id;
-    // const userId = data.id;
 
     const [application, team, events] = await Promise.all([
         trpcClient.applications.getCurrentApplication({
@@ -53,10 +58,10 @@ export default async function Home() {
             </h1>
 
             <div className="flex flex-col gap-6 md:gap-8">
-                <div className="flex flex-col gap-6 md:gap-8 xl:hidden">
-                    {/*<SubmissionCardHomepage />*/}
+                {/* MOBILE */}
+                <div className="flex flex-col gap-6 pb-24 md:gap-8 md:pb-10 xl:hidden">
+                    {/* <SubmissionCardHomepage /> */}
                     <ApplicationCard
-                        className="col-span-1"
                         userData={data}
                         image={userQR}
                         applicationStatus={application?.currentStatus}
@@ -71,16 +76,15 @@ export default async function Home() {
                     <DiscordCard />
                 </div>
 
+                {/* DESKTOP */}
                 <div className="hidden xl:grid xl:grid-cols-11 xl:gap-8">
                     <div className="col-span-7 flex flex-col gap-8">
                         <ApplicationCard
-                            className="col-span-1"
                             userData={data}
                             image={userQR}
                             applicationStatus={application?.currentStatus}
                             applicationSubmitted={application !== null}
                         />
-                        {/*<SubmissionCardHomepage />*/}
                     </div>
                     <TeamCard
                         userData={data}

@@ -120,7 +120,7 @@ export function ReviewPage({
 
             case 'school-name':
                 const schoolQuestion = question as QuestionSchoolName;
-                return schoolQuestion.value || 'N/A';
+                return schoolQuestion.selection || 'N/A';
 
             case 'name':
                 const nameQuestion = question as QuestionNameInput;

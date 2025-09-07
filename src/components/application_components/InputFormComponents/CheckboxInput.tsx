@@ -16,8 +16,7 @@ export function CheckBoxInput({
     const [question, setQuestion] = useAtom(dataAtom);
     return (
         <CheckBoxWithLabel
-            id={`checkbox-${question.questionId}`}
-            name={question.label ?? ''}
+            name={`checkbox-${question.questionId}`}
             required={question.required ?? false}
             checked={question.value ?? false}
             onChange={(e) => {
@@ -27,6 +26,8 @@ export function CheckBoxInput({
                     value: e.target.checked,
                 });
             }}
-        ></CheckBoxWithLabel>
+        >
+            {question.label}
+        </CheckBoxWithLabel>
     );
 }

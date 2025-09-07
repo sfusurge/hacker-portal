@@ -24,6 +24,7 @@ interface NavLinkProps {
     icon?: ReactNode;
     iconAlt?: string;
     collapsed?: boolean;
+    disabled?: boolean;
     dropdownItems?: DropdownItem[];
 }
 

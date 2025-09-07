@@ -10,6 +10,7 @@ import {
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
     ChevronRightIcon,
+    ChartBarIcon,
 } from '@heroicons/react/24/outline';
 
 import { HomeIcon } from '@heroicons/react/24/outline';
@@ -59,18 +60,18 @@ const navLinks = [
         iconAlt: 'Schedule logo',
     },
     // {
+    //     href: '/notifications',
+    //     label: 'Notifications',
+    //     icon: <BellAlertIcon className="h-6 w-6" />,
+    //     iconAlt: 'Notifications logo',
+    //     disabled: true,
+    // },
+    // {
     //     href: '/projects',
     //     label: 'Projects',
     //     icon: <InboxStackIcon className="h-6 w-6" />,
     //     iconAlt: 'Projects logo',
     // },
-    {
-        href: '/notifications',
-        label: 'Notifications',
-        icon: <BellAlertIcon className="h-6 w-6" />,
-        iconAlt: 'Notifications logo',
-        disabled: true,
-    },
 ];
 
 const adminLinks = [
@@ -111,6 +112,34 @@ const judgeNavLinks = [
         label: 'Projects',
         icon: <InboxStackIcon className="h-6 w-6" />,
         iconAlt: 'Projects logo',
+    },
+    {
+        href: '/schedule',
+        label: 'Schedule',
+        icon: <CalendarDaysIcon className="h-6 w-6" />,
+        iconAlt: 'Schedule logo',
+    },
+];
+
+// SPONSORS CAN ONLY SEE THESE LINKS
+const sponsorNavLinks = [
+    {
+        href: '/home',
+        label: 'Dashboard',
+        icon: <HomeIcon className="h-6 w-6" />,
+        iconAlt: 'Dashboard logo',
+    },
+    {
+        href: '/review',
+        label: 'Resume Bank',
+        icon: <UserGroupIcon className="h-6 w-6" />,
+        iconAlt: 'Resume Bank logo',
+    },
+    {
+        href: '/statistics',
+        label: 'Statistics',
+        icon: <ChartBarIcon className="h-6 w-6" />,
+        iconAlt: 'Stats logo',
     },
     {
         href: '/schedule',
@@ -182,7 +211,7 @@ export default function DesktopNav({
                     collapsed ? 'w-12' : 'w-[280px]'
                 )}
             >
-                <div className="flex flex-col items-center justify-between">
+                <div className="flex h-full flex-col items-center justify-between">
                     <div className={clsx('flex w-full flex-col gap-5')}>
                         <motion.div
                             className="relative overflow-hidden"
@@ -274,6 +303,19 @@ export default function DesktopNav({
                                         collapsed={collapsed}
                                     />
                                 ))
+                            ) : initialData?.userRole === 'sponsor' ? (
+                                sponsorNavLinks.map((link) => (
+                                    <NavLink
+                                        key={link.href}
+                                        href={link.href}
+                                        label={link.label}
+                                        icon={link.icon}
+                                        iconAlt={link.iconAlt}
+                                        platform="desktop"
+                                        active={url.startsWith(link.href)}
+                                        collapsed={collapsed}
+                                    />
+                                ))
                             ) : (
                                 <>
                                     {navLinks.map((link) => (
@@ -285,7 +327,6 @@ export default function DesktopNav({
                                             iconAlt={link.iconAlt}
                                             platform="desktop"
                                             active={url.startsWith(link.href)}
-                                            disabled={link.disabled}
                                             collapsed={collapsed}
                                         />
                                     ))}

@@ -73,7 +73,7 @@ export default function MobileTopNav({
                                     StormHacks 2025
                                 </span>
                                 <span className="line-clamp-1 text-sm leading-none text-white/60">
-                                    May 17–31, 2025
+                                    October 4–5, 2025
                                 </span>
                             </div>
                         </div>
