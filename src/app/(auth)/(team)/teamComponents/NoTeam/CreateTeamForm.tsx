@@ -2,6 +2,7 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { FormTextInput, Input } from '@/components/ui/input/input';
+import { Label } from '@/components/ui/label/label';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { trpc } from '@/trpc/client';
 import { useRouter } from 'next/navigation';
@@ -40,7 +41,7 @@ export default function CreateTeamForm({
     const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isCreating, setIsCreating] = useState<boolean>(false);
-    const [imageUrl, setImageUrl] = useState('');
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
     const disabled = useMemo(
         () => !teamInfo.teamName || !imageUrl || isCreating,
         [teamInfo, imageUrl, isCreating]
@@ -109,7 +110,6 @@ export default function CreateTeamForm({
         setIsCreating(false);
     };
 
-    // Form shared between Dialog and Drawer
     const FormContent = (
         <form className="flex flex-col gap-8">
             {error && (
@@ -121,7 +121,7 @@ export default function CreateTeamForm({
 
             <div className="flex gap-6 text-white/60">
                 <Image
-                    src={imageUrl ?? '/teams/default.webp'}
+                    src={imageUrl || '/teams/default.webp'}
                     alt="Team picture"
                     width={64}
                     height={64}
@@ -130,9 +130,9 @@ export default function CreateTeamForm({
                 />
                 <Conditional showWhen={isDesktop}>
                     <div className="flex flex-col gap-3">
-                        <label className="block text-sm font-medium">
-                            Team picture *
-                        </label>
+                        <Label required className="block text-sm font-medium">
+                            Team picture
+                        </Label>
                         <Input
                             type="file"
                             id="file-upload"
@@ -159,17 +159,17 @@ export default function CreateTeamForm({
                                     Upload
                                 </Button>
                             </label>
-                            {teamInfo.teamPicture && (
+                            {imageUrl && (
                                 <Button
                                     variant="default"
                                     hierarchy="tertiary"
                                     size="compact"
                                     className="hover:bg-neutral-750/60 border-2 border-transparent underline underline-offset-4"
                                     onClick={() => {
-                                        setTeamInfo((prevState) => ({
-                                            ...prevState,
-                                            teamPicture: '',
-                                        }));
+                                        setImageUrl(null);
+                                        if (fileInputRef.current) {
+                                            fileInputRef.current.value = '';
+                                        }
                                     }}
                                     type="button"
                                     disabled={isCreating}
@@ -186,9 +186,9 @@ export default function CreateTeamForm({
                 </Conditional>
                 <Conditional showWhen={!isDesktop}>
                     <div className="flex flex-col gap-3">
-                        <label className="block text-sm font-medium">
-                            Team picture *
-                        </label>
+                        <Label required className="block text-sm font-medium">
+                            Team picture
+                        </Label>
                         <Input
                             type="file"
                             id="file-upload"
@@ -241,12 +241,13 @@ export default function CreateTeamForm({
             </div>
 
             <div className="flex flex-col gap-3">
-                <label
+                <Label
+                    required
                     htmlFor="teamName"
                     className="text-sm font-medium text-white/60"
                 >
-                    Team name *
-                </label>
+                    Team name
+                </Label>
                 <FormTextInput
                     type="search"
                     name="teamName"

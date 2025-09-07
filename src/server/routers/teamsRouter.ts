@@ -273,7 +273,14 @@ export const teamsRouter = router({
                     `Last member left the team, removing ${teamPictureUrl} from R2`
                 );
 
-                await deleteFileFromR2('team-pictures', teamPictureUrl);
+                try {
+                    await deleteFileFromR2('team-pictures', teamPictureUrl);
+                } catch (error) {
+                    console.error(
+                        `Failed to delete team picture ${teamPictureUrl} from R2:`,
+                        error
+                    );
+                }
             }
 
             return true;

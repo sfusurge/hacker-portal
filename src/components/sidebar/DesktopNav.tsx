@@ -10,6 +10,7 @@ import {
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
     ChevronRightIcon,
+    ChartBarIcon,
 } from '@heroicons/react/24/outline';
 
 import { HomeIcon } from '@heroicons/react/24/outline';
@@ -17,7 +18,6 @@ import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
 import { IdentificationIcon, QrCodeIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
-import { trpc } from '@/trpc/client';
 
 import { signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
@@ -59,19 +59,19 @@ const navLinks = [
         icon: <CalendarDaysIcon className="h-6 w-6" />,
         iconAlt: 'Schedule logo',
     },
-    {
-        href: '/projects',
-        label: 'Projects',
-        icon: <InboxStackIcon className="h-6 w-6" />,
-        iconAlt: 'Projects logo',
-    },
-    {
-        href: '/notifications',
-        label: 'Notifications',
-        icon: <BellAlertIcon className="h-6 w-6" />,
-        iconAlt: 'Notifications logo',
-        disabled: true,
-    },
+    // {
+    //     href: '/notifications',
+    //     label: 'Notifications',
+    //     icon: <BellAlertIcon className="h-6 w-6" />,
+    //     iconAlt: 'Notifications logo',
+    //     disabled: true,
+    // },
+    // {
+    //     href: '/projects',
+    //     label: 'Projects',
+    //     icon: <InboxStackIcon className="h-6 w-6" />,
+    //     iconAlt: 'Projects logo',
+    // },
 ];
 
 const adminLinks = [
@@ -83,9 +83,13 @@ const adminLinks = [
     },
     {
         href: '/admin/email',
-        label: 'Email Templates (Admin)',
+        label: 'Emails',
         icon: <EnvelopeIcon className="h-6 w-6" />,
-        iconAlt: 'email',
+        iconAlt: 'Emails logo',
+        dropdownItems: [
+            { label: 'Email Templates', href: '/admin/email/templates' },
+            { label: 'Subscribed Emails', href: '/admin/email/subscribed' },
+        ],
     },
     {
         href: '/admin/judge',
@@ -117,12 +121,41 @@ const judgeNavLinks = [
     },
 ];
 
+// SPONSORS CAN ONLY SEE THESE LINKS
+const sponsorNavLinks = [
+    {
+        href: '/home',
+        label: 'Dashboard',
+        icon: <HomeIcon className="h-6 w-6" />,
+        iconAlt: 'Dashboard logo',
+    },
+    {
+        href: '/review',
+        label: 'Resume Bank',
+        icon: <UserGroupIcon className="h-6 w-6" />,
+        iconAlt: 'Resume Bank logo',
+    },
+    {
+        href: '/statistics',
+        label: 'Statistics',
+        icon: <ChartBarIcon className="h-6 w-6" />,
+        iconAlt: 'Stats logo',
+    },
+    {
+        href: '/schedule',
+        label: 'Schedule',
+        icon: <CalendarDaysIcon className="h-6 w-6" />,
+        iconAlt: 'Schedule logo',
+    },
+];
+
 export default function DesktopNav({
     className,
     initialData,
 }: DesktopNavProps) {
     const [collapsed, setCollapsed] = useState(false);
     const [isLargeScreen, setIsLargeScreen] = useState(true);
+    const [profilePopoverOpen, setProfilePopoverOpen] = useState(false);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -179,7 +212,7 @@ export default function DesktopNav({
                     collapsed ? 'w-12' : 'w-[280px]'
                 )}
             >
-                <div className="flex flex-col items-center justify-between">
+                <div className="flex h-full flex-col items-center justify-between">
                     <div className={clsx('flex w-full flex-col gap-5')}>
                         <motion.div
                             className="relative overflow-hidden"
@@ -205,8 +238,8 @@ export default function DesktopNav({
                                 )}
                             >
                                 <Image
-                                    src="/dashboard/OtterHead.png"
-                                    alt="Sparky wearing a chef's hat"
+                                    src="/dashboard/sh25head.png"
+                                    alt="StormHacks 2025 Logo"
                                     width={48}
                                     height={48}
                                     className="pointer-events-none h-full w-full rounded-lg object-cover"
@@ -235,13 +268,13 @@ export default function DesktopNav({
                                                     <div className="h-6 w-6 shrink-0 opacity-0" />
                                                     <div className="mt-1 flex flex-col gap-2 overflow-hidden">
                                                         <span className="line-clamp-1 text-sm font-medium whitespace-nowrap text-white">
-                                                            SparkJam 2025
+                                                            StormHacks 2025
                                                         </span>
                                                     </div>
                                                 </div>
                                                 <Image
-                                                    src="/dashboard/SparkJamOtterTableHeader.png"
-                                                    alt="Sparkjam"
+                                                    src="/dashboard/sh25header.png"
+                                                    alt="StormHacks"
                                                     width={200}
                                                     height={150}
                                                     className="h-full w-full object-cover"
@@ -271,6 +304,19 @@ export default function DesktopNav({
                                         collapsed={collapsed}
                                     />
                                 ))
+                            ) : initialData?.userRole === 'sponsor' ? (
+                                sponsorNavLinks.map((link) => (
+                                    <NavLink
+                                        key={link.href}
+                                        href={link.href}
+                                        label={link.label}
+                                        icon={link.icon}
+                                        iconAlt={link.iconAlt}
+                                        platform="desktop"
+                                        active={url.startsWith(link.href)}
+                                        collapsed={collapsed}
+                                    />
+                                ))
                             ) : (
                                 <>
                                     {navLinks.map((link) => (
@@ -282,7 +328,6 @@ export default function DesktopNav({
                                             iconAlt={link.iconAlt}
                                             platform="desktop"
                                             active={url.startsWith(link.href)}
-                                            disabled={link.disabled}
                                             collapsed={collapsed}
                                         />
                                     ))}
@@ -300,11 +345,17 @@ export default function DesktopNav({
                                                     link.href
                                                 )}
                                                 collapsed={collapsed}
+                                                dropdownItems={
+                                                    link.dropdownItems
+                                                }
                                             />
                                         ))}
                                 </>
                             )}
-                            <Popover>
+                            <Popover
+                                open={profilePopoverOpen}
+                                onOpenChange={setProfilePopoverOpen}
+                            >
                                 <PopoverTrigger asChild>
                                     <div
                                         className={cn(
@@ -361,12 +412,15 @@ export default function DesktopNav({
                                     <NavLink
                                         href="/profile"
                                         label="Edit profile"
-                                        disabled
                                         icon={
                                             <UserIcon className="h-6 w-6 text-white/60" />
                                         }
                                         iconAlt="Profile"
                                         platform="desktop"
+                                        active={url.startsWith('/profile')}
+                                        onClick={() =>
+                                            setProfilePopoverOpen(false)
+                                        }
                                     />
                                     <NavLink
                                         href="#"
@@ -378,6 +432,7 @@ export default function DesktopNav({
                                         platform="desktop"
                                         variant="error"
                                         onClick={async () => {
+                                            setProfilePopoverOpen(false);
                                             await signOut();
                                             if (typeof window !== 'undefined') {
                                                 localStorage.removeItem(

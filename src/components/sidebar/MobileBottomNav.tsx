@@ -6,7 +6,7 @@ import { HomeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
-import { InboxStackIcon } from '@heroicons/react/24/outline';
+import { InboxStackIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -27,6 +27,34 @@ const judgeNavLinks = [
         label: 'Projects',
         icon: <InboxStackIcon />,
         iconAlt: 'Projects logo',
+    },
+    {
+        href: '/schedule',
+        label: 'Schedule',
+        icon: <CalendarDaysIcon />,
+        iconAlt: 'Schedule logo',
+    },
+];
+
+const sponsorNavLinks = [
+    {
+        href: '/home',
+        label: 'Dashboard',
+        icon: <HomeIcon />,
+        iconAlt: 'Dashboard logo',
+    },
+    {
+        href: '/review',
+        label: 'Review',
+        icon: <UserGroupIcon />,
+        iconAlt: 'Review Hackers logo',
+    },
+    {
+        href: '/statistics',
+        label: 'Statistics',
+        icon: <ChartBarIcon />,
+        iconAlt: 'Stats logo',
+        disabled: true,
     },
     {
         href: '/schedule',
@@ -61,14 +89,14 @@ const navLinks = [
         active: false,
         disabled: false,
     },
-    {
-        href: '/projects',
-        label: 'Projects',
-        icon: <InboxStackIcon />,
-        iconAlt: 'Projects logo',
-        active: false,
-        disabled: false,
-    },
+    // {
+    //     href: '/projects',
+    //     label: 'Projects',
+    //     icon: <InboxStackIcon />,
+    //     iconAlt: 'Projects logo',
+    //     active: false,
+    //     disabled: false,
+    // },
     // {
     //     href: '#',
     //     label: 'Alerts',
@@ -130,6 +158,20 @@ export default function MobileBottomNav({
                     {initialData?.userRole === 'judge' ? (
                         <>
                             {judgeNavLinks.map((link) => (
+                                <NavLink
+                                    key={link.href}
+                                    href={link.href}
+                                    label={link.label}
+                                    icon={link.icon}
+                                    iconAlt={link.iconAlt}
+                                    platform="mobile"
+                                    active={url.startsWith(link.href)}
+                                />
+                            ))}
+                        </>
+                    ) : initialData?.userRole === 'sponsor' ? (
+                        <>
+                            {sponsorNavLinks.map((link) => (
                                 <NavLink
                                     key={link.href}
                                     href={link.href}

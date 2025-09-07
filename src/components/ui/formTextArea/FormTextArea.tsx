@@ -37,7 +37,14 @@ const FormTextArea = forwardRef<
         const textRef = useRef<HTMLTextAreaElement>(null);
         useImperativeHandle(ref, () => textRef.current as HTMLTextAreaElement);
         const [value, setValue] = useState(defaultValue);
-        const length = useMemo(() => (value as string).length, [value]);
+        const wordCount = useMemo(() => {
+            return value
+                ? value
+                      .trim()
+                      .split(/\s+/)
+                      .filter((word) => word.length > 0).length
+                : 0;
+        }, [value]);
         const timer = useRef<ReturnType<typeof setTimeout> | undefined>();
 
         useEffect(() => {
@@ -64,7 +71,7 @@ const FormTextArea = forwardRef<
                 className={maxLength !== undefined ? style.hasLength : ''}
                 style={
                     {
-                        '--length': `"${length}/${maxLength}"`,
+                        '--length': `"${wordCount}${maxLength ? ` / ${maxLength}` : ''}"`,
                     } as CSSProperties
                 }
             >
@@ -77,10 +84,19 @@ const FormTextArea = forwardRef<
                         className
                     )}
                     style={externalStyle}
-                    maxLength={maxLength}
                     {...props}
                     onChange={(e) => {
-                        setValue(e.target.value);
+                        const newValue = e.target.value;
+                        const newWordCount = newValue
+                            .trim()
+                            .split(/\s+/)
+                            .filter((word) => word.length > 0).length;
+
+                        if (maxLength && newWordCount > maxLength) {
+                            return; //prevent adding more words if max is reached
+                        }
+
+                        setValue(newValue);
                         if (timer.current !== undefined) {
                             clearTimeout(timer.current);
                         }

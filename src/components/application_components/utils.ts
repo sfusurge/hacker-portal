@@ -1,4 +1,7 @@
-import { InputFormPageData } from '@/components/application_components/types.js';
+import {
+    InputFormPageData,
+    InputFormQuestion,
+} from '@/components/application_components/types.js';
 
 export function flattenQuestions(pages: InputFormPageData[]) {
     return pages.flatMap((page) => {
@@ -8,7 +11,12 @@ export function flattenQuestions(pages: InputFormPageData[]) {
 
 export async function processResponseForServer(
     pages: InputFormPageData[],
-    uploadCallback: (filename: string, file: File) => Promise<string> // returns uploaded url
+    uploadCallback: (filename: string, file: File) => Promise<string>, // returns uploaded url
+    // use fileNameCallback to include info such as userId,
+    // hackathonId, etc.
+    fileNameCallback?: (
+        question: InputFormQuestion
+    ) => string | null | undefined
 ) {
     for (const page of pages) {
         for (const question of page.questions) {
@@ -22,6 +30,11 @@ export async function processResponseForServer(
                     if (!question.allowMultiple && question.singleFileName) {
                         filename = `${question.singleFileName}${filename.slice(filename.lastIndexOf('.'))}`;
                     }
+
+                    if (fileNameCallback) {
+                        filename = fileNameCallback(question) ?? filename;
+                    }
+
                     const uploadedUrl = await uploadCallback(filename, f);
 
                     if (uploadedUrl) {
@@ -57,6 +70,9 @@ export function getResponseMap(pages: InputFormPageData[]) {
                 break;
             case 'file-upload':
                 res[id] = question.fileLinks ?? [];
+                break;
+            case 'school-name':
+                res[id] = question.selection;
                 break;
             default:
                 res[id] = question.value;
@@ -98,7 +114,9 @@ export function loadResponseIntoSchema(
                         break;
                     case 'rich-text':
                         question.value = dataSource[id];
-
+                        break;
+                    case 'school-name':
+                        question.selection = dataSource[id];
                         break;
                     default:
                         question.value = dataSource[id];

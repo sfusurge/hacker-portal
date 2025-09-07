@@ -36,7 +36,7 @@ export default function TeamDisplay({
     // If user is not in a team for the current hackathon, show join team UI
     if (!currentTeam) {
         return (
-            <div className="flex h-full w-full items-center justify-center">
+            <div className="mt-20 flex h-full w-full items-center justify-center md:mt-0">
                 <CurrentStateUI
                     hackathonId={currentHackathon.id}
                     title="You're not in a team yet! 🥺"
@@ -67,34 +67,34 @@ export default function TeamDisplay({
                     </h1>
                 </div>
 
-                <Button
-                    onClick={() => {
-                        setShowFeedBacks(true);
-                    }}
-                    variant={'brand'}
-                    size="cozy"
-                    hierarchy={'primary'}
-                    style={{ alignSelf: 'center', marginLeft: 'auto' }}
-                >
-                    View Feedback
-                </Button>
+                {/*<Button*/}
+                {/*    onClick={() => {*/}
+                {/*        setShowFeedBacks(true);*/}
+                {/*    }}*/}
+                {/*    variant={'brand'}*/}
+                {/*    size="cozy"*/}
+                {/*    hierarchy={'primary'}*/}
+                {/*    style={{ alignSelf: 'center', marginLeft: 'auto' }}*/}
+                {/*>*/}
+                {/*    View Feedback*/}
+                {/*</Button>*/}
 
-                <FeedbackDialog
-                    open={showFeedBacks}
-                    onClose={() => {
-                        setShowFeedBacks(false);
-                    }}
-                />
+                {/*<FeedbackDialog*/}
+                {/*    open={showFeedBacks}*/}
+                {/*    onClose={() => {*/}
+                {/*        setShowFeedBacks(false);*/}
+                {/*    }}*/}
+                {/*/>*/}
             </div>
 
             <div className="flex flex-col gap-4">
                 <div className="grid grid-cols-1 gap-6 pb-24 md:pb-0 xl:grid-cols-2">
                     {/* <div className="grid grid-cols-1 gap-6 pb-24 md:pb-0 xl:grid-cols-[1fr_clamp(29rem,33vw,30.5rem)]"> */}
-                    <SubmitCard
-                        onShowSubmit={() => {
-                            redirect('/team/submit');
-                        }}
-                    />
+                    {/*<SubmitCard*/}
+                    {/*    onShowSubmit={() => {*/}
+                    {/*        redirect('/team/submit');*/}
+                    {/*    }}*/}
+                    {/*/>*/}
                     <TeamList currentUserEmail={userEmail} team={currentTeam} />
                     <InviteCard teamId={currentTeam.displayId} />
                 </div>

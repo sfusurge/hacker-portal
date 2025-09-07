@@ -12,7 +12,7 @@ import { z } from 'zod';
 import { InternalServerError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
 import Handlebars from 'handlebars';
-import { welcomeSparkhacksTemplate } from '@/server/routers/templates';
+import { welcomeStormhacksTemplate } from '@/server/routers/templates';
 import { transporter } from '@/server/nodemailerTransporter';
 import { teams } from '@/db/schema/teams';
 import { members } from '@/db/schema/members';
@@ -59,8 +59,8 @@ export const applicationsRouter = router({
 
             //based on code copied from rewviewappplications table lmao
             const tempDummy = (item: any) => {
-                const { '2': name, '5': email } = item.response || {};
-                return { name, email };
+                const { '1': firstName, '4': email } = item.response || {};
+                return { firstName, email };
             };
 
             if (!user?.email) {
@@ -75,24 +75,24 @@ export const applicationsRouter = router({
                 );
             }
 
-            const template = Handlebars.compile(welcomeSparkhacksTemplate);
+            const template = Handlebars.compile(welcomeStormhacksTemplate);
             const htmlContent = template({
-                // firstName: tempDummy(input).name,
+                firstName: tempDummy(input).firstName,
             });
 
             let oAuthMailOptions = {
                 from: process.env.SENDINGEMAIL,
                 to: user.email,
-                subject: 'Your SparkJam Application Has Been Received!',
-                text: 'Your SparkJam Application Has Been Received!',
+                subject: 'Your StormHacks Application Has Been Received!',
+                text: 'Your StormHacks Application Has Been Received!',
                 html: htmlContent,
             };
 
             let sfuMailOptions = {
                 from: process.env.SENDINGEMAIL,
                 to: extractedEmail,
-                subject: 'Your SparkJam Application Has Been Received!',
-                text: 'Your SparkJam Application Has Been Received!',
+                subject: 'Your StormHacks Application Has Been Received!',
+                text: 'Your StormHacks Application Has Been Received!',
                 html: htmlContent,
             };
 

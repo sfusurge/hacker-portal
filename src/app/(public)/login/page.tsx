@@ -72,8 +72,8 @@ export default async function Login({
             className="relative h-[100dvh] w-[100dvw] overflow-hidden"
         >
             <Image
-                src="/login/SparkJamOtterTableHeader.png"
-                alt="Stormy and Sparky in B&W drawings."
+                src="/dashboard/sh25header.png"
+                alt="Sparky Studying"
                 fill
                 className="absolute h-full w-full object-cover"
                 priority
