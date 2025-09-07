@@ -55,7 +55,9 @@ export function ReviewPage({
                 const textQuestion = question as
                     | QuestionTextLineInput
                     | QuestionTextAreaInput;
-                return textQuestion.value?.trim() || 'N/A';
+                return typeof textQuestion.value === 'string'
+                    ? textQuestion.value.trim() || 'N/A'
+                    : 'N/A';
 
             case 'link': {
                 const linkQuestion = question as QuestionTextLinkInput;
@@ -118,7 +120,7 @@ export function ReviewPage({
 
             case 'school-name':
                 const schoolQuestion = question as QuestionSchoolName;
-                return schoolQuestion.value || 'N/A';
+                return schoolQuestion.selection || 'N/A';
 
             case 'name':
                 const nameQuestion = question as QuestionNameInput;

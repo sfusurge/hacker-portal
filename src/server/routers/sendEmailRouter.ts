@@ -6,7 +6,7 @@ import { databaseClient } from '@/db/client';
 import { emailTemplates } from '@/db/schema/emails';
 import { user } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
-import { prepareEmailContent } from '@/app/(auth)/admin/email/emailPreview';
+import { prepareEmailContent } from '@/app/(auth)/admin/email/templates/emailPreview';
 import { getFileFromR2 } from '@/lib/cloudflare/r2';
 const env = process.env;
 

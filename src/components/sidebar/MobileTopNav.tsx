@@ -64,8 +64,8 @@ export default function MobileTopNav({
                     <div className="flex w-full flex-row items-center justify-between">
                         <div className="my-auto flex flex-row gap-3">
                             <Image
-                                src="/dashboard/OtterHead.png"
-                                alt="Sparky black and white drawing"
+                                src="/dashboard/sh25head.png"
+                                alt="StormHacks 2025 Logo"
                                 width={36}
                                 height={36}
                                 className="h-9 w-9 rounded-lg"
@@ -73,10 +73,10 @@ export default function MobileTopNav({
 
                             <div className="flex flex-col gap-2">
                                 <span className="line-clamp-1 text-sm leading-none font-medium text-white">
-                                    SparkJam 2025
+                                    StormHacks 2025
                                 </span>
                                 <span className="line-clamp-1 text-sm leading-none text-white/60">
-                                    May 17–31, 2025
+                                    October 4–5, 2025
                                 </span>
                             </div>
                         </div>

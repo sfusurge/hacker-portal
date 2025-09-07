@@ -40,7 +40,7 @@ export default function CreateTeamForm({
     const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isCreating, setIsCreating] = useState<boolean>(false);
-    const [imageUrl, setImageUrl] = useState('');
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
     const disabled = useMemo(
         () => !teamInfo.teamName || !imageUrl || isCreating,
         [teamInfo, imageUrl, isCreating]
@@ -109,7 +109,6 @@ export default function CreateTeamForm({
         setIsCreating(false);
     };
 
-    // Form shared between Dialog and Drawer
     const FormContent = (
         <form className="flex flex-col gap-8">
             {error && (
@@ -121,7 +120,7 @@ export default function CreateTeamForm({
 
             <div className="flex gap-6 text-white/60">
                 <Image
-                    src={imageUrl ?? '/teams/default.webp'}
+                    src={imageUrl !== '' ? imageUrl : '/teams/default.webp'}
                     alt="Team picture"
                     width={64}
                     height={64}

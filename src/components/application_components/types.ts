@@ -182,7 +182,11 @@ export interface QuestionFileUploads extends Question {
 export interface QuestionSchoolName extends Question {
     // TODO
     type: 'school-name';
-    value?: string;
+    title: string;
+    required: boolean;
+    questionId: number;
+    apiUrl: string;
+    selection: string;
 }
 
 export interface QuestionDatePicker extends Question {
