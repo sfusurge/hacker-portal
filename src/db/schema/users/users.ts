@@ -66,6 +66,7 @@ const updateUserSchema = z.object({
         .email('not a valid email')
         .max(255, 'email too long')
         .optional(),
+    image: z.string().optional(),
     isRegistered: z.boolean().default(false).optional(),
 });
 
