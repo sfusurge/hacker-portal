@@ -50,3 +50,24 @@
     flex-direction: column;
     align-items: center;
 }
+
+.htmlHolder {
+    /* maybe change this, inline for usable in title/descripts */
+    display: inline;
+}
+
+.htmlHolder a {
+    text-decoration: underline;
+    color: var(--text-brand-primary);
+
+    transition: filter 300ms ease-out;
+}
+
+.htmlHolder a:hover,
+.htmlHolder a:focus {
+    filter: brightness(1.2);
+}
+
+.htmlHolder a:visited {
+    color: var(--brand-700);
+}
