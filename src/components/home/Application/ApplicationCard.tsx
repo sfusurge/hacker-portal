@@ -35,7 +35,7 @@ export type AppStatus =
     | 'Not Yet Started'
     | 'In Progress'
     | 'Awaiting Review'
-    | 'Accepted – Awaiting RSVP'
+    | 'RSVP'
     | "Accepted and RSVP'd"
     | 'Declined'
     | 'Wait List'
@@ -144,6 +144,7 @@ function determineApplicationStatus(
 function getStatusStyleForTitle(status: AppStatus): string {
     switch (status) {
         case 'Accepted - Pending Payment':
+        case 'RSVP':
         case 'Accepted':
             return 'text-brand-400';
         case 'Withdrawn':

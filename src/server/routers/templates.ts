@@ -2647,9 +2647,14 @@ export const welcomeStormhacksTemplate = `<!doctype html>
                                                                 <p style="text-align: left;margin: 10px 0;padding: 0;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #202020;font-family: Helvetica;font-size: 16px;line-height: 150%;">
                                                                     <span style="color:#151413"><span style="font-size:18px"><strong>Welcome {{firstName}}!</strong></span></span><br>
                                                                     <br>
-                                                                    <span style="font-size:14px">Thanks so much for your application!</span><br>
+                                                                    <span style="font-size:14px">Thanks so much for your application! I heard the deliberation process is intense, with gods from the 3 Otterlympus realms overseeing the process. We'll have a decision to you by September 24th :)
+                                                                    </span><br>
                                                                     <br>
-                                                                    <span style="font-size:14px">I heard the deliberation process is intense, with gods from the 3 Otterlympus realms overseeing the process. We'll have a decision for you by September 23rd.</span><br>
+                                                                    <span style="font-size:14px"> In the meantime, remember, you MUST make a team on portal (you can do that 
+                                                                      <a href="https://portal.sfusurge.com/team" style="color:#007C89;">here</a>)! Even if you plan on riding solo, making a team solidifies your application and makes you eligible for consideration in this year's StormHacks.
+                                                                    </span><br>
+                                                                    <br>
+                                                                    <span style="font-size:14px">Have questions? Don’t hesitate to reach out to sfusurge@gmail.com or @sfusurge on Instagram. </span><br>
                                                                     <br>
                                                                     <span style="font-size:14px">We know waiting can be hard, so make sure to visit https://stormhacks.com/ to cure your boredom. New games and Webtoon chapters will be dropping every week until October 4th!</span><br>
                                                                     <br>
@@ -2657,7 +2662,7 @@ export const welcomeStormhacksTemplate = `<!doctype html>
                                                                     <br>
                                                                     <span style="font-size:14px">The StormHacks Team</span><br>
                                                                     <br>
-                                                                    <span style="font-size:13px"><em>(fueled by matcha, delusion, and 2 hours of daily sleep)</em></span>
+                                                                    <span style="font-size:13px"><em>(fueled by matcha 🍵 )</em></span>
                                                                 </p>
 
                                                                 <hr>
