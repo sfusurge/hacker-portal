@@ -2,3 +2,5 @@
 *.out
 venv/**
 .env
+.vercel
+.env*.local

@@ -1,6 +1,5 @@
-import { Atom, atom, PrimitiveAtom, useAtom, WritableAtom } from 'jotai';
+import { PrimitiveAtom, useAtom, WritableAtom } from 'jotai';
 import { QuestionCheckBoxInput } from '../types';
-
 import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 
 export function CheckBoxInput({
@@ -17,12 +16,18 @@ export function CheckBoxInput({
     const [question, setQuestion] = useAtom(dataAtom);
     return (
         <CheckBoxWithLabel
-            name={question.label ?? ''}
+            name={`checkbox-${question.questionId}`}
             required={question.required ?? false}
             checked={question.value ?? false}
             onChange={(e) => {
-                setQuestion({ ...question, value: e.target.checked });
+                setQuestion({
+                    ...question,
+                    questionId: question.questionId,
+                    value: e.target.checked,
+                });
             }}
-        ></CheckBoxWithLabel>
+        >
+            {question.label}
+        </CheckBoxWithLabel>
     );
 }

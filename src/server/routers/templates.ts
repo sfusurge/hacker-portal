@@ -2361,3 +2361,446 @@ The SparkJam Team<br>
     <script type="text/javascript"  src="/vf5cB19UY-YdEazux7T-/L3DYbSz6hSch/RhBbXg0E/UR1SVH/F8Jx0"></script></body>
 </html>
 `;
+
+export const welcomeStormhacksTemplate = `<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Your JourneyHacks Application</title>
+
+    <style type="text/css">
+        p{
+            margin:10px 0;
+            padding:0;
+        }
+        table{
+            border-collapse:collapse;
+        }
+        h1,h2,h3,h4,h5,h6{
+            display:block;
+            margin:0;
+            padding:0;
+        }
+        img,a img{
+            border:0;
+            height:auto;
+            outline:none;
+            text-decoration:none;
+        }
+        body,#bodyTable,#bodyCell{
+            height:100%;
+            margin:0;
+            padding:0;
+            width:100%;
+        }
+        #outlook a{
+            padding:0;
+        }
+        img{
+            -ms-interpolation-mode:bicubic;
+        }
+        table{
+            mso-table-lspace:0pt;
+            mso-table-rspace:0pt;
+        }
+        .ReadMsgBody{
+            width:100%;
+        }
+        .ExternalClass{
+            width:100%;
+        }
+        p,a,li,td,blockquote{
+            mso-line-height-rule:exactly;
+        }
+        a[href^=tel],a[href^=sms]{
+            color:inherit;
+            cursor:default;
+            text-decoration:none;
+        }
+        p,a,li,td,body,table,blockquote{
+            -ms-text-size-adjust:100%;
+            -webkit-text-size-adjust:100%;
+        }
+        .ExternalClass,.ExternalClass p,.ExternalClass td,.ExternalClass div,.ExternalClass span,.ExternalClass font{
+            line-height:100%;
+        }
+        a[x-apple-data-detectors]{
+            color:inherit !important;
+            text-decoration:none !important;
+            font-size:inherit !important;
+            font-family:inherit !important;
+            font-weight:inherit !important;
+            line-height:inherit !important;
+        }
+        table[align=left]{
+            float:left;
+        }
+        table[align=right]{
+            float:right;
+        }
+        #bodyCell{
+            padding:10px;
+        }
+        .templateContainer{
+            max-width:600px !important;
+        }
+        a.mcnButton{
+            display:block;
+        }
+        .mcnTextContent{
+            word-break:break-word;
+        }
+        .mcnTextContent img{
+            height:auto !important;
+        }
+        body,#bodyTable{
+            background-color:#FAFAFA;
+        }
+        #bodyCell{
+            border-top:0;
+        }
+        .templateContainer{
+            border:0;
+        }
+        h1{
+            color:#202020;
+            font-family:Helvetica;
+            font-size:26px;
+            font-style:normal;
+            font-weight:bold;
+            line-height:125%;
+            letter-spacing:normal;
+            text-align:left;
+        }
+        h2{
+            color:#202020;
+            font-family:Helvetica;
+            font-size:22px;
+            font-style:normal;
+            font-weight:bold;
+            line-height:125%;
+            letter-spacing:normal;
+            text-align:left;
+        }
+        h3{
+            color:#202020;
+            font-family:Helvetica;
+            font-size:20px;
+            font-style:normal;
+            font-weight:bold;
+            line-height:125%;
+            letter-spacing:normal;
+            text-align:left;
+        }
+        h4{
+            color:#202020;
+            font-family:Helvetica;
+            font-size:18px;
+            font-style:normal;
+            font-weight:bold;
+            line-height:125%;
+            letter-spacing:normal;
+            text-align:left;
+        }
+        #templateHeader{
+            background-color:#FFFFFF;
+            background-image:none;
+            background-repeat:no-repeat;
+            background-position:center;
+            background-size:cover;
+            border-top:0;
+            border-bottom:0;
+            padding-top:9px;
+            padding-bottom:0;
+        }
+        #templateHeader .mcnTextContent,#templateHeader .mcnTextContent p{
+            color:#202020;
+            font-family:Helvetica;
+            font-size:16px;
+            line-height:150%;
+            text-align:left;
+        }
+        #templateHeader .mcnTextContent a,#templateHeader .mcnTextContent p a{
+            color:#007C89;
+            font-weight:normal;
+            text-decoration:underline;
+        }
+        #templateBody{
+            background-color:#FFFFFF;
+            background-image:none;
+            background-repeat:no-repeat;
+            background-position:center;
+            background-size:cover;
+            border-top:0;
+            border-bottom:2px solid #EAEAEA;
+            padding-top:0;
+            padding-bottom:9px;
+        }
+        #templateBody .mcnTextContent,#templateBody .mcnTextContent p{
+            color:#202020;
+            font-family:Helvetica;
+            font-size:16px;
+            line-height:150%;
+            text-align:left;
+        }
+        #templateBody .mcnTextContent a,#templateBody .mcnTextContent p a{
+            color:#007C89;
+            font-weight:normal;
+            text-decoration:underline;
+        }
+        #templateFooter{
+            background-color:#FAFAFA;
+            background-image:none;
+            background-repeat:no-repeat;
+            background-position:center;
+            background-size:cover;
+            border-top:0;
+            border-bottom:0;
+            padding-top:9px;
+            padding-bottom:9px;
+        }
+        #templateFooter .mcnTextContent,#templateFooter .mcnTextContent p{
+            color:#656565;
+            font-family:Helvetica;
+            font-size:12px;
+            line-height:150%;
+            text-align:center;
+        }
+        #templateFooter .mcnTextContent a,#templateFooter .mcnTextContent p a{
+            color:#656565;
+            font-weight:normal;
+            text-decoration:underline;
+        }
+        
+        @media only screen and (min-width:768px){
+            .templateContainer{
+                width:600px !important;
+            }
+        }
+        
+        @media only screen and (max-width: 480px){
+            body,table,td,p,a,li,blockquote{
+                -webkit-text-size-adjust:none !important;
+            }
+            body{
+                width:100% !important;
+                min-width:100% !important;
+            }
+            .templateContainer{
+                max-width:100% !important;
+                width:100% !important;
+            }
+            .mcnTextContent{
+                padding-right:18px !important;
+                padding-left:18px !important;
+            }
+            h1{
+                font-size:22px !important;
+                line-height:125% !important;
+            }
+            h2{
+                font-size:20px !important;
+                line-height:125% !important;
+            }
+            h3{
+                font-size:18px !important;
+                line-height:125% !important;
+            }
+            h4{
+                font-size:16px !important;
+                line-height:150% !important;
+            }
+            #templateBody .mcnTextContent,#templateBody .mcnTextContent p{
+                font-size:16px !important;
+                line-height:150% !important;
+            }
+        }
+    </style>
+</head>
+<body style="height: 100%;margin: 0;padding: 0;width: 100%;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;background-color: #FAFAFA;">
+    <center>
+        <table align="center" border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" id="bodyTable" style="border-collapse: collapse;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;height: 100%;margin: 0;padding: 0;width: 100%;background-color: #FAFAFA;">
+            <tr>
+                <td align="center" valign="top" id="bodyCell" style="-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;height: 100%;margin: 0;padding: 10px;width: 100%;border-top: 0;">
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" class="templateContainer" style="border-collapse: collapse;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;border: 0;max-width: 600px !important;">
+                        <tr>
+                            <td valign="top" id="templateHeader" style="background:#FFFFFF none no-repeat center/cover;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;background-color: #FFFFFF;background-image: none;background-repeat: no-repeat;background-position: center;background-size: cover;border-top: 0;border-bottom: 0;padding-top: 9px;padding-bottom: 0;">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td valign="top" id="templateBody" style="background:#FFFFFF none no-repeat center/cover;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;background-color: #FFFFFF;background-image: none;background-repeat: no-repeat;background-position: center;background-size: cover;border-top: 0;border-bottom: 2px solid #EAEAEA;padding-top: 0;padding-bottom: 9px;">
+                                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                    <tbody>
+                                        <tr>
+                                            <td valign="top" style="padding-top: 9px;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                <table align="left" border="0" cellpadding="0" cellspacing="0" style="max-width: 100%;min-width: 100%;border-collapse: collapse;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;float: left;" width="100%">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td valign="top" class="mcnTextContent" style="padding-top: 0;padding-right: 18px;padding-bottom: 9px;padding-left: 18px;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;word-break: break-word;color: #202020;font-family: Helvetica;font-size: 16px;line-height: 150%;text-align: left;">
+
+                                                                <h1 style="text-align: center;display: block;margin: 0;padding: 0;color: #202020;font-family: Helvetica;font-size: 26px;font-style: normal;font-weight: bold;line-height: 125%;letter-spacing: normal;">
+                                                                    <img height="82" src="https://mcusercontent.com/33345c9bc17f10bac6afdd0ac/images/14ae4e9e-b849-ff79-250b-236ca05de560.png" style="border: 0px;max-width: 100%;height: auto;margin: 0px;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" width="660">
+                                                                </h1>
+
+                                                                <p style="text-align: left;margin: 10px 0;padding: 0;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #202020;font-family: Helvetica;font-size: 16px;line-height: 150%;">
+                                                                    <span style="color:#151413"><span style="font-size:18px"><strong>Welcome {{firstName}}!</strong></span></span><br>
+                                                                    <br>
+                                                                    <span style="font-size:14px">Thanks so much for your application! I heard the deliberation process is intense, with gods from the 3 Otterlympus realms overseeing the process. We'll have a decision to you by September 24th :)
+                                                                    </span><br>
+                                                                    <br>
+                                                                    <span style="font-size:14px"> In the meantime, remember, you MUST make a team on portal (you can do that 
+                                                                      <a href="https://portal.sfusurge.com/team" style="color:#007C89;">here</a>)! Even if you plan on riding solo, making a team solidifies your application and makes you eligible for consideration in this year's StormHacks.
+                                                                    </span><br>
+                                                                    <br>
+                                                                    <span style="font-size:14px">Have questions? Don’t hesitate to reach out to sfusurge@gmail.com or @sfusurge on Instagram. </span><br>
+                                                                    <br>
+                                                                    <span style="font-size:14px">We know waiting can be hard, so make sure to visit https://stormhacks.com/ to cure your boredom. New games and Webtoon chapters will be dropping every week until October 4th!</span><br>
+                                                                    <br>
+                                                                    <span style="font-size:14px">That's it from us for now,</span><br>
+                                                                    <br>
+                                                                    <span style="font-size:14px">The StormHacks Team</span><br>
+                                                                    <br>
+                                                                    <span style="font-size:13px"><em>(fueled by matcha 🍵 )</em></span>
+                                                                </p>
+
+                                                                <hr>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td valign="top" id="templateFooter" style="background:#FAFAFA none no-repeat center/cover;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;background-color: #FAFAFA;background-image: none;background-repeat: no-repeat;background-position: center;background-size: cover;border-top: 0;border-bottom: 0;padding-top: 9px;padding-bottom: 9px;">
+                                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                    <tbody>
+                                        <tr>
+                                            <td align="center" valign="top" style="padding: 9px;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td align="center" style="padding-left: 9px;padding-right: 9px;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #151413;border: 1px none;border-collapse: collapse;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td align="center" valign="top" style="padding-top: 9px;padding-right: 9px;padding-left: 9px;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                                <table align="center" border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                                    <tbody>
+                                                                                        <tr>
+                                                                                            <td align="center" valign="top" style="-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+
+                                                                                                <table align="left" border="0" cellpadding="0" cellspacing="0" style="display: inline;border-collapse: collapse;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;float: left;">
+                                                                                                    <tbody>
+                                                                                                        <tr>
+                                                                                                            <td valign="top" style="padding-right: 10px;padding-bottom: 9px;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                                                                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                                                                    <tbody>
+                                                                                                                        <tr>
+                                                                                                                            <td align="left" valign="middle" style="padding-top: 5px;padding-right: 10px;padding-bottom: 5px;padding-left: 9px;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                                                                                <table align="left" border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;float: left;">
+                                                                                                                                    <tbody>
+                                                                                                                                        <tr>
+                                                                                                                                            <td align="center" valign="middle" width="24" style="-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                                                                                                <a href="https://www.linkedin.com/company/sfu-surge/" style="-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                                                                                                    <img src="https://cdn-images.mailchimp.com/icons/social-block-v2/light-linkedin-48.png" alt="LinkedIn" style="display: block;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" height="24" width="24">
+                                                                                                                                                </a>
+                                                                                                                                            </td>
+                                                                                                                                        </tr>
+                                                                                                                                    </tbody>
+                                                                                                                                </table>
+                                                                                                                            </td>
+                                                                                                                        </tr>
+                                                                                                                    </tbody>
+                                                                                                                </table>
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                    </tbody>
+                                                                                                </table>
+
+                                                                                                <table align="left" border="0" cellpadding="0" cellspacing="0" style="display: inline;border-collapse: collapse;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;float: left;">
+                                                                                                    <tbody>
+                                                                                                        <tr>
+                                                                                                            <td valign="top" style="padding-right: 10px;padding-bottom: 9px;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                                                                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                                                                    <tbody>
+                                                                                                                        <tr>
+                                                                                                                            <td align="left" valign="middle" style="padding-top: 5px;padding-right: 10px;padding-bottom: 5px;padding-left: 9px;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                                                                                <table align="left" border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;float: left;">
+                                                                                                                                    <tbody>
+                                                                                                                                        <tr>
+                                                                                                                                            <td align="center" valign="middle" width="24" style="-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                                                                                                <a href="https://www.instagram.com/sfusurge/" style="-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                                                                                                    <img src="https://cdn-images.mailchimp.com/icons/social-block-v2/light-instagram-48.png" alt="Instagram" style="display: block;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" height="24" width="24">
+                                                                                                                                                </a>
+                                                                                                                                            </td>
+                                                                                                                                        </tr>
+                                                                                                                                    </tbody>
+                                                                                                                                </table>
+                                                                                                                            </td>
+                                                                                                                        </tr>
+                                                                                                                    </tbody>
+                                                                                                                </table>
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                    </tbody>
+                                                                                                </table>
+
+                                                                                                <table align="left" border="0" cellpadding="0" cellspacing="0" style="display: inline;border-collapse: collapse;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;float: left;">
+                                                                                                    <tbody>
+                                                                                                        <tr>
+                                                                                                            <td valign="top" style="padding-right: 0;padding-bottom: 9px;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                                                                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                                                                    <tbody>
+                                                                                                                        <tr>
+                                                                                                                            <td align="left" valign="middle" style="padding-top: 5px;padding-right: 10px;padding-bottom: 5px;padding-left: 9px;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                                                                                <table align="left" border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;float: left;">
+                                                                                                                                    <tbody>
+                                                                                                                                        <tr>
+                                                                                                                                            <td align="center" valign="middle" width="24" style="-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                                                                                                <a href="https://sfusurge.com/" style="-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                                                                                                                    <img src="https://cdn-images.mailchimp.com/icons/social-block-v2/light-link-48.png" alt="Website" style="display: block;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" height="24" width="24">
+                                                                                                                                                </a>
+                                                                                                                                            </td>
+                                                                                                                                        </tr>
+                                                                                                                                    </tbody>
+                                                                                                                                </table>
+                                                                                                                            </td>
+                                                                                                                        </tr>
+                                                                                                                    </tbody>
+                                                                                                                </table>
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                    </tbody>
+                                                                                                </table>
+
+                                                                                            </td>
+                                                                                        </tr>
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </center>
+</body>
+</html>`;

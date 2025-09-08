@@ -27,7 +27,7 @@ import { atom } from 'jotai';
 import { IframeEmbed } from './IframeEmbed';
 
 export interface ReviewPageProps {
-    submit: () => void;
+    submit: () => void | Promise<void>;
     mobileMode?: boolean;
     response: InputFormPageData[];
     disableSubmitBtn?: boolean;
@@ -47,6 +47,20 @@ export function ReviewPage({
     mobileMode = false,
     disableSubmitBtn = false,
 }: ReviewPageProps) {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async () => {
+        if (isSubmitting) return;
+
+        setIsSubmitting(true);
+        try {
+            await submit();
+        } catch (error) {
+            console.error('Submission error:', error);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
     function getQuestionResponse(question: InputFormQuestion) {
         // Type-specific handling based on question type
         switch (question.type) {
@@ -55,11 +69,16 @@ export function ReviewPage({
                 const textQuestion = question as
                     | QuestionTextLineInput
                     | QuestionTextAreaInput;
-                return textQuestion.value?.trim() || 'N/A';
+                return typeof textQuestion.value === 'string'
+                    ? textQuestion.value.trim() || 'N/A'
+                    : 'N/A';
 
             case 'link': {
                 const linkQuestion = question as QuestionTextLinkInput;
-                const rawUrl = linkQuestion.value?.trim();
+                const rawUrl =
+                    typeof linkQuestion.value === 'string'
+                        ? linkQuestion.value.trim()
+                        : String(linkQuestion.value || '').trim();
 
                 if (!rawUrl) return 'N/A';
                 return <IframeEmbed url={rawUrl} />;
@@ -118,7 +137,7 @@ export function ReviewPage({
 
             case 'school-name':
                 const schoolQuestion = question as QuestionSchoolName;
-                return schoolQuestion.value || 'N/A';
+                return schoolQuestion.selection || 'N/A';
 
             case 'name':
                 const nameQuestion = question as QuestionNameInput;
@@ -223,11 +242,12 @@ export function ReviewPage({
 
             {mobileMode && !disableSubmitBtn && (
                 <SkewmorphicButton
-                    onClick={submit}
+                    onClick={handleSubmit}
                     className="mt-4"
                     style={{ background: 'var(--brand-500)' }}
+                    disabled={isSubmitting}
                 >
-                    Submit!
+                    {isSubmitting ? 'Submitting...' : 'Submit!'}
                 </SkewmorphicButton>
             )}
         </div>

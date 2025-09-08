@@ -3,7 +3,6 @@ import { atom, useAtom, useAtomValue, WritableAtom } from 'jotai';
 import { focusAtom } from 'jotai-optics';
 import style from './SideCard.module.css';
 import { useMemo, useState } from 'react';
-import { useHackathon } from '@/hooks/use-hackathon';
 import {
     InputFormQuestion,
     QuestionMultipleCheckBox,
@@ -21,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 import { StatusEnum } from '@/db/schema/applications';
 import { trpc } from '@/trpc/client';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 
 export interface SideCardProps {
     visible: boolean;
@@ -57,11 +57,11 @@ export default function SideCard({
     const [status, _setStatus] = useAtom(statusAtom);
     const [editing, setEditing] = useState(false);
     const [updateCurrentStatus, setUpdateCurrentStatus] = useState(false);
-    const { hackathon } = useHackathon();
+    const hackathon = useAtomValue(hackathonAtom);
     const updateApplication = trpc.applications.updateApplication.useMutation(
         {}
     );
-    const utils = trpc.useContext();
+    const utils = trpc.useUtils();
 
     const ready = useMemo(
         () => visible && hackathon !== undefined,

@@ -5,6 +5,7 @@ import timezone from 'dayjs/plugin/timezone';
 
 import Image from 'next/image';
 import ApplicationPageComponent from '@/app/(auth)/application/ApplicationPage';
+import { createCaller } from '@/server/appRouter';
 
 export default async function ApplicationPage({
     searchParams,
@@ -14,11 +15,10 @@ export default async function ApplicationPage({
     dayjs.extend(utc);
     dayjs.extend(timezone);
     const currentTime = dayjs();
-    const cutoffTime = dayjs
-        .tz('2025-05-30', 'Canada/Pacific')
-        .startOf('day')
-        .add(1, 'hour');
+    const cutoffTime = dayjs.tz('2025-09-22', 'Canada/Pacific').endOf('day');
     const params = await searchParams;
+
+    const trpcClient = createCaller({});
 
     const bypass =
         process.env.APPLY_BYPASS &&

@@ -10,12 +10,25 @@ import { UserData } from '@/server/routers/usersRouter';
 import dayjs from 'dayjs';
 import { atom, useSetAtom } from 'jotai';
 import { useHydrateAtoms } from 'jotai/utils';
+import { ReactNode } from 'react';
 
-// TODO fix janky types
-export const userInfoAtom = atom<Exclude<UserData, undefined>>(
-    {} as Exclude<UserData, undefined>
-); // ssr, never actually undefined
-export const hackathonAtom = atom<HackathonData>({} as HackathonData); // likewise
+export type UserDataType = Exclude<UserData, undefined>;
+/**
+ * Trust that contents of this atom is never undefined.
+ *
+ * If user data fetch failed, page would've redirected to login
+ */
+export const userInfoAtom = atom<UserDataType>({} as unknown as UserDataType);
+
+/**
+ * Trust that hackathon atom is never undefined.
+ *
+ * Do not try to intentionally set this value to undefined.
+ */
+export const hackathonAtom = atom<HackathonData>(
+    {} as unknown as HackathonData
+);
+
 interface DbHackathonType {
     id: number;
     name: string;
@@ -28,6 +41,7 @@ interface DbHackathonType {
     judgeQuestions: JudgingFormQuestion[];
     judgeRubric: SubmissionJudgeRubric[];
 }
+
 function DeserializeHackathonData(hackathon: DbHackathonType) {
     return {
         ...hackathon,
@@ -40,17 +54,21 @@ function DeserializeHackathonData(hackathon: DbHackathonType) {
     };
 }
 
+export type HackathonType = ReturnType<typeof DeserializeHackathonData>;
+
 export function ClientContext({
     userData,
     hackathonData,
+    children,
 }: {
     userData: UserData;
     hackathonData: DbHackathonType;
+    children: ReactNode;
 }) {
     useHydrateAtoms([
         [userInfoAtom, userData!],
         [hackathonAtom, DeserializeHackathonData(hackathonData)],
     ]);
 
-    return <></>;
+    return <>{children}</>;
 }

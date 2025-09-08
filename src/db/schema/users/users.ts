@@ -18,12 +18,14 @@ export const UserRoleEnum = {
     user: 'user',
     admin: 'admin',
     judge: 'judge',
+    sponsor: 'sponsor',
 };
 
 export const userRoleDbEnum = pgEnum('user_role', [
     UserRoleEnum.admin,
     UserRoleEnum.user,
     UserRoleEnum.judge,
+    UserRoleEnum.sponsor,
 ]);
 
 export const user = pgTable(
@@ -66,6 +68,7 @@ const updateUserSchema = z.object({
         .email('not a valid email')
         .max(255, 'email too long')
         .optional(),
+    image: z.string().optional(),
     isRegistered: z.boolean().default(false).optional(),
 });
 

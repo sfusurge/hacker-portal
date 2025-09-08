@@ -126,12 +126,12 @@
 
     /* Font family variables */
     --font-sans-0:
-    /* Primary sans-serif font stack */
+        /* Primary sans-serif font stack */
         Inter, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
     --font-sans--font-feature-settings:
-    /* Font feature settings for sans-serif */
+        /* Font feature settings for sans-serif */
         'cv01' on, 'cv03' on, 'cv04' on, 'cv05' on, 'cv08' on, 'cv10' on,
         'cv11' on;
 
@@ -191,6 +191,10 @@
         --radius: 0.5rem;
         color-scheme: dark;
     }
+}
+
+html::-webkit-scrollbar {
+    display: none;
 }
 
 .large-dashes {
@@ -324,4 +328,13 @@ button {
     width: -webkit-fill-available;
     width: -moz-available;
     width: fill-available;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }

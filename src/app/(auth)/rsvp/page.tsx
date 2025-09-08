@@ -1,13 +1,14 @@
 'use client';
 import style from './Payment.module.css';
-import { userInfoAtom } from '@/app/(auth)/ClientAuthContext';
+import { userInfoAtom } from '@/app/(auth)/ClientContext';
 import ElementsForm from '@/app/(auth)/rsvp/components/ElementsForm';
 import { FullPageInfo } from '@/components/ui/FullPageInfo';
-import { hackathonAtom } from '@/hooks/use-hackathon';
+
 import { trpc } from '@/trpc/client';
 import { useAtomValue } from 'jotai';
 import { useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 
 export default function PaymentElementPage() {
     const userInfo = useAtomValue(userInfoAtom);

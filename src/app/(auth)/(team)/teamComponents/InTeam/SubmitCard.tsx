@@ -1,5 +1,5 @@
 'use client';
-import { userInfoAtom } from '@/app/(auth)/ClientAuthContext';
+import { hackathonAtom, userInfoAtom } from '@/app/(auth)/ClientContext';
 import { HackathonData } from '@/components/application_components/types';
 import CountdownTimer from '@/components/home/Application/Countdown';
 import { SubmitCardSkeleton } from '@/components/home/Skeletons';
@@ -12,7 +12,6 @@ import {
     CardHeaderDescription,
     CardHeaderTitle,
 } from '@/components/ui/card';
-import { useHackathon } from '@/hooks/use-hackathon';
 import { trpc } from '@/trpc/client';
 import { ArrowRightIcon } from '@heroicons/react/24/solid';
 import dayjs from 'dayjs';
@@ -103,7 +102,7 @@ export function VotingCard() {
 }
 
 export function SubmitCard({ onShowSubmit }: { onShowSubmit: () => void }) {
-    const { hackathon } = useHackathon();
+    const hackathon = useAtomValue(hackathonAtom);
     const [isVotingPeriod, setIsVotingPeriod] = useState(false);
 
     useEffect(() => {
@@ -172,7 +171,7 @@ function SubmitCardContent({
         const pstNow = new Date(
             now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
         );
-        const deadline = new Date('2025-05-29T00:00:00-07:00');
+        const deadline = new Date('2025-09-29T00:00:00-07:00');
         setIsPastDeadline(pstNow > deadline);
     }, [hackathon]);
 

@@ -9,10 +9,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { ToggleButton } from '@/components/ui/ToggleButton/ToggleButton';
 import { CalendarEvent } from '@/server/routers/eventsRouter';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
-import { userInfoAtom } from '../ClientAuthContext';
+import { userInfoAtom } from '../ClientContext';
 import { MonthCalendar } from '@/components/calendar/MonthCalendar/MonthCalendar';
 import {
     editModeAtom,

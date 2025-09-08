@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { getStatusVariant, getTextVariant } from '@/lib/application-status';
 import Link from 'next/link';
 import { LinkIcon } from '@heroicons/react/24/outline';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import {
     Card,
@@ -21,9 +21,10 @@ import Image from 'next/image';
 import { inferProcedureOutput } from '@trpc/server';
 import { AppRouter } from '@/server/appRouter';
 import { copyToClipboard } from '@/lib/copy-to-clipboard';
-import { trpc } from '@/trpc/client';
+
 import { UserData } from '@/server/routers/usersRouter';
 import JoinTeam from '@/app/(auth)/(team)/teamComponents/NoTeam/TeamOption';
+import { getIcon } from '@/utils/blobHelper';
 
 type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
 
@@ -37,25 +38,12 @@ function TeamMemberItem({
     member: TeamMemberType;
     userData: UserData;
 }) {
-    const fetchedImage = trpc.files.getUserImages.useQuery(
-        {},
-        {
-            refetchOnWindowFocus: false,
+    const avatarUrl = useMemo(() => {
+        if (!member.image) {
+            return '/sidebar/default-avatar.webp';
         }
-    );
-
-    const [avatarUrl, setAvatarUrl] = useState<string>(
-        '/sidebar/default-avatar.webp'
-    );
-
-    useEffect(() => {
-        if (fetchedImage.data && fetchedImage.data.length > 0) {
-            const dataUrl = `data:image/png;base64,${fetchedImage.data}`;
-            setAvatarUrl(dataUrl);
-        } else {
-            setAvatarUrl('/sidebar/default-avatar.webp');
-        }
-    }, [fetchedImage.data]);
+        return getIcon('user_icon', member.image);
+    }, [member]);
 
     return (
         <div className="flex items-center justify-between gap-2">

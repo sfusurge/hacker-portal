@@ -14,7 +14,7 @@ import { useState } from 'react';
 import TeamMemberList from './TeamMemberList';
 import { trpc } from '@/trpc/client';
 import { useAtom, useAtomValue } from 'jotai';
-import { hackathonAtom } from '@/app/(auth)/ClientAuthContext';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 
 interface TeamCardProps {
     teamData: {
@@ -62,27 +62,27 @@ export default function TeamCard({ teamData, isOwnProject }: TeamCardProps) {
                         image: member.image || null,
                     }))}
                 />
-                {isOwnProject &&
-                    feedbacksQuery.data &&
-                    feedbacksQuery.data[hackathon.id] !== undefined && (
-                        <div className="mt-4">
-                            <Button
-                                variant="brand"
-                                hierarchy="primary"
-                                size="cozy"
-                                onClick={() => setShowFeedbacks(true)}
-                            >
-                                View Feedback
-                            </Button>
-                            <FeedbackDialog
-                                open={showFeedbacks}
-                                selectedFeedback={
-                                    feedbacksQuery.data[hackathon.id]!
-                                }
-                                onClose={() => setShowFeedbacks(false)}
-                            />
-                        </div>
-                    )}
+                {/*{isOwnProject &&*/}
+                {/*    feedbacksQuery.data &&*/}
+                {/*    feedbacksQuery.data[hackathon.id] !== undefined && (*/}
+                {/*        <div className="mt-4">*/}
+                {/*            <Button*/}
+                {/*                variant="brand"*/}
+                {/*                hierarchy="primary"*/}
+                {/*                size="cozy"*/}
+                {/*                onClick={() => setShowFeedbacks(true)}*/}
+                {/*            >*/}
+                {/*                View Feedback*/}
+                {/*            </Button>*/}
+                {/*            <FeedbackDialog*/}
+                {/*                open={showFeedbacks}*/}
+                {/*                selectedFeedback={*/}
+                {/*                    feedbacksQuery.data[hackathon.id]!*/}
+                {/*                }*/}
+                {/*                onClose={() => setShowFeedbacks(false)}*/}
+                {/*            />*/}
+                {/*        </div>*/}
+                {/*    )}*/}
             </CardContent>
         </Card>
     );

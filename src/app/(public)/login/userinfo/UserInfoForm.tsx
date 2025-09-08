@@ -11,14 +11,13 @@ import { redirect, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { updateUserInfo } from './userinfo_action';
 import { Input } from '@/components/ui/input/input';
-import { trpc } from '@/trpc/client';
+
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { uploadFileToBlob } from '@/utils/blobHelper';
 
 export default function UserInfoForm() {
     const searchParams = useSearchParams();
     const session = useSession();
-    const uploadFile = trpc.files.uploadFile.useMutation();
-
     const updateUserWithRedirect = updateUserInfo.bind(
         null,
         searchParams.get('from') ?? undefined
@@ -36,38 +35,10 @@ export default function UserInfoForm() {
     const [lastName, setLastName] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [profilePicture, setProfilePicture] = useState('');
-    const [fileData, setFileData] = useState<{
-        file: File;
-        buffer: string;
-    } | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const formRef = useRef<HTMLFormElement>(null);
-
-    const handleFileChange = async (
-        event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-
-        try {
-            //Create a preview for immediate display
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setProfilePicture(reader.result as string);
-            };
-            reader.readAsDataURL(file);
-
-            //Process file for R2 upload
-            const buffer = await file.arrayBuffer();
-            const base64Buffer = Buffer.from(buffer).toString('base64');
-            setFileData({ file, buffer: base64Buffer });
-            setError(null);
-        } catch (err: any) {
-            setError(err.message || 'Failed to process image.');
-        }
-    };
 
     const handleButtonClick = () => {
         fileInputRef.current?.click();
@@ -75,46 +46,35 @@ export default function UserInfoForm() {
 
     const handleSubmit = async (formData: FormData) => {
         setIsSubmitting(true);
-        setError(null);
+        setTimeout(async () => {
+            setError(null);
 
-        try {
-            let profilePictureId = '';
+            const file = (fileInputRef.current?.files ?? [])[0];
 
-            // Upload file to R2 if one is selected
-            if (fileData) {
-                const result = await uploadFile.mutateAsync({
-                    fileName: fileData.file.name,
-                    file: fileData.buffer,
-                    bucketName: 'profile-pictures',
-                });
+            if (file) {
+                const fileName = await uploadFileToBlob(
+                    'user_icon',
+                    crypto.randomUUID(),
+                    file
+                );
 
-                if (!result.success) {
-                    throw new Error('Failed to upload profile picture');
-                }
-
-                profilePictureId = result.key;
+                formData.set('image', fileName);
             }
 
-            // Add the profile picture URL to the form data
-            if (profilePictureId) {
-                formData.append('profilePictureId', profilePictureId);
-            }
-
-            // Call the original action with the updated form data
             await updateUserWithRedirect(formData);
-        } catch (err: any) {
-            if (err?.digest?.startsWith('NEXT_REDIRECT')) {
-                throw err; // re-throw to let Next.js handle it
-            }
-
-            console.error(err);
-
-            setError(
-                err.message || 'Failed to update profile. Please try again.'
-            );
             setIsSubmitting(false);
-        }
+        }, 0);
     };
+
+    function handleFileChange() {
+        const file = (fileInputRef.current?.files ?? [])[0];
+        if (!file) {
+            setProfilePicture('');
+        }
+        const fileUrl = URL.createObjectURL(file);
+        console.log(fileUrl);
+        setProfilePicture(fileUrl);
+    }
 
     return (
         <div
@@ -123,8 +83,8 @@ export default function UserInfoForm() {
         >
             <div className="block h-full w-full bg-[#C4D086] lg:hidden" />
             <Image
-                src="/login/SparkJamOtterTableHeader.png"
-                alt="Stormy and Sparky are cooking."
+                src="/dashboard/sh25header.png"
+                alt="Sparky studying"
                 fill
                 className="absolute hidden h-full w-full object-cover lg:block"
                 priority
@@ -181,8 +141,8 @@ export default function UserInfoForm() {
                                             className="hidden w-auto"
                                             accept=".png, .jpeg, .jpg"
                                             ref={fileInputRef}
-                                            onChange={handleFileChange}
                                             disabled={isSubmitting}
+                                            onChange={handleFileChange}
                                         />
                                         <div className="flex gap-1">
                                             <label
@@ -208,7 +168,12 @@ export default function UserInfoForm() {
                                                     className="hover:bg-neutral-750/60 border-2 border-transparent underline underline-offset-4"
                                                     onClick={() => {
                                                         setProfilePicture('');
-                                                        setFileData(null);
+                                                        if (
+                                                            fileInputRef.current
+                                                        ) {
+                                                            fileInputRef.current.value =
+                                                                '';
+                                                        }
                                                     }}
                                                     type="button"
                                                     disabled={isSubmitting}
@@ -225,7 +190,7 @@ export default function UserInfoForm() {
                                 </div>
                                 <div className="flex flex-row gap-4 md:gap-6">
                                     <div className="w-full">
-                                        <Label required={true}>
+                                        <Label required={true} className="mb-2">
                                             First name
                                         </Label>
                                         <FormTextInput
@@ -242,7 +207,9 @@ export default function UserInfoForm() {
                                     </div>
 
                                     <div className="w-full">
-                                        <Label required={true}>Last name</Label>
+                                        <Label required={true} className="mb-2">
+                                            Last name
+                                        </Label>
                                         <FormTextInput
                                             name="lastname"
                                             type="search"
@@ -257,7 +224,9 @@ export default function UserInfoForm() {
                                     </div>
                                 </div>
                                 <div className="w-full">
-                                    <Label required={true}>Phone number</Label>
+                                    <Label required={true} className="mb-2">
+                                        Phone number
+                                    </Label>
                                     <FormTextInput
                                         name="phone"
                                         type="tel"

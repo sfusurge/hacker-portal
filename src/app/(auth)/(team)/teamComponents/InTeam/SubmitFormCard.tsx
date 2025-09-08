@@ -1,6 +1,6 @@
 'use client';
 
-import { userInfoAtom } from '@/app/(auth)/ClientAuthContext';
+import { hackathonAtom, userInfoAtom } from '@/app/(auth)/ClientContext';
 import { InputForm } from '@/components/application_components/InputForm';
 import { submittedAtom } from '@/components/application_components/InputFormComponents/shared';
 import { InputFormData } from '@/components/application_components/types';
@@ -18,7 +18,6 @@ import {
     DialogHeader,
 } from '@/components/ui/dialog';
 import { getFileSize } from '@/components/ui/FileUpload/FileUpload';
-import { hackathonAtom } from '@/hooks/use-hackathon';
 import { submitProject } from '@/lib/blobs';
 import { trpc } from '@/trpc/client';
 import { ArrowRightIcon } from '@heroicons/react/20/solid';
@@ -137,7 +136,7 @@ export function SubmitFormCard({ teamId }: { teamId: number }) {
                             alignItems: 'center',
                         }}
                     >
-                        <span>Your team's project was submitted!</span>
+                        <span>Your team&apos;s project was submitted!</span>
                         <Button
                             variant={'brand'}
                             hierarchy={'primary'}

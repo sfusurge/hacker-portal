@@ -1,4 +1,7 @@
-import { InputFormPageData } from '@/components/application_components/types.js';
+import {
+    InputFormPageData,
+    InputFormQuestion,
+} from '@/components/application_components/types.js';
 
 export function flattenQuestions(pages: InputFormPageData[]) {
     return pages.flatMap((page) => {
@@ -8,7 +11,12 @@ export function flattenQuestions(pages: InputFormPageData[]) {
 
 export async function processResponseForServer(
     pages: InputFormPageData[],
-    uploadCallback: (filename: string, file: File) => Promise<string> // returns uploaded url
+    uploadCallback: (filename: string, file: File) => Promise<string>, // returns uploaded url
+    // use fileNameCallback to include info such as userId,
+    // hackathonId, etc.
+    fileNameCallback?: (
+        question: InputFormQuestion
+    ) => string | null | undefined
 ) {
     for (const page of pages) {
         for (const question of page.questions) {
@@ -22,6 +30,11 @@ export async function processResponseForServer(
                     if (!question.allowMultiple && question.singleFileName) {
                         filename = `${question.singleFileName}${filename.slice(filename.lastIndexOf('.'))}`;
                     }
+
+                    if (fileNameCallback) {
+                        filename = fileNameCallback(question) ?? filename;
+                    }
+
                     const uploadedUrl = await uploadCallback(filename, f);
 
                     if (uploadedUrl) {
@@ -58,6 +71,9 @@ export function getResponseMap(pages: InputFormPageData[]) {
             case 'file-upload':
                 res[id] = question.fileLinks ?? [];
                 break;
+            case 'school-name':
+                res[id] = question.selection;
+                break;
             default:
                 res[id] = question.value;
         }
@@ -79,26 +95,34 @@ export function loadResponseIntoSchema(
                         // pass, name not used yet
                         break;
 
-                    case 'multiple-checkbox':
-                        const choices = new Map<string, number>();
-                        for (let i = 0; i < question.choices.length; i++) {
-                            choices.set(question.choices[i].data, i);
-                        }
-                        for (const item of dataSource[id]) {
-                            if (choices.has(item)) {
-                                question.choices[choices.get(item)!].value =
-                                    true;
-                            } else if (question.allowOther) {
-                                question.otherValue = item;
-                            }
+                    case 'multiple-checkbox': {
+                        // build new choices array with .value flags
+                        const selected = Array.isArray(dataSource[id])
+                            ? dataSource[id]
+                            : [];
+                        const selectedSet = new Set(selected);
+                        let foundOther = false;
+                        question.choices = question.choices.map((choice) => {
+                            const checked = selectedSet.has(choice.data);
+                            if (checked) selectedSet.delete(choice.data);
+                            return { ...choice, value: checked };
+                        });
+                        // remaining items in selectedSet are "other" values
+                        if (question.allowOther && selectedSet.size > 0) {
+                            question.otherValue = Array.from(selectedSet)[0];
+                        } else if (question.allowOther) {
+                            question.otherValue = '';
                         }
                         break;
+                    }
                     case 'file-upload':
                         question.fileLinks = dataSource[id];
                         break;
                     case 'rich-text':
                         question.value = dataSource[id];
-
+                        break;
+                    case 'school-name':
+                        question.selection = dataSource[id];
                         break;
                     default:
                         question.value = dataSource[id];

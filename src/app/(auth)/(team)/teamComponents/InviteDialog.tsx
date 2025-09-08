@@ -33,13 +33,13 @@ export default function InviteDialog({
     displayId,
     isOpen = true,
     hasTeam = null,
-    imageData,
+    imageUrl = '/teams/default.webp',
 }: {
     team: TeamData | null;
     displayId: string;
     isOpen?: boolean;
     hasTeam?: TeamData | null;
-    imageData?: string;
+    imageUrl?: string;
 }) {
     const [open, handleOpenChange] = useState(isOpen);
     const router = useRouter();
@@ -105,7 +105,7 @@ export default function InviteDialog({
                         <Image
                             width={64}
                             height={64}
-                            src={imageData ?? '/teams/default.webp'}
+                            src={imageUrl}
                             alt={`${team.name} logo`}
                             className="h-16 w-16 rounded-xl"
                         />

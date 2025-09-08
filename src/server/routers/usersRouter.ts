@@ -150,7 +150,7 @@ export async function getBasicUserInfo() {
     return {
         email: session.user.email.toLowerCase(),
         image: session.user.image ?? '',
-        userId: parseInt(session.userId),
+        id: parseInt(session.userId),
     };
 }
 

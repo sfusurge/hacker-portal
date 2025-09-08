@@ -5,7 +5,7 @@ import { trpc } from '@/trpc/client';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useHackathon } from '@/hooks/use-hackathon';
+
 import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -19,6 +19,8 @@ import {
 import TeamView from '@/components/projects/judge/scoring/TeamView';
 import JudgeView from '@/components/projects/judge/scoring/JudgeView';
 import ScoreView from '@/components/projects/judge/scoring/ScoreView';
+import { useAtomValue } from 'jotai';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 
 export default function JudgeAssignmentPage() {
     const [judges, setJudges] = useState<any[]>([]);
@@ -32,7 +34,7 @@ export default function JudgeAssignmentPage() {
         teamId: number;
     } | null>(null);
     const { toast } = useToast();
-    const { hackathon } = useHackathon();
+    const hackathon = useAtomValue(hackathonAtom);
 
     const [judgeSearchQuery, setJudgeSearchQuery] = useState('');
     const [teamSearchQuery, setTeamSearchQuery] = useState('');
@@ -63,15 +65,15 @@ export default function JudgeAssignmentPage() {
     });
 
     const getTeams = trpc.teams.getTeamsWithMemberCountWithProject.useQuery(
-        { hackathonId: hackathon?.id },
+        { hackathonId: hackathon.id },
         {
             enabled: false,
         }
     );
 
     const getJudgingProjects = trpc.judging.getJudgingProjects.useQuery(
-        { hackathonId: hackathon?.id || 0 },
-        { enabled: !!hackathon?.id }
+        { hackathonId: hackathon.id || 0 },
+        { enabled: !!hackathon.id }
     );
 
     const assignJudgingProject = trpc.judging.assignJudgingProject.useMutation({
@@ -155,7 +157,7 @@ export default function JudgeAssignmentPage() {
                 setLoading(false);
             }
         );
-    }, [hackathon?.id]);
+    }, [hackathon.id]);
 
     const removeJudgingProject = trpc.judging.removeJudgingProject.useMutation({
         onSuccess: () => {

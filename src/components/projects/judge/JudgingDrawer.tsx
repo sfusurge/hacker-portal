@@ -14,8 +14,7 @@ import { ExclamationCircleIcon } from '@heroicons/react/20/solid';
 import RubricDialog from './RubricDialog';
 import { trpc } from '@/trpc/client';
 import { Loader2, X } from 'lucide-react';
-import { useHackathon } from '@/hooks/use-hackathon';
-import { atom, useAtom } from 'jotai';
+import { atom, useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage, createJSONStorage } from 'jotai/utils';
 import {
     ScoreItem,
@@ -30,6 +29,7 @@ import {
     DrawerDescription,
     DrawerFooter,
 } from '@/components/ui/drawer';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 
 interface JudgingDrawerProps {
     teamId: number;
@@ -70,7 +70,8 @@ export default function JudgingDrawer({
     didJudge,
     isAssignedToJudge = true,
 }: JudgingDrawerProps) {
-    const { hackathon, hackathonLoaded } = useHackathon();
+    const hackathon = useAtomValue(hackathonAtom);
+
     const [judgingData, setJudgingData] = useAtom(judgingDataAtom);
     const [formErrors, setFormErrors] = useAtom(formErrorsAtom);
     const [questions, setQuestions] = useAtom(questionsAtom);
@@ -412,7 +413,7 @@ export default function JudgingDrawer({
     }, [user?.email, hackathonId, setJudgingData, isInitialized]);
 
     useEffect(() => {
-        if (hackathonLoaded && hackathon && isInitialized) {
+        if (hackathon && isInitialized) {
             try {
                 const judgeQuestions = hackathon.judgeQuestions || [];
                 setQuestions(
@@ -444,7 +445,6 @@ export default function JudgingDrawer({
             setIsLoading(false);
         }
     }, [
-        hackathonLoaded,
         hackathon,
         isInitialized,
         judgingData.responses,
@@ -736,7 +736,7 @@ export default function JudgingDrawer({
                                             htmlFor="dontShowAgain"
                                             className="cursor-pointer text-sm text-white/60"
                                         >
-                                            Don't show this again
+                                            {"Don't show this again"}
                                         </label>
                                     </div>
                                     <DrawerFooter className="border-t border-neutral-600/60 bg-neutral-800/60">

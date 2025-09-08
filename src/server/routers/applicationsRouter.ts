@@ -12,11 +12,13 @@ import { z } from 'zod';
 import { InternalServerError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
 import Handlebars from 'handlebars';
-import { welcomeSparkhacksTemplate } from '@/server/routers/templates';
+import { welcomeStormhacksTemplate } from '@/server/routers/templates';
 import { transporter } from '@/server/nodemailerTransporter';
 import { teams } from '@/db/schema/teams';
 import { members } from '@/db/schema/members';
-import { getUserData } from '@/server/routers/usersRouter';
+import { getBasicUserInfo, getUserData } from '@/server/routers/usersRouter';
+import { checkIns } from '@/db/schema/checkIn';
+import { events } from '@/db/schema/events';
 
 export interface SubmitApplicationResponse {
     hackathonId: number;
@@ -59,8 +61,8 @@ export const applicationsRouter = router({
 
             //based on code copied from rewviewappplications table lmao
             const tempDummy = (item: any) => {
-                const { '2': name, '5': email } = item.response || {};
-                return { name, email };
+                const { '1': firstName, '4': email } = item.response || {};
+                return { firstName, email };
             };
 
             if (!user?.email) {
@@ -75,24 +77,24 @@ export const applicationsRouter = router({
                 );
             }
 
-            const template = Handlebars.compile(welcomeSparkhacksTemplate);
+            const template = Handlebars.compile(welcomeStormhacksTemplate);
             const htmlContent = template({
-                // firstName: tempDummy(input).name,
+                firstName: tempDummy(input).firstName,
             });
 
             let oAuthMailOptions = {
                 from: process.env.SENDINGEMAIL,
                 to: user.email,
-                subject: 'Your SparkJam Application Has Been Received!',
-                text: 'Your SparkJam Application Has Been Received!',
+                subject: 'Your StormHacks Application Has Been Received!',
+                text: 'Your StormHacks Application Has Been Received!',
                 html: htmlContent,
             };
 
             let sfuMailOptions = {
                 from: process.env.SENDINGEMAIL,
                 to: extractedEmail,
-                subject: 'Your SparkJam Application Has Been Received!',
-                text: 'Your SparkJam Application Has Been Received!',
+                subject: 'Your StormHacks Application Has Been Received!',
+                text: 'Your StormHacks Application Has Been Received!',
                 html: htmlContent,
             };
 
@@ -153,23 +155,85 @@ export const applicationsRouter = router({
                     response: applications.response,
                     teamId: members.teamId,
                     teamName: teams.name,
+                    members: members.userId,
                 })
                 .from(applications)
                 .leftJoin(members, eq(applications.userId, members.userId))
                 .leftJoin(teams, eq(members.teamId, teams.id))
                 .where(condition)
-                .orderBy(asc(applications.createdDate))
-                .limit(input.maxResult)
-                .offset(offset);
+                .orderBy(asc(applications.createdDate));
 
-            // converting date to unix timestamp before returning
-            // suppressing warning to avoid uncessesary type conversion.
-            applicationsWithTeamInfo.forEach(
-                // @ts-ignore
-                (item) => (item.createdDate = item.createdDate.getTime())
+            const teamToMembersMap = Object.groupBy(
+                applicationsWithTeamInfo,
+                (item) => item.teamId || 'none'
             );
-            // @ts-ignore
-            return applicationsWithTeamInfo as ApplicationWithTeamInfo[];
+
+            const applicationsWithCheckInInfo = await databaseClient
+                .select({
+                    userId: applications.userId,
+                    eventId: events.id,
+                    eventTitle: events.title,
+                    checkInTime: checkIns.checkInTime,
+                })
+                .from(applications)
+                .innerJoin(
+                    events,
+                    and(
+                        eq(events.hackathonId, applications.hackathonId),
+                        eq(events.hackathonId, input.hackathonId)
+                    )
+                )
+                .leftJoin(
+                    checkIns,
+                    and(
+                        eq(checkIns.eventId, events.id),
+                        eq(applications.userId, checkIns.userId)
+                    )
+                )
+                .where(condition);
+
+            const userToEvents = Object.groupBy(
+                applicationsWithCheckInInfo,
+                ({ userId }) => userId
+            );
+
+            const applicationsWithAllInfos = applicationsWithTeamInfo.map(
+                ({ createdDate, ...application }) => {
+                    const { teamId } = application;
+
+                    const members =
+                        teamId != null
+                            ? teamToMembersMap[teamId]!.map(({ response }) => {
+                                  const firstName = (
+                                      response as Record<string, string>
+                                  )['1'];
+                                  const lastName = (
+                                      response as Record<string, string>
+                                  )['2'];
+
+                                  return `${firstName} ${lastName}`;
+                              })
+                            : [];
+
+                    const checkIns = (
+                        userToEvents[application.userId] ?? []
+                    ).map(({ userId, checkInTime, ...info }) => ({
+                        ...info,
+                        checkedIn: checkInTime != null,
+                    }));
+
+                    return {
+                        ...application,
+                        checkIns,
+                        // converting date to unix timestamp before returning
+                        // suppressing warning to avoid uncessesary type conversion.
+                        createdDate: createdDate?.getTime(),
+                        members,
+                    };
+                }
+            );
+
+            return applicationsWithAllInfos as ApplicationWithTeamInfo[];
         }),
 
     updateApplication: publicProcedure
@@ -205,7 +269,7 @@ export const applicationsRouter = router({
     getCurrentApplication: publicProcedure
         .input(z.object({ hackathonId: z.number().int() }))
         .query(async ({ input }) => {
-            const user = await getUserData();
+            const user = await getBasicUserInfo();
 
             if (!user) {
                 throw new InternalServerError(
@@ -273,6 +337,12 @@ export interface ApplicationWithTeamInfo {
     currentStatus: StatusEnum;
     pendingStatus: StatusEnum;
     createdDate: number;
+    checkIns: {
+        eventId: number;
+        eventTitle: string;
+        checkedIn: boolean;
+    }[];
+    members: string[];
 }
 
 export interface ApplicationInfo {

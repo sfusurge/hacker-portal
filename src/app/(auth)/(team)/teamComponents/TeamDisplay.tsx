@@ -19,28 +19,28 @@ type HackathonType = inferProcedureOutput<
 >;
 
 type TeamDisplayProps = {
-    currentTeam: TeamType;
+    currentTeam?: TeamType;
     currentHackathon: HackathonType;
-    user: UserData;
-    imageData?: string;
+    userEmail: string;
+    imageUrl?: string;
 };
 
 export default function TeamDisplay({
     currentTeam,
     currentHackathon,
-    user,
-    imageData = '/teams/default.webp',
+    userEmail,
+    imageUrl = '/teams/default.webp',
 }: TeamDisplayProps) {
     const [showFeedBacks, setShowFeedBacks] = useState(false);
 
     // If user is not in a team for the current hackathon, show join team UI
     if (!currentTeam) {
         return (
-            <div className="flex h-full w-full items-center justify-center">
+            <div className="mt-20 flex h-full w-full items-center justify-center md:mt-0">
                 <CurrentStateUI
                     hackathonId={currentHackathon.id}
                     title="You're not in a team yet! 🥺"
-                    description="Join an existing team or create a new one to view your team's information here."
+                    description="Join your friends’ team with their code, or create your own team, even if you’re solo."
                 />
             </div>
         );
@@ -53,7 +53,7 @@ export default function TeamDisplay({
                 <Image
                     width={64}
                     height={64}
-                    src={imageData}
+                    src={imageUrl}
                     alt={`${currentTeam.name} logo`}
                     className="inline-block h-11 w-11 rounded-xl md:h-16 md:w-16"
                 />
@@ -67,38 +67,35 @@ export default function TeamDisplay({
                     </h1>
                 </div>
 
-                <Button
-                    onClick={() => {
-                        setShowFeedBacks(true);
-                    }}
-                    variant={'brand'}
-                    size="cozy"
-                    hierarchy={'primary'}
-                    style={{ alignSelf: 'center', marginLeft: 'auto' }}
-                >
-                    View Feedback
-                </Button>
+                {/*<Button*/}
+                {/*    onClick={() => {*/}
+                {/*        setShowFeedBacks(true);*/}
+                {/*    }}*/}
+                {/*    variant={'brand'}*/}
+                {/*    size="cozy"*/}
+                {/*    hierarchy={'primary'}*/}
+                {/*    style={{ alignSelf: 'center', marginLeft: 'auto' }}*/}
+                {/*>*/}
+                {/*    View Feedback*/}
+                {/*</Button>*/}
 
-                <FeedbackDialog
-                    open={showFeedBacks}
-                    onClose={() => {
-                        setShowFeedBacks(false);
-                    }}
-                />
+                {/*<FeedbackDialog*/}
+                {/*    open={showFeedBacks}*/}
+                {/*    onClose={() => {*/}
+                {/*        setShowFeedBacks(false);*/}
+                {/*    }}*/}
+                {/*/>*/}
             </div>
 
             <div className="flex flex-col gap-4">
                 <div className="grid grid-cols-1 gap-6 pb-24 md:pb-0 xl:grid-cols-2">
                     {/* <div className="grid grid-cols-1 gap-6 pb-24 md:pb-0 xl:grid-cols-[1fr_clamp(29rem,33vw,30.5rem)]"> */}
-                    <SubmitCard
-                        onShowSubmit={() => {
-                            redirect('/team/submit');
-                        }}
-                    />
-                    <TeamList
-                        currentUserEmail={user!.email}
-                        team={currentTeam}
-                    />
+                    {/*<SubmitCard*/}
+                    {/*    onShowSubmit={() => {*/}
+                    {/*        redirect('/team/submit');*/}
+                    {/*    }}*/}
+                    {/*/>*/}
+                    <TeamList currentUserEmail={userEmail} team={currentTeam} />
                     <InviteCard teamId={currentTeam.displayId} />
                 </div>
             </div>

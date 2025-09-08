@@ -20,7 +20,7 @@ import {
     SortingState,
 } from '@tanstack/react-table';
 
-import { atom, useSetAtom } from 'jotai';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 
 import { Input } from '@/components/ui/input';
 import { mkConfig, generateCsv, download } from 'export-to-csv';
@@ -30,30 +30,58 @@ import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import { DocumentArrowDownIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/16/solid';
-import { useHackathon } from '@/hooks/use-hackathon';
 import dayjs from 'dayjs';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 
 export type Applicant = {
     id: number;
     teamName: string | null;
-    applicationFee: boolean;
+
+    // Basic Information
     firstName: string;
     lastName: string;
     pronouns: string;
     email: string;
-    phoneNumber: string;
-    school: string;
-    major: string;
-    yearOfStudy: string;
-    attendedDesignJam: string;
-    howManyJams: number;
-    passionateAreas: string[];
-    whyInterested: string;
-    whatHopeLearn: string;
-    dietaryRestrictions: string[];
-    photoConsent: string;
+    haveHackathonExperience: string[];
     howHeardAbout: string[];
+    dietaryRestrictions?: string[];
+    tShirtSize: string;
+    resume?: string;
+    discord: string;
+    instagram?: string;
+    github?: string;
+    linkedin?: string;
+    portfolio?: string;
+    otherLinks?: string;
+
+    // School Information
+    school?: string;
+    background: string;
+    yearOfStudy?: string;
+    major: string;
+
+    // Short Answer Questions
+    excitement: string;
+    problemOrSkill: string;
+    dreamProject: string;
+
+    // Sponsors / Agreements
+    shareResume: boolean;
+    acceptMLH: boolean;
+    acceptSFSS: boolean;
+    acceptEmails: boolean;
+    authorizeMLH: boolean;
+    photoRelease: boolean;
+    currentStatus: string;
+    pendingStatus: string;
+    applicationDate: Date;
+
+    checkIns: {
+        eventId: number;
+        eventTitle: string;
+        checkedIn: boolean;
+    }[];
 };
 
 type ReviewApplicationsTableProps = {
@@ -184,17 +212,13 @@ export default function ReviewApplicationsTable({
         }
     };
 
-    const { hackathon, hackathonLoaded } = useHackathon();
+    const hackathon = useAtomValue(hackathonAtom);
 
     // Get data from DB
-    const applicationData = trpc.applications.getApplications.useQuery(
-        {
-            hackathonId: hackathon?.id!,
-            maxResult: 200,
-        },
-        // only load applications data once hackathon has been loaded
-        { enabled: hackathonLoaded }
-    );
+    const applicationData = trpc.applications.getApplications.useQuery({
+        hackathonId: hackathon?.id!,
+        maxResult: 2000,
+    });
 
     const applicationDataMap = useMemo(() => {
         const map = new Map<number, ApplicationWithTeamInfo>();
@@ -227,6 +251,15 @@ export default function ReviewApplicationsTable({
         { id: 'teamName', desc: true },
     ]);
     const [rowSelection, setRowSelection] = useState({});
+
+    const checkedInInfoColumns: ColumnDef<Applicant>[] =
+        data[0]?.checkIns?.map(({ eventTitle, checkedIn }, i) => {
+            return {
+                accessorFn: () => (checkedIn ? 'Yes' : 'No'),
+                header: eventTitle,
+                size: 100,
+            };
+        }) ?? [];
 
     const defaultColumns: ColumnDef<Applicant>[] = [
         {
@@ -263,50 +296,19 @@ export default function ReviewApplicationsTable({
         },
         {
             accessorKey: 'firstName',
-            header: ({ column }) => (
-                <span
-                    className="cursor-pointer"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === 'asc')
-                    }
-                >
-                    First Name{' '}
-                    {column.getIsSorted()
-                        ? column.getIsSorted() === 'desc'
-                            ? ' ↓'
-                            : ' ↑'
-                        : ''}
-                </span>
-            ),
-            cell: (info) => info.getValue(),
-            size: 150, // Initial width
-            minSize: 100, // Minimum width
+            header: 'First Name',
+            size: 150,
+            minSize: 100,
         },
         {
             accessorKey: 'lastName',
-            header: ({ column }) => (
-                <span
-                    className="cursor-pointer"
-                    onClick={() =>
-                        column.toggleSorting(column.getIsSorted() === 'asc')
-                    }
-                >
-                    Last Name{' '}
-                    {column.getIsSorted()
-                        ? column.getIsSorted() === 'desc'
-                            ? ' ↓'
-                            : ' ↑'
-                        : ''}
-                </span>
-            ),
-            cell: (info) => info.getValue(),
-
-            size: 150, // Initial width
-            minSize: 100, // Minimum width
+            header: 'Last Name',
+            size: 150,
+            minSize: 100,
         },
         {
             accessorKey: 'currentStatus',
-            header: () => 'Current Status',
+            header: 'Current Status',
             cell: (info) => {
                 const value = info.getValue<string>();
                 return (
@@ -331,7 +333,7 @@ export default function ReviewApplicationsTable({
         },
         {
             accessorKey: 'pendingStatus',
-            header: () => 'Pending Status',
+            header: 'Pending Status',
             cell: (info) => {
                 const value = info.getValue<string>();
                 return (
@@ -356,76 +358,99 @@ export default function ReviewApplicationsTable({
         },
         {
             accessorKey: 'applicationDate',
-            header: () => 'Date',
+            header: 'Date',
             size: 100,
             minSize: 100,
-            cell: (info) => {
-                const datestring = dayjs(info.getValue() as Date).format(
-                    'MMM DD'
-                );
-                return datestring;
-            },
+            cell: (info) => dayjs(info.getValue() as Date).format('MMM DD'),
         },
         {
             accessorKey: 'email',
-            header: () => 'Email',
+            header: 'Email',
             size: 225,
             minSize: 150,
         },
         {
-            accessorKey: 'phoneNumber',
-            header: () => 'Phone Number',
+            accessorKey: 'discord',
+            header: 'Discord',
             size: 150,
             minSize: 100,
         },
         {
             accessorKey: 'school',
-            header: () => 'School',
+            header: 'School',
             size: 225,
             minSize: 150,
         },
         {
             accessorKey: 'major',
-            header: () => 'Major',
+            header: 'Major',
             size: 200,
             minSize: 150,
         },
         {
             accessorKey: 'yearOfStudy',
-            header: () => 'Years',
-            size: 70,
+            header: 'Year',
+            size: 120,
             minSize: 100,
         },
         {
-            accessorKey: 'attendedDesignJam',
-            header: () => 'Addended Before?',
-            size: 150,
+            accessorKey: 'haveHackathonExperience',
+            header: 'Hackathon Experience',
+            size: 200,
             minSize: 150,
+            cell: (info) => {
+                const value = info.getValue();
+                return Array.isArray(value) ? value.join(', ') : value || 'N/A';
+            },
         },
         {
-            accessorKey: 'howManyJams',
-            header: () => 'howManyJams',
-            size: 150,
+            accessorKey: 'howHeardAbout',
+            header: 'How Heard About',
+            size: 200,
             minSize: 150,
-        },
-        {
-            accessorKey: 'passionateAreas',
-            header: () => 'passionateAreas',
-            size: 300,
-            minSize: 100,
+            cell: (info) => {
+                const value = info.getValue();
+                return Array.isArray(value) ? value.join(', ') : value || 'N/A';
+            },
         },
         {
             accessorKey: 'dietaryRestrictions',
-            header: () => 'dietaryRestrictions',
-            size: 150,
+            header: 'Dietary Restrictions',
+            size: 200,
+            minSize: 150,
+            cell: (info) => {
+                const value = info.getValue();
+                return Array.isArray(value) ? value.join(', ') : value || 'N/A';
+            },
+        },
+        {
+            accessorKey: 'tShirtSize',
+            header: 'T-Shirt Size',
+            size: 120,
             minSize: 100,
         },
         {
-            accessorKey: 'photoConsent',
-            header: () => 'photoConsent',
-            size: 150,
-            minSize: 100,
+            accessorKey: 'resume',
+            header: 'Resume',
+            size: 200,
+            minSize: 150,
+            cell: (info) => {
+                const url = info.getValue() as string | undefined;
+                return url ? (
+                    <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 underline"
+                    >
+                        View
+                    </a>
+                ) : (
+                    'N/A'
+                );
+            },
         },
+        ...checkedInInfoColumns,
     ];
 
     const table = useReactTable({
@@ -472,45 +497,14 @@ export default function ReviewApplicationsTable({
 
     const exportExcel = () => {
         const selectedRows = table.getSelectedRowModel().rows;
-        const tempData = selectedRows.map((row) => {
-            const {
-                id,
-                teamName,
-                firstName,
-                lastName,
-                email,
-                phoneNumber,
-                school,
-                major,
-                yearOfStudy,
-                attendedDesignJam,
-                howManyJams,
-                passionateAreas,
-                whyInterested,
-                whatHopeLearn,
-                dietaryRestrictions,
-                photoConsent,
-                howHeardAbout,
-            } = row.original;
-
+        const tempData = selectedRows.map(({ original }) => {
+            const { applicationDate, checkIns, ...rest } = original;
             return {
-                id,
-                teamName,
-                firstName,
-                lastName,
-                email,
-                phoneNumber,
-                school,
-                major,
-                yearOfStudy,
-                attendedDesignJam,
-                howManyJams,
-                passionateAreas: passionateAreas.join(', '),
-                whyInterested,
-                whatHopeLearn,
-                dietaryRestrictions: dietaryRestrictions.join(', '),
-                photoConsent,
-                howHeardAbout: howHeardAbout.join(', '),
+                ...rest,
+                haveHackathonExperience:
+                    original.haveHackathonExperience?.join(', '),
+                howHeardAbout: original.howHeardAbout?.join(', '),
+                dietaryRestrictions: original.dietaryRestrictions?.join(', '),
             };
         });
 
@@ -963,72 +957,85 @@ function IndeterminateCheckbox({
 
 // Function to transform the data received from DB to the json format the table expects
 function transformResponse(response: any[]) {
-    const responses = response
-        .map((item) => {
-            const id = item.userId;
-            const currentStatus = item.currentStatus;
-            const pendingStatus = item.pendingStatus;
-            const applicationDate = item.createdDate;
-            const {
-                '1': applicationFee,
-                '2': firstName,
-                '3': lastName,
-                '4': pronouns,
-                '5': email,
-                '6': phoneNumber,
-                '7': school,
-                '8': major,
-                '9': yearOfStudy,
-                '10': attendedDesignJam,
-                '11': howManyJams,
-                '12': passionateAreas,
-                '13': whyInterested,
-                '14': whatHopeLearn,
-                '15': dietaryRestrictions,
-                '16': photoConsent,
-                '17': howHeardAbout,
-            } = item.response as Record<string, any>;
+    return response.map((item) => {
+        const {
+            '1': firstName,
+            '2': lastName,
+            '3': pronouns,
+            '4': email,
+            '5': haveHackathonExperience,
+            '6': howHeardAbout,
+            '7': dietaryRestrictions,
+            '8': tShirtSize,
+            '9': resume,
+            '10': discord,
+            '11': instagram,
+            '12': github,
+            '13': linkedin,
+            '14': portfolio,
+            '15': otherLinks,
+            '16': school,
+            '17': background,
+            '18': yearOfStudy,
+            '19': major,
+            '20': excitement,
+            '21': problemOrSkill,
+            '22': dreamProject,
+            '23': shareResume,
+            '24': acceptMLH,
+            '25': acceptSFSS,
+            '26': acceptEmails,
+            '27': authorizeMLH,
+            '28': photoRelease,
+        } = item.response as Record<string, any>;
 
-            const teamName = item.teamName
-                ? `${item.teamName} (${item.teamId})`
-                : null;
+        const members = item.members;
+        const checkIns = item.checkIns;
 
-            return {
-                id: Number(id),
-                teamName: teamName,
-                currentStatus,
-                pendingStatus,
-                applicationDate: new Date(applicationDate),
-                applicationFee,
-                firstName,
-                lastName,
-                pronouns,
-                email,
-                phoneNumber,
-                school,
-                major,
-                yearOfStudy,
-                attendedDesignJam,
-                howManyJams,
-                passionateAreas,
-                whyInterested,
-                whatHopeLearn,
-                dietaryRestrictions,
-                photoConsent,
-                howHeardAbout,
-            };
-        })
-        .toSorted((res1, res2) => {
-            const team1 = res1.teamName ?? '';
-            const team2 = res2.teamName ?? '';
-            if (team1 > team2) {
-                return 1;
-            } else if (team1 < team2) {
-                return -1;
-            } else {
-                return 0;
-            }
-        });
+        const teamName = item.teamName
+            ? `${item.teamName} (${item.teamId})`
+            : null;
 
-    return responses;
+        return {
+            id: Number(item.userId),
+            teamName,
+            currentStatus: item.currentStatus,
+            pendingStatus: item.pendingStatus,
+            applicationDate: new Date(item.createdDate),
+            dietaryRestrictions: Array.isArray(dietaryRestrictions)
+                ? dietaryRestrictions
+                : [dietaryRestrictions],
+            howHeardAbout: Array.isArray(howHeardAbout)
+                ? howHeardAbout
+                : [howHeardAbout],
+            members,
+            firstName,
+            lastName,
+            pronouns,
+            email,
+            haveHackathonExperience,
+            tShirtSize,
+            resume,
+            discord,
+            instagram,
+            github,
+            linkedin,
+            portfolio,
+            otherLinks,
+            school,
+            background,
+            yearOfStudy,
+            major,
+            excitement,
+            problemOrSkill,
+            dreamProject,
+            shareResume,
+            acceptMLH,
+            acceptSFSS,
+            acceptEmails,
+            authorizeMLH,
+            photoRelease,
+            checkIns,
+        };
+    });
 }

@@ -12,7 +12,7 @@ import {
 import { eq, desc } from 'drizzle-orm';
 import { getUserData } from '@/server/routers/usersRouter';
 
-export const emailsRouter = router({
+export const emailTemplatesRouter = router({
     createEmailTemplate: publicProcedure
         .input(emailTemplateSchema)
         .mutation(async ({ input }) => {
