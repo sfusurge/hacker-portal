@@ -474,7 +474,6 @@ function Question({
                 return <div>Unsupported input type: {type}</div>;
         }
     }
-    console.log(question.title);
 
     return (
         <div className={cn(style.ver)} style={{ width: '100%' }}>
