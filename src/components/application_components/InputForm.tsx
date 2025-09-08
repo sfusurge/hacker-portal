@@ -474,15 +474,26 @@ function Question({
                 return <div>Unsupported input type: {type}</div>;
         }
     }
+    console.log(question.title);
 
     return (
         <div className={cn(style.ver)} style={{ width: '100%' }}>
             {question.title && (
-                <Label required={question.required}>{question.title}</Label>
+                <Label required={question.required}>
+                    <div
+                        className={style.htmlHolder}
+                        dangerouslySetInnerHTML={{ __html: question.title }}
+                    ></div>
+                </Label>
             )}
             {question.description && (
                 <span className={cn(style.description, 'max-w-96')}>
-                    {question.description}
+                    <div
+                        className={style.htmlHolder}
+                        dangerouslySetInnerHTML={{
+                            __html: question.description,
+                        }}
+                    ></div>
                 </span>
             )}
             {getInnerInput(question.type, questionAtom, error)}
