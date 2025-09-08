@@ -163,7 +163,7 @@ export function CheckboxGroup({
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '8px',
-                    '--errMsg': "'Invalid selections'",
+                    '--errMsg': "'Please select at least one option.'",
                 } as CSSProperties
             }
             className={style.checkboxgroupfield}
