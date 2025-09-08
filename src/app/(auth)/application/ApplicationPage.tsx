@@ -90,7 +90,6 @@ export default function ApplicationPageComponent() {
     const application = trpc.applications.getCurrentApplication.useQuery({
         hackathonId: hackathon.id,
     });
-
     const session = useSession();
 
     // store user email for local storage user check

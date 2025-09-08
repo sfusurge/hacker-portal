@@ -111,8 +111,6 @@ function CalenderDays({ daysWithEvent }: MobileCalendarProps) {
         return monthInfo.firstDay.subtract(1, 'month');
     }, [monthInfo]);
 
-    console.log(daysWithEvent);
-
     return (
         <Card className={style.Container}>
             <div className={style.ContainerContent}>
