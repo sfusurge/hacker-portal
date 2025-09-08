@@ -1,6 +1,6 @@
 import { CSSProperties, useEffect, useRef, useState } from 'react';
 import { type Delta } from 'quill';
-import Quill from 'quill';
+import type Quill from 'quill';
 import 'quill/dist/quill.snow.css';
 import style from './Richtext.module.css';
 import { useAtomValue } from 'jotai';
@@ -68,29 +68,30 @@ export function RichText({
         if (richeditorRef.current) {
             return;
         }
-
-        const editor = new Quill(editorContainerRef.current!, {
-            readOnly,
-            theme: 'snow',
-            modules: {
-                toolbar: !readOnly
-                    ? [
-                          ['bold', 'italic', 'strike', 'underline'],
-                          ['link'],
-                          [{ list: 'ordered' }, { list: 'bullet' }],
-                          ['code-block'],
-                      ]
-                    : false,
-            },
-        });
-        editor.setContents((initialData as Delta) ?? []);
-        editor.on(Quill.events.TEXT_CHANGE, (delta: Delta) => {
-            onChange(editor.getContents());
-            errorCheck();
+        import('quill').then((Q) => {
+            const editor = new Q.default(editorContainerRef.current!, {
+                readOnly,
+                theme: 'snow',
+                modules: {
+                    toolbar: !readOnly
+                        ? [
+                              ['bold', 'italic', 'strike', 'underline'],
+                              ['link'],
+                              [{ list: 'ordered' }, { list: 'bullet' }],
+                              ['code-block'],
+                          ]
+                        : false,
+                },
+            });
+            editor.setContents((initialData as Delta) ?? []);
+            editor.on(Q.default.events.TEXT_CHANGE, (delta: Delta) => {
+                onChange(editor.getContents());
+                errorCheck();
+                lengthCheck();
+            });
+            richeditorRef.current = editor;
             lengthCheck();
         });
-        richeditorRef.current = editor;
-        lengthCheck();
     }, []);
 
     useEffect(() => {
