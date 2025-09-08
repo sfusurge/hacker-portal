@@ -70,7 +70,6 @@ export type Applicant = {
     teamMember1?: string;
     teamMember2?: string;
     teamMember3?: string;
-    teamMember4?: string;
 
     // Sponsors / Agreements
     shareResume: boolean;
@@ -389,21 +388,30 @@ export default function ReviewApplicationsTable({
             header: 'Hackathon Experience',
             size: 200,
             minSize: 150,
-            cell: (info) => (info.getValue() as string[]).join(', '),
+            cell: (info) => {
+                const value = info.getValue();
+                return Array.isArray(value) ? value.join(', ') : value || 'N/A';
+            },
         },
         {
             accessorKey: 'howHeardAbout',
             header: 'How Heard About',
             size: 200,
             minSize: 150,
-            cell: (info) => (info.getValue() as string[]).join(', '),
+            cell: (info) => {
+                const value = info.getValue();
+                return Array.isArray(value) ? value.join(', ') : value || 'N/A';
+            },
         },
         {
             accessorKey: 'dietaryRestrictions',
             header: 'Dietary Restrictions',
             size: 200,
             minSize: 150,
-            cell: (info) => (info.getValue() as string[]).join(', '),
+            cell: (info) => {
+                const value = info.getValue();
+                return Array.isArray(value) ? value.join(', ') : value || 'N/A';
+            },
         },
         {
             accessorKey: 'tShirtSize',
@@ -965,7 +973,6 @@ function transformResponse(response: any[]) {
             '23': teamMember1,
             '24': teamMember2,
             '25': teamMember3,
-            '26': teamMember4,
             '27': shareResume,
             '28': acceptMLH,
             '29': acceptSFSS,
@@ -1009,7 +1016,6 @@ function transformResponse(response: any[]) {
             teamMember1,
             teamMember2,
             teamMember3,
-            teamMember4,
             shareResume,
             acceptMLH,
             acceptSFSS,
