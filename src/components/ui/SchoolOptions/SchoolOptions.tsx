@@ -16,6 +16,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import styles from './SchoolOptions.module.css';
+import { FormTextInput } from '../input/input';
 
 type SchoolOptionsProps = {
     apiUrl: string;
@@ -45,9 +46,11 @@ export function SchoolOptions({
     const [value, setValue] = useState(initialData);
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState('');
+    const [customSchool, setCustomSchool] = useState('');
+    const [showCustomInput, setShowCustomInput] = useState(false);
 
     useEffect(() => {
-        fetch(`${apiUrl}?query=${encodeURIComponent(search)}&limit=50`, {
+        fetch(`${apiUrl}?query=${encodeURIComponent(search)}`, {
             cache: 'no-store',
         })
             .then((r) => (r.ok ? r.json() : []))
@@ -68,7 +71,29 @@ export function SchoolOptions({
 
     useEffect(() => {
         setValue(initialData);
-    }, [initialData]);
+        // only show custom input if initialData is "other" or if it's a custom value that's not in the API
+        if (initialData === 'other') {
+            setShowCustomInput(true);
+        } else if (initialData && initialData !== 'N/A') {
+            // check if this value exists in the current school options
+            const isRegularSchool = schoolOptions.some(
+                (school) => school.value === initialData
+            );
+            if (!isRegularSchool && schoolOptions.length > 0) {
+                // treat as custom if loaded options and not found
+                setCustomSchool(initialData);
+                setShowCustomInput(true);
+            } else if (schoolOptions.length === 0) {
+                setShowCustomInput(false);
+            } else {
+                setShowCustomInput(false);
+                setCustomSchool('');
+            }
+        } else {
+            setShowCustomInput(false);
+            setCustomSchool('');
+        }
+    }, [initialData, schoolOptions]);
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
@@ -82,11 +107,15 @@ export function SchoolOptions({
                 >
                     <span className="flex w-full items-center justify-between">
                         <span className="mr-2 flex-1 truncate text-left">
-                            {value
-                                ? schoolOptions.find(
-                                      (school) => school.value === value
-                                  )?.name || value
-                                : 'Search your School Name'}
+                            {value === 'N/A'
+                                ? 'N/A'
+                                : value === 'other'
+                                  ? customSchool || 'Other'
+                                  : value
+                                    ? schoolOptions.find(
+                                          (school) => school.value === value
+                                      )?.name || value
+                                    : 'Search your School Name'}
                         </span>
                         <ChevronsUpDown className="ml-2 flex-shrink-0 opacity-50" />
                     </span>
@@ -120,6 +149,42 @@ export function SchoolOptions({
                     >
                         <CommandEmpty>No school found.</CommandEmpty>
                         <CommandGroup>
+                            <CommandItem
+                                className={cn(
+                                    'commandItem text-white',
+                                    styles.commandItem
+                                )}
+                                value="N/A"
+                                onSelect={() => {
+                                    setValue('N/A');
+                                    setOpen(false);
+                                    setShowCustomInput(false);
+                                    setCustomSchool('');
+                                    onChange('N/A');
+                                }}
+                            >
+                                <span className="mr-2 flex-1 truncate text-left">
+                                    N/A
+                                </span>
+                            </CommandItem>
+
+                            <CommandItem
+                                className={cn(
+                                    'commandItem text-white',
+                                    styles.commandItem
+                                )}
+                                value="other"
+                                onSelect={() => {
+                                    setValue('other');
+                                    setOpen(false);
+                                    setShowCustomInput(true);
+                                }}
+                            >
+                                <span className="mr-2 flex-1 truncate text-left">
+                                    Other
+                                </span>
+                            </CommandItem>
+
                             {schoolOptions.map((school) => (
                                 <CommandItem
                                     className={cn(
@@ -131,6 +196,8 @@ export function SchoolOptions({
                                     onSelect={(currentValue) => {
                                         setValue(currentValue);
                                         setOpen(false);
+                                        setShowCustomInput(false);
+                                        setCustomSchool('');
                                         onChange(currentValue);
                                     }}
                                 >
@@ -143,6 +210,21 @@ export function SchoolOptions({
                     </CommandList>
                 </Command>
             </PopoverContent>
+
+            {showCustomInput && (
+                <FormTextInput
+                    type="text"
+                    placeholder="Enter your school name"
+                    defaultValue={customSchool}
+                    lazy={true}
+                    onLazyChange={(value) => {
+                        setCustomSchool(value);
+                        onChange(value);
+                    }}
+                    disabled={readOnly}
+                    className="max-w-[400px]"
+                />
+            )}
         </Popover>
     );
 }

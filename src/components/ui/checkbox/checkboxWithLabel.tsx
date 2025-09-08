@@ -52,10 +52,9 @@ export const CheckBoxWithLabel = forwardRef<
                         <div
                             style={{
                                 flexBasis: inline ? 'auto' : '100%',
-                                marginLeft: '1.75rem',
                             }}
                         >
-                            {children}
+                            {name}
                         </div>
                     ))}
             </label>
