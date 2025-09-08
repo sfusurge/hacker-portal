@@ -193,7 +193,9 @@ export function CheckboxGroup({
                             !selectedItems.has(item.data)
                         }
                         required={false}
-                    ></CheckBoxWithLabel>
+                    >
+                        {item.name}
+                    </CheckBoxWithLabel>
                 );
             })}
 
@@ -205,26 +207,37 @@ export function CheckboxGroup({
                     onChange={(e) => {
                         setHasUserInteracted(true);
                         setUsingOther(e.target.checked);
+                        if (!e.target.checked) {
+                            setOtherValue(undefined);
+                            onSelectionRef.current &&
+                                onSelectionRef.current(
+                                    selectedItems,
+                                    undefined
+                                );
+                        }
                     }}
                     required={false}
                     id={'Other' + id}
                 >
-                    {usingOther && (
-                        <FormTextInput
-                            type="text"
-                            lazy
-                            timeOut={300}
-                            onLazyChange={(val) => {
-                                setHasUserInteracted(true);
-                                setOtherValue(val);
-                            }}
-                            defaultValue={otherValue}
-                            required={required && usingOther}
-                            errorMsg="Required!"
-                            placeholder="Please specify"
-                            hideBackground
-                        />
-                    )}
+                    <div className="flex flex-col">
+                        Other
+                        {usingOther && (
+                            <FormTextInput
+                                type="text"
+                                lazy
+                                timeOut={300}
+                                onLazyChange={(val) => {
+                                    setHasUserInteracted(true);
+                                    setOtherValue(val);
+                                }}
+                                defaultValue={otherValue}
+                                required={required && usingOther}
+                                errorMsg="Required!"
+                                placeholder="Please specify"
+                                hideBackground
+                            />
+                        )}
+                    </div>
                 </CheckBoxWithLabel>
             )}
         </fieldset>
