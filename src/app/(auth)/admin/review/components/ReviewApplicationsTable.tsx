@@ -66,11 +66,6 @@ export type Applicant = {
     problemOrSkill: string;
     dreamProject: string;
 
-    // Team Information
-    teamMember1?: string;
-    teamMember2?: string;
-    teamMember3?: string;
-
     // Sponsors / Agreements
     shareResume: boolean;
     acceptMLH: boolean;
@@ -970,15 +965,12 @@ function transformResponse(response: any[]) {
             '20': excitement,
             '21': problemOrSkill,
             '22': dreamProject,
-            '23': teamMember1,
-            '24': teamMember2,
-            '25': teamMember3,
-            '27': shareResume,
-            '28': acceptMLH,
-            '29': acceptSFSS,
-            '30': acceptEmails,
-            '31': authorizeMLH,
-            '32': photoRelease,
+            '23': shareResume,
+            '24': acceptMLH,
+            '25': acceptSFSS,
+            '26': acceptEmails,
+            '27': authorizeMLH,
+            '28': photoRelease,
         } = item.response as Record<string, any>;
 
         const teamName = item.teamName
@@ -1013,9 +1005,6 @@ function transformResponse(response: any[]) {
             excitement,
             problemOrSkill,
             dreamProject,
-            teamMember1,
-            teamMember2,
-            teamMember3,
             shareResume,
             acceptMLH,
             acceptSFSS,
