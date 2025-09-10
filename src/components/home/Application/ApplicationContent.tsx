@@ -67,7 +67,6 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
 
     const handleOpenWithdrawPrompt = () => setIsWithdrawPromptOpen(true);
     const handleCloseWithdrawPrompt = () => setIsWithdrawPromptOpen(false);
-
     return (
         <>
             <div className="flex max-w-full flex-col gap-2 text-start md:pr-0 md:pl-0">

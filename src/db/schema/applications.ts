@@ -18,7 +18,8 @@ export type StatusEnum =
     | 'Declined'
     | 'Wait List'
     | 'Withdrawn'
-    | 'Accepted - Pending Payment';
+    | 'Accepted - Pending Payment'
+    | 'RSVP';
 
 export const applicationStatusEnum = pgEnum('application_status', [
     'N/A',
@@ -28,6 +29,7 @@ export const applicationStatusEnum = pgEnum('application_status', [
     'Wait List',
     'Withdrawn',
     'Accepted - Pending Payment',
+    'RSVP',
 ]);
 
 export const applications = pgTable(
