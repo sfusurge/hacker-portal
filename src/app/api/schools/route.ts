@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { send } from 'process';
-const schoolsUrl = `https://raw.githubusercontent.com/MLH/mlh-policies/main/schools.csv`;
-
+import { readFileSync } from 'node:fs';
+// const schoolsUrl = `https://raw.githubusercontent.com/MLH/mlh-policies/main/schools.csv`;
+import path from 'node:path';
 type schoolOption = { value: string; name: string };
 
 let cache: schoolOption[] | null = null;
@@ -26,8 +27,10 @@ async function getSchools() {
     let now = Date.now();
     if (cache != null && now < nextRefresh) return cache;
 
-    const res = await fetch(schoolsUrl, { cache: 'no-store' });
-    const text = await res.text();
+    // const res = await fetch(schoolsUrl, { cache: 'no-store' });
+    // const text = await res.text();
+    const schoolsUrl = path.join(process.cwd(), 'public', 'schools.csv');
+    const text = readFileSync(schoolsUrl, 'utf-8');
 
     cache = parseCSV(text);
     nextRefresh = now + 24 * 60 * 60 * 1000;
