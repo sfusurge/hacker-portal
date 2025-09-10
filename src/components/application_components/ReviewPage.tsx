@@ -231,7 +231,15 @@ export function ReviewPage({
                     const response = getQuestionResponse(question);
                     return (
                         <div key={index}>
-                            <h3 className={style.title}>{question.title}</h3>
+                            <h3 className={style.title}>
+                                <div
+                                    className={style.htmlHolder}
+                                    style={{ display: 'inline' }}
+                                    dangerouslySetInnerHTML={{
+                                        __html: question.title ?? '',
+                                    }}
+                                ></div>
+                            </h3>
                             <span className={`${style.description} mt-2 block`}>
                                 {response}
                             </span>
