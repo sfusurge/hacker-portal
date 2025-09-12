@@ -168,6 +168,11 @@ function html(params: { url: string; host: string }) {
     <![endif]-->
 
     <style type="text/css">
+      :root {
+        --Text-text-primary: #000;
+        --Size-3xl: 29px;
+      }
+
       .dark-mode .bg-fffffe {
         background-color: #fffffe !important;
       }
@@ -216,6 +221,16 @@ function html(params: { url: string; host: string }) {
       }
       [data-ogsc] .color-000000 {
         color: rgba(0, 0, 0, 0.6) !important;
+      }
+
+      .title-heading {
+        color: black;
+        font-style: normal;
+        font-weight: 600;
+        line-height: 112.5%;
+        letter-spacing: -0.435px;
+        margin: 0;
+        padding: 0;
       }
     </style>
 
@@ -287,6 +302,12 @@ function html(params: { url: string; host: string }) {
         p {
           text-indent: 0;
         }
+
+        .title-heading {
+          color: #000 !important;
+          font-size: 29px !important;
+          font-weight: 600 !important;
+        }
       </style>
     <![endif]-->
   </head>
@@ -304,7 +325,7 @@ function html(params: { url: string; host: string }) {
               </tr>
               <tr>
                 <td align="left" style="padding-top: 16px; padding-bottom: 6.56px; padding-left: 15px; padding-right: 15px">
-                    <img src="https://x7pvefn5lz1gfty3.public.blob.vercel-storage.com/email_images/button_text.png" alt="Sign in to SFU Surge Portal" width="369" style="max-width: initial; width: 369px; display: block; margin-top: -0.5px">
+                  <h1 class="title-heading">Sign in to SFU Surge Portal</h1>
                 </td>
               </tr>
               <tr>
