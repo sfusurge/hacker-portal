@@ -47,17 +47,13 @@ export const CheckBoxWithLabel = forwardRef<
                     required={required}
                     {...props}
                 ></input>
-                {children ||
-                    (name && (
-                        <div
-                            style={{
-                                flexBasis: inline ? 'auto' : '100%',
-                                marginLeft: '1.75rem',
-                            }}
-                        >
-                            {children}
-                        </div>
-                    ))}
+
+                {name && (
+                    <div>
+                        <span>{name}</span>
+                        {children && <span>{children}</span>}
+                    </div>
+                )}
             </label>
         );
     }

@@ -35,7 +35,7 @@
 
 .inputHolder:has(.textinput:user-invalid)::after,
 .inputHolder:has(.textinput:invalid:not(:placeholder-shown))::after {
-    content: var(--errMsg);
+    content: var(--errorMsg);
     color: var(--color-danger-400);
     font-size: smaller;
     max-width: calc(100% - 2rem);

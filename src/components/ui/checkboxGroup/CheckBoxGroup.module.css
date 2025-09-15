@@ -1,5 +1,5 @@
 .checkboxgroupfield:has(input[type='text']:invalid)::after {
-    content: var(--errMsg);
+    content: var(--errorMsg);
 
     display: block;
     color: var(--danger-500);
