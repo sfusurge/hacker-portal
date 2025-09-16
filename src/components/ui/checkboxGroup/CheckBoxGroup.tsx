@@ -65,15 +65,7 @@ export function CheckboxGroup({
 
         inputRef.current.setCustomValidity(message);
         setErrorMsg(message);
-    }, [
-        max,
-        min,
-        otherValue,
-        required,
-        selectedItems.size,
-        usingOther,
-        otherValue,
-    ]);
+    }, [max, min, otherValue, required, selectedItems.size, usingOther]);
 
     const handleCheckboxChange = (
         item: string,
@@ -82,7 +74,11 @@ export function CheckboxGroup({
     ) => {
         let newSelected = new Set(exclusive ? [] : selectedItems);
 
-        checked ? newSelected.add(item) : newSelected.delete(item);
+        if (checked) {
+            newSelected.add(item);
+        } else {
+            newSelected.delete(item);
+        }
 
         onSelection(newSelected, usingOther ? otherValue : undefined);
     };
