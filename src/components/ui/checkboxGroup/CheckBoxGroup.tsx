@@ -1,13 +1,6 @@
 'use client';
 
-import {
-    type CSSProperties,
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import { type CSSProperties, useEffect, useRef, useState } from 'react';
 import { CheckBoxWithLabel } from '../checkbox/checkboxWithLabel';
 import style from './CheckBoxGroup.module.css';
 import { FormTextInput } from '../input/input';
@@ -23,11 +16,10 @@ interface CheckBoxGroupProps {
         exclusive?: boolean;
     }[];
     selected?: string[];
-    onSelection?: (selected: Set<string>, other: string | undefined) => void;
+    onSelection: (selected: Set<string>, other: string | undefined) => void;
     allowOther?: boolean;
     otherValue?: string | undefined;
     required?: boolean;
-    forceValidCheck?: boolean;
 }
 
 export function CheckboxGroup({
@@ -37,88 +29,50 @@ export function CheckboxGroup({
     choices,
     selected: initialSelected = [],
     allowOther = false,
-    otherValue: defaultOther = '',
+    otherValue,
     onSelection,
     required,
-    forceValidCheck = false,
 }: CheckBoxGroupProps) {
-    // Create a state for selected items instead of just a memoized value
-    const [internalSelectedItems, setInternalSelectedItems] = useState<
-        Set<string>
-    >(new Set(initialSelected));
-    const [otherValue, setOtherValue] = useState<string | undefined>(
-        defaultOther
-    );
-    const [usingOther, setUsingOther] = useState(
-        allowOther && defaultOther !== undefined && defaultOther.length > 0
-    );
-    const ref = useRef<HTMLInputElement>(null);
+    const selectedItems = new Set(initialSelected);
+    const [usingOther, setUsingOther] = useState<boolean>(false);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [errorMsg, setErrorMsg] = useState('');
 
     useEffect(() => {
-        onSelection && onSelection(selectedItems, otherValue);
-    }, [usingOther, otherValue]);
-    // Use a derived value that combines the prop and internal state
-
-    const selectedItems = useMemo(
-        () =>
-            initialSelected ? new Set(initialSelected) : internalSelectedItems,
-        [internalSelectedItems, initialSelected]
-    );
-
-    const updateValidity = useCallback(() => {
-        if (!ref.current || !required) {
-            return;
+        if (allowOther) {
+            setUsingOther(otherValue !== undefined && !!otherValue.trim());
         }
+    }, [allowOther, otherValue]);
 
-        if (usingOther && !otherValue) {
-            ref.current!.setCustomValidity("Please fill the 'Other' value.");
-        } else {
-            const count =
-                selectedItems.size + (otherValue && usingOther ? 1 : 0);
-
-            if (count > max) {
-                ref.current!.setCustomValidity(
-                    `Too many selections! Max: ${max}`
-                );
-            } else if (count < min) {
-                ref.current!.setCustomValidity(
-                    `Too few selections! Min: ${min}`
-                );
-            } else {
-                ref.current!.setCustomValidity('');
-            }
-        }
-    }, [
-        max,
-        min,
-        otherValue,
-        required,
-        selectedItems.size,
-        usingOther,
-        forceValidCheck,
-    ]);
-
-    const [initialized, setInitialized] = useState(false);
-    // Trigger onSelection whenever relevant state changes
+    // update error message
     useEffect(() => {
-        if (initialized) {
-            updateValidity();
-        } else {
-            setInitialized(true);
+        if (!inputRef.current) return;
+
+        let message = '';
+        const cleanedOtherValue = otherValue ? otherValue.trim() : '';
+
+        if (usingOther && cleanedOtherValue.length === 0) {
+            message = "Please fill the 'Other' value.";
         }
-    }, [updateValidity]);
+
+        if (required && !message) {
+            const count = selectedItems.size + (usingOther ? 1 : 0);
+
+            if (count > max) message = `Too many selections! Max: ${max}`;
+
+            if (count < min) message = `Too few selections! Min: ${min}`;
+        }
+
+        inputRef.current.setCustomValidity(message);
+        setErrorMsg(message);
+    }, [max, min, otherValue, required, selectedItems.size, usingOther]);
 
     const handleCheckboxChange = (
         item: string,
         checked: boolean,
-        exclusive: boolean = false
+        exclusive: boolean
     ) => {
-        if (!checked) {
-            exclusive = false; // ignore exclusive items when deselecting.
-        }
-
-        // Create a new Set based on the current selectedItems
-        const newSelected = new Set(exclusive ? [] : selectedItems);
+        let newSelected = new Set(exclusive ? [] : selectedItems);
 
         if (checked) {
             newSelected.add(item);
@@ -126,19 +80,7 @@ export function CheckboxGroup({
             newSelected.delete(item);
         }
 
-        // Update internal state
-        setInternalSelectedItems(newSelected);
-
-        if (exclusive) {
-            setUsingOther(false);
-        }
-
-        // Directly call onSelection with the new set
-        onSelection &&
-            onSelection(
-                newSelected,
-                usingOther && exclusive ? otherValue : undefined
-            );
+        onSelection(newSelected, usingOther ? otherValue : undefined);
     };
 
     return (
@@ -148,39 +90,38 @@ export function CheckboxGroup({
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '8px',
-                    '--errMsg': "'Invalid selections'",
+                    '--errorMsg': `"${errorMsg}"`,
                 } as CSSProperties
             }
             className={style.checkboxgroupfield}
         >
             <input
-                ref={ref}
+                ref={inputRef}
                 type="text"
                 style={{ display: 'none' }}
                 required={required}
-                defaultValue={'na'}
+                defaultValue="na"
             />
-            {choices.map((item, index) => {
-                return (
-                    <CheckBoxWithLabel
-                        checked={selectedItems.has(item.data)}
-                        name={item.name}
-                        key={index}
-                        onChange={(e) => {
-                            handleCheckboxChange(
-                                item.data,
-                                e.target.checked,
-                                item.exclusive
-                            );
-                        }}
-                        disabled={
-                            selectedItems.size >= max &&
-                            !selectedItems.has(item.data)
-                        }
-                        required={false}
-                    ></CheckBoxWithLabel>
-                );
-            })}
+
+            {choices.map((item, index) => (
+                <CheckBoxWithLabel
+                    checked={selectedItems.has(item.data)}
+                    name={item.name}
+                    key={index}
+                    onChange={(e) =>
+                        handleCheckboxChange(
+                            item.data,
+                            e.target.checked,
+                            item.exclusive ?? false
+                        )
+                    }
+                    disabled={
+                        selectedItems.size >= max &&
+                        !selectedItems.has(item.data)
+                    }
+                    required={false}
+                />
+            ))}
 
             {allowOther && (
                 <CheckBoxWithLabel
@@ -189,9 +130,13 @@ export function CheckboxGroup({
                     key="other"
                     onChange={(e) => {
                         setUsingOther(e.target.checked);
+                        onSelection(
+                            selectedItems,
+                            e.target.checked ? otherValue : undefined
+                        );
                     }}
                     required={false}
-                    id={'Other' + id}
+                    id={`Other${id}`}
                 >
                     {usingOther && (
                         <FormTextInput
@@ -199,11 +144,10 @@ export function CheckboxGroup({
                             lazy
                             timeOut={300}
                             onLazyChange={(val) => {
-                                setOtherValue(val);
+                                onSelection(selectedItems, val);
                             }}
                             defaultValue={otherValue}
                             required={required && usingOther}
-                            errorMsg="Required!"
                             placeholder="Please specify"
                             hideBackground
                         />
