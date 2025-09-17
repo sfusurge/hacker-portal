@@ -42,7 +42,7 @@ export default function EmailEditPage() {
                     variant: 'default',
                     icon: <FolderArrowDownIcon />,
                 });
-                router.push('/admin/email');
+                router.push('/admin/email/templates');
             },
             onError: (error) => {
                 toast({
@@ -62,7 +62,7 @@ export default function EmailEditPage() {
                     variant: 'default',
                     icon: <FolderArrowDownIcon />,
                 });
-                router.push('/admin/email');
+                router.push('/admin/email/templates');
             },
             onError: (error) => {
                 toast({
@@ -112,7 +112,7 @@ export default function EmailEditPage() {
     };
 
     const handleCancel = () => {
-        router.push('/admin/email');
+        router.push('/admin/email/templates');
     };
 
     return (
@@ -123,7 +123,7 @@ export default function EmailEditPage() {
                         ? 'Edit Email Template'
                         : 'Create Email Template'}
                 </h1>
-                <Link href="/admin/email">
+                <Link href="/admin/email/templates">
                     <Button variant="brand" hierarchy="secondary" size="cozy">
                         Back to Templates
                     </Button>

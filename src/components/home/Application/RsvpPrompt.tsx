@@ -32,6 +32,7 @@ export default function RsvpPrompt({
     const pfp = '/favicon.png';
     const [RSVP, setRSVP] = useState(false);
     const [open, setOpen] = useState(isOpen);
+    const [isConfirmed, setIsConfirmed] = useState(false);
 
     const hackathon = useAtomValue(hackathonAtom);
     const updateApplication = trpc.applications.updateApplication.useMutation();
@@ -92,6 +93,7 @@ export default function RsvpPrompt({
     // }
 
     const handleRSVP = useCallback(() => {
+        if (!isConfirmed) return;
         setRSVP(true);
         try {
             updateApplication.mutate({
@@ -103,11 +105,15 @@ export default function RsvpPrompt({
         } catch (error) {
             console.error('Failed to update application:', error);
         }
-    }, [hackathon, updateApplication, userId]);
+    }, [hackathon, updateApplication, userId, isConfirmed]);
 
     const handleClose = () => {
         setOpen(false);
         closePrompt();
+    };
+
+    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setIsConfirmed(e.target.checked);
     };
 
     return (
@@ -130,12 +136,29 @@ export default function RsvpPrompt({
 
                     <Conditional showWhen={!RSVP}>
                         <DialogHeader className="text-center">
-                            <DialogTitle className="text-2xl font-bold">
-                                Are you sure you want to RSVP?
+                            <DialogTitle className="text-2xl font-semibold">
+                                Confirm your attendance.
                             </DialogTitle>
-                            <DialogDescription>
-                                This action is permanent and cannot be undone.
+                            <DialogDescription className="text-start">
+                                Congratulations on your acceptance to StormHacks
+                                2025. Please check the box below to confirm your
+                                attendance for the following dates:
                             </DialogDescription>
+                            <DialogDescription className="text-xl font-semibold">
+                                October 4 - October 5, 2025
+                            </DialogDescription>
+
+                            <label className="flex items-center gap-3">
+                                <input
+                                    type="checkbox"
+                                    checked={isConfirmed}
+                                    onChange={handleCheckboxChange}
+                                />
+                                <span className="text-start text-sm">
+                                    I confirm that I will be attending
+                                    StormHacks.
+                                </span>
+                            </label>
                         </DialogHeader>
                     </Conditional>
 
@@ -167,6 +190,8 @@ export default function RsvpPrompt({
                                 size="cozy"
                                 hierarchy="primary"
                                 onClick={handleRSVP}
+                                disabled={!isConfirmed}
+                                className={!isConfirmed ? 'opacity-50' : ''}
                             >
                                 Reserve my spot
                             </Button>
