@@ -1,13 +1,14 @@
 import { databaseClient } from '@/db/client';
 import {
     applications,
+    batchUpdateApplicationStatusSchema,
     insertApplicationSchema,
     queryApplicationsSchema,
     StatusEnum,
     updateApplicationStatusSchema,
 } from '@/db/schema/applications';
 import { user } from '@/db/schema/users/users';
-import { and, asc, eq, getTableColumns, desc } from 'drizzle-orm';
+import { and, asc, eq, getTableColumns, desc, or, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { InternalServerError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
@@ -266,6 +267,26 @@ export const applicationsRouter = router({
                 .returning();
 
             return application;
+        }),
+
+    updateApplicationBatch: publicProcedure
+        .input(batchUpdateApplicationStatusSchema)
+        .mutation(async ({ input }) => {
+            const updatedApplications = await databaseClient
+                .update(applications)
+                .set({
+                    pendingStatus: input.pendingStatus ?? undefined,
+                    currentStatus: input.status ?? undefined,
+                })
+                .where(
+                    and(
+                        eq(applications.hackathonId, input.hackathonId),
+                        inArray(applications.userId, input.userIds)
+                    )
+                )
+                .returning();
+
+            return updatedApplications;
         }),
 
     getCurrentApplication: publicProcedure

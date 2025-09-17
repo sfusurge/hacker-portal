@@ -18,6 +18,8 @@ import {
     getFilteredRowModel,
     useReactTable,
     SortingState,
+    RowSelectionState,
+    Row,
 } from '@tanstack/react-table';
 
 import { atom, useAtomValue, useSetAtom } from 'jotai';
@@ -33,6 +35,7 @@ import { EnvelopeIcon } from '@heroicons/react/16/solid';
 import dayjs from 'dayjs';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { StatusEnum } from '@/db/schema/applications';
 
 export type Applicant = {
     id: number;
@@ -93,6 +96,9 @@ export const sideCardAtomSJ = atom<ApplicationWithTeamInfo>();
 export default function ReviewApplicationsTable({
     toggleSideCard,
 }: ReviewApplicationsTableProps) {
+    const hackathon = useAtomValue(hackathonAtom);
+    const utils = trpc.useUtils();
+
     const setSideCardInfo = useSetAtom(sideCardAtomSJ);
 
     const sendEmail = trpc.emails.sendEmail.useMutation();
@@ -112,11 +118,70 @@ export default function ReviewApplicationsTable({
         setIsEmailPopupOpen(!isEmailPopupOpen);
     };
 
-    const updateApplicationStatus =
-        trpc.applications.updateApplication.useMutation();
+    const batchUpdateApplicationStatus =
+        trpc.applications.updateApplicationBatch.useMutation({
+            onSuccess: async (updatedEntries) => {
+                // https://github.com/vercel/next.js/discussions/81503
+                // Cancel outgoing fetches
+                await utils.applications.getApplications.cancel();
+
+                const userIdToUpdatedEntries = new Map(
+                    updatedEntries.map((entry) => [entry.userId, entry])
+                );
+
+                utils.applications.getApplications.setData(
+                    { hackathonId: hackathon.id },
+                    (old) => {
+                        return (
+                            old?.map((entry) => {
+                                if (userIdToUpdatedEntries.has(entry.userId)) {
+                                    const updatedEntry =
+                                        userIdToUpdatedEntries.get(
+                                            entry.userId
+                                        );
+
+                                    return {
+                                        ...entry,
+                                        currentStatus:
+                                            updatedEntry!.currentStatus,
+                                        pendingStatus:
+                                            updatedEntry!.pendingStatus,
+                                    };
+                                }
+
+                                return entry;
+                            }) ?? []
+                        );
+                    }
+                );
+            },
+        });
+
+    const batchUpdateApplicants = async (
+        rows: Row<Applicant>[],
+        {
+            pendingStatus,
+            status,
+        }: { status?: StatusEnum; pendingStatus?: StatusEnum }
+    ) => {
+        const ids = rows.map((row) => row.original.id);
+
+        if (ids.length === 0) {
+            return;
+        }
+
+        console.debug(`Setting Applications to ${pendingStatus}`);
+
+        batchUpdateApplicationStatus.mutateAsync({
+            hackathonId: hackathon.id,
+            userIds: ids,
+            pendingStatus,
+            status,
+        });
+    };
 
     //sends emails to selected users
-    const handleSendingEmails = async (rows: any) => {
+    const handleSendingEmails = async (rows: Row<Applicant>[]) => {
         try {
             if (!selectedTemplateId) {
                 toast({
@@ -129,7 +194,7 @@ export default function ReviewApplicationsTable({
 
             setIsSending(true);
 
-            const rowData = rows.map((row: any) => {
+            const rowData = rows.map((row) => {
                 return {
                     id: row.original.id,
                     firstName: row.original.firstName,
@@ -143,6 +208,10 @@ export default function ReviewApplicationsTable({
             let successCount = 0;
             let failureCount = 0;
             let statusUpdateCount = 0;
+            const updateApplicationStatusInfos: {
+                id: number;
+                status: StatusEnum;
+            }[] = [];
 
             for (let i = 0; i < rowData.length; i++) {
                 try {
@@ -163,12 +232,10 @@ export default function ReviewApplicationsTable({
                         status !== 'N/A' &&
                         rowData[i].currentStatus !== 'Accepted'
                     ) {
-                        await updateApplicationStatus.mutateAsync({
-                            userId: rowData[i].id,
-                            hackathonId: hackathon?.id!,
-                            status: status,
+                        updateApplicationStatusInfos.push({
+                            id: rowData[i].id,
+                            status: status as StatusEnum,
                         });
-                        statusUpdateCount++;
                     }
 
                     successCount++;
@@ -181,6 +248,39 @@ export default function ReviewApplicationsTable({
                 }
             }
 
+            const statusToIds = Object.groupBy(
+                updateApplicationStatusInfos,
+                ({ status }) => status
+            );
+
+            await Promise.all(
+                Object.entries(statusToIds).map(async ([status, items]) => {
+                    const userIds = items.map(({ id }) => id);
+
+                    console.debug(`Updating status to pendingStatus ${status}`);
+
+                    try {
+                        await batchUpdateApplicationStatus.mutateAsync({
+                            userIds,
+                            hackathonId: hackathon.id,
+                            status: status as StatusEnum,
+                        });
+                    } catch (error) {
+                        console.error(error);
+
+                        console.error(
+                            `failed userIds: [${userIds.join(', ')}]`
+                        );
+
+                        toast({
+                            title: 'Error',
+                            description: `Failed to update status to ${status}. Check console for more details`,
+                            variant: 'default',
+                        });
+                    }
+                })
+            );
+
             if (successCount > 0) {
                 toast({
                     title: 'Success',
@@ -189,7 +289,7 @@ export default function ReviewApplicationsTable({
                         'bg-neutral-900 text-white border-neutral-700/18',
                 });
 
-                applicationData.refetch();
+                // applicationData.refetch();
             } else if (failureCount > 0) {
                 toast({
                     title: 'Error',
@@ -212,12 +312,9 @@ export default function ReviewApplicationsTable({
         }
     };
 
-    const hackathon = useAtomValue(hackathonAtom);
-
     // Get data from DB
     const applicationData = trpc.applications.getApplications.useQuery({
         hackathonId: hackathon?.id!,
-        maxResult: 2000,
     });
 
     const applicationDataMap = useMemo(() => {
@@ -250,10 +347,10 @@ export default function ReviewApplicationsTable({
         // sort by people with a team first
         { id: 'teamName', desc: true },
     ]);
-    const [rowSelection, setRowSelection] = useState({});
+    const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
     const checkedInInfoColumns: ColumnDef<Applicant>[] =
-        data[0]?.checkIns?.map(({ eventTitle, checkedIn }, i) => {
+        data[0]?.checkIns?.map(({ eventTitle, checkedIn }) => {
             return {
                 accessorFn: () => (checkedIn ? 'Yes' : 'No'),
                 header: eventTitle,
@@ -782,12 +879,66 @@ export default function ReviewApplicationsTable({
                 </div>
             </div>
 
-            <div className="flex justify-end gap-3 p-4">
+            <div className="flex flex-wrap justify-end gap-3 p-4">
+                <button
+                    className={`flex flex-row items-center justify-center gap-2 rounded-md px-4 py-2 text-sm whitespace-nowrap ${
+                        Object.keys(rowSelection).length === 0
+                            ? 'cursor-not-allowed bg-neutral-500/18 text-white/18'
+                            : 'bg-success-700 text-white'
+                    }`}
+                    type="button"
+                    onClick={() =>
+                        batchUpdateApplicants(
+                            table.getSelectedRowModel().rows,
+                            { pendingStatus: 'Accepted' }
+                        )
+                    }
+                    disabled={Object.keys(rowSelection).length === 0}
+                >
+                    Accept Selected Entries
+                </button>
+
+                <button
+                    className={`flex flex-row items-center justify-center gap-2 rounded-md px-4 py-2 text-sm whitespace-nowrap ${
+                        Object.keys(rowSelection).length === 0
+                            ? 'cursor-not-allowed bg-neutral-500/18 text-white/18'
+                            : 'bg-danger-700 text-white'
+                    }`}
+                    type="button"
+                    onClick={() =>
+                        batchUpdateApplicants(
+                            table.getSelectedRowModel().rows,
+                            { pendingStatus: 'Declined' }
+                        )
+                    }
+                    disabled={Object.keys(rowSelection).length === 0}
+                >
+                    Reject Selected Entries
+                </button>
+
                 <button
                     className={`flex flex-row items-center justify-center gap-2 rounded-md px-4 py-2 text-sm whitespace-nowrap ${
                         Object.keys(rowSelection).length === 0
                             ? 'cursor-not-allowed bg-neutral-500/18 text-white/18'
                             : 'bg-neutral-700 text-white'
+                    }`}
+                    type="button"
+                    onClick={() =>
+                        batchUpdateApplicants(
+                            table.getSelectedRowModel().rows,
+                            { pendingStatus: 'Wait List' }
+                        )
+                    }
+                    disabled={Object.keys(rowSelection).length === 0}
+                >
+                    Waitlist Selected Entries
+                </button>
+
+                <button
+                    className={`flex flex-row items-center justify-center gap-2 rounded-md px-4 py-2 text-sm whitespace-nowrap ${
+                        Object.keys(rowSelection).length === 0
+                            ? 'cursor-not-allowed bg-neutral-500/18 text-white/18'
+                            : 'bg-brand-700 text-white'
                     }`}
                     type="button"
                     onClick={() => toggleEmailPopup()}
