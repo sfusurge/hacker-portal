@@ -21,7 +21,7 @@ export function CountdownContent() {
     dayjs.extend(timezone);
 
     const cutoffTime = dayjs
-        .utc('2025-09-21 00:00:00')
+        .utc('2025-09-22 00:00:00')
         .utcOffset(-8)
         .startOf('day')
         .add(1, 'hour');
