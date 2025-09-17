@@ -128,7 +128,7 @@ export default function ApplicationCard({
             <Conditional showWhen={isRSVPPromptOpen}>
                 {userData?.id && (
                     <RsvpPrompt
-                        userId={userData.id}
+                        userData={userData}
                         closePrompt={handleCloseRSVPPrompt}
                     />
                 )}

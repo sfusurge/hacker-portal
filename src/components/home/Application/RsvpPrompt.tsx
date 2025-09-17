@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { FormTextInput } from '@/components/ui/input/input';
+import { UserData } from '@/server/routers/usersRouter';
 import { useCallback, useEffect, useState } from 'react';
 import { trpc } from '@/trpc/client';
 import { Conditional } from '@/lib/Conditional';
@@ -19,13 +19,13 @@ import { useAtomValue } from 'jotai';
 import { createCaller } from '@/server/appRouter';
 
 export type RsvpPromptProps = {
-    userId: number;
+    userData: UserData;
     closePrompt: () => void;
     isOpen?: boolean;
 };
 
 export default function RsvpPrompt({
-    userId,
+    userData,
     closePrompt,
     isOpen = true,
 }: RsvpPromptProps) {
@@ -36,61 +36,15 @@ export default function RsvpPrompt({
 
     const hackathon = useAtomValue(hackathonAtom);
     const updateApplication = trpc.applications.updateApplication.useMutation();
-
-    // if (!application ||
-    //     application.currentStatus !==
-    //     'RSVP'
-    // ) {
-    //     console.error(
-    //         'No valid application found for active hackathon'
-    //     );
-    //     break;
-    // }
-    //
-    // await trpcClient.applications.updateApplication({
-    //     ...application,
-    //     status: 'Accepted',
-    //     pendingStatus: 'N/A',
-    // });
-    //
-    // // Send confirmation email after successful payment
-    // try {
-    //     const rsvpTemplate =
-    //         await trpcClient.emailTemplates.getEmailTemplateByPurpose(
-    //             {
-    //                 purpose: 'RSVP Received',
-    //             }
-    //         );
-    //
-    //     if (rsvpTemplate) {
-    //         // Extract name from application response if possible
-    //         const firstName =
-    //             application.response['2'] ?? 'Friend';
-    //         const lastName = application.response['3'] ?? '';
-    //
-    //         await trpcClient.emails.sendEmail({
-    //             templateId: rsvpTemplate.id,
-    //             user: {
-    //                 id: application.userId,
-    //                 firstName: firstName,
-    //                 lastName: lastName,
-    //                 email: data.receipt_email,
-    //             },
-    //         });
-    //         console.log(
-    //             'RSVP confirmation email sent successfully'
-    //         );
-    //     } else {
-    //         console.error(
-    //             'Email template with purpose "RSVP Received" not found'
-    //         );
-    //     }
-    // } catch (emailError) {
-    //     console.error(
-    //         'Failed to send RSVP confirmation email:',
-    //         emailError
-    //     );
-    // }
+    const getEmailTemplate =
+        trpc.emailTemplates.getEmailTemplateByPurpose.useQuery({
+            purpose: 'RSVP Received',
+        });
+    const sendEmail = trpc.emails.sendEmail.useMutation();
+    const firstName = userData?.firstName || 'Friend';
+    const lastName = userData?.lastName || '';
+    const userEmail = userData?.email;
+    const userId = userData.id;
 
     const handleRSVP = useCallback(() => {
         if (!isConfirmed) return;
@@ -101,6 +55,15 @@ export default function RsvpPrompt({
                 status: 'Accepted',
                 pendingStatus: 'N/A',
                 userId: userId,
+            });
+            sendEmail.mutate({
+                templateId: getEmailTemplate.data.id,
+                user: {
+                    id: userId,
+                    firstName: firstName,
+                    lastName: lastName,
+                    email: userEmail,
+                },
             });
         } catch (error) {
             console.error('Failed to update application:', error);

@@ -59,69 +59,71 @@ export const applicationsRouter = router({
                 // })
                 .returning();
 
-            //based on code copied from rewviewappplications table lmao
-            const tempDummy = (item: any) => {
-                const { '1': firstName, '4': email } = item.response || {};
-                return { firstName, email };
-            };
+            if (application) {
+                //based on code copied from rewviewappplications table lmao
+                const tempDummy = (item: any) => {
+                    const { '1': firstName, '4': email } = item.response || {};
+                    return { firstName, email };
+                };
 
-            if (!user?.email) {
-                throw new InternalServerError(
-                    'User email is missing. Cannot send email.'
-                );
-            }
-            const extractedEmail = tempDummy(input).email;
-            if (!extractedEmail) {
-                throw new InternalServerError(
-                    'User email is missing. Cannot send email.'
-                );
-            }
+                if (!user?.email) {
+                    throw new InternalServerError(
+                        'User email is missing. Cannot send email.'
+                    );
+                }
+                const extractedEmail = tempDummy(input).email;
+                if (!extractedEmail) {
+                    throw new InternalServerError(
+                        'User email is missing. Cannot send email.'
+                    );
+                }
 
-            const template = Handlebars.compile(welcomeStormhacksTemplate);
-            const htmlContent = template({
-                firstName: tempDummy(input).firstName,
-            });
-
-            let oAuthMailOptions = {
-                from: process.env.SENDINGEMAIL,
-                to: user.email,
-                subject: 'Your StormHacks Application Has Been Received!',
-                text: 'Your StormHacks Application Has Been Received!',
-                html: htmlContent,
-            };
-
-            let sfuMailOptions = {
-                from: process.env.SENDINGEMAIL,
-                to: extractedEmail,
-                subject: 'Your StormHacks Application Has Been Received!',
-                text: 'Your StormHacks Application Has Been Received!',
-                html: htmlContent,
-            };
-
-            if (user.email != extractedEmail) {
-                transporter.sendMail(oAuthMailOptions, (error, info) => {
-                    if (error) {
-                        console.error('Error sending email:', error);
-                    } else {
-                        console.log('Email sent:', info.response);
-                    }
+                const template = Handlebars.compile(welcomeStormhacksTemplate);
+                const htmlContent = template({
+                    firstName: tempDummy(input).firstName,
                 });
 
-                transporter.sendMail(sfuMailOptions, (error, info) => {
-                    if (error) {
-                        console.error('Error sending email:', error);
-                    } else {
-                        console.log('Email sent:', info.response);
-                    }
-                });
-            } else {
-                transporter.sendMail(oAuthMailOptions, (error, info) => {
-                    if (error) {
-                        console.error('Error sending email:', error);
-                    } else {
-                        console.log('Email sent:', info.response);
-                    }
-                });
+                let oAuthMailOptions = {
+                    from: process.env.SENDINGEMAIL,
+                    to: user.email,
+                    subject: 'Your StormHacks Application Has Been Received!',
+                    text: 'Your StormHacks Application Has Been Received!',
+                    html: htmlContent,
+                };
+
+                let sfuMailOptions = {
+                    from: process.env.SENDINGEMAIL,
+                    to: extractedEmail,
+                    subject: 'Your StormHacks Application Has Been Received!',
+                    text: 'Your StormHacks Application Has Been Received!',
+                    html: htmlContent,
+                };
+
+                if (user.email != extractedEmail) {
+                    transporter.sendMail(oAuthMailOptions, (error, info) => {
+                        if (error) {
+                            console.error('Error sending email:', error);
+                        } else {
+                            console.log('Email sent:', info.response);
+                        }
+                    });
+
+                    transporter.sendMail(sfuMailOptions, (error, info) => {
+                        if (error) {
+                            console.error('Error sending email:', error);
+                        } else {
+                            console.log('Email sent:', info.response);
+                        }
+                    });
+                } else {
+                    transporter.sendMail(oAuthMailOptions, (error, info) => {
+                        if (error) {
+                            console.error('Error sending email:', error);
+                        } else {
+                            console.log('Email sent:', info.response);
+                        }
+                    });
+                }
             }
 
             return {
