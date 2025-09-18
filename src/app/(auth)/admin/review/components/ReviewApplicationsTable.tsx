@@ -36,6 +36,7 @@ import dayjs from 'dayjs';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { StatusEnum } from '@/db/schema/applications';
+import { FilterColumn } from './FilterColumn';
 
 export type Applicant = {
     id: number;
@@ -129,29 +130,52 @@ export default function ReviewApplicationsTable({
                     updatedEntries.map((entry) => [entry.userId, entry])
                 );
 
-                utils.applications.getApplications.setData(
-                    { hackathonId: hackathon.id },
+                console.debug('Updating table with updated entry');
+
+                utils.applications.getApplications.setInfiniteData(
+                    {
+                        hackathonId: hackathon.id,
+                    },
                     (old) => {
-                        return (
-                            old?.map((entry) => {
-                                if (userIdToUpdatedEntries.has(entry.userId)) {
-                                    const updatedEntry =
-                                        userIdToUpdatedEntries.get(
-                                            entry.userId
-                                        );
+                        if (!old) {
+                            return {
+                                pageParams: [],
+                                pages: [],
+                            };
+                        }
 
-                                    return {
-                                        ...entry,
-                                        currentStatus:
-                                            updatedEntry!.currentStatus,
-                                        pendingStatus:
-                                            updatedEntry!.pendingStatus,
-                                    };
-                                }
+                        return {
+                            ...old,
+                            pages: old.pages.map((page) => {
+                                return {
+                                    ...page,
+                                    applications: page.applications.map(
+                                        (application) => {
+                                            if (
+                                                !userIdToUpdatedEntries.has(
+                                                    application.userId
+                                                )
+                                            ) {
+                                                return application;
+                                            }
 
-                                return entry;
-                            }) ?? []
-                        );
+                                            const updatedEntry =
+                                                userIdToUpdatedEntries.get(
+                                                    application.userId
+                                                )!;
+
+                                            return {
+                                                ...application,
+                                                currentStatus:
+                                                    updatedEntry.currentStatus,
+                                                pendingStatus:
+                                                    updatedEntry.pendingStatus,
+                                            };
+                                        }
+                                    ),
+                                };
+                            }),
+                        };
                     }
                 );
             },
@@ -167,12 +191,17 @@ export default function ReviewApplicationsTable({
         const ids = rows.map((row) => row.original.id);
 
         if (ids.length === 0) {
+            console.debug(
+                `No user ids to update status pendingStatus=${pendingStatus} status=${status}`
+            );
             return;
         }
 
-        console.debug(`Setting Applications to ${pendingStatus}`);
+        console.debug(
+            `Setting Applications pendingStatus=${pendingStatus}, status=${status}`
+        );
 
-        batchUpdateApplicationStatus.mutateAsync({
+        await batchUpdateApplicationStatus.mutateAsync({
             hackathonId: hackathon.id,
             userIds: ids,
             pendingStatus,
@@ -313,33 +342,40 @@ export default function ReviewApplicationsTable({
     };
 
     // Get data from DB
-    const applicationData = trpc.applications.getApplications.useQuery({
-        hackathonId: hackathon?.id!,
-    });
+    const applicationData = trpc.applications.getApplications.useInfiniteQuery(
+        {
+            hackathonId: hackathon?.id!,
+        },
+        {
+            getNextPageParam: (lastPage) => lastPage.nextToken,
+        }
+    );
+
+    const applications = useMemo(() => {
+        return (
+            applicationData.data?.pages.flatMap((page) => page.applications) ??
+            []
+        );
+    }, [applicationData.data]);
 
     const applicationDataMap = useMemo(() => {
         const map = new Map<number, ApplicationWithTeamInfo>();
-        if (!applicationData.data) {
-            return map;
-        }
 
-        for (const appData of applicationData.data) {
+        for (const appData of applications) {
             map.set(appData.userId, appData);
         }
 
         return map;
-    }, [applicationData]);
+    }, [applications]);
 
     // Data state
     const [data, setData] = useState<Applicant[]>([]);
 
     //Change data state on update of DB
     useEffect(() => {
-        if (applicationData.data) {
-            const transformed = transformResponse(applicationData.data);
-            setData(transformed);
-        }
-    }, [applicationData.data]);
+        const transformed = transformResponse(applications);
+        setData(transformed);
+    }, [applications]);
 
     // Filters and sorting
     const [globalFilter, setGlobalFilter] = useState<string>('');
@@ -355,6 +391,7 @@ export default function ReviewApplicationsTable({
                 accessorFn: () => (checkedIn ? 'Yes' : 'No'),
                 header: eventTitle,
                 size: 100,
+                enableColumnFilter: true,
             };
         }) ?? [];
 
@@ -390,6 +427,7 @@ export default function ReviewApplicationsTable({
             header: 'Team Name',
             size: 200,
             minSize: 100,
+            enableColumnFilter: true,
         },
         {
             accessorKey: 'firstName',
@@ -427,6 +465,7 @@ export default function ReviewApplicationsTable({
             },
             size: 200,
             minSize: 200,
+            enableColumnFilter: true,
         },
         {
             accessorKey: 'pendingStatus',
@@ -452,6 +491,7 @@ export default function ReviewApplicationsTable({
             },
             size: 150,
             minSize: 150,
+            enableColumnFilter: true,
         },
         {
             accessorKey: 'applicationDate',
@@ -531,6 +571,8 @@ export default function ReviewApplicationsTable({
             header: 'Resume',
             size: 200,
             minSize: 150,
+            enableGlobalFilter: false,
+            enableColumnFilter: false,
             cell: (info) => {
                 const url = info.getValue() as string | undefined;
                 return url ? (
@@ -583,7 +625,7 @@ export default function ReviewApplicationsTable({
             table.setPageIndex(parseInt(localStorage.getItem('pageindex')!));
         }
         setIniload(false);
-    }, [data, iniload]);
+    }, [data, iniload, table]);
 
     const csvConfig = mkConfig({
         fieldSeparator: ',',
@@ -654,51 +696,86 @@ export default function ReviewApplicationsTable({
                     >
                         <thead className="bg-neutral-900 whitespace-nowrap text-gray-200">
                             {table.getHeaderGroups().map((headerGroup) => (
-                                <tr key={headerGroup.id}>
-                                    {headerGroup.headers.map(
-                                        (header, index) => (
-                                            <th
-                                                key={header.id}
-                                                colSpan={header.colSpan}
-                                                style={{
-                                                    width: header.getSize(),
-                                                    minWidth:
-                                                        header.column.columnDef
-                                                            .minSize,
-                                                }}
-                                                className={`relative px-4 py-4 text-sm ${
-                                                    index === 0
-                                                        ? 'sticky left-0 z-20 bg-neutral-900' // First column
-                                                        : index === 1
-                                                          ? 'sticky left-[50px] z-20 bg-neutral-900' // Second column
-                                                          : ''
-                                                }`}
-                                            >
-                                                {header.isPlaceholder
-                                                    ? null
-                                                    : flexRender(
-                                                          header.column
-                                                              .columnDef.header,
-                                                          header.getContext()
-                                                      )}
-                                                {header.column.getCanResize() && (
-                                                    <div
-                                                        onMouseDown={header.getResizeHandler()}
-                                                        onTouchStart={header.getResizeHandler()}
-                                                        className={`absolute top-0 right-0 bottom-0 w-2 cursor-col-resize ${
-                                                            header.column.getIsResizing()
-                                                                ? 'bg-gray-500'
-                                                                : ''
-                                                        }`}
-                                                        style={{
-                                                            zIndex: 50,
-                                                        }}
-                                                    ></div>
-                                                )}
-                                            </th>
-                                        )
-                                    )}
-                                </tr>
+                                <>
+                                    <tr key={headerGroup.id}>
+                                        {headerGroup.headers.map(
+                                            (header, index) => (
+                                                <th
+                                                    key={header.id}
+                                                    colSpan={header.colSpan}
+                                                    style={{
+                                                        width: header.getSize(),
+                                                        minWidth:
+                                                            header.column
+                                                                .columnDef
+                                                                .minSize,
+                                                    }}
+                                                    className={`relative px-4 py-4 text-sm ${
+                                                        index === 0
+                                                            ? 'sticky left-0 z-20 bg-neutral-900' // First column
+                                                            : index === 1
+                                                              ? 'sticky left-[50px] z-20 bg-neutral-900' // Second column
+                                                              : ''
+                                                    }`}
+                                                >
+                                                    {header.isPlaceholder
+                                                        ? null
+                                                        : flexRender(
+                                                              header.column
+                                                                  .columnDef
+                                                                  .header,
+                                                              header.getContext()
+                                                          )}
+                                                    {header.column.getCanResize() && (
+                                                        <div
+                                                            onMouseDown={header.getResizeHandler()}
+                                                            onTouchStart={header.getResizeHandler()}
+                                                            className={`absolute top-0 right-0 bottom-0 w-2 cursor-col-resize ${
+                                                                header.column.getIsResizing()
+                                                                    ? 'bg-gray-500'
+                                                                    : ''
+                                                            }`}
+                                                            style={{
+                                                                zIndex: 50,
+                                                            }}
+                                                        ></div>
+                                                    )}
+                                                </th>
+                                            )
+                                        )}
+                                    </tr>
+                                    <tr>
+                                        {headerGroup.headers.map(
+                                            (header, index) => (
+                                                <th
+                                                    key={header.id}
+                                                    style={{
+                                                        width: header.getSize(),
+                                                        minWidth:
+                                                            header.column
+                                                                .columnDef
+                                                                .minSize,
+                                                    }}
+                                                    className={`relative px-4 py-2 text-sm ${
+                                                        index === 0
+                                                            ? 'sticky left-0 z-20 bg-neutral-900'
+                                                            : index === 1
+                                                              ? 'sticky left-[50px] z-20 bg-neutral-900'
+                                                              : ''
+                                                    }`}
+                                                >
+                                                    {header.column.getCanFilter() ? (
+                                                        <FilterColumn
+                                                            column={
+                                                                header.column
+                                                            }
+                                                        />
+                                                    ) : null}
+                                                </th>
+                                            )
+                                        )}
+                                    </tr>
+                                </>
                             ))}
                         </thead>
                         <tbody>

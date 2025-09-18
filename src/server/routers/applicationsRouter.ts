@@ -136,107 +136,133 @@ export const applicationsRouter = router({
     getApplications: publicProcedure
         .input(queryApplicationsSchema)
         .query(async ({ input }) => {
-            // https://orm.drizzle.team/docs/guides/limit-offset-pagination
-            const offset = (Number(input.nextToken ?? 1) - 1) * input.maxResult;
-
-            const hackathonIdMatchCondition = eq(
-                applications.hackathonId,
-                input.hackathonId
-            );
-
-            const condition =
-                input.userId != undefined
-                    ? and(
-                          hackathonIdMatchCondition,
-                          eq(applications.userId, input.userId)
-                      )
-                    : hackathonIdMatchCondition;
+            const offset = Number(input.nextToken ?? 0);
 
             const applicationsWithTeamInfo = await databaseClient
                 .select({
                     ...getTableColumns(applications),
-                    response: applications.response,
-                    teamId: members.teamId,
-                    teamName: teams.name,
-                    members: members.userId,
                 })
                 .from(applications)
-                .leftJoin(members, eq(applications.userId, members.userId))
-                .leftJoin(teams, eq(members.teamId, teams.id))
-                .where(condition)
-                .orderBy(asc(applications.createdDate));
+                .where(eq(applications.hackathonId, input.hackathonId))
+                .orderBy(asc(applications.createdDate))
+                .limit(input.maxResult)
+                .offset(offset);
 
-            const teamToMembersMap = Object.groupBy(
-                applicationsWithTeamInfo,
-                (item) => item.teamId || 'none'
+            const teamInfos = await databaseClient
+                .select({
+                    teamId: teams.id,
+                    teamName: teams.name,
+                    userId: members.userId,
+                    response: applications.response,
+                })
+                .from(teams)
+                .innerJoin(members, eq(members.teamId, teams.id))
+                .innerJoin(
+                    applications,
+                    and(
+                        eq(applications.userId, members.userId),
+                        eq(applications.hackathonId, input.hackathonId)
+                    )
+                )
+                .where(eq(teams.hackathonId, input.hackathonId));
+
+            const userIdToTeamMap = new Map(
+                teamInfos.map((teamInfo) => [teamInfo.userId, teamInfo])
             );
 
-            const applicationsWithCheckInInfo = await databaseClient
+            const teamIdToMembers = Object.groupBy(
+                teamInfos,
+                ({ teamId }) => teamId
+            );
+
+            const checkInInfos = await databaseClient
                 .select({
-                    userId: applications.userId,
+                    userId: checkIns.userId,
                     eventId: events.id,
                     eventTitle: events.title,
                     checkInTime: checkIns.checkInTime,
                 })
-                .from(applications)
+                .from(events)
+                .leftJoin(checkIns, eq(checkIns.eventId, events.id))
                 .innerJoin(
-                    events,
+                    applications,
                     and(
-                        eq(events.hackathonId, applications.hackathonId),
-                        eq(events.hackathonId, input.hackathonId)
+                        eq(checkIns.userId, applications.userId),
+                        eq(applications.hackathonId, input.hackathonId)
                     )
                 )
-                .leftJoin(
-                    checkIns,
-                    and(
-                        eq(checkIns.eventId, events.id),
-                        eq(applications.userId, checkIns.userId)
-                    )
-                )
-                .where(condition);
+                .where(and(eq(events.hackathonId, input.hackathonId)));
 
             const userToEvents = Object.groupBy(
-                applicationsWithCheckInInfo,
-                ({ userId }) => userId
+                checkInInfos.filter(({ userId }) => userId !== null),
+                ({ userId }) => userId!
             );
 
-            const applicationsWithAllInfos = applicationsWithTeamInfo.map(
-                ({ createdDate, ...application }) => {
-                    const { teamId } = application;
+            const applicationsWithAllInfos: ApplicationWithTeamInfo[] =
+                applicationsWithTeamInfo.map(
+                    ({ createdDate, ...application }) => {
+                        const teamId =
+                            userIdToTeamMap.get(application.userId)?.teamId ??
+                            null;
 
-                    const members =
-                        teamId != null
-                            ? teamToMembersMap[teamId]!.map(({ response }) => {
-                                  const firstName = (
-                                      response as Record<string, string>
-                                  )['1'];
-                                  const lastName = (
-                                      response as Record<string, string>
-                                  )['2'];
+                        const teamName =
+                            userIdToTeamMap.get(application.userId)?.teamName ??
+                            null;
 
-                                  return `${firstName} ${lastName}`;
-                              })
-                            : [];
+                        const members =
+                            teamId !== null
+                                ? teamIdToMembers[teamId]!.map((memberInfo) => {
+                                      const firstName = (
+                                          memberInfo.response as Record<
+                                              string,
+                                              string
+                                          >
+                                      )['1'];
 
-                    const checkIns = (
-                        userToEvents[application.userId] ?? []
-                    ).map(({ userId, checkInTime, ...info }) => ({
-                        ...info,
-                        checkedIn: checkInTime != null,
-                    }));
+                                      const lastName = (
+                                          memberInfo.response as Record<
+                                              string,
+                                              string
+                                          >
+                                      )['2'];
+                                      return `${firstName} ${lastName}`;
+                                  })
+                                : [];
 
-                    return {
-                        ...application,
-                        checkIns,
-                        // converting date to unix timestamp before returning
-                        // suppressing warning to avoid uncessesary type conversion.
-                        createdDate: createdDate?.getTime(),
-                        members,
-                    };
-                }
-            );
+                        const checkIns = (
+                            userToEvents[application.userId] ?? []
+                        ).map(({ userId, checkInTime, ...info }) => ({
+                            ...info,
+                            checkedIn: checkInTime != null,
+                        }));
 
-            return applicationsWithAllInfos as ApplicationWithTeamInfo[];
+                        return {
+                            ...application,
+                            response: application.response as Record<
+                                string,
+                                any
+                            >,
+                            teamId,
+                            teamName,
+                            checkIns,
+                            // converting date to unix timestamp before returning
+                            // suppressing warning to avoid uncessesary type conversion.
+                            createdDate: createdDate?.getTime(),
+                            members,
+                        };
+                    }
+                );
+
+            const nextToken =
+                applicationsWithAllInfos.length !== 0
+                    ? `${applicationsWithAllInfos.length}`
+                    : null;
+
+            return {
+                applications:
+                    applicationsWithAllInfos as ApplicationWithTeamInfo[],
+                nextToken,
+            };
         }),
 
     updateApplication: publicProcedure
