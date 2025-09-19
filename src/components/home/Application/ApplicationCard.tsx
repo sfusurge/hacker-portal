@@ -30,6 +30,8 @@ import { UserData } from '@/server/routers/usersRouter';
 import clsx from 'clsx';
 import { useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { Conditional } from '@/lib/Conditional';
+import RsvpPrompt from '@/components/home/Application/RsvpPrompt';
 
 export type AppStatus =
     | 'Not Yet Started'
@@ -64,6 +66,10 @@ export default function ApplicationCard({
     const hackathon = useAtomValue(hackathonAtom);
     const hackathonName = hackathon?.hackathonName || 'Hackathon';
 
+    const [isRSVPPromptOpen, setIsRSVPPromptOpen] = useState(false);
+    const handleOpenRSVPPrompt = () => setIsRSVPPromptOpen(true);
+    const handleCloseRSVPPrompt = () => setIsRSVPPromptOpen(false);
+
     useEffect(() => {
         const questionSet = localStorage.getItem('application_response');
         if (questionSet !== null) {
@@ -96,7 +102,8 @@ export default function ApplicationCard({
                     status,
                     hackathonName,
                     image,
-                    handleOpenTicket
+                    handleOpenTicket,
+                    handleOpenRSVPPrompt
                 )}
             </CardHeader>
 
@@ -117,7 +124,15 @@ export default function ApplicationCard({
                 )}
             </CardContent>
 
-            {getCardFooter(status, hackathonName)}
+            {getCardFooter(status, hackathonName, handleOpenRSVPPrompt)}
+            <Conditional showWhen={isRSVPPromptOpen}>
+                {userData?.id && (
+                    <RsvpPrompt
+                        userData={userData}
+                        closePrompt={handleCloseRSVPPrompt}
+                    />
+                )}
+            </Conditional>
         </Card>
     );
 }
@@ -145,6 +160,7 @@ function getStatusStyleForTitle(status: AppStatus): string {
     switch (status) {
         case 'Accepted - Pending Payment':
         case 'RSVP':
+            return 'text-brand-400';
         case 'Accepted':
             return 'text-brand-400';
         case 'Withdrawn':
@@ -174,7 +190,8 @@ function getHeaderAction(
     status: AppStatus,
     hackathonName: string,
     image?: string,
-    onOpenTicket?: () => void
+    onOpenTicket?: () => void,
+    onOpenRSVP?: () => void
 ) {
     if (status === 'Accepted' && image && onOpenTicket) {
         return <QRCodeButton onOpen={onOpenTicket} />;
@@ -220,6 +237,17 @@ function getHeaderAction(
                 Click to RSVP
             </Button>
         ),
+        RSVP: (
+            <Button
+                size="cozy"
+                variant="brand"
+                hierarchy="primary"
+                className="hidden md:block"
+                onClick={onOpenRSVP}
+            >
+                Click to RSVP
+            </Button>
+        ),
     };
 
     return headerActions[status as keyof typeof headerActions] || null;
@@ -260,6 +288,8 @@ function getCardContent(
             return <WaitlistContent />;
         case 'Accepted - Pending Payment':
             return <AwaitingRSVPContent userData={userData} />;
+        case 'RSVP':
+            return <AwaitingRSVPContent userData={userData} />;
         case 'Accepted':
             return (
                 <AcceptedContent
@@ -274,7 +304,11 @@ function getCardContent(
     }
 }
 
-function getCardFooter(status: AppStatus, hackathonName: string) {
+function getCardFooter(
+    status: AppStatus,
+    hackathonName: string,
+    onOpenRSVP?: () => void
+) {
     const footerActions = {
         'Not Yet Started': (
             <Button
@@ -311,6 +345,17 @@ function getCardFooter(status: AppStatus, hackathonName: string) {
                 hierarchy="primary"
                 className="w-full"
                 onClick={() => redirect('/rsvp')}
+            >
+                RSVP to {hackathonName}
+            </Button>
+        ),
+        RSVP: (
+            <Button
+                size="cozy"
+                variant="brand"
+                hierarchy="primary"
+                className="w-full"
+                onClick={onOpenRSVP}
             >
                 RSVP to {hackathonName}
             </Button>

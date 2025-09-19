@@ -18,7 +18,8 @@ export type StatusEnum =
     | 'Declined'
     | 'Wait List'
     | 'Withdrawn'
-    | 'Accepted - Pending Payment';
+    | 'Accepted - Pending Payment'
+    | 'RSVP';
 
 export const applicationStatusEnum = pgEnum('application_status', [
     'N/A',
@@ -28,6 +29,7 @@ export const applicationStatusEnum = pgEnum('application_status', [
     'Wait List',
     'Withdrawn',
     'Accepted - Pending Payment',
+    'RSVP',
 ]);
 
 export const applications = pgTable(
@@ -65,35 +67,33 @@ export const insertApplicationSchema = createInsertSchema(applications).pick({
 
 export const queryApplicationsSchema = z.object({
     hackathonId: z.number().int(),
-    userId: z.number().int().optional(),
-    maxResult: z.number().int().optional().default(100),
+    maxResult: z.number().int().optional().default(200),
     nextToken: z.string().regex(/^\d+$/g).optional(),
+    cursor: z.string().optional(),
 });
+
+const APPLICATION_STATUS_ENUM = z.enum([
+    'N/A',
+    'Accepted',
+    'Declined',
+    'Awaiting Review',
+    'Wait List',
+    'Withdrawn',
+    'Accepted - Pending Payment',
+    'RSVP',
+]);
 
 export const updateApplicationStatusSchema = z.object({
     hackathonId: z.number().int(),
     userId: z.number().int(),
-    status: z
-        .enum([
-            'N/A',
-            'Accepted',
-            'Declined',
-            'Awaiting Review',
-            'Wait List',
-            'Withdrawn',
-            'Accepted - Pending Payment',
-        ])
-        .optional(),
-    pendingStatus: z
-        .enum([
-            'N/A',
-            'Accepted',
-            'Declined',
-            'Awaiting Review',
-            'Wait List',
-            'Withdrawn',
-            'Accepted - Pending Payment',
-        ])
-        .optional(),
+    status: APPLICATION_STATUS_ENUM.optional(),
+    pendingStatus: APPLICATION_STATUS_ENUM.optional(),
     response: z.record(z.string(), z.any()).optional(),
+});
+
+export const batchUpdateApplicationStatusSchema = z.object({
+    hackathonId: z.number().int(),
+    userIds: z.array(z.number().int()),
+    status: APPLICATION_STATUS_ENUM.optional(),
+    pendingStatus: APPLICATION_STATUS_ENUM.optional(),
 });
