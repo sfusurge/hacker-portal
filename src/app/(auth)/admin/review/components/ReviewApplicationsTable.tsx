@@ -20,6 +20,7 @@ import {
     SortingState,
     RowSelectionState,
     Row,
+    PaginationState,
 } from '@tanstack/react-table';
 
 import { atom, useAtomValue, useSetAtom } from 'jotai';
@@ -94,9 +95,312 @@ type ReviewApplicationsTableProps = {
 
 export const sideCardAtomSJ = atom<ApplicationWithTeamInfo>();
 
+const csvConfig = mkConfig({
+    fieldSeparator: ',',
+    filename: 'Data',
+    decimalSeparator: '.',
+    useKeysAsHeaders: true,
+});
+
 export default function ReviewApplicationsTable({
     toggleSideCard,
 }: ReviewApplicationsTableProps) {
+    const hackathon = useAtomValue(hackathonAtom);
+
+    // Fetch email templates
+    const { data: emailTemplates, isLoading: templatesLoading } =
+        trpc.emailTemplates.getEmailTemplates.useQuery();
+
+    // Get data from DB
+    const applicationData = trpc.applications.getApplications.useInfiniteQuery(
+        {
+            hackathonId: hackathon?.id!,
+        },
+        {
+            getNextPageParam: (lastPage) => lastPage.nextToken,
+        }
+    );
+
+    const applications = useMemo(() => {
+        return (
+            applicationData.data?.pages.flatMap((page) => page.applications) ??
+            []
+        );
+    }, [applicationData.data]);
+
+    const applicationDataMap = useMemo(() => {
+        const map = new Map<number, ApplicationWithTeamInfo>();
+
+        for (const appData of applications) {
+            map.set(appData.userId, appData);
+        }
+
+        return map;
+    }, [applications]);
+
+    // Data state
+    const data: Applicant[] = transformResponse(applications);
+
+    const checkedInInfoColumns: ColumnDef<Applicant>[] =
+        data[0]?.checkIns?.map(({ eventTitle, checkedIn }) => {
+            return {
+                accessorFn: () => (checkedIn ? 'Yes' : 'No'),
+                header: eventTitle,
+                size: 100,
+                enableColumnFilter: true,
+            };
+        }) ?? [];
+
+    const defaultColumns: ColumnDef<Applicant>[] = [
+        {
+            id: 'select',
+            header: ({ table }) => (
+                <IndeterminateCheckbox
+                    {...{
+                        checked: table.getIsAllRowsSelected(),
+                        indeterminate: table.getIsSomeRowsSelected(),
+                        onChange: table.getToggleAllRowsSelectedHandler(),
+                    }}
+                />
+            ),
+            cell: ({ row }) => (
+                <div className="bg-neutral-800/60">
+                    <IndeterminateCheckbox
+                        {...{
+                            checked: row.getIsSelected(),
+                            disabled: !row.getCanSelect(),
+                            indeterminate: row.getIsSomeSelected(),
+                            onChange: row.getToggleSelectedHandler(),
+                        }}
+                    />
+                </div>
+            ),
+            size: 50,
+        },
+        {
+            // id: 'teamName',
+            accessorKey: 'teamName',
+            header: 'Team Name',
+            size: 200,
+            minSize: 100,
+        },
+        {
+            accessorKey: 'firstName',
+            header: 'First Name',
+            size: 150,
+            minSize: 100,
+        },
+        {
+            accessorKey: 'lastName',
+            header: 'Last Name',
+            size: 150,
+            minSize: 100,
+        },
+        {
+            accessorKey: 'currentStatus',
+            header: 'Current Status',
+            cell: (info) => {
+                const value = info.getValue<string>();
+                return (
+                    <span
+                        className={`rounded-md px-3 py-0.5 text-xs ${
+                            value === 'Accepted' ||
+                            value === 'Accepted - Pending Payment'
+                                ? 'bg-success-950 text-success-300'
+                                : value === 'Wait List'
+                                  ? 'bg-yellow-950 text-yellow-300'
+                                  : value === 'Declined'
+                                    ? 'bg-danger-950 text-danger-300'
+                                    : 'bg-neutral-600/30'
+                        }`}
+                    >
+                        {value}
+                    </span>
+                );
+            },
+            size: 200,
+            minSize: 200,
+            enableColumnFilter: true,
+        },
+        {
+            accessorKey: 'pendingStatus',
+            header: 'Pending Status',
+            cell: (info) => {
+                const value = info.getValue<string>();
+                return (
+                    <span
+                        className={`rounded-md px-3 py-0.5 text-xs ${
+                            value === 'Accepted' ||
+                            value === 'Accepted - Pending Payment'
+                                ? 'bg-success-950 text-success-300'
+                                : value === 'Wait List'
+                                  ? 'bg-yellow-950 text-yellow-300'
+                                  : value === 'Declined'
+                                    ? 'bg-danger-950 text-danger-300'
+                                    : 'bg-neutral-600/30'
+                        }`}
+                    >
+                        {value}
+                    </span>
+                );
+            },
+            size: 150,
+            minSize: 150,
+            enableColumnFilter: true,
+        },
+        {
+            accessorKey: 'applicationDate',
+            header: 'Date',
+            size: 100,
+            minSize: 100,
+            cell: (info) => dayjs(info.getValue() as Date).format('MMM DD'),
+        },
+        {
+            accessorKey: 'email',
+            header: 'Email',
+            size: 225,
+            minSize: 150,
+        },
+        {
+            accessorKey: 'discord',
+            header: 'Discord',
+            size: 150,
+            minSize: 100,
+        },
+        {
+            accessorKey: 'school',
+            header: 'School',
+            size: 225,
+            minSize: 150,
+        },
+        {
+            accessorKey: 'major',
+            header: 'Major',
+            size: 200,
+            minSize: 150,
+        },
+        {
+            accessorKey: 'yearOfStudy',
+            header: 'Year',
+            size: 120,
+            minSize: 100,
+        },
+        {
+            accessorKey: 'haveHackathonExperience',
+            header: 'Hackathon Experience',
+            size: 200,
+            minSize: 150,
+            cell: (info) => {
+                const value = info.getValue();
+                return Array.isArray(value) ? value.join(', ') : value || 'N/A';
+            },
+        },
+        {
+            accessorKey: 'howHeardAbout',
+            header: 'How Heard About',
+            size: 200,
+            minSize: 150,
+            cell: (info) => {
+                const value = info.getValue();
+                return Array.isArray(value) ? value.join(', ') : value || 'N/A';
+            },
+        },
+        {
+            accessorKey: 'dietaryRestrictions',
+            header: 'Dietary Restrictions',
+            size: 200,
+            minSize: 150,
+            cell: (info) => {
+                const value = info.getValue();
+                return Array.isArray(value) ? value.join(', ') : value || 'N/A';
+            },
+        },
+        {
+            accessorKey: 'tShirtSize',
+            header: 'T-Shirt Size',
+            size: 120,
+            minSize: 100,
+        },
+        {
+            accessorKey: 'resume',
+            header: 'Resume',
+            size: 200,
+            minSize: 150,
+            enableGlobalFilter: false,
+            enableColumnFilter: false,
+            cell: (info) => {
+                const url = info.getValue() as string | undefined;
+                return url ? (
+                    <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 underline"
+                    >
+                        View
+                    </a>
+                ) : (
+                    'N/A'
+                );
+            },
+        },
+        ...checkedInInfoColumns,
+    ];
+
+    const fetchNextPage = async () => {
+        if (applicationData.hasNextPage) {
+            await applicationData.fetchNextPage();
+        }
+    };
+
+    if (applicationData.isLoading) {
+        return (
+            <div className="flex h-full items-center justify-center">
+                <p>Loading data...</p>
+            </div>
+        );
+    }
+
+    if (applicationData.isError) {
+        return (
+            <div className="flex h-full items-center justify-center">
+                <p>Error fetching data: {applicationData.error.message}</p>
+            </div>
+        );
+    }
+
+    return (
+        <MyTable
+            applicationDataMap={applicationDataMap}
+            data={data}
+            defaultColumns={defaultColumns}
+            emailTemplates={emailTemplates}
+            templatesLoading={templatesLoading}
+            toggleSideCard={toggleSideCard}
+            fetchNextPage={fetchNextPage}
+        />
+    );
+}
+
+// Put this outside of ReviewApplicationsTable cuz updating table state keeps
+// infinte loop of fetching data, and updating table state
+function MyTable({
+    data,
+    defaultColumns,
+    emailTemplates,
+    templatesLoading,
+    toggleSideCard,
+    applicationDataMap,
+    fetchNextPage,
+}: {
+    data: Applicant[];
+    defaultColumns: ColumnDef<Applicant>[];
+    emailTemplates?: any[];
+    templatesLoading: boolean;
+    toggleSideCard: () => void;
+    applicationDataMap: Map<number, ApplicationWithTeamInfo>;
+    fetchNextPage: () => Promise<void>;
+}) {
     const hackathon = useAtomValue(hackathonAtom);
     const utils = trpc.useUtils();
 
@@ -109,10 +413,6 @@ export default function ReviewApplicationsTable({
         null
     );
     const { toast } = useToast();
-
-    // Fetch email templates
-    const { data: emailTemplates, isLoading: templatesLoading } =
-        trpc.emailTemplates.getEmailTemplates.useQuery();
 
     // Email popup state toggle
     const toggleEmailPopup = () => {
@@ -341,42 +641,6 @@ export default function ReviewApplicationsTable({
         }
     };
 
-    // Get data from DB
-    const applicationData = trpc.applications.getApplications.useInfiniteQuery(
-        {
-            hackathonId: hackathon?.id!,
-        },
-        {
-            getNextPageParam: (lastPage) => lastPage.nextToken,
-        }
-    );
-
-    const applications = useMemo(() => {
-        return (
-            applicationData.data?.pages.flatMap((page) => page.applications) ??
-            []
-        );
-    }, [applicationData.data]);
-
-    const applicationDataMap = useMemo(() => {
-        const map = new Map<number, ApplicationWithTeamInfo>();
-
-        for (const appData of applications) {
-            map.set(appData.userId, appData);
-        }
-
-        return map;
-    }, [applications]);
-
-    // Data state
-    const [data, setData] = useState<Applicant[]>([]);
-
-    //Change data state on update of DB
-    useEffect(() => {
-        const transformed = transformResponse(applications);
-        setData(transformed);
-    }, [applications]);
-
     // Filters and sorting
     const [globalFilter, setGlobalFilter] = useState<string>('');
     const [sorting, setSorting] = useState<SortingState>([
@@ -385,212 +649,10 @@ export default function ReviewApplicationsTable({
     ]);
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
-    const checkedInInfoColumns: ColumnDef<Applicant>[] =
-        data[0]?.checkIns?.map(({ eventTitle, checkedIn }) => {
-            return {
-                accessorFn: () => (checkedIn ? 'Yes' : 'No'),
-                header: eventTitle,
-                size: 100,
-                enableColumnFilter: true,
-            };
-        }) ?? [];
-
-    const defaultColumns: ColumnDef<Applicant>[] = [
-        {
-            id: 'select',
-            header: ({ table }) => (
-                <IndeterminateCheckbox
-                    {...{
-                        checked: table.getIsAllRowsSelected(),
-                        indeterminate: table.getIsSomeRowsSelected(),
-                        onChange: table.getToggleAllRowsSelectedHandler(),
-                    }}
-                />
-            ),
-            cell: ({ row }) => (
-                <div className="bg-neutral-800/60">
-                    <IndeterminateCheckbox
-                        {...{
-                            checked: row.getIsSelected(),
-                            disabled: !row.getCanSelect(),
-                            indeterminate: row.getIsSomeSelected(),
-                            onChange: row.getToggleSelectedHandler(),
-                        }}
-                    />
-                </div>
-            ),
-            size: 50,
-        },
-        {
-            id: 'teamName',
-            accessorKey: 'teamName',
-            header: 'Team Name',
-            size: 200,
-            minSize: 100,
-            enableColumnFilter: true,
-        },
-        {
-            accessorKey: 'firstName',
-            header: 'First Name',
-            size: 150,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'lastName',
-            header: 'Last Name',
-            size: 150,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'currentStatus',
-            header: 'Current Status',
-            cell: (info) => {
-                const value = info.getValue<string>();
-                return (
-                    <span
-                        className={`rounded-md px-3 py-0.5 text-xs ${
-                            value === 'Accepted' ||
-                            value === 'Accepted - Pending Payment'
-                                ? 'bg-success-950 text-success-300'
-                                : value === 'Wait List'
-                                  ? 'bg-yellow-950 text-yellow-300'
-                                  : value === 'Declined'
-                                    ? 'bg-danger-950 text-danger-300'
-                                    : 'bg-neutral-600/30'
-                        }`}
-                    >
-                        {value}
-                    </span>
-                );
-            },
-            size: 200,
-            minSize: 200,
-            enableColumnFilter: true,
-        },
-        {
-            accessorKey: 'pendingStatus',
-            header: 'Pending Status',
-            cell: (info) => {
-                const value = info.getValue<string>();
-                return (
-                    <span
-                        className={`rounded-md px-3 py-0.5 text-xs ${
-                            value === 'Accepted' ||
-                            value === 'Accepted - Pending Payment'
-                                ? 'bg-success-950 text-success-300'
-                                : value === 'Wait List'
-                                  ? 'bg-yellow-950 text-yellow-300'
-                                  : value === 'Declined'
-                                    ? 'bg-danger-950 text-danger-300'
-                                    : 'bg-neutral-600/30'
-                        }`}
-                    >
-                        {value}
-                    </span>
-                );
-            },
-            size: 150,
-            minSize: 150,
-            enableColumnFilter: true,
-        },
-        {
-            accessorKey: 'applicationDate',
-            header: 'Date',
-            size: 100,
-            minSize: 100,
-            cell: (info) => dayjs(info.getValue() as Date).format('MMM DD'),
-        },
-        {
-            accessorKey: 'email',
-            header: 'Email',
-            size: 225,
-            minSize: 150,
-        },
-        {
-            accessorKey: 'discord',
-            header: 'Discord',
-            size: 150,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'school',
-            header: 'School',
-            size: 225,
-            minSize: 150,
-        },
-        {
-            accessorKey: 'major',
-            header: 'Major',
-            size: 200,
-            minSize: 150,
-        },
-        {
-            accessorKey: 'yearOfStudy',
-            header: 'Year',
-            size: 120,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'haveHackathonExperience',
-            header: 'Hackathon Experience',
-            size: 200,
-            minSize: 150,
-            cell: (info) => {
-                const value = info.getValue();
-                return Array.isArray(value) ? value.join(', ') : value || 'N/A';
-            },
-        },
-        {
-            accessorKey: 'howHeardAbout',
-            header: 'How Heard About',
-            size: 200,
-            minSize: 150,
-            cell: (info) => {
-                const value = info.getValue();
-                return Array.isArray(value) ? value.join(', ') : value || 'N/A';
-            },
-        },
-        {
-            accessorKey: 'dietaryRestrictions',
-            header: 'Dietary Restrictions',
-            size: 200,
-            minSize: 150,
-            cell: (info) => {
-                const value = info.getValue();
-                return Array.isArray(value) ? value.join(', ') : value || 'N/A';
-            },
-        },
-        {
-            accessorKey: 'tShirtSize',
-            header: 'T-Shirt Size',
-            size: 120,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'resume',
-            header: 'Resume',
-            size: 200,
-            minSize: 150,
-            enableGlobalFilter: false,
-            enableColumnFilter: false,
-            cell: (info) => {
-                const url = info.getValue() as string | undefined;
-                return url ? (
-                    <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 underline"
-                    >
-                        View
-                    </a>
-                ) : (
-                    'N/A'
-                );
-            },
-        },
-        ...checkedInInfoColumns,
-    ];
+    const [pagination, setPagination] = useState<PaginationState>({
+        pageSize: parseInt(localStorage.getItem('pagesize') ?? '200'),
+        pageIndex: parseInt(localStorage.getItem('pageindex') ?? '0'),
+    });
 
     const table = useReactTable({
         data,
@@ -599,6 +661,7 @@ export default function ReviewApplicationsTable({
             globalFilter,
             sorting,
             rowSelection,
+            pagination,
         },
         columnResizeMode: 'onChange',
         enableColumnResizing: true,
@@ -610,29 +673,25 @@ export default function ReviewApplicationsTable({
         onGlobalFilterChange: setGlobalFilter,
         onSortingChange: setSorting,
         onRowSelectionChange: setRowSelection,
+        onPaginationChange: setPagination,
+        autoResetPageIndex: false,
     });
 
-    const [iniload, setIniload] = useState(true);
     useEffect(() => {
-        if (!iniload || data.length === 0) {
-            return;
-        }
-        // TODO remove this jank
-        if (localStorage.getItem('pagesize')) {
-            table.setPageSize(parseInt(localStorage.getItem('pagesize')!));
-        }
-        if (localStorage.getItem('pageindex')) {
-            table.setPageIndex(parseInt(localStorage.getItem('pageindex')!));
-        }
-        setIniload(false);
-    }, [data, iniload, table]);
+        localStorage.setItem('pagesize', `${pagination.pageSize}`);
+    }, [pagination.pageSize]);
 
-    const csvConfig = mkConfig({
-        fieldSeparator: ',',
-        filename: 'Data',
-        decimalSeparator: '.',
-        useKeysAsHeaders: true,
-    });
+    useEffect(() => {
+        localStorage.setItem('pageindex', `${pagination.pageIndex}`);
+    }, [pagination.pageIndex]);
+
+    useEffect(() => {
+        (async () => {
+            if (table.getPageCount() - (pagination.pageIndex + 1) <= 1) {
+                await fetchNextPage();
+            }
+        })();
+    }, [table.getPageCount(), pagination.pageIndex]);
 
     const exportExcel = () => {
         const selectedRows = table.getSelectedRowModel().rows;
@@ -658,22 +717,6 @@ export default function ReviewApplicationsTable({
         download(csvConfig)(csv);
     };
 
-    if (applicationData.isLoading) {
-        return (
-            <div className="flex h-full items-center justify-center">
-                <p>Loading data...</p>
-            </div>
-        );
-    }
-
-    if (applicationData.isError) {
-        return (
-            <div className="flex h-full items-center justify-center">
-                <p>Error fetching data: {applicationData.error.message}</p>
-            </div>
-        );
-    }
-
     return (
         <div className="overflow-hidden">
             {/* Global Search */}
@@ -696,8 +739,8 @@ export default function ReviewApplicationsTable({
                     >
                         <thead className="bg-neutral-900 whitespace-nowrap text-gray-200">
                             {table.getHeaderGroups().map((headerGroup) => (
-                                <>
-                                    <tr key={headerGroup.id}>
+                                <Fragment key={headerGroup.id}>
+                                    <tr>
                                         {headerGroup.headers.map(
                                             (header, index) => (
                                                 <th
@@ -775,9 +818,10 @@ export default function ReviewApplicationsTable({
                                             )
                                         )}
                                     </tr>
-                                </>
+                                </Fragment>
                             ))}
                         </thead>
+
                         <tbody>
                             {table.getRowModel().rows.map((row) => (
                                 <Fragment key={row.id}>
@@ -852,10 +896,6 @@ export default function ReviewApplicationsTable({
                                 value={table.getState().pagination.pageSize}
                                 onChange={(e) => {
                                     table.setPageSize(parseInt(e.target.value));
-                                    localStorage.setItem(
-                                        'pagesize',
-                                        e.target.value
-                                    );
                                 }}
                                 className="rounded-md bg-neutral-800/60 px-4 py-2 text-sm text-white"
                             >
@@ -900,10 +940,6 @@ export default function ReviewApplicationsTable({
                                     className=""
                                     onClick={() => {
                                         table.setPageIndex(0);
-                                        localStorage.setItem(
-                                            'pageindex',
-                                            `${0}`
-                                        );
                                     }}
                                     disabled={!table.getCanPreviousPage()}
                                 >
@@ -913,10 +949,6 @@ export default function ReviewApplicationsTable({
                                     className=""
                                     onClick={() => {
                                         table.previousPage();
-                                        localStorage.setItem(
-                                            'pageindex',
-                                            `${table.getState().pagination.pageIndex - 1}`
-                                        );
                                     }}
                                     disabled={!table.getCanPreviousPage()}
                                 >
@@ -926,10 +958,6 @@ export default function ReviewApplicationsTable({
                                     className=""
                                     onClick={() => {
                                         table.nextPage();
-                                        localStorage.setItem(
-                                            'pageindex',
-                                            `${table.getState().pagination.pageIndex + 1}`
-                                        );
                                     }}
                                     disabled={!table.getCanNextPage()}
                                 >
@@ -940,10 +968,6 @@ export default function ReviewApplicationsTable({
                                     onClick={() => {
                                         table.setPageIndex(
                                             table.getPageCount() - 1
-                                        );
-                                        localStorage.setItem(
-                                            'pageindex',
-                                            `${table.getPageCount() - 1}`
                                         );
                                     }}
                                     disabled={!table.getCanNextPage()}

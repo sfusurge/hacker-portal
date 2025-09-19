@@ -136,7 +136,7 @@ export const applicationsRouter = router({
     getApplications: publicProcedure
         .input(queryApplicationsSchema)
         .query(async ({ input }) => {
-            const offset = Number(input.nextToken ?? 0);
+            const offset = Number(input.cursor ?? 0);
 
             const applicationsWithTeamInfo = await databaseClient
                 .select({
@@ -255,9 +255,10 @@ export const applicationsRouter = router({
 
             const nextToken =
                 applicationsWithAllInfos.length !== 0
-                    ? `${applicationsWithAllInfos.length}`
+                    ? `${offset + applicationsWithAllInfos.length}`
                     : null;
 
+            // console.log({ applicationsWithAllInfos, nextToken });
             return {
                 applications:
                     applicationsWithAllInfos as ApplicationWithTeamInfo[],
