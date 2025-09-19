@@ -146,7 +146,7 @@ export default function ReviewApplicationsTable({
         data[0]?.checkIns?.map(({ eventTitle, checkedIn }) => {
             return {
                 accessorFn: () => (checkedIn ? 'Yes' : 'No'),
-                header: eventTitle,
+                header: `${eventTitle}?`,
                 size: 100,
                 enableColumnFilter: true,
             };

@@ -8,7 +8,16 @@ import {
     updateApplicationStatusSchema,
 } from '@/db/schema/applications';
 import { user } from '@/db/schema/users/users';
-import { and, asc, eq, getTableColumns, desc, or, inArray } from 'drizzle-orm';
+import {
+    and,
+    asc,
+    eq,
+    getTableColumns,
+    desc,
+    or,
+    inArray,
+    sql,
+} from 'drizzle-orm';
 import { object, z } from 'zod';
 import { InternalServerError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
@@ -154,7 +163,8 @@ export const applicationsRouter = router({
                     teamId: teams.id,
                     teamName: teams.name,
                     userId: members.userId,
-                    response: applications.response,
+                    firstName: sql<string>`${applications.response}->>'1'`,
+                    lastName: sql<string>`${applications.response}->>'2'`,
                 })
                 .from(teams)
                 .innerJoin(members, eq(members.teamId, teams.id))
@@ -181,10 +191,20 @@ export const applicationsRouter = router({
                     userId: checkIns.userId,
                     eventId: events.id,
                     eventTitle: events.title,
-                    checkInTime: checkIns.checkInTime,
                 })
                 .from(events)
-                .leftJoin(checkIns, eq(checkIns.eventId, events.id))
+                .leftJoin(
+                    checkIns,
+                    and(
+                        eq(checkIns.eventId, events.id),
+                        inArray(
+                            checkIns.userId,
+                            applicationInfos.map(
+                                (application) => application.userId
+                            )
+                        )
+                    )
+                )
                 .leftJoin(
                     applications,
                     and(
@@ -198,8 +218,6 @@ export const applicationsRouter = router({
                         eq(events.hasCheckIn, true)
                     )
                 );
-
-            console.log(checkInInfos);
 
             // eventId => (eventTitle, Set<userId>)
             const eventIdToCheckInfos = new Map<
@@ -237,20 +255,7 @@ export const applicationsRouter = router({
                     const members =
                         teamId !== null
                             ? teamIdToMembers[teamId]!.map((memberInfo) => {
-                                  const firstName = (
-                                      memberInfo.response as Record<
-                                          string,
-                                          string
-                                      >
-                                  )['1'];
-
-                                  const lastName = (
-                                      memberInfo.response as Record<
-                                          string,
-                                          string
-                                      >
-                                  )['2'];
-                                  return `${firstName} ${lastName}`;
+                                  return `${memberInfo.firstName} ${memberInfo.lastName}`;
                               })
                             : [];
 
