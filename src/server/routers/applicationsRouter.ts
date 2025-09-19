@@ -9,7 +9,7 @@ import {
 } from '@/db/schema/applications';
 import { user } from '@/db/schema/users/users';
 import { and, asc, eq, getTableColumns, desc, or, inArray } from 'drizzle-orm';
-import { z } from 'zod';
+import { object, z } from 'zod';
 import { InternalServerError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
 import Handlebars from 'handlebars';
@@ -138,14 +138,15 @@ export const applicationsRouter = router({
         .query(async ({ input }) => {
             const offset = Number(input.cursor ?? 0);
 
-            const applicationsWithTeamInfo = await databaseClient
+            const applicationInfos = await databaseClient
                 .select({
                     ...getTableColumns(applications),
                 })
                 .from(applications)
                 .where(eq(applications.hackathonId, input.hackathonId))
                 .orderBy(asc(applications.createdDate))
-                .limit(input.maxResult)
+                // add 1 to see if there are still results
+                .limit(input.maxResult + 1)
                 .offset(offset);
 
             const teamInfos = await databaseClient
@@ -184,84 +185,107 @@ export const applicationsRouter = router({
                 })
                 .from(events)
                 .leftJoin(checkIns, eq(checkIns.eventId, events.id))
-                .innerJoin(
+                .leftJoin(
                     applications,
                     and(
                         eq(checkIns.userId, applications.userId),
                         eq(applications.hackathonId, input.hackathonId)
                     )
                 )
-                .where(and(eq(events.hackathonId, input.hackathonId)));
-
-            const userToEvents = Object.groupBy(
-                checkInInfos.filter(({ userId }) => userId !== null),
-                ({ userId }) => userId!
-            );
-
-            const applicationsWithAllInfos: ApplicationWithTeamInfo[] =
-                applicationsWithTeamInfo.map(
-                    ({ createdDate, ...application }) => {
-                        const teamId =
-                            userIdToTeamMap.get(application.userId)?.teamId ??
-                            null;
-
-                        const teamName =
-                            userIdToTeamMap.get(application.userId)?.teamName ??
-                            null;
-
-                        const members =
-                            teamId !== null
-                                ? teamIdToMembers[teamId]!.map((memberInfo) => {
-                                      const firstName = (
-                                          memberInfo.response as Record<
-                                              string,
-                                              string
-                                          >
-                                      )['1'];
-
-                                      const lastName = (
-                                          memberInfo.response as Record<
-                                              string,
-                                              string
-                                          >
-                                      )['2'];
-                                      return `${firstName} ${lastName}`;
-                                  })
-                                : [];
-
-                        const checkIns = (
-                            userToEvents[application.userId] ?? []
-                        ).map(({ userId, checkInTime, ...info }) => ({
-                            ...info,
-                            checkedIn: checkInTime != null,
-                        }));
-
-                        return {
-                            ...application,
-                            response: application.response as Record<
-                                string,
-                                any
-                            >,
-                            teamId,
-                            teamName,
-                            checkIns,
-                            // converting date to unix timestamp before returning
-                            // suppressing warning to avoid uncessesary type conversion.
-                            createdDate: createdDate?.getTime(),
-                            members,
-                        };
-                    }
+                .where(
+                    and(
+                        eq(events.hackathonId, input.hackathonId),
+                        eq(events.hasCheckIn, true)
+                    )
                 );
 
-            const nextToken =
-                applicationsWithAllInfos.length !== 0
-                    ? `${offset + applicationsWithAllInfos.length}`
-                    : null;
+            console.log(checkInInfos);
 
-            // console.log({ applicationsWithAllInfos, nextToken });
+            // eventId => (eventTitle, Set<userId>)
+            const eventIdToCheckInfos = new Map<
+                number,
+                [string, Set<number>]
+            >();
+
+            for (const checkInInfo of checkInInfos) {
+                const eventId = checkInInfo.eventId;
+
+                if (eventIdToCheckInfos.has(eventId)) {
+                    const [, checkedInUsers] =
+                        eventIdToCheckInfos.get(eventId)!;
+
+                    if (checkInInfo.userId != null) {
+                        checkedInUsers.add(checkInInfo.userId);
+                    }
+                } else {
+                    eventIdToCheckInfos.set(eventId, [
+                        checkInInfo.eventTitle,
+                        new Set(),
+                    ]);
+                }
+            }
+
+            const applicationsWithAllInfos: ApplicationWithTeamInfo[] =
+                applicationInfos.map(({ createdDate, ...application }) => {
+                    const teamId =
+                        userIdToTeamMap.get(application.userId)?.teamId ?? null;
+
+                    const teamName =
+                        userIdToTeamMap.get(application.userId)?.teamName ??
+                        null;
+
+                    const members =
+                        teamId !== null
+                            ? teamIdToMembers[teamId]!.map((memberInfo) => {
+                                  const firstName = (
+                                      memberInfo.response as Record<
+                                          string,
+                                          string
+                                      >
+                                  )['1'];
+
+                                  const lastName = (
+                                      memberInfo.response as Record<
+                                          string,
+                                          string
+                                      >
+                                  )['2'];
+                                  return `${firstName} ${lastName}`;
+                              })
+                            : [];
+
+                    const checkIns = [...eventIdToCheckInfos.entries()].map(
+                        ([eventId, [eventTitle, checkedInUsers]]) => ({
+                            eventId,
+                            eventTitle,
+                            checkedIn: checkedInUsers.has(application.userId),
+                        })
+                    );
+
+                    return {
+                        ...application,
+                        response: application.response as Record<string, any>,
+                        teamId,
+                        teamName,
+                        checkIns,
+                        // converting date to unix timestamp before returning
+                        // suppressing warning to avoid uncessesary type conversion.
+                        createdDate: createdDate?.getTime(),
+                        members,
+                    };
+                });
+
+            const hasMoreItem =
+                applicationsWithAllInfos.length > input.maxResult;
+
+            const nextToken = hasMoreItem
+                ? `${offset + applicationsWithAllInfos.length - 1}`
+                : null;
+
             return {
-                applications:
-                    applicationsWithAllInfos as ApplicationWithTeamInfo[],
+                applications: hasMoreItem
+                    ? applicationsWithAllInfos.slice(0, -1)
+                    : applicationsWithAllInfos,
                 nextToken,
             };
         }),

@@ -4,6 +4,7 @@ import { trpc } from '@/trpc/client';
 import {
     Fragment,
     HTMLProps,
+    useCallback,
     useEffect,
     useMemo,
     useRef,
@@ -329,7 +330,8 @@ export default function ReviewApplicationsTable({
             enableGlobalFilter: false,
             enableColumnFilter: false,
             cell: (info) => {
-                const url = info.getValue() as string | undefined;
+                const url: string = ((info.getValue() as string[]) ?? [''])[0];
+
                 return url ? (
                     <a
                         href={url}
@@ -347,11 +349,11 @@ export default function ReviewApplicationsTable({
         ...checkedInInfoColumns,
     ];
 
-    const fetchNextPage = async () => {
+    const fetchNextPage = useCallback(async () => {
         if (applicationData.hasNextPage) {
             await applicationData.fetchNextPage();
         }
-    };
+    }, [applicationData]);
 
     if (applicationData.isLoading) {
         return (
@@ -645,7 +647,7 @@ function MyTable({
     const [globalFilter, setGlobalFilter] = useState<string>('');
     const [sorting, setSorting] = useState<SortingState>([
         // sort by people with a team first
-        { id: 'teamName', desc: true },
+        // { id: 'teamName', desc: true },
     ]);
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
@@ -691,7 +693,7 @@ function MyTable({
                 await fetchNextPage();
             }
         })();
-    }, [table.getPageCount(), pagination.pageIndex]);
+    }, [table.getPageCount(), pagination.pageIndex, fetchNextPage, table]);
 
     const exportExcel = () => {
         const selectedRows = table.getSelectedRowModel().rows;
@@ -1209,85 +1211,104 @@ function IndeterminateCheckbox({
 
 // Function to transform the data received from DB to the json format the table expects
 function transformResponse(response: any[]) {
-    return response.map((item) => {
-        const {
-            '1': firstName,
-            '2': lastName,
-            '3': pronouns,
-            '4': email,
-            '5': haveHackathonExperience,
-            '6': howHeardAbout,
-            '7': dietaryRestrictions,
-            '8': tShirtSize,
-            '9': resume,
-            '10': discord,
-            '11': instagram,
-            '12': github,
-            '13': linkedin,
-            '14': portfolio,
-            '15': otherLinks,
-            '16': school,
-            '17': background,
-            '18': yearOfStudy,
-            '19': major,
-            '20': excitement,
-            '21': problemOrSkill,
-            '22': dreamProject,
-            '23': shareResume,
-            '24': acceptMLH,
-            '25': acceptSFSS,
-            '26': acceptEmails,
-            '27': authorizeMLH,
-            '28': photoRelease,
-        } = item.response as Record<string, any>;
+    return response
+        .map((item) => {
+            const {
+                '1': firstName,
+                '2': lastName,
+                '3': pronouns,
+                '4': email,
+                '5': haveHackathonExperience,
+                '6': howHeardAbout,
+                '7': dietaryRestrictions,
+                '8': tShirtSize,
+                '9': resume,
+                '10': discord,
+                '11': instagram,
+                '12': github,
+                '13': linkedin,
+                '14': portfolio,
+                '15': otherLinks,
+                '16': school,
+                '17': background,
+                '18': yearOfStudy,
+                '19': major,
+                '20': excitement,
+                '21': problemOrSkill,
+                '22': dreamProject,
+                '23': shareResume,
+                '24': acceptMLH,
+                '25': acceptSFSS,
+                '26': acceptEmails,
+                '27': authorizeMLH,
+                '28': photoRelease,
+            } = item.response as Record<string, any>;
 
-        const members = item.members;
-        const checkIns = item.checkIns;
+            const members = item.members;
+            const checkIns = item.checkIns;
 
-        const teamName = item.teamName
-            ? `${item.teamName} (${item.teamId})`
-            : null;
+            const teamName = item.teamName
+                ? `${item.teamName} (${item.teamId})`
+                : '';
 
-        return {
-            id: Number(item.userId),
-            teamName,
-            currentStatus: item.currentStatus,
-            pendingStatus: item.pendingStatus,
-            applicationDate: new Date(item.createdDate),
-            dietaryRestrictions: Array.isArray(dietaryRestrictions)
-                ? dietaryRestrictions
-                : [dietaryRestrictions],
-            howHeardAbout: Array.isArray(howHeardAbout)
-                ? howHeardAbout
-                : [howHeardAbout],
-            members,
-            firstName,
-            lastName,
-            pronouns,
-            email,
-            haveHackathonExperience,
-            tShirtSize,
-            resume,
-            discord,
-            instagram,
-            github,
-            linkedin,
-            portfolio,
-            otherLinks,
-            school,
-            background,
-            yearOfStudy,
-            major,
-            excitement,
-            problemOrSkill,
-            dreamProject,
-            shareResume,
-            acceptMLH,
-            acceptSFSS,
-            acceptEmails,
-            authorizeMLH,
-            photoRelease,
-            checkIns,
-        };
-    });
+            return {
+                id: Number(item.userId),
+                teamName,
+                currentStatus: item.currentStatus,
+                pendingStatus: item.pendingStatus,
+                applicationDate: new Date(item.createdDate),
+                dietaryRestrictions: Array.isArray(dietaryRestrictions)
+                    ? dietaryRestrictions
+                    : [dietaryRestrictions],
+                howHeardAbout: Array.isArray(howHeardAbout)
+                    ? howHeardAbout
+                    : [howHeardAbout],
+                members,
+                firstName,
+                lastName,
+                pronouns,
+                email,
+                haveHackathonExperience,
+                tShirtSize,
+                resume,
+                discord,
+                instagram,
+                github,
+                linkedin,
+                portfolio,
+                otherLinks,
+                school,
+                background,
+                yearOfStudy,
+                major,
+                excitement,
+                problemOrSkill,
+                dreamProject,
+                shareResume,
+                acceptMLH,
+                acceptSFSS,
+                acceptEmails,
+                authorizeMLH,
+                photoRelease,
+                checkIns,
+            };
+        })
+        .sort((a, b) => {
+            const teamA = a.teamName.toLowerCase();
+            const teamB = b.teamName.toLowerCase();
+
+            if (teamA && teamB) {
+                return teamA.localeCompare(teamB);
+            }
+
+            if (a.teamName) {
+                return -1;
+            }
+
+            if (b.teamName) {
+                return 1;
+            }
+
+            return 0;
+        });
 }
