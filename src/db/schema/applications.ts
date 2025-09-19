@@ -80,6 +80,7 @@ const APPLICATION_STATUS_ENUM = z.enum([
     'Wait List',
     'Withdrawn',
     'Accepted - Pending Payment',
+    'RSVP',
 ]);
 
 export const updateApplicationStatusSchema = z.object({

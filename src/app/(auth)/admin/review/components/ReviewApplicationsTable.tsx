@@ -41,6 +41,7 @@ import { StatusEnum } from '@/db/schema/applications';
 import { FilterColumn } from './FilterColumn';
 
 export type Applicant = {
+    members: string[] | null;
     id: number;
     teamName: string | null;
 
@@ -49,11 +50,11 @@ export type Applicant = {
     lastName: string;
     pronouns: string;
     email: string;
-    haveHackathonExperience: string[];
+    haveHackathonExperience: string;
     howHeardAbout: string[];
     dietaryRestrictions?: string[];
     tShirtSize: string;
-    resume?: string;
+    resume?: string[];
     discord: string;
     instagram?: string;
     github?: string;
@@ -701,10 +702,14 @@ function MyTable({
             const { applicationDate, checkIns, ...rest } = original;
             return {
                 ...rest,
-                haveHackathonExperience:
-                    original.haveHackathonExperience?.join(', '),
-                howHeardAbout: original.howHeardAbout?.join(', '),
-                dietaryRestrictions: original.dietaryRestrictions?.join(', '),
+                applicationDate: applicationDate.toString(),
+                howHeardAbout: original.howHeardAbout?.join(', ') || '',
+                dietaryRestrictions:
+                    original.dietaryRestrictions?.join(', ') || '',
+                resume: original.resume?.join(', ') || '',
+                members: Array.isArray(original.members)
+                    ? original.members.join(', ')
+                    : '',
             };
         });
 
@@ -993,7 +998,7 @@ function MyTable({
                     onClick={() =>
                         batchUpdateApplicants(
                             table.getSelectedRowModel().rows,
-                            { pendingStatus: 'Accepted' }
+                            { pendingStatus: 'RSVP' }
                         )
                     }
                     disabled={Object.keys(rowSelection).length === 0}
