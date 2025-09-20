@@ -128,11 +128,10 @@ export default function RsvpPrompt({
                     <Conditional showWhen={RSVP}>
                         <DialogHeader className="text-center text-2xl">
                             <DialogTitle className="leading-tighter font-bold">
-                                Your Spot has been reserved!.
+                                Your spot has been reserved!.
                             </DialogTitle>
                             <DialogDescription>
-                                We hope to see you at future events hosted by
-                                SFU Surge! 🫶
+                                We hope to see you at StormHacks!🫶
                             </DialogDescription>
                         </DialogHeader>
                     </Conditional>
