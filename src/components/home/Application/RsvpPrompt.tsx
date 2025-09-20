@@ -21,6 +21,7 @@ import { createCaller } from '@/server/appRouter';
 export type RsvpPromptProps = {
     userData: UserData;
     closePrompt: () => void;
+    openWithdrawPrompt: () => void;
     isOpen?: boolean;
 };
 
@@ -28,8 +29,9 @@ export default function RsvpPrompt({
     userData,
     closePrompt,
     isOpen = true,
+    openWithdrawPrompt,
 }: RsvpPromptProps) {
-    const pfp = '/favicon.png';
+    const pfp = '/Stormy_No_Rizz.svg';
     const [RSVP, setRSVP] = useState(false);
     const [open, setOpen] = useState(isOpen);
     const [isConfirmed, setIsConfirmed] = useState(false);
@@ -99,19 +101,27 @@ export default function RsvpPrompt({
 
                     <Conditional showWhen={!RSVP}>
                         <DialogHeader className="text-center">
-                            <DialogTitle className="text-2xl font-semibold">
+                            <DialogTitle className="pb-4 text-2xl font-semibold">
                                 Confirm your attendance.
                             </DialogTitle>
-                            <DialogDescription className="text-start">
-                                Congratulations on your acceptance to StormHacks
-                                2025. Please check the box below to confirm your
-                                attendance for the following dates:
-                            </DialogDescription>
-                            <DialogDescription className="text-xl font-semibold">
-                                October 4 - October 5, 2025
-                            </DialogDescription>
+                            <div className="flex flex-col gap-2 pl-2 text-start">
+                                <DialogDescription>
+                                    Congratulations on your acceptance to
+                                    StormHacks 2025. Please check the box below
+                                    to confirm your attendance for the following
+                                    dates:
+                                </DialogDescription>
+                                <div>
+                                    <DialogDescription>
+                                        Day 1 - October 4 , 2025
+                                    </DialogDescription>
+                                    <DialogDescription>
+                                        Day 2 - October 5 , 2025
+                                    </DialogDescription>
+                                </div>
+                            </div>
 
-                            <label className="flex items-center gap-3">
+                            <label className="flex items-center gap-3 pl-2">
                                 <input
                                     type="checkbox"
                                     checked={isConfirmed}
@@ -137,7 +147,7 @@ export default function RsvpPrompt({
                     </Conditional>
 
                     <Conditional showWhen={!RSVP}>
-                        <DialogFooter className="grid grid-cols-2 justify-between gap-2">
+                        <DialogFooter className="grid grid-cols-2 justify-between gap-2 text-base/4">
                             <Button
                                 variant="default"
                                 size="cozy"
@@ -158,6 +168,18 @@ export default function RsvpPrompt({
                                 Reserve my spot
                             </Button>
                         </DialogFooter>
+
+                        <div className="flex flex-col">
+                            <DialogDescription className="text-xs text-white/30">
+                                No longer able to make it to the event?
+                            </DialogDescription>
+                            <button
+                                className="text-xs text-white/60 underline"
+                                onClick={openWithdrawPrompt}
+                            >
+                                withdraw your application
+                            </button>
+                        </div>
                     </Conditional>
 
                     <Conditional showWhen={RSVP}>

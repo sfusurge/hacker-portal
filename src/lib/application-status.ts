@@ -30,8 +30,8 @@ export function getStatusVariant(status: ApplicationStatus): StatusVariant {
             return 'brand';
         case 'Accepted':
             return 'success';
-        case 'RSVP':
-            return 'success';
+        case 'Accepted - RSVP to Confirm':
+            return 'brand';
         case 'Declined':
             return 'danger';
         case 'Withdrawn':

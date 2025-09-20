@@ -38,7 +38,7 @@ export default function PaymentElementPage() {
             return false;
         }
 
-        return appdata.currentStatus === 'RSVP';
+        return appdata.currentStatus === 'Accepted - Pending Payment';
     }, [getApplication]);
 
     const accepted = useMemo(() => {

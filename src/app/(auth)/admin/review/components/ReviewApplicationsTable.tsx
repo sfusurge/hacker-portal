@@ -998,7 +998,10 @@ function MyTable({
                     onClick={() =>
                         batchUpdateApplicants(
                             table.getSelectedRowModel().rows,
-                            { pendingStatus: 'RSVP' }
+                            {
+                                pendingStatus: 'Accepted - RSVP to Confirm',
+                                status: 'Accepted - RSVP to Confirm',
+                            }
                         )
                     }
                     disabled={Object.keys(rowSelection).length === 0}

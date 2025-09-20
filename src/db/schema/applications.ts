@@ -19,7 +19,7 @@ export type StatusEnum =
     | 'Wait List'
     | 'Withdrawn'
     | 'Accepted - Pending Payment'
-    | 'RSVP';
+    | 'Accepted - RSVP to Confirm';
 
 export const applicationStatusEnum = pgEnum('application_status', [
     'N/A',
@@ -29,7 +29,7 @@ export const applicationStatusEnum = pgEnum('application_status', [
     'Wait List',
     'Withdrawn',
     'Accepted - Pending Payment',
-    'RSVP',
+    'Accepted - RSVP to Confirm',
 ]);
 
 export const applications = pgTable(
@@ -80,7 +80,7 @@ const APPLICATION_STATUS_ENUM = z.enum([
     'Wait List',
     'Withdrawn',
     'Accepted - Pending Payment',
-    'RSVP',
+    'Accepted - RSVP to Confirm',
 ]);
 
 export const updateApplicationStatusSchema = z.object({

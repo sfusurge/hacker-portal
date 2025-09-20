@@ -32,6 +32,7 @@ import { useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { Conditional } from '@/lib/Conditional';
 import RsvpPrompt from '@/components/home/Application/RsvpPrompt';
+import WithdrawPrompt from '@/components/home/Application/WithdrawPrompt';
 
 export type AppStatus =
     | 'Not Yet Started'
@@ -44,7 +45,8 @@ export type AppStatus =
     | 'Accepted'
     | 'Withdrawn'
     | 'Loading'
-    | 'Accepted - Pending Payment';
+    | 'Accepted - Pending Payment'
+    | 'Accepted - RSVP to Confirm';
 
 type ApplicationCardProps = {
     userData: UserData;
@@ -70,6 +72,10 @@ export default function ApplicationCard({
     const handleOpenRSVPPrompt = () => setIsRSVPPromptOpen(true);
     const handleCloseRSVPPrompt = () => setIsRSVPPromptOpen(false);
 
+    const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
+
+    const handleOpenWithdrawPrompt = () => setIsWithdrawPromptOpen(true);
+    const handleCloseWithdrawPrompt = () => setIsWithdrawPromptOpen(false);
     useEffect(() => {
         const questionSet = localStorage.getItem('application_response');
         if (questionSet !== null) {
@@ -130,6 +136,15 @@ export default function ApplicationCard({
                     <RsvpPrompt
                         userData={userData}
                         closePrompt={handleCloseRSVPPrompt}
+                        openWithdrawPrompt={handleOpenWithdrawPrompt}
+                    />
+                )}
+            </Conditional>
+            <Conditional showWhen={isWithdrawPromptOpen}>
+                {userData?.id && (
+                    <WithdrawPrompt
+                        userId={userData.id}
+                        closePrompt={handleCloseWithdrawPrompt}
                     />
                 )}
             </Conditional>
@@ -159,7 +174,7 @@ function determineApplicationStatus(
 function getStatusStyleForTitle(status: AppStatus): string {
     switch (status) {
         case 'Accepted - Pending Payment':
-        case 'RSVP':
+        case 'Accepted - RSVP to Confirm':
             return 'text-brand-400';
         case 'Accepted':
             return 'text-brand-400';
@@ -237,7 +252,7 @@ function getHeaderAction(
                 Click to RSVP
             </Button>
         ),
-        RSVP: (
+        'Accepted - RSVP to Confirm': (
             <Button
                 size="cozy"
                 variant="brand"
@@ -245,7 +260,7 @@ function getHeaderAction(
                 className="hidden md:block"
                 onClick={onOpenRSVP}
             >
-                Click to RSVP
+                RSVP now
             </Button>
         ),
     };
@@ -288,7 +303,7 @@ function getCardContent(
             return <WaitlistContent />;
         case 'Accepted - Pending Payment':
             return <AwaitingRSVPContent userData={userData} />;
-        case 'RSVP':
+        case 'Accepted - RSVP to Confirm':
             return <AwaitingRSVPContent userData={userData} />;
         case 'Accepted':
             return (
@@ -349,7 +364,7 @@ function getCardFooter(
                 RSVP to {hackathonName}
             </Button>
         ),
-        RSVP: (
+        'Accepted - RSVP to Confirm': (
             <Button
                 size="cozy"
                 variant="brand"
