@@ -17,6 +17,7 @@ import {
     or,
     inArray,
     sql,
+    count,
 } from 'drizzle-orm';
 import { object, z } from 'zod';
 import { InternalServerError } from '../exceptions';
@@ -293,6 +294,17 @@ export const applicationsRouter = router({
                     : applicationsWithAllInfos,
                 nextToken,
             };
+        }),
+
+    getApplicationCount: publicProcedure
+        .input(z.object({ hackathonId: z.number().int() }))
+        .query(async ({ input }) => {
+            const [{ applicationCount }] = await databaseClient
+                .select({ applicationCount: count(applications.userId) })
+                .from(applications)
+                .where(eq(applications.hackathonId, input.hackathonId));
+
+            return { applicationCount };
         }),
 
     updateApplication: publicProcedure

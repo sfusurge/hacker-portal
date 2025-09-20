@@ -123,6 +123,11 @@ export default function ReviewApplicationsTable({
         }
     );
 
+    const { data: applicationCountData, isLoading: applicationCountLoading } =
+        trpc.applications.getApplicationCount.useQuery({
+            hackathonId: hackathon?.id!,
+        });
+
     const applications = useMemo(() => {
         return (
             applicationData.data?.pages.flatMap((page) => page.applications) ??
@@ -356,7 +361,7 @@ export default function ReviewApplicationsTable({
         }
     }, [applicationData]);
 
-    if (applicationData.isLoading) {
+    if (applicationData.isLoading || applicationCountLoading) {
         return (
             <div className="flex h-full items-center justify-center">
                 <p>Loading data...</p>
@@ -374,6 +379,7 @@ export default function ReviewApplicationsTable({
 
     return (
         <MyTable
+            applicationCount={applicationCountData?.applicationCount ?? -1}
             applicationDataMap={applicationDataMap}
             data={data}
             defaultColumns={defaultColumns}
@@ -388,6 +394,7 @@ export default function ReviewApplicationsTable({
 // Put this outside of ReviewApplicationsTable cuz updating table state keeps
 // infinte loop of fetching data, and updating table state
 function MyTable({
+    applicationCount,
     data,
     defaultColumns,
     emailTemplates,
@@ -396,6 +403,7 @@ function MyTable({
     applicationDataMap,
     fetchNextPage,
 }: {
+    applicationCount: number;
     data: Applicant[];
     defaultColumns: ColumnDef<Applicant>[];
     emailTemplates?: any[];
@@ -894,7 +902,8 @@ function MyTable({
                         <div className="text-sm text-white">
                             {Object.keys(rowSelection).length} of{' '}
                             {table.getPreFilteredRowModel().rows.length} Rows
-                            Selected
+                            Selected. Total applications count:{' '}
+                            {applicationCount}
                         </div>
 
                         <div className="flex flex-row items-center gap-1">
