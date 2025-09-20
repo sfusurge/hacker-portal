@@ -67,21 +67,21 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
 
     const handleOpenWithdrawPrompt = () => setIsWithdrawPromptOpen(true);
     const handleCloseWithdrawPrompt = () => setIsWithdrawPromptOpen(false);
+
     return (
         <>
             <div className="flex max-w-full flex-col gap-2 text-start md:pr-0 md:pl-0">
-                <CardTitle className="font-inter text-pretty">
+                <CardTitle className="text-pretty">
                     You&#39;ve been accepted into{' '}
                     {hackathon?.hackathonName ||
                         process.env.NEXT_PUBLIC_CURRENT_EVENT}
                     ! 🥳
                 </CardTitle>
                 <CardDescription className="text-base">
-                    SFU Surge is excited to offer you acceptance to{' '}
+                    Our team at SFU Surge is excited to offer you acceptance to{' '}
                     {hackathon?.hackathonName ||
                         process.env.NEXT_PUBLIC_CURRENT_EVENT}
-                    . Please RSVP to reserve your spot and confirm your
-                    attendance.
+                    ! Please RSVP to confirm your attendance.
                 </CardDescription>
                 <CardDescription>
                     {
@@ -109,7 +109,6 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
                     <WithdrawPrompt
                         userId={userData.id}
                         closePrompt={handleCloseWithdrawPrompt}
-                        openWithdrawPrompt={handleOpenWithdrawPrompt}
                     />
                 )}
             </Conditional>
