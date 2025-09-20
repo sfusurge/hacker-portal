@@ -220,7 +220,7 @@ export default function SideCard({
                             onClick={() => {
                                 // TODO This shouldn't be hard coded
                                 // should which ever status in appropreiate for the hackathon. Sparkjam needs payment, but most others won't
-                                setStatus('Accepted - Pending Payment');
+                                setStatus('Accepted - RSVP to Confirm');
                             }}
                             variant={'brand'}
                             hierarchy={'primary'}
@@ -304,7 +304,7 @@ export default function SideCard({
                             onClick={() => {
                                 // TODO This shouldn't be hard coded
                                 // should which ever status in appropreiate for the hackathon. Sparkjam needs payment, but most others won't
-                                setStatus('Accepted - Pending Payment');
+                                setStatus('Accepted - RSVP to Confirm');
                             }}
                             variant={'brand'}
                             hierarchy={'primary'}
