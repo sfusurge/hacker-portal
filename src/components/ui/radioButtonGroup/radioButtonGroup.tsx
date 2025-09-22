@@ -62,7 +62,6 @@ export function RadioButtonGroup({
     }
 
     function setSelection(val: string | undefined) {
-        console.log(`Setting selection for ${name} to:`, val);
         _setSelection(val);
         if (onSelection) {
             onSelection(val);

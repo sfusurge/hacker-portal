@@ -1,13 +1,6 @@
 'use client';
 
-import {
-    type CSSProperties,
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import { type CSSProperties, useEffect, useRef, useState } from 'react';
 import { CheckBoxWithLabel } from '../checkbox/checkboxWithLabel';
 import style from './CheckBoxGroup.module.css';
 import { FormTextInput } from '../input/input';
@@ -23,11 +16,10 @@ interface CheckBoxGroupProps {
         exclusive?: boolean;
     }[];
     selected?: string[];
-    onSelection?: (selected: Set<string>, other: string | undefined) => void;
+    onSelection: (selected: Set<string>, other: string | undefined) => void;
     allowOther?: boolean;
     otherValue?: string | undefined;
     required?: boolean;
-    forceValidCheck?: boolean;
 }
 
 export function CheckboxGroup({
@@ -37,103 +29,50 @@ export function CheckboxGroup({
     choices,
     selected: initialSelected = [],
     allowOther = false,
-    otherValue: defaultOther = '',
+    otherValue,
     onSelection,
     required,
-    forceValidCheck = false,
 }: CheckBoxGroupProps) {
-    const [internalSelectedItems, setInternalSelectedItems] = useState<
-        Set<string>
-    >(() => new Set(initialSelected));
-    const [otherValue, setOtherValue] = useState<string | undefined>(
-        defaultOther
-    );
-    // only show "Other" input if there's an otherValue that's not in the regular choices
-    const [usingOther, setUsingOther] = useState(() => {
-        if (!allowOther || !defaultOther || defaultOther.length === 0)
-            return false;
-        const regularChoices = choices.map((c) => c.data);
-        return !regularChoices.includes(defaultOther);
-    });
-    const ref = useRef<HTMLInputElement>(null);
-    const [hasUserInteracted, setHasUserInteracted] = useState(false);
-    const onSelectionRef = useRef(onSelection);
+    const selectedItems = new Set(initialSelected);
+    const [usingOther, setUsingOther] = useState<boolean>(false);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [errorMsg, setErrorMsg] = useState('');
 
     useEffect(() => {
-        onSelectionRef.current = onSelection;
-    }, [onSelection]);
+        if (allowOther) {
+            setUsingOther(otherValue !== undefined && !!otherValue.trim());
+        }
+    }, [allowOther, otherValue]);
 
-    // sync to props when they change, but only if user hasn't interacted yet
+    // update error message
     useEffect(() => {
-        if (!hasUserInteracted) {
-            setInternalSelectedItems(new Set(initialSelected));
-            setOtherValue(defaultOther);
-            // show "Other" input if there's an otherValue that's not in the regular choices
-            if (!allowOther || !defaultOther || defaultOther.length === 0) {
-                setUsingOther(false);
-            } else {
-                const regularChoices = choices.map((c) => c.data);
-                setUsingOther(!regularChoices.includes(defaultOther));
-            }
-        }
-    }, [initialSelected, defaultOther, allowOther, hasUserInteracted, choices]);
+        if (!inputRef.current) return;
 
-    // call onSelection after user interaction, not on initial load
-    useEffect(() => {
-        if (hasUserInteracted && onSelectionRef.current) {
-            onSelectionRef.current(internalSelectedItems, otherValue);
-        }
-    }, [usingOther, otherValue, internalSelectedItems, hasUserInteracted]);
+        let message = '';
+        const cleanedOtherValue = otherValue ? otherValue.trim() : '';
 
-    const selectedItems = internalSelectedItems;
-
-    const updateValidity = useCallback(() => {
-        if (!ref.current || !required) {
-            return;
+        if (usingOther && cleanedOtherValue.length === 0) {
+            message = "Please fill the 'Other' value.";
         }
 
-        if (usingOther && !otherValue) {
-            ref.current!.setCustomValidity("Please fill the 'Other' value.");
-        } else {
-            const count =
-                selectedItems.size + (otherValue && usingOther ? 1 : 0);
+        if (required && !message) {
+            const count = selectedItems.size + (usingOther ? 1 : 0);
 
-            if (count > max) {
-                ref.current!.setCustomValidity(
-                    `Too many selections! Max: ${max}`
-                );
-            } else if (count < min) {
-                ref.current!.setCustomValidity(
-                    `Too few selections! Min: ${min}`
-                );
-            } else {
-                ref.current!.setCustomValidity('');
-            }
+            if (count > max) message = `Too many selections! Max: ${max}`;
+
+            if (count < min) message = `Too few selections! Min: ${min}`;
         }
+
+        inputRef.current.setCustomValidity(message);
+        setErrorMsg(message);
     }, [max, min, otherValue, required, selectedItems.size, usingOther]);
-
-    const [initialized, setInitialized] = useState(false);
-    // trigger onSelection whenever relevant state changes
-    useEffect(() => {
-        if (initialized) {
-            updateValidity();
-        } else {
-            setInitialized(true);
-        }
-    }, [updateValidity, initialized]);
 
     const handleCheckboxChange = (
         item: string,
         checked: boolean,
-        exclusive: boolean = false
+        exclusive: boolean
     ) => {
-        setHasUserInteracted(true);
-
-        if (!checked) {
-            exclusive = false; // ignore exclusive items when deselecting.
-        }
-
-        const newSelected = new Set(exclusive ? [] : selectedItems);
+        let newSelected = new Set(exclusive ? [] : selectedItems);
 
         if (checked) {
             newSelected.add(item);
@@ -141,19 +80,7 @@ export function CheckboxGroup({
             newSelected.delete(item);
         }
 
-        // Update internal state
-        setInternalSelectedItems(newSelected);
-
-        if (exclusive) {
-            setUsingOther(false);
-        }
-
-        // directly call onSelection with the new set
-        onSelectionRef.current &&
-            onSelectionRef.current(
-                newSelected,
-                usingOther && !exclusive ? otherValue : undefined
-            );
+        onSelection(newSelected, usingOther ? otherValue : undefined);
     };
 
     return (
@@ -163,41 +90,38 @@ export function CheckboxGroup({
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '8px',
-                    '--errMsg': "'Please select at least one option.'",
+                    '--errorMsg': `"${errorMsg}"`,
                 } as CSSProperties
             }
             className={style.checkboxgroupfield}
         >
             <input
-                ref={ref}
+                ref={inputRef}
                 type="text"
                 style={{ display: 'none' }}
                 required={required}
-                defaultValue={'na'}
+                defaultValue="na"
             />
-            {choices.map((item, index) => {
-                return (
-                    <CheckBoxWithLabel
-                        checked={selectedItems.has(item.data)}
-                        name={item.name}
-                        key={index}
-                        onChange={(e) => {
-                            handleCheckboxChange(
-                                item.data,
-                                e.target.checked,
-                                item.exclusive
-                            );
-                        }}
-                        disabled={
-                            selectedItems.size >= max &&
-                            !selectedItems.has(item.data)
-                        }
-                        required={false}
-                    >
-                        {item.name}
-                    </CheckBoxWithLabel>
-                );
-            })}
+
+            {choices.map((item, index) => (
+                <CheckBoxWithLabel
+                    checked={selectedItems.has(item.data)}
+                    name={item.name}
+                    key={index}
+                    onChange={(e) =>
+                        handleCheckboxChange(
+                            item.data,
+                            e.target.checked,
+                            item.exclusive ?? false
+                        )
+                    }
+                    disabled={
+                        selectedItems.size >= max &&
+                        !selectedItems.has(item.data)
+                    }
+                    required={false}
+                />
+            ))}
 
             {allowOther && (
                 <CheckBoxWithLabel
@@ -205,39 +129,29 @@ export function CheckboxGroup({
                     name="Other"
                     key="other"
                     onChange={(e) => {
-                        setHasUserInteracted(true);
                         setUsingOther(e.target.checked);
-                        if (!e.target.checked) {
-                            setOtherValue(undefined);
-                            onSelectionRef.current &&
-                                onSelectionRef.current(
-                                    selectedItems,
-                                    undefined
-                                );
-                        }
+                        onSelection(
+                            selectedItems,
+                            e.target.checked ? otherValue : undefined
+                        );
                     }}
                     required={false}
-                    id={'Other' + id}
+                    id={`Other${id}`}
                 >
-                    <div className="flex flex-col">
-                        Other
-                        {usingOther && (
-                            <FormTextInput
-                                type="text"
-                                lazy
-                                timeOut={300}
-                                onLazyChange={(val) => {
-                                    setHasUserInteracted(true);
-                                    setOtherValue(val);
-                                }}
-                                defaultValue={otherValue}
-                                required={required && usingOther}
-                                errorMsg="Required!"
-                                placeholder="Please specify"
-                                hideBackground
-                            />
-                        )}
-                    </div>
+                    {usingOther && (
+                        <FormTextInput
+                            type="text"
+                            lazy
+                            timeOut={300}
+                            onLazyChange={(val) => {
+                                onSelection(selectedItems, val);
+                            }}
+                            defaultValue={otherValue}
+                            required={required && usingOther}
+                            placeholder="Please specify"
+                            hideBackground
+                        />
+                    )}
                 </CheckBoxWithLabel>
             )}
         </fieldset>

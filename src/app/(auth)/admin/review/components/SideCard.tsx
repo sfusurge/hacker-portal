@@ -262,19 +262,15 @@ export default function SideCard({
                                 onChange={(e) => {
                                     setEditing(e.target.checked);
                                 }}
-                            >
-                                Editing
-                            </CheckBoxWithLabel>
+                            />
 
                             <CheckBoxWithLabel
-                                name="Current Status"
+                                name="Override Current Status"
                                 checked={updateCurrentStatus}
                                 onChange={(e) => {
                                     setUpdateCurrentStatus(e.target.checked);
                                 }}
-                            >
-                                Override Current Status
-                            </CheckBoxWithLabel>
+                            />
                         </div>
                     </div>
 
