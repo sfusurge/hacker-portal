@@ -212,7 +212,8 @@ export default function ReviewApplicationsTable({
                     <span
                         className={`rounded-md px-3 py-0.5 text-xs ${
                             value === 'Accepted' ||
-                            value === 'Accepted - Pending Payment'
+                            value === 'Accepted - Pending Payment' ||
+                            value === 'Accepted - RSVP to Confirm'
                                 ? 'bg-success-950 text-success-300'
                                 : value === 'Wait List'
                                   ? 'bg-yellow-950 text-yellow-300'
@@ -238,7 +239,8 @@ export default function ReviewApplicationsTable({
                     <span
                         className={`rounded-md px-3 py-0.5 text-xs ${
                             value === 'Accepted' ||
-                            value === 'Accepted - Pending Payment'
+                            value === 'Accepted - Pending Payment' ||
+                            value === 'Accepted - RSVP to Confirm'
                                 ? 'bg-success-950 text-success-300'
                                 : value === 'Wait List'
                                   ? 'bg-yellow-950 text-yellow-300'
