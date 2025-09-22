@@ -95,20 +95,26 @@ export function loadResponseIntoSchema(
                         // pass, name not used yet
                         break;
 
-                    case 'multiple-checkbox':
-                        const choices = new Map<string, number>();
-                        for (let i = 0; i < question.choices.length; i++) {
-                            choices.set(question.choices[i].data, i);
-                        }
-                        for (const item of dataSource[id]) {
-                            if (choices.has(item)) {
-                                question.choices[choices.get(item)!].value =
-                                    true;
-                            } else if (question.allowOther) {
-                                question.otherValue = item;
-                            }
+                    case 'multiple-checkbox': {
+                        // build new choices array with .value flags
+                        const selected = Array.isArray(dataSource[id])
+                            ? dataSource[id]
+                            : [];
+                        const selectedSet = new Set(selected);
+                        let foundOther = false;
+                        question.choices = question.choices.map((choice) => {
+                            const checked = selectedSet.has(choice.data);
+                            if (checked) selectedSet.delete(choice.data);
+                            return { ...choice, value: checked };
+                        });
+                        // remaining items in selectedSet are "other" values
+                        if (question.allowOther && selectedSet.size > 0) {
+                            question.otherValue = Array.from(selectedSet)[0];
+                        } else if (question.allowOther) {
+                            question.otherValue = '';
                         }
                         break;
+                    }
                     case 'file-upload':
                         question.fileLinks = dataSource[id];
                         break;

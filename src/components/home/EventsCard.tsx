@@ -85,7 +85,7 @@ export default function EventsCard({ events }: { events: CalendarEvent[] }) {
                                         {dayjs(event.startDate).format('MMM')}
                                     </span>
                                     <span className="w-full bg-neutral-950 px-3 py-1 text-lg font-bold">
-                                        {dayjs(event.startDate).format('d')}
+                                        {dayjs(event.startDate).format('D')}
                                     </span>
                                 </div>
                                 <div className="flex h-full flex-col justify-center gap-2">
@@ -94,7 +94,7 @@ export default function EventsCard({ events }: { events: CalendarEvent[] }) {
                                     </h3>
                                     <p className="text-sm text-white/60">
                                         {dayjs(event.startDate).format(
-                                            'MMMM d, h:mm a'
+                                            'MMMM D, h:mm a'
                                         )}
                                         · {event.location}
                                     </p>

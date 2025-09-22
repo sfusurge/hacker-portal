@@ -1,5 +1,5 @@
 import { CSSProperties, useEffect, useRef, useState } from 'react';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Check, ChevronsUpDown, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -70,6 +70,14 @@ export function SchoolOptions({
         setValue(initialData);
     }, [initialData]);
 
+    const getDisplayValue = () => {
+        if (!value) return 'Search your School Name';
+        const matchedSchool = schoolOptions.find(
+            (school) => school.value === value
+        );
+        return matchedSchool ? matchedSchool.name : value;
+    };
+
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
@@ -82,11 +90,7 @@ export function SchoolOptions({
                 >
                     <span className="flex w-full items-center justify-between">
                         <span className="mr-2 flex-1 truncate text-left">
-                            {value
-                                ? schoolOptions.find(
-                                      (school) => school.value === value
-                                  )?.name || value
-                                : 'Search your School Name'}
+                            {getDisplayValue()}
                         </span>
                         <ChevronsUpDown className="ml-2 flex-shrink-0 opacity-50" />
                     </span>
@@ -139,6 +143,31 @@ export function SchoolOptions({
                                     </span>
                                 </CommandItem>
                             ))}
+                            {search.trim() && schoolOptions.length === 0 && (
+                                <CommandItem
+                                    className={cn(
+                                        'commandItem mt-2 border-t border-neutral-700 pt-2 text-white',
+                                        styles.commandItem
+                                    )}
+                                    value={`__custom__${search.trim()}`}
+                                    onSelect={(currentValue) => {
+                                        const customValue =
+                                            currentValue.startsWith(
+                                                '__custom__'
+                                            )
+                                                ? currentValue.substring(10)
+                                                : search.trim();
+                                        setValue(customValue);
+                                        setOpen(false);
+                                        onChange(customValue);
+                                    }}
+                                >
+                                    <Plus className="mr-2 h-4 w-4 text-neutral-400" />
+                                    <span className="flex-1 text-left">
+                                        Add &#34;{search.trim()}&#34;
+                                    </span>
+                                </CommandItem>
+                            )}
                         </CommandGroup>
                     </CommandList>
                 </Command>

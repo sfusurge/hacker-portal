@@ -1,14 +1,25 @@
 import { databaseClient } from '@/db/client';
 import {
     applications,
+    batchUpdateApplicationStatusSchema,
     insertApplicationSchema,
     queryApplicationsSchema,
     StatusEnum,
     updateApplicationStatusSchema,
 } from '@/db/schema/applications';
 import { user } from '@/db/schema/users/users';
-import { and, asc, eq, getTableColumns, desc } from 'drizzle-orm';
-import { z } from 'zod';
+import {
+    and,
+    asc,
+    eq,
+    getTableColumns,
+    desc,
+    or,
+    inArray,
+    sql,
+    count,
+} from 'drizzle-orm';
+import { object, z } from 'zod';
 import { InternalServerError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
 import Handlebars from 'handlebars';
@@ -59,69 +70,71 @@ export const applicationsRouter = router({
                 // })
                 .returning();
 
-            //based on code copied from rewviewappplications table lmao
-            const tempDummy = (item: any) => {
-                const { '1': firstName, '4': email } = item.response || {};
-                return { firstName, email };
-            };
+            if (application) {
+                //based on code copied from rewviewappplications table lmao
+                const tempDummy = (item: any) => {
+                    const { '1': firstName, '4': email } = item.response || {};
+                    return { firstName, email };
+                };
 
-            if (!user?.email) {
-                throw new InternalServerError(
-                    'User email is missing. Cannot send email.'
-                );
-            }
-            const extractedEmail = tempDummy(input).email;
-            if (!extractedEmail) {
-                throw new InternalServerError(
-                    'User email is missing. Cannot send email.'
-                );
-            }
+                if (!user?.email) {
+                    throw new InternalServerError(
+                        'User email is missing. Cannot send email.'
+                    );
+                }
+                const extractedEmail = tempDummy(input).email;
+                if (!extractedEmail) {
+                    throw new InternalServerError(
+                        'User email is missing. Cannot send email.'
+                    );
+                }
 
-            const template = Handlebars.compile(welcomeStormhacksTemplate);
-            const htmlContent = template({
-                firstName: tempDummy(input).firstName,
-            });
-
-            let oAuthMailOptions = {
-                from: process.env.SENDINGEMAIL,
-                to: user.email,
-                subject: 'Your StormHacks Application Has Been Received!',
-                text: 'Your StormHacks Application Has Been Received!',
-                html: htmlContent,
-            };
-
-            let sfuMailOptions = {
-                from: process.env.SENDINGEMAIL,
-                to: extractedEmail,
-                subject: 'Your StormHacks Application Has Been Received!',
-                text: 'Your StormHacks Application Has Been Received!',
-                html: htmlContent,
-            };
-
-            if (user.email != extractedEmail) {
-                transporter.sendMail(oAuthMailOptions, (error, info) => {
-                    if (error) {
-                        console.error('Error sending email:', error);
-                    } else {
-                        console.log('Email sent:', info.response);
-                    }
+                const template = Handlebars.compile(welcomeStormhacksTemplate);
+                const htmlContent = template({
+                    firstName: tempDummy(input).firstName,
                 });
 
-                transporter.sendMail(sfuMailOptions, (error, info) => {
-                    if (error) {
-                        console.error('Error sending email:', error);
-                    } else {
-                        console.log('Email sent:', info.response);
-                    }
-                });
-            } else {
-                transporter.sendMail(oAuthMailOptions, (error, info) => {
-                    if (error) {
-                        console.error('Error sending email:', error);
-                    } else {
-                        console.log('Email sent:', info.response);
-                    }
-                });
+                let oAuthMailOptions = {
+                    from: process.env.SENDINGEMAIL,
+                    to: user.email,
+                    subject: 'Your StormHacks Application Has Been Received!',
+                    text: 'Your StormHacks Application Has Been Received!',
+                    html: htmlContent,
+                };
+
+                let sfuMailOptions = {
+                    from: process.env.SENDINGEMAIL,
+                    to: extractedEmail,
+                    subject: 'Your StormHacks Application Has Been Received!',
+                    text: 'Your StormHacks Application Has Been Received!',
+                    html: htmlContent,
+                };
+
+                if (user.email != extractedEmail) {
+                    transporter.sendMail(oAuthMailOptions, (error, info) => {
+                        if (error) {
+                            console.error('Error sending email:', error);
+                        } else {
+                            console.log('Email sent:', info.response);
+                        }
+                    });
+
+                    transporter.sendMail(sfuMailOptions, (error, info) => {
+                        if (error) {
+                            console.error('Error sending email:', error);
+                        } else {
+                            console.log('Email sent:', info.response);
+                        }
+                    });
+                } else {
+                    transporter.sendMail(oAuthMailOptions, (error, info) => {
+                        if (error) {
+                            console.error('Error sending email:', error);
+                        } else {
+                            console.log('Email sent:', info.response);
+                        }
+                    });
+                }
             }
 
             return {
@@ -133,107 +146,165 @@ export const applicationsRouter = router({
     getApplications: publicProcedure
         .input(queryApplicationsSchema)
         .query(async ({ input }) => {
-            // https://orm.drizzle.team/docs/guides/limit-offset-pagination
-            const offset = (Number(input.nextToken ?? 1) - 1) * input.maxResult;
+            const offset = Number(input.cursor ?? 0);
 
-            const hackathonIdMatchCondition = eq(
-                applications.hackathonId,
-                input.hackathonId
-            );
-
-            const condition =
-                input.userId != undefined
-                    ? and(
-                          hackathonIdMatchCondition,
-                          eq(applications.userId, input.userId)
-                      )
-                    : hackathonIdMatchCondition;
-
-            const applicationsWithTeamInfo = await databaseClient
+            const applicationInfos = await databaseClient
                 .select({
                     ...getTableColumns(applications),
-                    response: applications.response,
-                    teamId: members.teamId,
-                    teamName: teams.name,
-                    members: members.userId,
                 })
                 .from(applications)
-                .leftJoin(members, eq(applications.userId, members.userId))
-                .leftJoin(teams, eq(members.teamId, teams.id))
-                .where(condition)
-                .orderBy(asc(applications.createdDate));
+                .where(eq(applications.hackathonId, input.hackathonId))
+                .orderBy(asc(applications.createdDate))
+                // add 1 to see if there are still results
+                .limit(input.maxResult + 1)
+                .offset(offset);
 
-            const teamToMembersMap = Object.groupBy(
-                applicationsWithTeamInfo,
-                (item) => item.teamId || 'none'
-            );
-
-            const applicationsWithCheckInInfo = await databaseClient
+            const teamInfos = await databaseClient
                 .select({
-                    userId: applications.userId,
-                    eventId: events.id,
-                    eventTitle: events.title,
-                    checkInTime: checkIns.checkInTime,
+                    teamId: teams.id,
+                    teamName: teams.name,
+                    userId: members.userId,
+                    firstName: sql<string>`${applications.response}->>'1'`,
+                    lastName: sql<string>`${applications.response}->>'2'`,
                 })
-                .from(applications)
+                .from(teams)
+                .innerJoin(members, eq(members.teamId, teams.id))
                 .innerJoin(
-                    events,
+                    applications,
                     and(
-                        eq(events.hackathonId, applications.hackathonId),
-                        eq(events.hackathonId, input.hackathonId)
+                        eq(applications.userId, members.userId),
+                        eq(applications.hackathonId, input.hackathonId)
                     )
                 )
+                .where(eq(teams.hackathonId, input.hackathonId));
+
+            const userIdToTeamMap = new Map(
+                teamInfos.map((teamInfo) => [teamInfo.userId, teamInfo])
+            );
+
+            const teamIdToMembers = Object.groupBy(
+                teamInfos,
+                ({ teamId }) => teamId
+            );
+
+            const checkInInfos = await databaseClient
+                .select({
+                    userId: checkIns.userId,
+                    eventId: events.id,
+                    eventTitle: events.title,
+                })
+                .from(events)
                 .leftJoin(
                     checkIns,
                     and(
                         eq(checkIns.eventId, events.id),
-                        eq(applications.userId, checkIns.userId)
+                        inArray(
+                            checkIns.userId,
+                            applicationInfos.map(
+                                (application) => application.userId
+                            )
+                        )
                     )
                 )
-                .where(condition);
+                .leftJoin(
+                    applications,
+                    and(
+                        eq(checkIns.userId, applications.userId),
+                        eq(applications.hackathonId, input.hackathonId)
+                    )
+                )
+                .where(
+                    and(
+                        eq(events.hackathonId, input.hackathonId),
+                        eq(events.hasCheckIn, true)
+                    )
+                );
 
-            const userToEvents = Object.groupBy(
-                applicationsWithCheckInInfo,
-                ({ userId }) => userId
-            );
+            // eventId => (eventTitle, Set<userId>)
+            const eventIdToCheckInfos = new Map<
+                number,
+                [string, Set<number>]
+            >();
 
-            const applicationsWithAllInfos = applicationsWithTeamInfo.map(
-                ({ createdDate, ...application }) => {
-                    const { teamId } = application;
+            for (const checkInInfo of checkInInfos) {
+                const eventId = checkInInfo.eventId;
+
+                if (eventIdToCheckInfos.has(eventId)) {
+                    const [, checkedInUsers] =
+                        eventIdToCheckInfos.get(eventId)!;
+
+                    if (checkInInfo.userId != null) {
+                        checkedInUsers.add(checkInInfo.userId);
+                    }
+                } else {
+                    eventIdToCheckInfos.set(eventId, [
+                        checkInInfo.eventTitle,
+                        new Set(),
+                    ]);
+                }
+            }
+
+            const applicationsWithAllInfos: ApplicationWithTeamInfo[] =
+                applicationInfos.map(({ createdDate, ...application }) => {
+                    const teamId =
+                        userIdToTeamMap.get(application.userId)?.teamId ?? null;
+
+                    const teamName =
+                        userIdToTeamMap.get(application.userId)?.teamName ??
+                        null;
 
                     const members =
-                        teamId != null
-                            ? teamToMembersMap[teamId]!.map(({ response }) => {
-                                  const firstName = (
-                                      response as Record<string, string>
-                                  )['1'];
-                                  const lastName = (
-                                      response as Record<string, string>
-                                  )['2'];
-
-                                  return `${firstName} ${lastName}`;
+                        teamId !== null
+                            ? teamIdToMembers[teamId]!.map((memberInfo) => {
+                                  return `${memberInfo.firstName} ${memberInfo.lastName}`;
                               })
                             : [];
 
-                    const checkIns = (
-                        userToEvents[application.userId] ?? []
-                    ).map(({ userId, checkInTime, ...info }) => ({
-                        ...info,
-                        checkedIn: checkInTime != null,
-                    }));
+                    const checkIns = [...eventIdToCheckInfos.entries()].map(
+                        ([eventId, [eventTitle, checkedInUsers]]) => ({
+                            eventId,
+                            eventTitle,
+                            checkedIn: checkedInUsers.has(application.userId),
+                        })
+                    );
 
                     return {
                         ...application,
+                        response: application.response as Record<string, any>,
+                        teamId,
+                        teamName,
                         checkIns,
                         // converting date to unix timestamp before returning
                         // suppressing warning to avoid uncessesary type conversion.
                         createdDate: createdDate?.getTime(),
                         members,
                     };
-                }
-            );
+                });
 
-            return applicationsWithAllInfos as ApplicationWithTeamInfo[];
+            const hasMoreItem =
+                applicationsWithAllInfos.length > input.maxResult;
+
+            const nextToken = hasMoreItem
+                ? `${offset + applicationsWithAllInfos.length - 1}`
+                : null;
+
+            return {
+                applications: hasMoreItem
+                    ? applicationsWithAllInfos.slice(0, -1)
+                    : applicationsWithAllInfos,
+                nextToken,
+            };
+        }),
+
+    getApplicationCount: publicProcedure
+        .input(z.object({ hackathonId: z.number().int() }))
+        .query(async ({ input }) => {
+            const [{ applicationCount }] = await databaseClient
+                .select({ applicationCount: count(applications.userId) })
+                .from(applications)
+                .where(eq(applications.hackathonId, input.hackathonId));
+
+            return { applicationCount };
         }),
 
     updateApplication: publicProcedure
@@ -264,6 +335,26 @@ export const applicationsRouter = router({
                 .returning();
 
             return application;
+        }),
+
+    updateApplicationBatch: publicProcedure
+        .input(batchUpdateApplicationStatusSchema)
+        .mutation(async ({ input }) => {
+            const updatedApplications = await databaseClient
+                .update(applications)
+                .set({
+                    pendingStatus: input.pendingStatus ?? undefined,
+                    currentStatus: input.status ?? undefined,
+                })
+                .where(
+                    and(
+                        eq(applications.hackathonId, input.hackathonId),
+                        inArray(applications.userId, input.userIds)
+                    )
+                )
+                .returning();
+
+            return updatedApplications;
         }),
 
     getCurrentApplication: publicProcedure

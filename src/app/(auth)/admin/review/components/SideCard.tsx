@@ -213,14 +213,14 @@ export default function SideCard({
                     <div className={style.hor}>
                         <Button
                             className={
-                                status === 'Accepted - Pending Payment'
+                                status === 'Accepted - RSVP to Confirm'
                                     ? style.selectedButton
                                     : ''
                             }
                             onClick={() => {
                                 // TODO This shouldn't be hard coded
                                 // should which ever status in appropreiate for the hackathon. Sparkjam needs payment, but most others won't
-                                setStatus('Accepted - Pending Payment');
+                                setStatus('Accepted - RSVP to Confirm');
                             }}
                             variant={'brand'}
                             hierarchy={'primary'}
@@ -262,7 +262,9 @@ export default function SideCard({
                                 onChange={(e) => {
                                     setEditing(e.target.checked);
                                 }}
-                            ></CheckBoxWithLabel>
+                            >
+                                Editing
+                            </CheckBoxWithLabel>
 
                             <CheckBoxWithLabel
                                 name="Current Status"
@@ -270,7 +272,9 @@ export default function SideCard({
                                 onChange={(e) => {
                                     setUpdateCurrentStatus(e.target.checked);
                                 }}
-                            ></CheckBoxWithLabel>
+                            >
+                                Override Current Status
+                            </CheckBoxWithLabel>
                         </div>
                     </div>
 
@@ -304,7 +308,7 @@ export default function SideCard({
                             onClick={() => {
                                 // TODO This shouldn't be hard coded
                                 // should which ever status in appropreiate for the hackathon. Sparkjam needs payment, but most others won't
-                                setStatus('Accepted - Pending Payment');
+                                setStatus('Accepted - RSVP to Confirm');
                             }}
                             variant={'brand'}
                             hierarchy={'primary'}

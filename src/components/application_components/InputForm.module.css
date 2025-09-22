@@ -21,6 +21,7 @@
     font-size: 30px;
     font-weight: 200;
 }
+
 .appFormWrapper {
     /* used to crop scrol bar */
     display: flex;
@@ -31,6 +32,7 @@
     background-color: var(--neutral-900);
     border-radius: 12px;
 }
+
 .appFormContent {
     position: relative;
     display: flex;
@@ -53,6 +55,7 @@
 
 .description {
     font-size: 14px;
+    max-width: 400px;
     color: var(--text-secondary);
 }
 
@@ -134,4 +137,26 @@
     .appFormContent {
         overflow: visible;
     }
+}
+
+/* for injected html */
+.htmlHolder {
+    /* maybe change this, inline for usable in title/descripts */
+    display: inline;
+}
+
+.htmlHolder a {
+    text-decoration: underline;
+    color: var(--text-brand-primary);
+
+    transition: filter 300ms ease-out;
+}
+
+.htmlHolder a:hover,
+.htmlHolder a:focus {
+    filter: brightness(1.2);
+}
+
+.htmlHolder a:visited {
+    color: var(--brand-700);
 }

@@ -6,8 +6,8 @@ import { redirect } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function SubmitPage() {
-    const goHome = () => {
-        redirect('/home');
+    const goTeam = () => {
+        redirect('/team');
     };
 
     useEffect(() => {
@@ -16,32 +16,32 @@ export default function SubmitPage() {
 
     return (
         <div className="flex h-full w-full flex-col items-center justify-center gap-8">
-            <Image
-                src="/login/application-review.webp"
-                width={1537}
-                height={1134}
-                className="max-w-[280px]"
-                alt="Four otters are gathered around a table, reviewing application submissions."
-            ></Image>
-            <div className="text-center text-white">
-                <p className="text-brand-400 mb-2 text-sm font-semibold">
+            <div className="text-center">
+                <p className="text-brand-400 text-md mb-2 font-semibold">
                     Submission Successful
                 </p>
-                <h1 className="mb-3 text-3xl leading-tight font-semibold text-balance text-white">
-                    Thank you for applying to StormHacks!
-                </h1>
-                <p className="text-base text-balance text-white/60">
+                <p className="text-base text-balance text-[#A0A0A0]">
                     Keep an eye on your inbox for any updates regarding your
                     application status.
                 </p>
             </div>
+            <Image
+                src="/login/otter-mail.png"
+                width={1920}
+                height={1080}
+                className="h-[270px] w-[480px] rounded-2xl"
+                alt="Submission Successful"
+            ></Image>
+            <p className="text-primary mb-2 text-2xl font-semibold">
+                Next Step: Join a Team
+            </p>
             <Button
                 variant="brand"
                 hierarchy="primary"
                 size="cozy"
-                onClick={goHome}
+                onClick={goTeam}
             >
-                Return to home
+                Take me to the teams page
             </Button>
         </div>
     );

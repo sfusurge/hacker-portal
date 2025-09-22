@@ -40,7 +40,7 @@ export default function TeamDisplay({
                 <CurrentStateUI
                     hackathonId={currentHackathon.id}
                     title="You're not in a team yet! 🥺"
-                    description="Join an existing team or create a new one to view your team's information here."
+                    description="Join your friends’ team with their code, or create your own team, even if you’re solo."
                 />
             </div>
         );

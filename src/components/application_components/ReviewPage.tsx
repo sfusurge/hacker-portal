@@ -27,7 +27,7 @@ import { atom } from 'jotai';
 import { IframeEmbed } from './IframeEmbed';
 
 export interface ReviewPageProps {
-    submit: () => void;
+    submit: () => void | Promise<void>;
     mobileMode?: boolean;
     response: InputFormPageData[];
     disableSubmitBtn?: boolean;
@@ -47,6 +47,20 @@ export function ReviewPage({
     mobileMode = false,
     disableSubmitBtn = false,
 }: ReviewPageProps) {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async () => {
+        if (isSubmitting) return;
+
+        setIsSubmitting(true);
+        try {
+            await submit();
+        } catch (error) {
+            console.error('Submission error:', error);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
     function getQuestionResponse(question: InputFormQuestion) {
         // Type-specific handling based on question type
         switch (question.type) {
@@ -61,7 +75,10 @@ export function ReviewPage({
 
             case 'link': {
                 const linkQuestion = question as QuestionTextLinkInput;
-                const rawUrl = linkQuestion.value?.trim();
+                const rawUrl =
+                    typeof linkQuestion.value === 'string'
+                        ? linkQuestion.value.trim()
+                        : String(linkQuestion.value || '').trim();
 
                 if (!rawUrl) return 'N/A';
                 return <IframeEmbed url={rawUrl} />;
@@ -214,7 +231,15 @@ export function ReviewPage({
                     const response = getQuestionResponse(question);
                     return (
                         <div key={index}>
-                            <h3 className={style.title}>{question.title}</h3>
+                            <h3 className={style.title}>
+                                <div
+                                    className={style.htmlHolder}
+                                    style={{ display: 'inline' }}
+                                    dangerouslySetInnerHTML={{
+                                        __html: question.title ?? '',
+                                    }}
+                                ></div>
+                            </h3>
                             <span className={`${style.description} mt-2 block`}>
                                 {response}
                             </span>
@@ -225,11 +250,12 @@ export function ReviewPage({
 
             {mobileMode && !disableSubmitBtn && (
                 <SkewmorphicButton
-                    onClick={submit}
+                    onClick={handleSubmit}
                     className="mt-4"
                     style={{ background: 'var(--brand-500)' }}
+                    disabled={isSubmitting}
                 >
-                    Submit!
+                    {isSubmitting ? 'Submitting...' : 'Submit!'}
                 </SkewmorphicButton>
             )}
         </div>

@@ -23,13 +23,13 @@ export function TextLinkInput({
     const [question, setQuestion] = useAtom(dataAtom);
 
     const urlPattern =
-        '^(https?:\\/\\/)?([\\w\\-]+\\.)+[\\w\\-]+(\\/[\\w\\-./?%&=]*)?$';
+        "^(https?:\\/\\/)?(www\\.)?[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?\\.[a-zA-Z]{2,}(\\/[a-zA-Z0-9\\-._~:/?#\\[\\]@!$&'()*+,;=%]*)?$";
 
     return (
         <FormTextInput
             type="search"
             lazy
-            timeOut={500}
+            timeOut={1000}
             onLazyChange={(newVal) => {
                 setQuestion({ ...question, value: `${newVal}` });
             }}

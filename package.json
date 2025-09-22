@@ -95,7 +95,7 @@
         "@types/react-transition-group": "^4.4.12",
         "@yudiel/react-qr-scanner": "^2.2.1",
         "dotenv": "^16.4.7",
-        "drizzle-kit": "^0.30.6",
+        "drizzle-kit": "^0.31.4",
         "eslint": "^8.57.1",
         "eslint-config-next": "15.0.3",
         "export-to-csv": "^1.4.0",
