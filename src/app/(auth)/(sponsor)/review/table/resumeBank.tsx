@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { getColumns, User } from './columns';
 import {
     ResponsiveDialog,
@@ -16,7 +16,6 @@ import { Input } from '@/components/ui/input';
 import {
     getCoreRowModel,
     getFilteredRowModel,
-    getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
     SortingState,
@@ -33,99 +32,73 @@ interface ResumeTableProps {
 export default function ResumeTable({ hackathonId }: ResumeTableProps) {
     const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [pageSize, setPageSize] = useState<number>(20);
-    const [pageIndex, setPageIndex] = useState<number>(0);
 
-    // table states
     const [globalFilter, setGlobalFilter] = useState<string>('');
     const [sorting, setSorting] = useState<SortingState>([]);
 
+    // Infinite query for applications
     const {
-        data: applications,
+        data: applicationPages,
         isLoading,
         isError,
         error,
-    } = trpc.applications.getApplications.useQuery({
-        hackathonId,
-    });
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+    } = trpc.applications.getApplications.useInfiniteQuery(
+        {
+            hackathonId,
+        },
+        {
+            getNextPageParam: (lastPage) => lastPage.nextToken,
+        }
+    );
 
-    // Transform the application data to match the expected format
+    const applications = useMemo(() => {
+        return (
+            applicationPages?.pages.flatMap((page: any) => page.applications) ??
+            []
+        );
+    }, [applicationPages]);
+
+    // transform the application data to match the expected format
     const data = useMemo(() => {
-        if (!applications) return [];
+        if (!applications || !Array.isArray(applications)) return [];
 
-        return applications.map((item: any) => {
-            const {
-                '1': firstName,
-                '2': lastName,
-                '4': email,
-                '9': resumeUrls,
-                '12': github,
-                '13': linkedin,
-                '16': school,
-            } = item.response as Record<string, any>;
+        return applications
+            .map((item: any) => {
+                const {
+                    '1': firstName,
+                    '2': lastName,
+                    '4': email,
+                    '9': resumeUrls,
+                    '12': github,
+                    '13': linkedin,
+                    '16': school,
+                } = item.response as Record<string, any>;
 
-            return {
-                id: item.userId,
-                firstName: firstName || 'N/A',
-                lastName: lastName || 'N/A',
-                school: school || 'N/A',
-                github: github || 'N/A',
-                linkedin: linkedin || 'N/A',
-                resumeUrl:
+                const resumeUrl =
                     Array.isArray(resumeUrls) && resumeUrls.length > 0
                         ? resumeUrls[0]
-                        : 'N/A',
-                email: email || 'N/A',
-            };
-        });
+                        : null;
+
+                return {
+                    id: item.userId,
+                    firstName: firstName || 'N/A',
+                    lastName: lastName || 'N/A',
+                    school: school || 'N/A',
+                    github: github || 'N/A',
+                    linkedin: linkedin || 'N/A',
+                    resumeUrl,
+                    email: email || 'N/A',
+                };
+            })
+            .filter((user: User) => !!user.resumeUrl);
     }, [applications]);
 
     const openDialog = (userId: number) => {
         setSelectedUserId(userId);
         setDialogOpen(true);
-    };
-
-    const navigateUser = (direction: 'prev' | 'next') => {
-        if (selectedUserId === null) return;
-        // fetch the filtered rows (across all pages)
-        const allFilteredRows = table.getFilteredRowModel().rows;
-        const currentIndex = allFilteredRows.findIndex(
-            (row) => row.original.id === selectedUserId
-        );
-
-        if (currentIndex === -1) return;
-
-        // get direction and increment/decrement from index
-        let targetIndex = currentIndex;
-        if (direction === 'prev' && currentIndex > 0) {
-            targetIndex = currentIndex - 1;
-        } else if (
-            direction === 'next' &&
-            currentIndex < allFilteredRows.length - 1
-        ) {
-            targetIndex = currentIndex + 1;
-        } else {
-            return;
-        }
-
-        const targetUser = allFilteredRows[targetIndex].original;
-
-        // calculate page user is on to automatically swap pages when needed
-        const targetPageIndex = Math.floor(targetIndex / pageSize);
-
-        // swap page index to new page when needed
-        if (targetPageIndex !== pageIndex) {
-            setPageIndex(targetPageIndex);
-            table.setPageIndex(targetPageIndex);
-            if (typeof window !== 'undefined') {
-                window.localStorage.setItem(
-                    'resumeTablePageIndex',
-                    String(targetPageIndex)
-                );
-            }
-        }
-
-        setSelectedUserId(targetUser.id);
     };
 
     const columns = getColumns((userId: number) => openDialog(userId));
@@ -136,63 +109,78 @@ export default function ResumeTable({ hackathonId }: ResumeTableProps) {
         state: {
             globalFilter,
             sorting,
-            pagination: {
-                pageSize,
-                pageIndex,
-            },
         },
-        columnResizeMode: 'onChange',
-        enableColumnResizing: true,
         getCoreRowModel: getCoreRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
         onGlobalFilterChange: setGlobalFilter,
         onSortingChange: setSorting,
-        onPaginationChange: (updater) => {
-            let newState;
-            if (typeof updater === 'function') {
-                newState = updater({ pageSize, pageIndex });
-            } else {
-                newState = updater;
-            }
-            if (newState.pageSize !== pageSize) {
-                setPageSize(newState.pageSize);
-                if (typeof window !== 'undefined') {
-                    window.localStorage.setItem(
-                        'resumeTablePageSize',
-                        String(newState.pageSize)
-                    );
-                }
-            }
-            if (newState.pageIndex !== pageIndex) {
-                setPageIndex(newState.pageIndex);
-                if (typeof window !== 'undefined') {
-                    window.localStorage.setItem(
-                        'resumeTablePageIndex',
-                        String(newState.pageIndex)
-                    );
-                }
-            }
-        },
     });
 
-    // Only run after table and data are ready
+    // infinite scroll logic
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    const handleScroll = useCallback(() => {
+        const container = scrollContainerRef.current;
+        if (!container || isFetchingNextPage || !hasNextPage) return;
+        const { scrollTop, scrollHeight, clientHeight } = container;
+        if (scrollTop + clientHeight >= scrollHeight - 200) {
+            fetchNextPage();
+        }
+    }, [isFetchingNextPage, hasNextPage, fetchNextPage]);
+
     useEffect(() => {
-        if (data.length === 0) return;
-        const storedSize = localStorage.getItem('resumeTablePageSize');
-        const storedIndex = localStorage.getItem('resumeTablePageIndex');
-        if (storedSize) {
-            const size = parseInt(storedSize);
-            setPageSize(size);
-            table.setPageSize(size);
+        const container = scrollContainerRef.current;
+        if (!container) return;
+        container.addEventListener('scroll', handleScroll);
+        return () => {
+            container.removeEventListener('scroll', handleScroll);
+        };
+    }, [handleScroll]);
+
+    // get currently open modal user
+    const selectedUser = selectedUserId
+        ? data.find((u) => u.id === selectedUserId)
+        : null;
+
+    const navigateUser = (direction: 'prev' | 'next') => {
+        const processedRows = table.getPrePaginationRowModel().rows;
+        const currentIndex = processedRows.findIndex(
+            (row) => row.original.id === selectedUserId
+        );
+        if (direction === 'prev' && currentIndex > 0) {
+            setSelectedUserId(processedRows[currentIndex - 1].original.id);
         }
-        if (storedIndex) {
-            const idx = parseInt(storedIndex);
-            setPageIndex(idx);
-            table.setPageIndex(idx);
+        if (direction === 'next' && currentIndex < processedRows.length - 1) {
+            setSelectedUserId(processedRows[currentIndex + 1].original.id);
         }
-    }, [table, data]);
+    };
+
+    // convert data to CSV
+    function convertToCSV(arr: any[]) {
+        if (!arr.length) return '';
+        const header = Object.keys(arr[0]).filter((key) => key !== 'id');
+        const csvRows = [
+            header.join(','), // header row
+            ...arr.map((row) =>
+                header
+                    .map((fieldName) => {
+                        let val = row[fieldName];
+                        if (typeof val === 'string') {
+                            // escape quotes
+                            val = val.replace(/"/g, '""');
+                            // wrap in quotes if contains comma or newline
+                            if (val.search(/("|,|\n)/g) >= 0) {
+                                val = `"${val}"`;
+                            }
+                        }
+                        return val;
+                    })
+                    .join(',')
+            ),
+        ];
+        return csvRows.join('\n');
+    }
 
     if (isLoading) {
         return (
@@ -212,11 +200,6 @@ export default function ResumeTable({ hackathonId }: ResumeTableProps) {
         );
     }
 
-    // get currently open modal user
-    const selectedUser = selectedUserId
-        ? data.find((u) => u.id === selectedUserId)
-        : null;
-
     return (
         <>
             {/* Search */}
@@ -228,10 +211,31 @@ export default function ResumeTable({ hackathonId }: ResumeTableProps) {
                     onChange={(e) => setGlobalFilter(e.target.value)}
                     className="w-full border border-neutral-700/18 bg-neutral-800 text-white"
                 />
+                <Button
+                    variant="brand"
+                    hierarchy="primary"
+                    size="cozy"
+                    className="whitespace-nowrap"
+                    onClick={() => {
+                        const csv = convertToCSV(data);
+                        const blob = new Blob([csv], { type: 'text/csv' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'stormhacks-resume-bank.csv';
+                        a.click();
+                        URL.revokeObjectURL(url);
+                    }}
+                >
+                    Export as CSV
+                </Button>
             </div>
 
-            {/* scrollable table body */}
-            <div className="w-full rounded-xl bg-neutral-900 p-1">
+            {/* Infinite scrollable table body */}
+            <div
+                ref={scrollContainerRef}
+                className="h-full max-h-[75dvh] w-full overflow-y-auto rounded-xl bg-neutral-900 p-1"
+            >
                 <div className="overflow-x-auto">
                     <table
                         className="w-full text-left"
@@ -320,129 +324,16 @@ export default function ResumeTable({ hackathonId }: ResumeTableProps) {
                             ))}
                         </tbody>
                     </table>
-                </div>
-            </div>
-
-            {/* Pagination */}
-            <div className="flex items-center justify-between bg-neutral-900 px-4 py-4">
-                <div className="text-sm text-white">
-                    <span className="hidden md:inline-flex">Page</span>{' '}
-                    {table.getState().pagination.pageIndex + 1} of{' '}
-                    {table.getPageCount()}
-                </div>
-
-                <div className="flex items-center gap-5">
-                    <div className="flex flex-row items-center gap-2">
-                        <header className="text-white">
-                            Rows
-                            <span className="hidden md:inline-flex">
-                                &nbsp;per page
-                            </span>
-                            :
-                        </header>
-                        <select
-                            value={pageSize}
-                            onChange={(e) => {
-                                const newSize = parseInt(e.target.value);
-                                setPageSize(newSize);
-                                table.setPageSize(newSize);
-                                if (typeof window !== 'undefined') {
-                                    window.localStorage.setItem(
-                                        'resumeTablePageSize',
-                                        String(newSize)
-                                    );
-                                }
-                                setPageIndex(0);
-                                table.setPageIndex(0);
-                                if (typeof window !== 'undefined') {
-                                    window.localStorage.setItem(
-                                        'resumeTablePageIndex',
-                                        '0'
-                                    );
-                                }
-                            }}
-                            className="rounded-md bg-neutral-800/60 px-3 py-2 text-sm text-white"
-                        >
-                            {[20, 50, 100, 200].map((size) => (
-                                <option key={size} value={size}>
-                                    {size}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => {
-                                setPageIndex(0);
-                                table.setPageIndex(0);
-                                if (typeof window !== 'undefined') {
-                                    window.localStorage.setItem(
-                                        'resumeTablePageIndex',
-                                        '0'
-                                    );
-                                }
-                            }}
-                            disabled={!table.getCanPreviousPage()}
-                            className="text-white disabled:opacity-50"
-                        >
-                            {'<<'}
-                        </button>
-                        <button
-                            onClick={() => {
-                                const prev = Math.max(pageIndex - 1, 0);
-                                setPageIndex(prev);
-                                table.setPageIndex(prev);
-                                if (typeof window !== 'undefined') {
-                                    window.localStorage.setItem(
-                                        'resumeTablePageIndex',
-                                        String(prev)
-                                    );
-                                }
-                            }}
-                            disabled={!table.getCanPreviousPage()}
-                            className="text-white disabled:opacity-50"
-                        >
-                            {'<'}
-                        </button>
-                        <button
-                            onClick={() => {
-                                const next = Math.min(
-                                    pageIndex + 1,
-                                    table.getPageCount() - 1
-                                );
-                                setPageIndex(next);
-                                table.setPageIndex(next);
-                                if (typeof window !== 'undefined') {
-                                    window.localStorage.setItem(
-                                        'resumeTablePageIndex',
-                                        String(next)
-                                    );
-                                }
-                            }}
-                            disabled={!table.getCanNextPage()}
-                            className="text-white disabled:opacity-50"
-                        >
-                            {'>'}
-                        </button>
-                        <button
-                            onClick={() => {
-                                const last = table.getPageCount() - 1;
-                                setPageIndex(last);
-                                table.setPageIndex(last);
-                                if (typeof window !== 'undefined') {
-                                    window.localStorage.setItem(
-                                        'resumeTablePageIndex',
-                                        String(last)
-                                    );
-                                }
-                            }}
-                            disabled={!table.getCanNextPage()}
-                            className="text-white disabled:opacity-50"
-                        >
-                            {'>>'}
-                        </button>
-                    </div>
+                    {isFetchingNextPage && (
+                        <div className="flex justify-center py-4">
+                            <Loader2 className="text-brand-700 animate-spin" />
+                        </div>
+                    )}
+                    {!hasNextPage && (
+                        <div className="flex justify-center py-4 text-xs text-white/60">
+                            End of applications
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -461,23 +352,32 @@ export default function ResumeTable({ hackathonId }: ResumeTableProps) {
                             {selectedUser ? (
                                 <>
                                     {selectedUser.school}
-                                    {' | '}
+                                    {(selectedUser.linkedin !== 'N/A' ||
+                                        selectedUser.github !== 'N/A') &&
+                                        ' | '}
                                     <span>
-                                        <Link
-                                            href={selectedUser.linkedin}
-                                            target="_blank"
-                                            className="text-brand-400 hover:underline"
-                                        >
-                                            Linkedin
-                                        </Link>
-                                        {' | '}
-                                        <Link
-                                            className="text-brand-400 hover:underline"
-                                            target="_blank"
-                                            href={selectedUser.github}
-                                        >
-                                            Github
-                                        </Link>
+                                        {selectedUser.linkedin !== 'N/A' && (
+                                            <>
+                                                <Link
+                                                    href={selectedUser.linkedin}
+                                                    target="_blank"
+                                                    className="text-brand-400 hover:underline"
+                                                >
+                                                    Linkedin
+                                                </Link>
+                                                {selectedUser.github !==
+                                                    'N/A' && ' | '}
+                                            </>
+                                        )}
+                                        {selectedUser.github !== 'N/A' && (
+                                            <Link
+                                                className="text-brand-400 hover:underline"
+                                                target="_blank"
+                                                href={selectedUser.github}
+                                            >
+                                                Github
+                                            </Link>
+                                        )}
                                     </span>
                                 </>
                             ) : (
