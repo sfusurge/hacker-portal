@@ -5,17 +5,19 @@ import { FormTextInput } from '@/components/ui/input/input';
 import { useCallback, useEffect, useState } from 'react';
 import { trpc } from '@/trpc/client';
 import { Conditional } from '@/lib/Conditional';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-    DialogDescription,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { useAtomValue } from 'jotai';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import Link from 'next/link';
+import {
+    ResponsiveDialog,
+    ResponsiveDialogContent,
+    ResponsiveDialogHeader,
+    ResponsiveDialogTitle,
+    ResponsiveDialogFooter,
+    ResponsiveDialogDescription,
+} from '@/components/ui/responsive-dialog';
 
 export type WithdrawPromptProps = {
     userId: number;
@@ -54,6 +56,9 @@ export default function WithdrawPrompt({
     const handleClose = () => {
         setOpen(false);
         closePrompt();
+        if (withdrawn) {
+            window.location.reload();
+        }
     };
 
     useEffect(() => {
@@ -65,44 +70,64 @@ export default function WithdrawPrompt({
     }, [verifyText]);
 
     return (
-        <Dialog
+        <ResponsiveDialog
             open={open}
             onOpenChange={(isOpen) => {
                 if (!isOpen) handleClose();
                 else setOpen(isOpen);
             }}
         >
-            <DialogContent className="sm:max-w-[25rem]">
-                <div className="flex flex-col items-center justify-center gap-5 text-center">
+            <ResponsiveDialogContent className="p-0 sm:max-w-[28rem]">
+                <div className="flex flex-col items-center justify-center gap-4">
                     <Image
                         src={pfp}
                         alt="Profile Picture"
                         width={100}
                         height={100}
-                        className="rounded-full"
+                        className="rounded-full pt-5"
                     />
 
                     <Conditional showWhen={!withdrawn}>
-                        <DialogHeader className="text-center">
-                            <DialogTitle className="text-2xl font-bold">
+                        <ResponsiveDialogHeader className="gap-4 px-5">
+                            <ResponsiveDialogTitle className="text-center text-2xl font-bold text-balance">
                                 Are you sure you want to withdraw your
                                 application?
-                            </DialogTitle>
-                            <DialogDescription>
-                                This action is permanent and cannot be undone.
-                                To confirm, enter{' '}
+                            </ResponsiveDialogTitle>
+                            <Alert variant={'warning'} className="text-left">
+                                <AlertTitle>
+                                    Applications cannot be resubmitted once
+                                    withdrawn.
+                                </AlertTitle>
+                                <AlertDescription className="text-white/60">
+                                    For any questions regarding your submission,
+                                    contact us in the{' '}
+                                    <Link
+                                        className="underline hover:font-bold"
+                                        href="https://discord.gg/Rg4mwHvKjd"
+                                        target="_blank"
+                                    >
+                                        #question-and-answer
+                                    </Link>{' '}
+                                    channel on our Discord server.
+                                </AlertDescription>
+                            </Alert>
+                            <ResponsiveDialogDescription className="text-base">
+                                To confirm, type{' '}
                                 <span className="text-white">
                                     I WITHDRAW MY APPLICATION
                                 </span>{' '}
-                                below.
-                            </DialogDescription>
-                        </DialogHeader>
+                            </ResponsiveDialogDescription>
+                        </ResponsiveDialogHeader>
 
                         <FormTextInput
                             name="withdrawText"
                             type="search"
                             lazy
-                            style={{ width: '100%' }}
+                            style={{
+                                width: '100%',
+                                paddingLeft: '1.25rem',
+                                paddingRight: '1.25rem',
+                            }}
                             onLazyChange={(text) => {
                                 setVerifyText(text as string);
                             }}
@@ -112,19 +137,19 @@ export default function WithdrawPrompt({
                     </Conditional>
 
                     <Conditional showWhen={withdrawn}>
-                        <DialogHeader className="text-center text-2xl">
-                            <DialogTitle className="leading-tighter font-bold">
+                        <ResponsiveDialogHeader className="gap-4 p-5 text-center text-2xl">
+                            <ResponsiveDialogTitle className="leading-tighter font-bold">
                                 Your application has been withdrawn.
-                            </DialogTitle>
-                            <DialogDescription>
+                            </ResponsiveDialogTitle>
+                            <ResponsiveDialogDescription className="text-base text-pretty">
                                 We hope to see you at future events hosted by
                                 SFU Surge! 🫶
-                            </DialogDescription>
-                        </DialogHeader>
+                            </ResponsiveDialogDescription>
+                        </ResponsiveDialogHeader>
                     </Conditional>
 
                     <Conditional showWhen={!withdrawn}>
-                        <DialogFooter className="grid grid-cols-2 justify-between gap-2">
+                        <ResponsiveDialogFooter className="border-neutral-750 grid w-full grid-cols-2 gap-4 border-t p-5">
                             <Button
                                 variant="default"
                                 size="cozy"
@@ -144,11 +169,11 @@ export default function WithdrawPrompt({
                             >
                                 Withdraw
                             </Button>
-                        </DialogFooter>
+                        </ResponsiveDialogFooter>
                     </Conditional>
 
                     <Conditional showWhen={withdrawn}>
-                        <DialogFooter className="w-full">
+                        <ResponsiveDialogFooter className="border-neutral-750 flex w-full flex-col-reverse justify-end gap-4 border-t p-5 sm:flex-row">
                             <Button
                                 variant="brand"
                                 size="cozy"
@@ -158,10 +183,10 @@ export default function WithdrawPrompt({
                             >
                                 Return to home
                             </Button>
-                        </DialogFooter>
+                        </ResponsiveDialogFooter>
                     </Conditional>
                 </div>
-            </DialogContent>
-        </Dialog>
+            </ResponsiveDialogContent>
+        </ResponsiveDialog>
     );
 }

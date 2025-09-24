@@ -25,6 +25,7 @@ import { getFileSize } from '@/components/ui/FileUpload/FileUpload';
 import { RichText } from '@/components/ui/RichText/RichText';
 import { atom } from 'jotai';
 import { IframeEmbed } from './IframeEmbed';
+import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
 
 export interface ReviewPageProps {
     submit: () => void | Promise<void>;
@@ -227,25 +228,39 @@ export function ReviewPage({
             {flattenedQuestions.length === 0 ? (
                 <div className="py-4 text-center">No questions to review</div>
             ) : (
-                flattenedQuestions.map((question, index) => {
-                    const response = getQuestionResponse(question);
-                    return (
-                        <div key={index}>
-                            <h3 className={style.title}>
-                                <div
-                                    className={style.htmlHolder}
-                                    style={{ display: 'inline' }}
-                                    dangerouslySetInnerHTML={{
-                                        __html: question.title ?? '',
-                                    }}
-                                ></div>
-                            </h3>
-                            <span className={`${style.description} mt-2 block`}>
-                                {response}
-                            </span>
-                        </div>
-                    );
-                })
+                <>
+                    <Alert variant={'info'} className="-mt-2 max-w-[480px]">
+                        <AlertTitle>
+                            Take the time to review your responses carefully!
+                        </AlertTitle>
+                        <AlertDescription>
+                            Make sure everything&apos;s filled out correctly.
+                            Once you submit your application you won&apos;t be
+                            able to make changes.
+                        </AlertDescription>
+                    </Alert>
+                    {flattenedQuestions.map((question, index) => {
+                        const response = getQuestionResponse(question);
+                        return (
+                            <div key={index}>
+                                <h3 className={style.title}>
+                                    <div
+                                        className={style.htmlHolder}
+                                        style={{ display: 'inline' }}
+                                        dangerouslySetInnerHTML={{
+                                            __html: question.title ?? '',
+                                        }}
+                                    ></div>
+                                </h3>
+                                <span
+                                    className={`${style.description} mt-2 block`}
+                                >
+                                    {response}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </>
             )}
 
             {mobileMode && !disableSubmitBtn && (

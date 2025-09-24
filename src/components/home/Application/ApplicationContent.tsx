@@ -109,7 +109,6 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
                     <WithdrawPrompt
                         userId={userData.id}
                         closePrompt={handleCloseWithdrawPrompt}
-                        openWithdrawPrompt={handleOpenWithdrawPrompt}
                     />
                 )}
             </Conditional>
@@ -251,8 +250,12 @@ export function ReviewContent({ userData }: { userData: UserData }) {
 
                 <CardDescription>
                     Your application has been submitted and is being reviewed by
-                    the Surge team. If you&apos;re no longer able to make it to
-                    the event, please{' '}
+                    the Surge team. You will receive an update once the
+                    submission period closes.
+                    <br />
+                    <br />
+                    If you&apos;re no longer able to make it to the event,
+                    please{' '}
                     <button
                         className="inline text-left text-white underline hover:text-white/70"
                         onClick={handleOpenWithdrawPrompt}
