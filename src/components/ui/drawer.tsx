@@ -46,7 +46,7 @@ const DrawerContent = React.forwardRef<
     React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & {
         overlayZIndex?: number;
     }
->(({ className, children, overlayZIndex = 50, ...props }, ref) => (
+>(({ className, children, overlayZIndex = 500, ...props }, ref) => (
     <DrawerPortal>
         <DrawerOverlay style={{ zIndex: overlayZIndex }} />
         <DrawerPrimitive.Content

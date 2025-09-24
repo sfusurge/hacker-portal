@@ -25,7 +25,6 @@ export const hackathonsRouter = router({
             .where(eq(hackathons.isActive, true))
             .limit(1)
             .orderBy(asc(hackathons.startDate));
-
         return hackathon ?? null;
     }),
 
