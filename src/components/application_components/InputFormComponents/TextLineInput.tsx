@@ -39,7 +39,7 @@ export function TextLineInput({
             maxLength={question.maxCount}
             errorMsg={question.validator?.errorMsg}
             autoComplete={question.autoComplete ?? ''}
-            style={{ maxWidth: '400px' }}
+            style={{ maxWidth: '480px' }}
         ></FormTextInput>
     );
 }

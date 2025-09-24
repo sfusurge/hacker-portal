@@ -45,6 +45,7 @@ export interface InputFormData {
 export interface TransformedInputFormData extends InputFormData {}
 
 export interface InputFormPageData extends Entry {
+    alert?: AlertData;
     questions: InputFormQuestion[];
 }
 
@@ -63,6 +64,11 @@ export type InputFormQuestion =
     | QuestionTextLinkInput;
 
 export type ApplicationQuestionType = InputFormQuestion['type'];
+
+export interface AlertData {
+    title: string;
+    description: string;
+}
 
 interface Question extends Entry {
     questionId: number; // must be unique to the application.

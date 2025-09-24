@@ -4,8 +4,6 @@ import { PrimitiveAtom, useAtom, useAtomValue, WritableAtom } from 'jotai';
 import type { QuestionMultipleCheckBox } from '../types';
 import { CheckboxGroup } from '@/components/ui/checkboxGroup/CheckBoxGroup';
 
-import { finalErrCheckAtom } from '../InputForm';
-
 export function CheckBoxGroupInput({
     dataAtom,
 }: {
@@ -18,7 +16,6 @@ export function CheckBoxGroupInput({
           >;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
-    const finalCheck = useAtomValue(finalErrCheckAtom);
 
     // Extract selected values from choices
     const selectedValues = question.choices
@@ -48,7 +45,6 @@ export function CheckBoxGroupInput({
             onSelection={handleSelection}
             allowOther={question.allowOther}
             otherValue={question.otherValue}
-            forceValidCheck={finalCheck}
         />
     );
 }

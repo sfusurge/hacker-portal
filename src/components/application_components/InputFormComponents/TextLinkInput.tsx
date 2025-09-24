@@ -42,7 +42,7 @@ export function TextLinkInput({
                 question.validator?.errorMsg ?? 'Please enter a valid URL.'
             }
             autoComplete={question.autoComplete ?? ''}
-            style={{ maxWidth: '400px' }}
+            style={{ maxWidth: '480px' }}
         ></FormTextInput>
     );
 }

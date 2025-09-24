@@ -33,22 +33,22 @@ const Alert = React.forwardRef<
     const IconComponent = React.useMemo(() => {
         switch (variant) {
             case 'success':
-                return <CheckCircleIcon className="text-success-400 h-4 w-4" />;
+                return <CheckCircleIcon className="text-success-400 h-6 w-6" />;
             case 'warning':
                 return (
-                    <ExclamationTriangleIcon className="text-caution-400 h-4 w-4" />
+                    <ShieldExclamationIcon className="text-caution-400 h-6 w-6" />
                 );
             case 'danger':
                 return (
-                    <ShieldExclamationIcon className="text-danger-400 h-4 w-4" />
+                    <ShieldExclamationIcon className="text-danger-400 h-6 w-6" />
                 );
             case 'info':
                 return (
-                    <InformationCircleIcon className="text-brand-400 h-4 w-4" />
+                    <InformationCircleIcon className="text-brand-400 h-6 w-6" />
                 );
             default:
                 return (
-                    <InformationCircleIcon className="h-4 w-4 text-neutral-400" />
+                    <InformationCircleIcon className="h-6 w-6 text-neutral-400" />
                 );
         }
     }, [variant]);
@@ -62,11 +62,13 @@ const Alert = React.forwardRef<
         >
             <div className="flex gap-2">
                 {IconComponent}
-                <div className="flex-1">{props.children}</div>
+                <div className="flex flex-1 flex-col gap-2">
+                    {props.children}
+                </div>
                 {onClose && (
                     <button
                         onClick={onClose}
-                        className="flex h-4 w-4 cursor-pointer items-center justify-center text-white/30 opacity-70 transition-opacity hover:opacity-100 focus:outline-none"
+                        className="flex h-6 w-6 cursor-pointer items-center justify-center text-white/30 opacity-70 transition-opacity hover:opacity-100 focus:outline-none"
                     >
                         <XCircleIcon className="h-4 w-4" />
                         <span className="sr-only">Close</span>
@@ -85,7 +87,7 @@ const AlertTitle = React.forwardRef<
     <h5
         ref={ref}
         className={cn(
-            'mb-2 leading-none font-semibold tracking-tight',
+            'text-base leading-none font-semibold tracking-tight',
             className
         )}
         {...props}
@@ -99,7 +101,7 @@ const AlertDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
     <div
         ref={ref}
-        className={cn('text-xs text-white [&_p]:leading-relaxed', className)}
+        className={cn('text-sm text-pretty text-white', className)}
         {...props}
     />
 ));

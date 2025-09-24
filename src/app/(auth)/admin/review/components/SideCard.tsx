@@ -213,7 +213,7 @@ export default function SideCard({
                     <div className={style.hor}>
                         <Button
                             className={
-                                status === 'Accepted - Pending Payment'
+                                status === 'Accepted - RSVP to Confirm'
                                     ? style.selectedButton
                                     : ''
                             }
@@ -262,15 +262,15 @@ export default function SideCard({
                                 onChange={(e) => {
                                     setEditing(e.target.checked);
                                 }}
-                            ></CheckBoxWithLabel>
+                            />
 
                             <CheckBoxWithLabel
-                                name="Current Status"
+                                name="Override Current Status"
                                 checked={updateCurrentStatus}
                                 onChange={(e) => {
                                     setUpdateCurrentStatus(e.target.checked);
                                 }}
-                            ></CheckBoxWithLabel>
+                            />
                         </div>
                     </div>
 

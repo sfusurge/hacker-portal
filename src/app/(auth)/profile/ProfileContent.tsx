@@ -84,6 +84,8 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
             });
             setIsSubmitting(false);
         }
+
+        history.back();
     };
 
     const handleReset = () => {
@@ -98,6 +100,8 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
         }
         setErrors({});
         setKey((prev) => prev + 1); // Force re-render to update form field values
+
+        history.back();
     };
 
     const handleInputChange = (field: string, value: string) => {
