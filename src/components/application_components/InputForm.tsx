@@ -63,6 +63,7 @@ import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
 import { FileUploadInput } from '@/components/application_components/InputFormComponents/FileUploadInput';
 import { RichTextInput } from '@/components/application_components/InputFormComponents/RichTextInput';
 import { toast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -360,6 +361,14 @@ function Page({
             {page.title && <h2 className={style.mainTitle}>{page.title}</h2>}
             {page.description && (
                 <p className={style.description}>{page.description}</p>
+            )}
+            {page.alert && (
+                <Alert variant={'info'} className="-mt-4 max-w-[480px]">
+                    <AlertTitle>{page.alert.title}</AlertTitle>
+                    <AlertDescription>
+                        {page.alert.description}
+                    </AlertDescription>
+                </Alert>
             )}
             {questionAtoms.map((item, index) => (
                 <Question questionAtom={item} key={index} />

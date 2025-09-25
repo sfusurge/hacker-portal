@@ -84,7 +84,7 @@ export function SchoolOptions({
                 <Button
                     role="combobox"
                     aria-expanded={open}
-                    className="bg-neutral-850 hover:bg-neutral-80 -p-2 flex h-14 w-full max-w-[400px] items-center justify-start rounded border border-neutral-700 px-6 py-6 text-lg text-white [&>span]:w-full"
+                    className="bg-neutral-850 hover:bg-neutral-80 -p-2 flex h-14 w-full max-w-[480px] items-center justify-start rounded border border-neutral-700 px-6 py-6 text-lg text-white [&>span]:w-full"
                     disabled={readOnly}
                     size="cozy"
                 >
@@ -98,13 +98,13 @@ export function SchoolOptions({
             </PopoverTrigger>
             <PopoverContent
                 className={cn(
-                    'bg-neutral-850 mr-0 w-full max-w-[400px]',
+                    'bg-neutral-850 mr-0 w-full max-w-[480px]',
                     styles.popperContentWrapper
                 )}
             >
                 <Command
                     className={cn(
-                        'bg-neutral-850 w-full max-w-[400px]',
+                        'bg-neutral-850 w-full max-w-[480px]',
                         styles.commandContainer
                     )}
                 >
@@ -118,7 +118,7 @@ export function SchoolOptions({
                     />
                     <CommandList
                         className={cn(
-                            'bg-neutral-850 w-full max-w-[400px] text-white',
+                            'bg-neutral-850 w-full max-w-[480px] text-white',
                             styles.commandList
                         )}
                     >
