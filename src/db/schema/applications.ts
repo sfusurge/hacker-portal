@@ -72,7 +72,7 @@ export const queryApplicationsSchema = z.object({
     cursor: z.string().optional(),
 });
 
-const APPLICATION_STATUS_ENUM = z.enum([
+export const APPLICATION_STATUS_ENUM = [
     'N/A',
     'Accepted',
     'Declined',
@@ -81,19 +81,23 @@ const APPLICATION_STATUS_ENUM = z.enum([
     'Withdrawn',
     'Accepted - Pending Payment',
     'Accepted - RSVP to Confirm',
-]);
+] as const;
+
+export type ApplicationStatus = (typeof APPLICATION_STATUS_ENUM)[number];
+
+export const ApplicationStatusSchema = z.enum(APPLICATION_STATUS_ENUM);
 
 export const updateApplicationStatusSchema = z.object({
     hackathonId: z.number().int(),
     userId: z.number().int(),
-    status: APPLICATION_STATUS_ENUM.optional(),
-    pendingStatus: APPLICATION_STATUS_ENUM.optional(),
+    status: ApplicationStatusSchema.optional(),
+    pendingStatus: ApplicationStatusSchema.optional(),
     response: z.record(z.string(), z.any()).optional(),
 });
 
 export const batchUpdateApplicationStatusSchema = z.object({
     hackathonId: z.number().int(),
     userIds: z.array(z.number().int()),
-    status: APPLICATION_STATUS_ENUM.optional(),
-    pendingStatus: APPLICATION_STATUS_ENUM.optional(),
+    status: ApplicationStatusSchema.optional(),
+    pendingStatus: ApplicationStatusSchema.optional(),
 });
