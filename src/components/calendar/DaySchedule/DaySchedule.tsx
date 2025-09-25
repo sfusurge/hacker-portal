@@ -16,7 +16,6 @@ import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/Skewmorphic
 import { EventCard } from '../EventCard/EventCard';
 import { AnimatePresence } from 'motion/react';
 import { LongDescriptionModal } from '../EventLongDescription/EventLongDescription';
-import { CalendarEvent } from '@/server/routers/eventsRouter';
 
 // size of UI, shared
 const [rowHeight, headerHeight] = [90, 30];
