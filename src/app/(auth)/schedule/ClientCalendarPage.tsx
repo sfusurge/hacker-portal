@@ -87,7 +87,6 @@ export function ClientCalendarPage({
     const [weekOffset, setWeekOffset] = useState(0);
 
     function getStartDate() {
-        console.log(events);
         const dayOffset = weekOffset * 7;
         const today = dayjs();
         const firstDay = dayjs(hackathon.startDate);
@@ -261,7 +260,6 @@ function WeekControl({
                 variant="default"
                 onClick={() => {
                     updateWeek(-1);
-                    console.log('???');
                 }}
             >
                 <ChevronLeftIcon style={{ display: 'block', width: '16px' }} />
