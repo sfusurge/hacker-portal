@@ -138,12 +138,18 @@
 }
 
 .md > hr {
-    margin: 2rem;
+    margin: 1rem;
+
     border-color: var(--border-neutral-secondary);
 }
 
-.md > a {
+.md > a,
+.md > * > a {
     color: var(--brand-400);
     text-decoration: underline;
     font-style: italic;
+}
+
+.md > p {
+    margin-bottom: 0.75rem;
 }
