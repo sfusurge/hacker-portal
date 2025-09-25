@@ -6,7 +6,7 @@ import {
     range,
     selectedDayAtom,
 } from '@/components/calendar/MonthCalendarShared';
-import { useAtom, useAtomValue } from 'jotai';
+import { atom, useAtom, useAtomValue } from 'jotai';
 import { useMemo, useState } from 'react';
 import style from './ImproveMobileCalendar.module.css';
 import { LinearTimeline } from '@/components/calendar/LinearTimeLine/LinearTimeline';
@@ -14,9 +14,16 @@ import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { DialogTitle } from '@radix-ui/react-dialog';
 import { DaySchedule } from '@/components/calendar/DaySchedule/DaySchedule';
 import dayjs from 'dayjs';
+import dayOfYear from 'dayjs/plugin/dayOfYear';
 import clsx from 'clsx';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
 import { Card, CardContent } from '@/components/ui/card';
+dayjs.extend(dayOfYear);
+
+const firstdayAtom = atom((get) => {
+    const { year, month } = get(currentYearMonthAtom);
+    return dayjs(new Date(year, month, 1));
+});
 
 export function ImprovedMobileCalendar({
     events,
@@ -24,10 +31,7 @@ export function ImprovedMobileCalendar({
     events: InternalCalendarEventType[];
 }) {
     const [{ year, month }, updateYearMonth] = useAtom(currentYearMonthAtom);
-    const firstDay = useMemo(
-        () => dayjs(new Date(year, month, 1)),
-        [year, month]
-    );
+    const firstDay = useAtomValue(firstdayAtom);
     const [selectedDay, setSelectedDay] = useAtom(selectedDayAtom);
 
     const filteredEvents = useMemo(
@@ -39,7 +43,7 @@ export function ImprovedMobileCalendar({
     const daysWithEvents = useMemo(() => {
         const out = new Set<number>();
         for (const e of filteredEvents) {
-            const dayid = Math.ceil(e.startTime.diff(firstDay, 'day', true));
+            const dayid = e.startTime.dayOfYear() - firstDay.dayOfYear() + 1;
             if (!out.has(dayid)) {
                 out.add(dayid);
             }
@@ -111,6 +115,8 @@ function CalenderDays({ daysWithEvent }: MobileCalendarProps) {
         return monthInfo.firstDay.subtract(1, 'month');
     }, [monthInfo]);
 
+    const firstDay = useAtomValue(firstdayAtom);
+
     return (
         <Card className={style.Container}>
             <div className={style.ContainerContent}>
@@ -150,29 +156,40 @@ function CalenderDays({ daysWithEvent }: MobileCalendarProps) {
                                 dayidx +
                                 1 -
                                 monthInfo.firstDayOffset;
+                            let dayId = d;
                             const OOB = d < 1 || d > monthInfo.daysInMonth;
                             if (d < 1) {
                                 d += lastMonth.daysInMonth();
                             } else if (d > monthInfo.daysInMonth) {
                                 d -= monthInfo.daysInMonth;
                             }
+
                             return (
                                 <button
                                     key={d}
                                     className={clsx(
                                         style.DateButton,
-
                                         OOB && style.OOB,
+                                        dayId ===
+                                            (selectedDay?.dayOfYear() ?? 0) -
+                                                firstDay.dayOfYear() +
+                                                1 && style.selected,
 
-                                        d === selectedDay?.date() &&
-                                            !OOB &&
-                                            style.selected,
-
-                                        daysWithEvent.has(d) && style.hasEvent
+                                        daysWithEvent.has(dayId) &&
+                                            style.hasEvent
                                     )}
                                     onClick={() => {
+                                        console.log(
+                                            (selectedDay?.dayOfYear() ?? 0) -
+                                                firstDay.dayOfYear() +
+                                                1
+                                        );
+
                                         setSelectedDay(
-                                            dayjs(new Date(year, month, d))
+                                            dayjs(new Date(year, month, 1)).add(
+                                                dayId - 1,
+                                                'day'
+                                            )
                                         );
                                     }}
                                 >

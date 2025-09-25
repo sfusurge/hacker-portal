@@ -16,6 +16,7 @@ import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/Skewmorphic
 import { EventCard } from '../EventCard/EventCard';
 import { AnimatePresence } from 'motion/react';
 import { LongDescriptionModal } from '../EventLongDescription/EventLongDescription';
+import clsx from 'clsx';
 
 // size of UI, shared
 const [rowHeight, headerHeight] = [90, 30];
@@ -203,6 +204,10 @@ export function DaySchedule({
                                                             parentHeight={
                                                                 containerHeight
                                                             }
+                                                            columnCount={
+                                                                columnsOfDay.length
+                                                            }
+                                                            columnIndex={index}
                                                         ></DayEventItem>
                                                     ))}
                                                 </div>
@@ -308,9 +313,13 @@ function ProcessEventsForSchedule(eventsMaps: {
 function DayEventItem({
     event,
     parentHeight,
+    columnIndex,
+    columnCount,
 }: {
     event: InternalCalendarEventType;
     parentHeight: number;
+    columnIndex: number;
+    columnCount: number;
 }) {
     const minutesInDay = 1440;
     const [top, height] = useMemo(() => {
@@ -323,16 +332,25 @@ function DayEventItem({
         ];
     }, [parentHeight]);
 
-    const setSelectedEvent = useSetAtom(selectedEventAtom);
+    const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
 
     const eventTime = event.startTime;
 
     const containerRef = useRef<HTMLDivElement>(null);
 
+    const isActive = useMemo(() => {
+        return selectedEvent?.event === event;
+    }, [selectedEvent]);
+
     return (
         <div
             ref={containerRef}
-            className={style.dayEvent}
+            className={clsx([
+                style.dayEvent,
+                {
+                    [style.active]: isActive,
+                },
+            ])}
             onClick={() => {
                 setSelectedEvent({
                     element: containerRef.current ?? undefined,
@@ -344,6 +362,8 @@ function DayEventItem({
                     '--top': `${Math.round(top)}px`,
                     '--height': `${Math.round(height)}px`,
                     '--color': event.color,
+                    '--col': columnIndex,
+                    '--colCount': columnCount,
                 } as CSSProperties
             }
         >
