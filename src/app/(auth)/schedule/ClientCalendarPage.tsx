@@ -260,7 +260,6 @@ function WeekControl({
                 variant="default"
                 onClick={() => {
                     updateWeek(-1);
-                    console.log('???');
                 }}
             >
                 <ChevronLeftIcon style={{ display: 'block', width: '16px' }} />
