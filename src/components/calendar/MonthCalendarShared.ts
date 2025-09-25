@@ -107,6 +107,7 @@ export function groupEventsByDay(
         }
         startDate = startDate.add(1, 'day');
     }
+
     return grouped;
 }
 
@@ -241,10 +242,10 @@ Join us for an exciting hands-on workshop where you'll learn how to build a full
 - **Difficulty Level:** Beginner to Intermediate
 
 ## 🛠 What You'll Learn
-✅ Introduction to Svelte framework  
-✅ Setting up Firebase for authentication & database  
-✅ Building a responsive web app  
-✅ Deploying your app live  
+✅ Introduction to Svelte framework
+✅ Setting up Firebase for authentication & database
+✅ Building a responsive web app
+✅ Deploying your app live
 
 ![Svelte Logo](https://upload.wikimedia.org/wikipedia/commons/1/1b/Svelte_Logo.svg)
 

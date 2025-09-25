@@ -41,7 +41,7 @@ export function LinearTimeline({
 
     const eventsGroupedByDay = groupEventsByDay(
         events,
-        dayjs(new Date(month, year, 1))
+        dayjs(new Date(year, month, 1))
     );
 
     const [showMoreInfo, setShowMore] = useAtom(showMoreInfoEvent);

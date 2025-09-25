@@ -68,6 +68,12 @@ export function ClientCalendarPage({
     const [width, height] = useWindowSize();
     const [showSchedule, setShowSchedule] = useState(true);
     const showCalendar = useMemo(() => !showSchedule, [showSchedule]);
+    const eventStarted = useMemo(() => {
+        return (
+            dayjs().isAfter(hackathon.startDate) &&
+            dayjs().isBefore(hackathon.endDate)
+        );
+    }, [hackathon]);
     const isMobile = useMemo(() => width <= 768, [width]);
 
     const [selectedEvent, _] = useAtom(selectedEventAtom);
@@ -79,6 +85,7 @@ export function ClientCalendarPage({
     );
 
     const [weekOffset, setWeekOffset] = useState(0);
+
     function getStartDate() {
         console.log(events);
         const dayOffset = weekOffset * 7;
@@ -100,9 +107,9 @@ export function ClientCalendarPage({
         }
 
         if (today.isBefore(firstDay)) {
-            return minDate.startOf('day');
+            return minDate.startOf('day').add(dayOffset, 'day');
         } else {
-            return firstDay.startOf('day');
+            return firstDay.startOf('day').add(dayOffset, 'day');
         }
 
         return today.add(dayOffset, 'day');
@@ -221,8 +228,8 @@ export function ClientCalendarPage({
                     {/* DESKTOP */}
                     {!isMobile && showSchedule && (
                         <DaySchedule
-                            days={7}
-                            minColumnWidth={150}
+                            days={eventStarted ? 2 : 7}
+                            minColumnWidth={200}
                             startDate={getStartDate()}
                             events={events}
                         />
@@ -254,6 +261,7 @@ function WeekControl({
                 variant="default"
                 onClick={() => {
                     updateWeek(-1);
+                    console.log('???');
                 }}
             >
                 <ChevronLeftIcon style={{ display: 'block', width: '16px' }} />
