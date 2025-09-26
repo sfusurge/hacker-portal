@@ -92,7 +92,12 @@ export type Applicant = {
 };
 
 type ReviewApplicationsTableProps = {
-    toggleSideCard: () => void;
+    data: Applicant[];
+    applicationCount: number;
+    applicationDataMap: Map<number, ApplicationWithTeamInfo>;
+    fetchNextPage: () => Promise<void>;
+    onRowClick?: (app: Applicant, idx: number) => void;
+    hackathonId: number;
 };
 
 export const sideCardAtomSJ = atom<ApplicationWithTeamInfo>();
@@ -105,7 +110,12 @@ const csvConfig = mkConfig({
 });
 
 export default function ReviewApplicationsTable({
-    toggleSideCard,
+    data,
+    applicationCount,
+    applicationDataMap,
+    fetchNextPage,
+    onRowClick,
+    hackathonId,
 }: ReviewApplicationsTableProps) {
     const hackathon = useAtomValue(hackathonAtom);
 
@@ -113,40 +123,8 @@ export default function ReviewApplicationsTable({
     const { data: emailTemplates, isLoading: templatesLoading } =
         trpc.emailTemplates.getEmailTemplates.useQuery();
 
-    // Get data from DB
-    const applicationData = trpc.applications.getApplications.useInfiniteQuery(
-        {
-            hackathonId: hackathon?.id!,
-        },
-        {
-            getNextPageParam: (lastPage) => lastPage.nextToken,
-        }
-    );
-
-    const { data: applicationCountData, isLoading: applicationCountLoading } =
-        trpc.applications.getApplicationCount.useQuery({
-            hackathonId: hackathon?.id!,
-        });
-
-    const applications = useMemo(() => {
-        return (
-            applicationData.data?.pages.flatMap((page) => page.applications) ??
-            []
-        );
-    }, [applicationData.data]);
-
-    const applicationDataMap = useMemo(() => {
-        const map = new Map<number, ApplicationWithTeamInfo>();
-
-        for (const appData of applications) {
-            map.set(appData.userId, appData);
-        }
-
-        return map;
-    }, [applications]);
-
     // Data state
-    const data: Applicant[] = transformResponse(applications);
+    //const data: Applicant[] = transformResponse(applications);
 
     const checkedInInfoColumns: ColumnDef<Applicant>[] =
         data[0]?.checkIns?.map(({ eventTitle, checkedIn }) => {
@@ -357,38 +335,18 @@ export default function ReviewApplicationsTable({
         ...checkedInInfoColumns,
     ];
 
-    const fetchNextPage = useCallback(async () => {
-        if (applicationData.hasNextPage) {
-            await applicationData.fetchNextPage();
-        }
-    }, [applicationData]);
-
-    if (applicationData.isLoading || applicationCountLoading) {
-        return (
-            <div className="flex h-full items-center justify-center">
-                <p>Loading data...</p>
-            </div>
-        );
-    }
-
-    if (applicationData.isError) {
-        return (
-            <div className="flex h-full items-center justify-center">
-                <p>Error fetching data: {applicationData.error.message}</p>
-            </div>
-        );
-    }
-
     return (
         <MyTable
-            applicationCount={applicationCountData?.applicationCount ?? -1}
+            applicationCount={applicationCount}
             applicationDataMap={applicationDataMap}
             data={data}
             defaultColumns={defaultColumns}
             emailTemplates={emailTemplates}
             templatesLoading={templatesLoading}
-            toggleSideCard={toggleSideCard}
+            //toggleSideCard={toggleSideCard}
             fetchNextPage={fetchNextPage}
+            onRowClick={onRowClick}
+            hackathonId={hackathonId}
         />
     );
 }
@@ -401,20 +359,24 @@ function MyTable({
     defaultColumns,
     emailTemplates,
     templatesLoading,
-    toggleSideCard,
+    //toggleSideCard,
     applicationDataMap,
     fetchNextPage,
+    onRowClick,
+    hackathonId,
 }: {
     applicationCount: number;
     data: Applicant[];
     defaultColumns: ColumnDef<Applicant>[];
     emailTemplates?: any[];
     templatesLoading: boolean;
-    toggleSideCard: () => void;
+    //toggleSideCard: () => void;
     applicationDataMap: Map<number, ApplicationWithTeamInfo>;
     fetchNextPage: () => Promise<void>;
+    onRowClick?: (app: Applicant, idx: number) => void;
+    hackathonId: number;
 }) {
-    const hackathon = useAtomValue(hackathonAtom);
+    //const hackathon = useAtomValue(hackathonAtom);
     const utils = trpc.useUtils();
 
     const setSideCardInfo = useSetAtom(sideCardAtomSJ);
@@ -447,7 +409,7 @@ function MyTable({
 
                 utils.applications.getApplications.setInfiniteData(
                     {
-                        hackathonId: hackathon.id,
+                        hackathonId,
                     },
                     (old) => {
                         if (!old) {
@@ -515,7 +477,7 @@ function MyTable({
         );
 
         await batchUpdateApplicationStatus.mutateAsync({
-            hackathonId: hackathon.id,
+            hackathonId,
             userIds: ids,
             pendingStatus,
             status,
@@ -604,7 +566,7 @@ function MyTable({
                     try {
                         await batchUpdateApplicationStatus.mutateAsync({
                             userIds,
-                            hackathonId: hackathon.id,
+                            hackathonId,
                             status: status as StatusEnum,
                         });
                     } catch (error) {
@@ -777,6 +739,11 @@ function MyTable({
                                                               ? 'sticky left-[50px] z-20 bg-neutral-900' // Second column
                                                               : ''
                                                     }`}
+                                                    onClick={
+                                                        header.column.getCanMultiSort()
+                                                            ? header.column.getToggleSortingHandler()
+                                                            : undefined
+                                                    }
                                                 >
                                                     {header.isPlaceholder
                                                         ? null
@@ -786,6 +753,16 @@ function MyTable({
                                                                   .header,
                                                               header.getContext()
                                                           )}
+                                                    {header.column.getCanSort() && (
+                                                        <span>
+                                                            {header.column.getIsSorted() ===
+                                                                'asc' && ' ▲'}
+                                                            {header.column.getIsSorted() ===
+                                                                'desc' && ' ▼'}
+                                                            {header.column.getIsSorted() ===
+                                                                false && ' -'}
+                                                        </span>
+                                                    )}
                                                     {header.column.getCanResize() && (
                                                         <div
                                                             onMouseDown={header.getResizeHandler()}
@@ -845,12 +822,18 @@ function MyTable({
                                     <tr
                                         className="cursor-pointer hover:bg-gray-800"
                                         onClick={() => {
-                                            toggleSideCard();
+                                            //toggleSideCard();
                                             setSideCardInfo(
                                                 applicationDataMap.get(
                                                     row.original.id
                                                 )
                                             );
+                                            if (onRowClick) {
+                                                onRowClick(
+                                                    row.original,
+                                                    row.index
+                                                );
+                                            }
                                         }}
                                     >
                                         {row

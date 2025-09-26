@@ -1,8 +1,8 @@
 import { sideCardAtomSJ } from '@/app/(auth)/admin/review/components/ReviewApplicationsTable';
-import { atom, useAtom, useAtomValue, WritableAtom } from 'jotai';
+import { atom, useAtom, useAtomValue, useSetAtom, WritableAtom } from 'jotai';
 import { focusAtom } from 'jotai-optics';
 import style from './SideCard.module.css';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
     InputFormQuestion,
     QuestionMultipleCheckBox,
@@ -21,10 +21,15 @@ import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 import { StatusEnum } from '@/db/schema/applications';
 import { trpc } from '@/trpc/client';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { Applicant } from '../page';
 
 export interface SideCardProps {
     visible: boolean;
     onclose: () => void;
+    onPrev: () => void;
+    onNext: () => void;
+    selected?: ApplicationWithTeamInfo | null;
+    onRefresh?: () => void;
 }
 
 const responseAtom = atom(
@@ -51,6 +56,10 @@ const statusAtom = focusAtom(sideCardAtomSJ, (op) =>
 export default function SideCard({
     visible = false,
     onclose: _onclose,
+    onPrev,
+    onNext,
+    selected,
+    onRefresh,
 }: SideCardProps) {
     const responseData = useAtomValue(responseAtom);
     const applicationData = useAtomValue(sideCardAtomSJ);
@@ -61,6 +70,14 @@ export default function SideCard({
     const updateApplication = trpc.applications.updateApplication.useMutation(
         {}
     );
+    const cardId = applicationData?.userId;
+    /*
+    useEffect(() => {
+        if (selected) {
+            setSideCardAtom(selected as unknown as ApplicationWithTeamInfo);
+        }
+    }, [selected, setSideCardAtom]);
+*/
     const utils = trpc.useUtils();
 
     const ready = useMemo(
@@ -85,6 +102,7 @@ export default function SideCard({
                 })
                 .then(() => {
                     utils.applications.getApplications.invalidate();
+                    if (typeof onRefresh === 'function') onRefresh();
                 });
         }
         _onclose();
@@ -199,7 +217,7 @@ export default function SideCard({
         <>
             {ready && <div className={style.background} onClick={onclose} />}
             {ready && (
-                <div className={style.cardContainer}>
+                <div className={style.cardContainer} key={cardId}>
                     {/* title and close button */}
                     <div className={style.titleRow}>
                         <h1 style={{ fontSize: '24px' }}>
@@ -211,6 +229,7 @@ export default function SideCard({
                     </div>
 
                     <div className={style.hor}>
+                        <Button onClick={onPrev}>Prev</Button>
                         <Button
                             className={
                                 status === 'Accepted - RSVP to Confirm'
@@ -255,6 +274,7 @@ export default function SideCard({
                         >
                             Decline
                         </Button>
+                        <Button onClick={onNext}>Next</Button>
                         <div className="flex flex-col gap-2">
                             <CheckBoxWithLabel
                                 name="Editing"
@@ -280,11 +300,15 @@ export default function SideCard({
                         const q = questionTypeMap.get(id);
 
                         if (!q) {
-                            return <p key={id}>Unknown question id: {id}</p>;
+                            return (
+                                <p key={`${cardId}:${id}`}>
+                                    Unknown question id: {id}
+                                </p>
+                            );
                         }
 
                         return (
-                            <div key={id}>
+                            <div key={`${cardId}:${id}`}>
                                 <Label style={{ paddingBottom: '0.5rem' }}>
                                     {q.title}
                                 </Label>
@@ -295,6 +319,7 @@ export default function SideCard({
 
                     {/* Status change (repeating at both top and bottom of page)*/}
                     <div className={style.hor}>
+                        <Button onClick={onPrev}>Prev</Button>
                         <Button
                             className={
                                 status === 'Accepted - Pending Payment'
@@ -339,6 +364,7 @@ export default function SideCard({
                         >
                             Decline
                         </Button>
+                        <Button onClick={onNext}>Next</Button>
                     </div>
                 </div>
             )}
