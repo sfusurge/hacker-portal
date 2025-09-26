@@ -22,6 +22,7 @@ import { StatusEnum } from '@/db/schema/applications';
 import { trpc } from '@/trpc/client';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { Applicant } from '../page';
+import { TextLinkInput } from '@/components/application_components/InputFormComponents/TextLinkInput';
 
 export interface SideCardProps {
     visible: boolean;
@@ -158,8 +159,12 @@ export default function SideCard({
                 const numberAtom = getGenericInputAtom(question, dataAtom);
                 return <NumberInput dataAtom={numberAtom} />;
 
-            case 'text-line':
             case 'link':
+                const linkAtom = getGenericInputAtom(question, dataAtom);
+
+                return <TextLinkInput dataAtom={linkAtom} />;
+
+            case 'text-line':
                 const textLineAtom = getGenericInputAtom(question, dataAtom);
                 // @ts-ignore
                 return <TextLineInput dataAtom={textLineAtom} />;
