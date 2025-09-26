@@ -37,7 +37,11 @@ import { EnvelopeIcon } from '@heroicons/react/16/solid';
 import dayjs from 'dayjs';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
-import { StatusEnum } from '@/db/schema/applications';
+import {
+    StatusEnum,
+    ApplicationStatus,
+    APPLICATION_STATUS_ENUM,
+} from '@/db/schema/applications';
 import { FilterColumn } from './FilterColumn';
 
 export type Applicant = {
@@ -351,6 +355,29 @@ export default function ReviewApplicationsTable({
     );
 }
 
+function getStatusCounts(applications: Applicant[]) {
+    const counts: Record<ApplicationStatus, number> = {
+        'N/A': 0,
+        Accepted: 0,
+        Declined: 0,
+        'Awaiting Review': 0,
+        'Wait List': 0,
+        Withdrawn: 0,
+        'Accepted - Pending Payment': 0,
+        'Accepted - RSVP to Confirm': 0,
+    };
+
+    for (const app of applications) {
+        const status = app.currentStatus as ApplicationStatus;
+        if (counts[status] !== undefined) {
+            counts[status]++;
+        } else {
+            counts['N/A']++;
+        }
+    }
+
+    return counts;
+}
 // Put this outside of ReviewApplicationsTable cuz updating table state keeps
 // infinte loop of fetching data, and updating table state
 function MyTable({
@@ -389,7 +416,8 @@ function MyTable({
     );
     const { toast } = useToast();
 
-    // Email popup state toggle
+    const statusCounts = useMemo(() => getStatusCounts(data), [data]);
+
     const toggleEmailPopup = () => {
         setIsEmailPopupOpen(!isEmailPopupOpen);
     };
@@ -498,20 +526,19 @@ function MyTable({
 
             setIsSending(true);
 
-            const rowData = rows.map((row) => {
-                return {
-                    id: row.original.id,
-                    firstName: row.original.firstName,
-                    lastName: row.original.lastName,
-                    email: row.original.email,
-                    pendingStatus: row.original.pendingStatus,
-                    currentStatus: row.original.currentStatus,
-                };
-            });
+            const rowData = rows.map((row) => ({
+                id: row.original.id,
+                firstName: row.original.firstName,
+                lastName: row.original.lastName,
+                email: row.original.email,
+                pendingStatus: row.original.pendingStatus,
+                currentStatus: row.original.currentStatus,
+            }));
 
             let successCount = 0;
             let failureCount = 0;
             let statusUpdateCount = 0;
+
             const updateApplicationStatusInfos: {
                 id: number;
                 status: StatusEnum;
@@ -578,8 +605,7 @@ function MyTable({
 
                         toast({
                             title: 'Error',
-                            description: `Failed to update status to ${status}. Check console for more details`,
-                            variant: 'default',
+                            description: `Failed to update status to ${status}`,
                         });
                     }
                 })
@@ -608,20 +634,14 @@ function MyTable({
             console.error('Error in email sending process:', error);
             toast({
                 title: 'Error',
-                description:
-                    'Failed to send emails. Check console for details.',
-                variant: 'default',
+                description: 'Failed to send emails.',
             });
             setIsSending(false);
         }
     };
 
-    // Filters and sorting
     const [globalFilter, setGlobalFilter] = useState<string>('');
-    const [sorting, setSorting] = useState<SortingState>([
-        // sort by people with a team first
-        // { id: 'teamName', desc: true },
-    ]);
+    const [sorting, setSorting] = useState<SortingState>([]);
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
     const [pagination, setPagination] = useState<PaginationState>({
@@ -632,12 +652,7 @@ function MyTable({
     const table = useReactTable({
         data,
         columns: defaultColumns,
-        state: {
-            globalFilter,
-            sorting,
-            rowSelection,
-            pagination,
-        },
+        state: { globalFilter, sorting, rowSelection, pagination },
         columnResizeMode: 'onChange',
         enableColumnResizing: true,
         getCoreRowModel: getCoreRowModel(),
@@ -698,7 +713,19 @@ function MyTable({
 
     return (
         <div className="overflow-hidden">
-            {/* Global Search */}
+            {/* Status Summary */}
+            <div className="flex flex-wrap gap-3 p-4 text-sm text-white">
+                {APPLICATION_STATUS_ENUM.map((status: ApplicationStatus) => (
+                    <div
+                        key={status}
+                        className="rounded-md bg-neutral-800 px-3 py-2"
+                    >
+                        <span className="font-medium">{status}:</span>{' '}
+                        {statusCounts[status]}
+                    </div>
+                ))}
+            </div>
+
             <div className="flex justify-center gap-3 p-4">
                 <Input
                     type="text"
