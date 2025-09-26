@@ -131,12 +131,13 @@ export default function ReviewApplicationsTable({
     //const data: Applicant[] = transformResponse(applications);
 
     const checkedInInfoColumns: ColumnDef<Applicant>[] =
-        data[0]?.checkIns?.map(({ eventTitle, checkedIn }) => {
+        data[0]?.checkIns?.map(({ eventTitle, checkedIn, eventId }) => {
             return {
                 accessorFn: () => (checkedIn ? 'Yes' : 'No'),
                 header: `${eventTitle}?`,
-                size: 100,
                 enableColumnFilter: true,
+                id: `${eventTitle}-${eventId}`,
+                size: 150,
             };
         }) ?? [];
 
@@ -759,7 +760,7 @@ function MyTable({
                                                                 .columnDef
                                                                 .minSize,
                                                     }}
-                                                    className={`relative px-4 py-4 text-sm ${
+                                                    className={`relative overflow-hidden px-4 py-4 text-sm overflow-ellipsis ${
                                                         index === 0
                                                             ? 'sticky left-0 z-20 bg-neutral-900' // First column
                                                             : index === 1
