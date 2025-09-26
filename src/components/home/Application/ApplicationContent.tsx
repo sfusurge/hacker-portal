@@ -63,6 +63,7 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
 
     const handleOpenWithdrawPrompt = () => setIsWithdrawPromptOpen(true);
     const handleCloseWithdrawPrompt = () => setIsWithdrawPromptOpen(false);
+
     return (
         <>
             <div className="flex max-w-full flex-col gap-2 text-start md:pr-0 md:pl-0">
@@ -99,15 +100,13 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
                 className="-order-1 max-w-72 md:order-last"
                 alt="Four otters are gathered around a table, reviewing application submissions."
             />
-
-            <Conditional showWhen={isWithdrawPromptOpen}>
-                {userData?.id && (
-                    <WithdrawPrompt
-                        userId={userData.id}
-                        closePrompt={handleCloseWithdrawPrompt}
-                    />
-                )}
-            </Conditional>
+            {userData?.id && (
+                <WithdrawPrompt
+                    isOpen={isWithdrawPromptOpen}
+                    userId={userData.id}
+                    closePrompt={handleCloseWithdrawPrompt}
+                />
+            )}
         </>
     );
 }
@@ -187,14 +186,13 @@ export function AcceptedContent({
                 </section>
             )}
 
-            <Conditional showWhen={isWithdrawPromptOpen}>
-                {userData?.id && (
-                    <WithdrawPrompt
-                        userId={userData.id}
-                        closePrompt={handleCloseWithdrawPrompt}
-                    />
-                )}
-            </Conditional>
+            {userData?.id && (
+                <WithdrawPrompt
+                    isOpen={isWithdrawPromptOpen}
+                    userId={userData.id}
+                    closePrompt={handleCloseWithdrawPrompt}
+                />
+            )}
 
             <div
                 className={`bg-opacity-80 fixed inset-0 z-200 w-full bg-black transition-opacity duration-300 ${isTicketOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
@@ -270,14 +268,13 @@ export function ReviewContent({ userData }: { userData: UserData }) {
                 alt="Four otters are gathered around a table, reviewing application submissions."
             />
 
-            <Conditional showWhen={isWithdrawPromptOpen}>
-                {userData?.id && (
-                    <WithdrawPrompt
-                        userId={userData.id}
-                        closePrompt={handleCloseWithdrawPrompt}
-                    />
-                )}
-            </Conditional>
+            {userData?.id && (
+                <WithdrawPrompt
+                    isOpen={isWithdrawPromptOpen}
+                    userId={userData.id}
+                    closePrompt={handleCloseWithdrawPrompt}
+                />
+            )}
         </>
     );
 }
@@ -316,6 +313,7 @@ export function WithdrawnContent() {
         </>
     );
 }
+
 export function WaitlistContent() {
     const hackathon = useAtomValue(hackathonAtom);
 
@@ -344,6 +342,7 @@ export function WaitlistContent() {
         </>
     );
 }
+
 export function RejectedContent() {
     const hackathon = useAtomValue(hackathonAtom);
 

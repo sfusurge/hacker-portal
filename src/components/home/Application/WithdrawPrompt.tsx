@@ -22,39 +22,47 @@ import {
 export type WithdrawPromptProps = {
     userId: number;
     closePrompt: () => void;
-    isOpen?: boolean;
+    isOpen: boolean;
 };
 
 export default function WithdrawPrompt({
     userId,
     closePrompt,
-    isOpen = true,
+    isOpen,
 }: WithdrawPromptProps) {
     const pfp = '/SpendyPFP.png';
     const [notSubmittable, setNotSubmittable] = useState(true);
     const [verifyText, setVerifyText] = useState('');
     const [withdrawn, setWithdrawn] = useState(false);
-    const [open, setOpen] = useState(isOpen);
 
     const hackathon = useAtomValue(hackathonAtom);
-
     const updateApplication = trpc.applications.updateApplication.useMutation();
 
-    const handleWithdraw = useCallback(() => {
-        setWithdrawn(true);
+    useEffect(() => {
+        if (isOpen) {
+            setNotSubmittable(true);
+            setVerifyText('');
+            setWithdrawn(false);
+        }
+    }, [isOpen]);
+
+    const handleWithdraw = useCallback(async () => {
+        if (!hackathon || notSubmittable) return;
+
         try {
-            updateApplication.mutate({
-                hackathonId: hackathon!.id,
+            setWithdrawn(true);
+            await updateApplication.mutateAsync({
+                hackathonId: hackathon.id,
                 userId: userId,
                 status: 'Withdrawn',
             });
         } catch (error) {
             console.error('Failed to update application:', error);
+            setWithdrawn(false);
         }
-    }, [hackathon, updateApplication, userId]);
+    }, [hackathon, updateApplication, userId, notSubmittable]);
 
     const handleClose = () => {
-        setOpen(false);
         closePrompt();
         if (withdrawn) {
             window.location.reload();
@@ -71,10 +79,11 @@ export default function WithdrawPrompt({
 
     return (
         <ResponsiveDialog
-            open={open}
-            onOpenChange={(isOpen) => {
-                if (!isOpen) handleClose();
-                else setOpen(isOpen);
+            open={isOpen}
+            onOpenChange={(open) => {
+                if (!open) {
+                    handleClose();
+                }
             }}
         >
             <ResponsiveDialogContent className="p-0 sm:max-w-[28rem]">
@@ -102,7 +111,7 @@ export default function WithdrawPrompt({
                                     For any questions regarding your submission,
                                     contact us in the{' '}
                                     <Link
-                                        className="underline hover:font-bold"
+                                        className="underline"
                                         href="https://discord.gg/Rg4mwHvKjd"
                                         target="_blank"
                                     >
@@ -133,6 +142,7 @@ export default function WithdrawPrompt({
                             }}
                             required
                             placeholder="Enter the text to confirm withdrawal"
+                            value={verifyText}
                         />
                     </Conditional>
 
@@ -155,6 +165,7 @@ export default function WithdrawPrompt({
                                 size="cozy"
                                 hierarchy="secondary"
                                 onClick={handleClose}
+                                disabled={updateApplication.isPending}
                             >
                                 Cancel
                             </Button>
@@ -163,11 +174,21 @@ export default function WithdrawPrompt({
                                 variant="brand"
                                 size="cozy"
                                 hierarchy="primary"
-                                disabled={notSubmittable}
+                                disabled={
+                                    notSubmittable ||
+                                    updateApplication.isPending
+                                }
                                 onClick={handleWithdraw}
-                                className={notSubmittable ? 'opacity-50' : ''}
+                                className={
+                                    notSubmittable ||
+                                    updateApplication.isPending
+                                        ? 'opacity-50'
+                                        : ''
+                                }
                             >
-                                Withdraw
+                                {updateApplication.isPending
+                                    ? 'Withdrawing...'
+                                    : 'Withdraw'}
                             </Button>
                         </ResponsiveDialogFooter>
                     </Conditional>

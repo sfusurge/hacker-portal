@@ -131,23 +131,21 @@ export default function ApplicationCard({
             </CardContent>
 
             {getCardFooter(status, hackathonName, handleOpenRSVPPrompt)}
-            <Conditional showWhen={isRSVPPromptOpen}>
-                {userData?.id && (
-                    <RsvpPrompt
-                        userData={userData}
-                        closePrompt={handleCloseRSVPPrompt}
-                        openWithdrawPrompt={handleOpenWithdrawPrompt}
-                    />
-                )}
-            </Conditional>
-            <Conditional showWhen={isWithdrawPromptOpen}>
-                {userData?.id && (
-                    <WithdrawPrompt
-                        userId={userData.id}
-                        closePrompt={handleCloseWithdrawPrompt}
-                    />
-                )}
-            </Conditional>
+            {userData?.id && (
+                <RsvpPrompt
+                    isOpen={isRSVPPromptOpen}
+                    userData={userData}
+                    closePrompt={handleCloseRSVPPrompt}
+                    openWithdrawPrompt={handleOpenWithdrawPrompt}
+                />
+            )}
+            {userData?.id && (
+                <WithdrawPrompt
+                    isOpen={isWithdrawPromptOpen}
+                    userId={userData.id}
+                    closePrompt={handleCloseWithdrawPrompt}
+                />
+            )}
         </Card>
     );
 }
@@ -159,8 +157,11 @@ function determineApplicationStatus(
     questionSetExists?: boolean
 ): AppStatus {
     if (applicationSubmitted && currentStatus) {
-        if (currentStatus === 'Accepted - Pending Payment') {
-            return 'Accepted - Pending Payment';
+        if (
+            currentStatus === 'Accepted - Pending Payment' ||
+            currentStatus === 'Accepted - RSVP to Confirm'
+        ) {
+            return 'Accepted - RSVP to Confirm';
         }
         return currentStatus as AppStatus;
     } else if (questionSetExists) {

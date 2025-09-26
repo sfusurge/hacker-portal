@@ -2,38 +2,37 @@
 
 import Image from 'next/image';
 import { UserData } from '@/server/routers/usersRouter';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { trpc } from '@/trpc/client';
 import { Conditional } from '@/lib/Conditional';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-    DialogDescription,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { useAtomValue } from 'jotai';
-import { createCaller } from '@/server/appRouter';
+import {
+    ResponsiveDialog,
+    ResponsiveDialogContent,
+    ResponsiveDialogHeader,
+    ResponsiveDialogTitle,
+    ResponsiveDialogFooter,
+    ResponsiveDialogDescription,
+} from '@/components/ui/responsive-dialog';
+import { CheckBox } from '@/components/ui/checkbox/checkbox';
 
 export type RsvpPromptProps = {
     userData: UserData;
     closePrompt: () => void;
     openWithdrawPrompt: () => void;
-    isOpen?: boolean;
+    isOpen: boolean;
 };
 
 export default function RsvpPrompt({
     userData,
     closePrompt,
-    isOpen = true,
+    isOpen,
     openWithdrawPrompt,
 }: RsvpPromptProps) {
-    const pfp = '/Stormy_No_Rizz.svg';
+    const pfp = '/stormy-party.webp';
     const [RSVP, setRSVP] = useState(false);
-    const [open, setOpen] = useState(isOpen);
     const [isConfirmed, setIsConfirmed] = useState(false);
 
     const hackathon = useAtomValue(hackathonAtom);
@@ -43,111 +42,138 @@ export default function RsvpPrompt({
             purpose: 'RSVP Received',
         });
     const sendEmail = trpc.emails.sendEmail.useMutation();
+
     const firstName = userData?.firstName || 'Friend';
     const lastName = userData?.lastName || '';
     const userEmail = userData?.email;
-    const userId = userData.id;
+    const userId = userData?.id;
 
-    const handleRSVP = useCallback(() => {
-        if (!isConfirmed) return;
-        setRSVP(true);
+    useEffect(() => {
+        if (isOpen) {
+            setRSVP(false);
+            setIsConfirmed(false);
+        }
+    }, [isOpen]);
+
+    const handleRSVP = useCallback(async () => {
+        if (!isConfirmed || !userId || !hackathon) return;
+
         try {
-            updateApplication.mutate({
-                hackathonId: hackathon!.id,
+            setRSVP(true);
+
+            await updateApplication.mutateAsync({
+                hackathonId: hackathon.id,
                 status: 'Accepted',
                 pendingStatus: 'N/A',
                 userId: userId,
             });
-            sendEmail.mutate({
-                templateId: getEmailTemplate.data.id,
-                user: {
-                    id: userId,
-                    firstName: firstName,
-                    lastName: lastName,
-                    email: userEmail,
-                },
-            });
+
+            if (getEmailTemplate.data?.id && userEmail) {
+                await sendEmail.mutateAsync({
+                    templateId: getEmailTemplate.data.id,
+                    user: {
+                        id: userId,
+                        firstName,
+                        lastName,
+                        email: userEmail,
+                    },
+                });
+            }
         } catch (error) {
             console.error('Failed to update application:', error);
+            setRSVP(false);
         }
-    }, [hackathon, updateApplication, userId, isConfirmed]);
+    }, [
+        hackathon,
+        updateApplication,
+        sendEmail,
+        userId,
+        userEmail,
+        firstName,
+        lastName,
+        isConfirmed,
+        getEmailTemplate.data?.id,
+    ]);
 
     const handleClose = () => {
-        setOpen(false);
         closePrompt();
     };
 
-    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setIsConfirmed(e.target.checked);
+    const handleWithdrawClick = () => {
+        openWithdrawPrompt();
     };
 
     return (
-        <Dialog
-            open={open}
-            onOpenChange={(isOpen) => {
-                if (!isOpen) handleClose();
-                else setOpen(isOpen);
+        <ResponsiveDialog
+            open={isOpen}
+            onOpenChange={(open) => {
+                if (!open) {
+                    handleClose();
+                }
             }}
         >
-            <DialogContent className="sm:max-w-[25rem]">
-                <div className="flex flex-col items-center justify-center gap-5 text-center">
+            <ResponsiveDialogContent className="p-0 sm:max-w-[28rem]">
+                <div className="flex flex-col items-center justify-center gap-6 text-center">
                     <Image
                         src={pfp}
                         alt="Profile Picture"
                         width={100}
                         height={100}
-                        className="rounded-full"
+                        className="rounded-full pt-6"
                     />
 
                     <Conditional showWhen={!RSVP}>
-                        <DialogHeader className="text-center">
-                            <DialogTitle className="pb-4 text-2xl font-semibold">
+                        <ResponsiveDialogHeader className="gap-4 px-6">
+                            <ResponsiveDialogTitle className="text-center text-2xl font-semibold">
                                 Confirm your attendance.
-                            </DialogTitle>
-                            <div className="flex flex-col gap-2 pl-2 text-start">
-                                <DialogDescription>
-                                    Congratulations on your acceptance to
-                                    StormHacks 2025. Please check the box below
-                                    to confirm your attendance for the following
-                                    dates:
-                                </DialogDescription>
+                            </ResponsiveDialogTitle>
+                            <div className="flex flex-col gap-2 px-2 text-start">
+                                <ResponsiveDialogDescription>
+                                    Congratulations on your acceptance to{' '}
+                                    {hackathon?.hackathonName ||
+                                        'StormHacks 2025'}
+                                    . Please check the box below to
+                                    indicate/confirm your attendance to{' '}
+                                    {hackathon?.hackathonName ||
+                                        'StormHacks 2025'}
+                                    .
+                                </ResponsiveDialogDescription>
                                 <div>
-                                    <DialogDescription>
-                                        Day 1 - October 4 , 2025
-                                    </DialogDescription>
-                                    <DialogDescription>
-                                        Day 2 - October 5 , 2025
-                                    </DialogDescription>
+                                    <ResponsiveDialogDescription>
+                                        Day 1: October 4, 2025 (Required)
+                                    </ResponsiveDialogDescription>
+                                    <ResponsiveDialogDescription>
+                                        Day 2: October 5, 2025 (Recommended)
+                                    </ResponsiveDialogDescription>
                                 </div>
                             </div>
-
-                            <label className="flex items-center gap-3 pl-2">
-                                <input
-                                    type="checkbox"
+                            <div className="w-full px-2">
+                                <CheckBox
+                                    name="confirm-attendance"
                                     checked={isConfirmed}
-                                    onChange={handleCheckboxChange}
+                                    onChange={(e) =>
+                                        setIsConfirmed(e.target.checked)
+                                    }
+                                    label={`I confirm that I will be attending ${hackathon?.hackathonName || 'StormHacks 2025'}.`}
                                 />
-                                <span className="text-start text-sm">
-                                    I confirm that I will be attending
-                                    StormHacks.
-                                </span>
-                            </label>
-                        </DialogHeader>
+                            </div>
+                        </ResponsiveDialogHeader>
                     </Conditional>
 
                     <Conditional showWhen={RSVP}>
-                        <DialogHeader className="text-center text-2xl">
-                            <DialogTitle className="leading-tighter font-bold">
-                                Your spot has been reserved!.
-                            </DialogTitle>
-                            <DialogDescription>
-                                We hope to see you at StormHacks!🫶
-                            </DialogDescription>
-                        </DialogHeader>
+                        <ResponsiveDialogHeader className="gap-4 text-center text-2xl">
+                            <ResponsiveDialogTitle className="leading-tighter font-semibold">
+                                Your spot has been reserved!
+                            </ResponsiveDialogTitle>
+                            <ResponsiveDialogDescription>
+                                We&apos;re excited to see you at{' '}
+                                {hackathon?.hackathonName || 'StormHacks'}! 🫶
+                            </ResponsiveDialogDescription>
+                        </ResponsiveDialogHeader>
                     </Conditional>
 
                     <Conditional showWhen={!RSVP}>
-                        <DialogFooter className="grid grid-cols-2 justify-between gap-2 text-base/4">
+                        <div className="grid w-full grid-cols-2 gap-3 px-6">
                             <Button
                                 variant="default"
                                 size="cozy"
@@ -162,28 +188,35 @@ export default function RsvpPrompt({
                                 size="cozy"
                                 hierarchy="primary"
                                 onClick={handleRSVP}
-                                disabled={!isConfirmed}
+                                disabled={
+                                    !isConfirmed || updateApplication.isPending
+                                }
                                 className={!isConfirmed ? 'opacity-50' : ''}
                             >
-                                Reserve my spot
+                                {updateApplication.isPending
+                                    ? 'Reserving...'
+                                    : 'Reserve my spot'}
                             </Button>
-                        </DialogFooter>
-
-                        <div className="flex flex-col">
-                            <DialogDescription className="text-xs text-white/30">
-                                No longer able to make it to the event?
-                            </DialogDescription>
-                            <button
-                                className="text-xs text-white/60 underline"
-                                onClick={openWithdrawPrompt}
-                            >
-                                withdraw your application
-                            </button>
                         </div>
                     </Conditional>
 
+                    <Conditional showWhen={!RSVP}>
+                        <ResponsiveDialogFooter className="border-neutral-750 flex w-full flex-col items-center justify-center border-t p-5">
+                            <ResponsiveDialogDescription className="justify-center text-xs text-white/30">
+                                No longer able to make it to the event?
+                                <br />
+                                <button
+                                    className="cursor-pointer text-xs text-white/60 underline hover:text-white/80"
+                                    onClick={handleWithdrawClick}
+                                >
+                                    withdraw your application
+                                </button>
+                            </ResponsiveDialogDescription>
+                        </ResponsiveDialogFooter>
+                    </Conditional>
+
                     <Conditional showWhen={RSVP}>
-                        <DialogFooter className="w-full">
+                        <ResponsiveDialogFooter className="border-neutral-750 flex w-full flex-col-reverse justify-end gap-4 border-t p-5 sm:flex-row">
                             <Button
                                 variant="brand"
                                 size="cozy"
@@ -193,10 +226,10 @@ export default function RsvpPrompt({
                             >
                                 Return to home
                             </Button>
-                        </DialogFooter>
+                        </ResponsiveDialogFooter>
                     </Conditional>
                 </div>
-            </DialogContent>
-        </Dialog>
+            </ResponsiveDialogContent>
+        </ResponsiveDialog>
     );
 }
