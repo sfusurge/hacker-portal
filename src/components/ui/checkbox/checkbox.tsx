@@ -30,7 +30,7 @@ export const CheckBox = forwardRef<
                 {...props}
             />
             {label && (
-                <span className={`${styles.inlineLabel} text-sm text-white/60`}>
+                <span className={`${styles.inlineLabel} text-sm font-medium`}>
                     {label}
                 </span>
             )}
