@@ -159,8 +159,9 @@ export default function SideCard({
                 return <NumberInput dataAtom={numberAtom} />;
 
             case 'text-line':
-                5;
+            case 'link':
                 const textLineAtom = getGenericInputAtom(question, dataAtom);
+                // @ts-ignore
                 return <TextLineInput dataAtom={textLineAtom} />;
 
             case 'text-area':
