@@ -206,7 +206,7 @@ export default function SideCard({
                 return <CheckBoxGroupInput dataAtom={multiCheckboxAtom} />;
 
             default:
-                return <p>Unknown requestion type: {question.type}</p>;
+                return <p>Unknown question type: {question.type}</p>;
         }
     }
 
