@@ -87,7 +87,7 @@ const AlertTitle = React.forwardRef<
     <h5
         ref={ref}
         className={cn(
-            'text-base leading-none font-semibold tracking-tight',
+            'text-base leading-tight font-semibold tracking-tight',
             className
         )}
         {...props}

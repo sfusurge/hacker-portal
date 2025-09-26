@@ -5,7 +5,7 @@
     width: 16px;
     height: 16px;
 
-    align-self: flex-start;
+    align-self: center;
 
     border-radius: 4px;
     border: 1px solid #525252;
@@ -19,6 +19,7 @@
     box-sizing: border-box;
 
     cursor: pointer;
+    margin-right: 12px;
 }
 
 .label:hover::before {
@@ -80,6 +81,7 @@
 }
 
 .check {
-    appearance: none;
-    margin-right: 12px;
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
 }
