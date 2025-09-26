@@ -309,9 +309,12 @@ export default function SideCard({
 
                         return (
                             <div key={`${cardId}:${id}`}>
-                                <Label style={{ paddingBottom: '0.5rem' }}>
-                                    {q.title}
-                                </Label>
+                                <div
+                                    className={style.htmlHolder}
+                                    dangerouslySetInnerHTML={{
+                                        __html: q.title ?? '',
+                                    }}
+                                ></div>
                                 {getFieldFromType(id)}
                             </div>
                         );
