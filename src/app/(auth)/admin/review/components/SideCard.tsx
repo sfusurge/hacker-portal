@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
     InputFormQuestion,
     QuestionMultipleCheckBox,
+    QuestionSchoolName,
 } from '@/components/application_components/types';
 import { CheckBoxInput } from '@/components/application_components/InputFormComponents/CheckboxInput';
 import { NumberInput } from '@/components/application_components/InputFormComponents/NumberInput';
@@ -23,6 +24,7 @@ import { trpc } from '@/trpc/client';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { Applicant } from '../page';
 import { TextLinkInput } from '@/components/application_components/InputFormComponents/TextLinkInput';
+import { SchoolNameInput } from '@/components/application_components/InputFormComponents/SchoolNameInput';
 
 export interface SideCardProps {
     visible: boolean;
@@ -163,6 +165,18 @@ export default function SideCard({
                 const linkAtom = getGenericInputAtom(question, dataAtom);
 
                 return <TextLinkInput dataAtom={linkAtom} />;
+
+            case 'school-name':
+                const schoolAtom = atom(
+                    (get) => {
+                        return { ...question, selection: get(dataAtom) };
+                    },
+                    (get, set, val: QuestionSchoolName) => {
+                        set(dataAtom, val.selection);
+                    }
+                );
+
+                return <SchoolNameInput dataAtom={schoolAtom} />;
 
             case 'text-line':
                 const textLineAtom = getGenericInputAtom(question, dataAtom);
