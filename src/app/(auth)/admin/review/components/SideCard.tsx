@@ -178,11 +178,13 @@ export default function SideCard({
             case 'multiple-checkbox':
                 const multiCheckboxAtom = atom(
                     (get) => {
-                        const choices = new Set<string>(get(dataAtom));
+                        const choices = new Set<string>(
+                            get(dataAtom).map((v: string) => v.toLowerCase())
+                        );
                         for (const c of question.choices) {
-                            if (choices.has(c.name)) {
+                            if (choices.has(c.data.toLowerCase())) {
                                 c.value = true;
-                                choices.delete(c.name);
+                                choices.delete(c.data);
                             } else {
                                 c.value = false;
                             }
@@ -190,8 +192,12 @@ export default function SideCard({
 
                         if (choices.size > 0) {
                             // some value is not yet comsumed, there must be an 'other value available
-                            question.otherValue = choices.values().next().value;
+                            return {
+                                ...question,
+                                therValue: choices.values().next().value,
+                            };
                         }
+
                         return question;
                     },
                     (get, set, val: QuestionMultipleCheckBox) => {

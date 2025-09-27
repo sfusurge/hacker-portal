@@ -302,6 +302,7 @@ export default function ReviewApplicationsTable({
             header: 'Dietary Restrictions',
             size: 200,
             minSize: 150,
+            filterFn: 'arrIncludes',
             cell: (info) => {
                 const value = info.getValue();
                 return Array.isArray(value) ? value.join(', ') : value || 'N/A';
