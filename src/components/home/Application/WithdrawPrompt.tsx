@@ -102,7 +102,7 @@ export default function WithdrawPrompt({
                                 Are you sure you want to withdraw your
                                 application?
                             </ResponsiveDialogTitle>
-                            <Alert variant={'warning'} className="text-left">
+                            <Alert variant={'danger'} className="text-left">
                                 <AlertTitle>
                                     Applications cannot be resubmitted once
                                     withdrawn.
@@ -136,13 +136,14 @@ export default function WithdrawPrompt({
                                 width: '100%',
                                 paddingLeft: '1.25rem',
                                 paddingRight: '1.25rem',
+                                paddingBottom: '1.25rem',
                             }}
                             onLazyChange={(text) => {
                                 setVerifyText(text as string);
                             }}
                             required
                             placeholder="Enter the text to confirm withdrawal"
-                            value={verifyText}
+                            defaultValue={verifyText}
                         />
                     </Conditional>
 

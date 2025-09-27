@@ -36,7 +36,7 @@ const Alert = React.forwardRef<
                 return <CheckCircleIcon className="text-success-400 h-6 w-6" />;
             case 'warning':
                 return (
-                    <ShieldExclamationIcon className="text-caution-400 h-6 w-6" />
+                    <ExclamationTriangleIcon className="text-caution-400 h-6 w-6" />
                 );
             case 'danger':
                 return (
