@@ -1023,7 +1023,6 @@ function MyTable({
                             table.getSelectedRowModel().rows,
                             {
                                 pendingStatus: 'Accepted - RSVP to Confirm',
-                                status: 'Accepted - RSVP to Confirm',
                             }
                         )
                     }
