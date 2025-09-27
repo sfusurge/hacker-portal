@@ -420,6 +420,33 @@ function MyTable({
 
     const statusCounts = useMemo(() => getStatusCounts(data), [data]);
 
+    const [globalFilter, setGlobalFilter] = useState<string>('');
+    const [sorting, setSorting] = useState<SortingState>([]);
+    const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+    const [pagination, setPagination] = useState<PaginationState>({
+        pageSize: parseInt(localStorage.getItem('pagesize') ?? '200'),
+        pageIndex: parseInt(localStorage.getItem('pageindex') ?? '0'),
+    });
+
+    const table = useReactTable({
+        data,
+        columns: defaultColumns,
+        state: { globalFilter, sorting, rowSelection, pagination },
+        columnResizeMode: 'onChange',
+        enableColumnResizing: true,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        enableRowSelection: true,
+        onGlobalFilterChange: setGlobalFilter,
+        onSortingChange: setSorting,
+        onRowSelectionChange: setRowSelection,
+        onPaginationChange: setPagination,
+        autoResetPageIndex: false,
+    });
+
     const toggleEmailPopup = () => {
         setIsEmailPopupOpen(!isEmailPopupOpen);
     };
@@ -511,6 +538,17 @@ function MyTable({
             userIds: ids,
             pendingStatus,
             status,
+        });
+
+        // unselect those rows
+        setRowSelection((prev) => {
+            const { ...newSelection } = prev;
+
+            rows.forEach((row) => {
+                delete newSelection[row.id];
+            });
+
+            return newSelection;
         });
     };
 
@@ -641,33 +679,6 @@ function MyTable({
             setIsSending(false);
         }
     };
-
-    const [globalFilter, setGlobalFilter] = useState<string>('');
-    const [sorting, setSorting] = useState<SortingState>([]);
-    const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-
-    const [pagination, setPagination] = useState<PaginationState>({
-        pageSize: parseInt(localStorage.getItem('pagesize') ?? '200'),
-        pageIndex: parseInt(localStorage.getItem('pageindex') ?? '0'),
-    });
-
-    const table = useReactTable({
-        data,
-        columns: defaultColumns,
-        state: { globalFilter, sorting, rowSelection, pagination },
-        columnResizeMode: 'onChange',
-        enableColumnResizing: true,
-        getCoreRowModel: getCoreRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        enableRowSelection: true,
-        onGlobalFilterChange: setGlobalFilter,
-        onSortingChange: setSorting,
-        onRowSelectionChange: setRowSelection,
-        onPaginationChange: setPagination,
-        autoResetPageIndex: false,
-    });
 
     useEffect(() => {
         localStorage.setItem('pagesize', `${pagination.pageSize}`);
@@ -1237,108 +1248,4 @@ function IndeterminateCheckbox({
             onClick={(e) => e.stopPropagation()}
         />
     );
-}
-
-// Function to transform the data received from DB to the json format the table expects
-function transformResponse(response: any[]) {
-    return response
-        .map((item) => {
-            const {
-                '1': firstName,
-                '2': lastName,
-                '3': pronouns,
-                '4': email,
-                '5': haveHackathonExperience,
-                '6': howHeardAbout,
-                '7': dietaryRestrictions,
-                '8': tShirtSize,
-                '9': resume,
-                '10': discord,
-                '11': instagram,
-                '12': github,
-                '13': linkedin,
-                '14': portfolio,
-                '15': otherLinks,
-                '16': school,
-                '17': background,
-                '18': yearOfStudy,
-                '19': major,
-                '20': excitement,
-                '21': problemOrSkill,
-                '22': dreamProject,
-                '23': shareResume,
-                '24': acceptMLH,
-                '25': acceptSFSS,
-                '26': acceptEmails,
-                '27': authorizeMLH,
-                '28': photoRelease,
-            } = item.response as Record<string, any>;
-
-            const members = item.members;
-            const checkIns = item.checkIns;
-
-            const teamName = item.teamName
-                ? `${item.teamName} (${item.teamId})`
-                : '';
-
-            return {
-                id: Number(item.userId),
-                teamName,
-                currentStatus: item.currentStatus,
-                pendingStatus: item.pendingStatus,
-                applicationDate: new Date(item.createdDate),
-                dietaryRestrictions: Array.isArray(dietaryRestrictions)
-                    ? dietaryRestrictions
-                    : [dietaryRestrictions],
-                howHeardAbout: Array.isArray(howHeardAbout)
-                    ? howHeardAbout
-                    : [howHeardAbout],
-                members,
-                firstName,
-                lastName,
-                pronouns,
-                email,
-                haveHackathonExperience,
-                tShirtSize,
-                resume,
-                discord,
-                instagram,
-                github,
-                linkedin,
-                portfolio,
-                otherLinks,
-                school,
-                background,
-                yearOfStudy,
-                major,
-                excitement,
-                problemOrSkill,
-                dreamProject,
-                shareResume,
-                acceptMLH,
-                acceptSFSS,
-                acceptEmails,
-                authorizeMLH,
-                photoRelease,
-                checkIns,
-            };
-        })
-        .sort((a, b) => {
-            const teamA = a.teamName.toLowerCase();
-            const teamB = b.teamName.toLowerCase();
-
-            if (teamA && teamB) {
-                return teamA.localeCompare(teamB);
-            }
-
-            if (a.teamName) {
-                return -1;
-            }
-
-            if (b.teamName) {
-                return 1;
-            }
-
-            return 0;
-        });
 }
