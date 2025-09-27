@@ -194,7 +194,7 @@ export default function SideCard({
                             // some value is not yet comsumed, there must be an 'other value available
                             return {
                                 ...question,
-                                therValue: choices.values().next().value,
+                                otherValue: choices.values().next().value,
                             };
                         }
 
