@@ -4,6 +4,7 @@ import { trpc } from '@/trpc/client';
 import {
     Fragment,
     HTMLProps,
+    useCallback,
     useEffect,
     useMemo,
     useRef,
@@ -18,6 +19,9 @@ import {
     getFilteredRowModel,
     useReactTable,
     SortingState,
+    RowSelectionState,
+    Row,
+    PaginationState,
 } from '@tanstack/react-table';
 
 import { atom, useAtomValue, useSetAtom } from 'jotai';
@@ -33,8 +37,15 @@ import { EnvelopeIcon } from '@heroicons/react/16/solid';
 import dayjs from 'dayjs';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import {
+    StatusEnum,
+    ApplicationStatus,
+    APPLICATION_STATUS_ENUM,
+} from '@/db/schema/applications';
+import { FilterColumn } from './FilterColumn';
 
 export type Applicant = {
+    members: string[] | null;
     id: number;
     teamName: string | null;
 
@@ -43,11 +54,11 @@ export type Applicant = {
     lastName: string;
     pronouns: string;
     email: string;
-    haveHackathonExperience: string[];
+    haveHackathonExperience: string;
     howHeardAbout: string[];
     dietaryRestrictions?: string[];
     tShirtSize: string;
-    resume?: string;
+    resume?: string[];
     discord: string;
     instagram?: string;
     github?: string;
@@ -85,179 +96,48 @@ export type Applicant = {
 };
 
 type ReviewApplicationsTableProps = {
-    toggleSideCard: () => void;
+    data: Applicant[];
+    applicationCount: number;
+    applicationDataMap: Map<number, ApplicationWithTeamInfo>;
+    fetchNextPage: () => Promise<void>;
+    onRowClick?: (app: Applicant, idx: number) => void;
+    hackathonId: number;
 };
 
 export const sideCardAtomSJ = atom<ApplicationWithTeamInfo>();
 
-export default function ReviewApplicationsTable({
-    toggleSideCard,
-}: ReviewApplicationsTableProps) {
-    const setSideCardInfo = useSetAtom(sideCardAtomSJ);
+const csvConfig = mkConfig({
+    fieldSeparator: ',',
+    filename: 'Data',
+    decimalSeparator: '.',
+    useKeysAsHeaders: true,
+});
 
-    const sendEmail = trpc.emails.sendEmail.useMutation();
-    const [isEmailPopupOpen, setIsEmailPopupOpen] = useState(false);
-    const [isSending, setIsSending] = useState(false);
-    const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(
-        null
-    );
-    const { toast } = useToast();
+export default function ReviewApplicationsTable({
+    data,
+    applicationCount,
+    applicationDataMap,
+    fetchNextPage,
+    onRowClick,
+    hackathonId,
+}: ReviewApplicationsTableProps) {
+    const hackathon = useAtomValue(hackathonAtom);
 
     // Fetch email templates
     const { data: emailTemplates, isLoading: templatesLoading } =
         trpc.emailTemplates.getEmailTemplates.useQuery();
 
-    // Email popup state toggle
-    const toggleEmailPopup = () => {
-        setIsEmailPopupOpen(!isEmailPopupOpen);
-    };
-
-    const updateApplicationStatus =
-        trpc.applications.updateApplication.useMutation();
-
-    //sends emails to selected users
-    const handleSendingEmails = async (rows: any) => {
-        try {
-            if (!selectedTemplateId) {
-                toast({
-                    title: 'Error',
-                    description: 'Please select an email template',
-                    variant: 'default',
-                });
-                return;
-            }
-
-            setIsSending(true);
-
-            const rowData = rows.map((row: any) => {
-                return {
-                    id: row.original.id,
-                    firstName: row.original.firstName,
-                    lastName: row.original.lastName,
-                    email: row.original.email,
-                    pendingStatus: row.original.pendingStatus,
-                    currentStatus: row.original.currentStatus,
-                };
-            });
-
-            let successCount = 0;
-            let failureCount = 0;
-            let statusUpdateCount = 0;
-
-            for (let i = 0; i < rowData.length; i++) {
-                try {
-                    // Send email
-                    await sendEmail.mutateAsync({
-                        templateId: selectedTemplateId,
-                        user: {
-                            id: rowData[i].id,
-                            email: rowData[i].email,
-                            firstName: rowData[i].firstName,
-                            lastName: rowData[i].lastName,
-                        },
-                    });
-
-                    const status = rowData[i].pendingStatus;
-
-                    if (
-                        status !== 'N/A' &&
-                        rowData[i].currentStatus !== 'Accepted'
-                    ) {
-                        await updateApplicationStatus.mutateAsync({
-                            userId: rowData[i].id,
-                            hackathonId: hackathon?.id!,
-                            status: status,
-                        });
-                        statusUpdateCount++;
-                    }
-
-                    successCount++;
-                } catch (error) {
-                    console.error(
-                        `Error sending email to ${rowData[i].email}:`,
-                        error
-                    );
-                    failureCount++;
-                }
-            }
-
-            if (successCount > 0) {
-                toast({
-                    title: 'Success',
-                    description: `${successCount} email${successCount !== 1 ? 's' : ''} sent successfully${failureCount > 0 ? ` (${failureCount} failed)` : ''}${statusUpdateCount > 0 ? ` and ${statusUpdateCount} status${statusUpdateCount !== 1 ? 'es' : ''} updated` : ''}`,
-                    className:
-                        'bg-neutral-900 text-white border-neutral-700/18',
-                });
-
-                applicationData.refetch();
-            } else if (failureCount > 0) {
-                toast({
-                    title: 'Error',
-                    description: `Failed to send ${failureCount} email${failureCount !== 1 ? 's' : ''}. Check console for details.`,
-                    variant: 'default',
-                });
-            }
-
-            setIsEmailPopupOpen(false);
-            setIsSending(false);
-        } catch (error) {
-            console.error('Error in email sending process:', error);
-            toast({
-                title: 'Error',
-                description:
-                    'Failed to send emails. Check console for details.',
-                variant: 'default',
-            });
-            setIsSending(false);
-        }
-    };
-
-    const hackathon = useAtomValue(hackathonAtom);
-
-    // Get data from DB
-    const applicationData = trpc.applications.getApplications.useQuery({
-        hackathonId: hackathon?.id!,
-        maxResult: 2000,
-    });
-
-    const applicationDataMap = useMemo(() => {
-        const map = new Map<number, ApplicationWithTeamInfo>();
-        if (!applicationData.data) {
-            return map;
-        }
-
-        for (const appData of applicationData.data) {
-            map.set(appData.userId, appData);
-        }
-
-        return map;
-    }, [applicationData]);
-
     // Data state
-    const [data, setData] = useState<Applicant[]>([]);
-
-    //Change data state on update of DB
-    useEffect(() => {
-        if (applicationData.data) {
-            const transformed = transformResponse(applicationData.data);
-            setData(transformed);
-        }
-    }, [applicationData.data]);
-
-    // Filters and sorting
-    const [globalFilter, setGlobalFilter] = useState<string>('');
-    const [sorting, setSorting] = useState<SortingState>([
-        // sort by people with a team first
-        { id: 'teamName', desc: true },
-    ]);
-    const [rowSelection, setRowSelection] = useState({});
+    //const data: Applicant[] = transformResponse(applications);
 
     const checkedInInfoColumns: ColumnDef<Applicant>[] =
-        data[0]?.checkIns?.map(({ eventTitle, checkedIn }, i) => {
+        data[0]?.checkIns?.map(({ eventTitle, checkedIn, eventId }) => {
             return {
                 accessorFn: () => (checkedIn ? 'Yes' : 'No'),
-                header: eventTitle,
-                size: 100,
+                header: `${eventTitle}?`,
+                enableColumnFilter: true,
+                id: `${eventTitle}-${eventId}`,
+                size: 150,
             };
         }) ?? [];
 
@@ -288,7 +168,7 @@ export default function ReviewApplicationsTable({
             size: 50,
         },
         {
-            id: 'teamName',
+            // id: 'teamName',
             accessorKey: 'teamName',
             header: 'Team Name',
             size: 200,
@@ -315,7 +195,8 @@ export default function ReviewApplicationsTable({
                     <span
                         className={`rounded-md px-3 py-0.5 text-xs ${
                             value === 'Accepted' ||
-                            value === 'Accepted - Pending Payment'
+                            value === 'Accepted - Pending Payment' ||
+                            value === 'Accepted - RSVP to Confirm'
                                 ? 'bg-success-950 text-success-300'
                                 : value === 'Wait List'
                                   ? 'bg-yellow-950 text-yellow-300'
@@ -330,6 +211,7 @@ export default function ReviewApplicationsTable({
             },
             size: 200,
             minSize: 200,
+            enableColumnFilter: true,
         },
         {
             accessorKey: 'pendingStatus',
@@ -340,7 +222,8 @@ export default function ReviewApplicationsTable({
                     <span
                         className={`rounded-md px-3 py-0.5 text-xs ${
                             value === 'Accepted' ||
-                            value === 'Accepted - Pending Payment'
+                            value === 'Accepted - Pending Payment' ||
+                            value === 'Accepted - RSVP to Confirm'
                                 ? 'bg-success-950 text-success-300'
                                 : value === 'Wait List'
                                   ? 'bg-yellow-950 text-yellow-300'
@@ -355,6 +238,7 @@ export default function ReviewApplicationsTable({
             },
             size: 150,
             minSize: 150,
+            enableColumnFilter: true,
         },
         {
             accessorKey: 'applicationDate',
@@ -418,6 +302,7 @@ export default function ReviewApplicationsTable({
             header: 'Dietary Restrictions',
             size: 200,
             minSize: 150,
+            filterFn: 'arrIncludes',
             cell: (info) => {
                 const value = info.getValue();
                 return Array.isArray(value) ? value.join(', ') : value || 'N/A';
@@ -434,8 +319,11 @@ export default function ReviewApplicationsTable({
             header: 'Resume',
             size: 200,
             minSize: 150,
+            enableGlobalFilter: false,
+            enableColumnFilter: false,
             cell: (info) => {
-                const url = info.getValue() as string | undefined;
+                const url: string = ((info.getValue() as string[]) ?? [''])[0];
+
                 return url ? (
                     <a
                         href={url}
@@ -453,14 +341,320 @@ export default function ReviewApplicationsTable({
         ...checkedInInfoColumns,
     ];
 
+    return (
+        <MyTable
+            applicationCount={applicationCount}
+            applicationDataMap={applicationDataMap}
+            data={data}
+            defaultColumns={defaultColumns}
+            emailTemplates={emailTemplates}
+            templatesLoading={templatesLoading}
+            //toggleSideCard={toggleSideCard}
+            fetchNextPage={fetchNextPage}
+            onRowClick={onRowClick}
+            hackathonId={hackathonId}
+        />
+    );
+}
+
+function getStatusCounts(applications: Applicant[]) {
+    const counts: Record<ApplicationStatus, number> = {
+        'N/A': 0,
+        Accepted: 0,
+        Declined: 0,
+        'Awaiting Review': 0,
+        'Wait List': 0,
+        Withdrawn: 0,
+        'Accepted - Pending Payment': 0,
+        'Accepted - RSVP to Confirm': 0,
+    };
+
+    for (const app of applications) {
+        const status = app.currentStatus as ApplicationStatus;
+        if (counts[status] !== undefined) {
+            counts[status]++;
+        } else {
+            counts['N/A']++;
+        }
+    }
+
+    return counts;
+}
+// Put this outside of ReviewApplicationsTable cuz updating table state keeps
+// infinte loop of fetching data, and updating table state
+function MyTable({
+    applicationCount,
+    data,
+    defaultColumns,
+    emailTemplates,
+    templatesLoading,
+    //toggleSideCard,
+    applicationDataMap,
+    fetchNextPage,
+    onRowClick,
+    hackathonId,
+}: {
+    applicationCount: number;
+    data: Applicant[];
+    defaultColumns: ColumnDef<Applicant>[];
+    emailTemplates?: any[];
+    templatesLoading: boolean;
+    //toggleSideCard: () => void;
+    applicationDataMap: Map<number, ApplicationWithTeamInfo>;
+    fetchNextPage: () => Promise<void>;
+    onRowClick?: (app: Applicant, idx: number) => void;
+    hackathonId: number;
+}) {
+    //const hackathon = useAtomValue(hackathonAtom);
+    const utils = trpc.useUtils();
+
+    const setSideCardInfo = useSetAtom(sideCardAtomSJ);
+
+    const sendEmail = trpc.emails.sendEmail.useMutation();
+    const [isEmailPopupOpen, setIsEmailPopupOpen] = useState(false);
+    const [isSending, setIsSending] = useState(false);
+    const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(
+        null
+    );
+    const { toast } = useToast();
+
+    const statusCounts = useMemo(() => getStatusCounts(data), [data]);
+
+    const toggleEmailPopup = () => {
+        setIsEmailPopupOpen(!isEmailPopupOpen);
+    };
+
+    const batchUpdateApplicationStatus =
+        trpc.applications.updateApplicationBatch.useMutation({
+            onSuccess: async (updatedEntries) => {
+                // https://github.com/vercel/next.js/discussions/81503
+                // Cancel outgoing fetches
+                await utils.applications.getApplications.cancel();
+
+                const userIdToUpdatedEntries = new Map(
+                    updatedEntries.map((entry) => [entry.userId, entry])
+                );
+
+                console.debug('Updating table with updated entry');
+
+                utils.applications.getApplications.setInfiniteData(
+                    {
+                        hackathonId,
+                    },
+                    (old) => {
+                        if (!old) {
+                            return {
+                                pageParams: [],
+                                pages: [],
+                            };
+                        }
+
+                        return {
+                            ...old,
+                            pages: old.pages.map((page) => {
+                                return {
+                                    ...page,
+                                    applications: page.applications.map(
+                                        (application) => {
+                                            if (
+                                                !userIdToUpdatedEntries.has(
+                                                    application.userId
+                                                )
+                                            ) {
+                                                return application;
+                                            }
+
+                                            const updatedEntry =
+                                                userIdToUpdatedEntries.get(
+                                                    application.userId
+                                                )!;
+
+                                            return {
+                                                ...application,
+                                                currentStatus:
+                                                    updatedEntry.currentStatus,
+                                                pendingStatus:
+                                                    updatedEntry.pendingStatus,
+                                            };
+                                        }
+                                    ),
+                                };
+                            }),
+                        };
+                    }
+                );
+            },
+        });
+
+    const batchUpdateApplicants = async (
+        rows: Row<Applicant>[],
+        {
+            pendingStatus,
+            status,
+        }: { status?: StatusEnum; pendingStatus?: StatusEnum }
+    ) => {
+        const ids = rows.map((row) => row.original.id);
+
+        if (ids.length === 0) {
+            console.debug(
+                `No user ids to update status pendingStatus=${pendingStatus} status=${status}`
+            );
+            return;
+        }
+
+        console.debug(
+            `Setting Applications pendingStatus=${pendingStatus}, status=${status}`
+        );
+
+        await batchUpdateApplicationStatus.mutateAsync({
+            hackathonId,
+            userIds: ids,
+            pendingStatus,
+            status,
+        });
+    };
+
+    //sends emails to selected users
+    const handleSendingEmails = async (rows: Row<Applicant>[]) => {
+        try {
+            if (!selectedTemplateId) {
+                toast({
+                    title: 'Error',
+                    description: 'Please select an email template',
+                    variant: 'default',
+                });
+                return;
+            }
+
+            setIsSending(true);
+
+            const rowData = rows.map((row) => ({
+                id: row.original.id,
+                firstName: row.original.firstName,
+                lastName: row.original.lastName,
+                email: row.original.email,
+                pendingStatus: row.original.pendingStatus,
+                currentStatus: row.original.currentStatus,
+            }));
+
+            let successCount = 0;
+            let failureCount = 0;
+            let statusUpdateCount = 0;
+
+            const updateApplicationStatusInfos: {
+                id: number;
+                status: StatusEnum;
+            }[] = [];
+
+            for (let i = 0; i < rowData.length; i++) {
+                try {
+                    // Send email
+                    await sendEmail.mutateAsync({
+                        templateId: selectedTemplateId,
+                        user: {
+                            id: rowData[i].id,
+                            email: rowData[i].email,
+                            firstName: rowData[i].firstName,
+                            lastName: rowData[i].lastName,
+                        },
+                    });
+
+                    const status = rowData[i].pendingStatus;
+
+                    if (
+                        status !== 'N/A' &&
+                        rowData[i].currentStatus !== 'Accepted'
+                    ) {
+                        updateApplicationStatusInfos.push({
+                            id: rowData[i].id,
+                            status: status as StatusEnum,
+                        });
+                    }
+
+                    successCount++;
+                } catch (error) {
+                    console.error(
+                        `Error sending email to ${rowData[i].email}:`,
+                        error
+                    );
+                    failureCount++;
+                }
+            }
+
+            const statusToIds = Object.groupBy(
+                updateApplicationStatusInfos,
+                ({ status }) => status
+            );
+
+            await Promise.all(
+                Object.entries(statusToIds).map(async ([status, items]) => {
+                    const userIds = items.map(({ id }) => id);
+
+                    console.debug(`Updating status to pendingStatus ${status}`);
+
+                    try {
+                        await batchUpdateApplicationStatus.mutateAsync({
+                            userIds,
+                            hackathonId,
+                            status: status as StatusEnum,
+                        });
+                    } catch (error) {
+                        console.error(error);
+
+                        console.error(
+                            `failed userIds: [${userIds.join(', ')}]`
+                        );
+
+                        toast({
+                            title: 'Error',
+                            description: `Failed to update status to ${status}`,
+                        });
+                    }
+                })
+            );
+
+            if (successCount > 0) {
+                toast({
+                    title: 'Success',
+                    description: `${successCount} email${successCount !== 1 ? 's' : ''} sent successfully${failureCount > 0 ? ` (${failureCount} failed)` : ''}${statusUpdateCount > 0 ? ` and ${statusUpdateCount} status${statusUpdateCount !== 1 ? 'es' : ''} updated` : ''}`,
+                    className:
+                        'bg-neutral-900 text-white border-neutral-700/18',
+                });
+
+                // applicationData.refetch();
+            } else if (failureCount > 0) {
+                toast({
+                    title: 'Error',
+                    description: `Failed to send ${failureCount} email${failureCount !== 1 ? 's' : ''}. Check console for details.`,
+                    variant: 'default',
+                });
+            }
+
+            setIsEmailPopupOpen(false);
+            setIsSending(false);
+        } catch (error) {
+            console.error('Error in email sending process:', error);
+            toast({
+                title: 'Error',
+                description: 'Failed to send emails.',
+            });
+            setIsSending(false);
+        }
+    };
+
+    const [globalFilter, setGlobalFilter] = useState<string>('');
+    const [sorting, setSorting] = useState<SortingState>([]);
+    const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+    const [pagination, setPagination] = useState<PaginationState>({
+        pageSize: parseInt(localStorage.getItem('pagesize') ?? '200'),
+        pageIndex: parseInt(localStorage.getItem('pageindex') ?? '0'),
+    });
+
     const table = useReactTable({
         data,
         columns: defaultColumns,
-        state: {
-            globalFilter,
-            sorting,
-            rowSelection,
-        },
+        state: { globalFilter, sorting, rowSelection, pagination },
         columnResizeMode: 'onChange',
         enableColumnResizing: true,
         getCoreRowModel: getCoreRowModel(),
@@ -471,29 +665,25 @@ export default function ReviewApplicationsTable({
         onGlobalFilterChange: setGlobalFilter,
         onSortingChange: setSorting,
         onRowSelectionChange: setRowSelection,
+        onPaginationChange: setPagination,
+        autoResetPageIndex: false,
     });
 
-    const [iniload, setIniload] = useState(true);
     useEffect(() => {
-        if (!iniload || data.length === 0) {
-            return;
-        }
-        // TODO remove this jank
-        if (localStorage.getItem('pagesize')) {
-            table.setPageSize(parseInt(localStorage.getItem('pagesize')!));
-        }
-        if (localStorage.getItem('pageindex')) {
-            table.setPageIndex(parseInt(localStorage.getItem('pageindex')!));
-        }
-        setIniload(false);
-    }, [data, iniload]);
+        localStorage.setItem('pagesize', `${pagination.pageSize}`);
+    }, [pagination.pageSize]);
 
-    const csvConfig = mkConfig({
-        fieldSeparator: ',',
-        filename: 'Data',
-        decimalSeparator: '.',
-        useKeysAsHeaders: true,
-    });
+    useEffect(() => {
+        localStorage.setItem('pageindex', `${pagination.pageIndex}`);
+    }, [pagination.pageIndex]);
+
+    useEffect(() => {
+        (async () => {
+            if (table.getPageCount() - (pagination.pageIndex + 1) <= 1) {
+                await fetchNextPage();
+            }
+        })();
+    }, [table.getPageCount(), pagination.pageIndex, fetchNextPage, table]);
 
     const exportExcel = () => {
         const selectedRows = table.getSelectedRowModel().rows;
@@ -501,10 +691,14 @@ export default function ReviewApplicationsTable({
             const { applicationDate, checkIns, ...rest } = original;
             return {
                 ...rest,
-                haveHackathonExperience:
-                    original.haveHackathonExperience?.join(', '),
-                howHeardAbout: original.howHeardAbout?.join(', '),
-                dietaryRestrictions: original.dietaryRestrictions?.join(', '),
+                applicationDate: applicationDate.toString(),
+                howHeardAbout: original.howHeardAbout?.join(', ') || '',
+                dietaryRestrictions:
+                    original.dietaryRestrictions?.join(', ') || '',
+                resume: original.resume?.join(', ') || '',
+                members: Array.isArray(original.members)
+                    ? original.members.join(', ')
+                    : '',
             };
         });
 
@@ -519,25 +713,21 @@ export default function ReviewApplicationsTable({
         download(csvConfig)(csv);
     };
 
-    if (applicationData.isLoading) {
-        return (
-            <div className="flex h-full items-center justify-center">
-                <p>Loading data...</p>
-            </div>
-        );
-    }
-
-    if (applicationData.isError) {
-        return (
-            <div className="flex h-full items-center justify-center">
-                <p>Error fetching data: {applicationData.error.message}</p>
-            </div>
-        );
-    }
-
     return (
         <div className="overflow-hidden">
-            {/* Global Search */}
+            {/* Status Summary */}
+            <div className="flex flex-wrap gap-3 p-4 text-sm text-white">
+                {APPLICATION_STATUS_ENUM.map((status: ApplicationStatus) => (
+                    <div
+                        key={status}
+                        className="rounded-md bg-neutral-800 px-3 py-2"
+                    >
+                        <span className="font-medium">{status}:</span>{' '}
+                        {statusCounts[status]}
+                    </div>
+                ))}
+            </div>
+
             <div className="flex justify-center gap-3 p-4">
                 <Input
                     type="text"
@@ -557,65 +747,122 @@ export default function ReviewApplicationsTable({
                     >
                         <thead className="bg-neutral-900 whitespace-nowrap text-gray-200">
                             {table.getHeaderGroups().map((headerGroup) => (
-                                <tr key={headerGroup.id}>
-                                    {headerGroup.headers.map(
-                                        (header, index) => (
-                                            <th
-                                                key={header.id}
-                                                colSpan={header.colSpan}
-                                                style={{
-                                                    width: header.getSize(),
-                                                    minWidth:
-                                                        header.column.columnDef
-                                                            .minSize,
-                                                }}
-                                                className={`relative px-4 py-4 text-sm ${
-                                                    index === 0
-                                                        ? 'sticky left-0 z-20 bg-neutral-900' // First column
-                                                        : index === 1
-                                                          ? 'sticky left-[50px] z-20 bg-neutral-900' // Second column
-                                                          : ''
-                                                }`}
-                                            >
-                                                {header.isPlaceholder
-                                                    ? null
-                                                    : flexRender(
-                                                          header.column
-                                                              .columnDef.header,
-                                                          header.getContext()
-                                                      )}
-                                                {header.column.getCanResize() && (
-                                                    <div
-                                                        onMouseDown={header.getResizeHandler()}
-                                                        onTouchStart={header.getResizeHandler()}
-                                                        className={`absolute top-0 right-0 bottom-0 w-2 cursor-col-resize ${
-                                                            header.column.getIsResizing()
-                                                                ? 'bg-gray-500'
-                                                                : ''
-                                                        }`}
-                                                        style={{
-                                                            zIndex: 50,
-                                                        }}
-                                                    ></div>
-                                                )}
-                                            </th>
-                                        )
-                                    )}
-                                </tr>
+                                <Fragment key={headerGroup.id}>
+                                    <tr>
+                                        {headerGroup.headers.map(
+                                            (header, index) => (
+                                                <th
+                                                    key={header.id}
+                                                    colSpan={header.colSpan}
+                                                    style={{
+                                                        width: header.getSize(),
+                                                        minWidth:
+                                                            header.column
+                                                                .columnDef
+                                                                .minSize,
+                                                    }}
+                                                    className={`relative overflow-hidden px-4 py-4 text-sm overflow-ellipsis ${
+                                                        index === 0
+                                                            ? 'sticky left-0 z-20 bg-neutral-900' // First column
+                                                            : index === 1
+                                                              ? 'sticky left-[50px] z-20 bg-neutral-900' // Second column
+                                                              : ''
+                                                    }`}
+                                                    onClick={
+                                                        header.column.getCanMultiSort()
+                                                            ? header.column.getToggleSortingHandler()
+                                                            : undefined
+                                                    }
+                                                >
+                                                    {header.isPlaceholder
+                                                        ? null
+                                                        : flexRender(
+                                                              header.column
+                                                                  .columnDef
+                                                                  .header,
+                                                              header.getContext()
+                                                          )}
+                                                    {header.column.getCanSort() && (
+                                                        <span>
+                                                            {header.column.getIsSorted() ===
+                                                                'asc' && ' ▲'}
+                                                            {header.column.getIsSorted() ===
+                                                                'desc' && ' ▼'}
+                                                            {header.column.getIsSorted() ===
+                                                                false && ' -'}
+                                                        </span>
+                                                    )}
+                                                    {header.column.getCanResize() && (
+                                                        <div
+                                                            onMouseDown={header.getResizeHandler()}
+                                                            onTouchStart={header.getResizeHandler()}
+                                                            className={`absolute top-0 right-0 bottom-0 w-2 cursor-col-resize ${
+                                                                header.column.getIsResizing()
+                                                                    ? 'bg-gray-500'
+                                                                    : ''
+                                                            }`}
+                                                            style={{
+                                                                zIndex: 50,
+                                                            }}
+                                                        ></div>
+                                                    )}
+                                                </th>
+                                            )
+                                        )}
+                                    </tr>
+                                    <tr>
+                                        {headerGroup.headers.map(
+                                            (header, index) => (
+                                                <th
+                                                    key={header.id}
+                                                    style={{
+                                                        width: header.getSize(),
+                                                        minWidth:
+                                                            header.column
+                                                                .columnDef
+                                                                .minSize,
+                                                    }}
+                                                    className={`relative px-4 py-2 text-sm ${
+                                                        index === 0
+                                                            ? 'sticky left-0 z-20 bg-neutral-900'
+                                                            : index === 1
+                                                              ? 'sticky left-[50px] z-20 bg-neutral-900'
+                                                              : ''
+                                                    }`}
+                                                >
+                                                    {header.column.getCanFilter() ? (
+                                                        <FilterColumn
+                                                            column={
+                                                                header.column
+                                                            }
+                                                        />
+                                                    ) : null}
+                                                </th>
+                                            )
+                                        )}
+                                    </tr>
+                                </Fragment>
                             ))}
                         </thead>
+
                         <tbody>
                             {table.getRowModel().rows.map((row) => (
                                 <Fragment key={row.id}>
                                     <tr
                                         className="cursor-pointer hover:bg-gray-800"
                                         onClick={() => {
-                                            toggleSideCard();
+                                            //toggleSideCard();
                                             setSideCardInfo(
                                                 applicationDataMap.get(
                                                     row.original.id
                                                 )
                                             );
+                                            if (onRowClick) {
+                                                onRowClick(
+                                                    row.original,
+                                                    row.index
+                                                );
+                                            }
                                         }}
                                     >
                                         {row
@@ -669,7 +916,8 @@ export default function ReviewApplicationsTable({
                         <div className="text-sm text-white">
                             {Object.keys(rowSelection).length} of{' '}
                             {table.getPreFilteredRowModel().rows.length} Rows
-                            Selected
+                            Selected. Total applications count:{' '}
+                            {applicationCount}
                         </div>
 
                         <div className="flex flex-row items-center gap-1">
@@ -678,10 +926,6 @@ export default function ReviewApplicationsTable({
                                 value={table.getState().pagination.pageSize}
                                 onChange={(e) => {
                                     table.setPageSize(parseInt(e.target.value));
-                                    localStorage.setItem(
-                                        'pagesize',
-                                        e.target.value
-                                    );
                                 }}
                                 className="rounded-md bg-neutral-800/60 px-4 py-2 text-sm text-white"
                             >
@@ -726,10 +970,6 @@ export default function ReviewApplicationsTable({
                                     className=""
                                     onClick={() => {
                                         table.setPageIndex(0);
-                                        localStorage.setItem(
-                                            'pageindex',
-                                            `${0}`
-                                        );
                                     }}
                                     disabled={!table.getCanPreviousPage()}
                                 >
@@ -739,10 +979,6 @@ export default function ReviewApplicationsTable({
                                     className=""
                                     onClick={() => {
                                         table.previousPage();
-                                        localStorage.setItem(
-                                            'pageindex',
-                                            `${table.getState().pagination.pageIndex - 1}`
-                                        );
                                     }}
                                     disabled={!table.getCanPreviousPage()}
                                 >
@@ -752,10 +988,6 @@ export default function ReviewApplicationsTable({
                                     className=""
                                     onClick={() => {
                                         table.nextPage();
-                                        localStorage.setItem(
-                                            'pageindex',
-                                            `${table.getState().pagination.pageIndex + 1}`
-                                        );
                                     }}
                                     disabled={!table.getCanNextPage()}
                                 >
@@ -766,10 +998,6 @@ export default function ReviewApplicationsTable({
                                     onClick={() => {
                                         table.setPageIndex(
                                             table.getPageCount() - 1
-                                        );
-                                        localStorage.setItem(
-                                            'pageindex',
-                                            `${table.getPageCount() - 1}`
                                         );
                                     }}
                                     disabled={!table.getCanNextPage()}
@@ -782,12 +1010,69 @@ export default function ReviewApplicationsTable({
                 </div>
             </div>
 
-            <div className="flex justify-end gap-3 p-4">
+            <div className="flex flex-wrap justify-end gap-3 p-4">
+                <button
+                    className={`flex flex-row items-center justify-center gap-2 rounded-md px-4 py-2 text-sm whitespace-nowrap ${
+                        Object.keys(rowSelection).length === 0
+                            ? 'cursor-not-allowed bg-neutral-500/18 text-white/18'
+                            : 'bg-success-700 text-white'
+                    }`}
+                    type="button"
+                    onClick={() =>
+                        batchUpdateApplicants(
+                            table.getSelectedRowModel().rows,
+                            {
+                                pendingStatus: 'Accepted - RSVP to Confirm',
+                                status: 'Accepted - RSVP to Confirm',
+                            }
+                        )
+                    }
+                    disabled={Object.keys(rowSelection).length === 0}
+                >
+                    Accept Selected Entries
+                </button>
+
+                <button
+                    className={`flex flex-row items-center justify-center gap-2 rounded-md px-4 py-2 text-sm whitespace-nowrap ${
+                        Object.keys(rowSelection).length === 0
+                            ? 'cursor-not-allowed bg-neutral-500/18 text-white/18'
+                            : 'bg-danger-700 text-white'
+                    }`}
+                    type="button"
+                    onClick={() =>
+                        batchUpdateApplicants(
+                            table.getSelectedRowModel().rows,
+                            { pendingStatus: 'Declined' }
+                        )
+                    }
+                    disabled={Object.keys(rowSelection).length === 0}
+                >
+                    Reject Selected Entries
+                </button>
+
                 <button
                     className={`flex flex-row items-center justify-center gap-2 rounded-md px-4 py-2 text-sm whitespace-nowrap ${
                         Object.keys(rowSelection).length === 0
                             ? 'cursor-not-allowed bg-neutral-500/18 text-white/18'
                             : 'bg-neutral-700 text-white'
+                    }`}
+                    type="button"
+                    onClick={() =>
+                        batchUpdateApplicants(
+                            table.getSelectedRowModel().rows,
+                            { pendingStatus: 'Wait List' }
+                        )
+                    }
+                    disabled={Object.keys(rowSelection).length === 0}
+                >
+                    Waitlist Selected Entries
+                </button>
+
+                <button
+                    className={`flex flex-row items-center justify-center gap-2 rounded-md px-4 py-2 text-sm whitespace-nowrap ${
+                        Object.keys(rowSelection).length === 0
+                            ? 'cursor-not-allowed bg-neutral-500/18 text-white/18'
+                            : 'bg-brand-700 text-white'
                     }`}
                     type="button"
                     onClick={() => toggleEmailPopup()}
@@ -957,85 +1242,104 @@ function IndeterminateCheckbox({
 
 // Function to transform the data received from DB to the json format the table expects
 function transformResponse(response: any[]) {
-    return response.map((item) => {
-        const {
-            '1': firstName,
-            '2': lastName,
-            '3': pronouns,
-            '4': email,
-            '5': haveHackathonExperience,
-            '6': howHeardAbout,
-            '7': dietaryRestrictions,
-            '8': tShirtSize,
-            '9': resume,
-            '10': discord,
-            '11': instagram,
-            '12': github,
-            '13': linkedin,
-            '14': portfolio,
-            '15': otherLinks,
-            '16': school,
-            '17': background,
-            '18': yearOfStudy,
-            '19': major,
-            '20': excitement,
-            '21': problemOrSkill,
-            '22': dreamProject,
-            '23': shareResume,
-            '24': acceptMLH,
-            '25': acceptSFSS,
-            '26': acceptEmails,
-            '27': authorizeMLH,
-            '28': photoRelease,
-        } = item.response as Record<string, any>;
+    return response
+        .map((item) => {
+            const {
+                '1': firstName,
+                '2': lastName,
+                '3': pronouns,
+                '4': email,
+                '5': haveHackathonExperience,
+                '6': howHeardAbout,
+                '7': dietaryRestrictions,
+                '8': tShirtSize,
+                '9': resume,
+                '10': discord,
+                '11': instagram,
+                '12': github,
+                '13': linkedin,
+                '14': portfolio,
+                '15': otherLinks,
+                '16': school,
+                '17': background,
+                '18': yearOfStudy,
+                '19': major,
+                '20': excitement,
+                '21': problemOrSkill,
+                '22': dreamProject,
+                '23': shareResume,
+                '24': acceptMLH,
+                '25': acceptSFSS,
+                '26': acceptEmails,
+                '27': authorizeMLH,
+                '28': photoRelease,
+            } = item.response as Record<string, any>;
 
-        const members = item.members;
-        const checkIns = item.checkIns;
+            const members = item.members;
+            const checkIns = item.checkIns;
 
-        const teamName = item.teamName
-            ? `${item.teamName} (${item.teamId})`
-            : null;
+            const teamName = item.teamName
+                ? `${item.teamName} (${item.teamId})`
+                : '';
 
-        return {
-            id: Number(item.userId),
-            teamName,
-            currentStatus: item.currentStatus,
-            pendingStatus: item.pendingStatus,
-            applicationDate: new Date(item.createdDate),
-            dietaryRestrictions: Array.isArray(dietaryRestrictions)
-                ? dietaryRestrictions
-                : [dietaryRestrictions],
-            howHeardAbout: Array.isArray(howHeardAbout)
-                ? howHeardAbout
-                : [howHeardAbout],
-            members,
-            firstName,
-            lastName,
-            pronouns,
-            email,
-            haveHackathonExperience,
-            tShirtSize,
-            resume,
-            discord,
-            instagram,
-            github,
-            linkedin,
-            portfolio,
-            otherLinks,
-            school,
-            background,
-            yearOfStudy,
-            major,
-            excitement,
-            problemOrSkill,
-            dreamProject,
-            shareResume,
-            acceptMLH,
-            acceptSFSS,
-            acceptEmails,
-            authorizeMLH,
-            photoRelease,
-            checkIns,
-        };
-    });
+            return {
+                id: Number(item.userId),
+                teamName,
+                currentStatus: item.currentStatus,
+                pendingStatus: item.pendingStatus,
+                applicationDate: new Date(item.createdDate),
+                dietaryRestrictions: Array.isArray(dietaryRestrictions)
+                    ? dietaryRestrictions
+                    : [dietaryRestrictions],
+                howHeardAbout: Array.isArray(howHeardAbout)
+                    ? howHeardAbout
+                    : [howHeardAbout],
+                members,
+                firstName,
+                lastName,
+                pronouns,
+                email,
+                haveHackathonExperience,
+                tShirtSize,
+                resume,
+                discord,
+                instagram,
+                github,
+                linkedin,
+                portfolio,
+                otherLinks,
+                school,
+                background,
+                yearOfStudy,
+                major,
+                excitement,
+                problemOrSkill,
+                dreamProject,
+                shareResume,
+                acceptMLH,
+                acceptSFSS,
+                acceptEmails,
+                authorizeMLH,
+                photoRelease,
+                checkIns,
+            };
+        })
+        .sort((a, b) => {
+            const teamA = a.teamName.toLowerCase();
+            const teamB = b.teamName.toLowerCase();
+
+            if (teamA && teamB) {
+                return teamA.localeCompare(teamB);
+            }
+
+            if (a.teamName) {
+                return -1;
+            }
+
+            if (b.teamName) {
+                return 1;
+            }
+
+            return 0;
+        });
 }

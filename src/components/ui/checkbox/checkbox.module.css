@@ -19,6 +19,7 @@
     box-sizing: border-box;
 
     cursor: pointer;
+    margin-right: 12px;
 }
 
 .label:hover::before {
@@ -55,7 +56,7 @@
     background-color: var(--background-neutral-secondary);
 
     width: auto;
-    max-width: 400px;
+    max-width: 480px;
 
     color: white;
 }
@@ -80,6 +81,7 @@
 }
 
 .check {
-    appearance: none;
-    margin-right: 12px;
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
 }

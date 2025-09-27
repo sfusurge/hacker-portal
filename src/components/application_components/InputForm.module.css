@@ -55,6 +55,7 @@
 
 .description {
     font-size: 14px;
+    max-width: 480px;
     color: var(--text-secondary);
 }
 

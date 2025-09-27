@@ -68,6 +68,12 @@ export function ClientCalendarPage({
     const [width, height] = useWindowSize();
     const [showSchedule, setShowSchedule] = useState(true);
     const showCalendar = useMemo(() => !showSchedule, [showSchedule]);
+    const eventStarted = useMemo(() => {
+        return (
+            dayjs().isAfter(hackathon.startDate) &&
+            dayjs().isBefore(hackathon.endDate)
+        );
+    }, [hackathon]);
     const isMobile = useMemo(() => width <= 768, [width]);
 
     const [selectedEvent, _] = useAtom(selectedEventAtom);
@@ -79,17 +85,30 @@ export function ClientCalendarPage({
     );
 
     const [weekOffset, setWeekOffset] = useState(0);
+
     function getStartDate() {
         const dayOffset = weekOffset * 7;
         const today = dayjs();
         const firstDay = dayjs(hackathon.startDate);
-        const lastDay = dayjs(hackathon.endDate);
-        if (today.isBefore(firstDay)) {
-            return firstDay.add(dayOffset, 'day');
+        // const lastDay = dayjs(hackathon.endDate);
+        // if (today.isBefore(firstDay)) {
+        //     return firstDay.add(dayOffset, 'day');
+        // }
+
+        // if (today.isBefore(lastDay)) {
+        //     return lastDay.subtract(dayOffset, 'day').subtract(7, 'day');
+        // }
+        let minDate = dayjs(new Date(2099, 1, 1));
+        for (const e of events) {
+            if (e.startTime.isAfter(today) && e.startTime.isBefore(minDate)) {
+                minDate = e.startTime;
+            }
         }
 
-        if (today.isBefore(lastDay)) {
-            return lastDay.subtract(dayOffset, 'day').subtract(7, 'day');
+        if (today.isBefore(firstDay)) {
+            return minDate.startOf('day').add(dayOffset, 'day');
+        } else {
+            return firstDay.startOf('day').add(dayOffset, 'day');
         }
 
         return today.add(dayOffset, 'day');
@@ -208,8 +227,8 @@ export function ClientCalendarPage({
                     {/* DESKTOP */}
                     {!isMobile && showSchedule && (
                         <DaySchedule
-                            days={7}
-                            minColumnWidth={250}
+                            days={eventStarted ? 2 : 7}
+                            minColumnWidth={200}
                             startDate={getStartDate()}
                             events={events}
                         />

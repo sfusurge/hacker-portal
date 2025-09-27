@@ -12,6 +12,7 @@
     height: 100%;
     /* max-height: 100%; */
 }
+
 .scheduleRoot {
     height: 100%;
     width: 100%;
@@ -121,12 +122,21 @@
     /* top to be controlled by js */
     top: calc(var(--top) + var(--margin));
     height: calc(var(--height) - var(--margin) * 2);
-    width: calc(100% - var(--margin) * 2);
+
+    width: fit-content;
+    max-width: calc(100% - var(--margin) * 2);
 
     padding: 0.2rem 0.5rem;
     background-color: var(--neutral-800);
 
-    transition: filter 400ms ease-out;
+    transition: all 250ms ease-out;
+}
+
+.dayEvent:hover,
+.dayEvent:active,
+.dayEvent.active {
+    max-width: calc(var(--colCount) * 100%);
+    z-index: 10;
 }
 
 .dayEvent::after {
@@ -164,6 +174,7 @@
 .dayEvent:hover {
     filter: brightness(1.2);
 }
+
 .dayEvent:active {
     filter: brightness(0.9);
 }

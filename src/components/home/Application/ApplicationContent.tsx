@@ -20,11 +20,7 @@ export function CountdownContent() {
     dayjs.extend(utc);
     dayjs.extend(timezone);
 
-    const cutoffTime = dayjs
-        .utc('2025-09-21 00:00:00')
-        .utcOffset(-8)
-        .startOf('day')
-        .add(1, 'hour');
+    const cutoffTime = dayjs.tz('2025-09-26 23:59:00', 'America/Los_Angeles');
     const overdue = useMemo(
         () => currentTime.isAfter(cutoffTime),
         [currentTime]
@@ -71,17 +67,18 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
     return (
         <>
             <div className="flex max-w-full flex-col gap-2 text-start md:pr-0 md:pl-0">
-                <CardTitle className="text-pretty">
+                <CardTitle className="font-inter text-pretty">
                     You&#39;ve been accepted into{' '}
                     {hackathon?.hackathonName ||
                         process.env.NEXT_PUBLIC_CURRENT_EVENT}
                     ! 🥳
                 </CardTitle>
                 <CardDescription className="text-base">
-                    Our team at SFU Surge is excited to offer you acceptance to{' '}
+                    SFU Surge is excited to offer you acceptance to{' '}
                     {hackathon?.hackathonName ||
                         process.env.NEXT_PUBLIC_CURRENT_EVENT}
-                    ! Please RSVP to confirm your attendance.
+                    . Please RSVP to reserve your spot and confirm your
+                    attendance.
                 </CardDescription>
                 <CardDescription>
                     {
@@ -103,15 +100,13 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
                 className="-order-1 max-w-72 md:order-last"
                 alt="Four otters are gathered around a table, reviewing application submissions."
             />
-
-            <Conditional showWhen={isWithdrawPromptOpen}>
-                {userData?.id && (
-                    <WithdrawPrompt
-                        userId={userData.id}
-                        closePrompt={handleCloseWithdrawPrompt}
-                    />
-                )}
-            </Conditional>
+            {userData?.id && (
+                <WithdrawPrompt
+                    isOpen={isWithdrawPromptOpen}
+                    userId={userData.id}
+                    closePrompt={handleCloseWithdrawPrompt}
+                />
+            )}
         </>
     );
 }
@@ -191,14 +186,13 @@ export function AcceptedContent({
                 </section>
             )}
 
-            <Conditional showWhen={isWithdrawPromptOpen}>
-                {userData?.id && (
-                    <WithdrawPrompt
-                        userId={userData.id}
-                        closePrompt={handleCloseWithdrawPrompt}
-                    />
-                )}
-            </Conditional>
+            {userData?.id && (
+                <WithdrawPrompt
+                    isOpen={isWithdrawPromptOpen}
+                    userId={userData.id}
+                    closePrompt={handleCloseWithdrawPrompt}
+                />
+            )}
 
             <div
                 className={`bg-opacity-80 fixed inset-0 z-200 w-full bg-black transition-opacity duration-300 ${isTicketOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
@@ -250,8 +244,12 @@ export function ReviewContent({ userData }: { userData: UserData }) {
 
                 <CardDescription>
                     Your application has been submitted and is being reviewed by
-                    the Surge team. If you&apos;re no longer able to make it to
-                    the event, please{' '}
+                    the Surge team. You will receive an update once the
+                    submission period closes.
+                    <br />
+                    <br />
+                    If you&apos;re no longer able to make it to the event,
+                    please{' '}
                     <button
                         className="inline text-left text-white underline hover:text-white/70"
                         onClick={handleOpenWithdrawPrompt}
@@ -270,14 +268,13 @@ export function ReviewContent({ userData }: { userData: UserData }) {
                 alt="Four otters are gathered around a table, reviewing application submissions."
             />
 
-            <Conditional showWhen={isWithdrawPromptOpen}>
-                {userData?.id && (
-                    <WithdrawPrompt
-                        userId={userData.id}
-                        closePrompt={handleCloseWithdrawPrompt}
-                    />
-                )}
-            </Conditional>
+            {userData?.id && (
+                <WithdrawPrompt
+                    isOpen={isWithdrawPromptOpen}
+                    userId={userData.id}
+                    closePrompt={handleCloseWithdrawPrompt}
+                />
+            )}
         </>
     );
 }
@@ -316,6 +313,7 @@ export function WithdrawnContent() {
         </>
     );
 }
+
 export function WaitlistContent() {
     const hackathon = useAtomValue(hackathonAtom);
 
@@ -344,6 +342,7 @@ export function WaitlistContent() {
         </>
     );
 }
+
 export function RejectedContent() {
     const hackathon = useAtomValue(hackathonAtom);
 

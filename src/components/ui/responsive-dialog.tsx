@@ -40,6 +40,7 @@ interface ResponsiveProps extends BaseProps {
     className?: string;
     asChild?: true;
     hideCloseIcon?: boolean;
+    style?: React.CSSProperties;
 }
 
 const ResponsiveContext = React.createContext<{
@@ -218,13 +219,14 @@ const ResponsiveDialogBody = ({
 const ResponsiveDialogFooter = ({
     className,
     children,
+    style,
     ...props
 }: ResponsiveProps) => {
     const { isDesktop } = useResponsiveContext();
     const FooterComponent = isDesktop ? DialogFooter : DrawerFooter;
 
     return (
-        <FooterComponent className={className} {...props}>
+        <FooterComponent className={className} style={style} {...props}>
             {children}
         </FooterComponent>
     );

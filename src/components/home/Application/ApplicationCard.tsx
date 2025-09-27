@@ -30,6 +30,9 @@ import { UserData } from '@/server/routers/usersRouter';
 import clsx from 'clsx';
 import { useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { Conditional } from '@/lib/Conditional';
+import RsvpPrompt from '@/components/home/Application/RsvpPrompt';
+import WithdrawPrompt from '@/components/home/Application/WithdrawPrompt';
 
 export type AppStatus =
     | 'Not Yet Started'
@@ -42,7 +45,8 @@ export type AppStatus =
     | 'Accepted'
     | 'Withdrawn'
     | 'Loading'
-    | 'Accepted - Pending Payment';
+    | 'Accepted - Pending Payment'
+    | 'Accepted - RSVP to Confirm';
 
 type ApplicationCardProps = {
     userData: UserData;
@@ -64,6 +68,14 @@ export default function ApplicationCard({
     const hackathon = useAtomValue(hackathonAtom);
     const hackathonName = hackathon?.hackathonName || 'Hackathon';
 
+    const [isRSVPPromptOpen, setIsRSVPPromptOpen] = useState(false);
+    const handleOpenRSVPPrompt = () => setIsRSVPPromptOpen(true);
+    const handleCloseRSVPPrompt = () => setIsRSVPPromptOpen(false);
+
+    const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
+
+    const handleOpenWithdrawPrompt = () => setIsWithdrawPromptOpen(true);
+    const handleCloseWithdrawPrompt = () => setIsWithdrawPromptOpen(false);
     useEffect(() => {
         const questionSet = localStorage.getItem('application_response');
         if (questionSet !== null) {
@@ -96,7 +108,8 @@ export default function ApplicationCard({
                     status,
                     hackathonName,
                     image,
-                    handleOpenTicket
+                    handleOpenTicket,
+                    handleOpenRSVPPrompt
                 )}
             </CardHeader>
 
@@ -117,7 +130,22 @@ export default function ApplicationCard({
                 )}
             </CardContent>
 
-            {getCardFooter(status, hackathonName)}
+            {getCardFooter(status, hackathonName, handleOpenRSVPPrompt)}
+            {userData?.id && (
+                <RsvpPrompt
+                    isOpen={isRSVPPromptOpen}
+                    userData={userData}
+                    closePrompt={handleCloseRSVPPrompt}
+                    openWithdrawPrompt={handleOpenWithdrawPrompt}
+                />
+            )}
+            {userData?.id && (
+                <WithdrawPrompt
+                    isOpen={isWithdrawPromptOpen}
+                    userId={userData.id}
+                    closePrompt={handleCloseWithdrawPrompt}
+                />
+            )}
         </Card>
     );
 }
@@ -129,8 +157,11 @@ function determineApplicationStatus(
     questionSetExists?: boolean
 ): AppStatus {
     if (applicationSubmitted && currentStatus) {
-        if (currentStatus === 'Accepted - Pending Payment') {
-            return 'Accepted - Pending Payment';
+        if (
+            currentStatus === 'Accepted - Pending Payment' ||
+            currentStatus === 'Accepted - RSVP to Confirm'
+        ) {
+            return 'Accepted - RSVP to Confirm';
         }
         return currentStatus as AppStatus;
     } else if (questionSetExists) {
@@ -144,7 +175,8 @@ function determineApplicationStatus(
 function getStatusStyleForTitle(status: AppStatus): string {
     switch (status) {
         case 'Accepted - Pending Payment':
-        case 'RSVP':
+        case 'Accepted - RSVP to Confirm':
+            return 'text-brand-400';
         case 'Accepted':
             return 'text-brand-400';
         case 'Withdrawn':
@@ -174,7 +206,8 @@ function getHeaderAction(
     status: AppStatus,
     hackathonName: string,
     image?: string,
-    onOpenTicket?: () => void
+    onOpenTicket?: () => void,
+    onOpenRSVP?: () => void
 ) {
     if (status === 'Accepted' && image && onOpenTicket) {
         return <QRCodeButton onOpen={onOpenTicket} />;
@@ -220,6 +253,17 @@ function getHeaderAction(
                 Click to RSVP
             </Button>
         ),
+        'Accepted - RSVP to Confirm': (
+            <Button
+                size="cozy"
+                variant="brand"
+                hierarchy="primary"
+                className="hidden md:block"
+                onClick={onOpenRSVP}
+            >
+                RSVP now
+            </Button>
+        ),
     };
 
     return headerActions[status as keyof typeof headerActions] || null;
@@ -260,6 +304,8 @@ function getCardContent(
             return <WaitlistContent />;
         case 'Accepted - Pending Payment':
             return <AwaitingRSVPContent userData={userData} />;
+        case 'Accepted - RSVP to Confirm':
+            return <AwaitingRSVPContent userData={userData} />;
         case 'Accepted':
             return (
                 <AcceptedContent
@@ -274,7 +320,11 @@ function getCardContent(
     }
 }
 
-function getCardFooter(status: AppStatus, hackathonName: string) {
+function getCardFooter(
+    status: AppStatus,
+    hackathonName: string,
+    onOpenRSVP?: () => void
+) {
     const footerActions = {
         'Not Yet Started': (
             <Button
@@ -311,6 +361,17 @@ function getCardFooter(status: AppStatus, hackathonName: string) {
                 hierarchy="primary"
                 className="w-full"
                 onClick={() => redirect('/rsvp')}
+            >
+                RSVP to {hackathonName}
+            </Button>
+        ),
+        'Accepted - RSVP to Confirm': (
+            <Button
+                size="cozy"
+                variant="brand"
+                hierarchy="primary"
+                className="w-full"
+                onClick={onOpenRSVP}
             >
                 RSVP to {hackathonName}
             </Button>

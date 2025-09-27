@@ -99,7 +99,7 @@ export const FormTextInput = forwardRef<
                 style={
                     {
                         ...externalStyle,
-                        '--errMsg': `"${errorMsg ?? 'Invalid'}"`,
+                        '--errorMsg': `"${errorMsg ?? 'Invalid'}"`,
                         '--lengthMsg': `"${length}/${props.maxLength}"`,
                     } as CSSProperties
                 }

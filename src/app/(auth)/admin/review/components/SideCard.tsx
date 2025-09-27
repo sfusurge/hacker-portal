@@ -1,11 +1,12 @@
 import { sideCardAtomSJ } from '@/app/(auth)/admin/review/components/ReviewApplicationsTable';
-import { atom, useAtom, useAtomValue, WritableAtom } from 'jotai';
+import { atom, useAtom, useAtomValue, useSetAtom, WritableAtom } from 'jotai';
 import { focusAtom } from 'jotai-optics';
 import style from './SideCard.module.css';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
     InputFormQuestion,
     QuestionMultipleCheckBox,
+    QuestionSchoolName,
 } from '@/components/application_components/types';
 import { CheckBoxInput } from '@/components/application_components/InputFormComponents/CheckboxInput';
 import { NumberInput } from '@/components/application_components/InputFormComponents/NumberInput';
@@ -21,10 +22,17 @@ import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 import { StatusEnum } from '@/db/schema/applications';
 import { trpc } from '@/trpc/client';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { Applicant } from '../page';
+import { TextLinkInput } from '@/components/application_components/InputFormComponents/TextLinkInput';
+import { SchoolNameInput } from '@/components/application_components/InputFormComponents/SchoolNameInput';
 
 export interface SideCardProps {
     visible: boolean;
     onclose: () => void;
+    onPrev: () => void;
+    onNext: () => void;
+    selected?: ApplicationWithTeamInfo | null;
+    onRefresh?: () => void;
 }
 
 const responseAtom = atom(
@@ -51,6 +59,10 @@ const statusAtom = focusAtom(sideCardAtomSJ, (op) =>
 export default function SideCard({
     visible = false,
     onclose: _onclose,
+    onPrev,
+    onNext,
+    selected,
+    onRefresh,
 }: SideCardProps) {
     const responseData = useAtomValue(responseAtom);
     const applicationData = useAtomValue(sideCardAtomSJ);
@@ -61,6 +73,14 @@ export default function SideCard({
     const updateApplication = trpc.applications.updateApplication.useMutation(
         {}
     );
+    const cardId = applicationData?.userId;
+    /*
+    useEffect(() => {
+        if (selected) {
+            setSideCardAtom(selected as unknown as ApplicationWithTeamInfo);
+        }
+    }, [selected, setSideCardAtom]);
+*/
     const utils = trpc.useUtils();
 
     const ready = useMemo(
@@ -85,6 +105,7 @@ export default function SideCard({
                 })
                 .then(() => {
                     utils.applications.getApplications.invalidate();
+                    if (typeof onRefresh === 'function') onRefresh();
                 });
         }
         _onclose();
@@ -140,9 +161,26 @@ export default function SideCard({
                 const numberAtom = getGenericInputAtom(question, dataAtom);
                 return <NumberInput dataAtom={numberAtom} />;
 
+            case 'link':
+                const linkAtom = getGenericInputAtom(question, dataAtom);
+
+                return <TextLinkInput dataAtom={linkAtom} />;
+
+            case 'school-name':
+                const schoolAtom = atom(
+                    (get) => {
+                        return { ...question, selection: get(dataAtom) };
+                    },
+                    (get, set, val: QuestionSchoolName) => {
+                        set(dataAtom, val.selection);
+                    }
+                );
+
+                return <SchoolNameInput dataAtom={schoolAtom} />;
+
             case 'text-line':
-                5;
                 const textLineAtom = getGenericInputAtom(question, dataAtom);
+                // @ts-ignore
                 return <TextLineInput dataAtom={textLineAtom} />;
 
             case 'text-area':
@@ -154,11 +192,13 @@ export default function SideCard({
             case 'multiple-checkbox':
                 const multiCheckboxAtom = atom(
                     (get) => {
-                        const choices = new Set<string>(get(dataAtom));
+                        const choices = new Set<string>(
+                            get(dataAtom).map((v: string) => v.toLowerCase())
+                        );
                         for (const c of question.choices) {
-                            if (choices.has(c.name)) {
+                            if (choices.has(c.data.toLowerCase())) {
                                 c.value = true;
-                                choices.delete(c.name);
+                                choices.delete(c.data);
                             } else {
                                 c.value = false;
                             }
@@ -166,8 +206,12 @@ export default function SideCard({
 
                         if (choices.size > 0) {
                             // some value is not yet comsumed, there must be an 'other value available
-                            question.otherValue = choices.values().next().value;
+                            return {
+                                ...question,
+                                otherValue: choices.values().next().value,
+                            };
                         }
+
                         return question;
                     },
                     (get, set, val: QuestionMultipleCheckBox) => {
@@ -187,7 +231,7 @@ export default function SideCard({
                 return <CheckBoxGroupInput dataAtom={multiCheckboxAtom} />;
 
             default:
-                return <p>Unknown requestion type: {question.type}</p>;
+                return <p>Unknown question type: {question.type}</p>;
         }
     }
 
@@ -199,7 +243,7 @@ export default function SideCard({
         <>
             {ready && <div className={style.background} onClick={onclose} />}
             {ready && (
-                <div className={style.cardContainer}>
+                <div className={style.cardContainer} key={cardId}>
                     {/* title and close button */}
                     <div className={style.titleRow}>
                         <h1 style={{ fontSize: '24px' }}>
@@ -211,16 +255,17 @@ export default function SideCard({
                     </div>
 
                     <div className={style.hor}>
+                        <Button onClick={onPrev}>Prev</Button>
                         <Button
                             className={
-                                status === 'Accepted - Pending Payment'
+                                status === 'Accepted - RSVP to Confirm'
                                     ? style.selectedButton
                                     : ''
                             }
                             onClick={() => {
                                 // TODO This shouldn't be hard coded
                                 // should which ever status in appropreiate for the hackathon. Sparkjam needs payment, but most others won't
-                                setStatus('Accepted - Pending Payment');
+                                setStatus('Accepted - RSVP to Confirm');
                             }}
                             variant={'brand'}
                             hierarchy={'primary'}
@@ -255,6 +300,7 @@ export default function SideCard({
                         >
                             Decline
                         </Button>
+                        <Button onClick={onNext}>Next</Button>
                         <div className="flex flex-col gap-2">
                             <CheckBoxWithLabel
                                 name="Editing"
@@ -262,15 +308,15 @@ export default function SideCard({
                                 onChange={(e) => {
                                     setEditing(e.target.checked);
                                 }}
-                            ></CheckBoxWithLabel>
+                            />
 
                             <CheckBoxWithLabel
-                                name="Current Status"
+                                name="Override Current Status"
                                 checked={updateCurrentStatus}
                                 onChange={(e) => {
                                     setUpdateCurrentStatus(e.target.checked);
                                 }}
-                            ></CheckBoxWithLabel>
+                            />
                         </div>
                     </div>
 
@@ -280,14 +326,21 @@ export default function SideCard({
                         const q = questionTypeMap.get(id);
 
                         if (!q) {
-                            return <p key={id}>Unknown question id: {id}</p>;
+                            return (
+                                <p key={`${cardId}:${id}`}>
+                                    Unknown question id: {id}
+                                </p>
+                            );
                         }
 
                         return (
-                            <div key={id}>
-                                <Label style={{ paddingBottom: '0.5rem' }}>
-                                    {q.title}
-                                </Label>
+                            <div key={`${cardId}:${id}`}>
+                                <div
+                                    className={style.htmlHolder}
+                                    dangerouslySetInnerHTML={{
+                                        __html: q.title ?? '',
+                                    }}
+                                ></div>
                                 {getFieldFromType(id)}
                             </div>
                         );
@@ -295,6 +348,7 @@ export default function SideCard({
 
                     {/* Status change (repeating at both top and bottom of page)*/}
                     <div className={style.hor}>
+                        <Button onClick={onPrev}>Prev</Button>
                         <Button
                             className={
                                 status === 'Accepted - Pending Payment'
@@ -304,7 +358,7 @@ export default function SideCard({
                             onClick={() => {
                                 // TODO This shouldn't be hard coded
                                 // should which ever status in appropreiate for the hackathon. Sparkjam needs payment, but most others won't
-                                setStatus('Accepted - Pending Payment');
+                                setStatus('Accepted - RSVP to Confirm');
                             }}
                             variant={'brand'}
                             hierarchy={'primary'}
@@ -339,6 +393,7 @@ export default function SideCard({
                         >
                             Decline
                         </Button>
+                        <Button onClick={onNext}>Next</Button>
                     </div>
                 </div>
             )}
