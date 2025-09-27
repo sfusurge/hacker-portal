@@ -22,6 +22,7 @@ import { StatusEnum } from '@/db/schema/applications';
 import { trpc } from '@/trpc/client';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { Applicant } from '../page';
+import { TextLinkInput } from '@/components/application_components/InputFormComponents/TextLinkInput';
 
 export interface SideCardProps {
     visible: boolean;
@@ -158,9 +159,14 @@ export default function SideCard({
                 const numberAtom = getGenericInputAtom(question, dataAtom);
                 return <NumberInput dataAtom={numberAtom} />;
 
+            case 'link':
+                const linkAtom = getGenericInputAtom(question, dataAtom);
+
+                return <TextLinkInput dataAtom={linkAtom} />;
+
             case 'text-line':
-                5;
                 const textLineAtom = getGenericInputAtom(question, dataAtom);
+                // @ts-ignore
                 return <TextLineInput dataAtom={textLineAtom} />;
 
             case 'text-area':
@@ -172,11 +178,13 @@ export default function SideCard({
             case 'multiple-checkbox':
                 const multiCheckboxAtom = atom(
                     (get) => {
-                        const choices = new Set<string>(get(dataAtom));
+                        const choices = new Set<string>(
+                            get(dataAtom).map((v: string) => v.toLowerCase())
+                        );
                         for (const c of question.choices) {
-                            if (choices.has(c.name)) {
+                            if (choices.has(c.data.toLowerCase())) {
                                 c.value = true;
-                                choices.delete(c.name);
+                                choices.delete(c.data);
                             } else {
                                 c.value = false;
                             }
@@ -184,8 +192,12 @@ export default function SideCard({
 
                         if (choices.size > 0) {
                             // some value is not yet comsumed, there must be an 'other value available
-                            question.otherValue = choices.values().next().value;
+                            return {
+                                ...question,
+                                otherValue: choices.values().next().value,
+                            };
                         }
+
                         return question;
                     },
                     (get, set, val: QuestionMultipleCheckBox) => {
@@ -205,7 +217,7 @@ export default function SideCard({
                 return <CheckBoxGroupInput dataAtom={multiCheckboxAtom} />;
 
             default:
-                return <p>Unknown requestion type: {question.type}</p>;
+                return <p>Unknown question type: {question.type}</p>;
         }
     }
 
