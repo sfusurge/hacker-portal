@@ -87,6 +87,7 @@ export type Applicant = {
     currentStatus: string;
     pendingStatus: string;
     applicationDate: Date;
+    lastEmailSent: string;
 
     checkIns: {
         eventId: number;
@@ -239,6 +240,12 @@ export default function ReviewApplicationsTable({
             size: 150,
             minSize: 150,
             enableColumnFilter: true,
+        },
+        {
+            accessorKey: 'lastEmailSent',
+            header: 'Last Email Sent',
+            size: 200,
+            minSize: 150,
         },
         {
             accessorKey: 'applicationDate',
@@ -411,6 +418,8 @@ function MyTable({
     const setSideCardInfo = useSetAtom(sideCardAtomSJ);
 
     const sendEmail = trpc.emails.sendEmail.useMutation();
+    const updateLastEmailSent =
+        trpc.applications.updateLastEmailSent.useMutation();
     const [isEmailPopupOpen, setIsEmailPopupOpen] = useState(false);
     const [isSending, setIsSending] = useState(false);
     const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(
@@ -566,6 +575,13 @@ function MyTable({
 
             setIsSending(true);
 
+            const selectedTemplate = emailTemplates?.find(
+                (t) => t.id === selectedTemplateId
+            );
+            if (!selectedTemplate) {
+                throw new Error('Selected template not found');
+            }
+
             const rowData = rows.map((row) => ({
                 id: row.original.id,
                 firstName: row.original.firstName,
@@ -595,6 +611,12 @@ function MyTable({
                             firstName: rowData[i].firstName,
                             lastName: rowData[i].lastName,
                         },
+                    });
+
+                    await updateLastEmailSent.mutateAsync({
+                        hackathonId,
+                        userId: rowData[i].id,
+                        emailType: selectedTemplate.purpose,
                     });
 
                     const status = rowData[i].pendingStatus;

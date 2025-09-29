@@ -3,6 +3,7 @@ import {
     json,
     pgEnum,
     pgTable,
+    text,
     primaryKey,
     timestamp,
 } from 'drizzle-orm/pg-core';
@@ -49,6 +50,7 @@ export const applications = pgTable(
             .notNull(),
         response: json().notNull(),
         createdDate: timestamp('created_date').defaultNow().notNull(),
+        lastEmailSent: text('last_email_sent').notNull().default('N/A'),
     },
     (table) => {
         return [
@@ -100,4 +102,15 @@ export const batchUpdateApplicationStatusSchema = z.object({
     userIds: z.array(z.number().int()),
     status: ApplicationStatusSchema.optional(),
     pendingStatus: ApplicationStatusSchema.optional(),
+});
+
+export const updateRsvpMailSentSchema = z.object({
+    hackathonId: z.number().int(),
+    userId: z.number().int(),
+});
+
+export const updateLastEmailSentSchema = z.object({
+    hackathonId: z.number().int(),
+    userId: z.number().int(),
+    emailType: z.string(),
 });
