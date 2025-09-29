@@ -6,6 +6,7 @@ import {
     queryApplicationsSchema,
     StatusEnum,
     updateApplicationStatusSchema,
+    updateLastEmailSentSchema,
 } from '@/db/schema/applications';
 import { user } from '@/db/schema/users/users';
 import {
@@ -414,6 +415,25 @@ export const applicationsRouter = router({
                 .where(eq(user.email, input.email))
                 .orderBy(desc(applications.createdDate));
             return applications_result as ApplicationInfo[];
+        }),
+
+    updateLastEmailSent: publicProcedure
+        .input(updateLastEmailSentSchema)
+        .mutation(async ({ input }) => {
+            const [application] = await databaseClient
+                .update(applications)
+                .set({
+                    lastEmailSent: input.emailType,
+                })
+                .where(
+                    and(
+                        eq(applications.hackathonId, input.hackathonId),
+                        eq(applications.userId, input.userId)
+                    )
+                )
+                .returning();
+
+            return application;
         }),
 });
 

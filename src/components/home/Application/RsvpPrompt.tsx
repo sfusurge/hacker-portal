@@ -42,6 +42,8 @@ export default function RsvpPrompt({
             purpose: 'RSVP Received',
         });
     const sendEmail = trpc.emails.sendEmail.useMutation();
+    const updateLastEmailSent =
+        trpc.applications.updateLastEmailSent.useMutation();
 
     const firstName = userData?.firstName || 'Friend';
     const lastName = userData?.lastName || '';
@@ -78,6 +80,11 @@ export default function RsvpPrompt({
                         email: userEmail,
                     },
                 });
+                await updateLastEmailSent.mutateAsync({
+                    hackathonId: hackathon.id,
+                    userId: userId,
+                    emailType: 'RSVP Received',
+                });
             }
         } catch (error) {
             console.error('Failed to update application:', error);
@@ -87,6 +94,7 @@ export default function RsvpPrompt({
         hackathon,
         updateApplication,
         sendEmail,
+        updateLastEmailSent,
         userId,
         userEmail,
         firstName,

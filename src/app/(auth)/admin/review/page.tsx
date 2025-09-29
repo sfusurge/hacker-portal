@@ -52,6 +52,7 @@ export type Applicant = {
     currentStatus: string;
     pendingStatus: string;
     applicationDate: Date;
+    lastEmailSent: string;
 
     checkIns: {
         eventId: number;
@@ -83,6 +84,7 @@ export default function ReviewApplicationsPage() {
         () => applicationData.data?.pages.flatMap((p) => p.applications) ?? [],
         [applicationData.data]
     );
+    console.log('applications', { applications });
 
     const applicationDataMap = useMemo(() => {
         const map = new Map<number, ApplicationWithTeamInfo>();
@@ -216,6 +218,7 @@ function transformResponse(response: any[]) {
 
             const members = item.members;
             const checkIns = item.checkIns;
+            const lastEmailSent = item.lastEmailSent;
 
             const teamName = item.teamName
                 ? `${item.teamName} (${item.teamId})`
@@ -226,6 +229,7 @@ function transformResponse(response: any[]) {
                 teamName,
                 currentStatus: item.currentStatus,
                 pendingStatus: item.pendingStatus,
+                lastEmailSent,
                 applicationDate: new Date(item.createdDate),
                 dietaryRestrictions: Array.isArray(dietaryRestrictions)
                     ? dietaryRestrictions
