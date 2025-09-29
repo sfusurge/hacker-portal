@@ -1,16 +1,9 @@
 import Link from 'next/link';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
+import { User } from './types';
 
-export type User = {
-    id: number;
-    firstName: string;
-    lastName: string;
-    school: string;
-    github: string;
-    linkedin: string;
-    resumeUrl: string;
-    email: string;
+export type UserWithHandler = User & {
     onViewResume?: (id: number) => void;
 };
 

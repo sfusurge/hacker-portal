@@ -15,7 +15,7 @@ export default async function ResumeBankPage() {
     }
 
     return (
-        <div className="w-full">
+        <div className="w-full pb-32 md:pb-0">
             <ResumeTable hackathonId={activeHackathon.id} />
         </div>
     );
