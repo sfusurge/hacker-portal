@@ -607,7 +607,7 @@ function MyTable({
                         templateId: selectedTemplateId,
                         user: {
                             id: rowData[i].id,
-                            email: rowData[i].email,
+                            email: rowData[i].email.trim(),
                             firstName: rowData[i].firstName,
                             lastName: rowData[i].lastName,
                         },
@@ -630,6 +630,12 @@ function MyTable({
                             status: status as StatusEnum,
                         });
                     }
+
+                    await batchUpdateApplicationStatus.mutateAsync({
+                        userIds: [rowData[i].id],
+                        hackathonId,
+                        pendingStatus: 'N/A',
+                    });
 
                     successCount++;
                 } catch (error) {

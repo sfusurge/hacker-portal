@@ -77,7 +77,7 @@ export default function RsvpPrompt({
                         id: userId,
                         firstName,
                         lastName,
-                        email: userEmail,
+                        email: userEmail.trim(),
                     },
                 });
                 await updateLastEmailSent.mutateAsync({
