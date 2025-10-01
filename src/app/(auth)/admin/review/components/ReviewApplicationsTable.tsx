@@ -631,6 +631,12 @@ function MyTable({
                         });
                     }
 
+                    await batchUpdateApplicationStatus.mutateAsync({
+                        userIds: [rowData[i].id],
+                        hackathonId,
+                        pendingStatus: 'N/A',
+                    });
+
                     successCount++;
                 } catch (error) {
                     console.error(
