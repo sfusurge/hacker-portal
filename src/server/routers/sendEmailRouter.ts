@@ -120,7 +120,7 @@ export const sendEmailRouter = router({
 
                 const mailOptions = {
                     from: env.SENDINGEMAIL,
-                    to: input.user.email,
+                    to: input.user.email.trim(),
                     subject: template.title,
                     html: finalHtmlContent,
                     attachments: attachments,

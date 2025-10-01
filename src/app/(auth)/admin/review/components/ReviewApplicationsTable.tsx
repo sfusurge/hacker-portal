@@ -607,7 +607,7 @@ function MyTable({
                         templateId: selectedTemplateId,
                         user: {
                             id: rowData[i].id,
-                            email: rowData[i].email,
+                            email: rowData[i].email.trim(),
                             firstName: rowData[i].firstName,
                             lastName: rowData[i].lastName,
                         },
