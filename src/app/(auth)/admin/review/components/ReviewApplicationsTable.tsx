@@ -132,12 +132,17 @@ export default function ReviewApplicationsTable({
     //const data: Applicant[] = transformResponse(applications);
 
     const checkedInInfoColumns: ColumnDef<Applicant>[] =
-        data[0]?.checkIns?.map(({ eventTitle, checkedIn, eventId }) => {
+        data[0]?.checkIns?.map(({ eventTitle, eventId }) => {
             return {
-                accessorFn: () => (checkedIn ? 'Yes' : 'No'),
-                header: `${eventTitle}?`,
+                accessorFn: (row: Applicant) => {
+                    const checkIn = row.checkIns?.find(
+                        (c) => c.eventId === eventId
+                    );
+                    return checkIn?.checkedIn ? 'Yes' : 'No';
+                },
+                header: eventTitle,
                 enableColumnFilter: true,
-                id: `${eventTitle}-${eventId}`,
+                id: `checkin-${eventId}`,
                 size: 150,
             };
         }) ?? [];

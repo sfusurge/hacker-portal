@@ -79,7 +79,9 @@ export default async function Home() {
                         </>
                     )}
                     <EventsCard events={events} />
-                    <DiscordCard />
+                    <DiscordCard
+                        applicationStatus={application?.currentStatus}
+                    />
                 </div>
 
                 {/* DESKTOP */}
@@ -107,7 +109,9 @@ export default async function Home() {
                         className={`${isAdmin ? 'col-span-11' : 'col-span-11'} grid grid-cols-2 gap-8`}
                     >
                         <EventsCard events={events} />
-                        <DiscordCard />
+                        <DiscordCard
+                            applicationStatus={application?.currentStatus}
+                        />
                     </div>
                 </div>
             </div>

@@ -190,30 +190,12 @@ export const applicationsRouter = router({
 
             const checkInInfos = await databaseClient
                 .select({
-                    userId: checkIns.userId,
                     eventId: events.id,
                     eventTitle: events.title,
+                    userId: checkIns.userId,
                 })
                 .from(events)
-                .leftJoin(
-                    checkIns,
-                    and(
-                        eq(checkIns.eventId, events.id),
-                        inArray(
-                            checkIns.userId,
-                            applicationInfos.map(
-                                (application) => application.userId
-                            )
-                        )
-                    )
-                )
-                .leftJoin(
-                    applications,
-                    and(
-                        eq(checkIns.userId, applications.userId),
-                        eq(applications.hackathonId, input.hackathonId)
-                    )
-                )
+                .innerJoin(checkIns, eq(events.id, checkIns.eventId)) // Change leftJoin to innerJoin
                 .where(
                     and(
                         eq(events.hackathonId, input.hackathonId),
@@ -240,7 +222,7 @@ export const applicationsRouter = router({
                 } else {
                     eventIdToCheckInfos.set(eventId, [
                         checkInInfo.eventTitle,
-                        new Set(),
+                        new Set(checkInInfo.userId ? [checkInInfo.userId] : []),
                     ]);
                 }
             }
@@ -434,6 +416,37 @@ export const applicationsRouter = router({
                 .returning();
 
             return application;
+        }),
+
+    getStatisticsData: publicProcedure
+        .input(z.object({ hackathonId: z.number().int() }))
+        .query(async ({ input }) => {
+            try {
+                const response = await fetch(
+                    `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/statistics/${input.hackathonId}`
+                );
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        return {
+                            success: false,
+                            error: 'Statistics data not found. Please run the cron job first.',
+                            data: [],
+                        };
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error('Error fetching statistics data:', error);
+                return {
+                    success: false,
+                    error: 'Failed to fetch statistics data',
+                    data: [],
+                };
+            }
         }),
 });
 

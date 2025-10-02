@@ -13,17 +13,31 @@ import {
     CardHeaderColumn,
 } from '@/components/ui/card';
 
-const DISCORD_LINK = 'https://discord.com/invite/U5q6RkHHtA/login';
+type DiscordCardProps = {
+    applicationStatus?: string;
+};
 
-export default function DiscordCard() {
+const DISCORD_LINK_STANDARD = 'https://discord.com/invite/U5q6RkHHtA/login';
+const DISCORD_LINK_ACCEPTED = 'https://discord.gg/mfn8YkPCnp';
+
+export default function DiscordCard({ applicationStatus }: DiscordCardProps) {
+    const discordLink =
+        applicationStatus === 'Accepted'
+            ? DISCORD_LINK_ACCEPTED
+            : DISCORD_LINK_STANDARD;
+    const headerTitle =
+        applicationStatus === 'Accepted'
+            ? 'Join the StormHacks Discord!'
+            : 'Join the Surge Discord!';
+
     return (
         <Card className="h-full">
             <CardHeader>
                 <CardHeaderColumn>
                     <CardHeaderDescription>Your Events</CardHeaderDescription>
-                    <CardHeaderTitle>Join the Surge Discord!</CardHeaderTitle>
+                    <CardHeaderTitle>{headerTitle}</CardHeaderTitle>
                 </CardHeaderColumn>
-                <Link href={DISCORD_LINK} target="_blank">
+                <Link href={discordLink} target="_blank">
                     <Button
                         size="cozy"
                         variant="default"
@@ -44,7 +58,7 @@ export default function DiscordCard() {
                 />
             </CardContent>
             <CardFooter className="md:hidden">
-                <Link href={DISCORD_LINK} target="_blank">
+                <Link href={discordLink} target="_blank">
                     <Button
                         size="cozy"
                         variant="default"
