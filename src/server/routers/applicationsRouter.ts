@@ -190,30 +190,12 @@ export const applicationsRouter = router({
 
             const checkInInfos = await databaseClient
                 .select({
-                    userId: checkIns.userId,
                     eventId: events.id,
                     eventTitle: events.title,
+                    userId: checkIns.userId,
                 })
                 .from(events)
-                .leftJoin(
-                    checkIns,
-                    and(
-                        eq(checkIns.eventId, events.id),
-                        inArray(
-                            checkIns.userId,
-                            applicationInfos.map(
-                                (application) => application.userId
-                            )
-                        )
-                    )
-                )
-                .leftJoin(
-                    applications,
-                    and(
-                        eq(checkIns.userId, applications.userId),
-                        eq(applications.hackathonId, input.hackathonId)
-                    )
-                )
+                .innerJoin(checkIns, eq(events.id, checkIns.eventId)) // Change leftJoin to innerJoin
                 .where(
                     and(
                         eq(events.hackathonId, input.hackathonId),
@@ -240,7 +222,7 @@ export const applicationsRouter = router({
                 } else {
                     eventIdToCheckInfos.set(eventId, [
                         checkInInfo.eventTitle,
-                        new Set(),
+                        new Set(checkInInfo.userId ? [checkInInfo.userId] : []),
                     ]);
                 }
             }
