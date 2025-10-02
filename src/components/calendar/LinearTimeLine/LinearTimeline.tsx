@@ -102,8 +102,9 @@ function TimeLineDayWrapper({
     }, [selectedDay]);
 
     return (
-        <div className={style.dayWrapper} ref={ref}>
+        <div className={style.dayWrapper}>
             <div
+                ref={ref}
                 className={style.timelineHeader}
                 onClick={() => {
                     daySelected(eventsOfDay);
@@ -211,5 +212,9 @@ function TimelineItem({ event }: { event: InternalCalendarEventType }) {
 }
 
 function TimeLabel({ event }: { event: InternalCalendarEventType }) {
-    return <span>{event.startTime.format('h:mm A')}</span>;
+    return (
+        <span style={{ whiteSpace: 'nowrap' }}>
+            {event.startTime.format('h:mm A')}
+        </span>
+    );
 }
