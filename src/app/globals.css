@@ -67,6 +67,13 @@
     --color-success-300: #87efac;
     --color-success-400: #49de80;
     --color-success-500: #22c55d;
+
+    /* Chart color palette */
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
     --color-success-600: #17a34a;
     --color-success-700: #17803d;
     --color-success-800: #166434;
@@ -191,6 +198,11 @@
     :root {
         --radius: 0.5rem;
         color-scheme: dark;
+        --chart-1: oklch(0.488 0.243 264.376);
+        --chart-2: oklch(0.696 0.17 162.48);
+        --chart-3: oklch(0.769 0.188 70.08);
+        --chart-4: oklch(0.627 0.265 303.9);
+        --chart-5: oklch(0.645 0.246 16.439);
     }
 }
 

@@ -435,6 +435,37 @@ export const applicationsRouter = router({
 
             return application;
         }),
+
+    getStatisticsData: publicProcedure
+        .input(z.object({ hackathonId: z.number().int() }))
+        .query(async ({ input }) => {
+            try {
+                const response = await fetch(
+                    `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/statistics/${input.hackathonId}`
+                );
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        return {
+                            success: false,
+                            error: 'Statistics data not found. Please run the cron job first.',
+                            data: [],
+                        };
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error('Error fetching statistics data:', error);
+                return {
+                    success: false,
+                    error: 'Failed to fetch statistics data',
+                    data: [],
+                };
+            }
+        }),
 });
 
 export type ApplicationsRouter = typeof applicationsRouter;
