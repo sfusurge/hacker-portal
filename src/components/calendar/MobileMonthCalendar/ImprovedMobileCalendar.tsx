@@ -79,7 +79,6 @@ export function ImprovedMobileCalendar({
                         <DaySchedule
                             days={1}
                             events={dayEvents ?? []}
-                            minColumnWidth={200}
                             startDate={selectedDay ?? dayjs()}
                         />
                     </div>

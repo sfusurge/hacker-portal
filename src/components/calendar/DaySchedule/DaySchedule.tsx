@@ -35,7 +35,7 @@ export function DaySchedule({
 }: {
     startDate: Dayjs;
     days: number;
-    minColumnWidth: number;
+    minColumnWidth?: number;
     events: InternalCalendarEventType[];
 }) {
     startDate = dayjs(startDate);
@@ -57,6 +57,19 @@ export function DaySchedule({
             )
         );
     }, [events, startDate, days]);
+
+    // auto calculate _minColWidth
+    const _minColumnWidth = useMemo(() => {
+        if (!minColumnWidth) {
+            // in case minColWidth is not provided, assign at least 100px per column
+            return (
+                Math.max(
+                    ...Object.values(processedEvents).map((day) => day.length)
+                ) * 100
+            );
+        }
+        return minColumnWidth;
+    }, [minColumnWidth, processedEvents]);
 
     const rootRef = useRef<HTMLDivElement>(null);
     const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
@@ -118,7 +131,7 @@ export function DaySchedule({
                 style={
                     {
                         '--rowHeight': `${rowHeight}px`,
-                        '--minColWidth': `${minColumnWidth}px`,
+                        '--minColWidth': `${_minColumnWidth}px`,
                         '--headerHeight': `${headerHeight}px`,
                     } as CSSProperties
                 }
