@@ -28,6 +28,7 @@ import { useWindowSize } from '@/lib/utils';
 import { MobileMonthCalendar } from '@/components/calendar/MobileMonthCalendar/MobileMonthCalendar';
 import { trpc } from '@/trpc/client';
 import { ImprovedMobileCalendar } from '@/components/calendar/MobileMonthCalendar/ImprovedMobileCalendar';
+import { log } from 'console';
 
 export function ClientCalendarPage({
     events: _events,
@@ -69,8 +70,9 @@ export function ClientCalendarPage({
     const [showSchedule, setShowSchedule] = useState(true);
     const showCalendar = useMemo(() => !showSchedule, [showSchedule]);
     const eventStarted = useMemo(() => {
+        return true;
         return (
-            dayjs().isAfter(hackathon.startDate) &&
+            dayjs().isAfter(dayjs(hackathon.startDate).startOf('day')) &&
             dayjs().isBefore(hackathon.endDate)
         );
     }, [hackathon]);
@@ -86,9 +88,9 @@ export function ClientCalendarPage({
 
     const [weekOffset, setWeekOffset] = useState(0);
 
-    function getStartDate() {
-        const dayOffset = weekOffset * 7;
-        const today = dayjs();
+    function getStartDate(period: number) {
+        const dayOffset = weekOffset * period;
+        const today = dayjs().startOf('day');
         const firstDay = dayjs(hackathon.startDate);
         // const lastDay = dayjs(hackathon.endDate);
         // if (today.isBefore(firstDay)) {
@@ -228,8 +230,8 @@ export function ClientCalendarPage({
                     {!isMobile && showSchedule && (
                         <DaySchedule
                             days={eventStarted ? 2 : 7}
-                            minColumnWidth={200}
-                            startDate={getStartDate()}
+                            minColumnWidth={eventStarted ? 600 : 200}
+                            startDate={getStartDate(eventStarted ? 2 : 7)}
                             events={events}
                         />
                     )}

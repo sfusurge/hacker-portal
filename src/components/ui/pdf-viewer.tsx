@@ -46,7 +46,7 @@ export default function PdfViewer({ url }: PdfViewerProps) {
     if (isMobile) {
         const googleEmbedUrl = `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(
             url
-        )}`;
+        )}&zoom=67`;
 
         return (
             <div className="flex w-full flex-col items-center">
@@ -61,25 +61,20 @@ export default function PdfViewer({ url }: PdfViewerProps) {
         );
     }
 
-    // Desktop: normal iframe/embed fallback
+    // Desktop: embed
+    const googleEmbedUrl = `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(
+        url
+    )}&zoom=67`;
+
     return (
         <div className="flex w-full flex-col items-center">
-            {!iframeError ? (
-                <iframe
-                    src={url}
-                    width="100%"
-                    height="600"
-                    onError={() => setIframeError(true)}
-                />
-            ) : !embedError ? (
-                <embed
-                    src={url}
-                    type="application/pdf"
-                    width="100%"
-                    height="600"
-                    onError={() => setEmbedError(true)}
-                />
-            ) : null}
+            <iframe
+                src={googleEmbedUrl}
+                width="100%"
+                height="600"
+                style={{ border: 'none' }}
+                onError={() => setIframeError(true)}
+            />
         </div>
     );
 }
