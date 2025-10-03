@@ -14,6 +14,7 @@ import { useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
+import { redirect } from 'next/navigation';
 
 export function CountdownContent() {
     const [currentTime, setime] = useState(dayjs());
@@ -157,6 +158,19 @@ export function AcceptedContent({
                     >
                         withdraw your application
                     </button>
+                    .
+                </CardDescription>
+
+                <CardDescription className={'font-semibold text-white'}>
+                    {'Your Hacker package can be found '}
+                    <a
+                        className="inline text-white underline hover:text-white/70"
+                        href="https://verbena-oregano-a56.notion.site/StormHacks-2025-Hacker-Package-26a82a4e770680298cd7e708cd39648e"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        here
+                    </a>
                     .
                 </CardDescription>
             </div>

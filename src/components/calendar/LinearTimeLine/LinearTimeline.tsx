@@ -29,21 +29,12 @@ const showMoreInfoEvent = atom<InternalCalendarEventType | undefined>(
 );
 
 export function LinearTimeline({
-    events,
+    eventsGroupedByDay,
     styles,
-    daySelected,
 }: {
-    events: InternalCalendarEventType[];
-    daySelected: (eventsOfDay: InternalCalendarEventType[]) => void;
+    eventsGroupedByDay: Record<string, InternalCalendarEventType[]>;
     styles?: CSSProperties | undefined;
 }) {
-    const { month, year } = useAtomValue(currentYearMonthAtom);
-
-    const eventsGroupedByDay = groupEventsByDay(
-        events,
-        dayjs(new Date(year, month, 1))
-    );
-
     const [showMoreInfo, setShowMore] = useAtom(showMoreInfoEvent);
 
     return (
@@ -65,12 +56,12 @@ export function LinearTimeline({
             <div className={style.timelineContainer} style={styles}>
                 {Object.entries(eventsGroupedByDay).map((e) => {
                     const [key, eventsOfDay] = e;
+                    console.log(key);
 
                     return (
                         <TimeLineDayWrapper
                             key={key}
                             eventsOfDay={eventsOfDay}
-                            daySelected={daySelected}
                         ></TimeLineDayWrapper>
                     );
                 })}
@@ -81,10 +72,8 @@ export function LinearTimeline({
 
 function TimeLineDayWrapper({
     eventsOfDay,
-    daySelected,
 }: {
     eventsOfDay: InternalCalendarEventType[];
-    daySelected: (eventsOfDay: InternalCalendarEventType[]) => void;
 }) {
     const [selectedDay, setSelectedDay] = useAtom(selectedDayAtom);
 
@@ -107,7 +96,6 @@ function TimeLineDayWrapper({
                 ref={ref}
                 className={style.timelineHeader}
                 onClick={() => {
-                    daySelected(eventsOfDay);
                     setSelectedDay(eventsOfDay[0].startTime);
                 }}
             >

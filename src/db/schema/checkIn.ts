@@ -41,3 +41,7 @@ export const isCheckInSchema = z.object({
     userId: z.number().int(),
     eventId: z.number().int(),
 });
+
+export const getEventCheckInCountSchema = z.object({
+    hackathonId: z.number().int(),
+});

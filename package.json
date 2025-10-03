@@ -75,6 +75,7 @@
         "react-dom": "^18.3.1",
         "react-hook-form": "^7.55.0",
         "react-remark": "^2.1.0",
+        "recharts": "2.15.4",
         "stripe": "^18.0.0",
         "tailwind-merge": "^2.6.0",
         "tls": "^0.0.1",

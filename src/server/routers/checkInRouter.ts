@@ -1,14 +1,16 @@
 import { databaseClient } from '@/db/client';
 import {
     checkIns,
+    getEventCheckInCountSchema,
     insertCheckInSchema,
     isCheckInSchema,
 } from '@/db/schema/checkIn';
 import { UserRoleEnum } from '@/db/schema/users/users';
 import { UnauthorizedError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq, count } from 'drizzle-orm';
 import { getUserData } from '@/server/routers/usersRouter';
+import { events } from '@/db/schema/events';
 
 export const checkInRouter = router({
     checkIn: publicProcedure
@@ -59,5 +61,37 @@ export const checkInRouter = router({
                 isCheckedIn: true,
                 checkInTime: checkInRecord[0].checkInTime,
             };
+        }),
+
+    getEventCheckInCounts: publicProcedure
+        .input(getEventCheckInCountSchema)
+        .query(async ({ input }) => {
+            const user = await getUserData();
+
+            if (user?.userRole !== UserRoleEnum.admin) {
+                throw new UnauthorizedError({
+                    email: user?.email,
+                    role: user?.userRole,
+                });
+            }
+
+            const checkInCounts = await databaseClient
+                .select({
+                    eventId: events.id,
+                    eventTitle: events.title,
+                    checkInCount: count(checkIns.userId),
+                })
+                .from(events)
+                .leftJoin(checkIns, eq(events.id, checkIns.eventId))
+                .where(
+                    and(
+                        eq(events.hackathonId, input.hackathonId),
+                        eq(events.hasCheckIn, true)
+                    )
+                )
+                .groupBy(events.id, events.title)
+                .orderBy(desc(events.startDate));
+
+            return checkInCounts;
         }),
 });
