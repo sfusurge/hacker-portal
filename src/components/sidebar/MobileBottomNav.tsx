@@ -39,9 +39,9 @@ const judgeNavLinks = [
 const sponsorNavLinks = [
     {
         href: '/home',
-        label: 'Dashboard',
+        label: 'Home',
         icon: <HomeIcon />,
-        iconAlt: 'Dashboard logo',
+        iconAlt: 'Home logo',
     },
     {
         href: '/review',
