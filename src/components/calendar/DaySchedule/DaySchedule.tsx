@@ -181,7 +181,9 @@ export function DaySchedule({
                                             } as CSSProperties
                                         }
                                     >
-                                        {day.format('MMM D, ddd')}
+                                        <div className={style.headerContent}>
+                                            {day.format('MMM D, ddd')}
+                                        </div>
                                     </div>
                                     <div className={style.dayColumnContent}>
                                         {containerHeight > 0 &&
