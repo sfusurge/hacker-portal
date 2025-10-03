@@ -141,6 +141,10 @@ function StatisticsCard({
                                 outerRadius={chartSize.outerRadius}
                                 innerRadius={chartSize.innerRadius}
                                 stroke="none"
+                                onMouseEnter={(data: any, index: number) =>
+                                    setActiveIndex(index)
+                                }
+                                onMouseLeave={() => setActiveIndex(null)}
                             >
                                 {data.map((entry: any, index: number) => (
                                     <Cell
@@ -245,7 +249,7 @@ export default function StatisticsPage() {
 
     if (loading) {
         return (
-            <div className="flex h-full w-full flex-col gap-4 p-4 sm:gap-6 sm:p-6">
+            <div className="flex h-full w-full flex-col gap-4 sm:gap-6">
                 <div className="text-left text-white">
                     <h1 className="mb-2 text-2xl font-bold text-white sm:text-3xl">
                         Application Statistics
@@ -274,7 +278,7 @@ export default function StatisticsPage() {
 
     if (error) {
         return (
-            <div className="flex h-full w-full flex-col gap-4 p-4 sm:gap-6 sm:p-6">
+            <div className="flex h-full w-full flex-col gap-4 sm:gap-6">
                 <div className="text-left text-white">
                     <h1 className="mb-2 text-2xl font-bold text-white sm:text-3xl">
                         Application Statistics
