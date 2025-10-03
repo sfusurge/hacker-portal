@@ -25,10 +25,8 @@ import {
     PlusIcon,
 } from '@heroicons/react/24/solid';
 import { useWindowSize } from '@/lib/utils';
-import { MobileMonthCalendar } from '@/components/calendar/MobileMonthCalendar/MobileMonthCalendar';
 import { trpc } from '@/trpc/client';
-import { ImprovedMobileCalendar } from '@/components/calendar/MobileMonthCalendar/ImprovedMobileCalendar';
-import { log } from 'console';
+import { MobileCalendar } from '@/components/calendar/MobileMonthCalendar/MobileCalendar';
 
 export function ClientCalendarPage({
     events: _events,
@@ -240,7 +238,7 @@ export function ClientCalendarPage({
                     )}
 
                     {/* Mobile */}
-                    {isMobile && <ImprovedMobileCalendar events={events} />}
+                    {isMobile && <MobileCalendar events={events} />}
                 </div>
             </div>
         </>
