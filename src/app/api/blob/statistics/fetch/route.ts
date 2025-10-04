@@ -75,11 +75,11 @@ export async function GET(request: NextRequest) {
                 and(
                     eq(applications.hackathonId, hackathonId),
                     or(
-                        eq(applications.currentStatus, 'Accepted'),
-                        eq(
-                            applications.currentStatus,
-                            'Accepted - RSVP to Confirm'
-                        )
+                        eq(applications.currentStatus, 'Accepted')
+                        // eq(
+                        //     applications.currentStatus,
+                        //     'Accepted - RSVP to Confirm'
+                        // )
                     )
                 )
             );
