@@ -297,6 +297,12 @@ export default function ReviewApplicationsTable({
             minSize: 100,
         },
         {
+            accessorKey: 'background',
+            header: 'background',
+            size: 120,
+            minSize: 100,
+        },
+        {
             accessorKey: 'haveHackathonExperience',
             header: 'Hackathon Experience',
             size: 200,
