@@ -23,7 +23,7 @@
 
 .scheduleContainer {
     height: fit-content;
-
+    width: auto;
     display: flex;
     flex-direction: row;
 }
