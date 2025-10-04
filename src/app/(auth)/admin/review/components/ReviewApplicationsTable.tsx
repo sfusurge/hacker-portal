@@ -289,7 +289,6 @@ export default function ReviewApplicationsTable({
             size: 120,
             minSize: 100,
         },
-        ,
         {
             accessorKey: 'background',
             header: 'background',
