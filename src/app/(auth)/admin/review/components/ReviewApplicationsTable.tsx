@@ -68,7 +68,7 @@ export type Applicant = {
 
     // School Information
     school?: string;
-    background: string;
+    background?: string;
     yearOfStudy?: string;
     major: string;
 
@@ -286,6 +286,13 @@ export default function ReviewApplicationsTable({
         {
             accessorKey: 'yearOfStudy',
             header: 'Year',
+            size: 120,
+            minSize: 100,
+        },
+        ,
+        {
+            accessorKey: 'background',
+            header: 'background',
             size: 120,
             minSize: 100,
         },
