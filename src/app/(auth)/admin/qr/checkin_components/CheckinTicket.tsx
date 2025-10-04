@@ -105,7 +105,7 @@ export default function CheckinTicket({
 
     return (
         <Drawer open={open} onOpenChange={handleOpenChange}>
-            <DrawerContent className="max-h-[80vh]">
+            <DrawerContent className="max-h-[80vh]" overlayZIndex={50}>
                 {currentHacker?.id && (
                     <div className="relative flex w-full flex-col items-center justify-start gap-2 pb-6">
                         <DrawerHeader className="pb-4">

@@ -71,10 +71,16 @@
     top: 0;
     z-index: 30;
     background-color: var(--neutral-900);
-
     display: flex;
     align-items: center;
     padding-left: 1rem;
+}
+
+.headerContent {
+    position: sticky;
+    left: 1.25rem;
+    top: 0;
+    height: 100%;
 }
 
 .dayColumn {
