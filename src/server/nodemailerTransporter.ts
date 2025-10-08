@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 const env = process.env;
 
 export const transporter = nodemailer.createTransport({
-    host: 'blizzard.mxrouting.net',
+    host: 'smtp.gmail.com',
     port: 465,
     secure: true,
     greetingTimeout: 10000,
