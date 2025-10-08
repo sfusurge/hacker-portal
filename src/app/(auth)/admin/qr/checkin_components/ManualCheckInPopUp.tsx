@@ -32,14 +32,14 @@ export default function ManualCheckIn({
 
     return (
         <Drawer open={show} onOpenChange={onClose}>
-            <DrawerContent>
+            <DrawerContent overlayZIndex={49}>
                 <div className="flex items-center justify-center overflow-hidden">
                     <div className="flex flex-col items-center justify-start overflow-hidden">
                         <DrawerHeader>
                             <DrawerTitle>Manual Check-In</DrawerTitle>
                             <DrawerDescription>
-                                Enter hacker's 6-digit code to manually check
-                                them into the hackathon.
+                                Enter hacker&apos;s 6-digit code to manually
+                                check them into the hackathon.
                             </DrawerDescription>
                         </DrawerHeader>
 
