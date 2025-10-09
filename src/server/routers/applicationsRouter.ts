@@ -193,6 +193,7 @@ export const applicationsRouter = router({
                     eventId: events.id,
                     eventTitle: events.title,
                     userId: checkIns.userId,
+                    checkInTime: checkIns.checkInTime,
                 })
                 .from(events)
                 .innerJoin(checkIns, eq(events.id, checkIns.eventId)) // Change leftJoin to innerJoin
@@ -203,10 +204,9 @@ export const applicationsRouter = router({
                     )
                 );
 
-            // eventId => (eventTitle, Set<userId>)
             const eventIdToCheckInfos = new Map<
                 number,
-                [string, Set<number>]
+                [string, Map<number, Date>]
             >();
 
             for (const checkInInfo of checkInInfos) {
@@ -217,12 +217,22 @@ export const applicationsRouter = router({
                         eventIdToCheckInfos.get(eventId)!;
 
                     if (checkInInfo.userId != null) {
-                        checkedInUsers.add(checkInInfo.userId);
+                        checkedInUsers.set(
+                            checkInInfo.userId,
+                            checkInInfo.checkInTime as unknown as Date
+                        );
                     }
                 } else {
+                    const map = new Map<number, Date>();
+                    if (checkInInfo.userId != null) {
+                        map.set(
+                            checkInInfo.userId,
+                            checkInInfo.checkInTime as unknown as Date
+                        );
+                    }
                     eventIdToCheckInfos.set(eventId, [
                         checkInInfo.eventTitle,
-                        new Set(checkInInfo.userId ? [checkInInfo.userId] : []),
+                        map,
                     ]);
                 }
             }
@@ -248,6 +258,8 @@ export const applicationsRouter = router({
                             eventId,
                             eventTitle,
                             checkedIn: checkedInUsers.has(application.userId),
+                            checkInTime:
+                                checkedInUsers.get(application.userId) ?? null,
                         })
                     );
 
@@ -465,6 +477,7 @@ export interface ApplicationWithTeamInfo {
         eventId: number;
         eventTitle: string;
         checkedIn: boolean;
+        checkInTime: Date | null;
     }[];
     members: string[];
 }

@@ -93,6 +93,7 @@ export type Applicant = {
         eventId: number;
         eventTitle: string;
         checkedIn: boolean;
+        checkInTime: Date | null;
     }[];
 };
 
@@ -138,7 +139,16 @@ export default function ReviewApplicationsTable({
                     const checkIn = row.checkIns?.find(
                         (c) => c.eventId === eventId
                     );
-                    return checkIn?.checkedIn ? 'Yes' : 'No';
+                    if (checkIn?.checkInTime) {
+                        try {
+                            return dayjs(checkIn.checkInTime).format(
+                                'MM-DD HH:mm'
+                            );
+                        } catch (e) {
+                            return '';
+                        }
+                    }
+                    return '';
                 },
                 header: eventTitle,
                 enableColumnFilter: true,
@@ -257,7 +267,8 @@ export default function ReviewApplicationsTable({
             header: 'Date',
             size: 100,
             minSize: 100,
-            cell: (info) => dayjs(info.getValue() as Date).format('MMM DD'),
+            cell: (info) =>
+                dayjs(info.getValue() as Date).format('MM-DD HH:mm'),
         },
         {
             accessorKey: 'email',
@@ -737,11 +748,35 @@ function MyTable({
 
     const exportExcel = () => {
         const selectedRows = table.getSelectedRowModel().rows;
+        const allCheckInTitles = Array.from(
+            new Set(
+                (data ?? []).flatMap(
+                    (r) => r.checkIns?.map((ci) => ci.eventTitle) ?? []
+                )
+            )
+        );
+
         const tempData = selectedRows.map(({ original }) => {
             const { applicationDate, checkIns, ...rest } = original;
+            const checkInColumns = (checkIns ?? []).reduce<
+                Record<string, string>
+            >((acc, ci) => {
+                if (ci?.eventTitle) {
+                    acc[ci.eventTitle] = ci?.checkInTime
+                        ? dayjs(ci.checkInTime).format('MM-DD HH:mm')
+                        : '';
+                }
+                return acc;
+            }, {});
+            for (const title of allCheckInTitles) {
+                if (!(title in checkInColumns)) {
+                    checkInColumns[title] = '';
+                }
+            }
+
             return {
                 ...rest,
-                applicationDate: applicationDate.toString(),
+                applicationDate: dayjs(applicationDate).format('MM-DD HH:mm'),
                 howHeardAbout: original.howHeardAbout?.join(', ') || '',
                 dietaryRestrictions:
                     original.dietaryRestrictions?.join(', ') || '',
@@ -749,6 +784,7 @@ function MyTable({
                 members: Array.isArray(original.members)
                     ? original.members.join(', ')
                     : '',
+                ...checkInColumns,
             };
         });
 
