@@ -64,7 +64,7 @@ const DrawerContent = React.forwardRef<
                 <div className="bg-neutral-750 mx-auto mt-4 h-2 w-9 rounded-full" />
                 <div
                     className={cn(
-                        'relative z-[450] flex flex-col p-6 pt-0',
+                        'relative z-[450] flex flex-col gap-6 p-6 pt-0',
                         className
                     )}
                 >
