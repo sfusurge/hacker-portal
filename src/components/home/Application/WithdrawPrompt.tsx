@@ -86,19 +86,18 @@ export default function WithdrawPrompt({
                 }
             }}
         >
-            <ResponsiveDialogContent className="p-0 sm:max-w-[28rem]">
+            <ResponsiveDialogContent className="p-0 sm:max-w-[27rem]">
                 <div className="flex flex-col items-center justify-center gap-4">
                     <Image
                         src={pfp}
                         alt="Profile Picture"
                         width={100}
                         height={100}
-                        className="rounded-full pt-5"
+                        className="mt-6 rounded-full"
                     />
-
                     <Conditional showWhen={!withdrawn}>
-                        <ResponsiveDialogHeader className="gap-4 px-5">
-                            <ResponsiveDialogTitle className="text-center text-2xl font-bold text-balance">
+                        <ResponsiveDialogHeader className="gap-4 px-6">
+                            <ResponsiveDialogTitle className="text-center text-balance">
                                 Are you sure you want to withdraw your
                                 application?
                             </ResponsiveDialogTitle>
@@ -120,36 +119,36 @@ export default function WithdrawPrompt({
                                     channel on our Discord server.
                                 </AlertDescription>
                             </Alert>
-                            <ResponsiveDialogDescription className="text-base">
-                                To confirm, type{' '}
-                                <span className="text-white">
-                                    I WITHDRAW MY APPLICATION
-                                </span>{' '}
-                            </ResponsiveDialogDescription>
-                        </ResponsiveDialogHeader>
 
-                        <FormTextInput
-                            name="withdrawText"
-                            type="search"
-                            lazy
-                            style={{
-                                width: '100%',
-                                paddingLeft: '1.25rem',
-                                paddingRight: '1.25rem',
-                                paddingBottom: '1.25rem',
-                            }}
-                            onLazyChange={(text) => {
-                                setVerifyText(text as string);
-                            }}
-                            required
-                            placeholder="Enter the text to confirm withdrawal"
-                            defaultValue={verifyText}
-                        />
+                            <div className="w-full">
+                                <ResponsiveDialogDescription className="pb-3 text-base">
+                                    To confirm, type{' '}
+                                    <span className="text-white">
+                                        I WITHDRAW MY APPLICATION
+                                    </span>{' '}
+                                </ResponsiveDialogDescription>
+                                <FormTextInput
+                                    name="withdrawText"
+                                    type="search"
+                                    lazy
+                                    style={{
+                                        width: '100%',
+                                        paddingBottom: '1.25rem',
+                                    }}
+                                    onLazyChange={(text) => {
+                                        setVerifyText(text as string);
+                                    }}
+                                    required
+                                    placeholder="Enter the text to confirm withdrawal"
+                                    defaultValue={verifyText}
+                                />
+                            </div>
+                        </ResponsiveDialogHeader>
                     </Conditional>
 
                     <Conditional showWhen={withdrawn}>
-                        <ResponsiveDialogHeader className="gap-4 p-5 text-center text-2xl">
-                            <ResponsiveDialogTitle className="leading-tighter font-bold">
+                        <ResponsiveDialogHeader className="gap-4 p-6 text-center">
+                            <ResponsiveDialogTitle className="text-center">
                                 Your application has been withdrawn.
                             </ResponsiveDialogTitle>
                             <ResponsiveDialogDescription className="text-base text-pretty">
@@ -160,51 +159,57 @@ export default function WithdrawPrompt({
                     </Conditional>
 
                     <Conditional showWhen={!withdrawn}>
-                        <ResponsiveDialogFooter className="border-neutral-750 grid w-full grid-cols-2 gap-4 border-t p-5">
-                            <Button
-                                variant="default"
-                                size="cozy"
-                                hierarchy="secondary"
-                                onClick={handleClose}
-                                disabled={updateApplication.isPending}
-                            >
-                                Cancel
-                            </Button>
+                        <ResponsiveDialogFooter className="border-neutral-750 grid w-full border-t p-6">
+                            <div className="grid w-full grid-cols-2 gap-4">
+                                <Button
+                                    variant="default"
+                                    size="compact"
+                                    hierarchy="secondary"
+                                    onClick={handleClose}
+                                    disabled={updateApplication.isPending}
+                                >
+                                    Cancel
+                                </Button>
 
-                            <Button
-                                variant="brand"
-                                size="cozy"
-                                hierarchy="primary"
-                                disabled={
-                                    notSubmittable ||
-                                    updateApplication.isPending
-                                }
-                                onClick={handleWithdraw}
-                                className={
-                                    notSubmittable ||
-                                    updateApplication.isPending
-                                        ? 'opacity-50'
-                                        : ''
-                                }
-                            >
-                                {updateApplication.isPending
-                                    ? 'Withdrawing...'
-                                    : 'Withdraw'}
-                            </Button>
+                                <Button
+                                    variant="brand"
+                                    size="compact"
+                                    hierarchy="primary"
+                                    disabled={
+                                        notSubmittable ||
+                                        updateApplication.isPending
+                                    }
+                                    onClick={handleWithdraw}
+                                    className={
+                                        notSubmittable ||
+                                        updateApplication.isPending
+                                            ? 'opacity-50'
+                                            : ''
+                                    }
+                                >
+                                    {updateApplication.isPending
+                                        ? 'Withdrawing...'
+                                        : 'Withdraw Application'}
+                                </Button>
+                            </div>
                         </ResponsiveDialogFooter>
                     </Conditional>
 
                     <Conditional showWhen={withdrawn}>
-                        <ResponsiveDialogFooter className="border-neutral-750 flex w-full flex-col-reverse justify-end gap-4 border-t p-5 sm:flex-row">
-                            <Button
-                                variant="brand"
-                                size="cozy"
-                                hierarchy="primary"
-                                className="w-full"
-                                onClick={() => (window.location.href = '/home')}
-                            >
-                                Return to home
-                            </Button>
+                        <ResponsiveDialogFooter className="border-neutral-750 flex w-full flex-col-reverse justify-end gap-4 border-t p-6 sm:flex-row">
+                            <div className="flex w-full">
+                                <Button
+                                    variant="brand"
+                                    size="compact"
+                                    hierarchy="primary"
+                                    className="w-full"
+                                    onClick={() =>
+                                        (window.location.href = '/home')
+                                    }
+                                >
+                                    Return to home
+                                </Button>
+                            </div>
                         </ResponsiveDialogFooter>
                     </Conditional>
                 </div>
