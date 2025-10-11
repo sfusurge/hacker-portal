@@ -141,8 +141,8 @@ export const getColumns = (
             <Button
                 variant={'default'}
                 hierarchy={'primary'}
-                size="cozy"
-                mobileSize="compact"
+                size="compact"
+                desktopSize="cozy"
                 onClick={() => openDialog(row.original.id)}
             >
                 View Resume
