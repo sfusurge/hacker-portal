@@ -58,6 +58,7 @@ export type Applicant = {
         eventId: number;
         eventTitle: string;
         checkedIn: boolean;
+        checkInTime: Date | null;
     }[];
 };
 

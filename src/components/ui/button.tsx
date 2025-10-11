@@ -13,7 +13,7 @@ interface ButtonProps {
     trailingIconChild?: React.ReactElement;
     type?: 'button' | 'submit' | 'reset';
     size?: 'compact' | 'cozy';
-    mobileSize?: 'compact' | 'cozy';
+    desktopSize?: 'compact' | 'cozy';
 }
 
 const buttonVariants = cva(
@@ -129,7 +129,7 @@ const Button = forwardRef<
             className,
             variant,
             size = 'compact',
-            mobileSize,
+            desktopSize,
             hierarchy,
             disabled,
             leadingIcon,
@@ -147,8 +147,8 @@ const Button = forwardRef<
             size === 'compact'
                 ? 'h-9 rounded-md text-sm'
                 : 'h-11 rounded-lg text-md',
-            mobileSize
-                ? mobileSize === 'compact'
+            desktopSize
+                ? desktopSize === 'compact'
                     ? 'md:h-9 md:rounded-md md:text-sm'
                     : 'md:h-11 md:rounded-lg md:text-md'
                 : size === 'compact'
@@ -160,26 +160,27 @@ const Button = forwardRef<
             'ml-2': size === 'compact' && (leadingIcon || leadingIconChild),
             'ml-3': size === 'cozy' && (leadingIcon || leadingIconChild),
             'md:ml-2':
-                mobileSize === 'compact' && (leadingIcon || leadingIconChild),
+                desktopSize === 'compact' && (leadingIcon || leadingIconChild),
             'md:ml-3':
-                mobileSize === 'cozy' && (leadingIcon || leadingIconChild),
+                desktopSize === 'cozy' && (leadingIcon || leadingIconChild),
         });
 
         const trailingIconStyles = cn({
             'mr-2': size === 'compact' && (trailingIcon || trailingIconChild),
             'mr-3': size === 'cozy' && (trailingIcon || trailingIconChild),
             'md:mr-2':
-                mobileSize === 'compact' && (trailingIcon || trailingIconChild),
+                desktopSize === 'compact' &&
+                (trailingIcon || trailingIconChild),
             'md:mr-3':
-                mobileSize === 'cozy' && (trailingIcon || trailingIconChild),
+                desktopSize === 'cozy' && (trailingIcon || trailingIconChild),
         });
 
         // Handle padding for text content
         const contentStyles = cn({
             'p-2': size === 'compact',
             'p-3': size === 'cozy',
-            'md:p-2': mobileSize === 'compact',
-            'md:p-3': mobileSize === 'cozy',
+            'md:p-2': desktopSize === 'compact',
+            'md:p-3': desktopSize === 'cozy',
         });
 
         return (

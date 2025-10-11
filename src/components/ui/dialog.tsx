@@ -42,6 +42,7 @@ const DialogContent = React.forwardRef<
     React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
         hideCloseIcon?: boolean;
         overlayZIndex?: number;
+        borderSeparator?: boolean;
     }
 >(
     (
@@ -50,6 +51,7 @@ const DialogContent = React.forwardRef<
             children,
             hideCloseIcon = false,
             overlayZIndex = 50,
+            borderSeparator = false,
             ...props
         },
         ref
@@ -63,7 +65,9 @@ const DialogContent = React.forwardRef<
                 onOpenAutoFocus={(e) => e.preventDefault()}
                 ref={ref}
                 className={cn(
-                    'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-bottom-[48px] data-[state=open]:slide-in-from-bottom-[48px] bg-neutral-850 fixed top-[50%] left-[50%] z-50 grid w-[calc(100%-3rem)] translate-x-[-50%] translate-y-[-50%] gap-8 rounded-xl border border-neutral-600/60 p-8 shadow-lg duration-300 motion-safe:backdrop-blur-[2px] motion-reduce:transition-none sm:max-w-md sm:rounded-lg',
+                    borderSeparator
+                        ? 'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-bottom-[48px] data-[state=open]:slide-in-from-bottom-[48px] bg-neutral-850 fixed top-[50%] left-[50%] z-50 grid w-[calc(100%-3rem)] translate-x-[-50%] translate-y-[-50%] gap-0 rounded-xl border border-neutral-600/60 p-0 shadow-lg duration-300 motion-safe:backdrop-blur-[2px] motion-reduce:transition-none sm:max-w-[28rem] sm:rounded-lg'
+                        : 'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-bottom-[48px] data-[state=open]:slide-in-from-bottom-[48px] bg-neutral-850 fixed top-[50%] left-[50%] z-50 grid w-[calc(100%-3rem)] translate-x-[-50%] translate-y-[-50%] gap-8 rounded-xl border border-neutral-600/60 p-8 shadow-lg duration-300 motion-safe:backdrop-blur-[2px] motion-reduce:transition-none sm:max-w-md sm:rounded-lg',
                     className
                 )}
                 style={{ zIndex: overlayZIndex + 1 }}
@@ -85,31 +89,45 @@ const DialogContent = React.forwardRef<
 );
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
-const DialogHeader = ({
-    className,
-    ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
+const DialogHeader = React.forwardRef<
+    HTMLDivElement,
+    React.HTMLAttributes<HTMLDivElement> & { borderSeparator?: boolean }
+>(({ className, borderSeparator = false, ...props }, ref) => (
     <div
-        className={cn('flex flex-col gap-2 text-left', className)}
+        ref={ref}
+        className={cn(
+            borderSeparator
+                ? 'flex flex-col gap-4 p-6 text-left'
+                : 'flex flex-col gap-2 text-left',
+            className
+        )}
         {...props}
     />
-);
+));
+
 DialogHeader.displayName = 'DialogHeader';
 
 const DialogFooter = ({
     className,
+    borderSeparator = false,
     ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
+}: React.HTMLAttributes<HTMLDivElement> & { borderSeparator?: boolean }) => (
     <div
         className={cn(
-            'flex w-full flex-col-reverse text-base font-medium md:flex-row',
+            borderSeparator
+                ? 'border-neutral-750 flex w-full flex-col-reverse justify-end gap-4 border-t p-6 md:flex-row'
+                : 'flex w-full flex-col-reverse text-base font-medium md:flex-row',
             className
         )}
-        style={{
-            marginTop: 'auto',
-            justifyContent: 'flex-end',
-            gap: '1rem',
-        }}
+        style={
+            borderSeparator
+                ? {}
+                : {
+                      marginTop: 'auto',
+                      justifyContent: 'flex-end',
+                      gap: '1rem',
+                  }
+        }
         {...props}
     />
 );

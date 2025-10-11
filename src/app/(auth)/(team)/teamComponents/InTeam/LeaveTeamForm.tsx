@@ -56,8 +56,8 @@ export default function LeaveTeamForm({
     };
 
     return (
-        <DialogContent className="max-w-sm gap-6 sm:max-w-[26rem]">
-            <DialogHeader>
+        <DialogContent borderSeparator className="sm:max-w-[430px]">
+            <DialogHeader borderSeparator>
                 <DialogTitle>Leave team {teamName}?</DialogTitle>
                 <DialogDescription>
                     Are you sure you want to leave this team? You will no longer
@@ -75,25 +75,35 @@ export default function LeaveTeamForm({
                     </span> */}
                 </DialogDescription>
             </DialogHeader>
-            <DialogFooter className="grid gap-3 text-base md:grid-cols-2">
-                <DialogTrigger asChild className="order-2 w-full md:order-0">
+            <DialogFooter
+                borderSeparator
+                className="grid gap-3 text-base md:grid-cols-2"
+                style={{
+                    justifyContent: 'inherit',
+                }}
+            >
+                <DialogTrigger asChild className="w-full">
                     <Button
                         variant={'default'}
-                        size={'cozy'}
+                        size={'compact'}
+                        desktopSize={'cozy'}
                         hierarchy={'secondary'}
                         type="button"
                         disabled={isLeaving}
+                        className="w-full"
                     >
-                        No, cancel
+                        No, Cancel
                     </Button>
                 </DialogTrigger>
                 <Button
                     type="submit"
                     variant="danger"
-                    size="cozy"
+                    size="compact"
+                    desktopSize={'cozy'}
                     hierarchy="primary"
                     onClick={onLeaveTeam}
                     disabled={isLeaving}
+                    className="w-full"
                 >
                     {isLeaving ? 'Leaving team...' : 'Yes, leave team'}
                 </Button>
