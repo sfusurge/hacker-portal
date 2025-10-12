@@ -1,0 +1,33 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+import Image from 'next/image';
+import SurgeLogo from '../../public/icons/surge-logo-blue.svg';
+
+<Meta title="Introduction" />
+
+<div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+    <div>
+        <h1 style={{ margin: 0 }}>Introduction</h1>
+    </div>
+    <Image src={SurgeLogo} alt="SFU Surge Logo" width={32} height={32} />
+</div>
+
+> "Styles come and go. Good design is a language, not a style."
+>
+> – Massimo Vignelli
+
+Strike is the component library and design system for SFU Surge. This Storybook documents our collection of repeatable components and the standards guiding their use. These components can be assembled together to build different products and platforms while maintaining consistency and a cohesive experience across the portal.
+
+Most of our components are built on top of [shadcn/ui](https://ui.shadcn.com/), a component library that we customize and extend to fit our needs.
+
+## Why do we need a design system?
+
+Design systems are a single source of truth that allows for a scalable UI language and streamlined UX guidelines. Building a library of design patterns, rules, and UX guidelines prevent inconsistencies when shipping products at scale.
+
+Design systems also encourage code reuse by providing a standardized set of pre-built, reusable components and design patterns, allowing developers to implement consistent functionality and UI elements across different projects without rebuilding from scratch.
+
+## What are the benefits of a design system?
+
+- Improved consistency across products
+- Faster development cycles with reusable components, as developers do not need to spend additional hours rebuilding the same elements over and over
+- Improved collaboration between design and development teams with an established framework for handoff from design to development
+- Quicker prototyping for designers by providing ready-made components that can be easily assembled into prototypes

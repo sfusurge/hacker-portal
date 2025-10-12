@@ -44,3 +44,6 @@ next-env.d.ts
 certificates
 # Local Netlify folder
 .netlify
+
+*storybook.log
+storybook-static

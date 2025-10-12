@@ -4,6 +4,18 @@ import { cva, VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
+export type ButtonVariant =
+    | 'default'
+    | 'success'
+    | 'caution'
+    | 'error'
+    | 'brand'
+    | 'danger'
+    | 'social';
+export type ButtonHierarchy = 'primary' | 'secondary' | 'tertiary';
+export type ButtonSize = 'compact' | 'cozy';
+export type ButtonType = 'button' | 'submit' | 'reset';
+
 interface ButtonProps {
     leadingIcon?: string;
     leadingIconAlt?: string;
@@ -11,9 +23,9 @@ interface ButtonProps {
     trailingIcon?: string;
     trailingIconAlt?: string;
     trailingIconChild?: React.ReactElement;
-    type?: 'button' | 'submit' | 'reset';
-    size?: 'compact' | 'cozy';
-    desktopSize?: 'compact' | 'cozy';
+    type?: ButtonType;
+    size?: ButtonSize;
+    desktopSize?: ButtonSize;
 }
 
 const buttonVariants = cva(
