@@ -80,6 +80,10 @@
     border-color: var(--border-brand-primary);
 }
 
+.label:has(input:checked) .inlineLabel {
+    color: white;
+}
+
 .check {
     position: absolute;
     opacity: 0;
