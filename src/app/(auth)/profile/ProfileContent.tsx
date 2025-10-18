@@ -4,11 +4,10 @@ import { useState, useRef } from 'react';
 import { Label } from '@/components/ui/label/label';
 import { FormTextInput, Input } from '@/components/ui/input/input';
 import { UserData } from '@/server/routers/usersRouter';
-import { PencilIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
 import { trpc } from '@/trpc/client';
 import { useToast } from '@/hooks/use-toast';
-import Image from 'next/image';
+import { AvatarUpload } from '@/components/ui/avatar-upload';
 import { uploadFileToBlob, getIcon } from '@/utils/blobHelper';
 
 interface ProfileContentProps {
@@ -138,85 +137,46 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
 
     return (
         <div className="w-full max-w-[498px] space-y-10">
-            <div className="flex h-24 w-full flex-row items-start gap-6">
-                <div className="relative h-24 w-24 flex-none">
-                    <div className="h-24 w-24 overflow-hidden rounded-full">
-                        <Image
-                            src={
-                                profilePicture ||
-                                (userData.image
-                                    ? getIcon('user_icon', userData.image)
-                                    : '/teams/single-otter.webp')
-                            }
-                            alt="Profile Picture"
-                            width={96}
-                            height={96}
-                            objectFit="cover"
-                            className="h-full w-full rounded-full"
-                            unoptimized={!!profilePicture}
-                        />
-                    </div>
-                    <button
-                        type="button"
-                        className="absolute top-16 left-16 flex h-9 w-9 items-center justify-center rounded-full bg-[var(--neutral-925)]"
-                        aria-label="Edit profile picture"
-                        onClick={handleProfilePictureClick}
-                        disabled={isSubmitting}
-                    >
-                        <PencilIcon className="h-4 w-4 text-[var(--text-secondary)]" />
-                    </button>
-                </div>
+            <AvatarUpload
+                type="profile"
+                size="lg"
+                currentImage={
+                    profilePicture ||
+                    (userData.image
+                        ? getIcon('user_icon', userData.image)
+                        : undefined)
+                }
+                defaultImage="/teams/single-otter.webp"
+                disabled={isSubmitting}
+                onFileChange={(file) => {
+                    if (file) {
+                        if (fileInputRef.current) {
+                            // Create a DataTransfer object to set files
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(file);
+                            fileInputRef.current.files = dataTransfer.files;
+                        }
+                        const fileUrl = URL.createObjectURL(file);
+                        setProfilePicture(fileUrl);
+                    } else {
+                        setProfilePicture('');
+                        if (fileInputRef.current) {
+                            fileInputRef.current.value = '';
+                        }
+                    }
+                }}
+                onImageUrlChange={(url) => setProfilePicture(url || '')}
+            />
 
-                {/* Hidden file input */}
-                <Input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept=".png, .jpeg, .jpg"
-                    onChange={handleFileChange}
-                    disabled={isSubmitting}
-                />
-
-                {/* Profile pic */}
-                <div className="flex h-23 flex-col items-start gap-3">
-                    <div className="text-[length:var(--text-sm)] font-medium text-[var(--text-secondary)]">
-                        Profile picture
-                    </div>
-
-                    <div className="flex gap-2">
-                        <button
-                            type="button"
-                            onClick={handleProfilePictureClick}
-                            disabled={isSubmitting}
-                            className="flex h-9 w-18 flex-row items-center justify-center rounded-lg border border-[var(--border-neutral-secondary)] bg-[var(--background-neutral-secondary)] px-0 py-2 disabled:opacity-50"
-                        >
-                            <span className="px-3 text-[length:var(--text-sm)] font-medium text-[var(--text-regular)]">
-                                Upload
-                            </span>
-                        </button>
-
-                        {profilePicture && (
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setProfilePicture('');
-                                    if (fileInputRef.current) {
-                                        fileInputRef.current.value = '';
-                                    }
-                                }}
-                                disabled={isSubmitting}
-                                className="hover:bg-neutral-750/60 flex h-9 items-center justify-center rounded-lg border border-transparent bg-transparent px-3 py-2 text-[length:var(--text-sm)] font-medium text-[var(--text-regular)] underline underline-offset-4 disabled:opacity-50"
-                            >
-                                Clear
-                            </button>
-                        )}
-                    </div>
-
-                    <div className="text-[length:var(--text-xs)] leading-[var(--leading-relaxed)] text-balance text-white/60">
-                        .png, .jpeg files up to 2 MB, at least 200px × 200px
-                    </div>
-                </div>
-            </div>
+            {/* Hidden file input for backward compatibility */}
+            <Input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept=".png, .jpeg, .jpg"
+                onChange={handleFileChange}
+                disabled={isSubmitting}
+            />
 
             {/* Form */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

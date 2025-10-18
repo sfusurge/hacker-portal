@@ -7,6 +7,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { trpc } from '@/trpc/client';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AvatarUpload } from '@/components/ui/avatar-upload';
 import {
     ResponsiveDialogContent,
     ResponsiveDialogHeader,
@@ -119,126 +120,29 @@ export default function CreateTeamForm({
                 </Alert>
             )}
 
-            <div className="flex gap-6 text-white/60">
-                <Image
-                    src={imageUrl || '/teams/default.webp'}
-                    alt="Team picture"
-                    width={64}
-                    height={64}
-                    className="h-16 w-16 rounded-xl"
-                    unoptimized={!!imageUrl}
-                />
-                <Conditional showWhen={isDesktop}>
-                    <div className="flex flex-col gap-3">
-                        <Label required className="block text-sm font-medium">
-                            Team picture
-                        </Label>
-                        <Input
-                            type="file"
-                            id="file-upload"
-                            className="hidden w-auto"
-                            accept=".png, .jpeg, .jpg"
-                            ref={fileInputRef}
-                            onChange={handleFileChange}
-                            required
-                            disabled={isCreating}
-                        />
-                        <div className="flex gap-1">
-                            <label
-                                htmlFor="file-upload"
-                                className="cursor-pointer"
-                            >
-                                <Button
-                                    variant="default"
-                                    hierarchy="primary"
-                                    size="compact"
-                                    onClick={handleButtonClick}
-                                    type="button"
-                                    disabled={isCreating}
-                                >
-                                    Upload
-                                </Button>
-                            </label>
-                            {imageUrl && (
-                                <Button
-                                    variant="default"
-                                    hierarchy="tertiary"
-                                    size="compact"
-                                    className="hover:bg-neutral-750/60 border-2 border-transparent underline underline-offset-4"
-                                    onClick={() => {
-                                        setImageUrl(null);
-                                        if (fileInputRef.current) {
-                                            fileInputRef.current.value = '';
-                                        }
-                                    }}
-                                    type="button"
-                                    disabled={isCreating}
-                                >
-                                    Clear
-                                </Button>
-                            )}
-                        </div>
-                        <p className="text-xs">
-                            .png, jpeg files up to 2 MB <br /> At least 200px x
-                            200px
-                        </p>
-                    </div>
-                </Conditional>
-                <Conditional showWhen={!isDesktop}>
-                    <div className="flex flex-col gap-3">
-                        <Label required className="block text-sm font-medium">
-                            Team picture
-                        </Label>
-                        <Input
-                            type="file"
-                            id="file-upload"
-                            className="hidden w-auto"
-                            accept=".png, .jpeg"
-                            ref={fileInputRef}
-                            onChange={handleFileChange}
-                            required
-                            disabled={isCreating}
-                        />
-                        <p className="text-xs">
-                            .png, jpeg files up to 2 MB <br /> At least 200px x
-                            200px
-                        </p>
-                    </div>
-                    <div className="flex flex-col items-end justify-end gap-1">
-                        <label htmlFor="file-upload" className="cursor-pointer">
-                            <Button
-                                variant="default"
-                                hierarchy="primary"
-                                size="compact"
-                                onClick={handleButtonClick}
-                                type="button"
-                                disabled={isCreating}
-                            >
-                                Upload
-                            </Button>
-                        </label>
-
-                        {imageUrl && (
-                            <Button
-                                variant="default"
-                                hierarchy="tertiary"
-                                size="compact"
-                                className="hover:bg-neutral-750/60 border-2 border-transparent underline underline-offset-4"
-                                onClick={() => {
-                                    setImageUrl('');
-                                    if (fileInputRef.current) {
-                                        fileInputRef.current.value = '';
-                                    }
-                                }}
-                                type="button"
-                                disabled={isCreating}
-                            >
-                                Clear
-                            </Button>
-                        )}
-                    </div>
-                </Conditional>
-            </div>
+            <AvatarUpload
+                type="team"
+                size="sm"
+                label="Team picture"
+                currentImage={imageUrl || undefined}
+                defaultImage="/teams/default.webp"
+                helpText=".png, jpeg files up to 2 MB, at least 200px x 200px"
+                required={true}
+                disabled={isCreating}
+                onFileChange={(file) => {
+                    if (file) {
+                        handleFileChange({
+                            target: { files: [file] },
+                        } as React.ChangeEvent<HTMLInputElement>);
+                    } else {
+                        setImageUrl(null);
+                        if (fileInputRef.current) {
+                            fileInputRef.current.value = '';
+                        }
+                    }
+                }}
+                onImageUrlChange={(url) => setImageUrl(url || null)}
+            />
 
             <div className="flex flex-col gap-3">
                 <Label

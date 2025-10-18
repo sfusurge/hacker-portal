@@ -136,7 +136,7 @@ export const WithoutCloseButton = {
                     <DrawerHeader>
                         <DrawerTitle>No Close Button</DrawerTitle>
                         <DrawerDescription>
-                            This drawer doesn't have a close button in the
+                            This drawer doesn&apos;t have a close button in the
                             header.
                         </DrawerDescription>
                     </DrawerHeader>

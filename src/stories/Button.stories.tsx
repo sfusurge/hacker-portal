@@ -4,7 +4,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 
 const meta: Meta<React.ComponentProps<typeof Button>> = {
-    title: 'Strike/Button',
+    title: 'Strike/Button/Button',
     component: Button,
     parameters: {
         layout: 'centered',
