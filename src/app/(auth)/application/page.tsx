@@ -1,3 +1,5 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -5,9 +7,9 @@ import timezone from 'dayjs/plugin/timezone';
 
 import Image from 'next/image';
 import ApplicationPageComponent from '@/app/(auth)/application/ApplicationPage';
-import { createCaller } from '@/server/appRouter';
+// import { createCaller } from '@/server/appRouter';
 
-export default async function ApplicationPage({
+export default function ApplicationPage({
     searchParams,
 }: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -16,15 +18,15 @@ export default async function ApplicationPage({
     dayjs.extend(timezone);
     const currentTime = dayjs();
     const cutoffTime = dayjs.tz('2025-09-26 23:59:00', 'America/Los_Angeles');
-    const params = await searchParams;
+    // const params = await searchParams;
 
-    const trpcClient = createCaller({});
+    // const trpcClient = createCaller({});
 
-    const bypass =
-        process.env.APPLY_BYPASS &&
-        params['appbypass'] === process.env.APPLY_BYPASS;
+    // const bypass =
+    //     process.env.APPLY_BYPASS &&
+    //     params['appbypass'] === process.env.APPLY_BYPASS;
 
-    if (currentTime.isAfter(cutoffTime) && !bypass) {
+    if (currentTime.isAfter(cutoffTime)) {
         return (
             <div className="flex h-full w-full flex-col items-center justify-center gap-8">
                 <Image
