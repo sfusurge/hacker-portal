@@ -267,7 +267,43 @@ export default function DesktopNav({
                                                 <div className="absolute top-0 flex w-full flex-row items-center gap-3 bg-neutral-900/50 p-3 backdrop-blur-lg">
                                                     <div className="h-6 w-6 shrink-0 opacity-0" />
                                                     <div className="mt-1 flex flex-col gap-2 overflow-hidden">
-                                                        <span className="line-clamp-1 text-sm font-medium whitespace-nowrap text-white">
+                                                        <span
+                                                            className="line-clamp-1 cursor-pointer text-sm font-medium whitespace-nowrap text-white hover:text-white/80"
+                                                            role="button"
+                                                            tabIndex={0}
+                                                            onClick={() => {
+                                                                try {
+                                                                    const prev =
+                                                                        localStorage.getItem(
+                                                                            'timeShift.visible'
+                                                                        ) ===
+                                                                        'true';
+                                                                    localStorage.setItem(
+                                                                        'timeShift.visible',
+                                                                        prev
+                                                                            ? 'false'
+                                                                            : 'true'
+                                                                    );
+                                                                } catch (e) {
+                                                                    console.error(
+                                                                        'DesktopNav: Failed to toggle timeShift.visible',
+                                                                        e
+                                                                    );
+                                                                }
+                                                                try {
+                                                                    window.dispatchEvent(
+                                                                        new Event(
+                                                                            'timeShift-toggle'
+                                                                        )
+                                                                    );
+                                                                } catch (e) {
+                                                                    console.error(
+                                                                        'DesktopNav: Failed to dispatch timeShift-toggle',
+                                                                        e
+                                                                    );
+                                                                }
+                                                            }}
+                                                        >
                                                             StormHacks 2025
                                                         </span>
                                                     </div>
