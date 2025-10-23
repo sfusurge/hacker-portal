@@ -245,7 +245,7 @@ function SubmitCardContent({
     }
 
     function getContent() {
-        console.log(hackathon.submissionDeadline.format('MMM DD, hh:mm'));
+        // console.log(hackathon.submissionDeadline.format('MMM DD, hh:mm'));
 
         if (
             !userapplication.isLoading &&

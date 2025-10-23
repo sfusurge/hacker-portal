@@ -7,6 +7,7 @@ import {
     StatusEnum,
     updateApplicationStatusSchema,
     updateLastEmailSentSchema,
+    deleteApplicationSchema,
 } from '@/db/schema/applications';
 import { user } from '@/db/schema/users/users';
 import {
@@ -375,6 +376,49 @@ export const applicationsRouter = router({
                 .limit(1);
 
             return application ?? null;
+        }),
+
+    deleteOwnApplication: publicProcedure
+        .input(deleteApplicationSchema)
+        .mutation(async ({ input }) => {
+            const user = await getBasicUserInfo();
+
+            if (!user) {
+                throw new InternalServerError(
+                    'Unexpected `undefined` userData'
+                );
+            }
+
+            try {
+                const deletedApplications = await databaseClient
+                    .delete(applications)
+                    .where(
+                        and(
+                            eq(applications.hackathonId, input.hackathonId),
+                            eq(applications.userId, user.id)
+                        )
+                    )
+                    .returning();
+
+                if (deletedApplications.length === 0) {
+                    return {
+                        success: false,
+                        message: 'No application found to delete',
+                    };
+                }
+
+                return {
+                    success: true,
+                    message: 'Application deleted successfully',
+                    deletedApplication: deletedApplications[0],
+                };
+            } catch (e) {
+                console.error(
+                    'applicationsRouter.deleteOwnApplication failed',
+                    e
+                );
+                throw new InternalServerError('Failed to delete application');
+            }
         }),
 
     getApplicationByEmail: publicProcedure

@@ -49,7 +49,7 @@ export const sendEmailRouter = router({
                             /^data:image\/png;base64,/,
                             ''
                         );
-                        console.log('QR code generated successfully');
+                        // console.log('QR code generated successfully');
 
                         // Add QR code as embedded image for display in email
                         attachments.push({

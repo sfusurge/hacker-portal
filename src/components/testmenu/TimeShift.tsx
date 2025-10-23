@@ -58,7 +58,7 @@ function patchGlobalDate() {
             (ShiftedDate as any)[key] = (OriginalDate as any)[key];
         } catch (e) {
             console.error(
-                'TimeShift: Failed copying static property onto ShiftedDate (harmless):',
+                'TimeShift: Failed copying static property onto ShiftedDate',
                 key,
                 e
             );
@@ -178,7 +178,7 @@ export default function TimeShift() {
         try {
             router.refresh();
         } catch (e) {
-            console.error('TimeShift: router.refresh() failed (non-fatal)', e);
+            console.error('TimeShift: router.refresh() failed', e);
         }
     }, [offsetMs]);
 
@@ -229,29 +229,33 @@ export default function TimeShift() {
 
     return (
         <Card className="p-3">
-            <div className="flex items-center gap-3">
-                <label className="text-white/60">Set Simulated DateTime</label>
-                <input
-                    type="datetime-local"
-                    value={selectedDateTime}
-                    onChange={(e) => {
-                        const v = e.target.value;
-                        setSelectedDateTime(v);
-                        storeDateTime(v);
-                    }}
-                    className="rounded bg-neutral-800 px-2 py-1 outline-none"
-                    aria-label="Set simulated date and time"
-                />
-                <Button
-                    size={'cozy'}
-                    variant="default"
-                    hierarchy={'primary'}
-                    className="text-sm"
-                    onClick={reset}
-                >
-                    Reset
-                </Button>
-                <div className="ml-auto text-xs text-white/60">
+            <div className="flex flex-col items-start justify-start gap-3">
+                <label className="text-sm text-white/90">
+                    Set Simulated DateTime
+                </label>
+                <div className={'flex items-center gap-2'}>
+                    <input
+                        type="datetime-local"
+                        value={selectedDateTime}
+                        onChange={(e) => {
+                            const v = e.target.value;
+                            setSelectedDateTime(v);
+                            storeDateTime(v);
+                        }}
+                        className="rounded bg-neutral-800 px-2 py-1 outline-none"
+                        aria-label="Set simulated date and time"
+                    />
+                    <Button
+                        size={'cozy'}
+                        variant="default"
+                        hierarchy={'primary'}
+                        className="text-sm"
+                        onClick={reset}
+                    >
+                        Reset
+                    </Button>
+                </div>
+                <div className="text-xs text-white/60">
                     What time the Portal thinks it is:{' '}
                     {shiftedNow.toLocaleString()}
                 </div>

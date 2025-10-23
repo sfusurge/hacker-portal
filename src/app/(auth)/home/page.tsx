@@ -8,7 +8,6 @@ import { redirect } from 'next/navigation';
 import SubmissionCardHomepage from '@/components/home/SubmissionCard';
 import SponsorDashboard from './sponsor/index';
 import DiscordCard from '@/components/home/DiscordCard';
-import TimeShiftCond from '@/components/timeshift/TimeShiftCond';
 
 export default async function Home() {
     const data = await getUserData();
@@ -56,7 +55,6 @@ export default async function Home() {
 
     return (
         <div className="flex flex-col gap-6 md:gap-8">
-            <TimeShiftCond />
             <h1 className="text-3xl font-semibold text-white">
                 Hi, {data?.firstName} {data?.lastName}!
             </h1>

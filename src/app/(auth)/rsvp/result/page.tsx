@@ -21,7 +21,7 @@ export default async function ResultPage(
 
     // const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
-    console.log('payment results:');
+    // console.log('payment results:');
     // console.log(JSON.stringify(paymentIntentId, undefined, 4));
     return (
         <FullPageInfo

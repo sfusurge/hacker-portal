@@ -67,6 +67,10 @@ export const insertApplicationSchema = createInsertSchema(applications).pick({
     response: true,
 });
 
+export const deleteApplicationSchema = z.object({
+    hackathonId: z.number().int(),
+});
+
 export const queryApplicationsSchema = z.object({
     hackathonId: z.number().int(),
     maxResult: z.number().int().optional().default(200),

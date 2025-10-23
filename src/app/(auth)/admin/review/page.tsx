@@ -85,7 +85,7 @@ export default function ReviewApplicationsPage() {
         () => applicationData.data?.pages.flatMap((p) => p.applications) ?? [],
         [applicationData.data]
     );
-    console.log('applications', { applications });
+    // console.log('applications', { applications });
 
     const applicationDataMap = useMemo(() => {
         const map = new Map<number, ApplicationWithTeamInfo>();
