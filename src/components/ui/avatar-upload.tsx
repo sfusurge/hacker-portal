@@ -33,7 +33,7 @@ export function AvatarUpload({
         (type === 'team' ? '/teams/default.webp' : '/teams/single-otter.webp');
     const isRequired = type === 'team';
     const displayLabel = type === 'team' ? 'Team picture' : 'Profile picture';
-    const showEditIcon = true;
+    const showEditIcon = type !== 'team';
     const showClearButton = true;
     const [imageUrl, setImageUrl] = useState<string | null>(
         currentImage || null

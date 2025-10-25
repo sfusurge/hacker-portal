@@ -4,7 +4,7 @@ import React from 'react';
 import { AvatarUpload } from '@/components/ui/avatar-upload';
 
 const meta: Meta<React.ComponentProps<typeof AvatarUpload>> = {
-    title: 'Strike/AvatarUpload',
+    title: 'Strike/Avatar Upload',
     component: AvatarUpload,
     parameters: {
         layout: 'centered',
@@ -72,68 +72,8 @@ export const TeamAvatar = {
     },
 };
 
-export const LargeAvatar = {
-    parameters: {
-        docs: {
-            description: {
-                story: 'Large size avatar upload.',
-            },
-        },
-    },
-    args: {
-        type: 'profile',
-        size: 'lg',
-        disabled: false,
-    },
-};
-
-export const SmallAvatar = {
-    parameters: {
-        docs: {
-            description: {
-                story: 'Small size avatar upload.',
-            },
-        },
-    },
-    args: {
-        type: 'profile',
-        size: 'sm',
-        disabled: false,
-    },
-};
-
-export const DisabledAvatar = {
-    parameters: {
-        docs: {
-            description: {
-                story: 'Disabled avatar upload.',
-            },
-        },
-    },
-    args: {
-        type: 'profile',
-        size: 'lg',
-        disabled: true,
-    },
-};
-
-export const NoEditIcon = {
-    parameters: {
-        docs: {
-            description: {
-                story: 'Avatar upload without edit icon.',
-            },
-        },
-    },
-    args: {
-        type: 'profile',
-        size: 'lg',
-        disabled: false,
-    },
-};
-
 export const AllVariantsShowcase = {
-    name: 'All Variants Showcase',
+    name: 'Variants Showcase',
     parameters: {
         docs: {
             description: {
@@ -143,14 +83,12 @@ export const AllVariantsShowcase = {
     },
     decorators: [
         () => (
-            <div className="flex flex-col gap-8 p-6">
+            <div className="flex gap-8 p-6">
                 <div>
                     <h3 className="mb-4 text-lg font-medium">
                         Profile Avatars
                     </h3>
                     <div className="flex flex-wrap gap-8">
-                        <AvatarUpload type="profile" size="sm" />
-                        <AvatarUpload type="profile" size="md" />
                         <AvatarUpload type="profile" size="lg" />
                     </div>
                 </div>
@@ -158,8 +96,6 @@ export const AllVariantsShowcase = {
                 <div>
                     <h3 className="mb-4 text-lg font-medium">Team Avatars</h3>
                     <div className="flex flex-wrap gap-8">
-                        <AvatarUpload type="team" size="sm" />
-                        <AvatarUpload type="team" size="md" />
                         <AvatarUpload type="team" size="lg" />
                     </div>
                 </div>

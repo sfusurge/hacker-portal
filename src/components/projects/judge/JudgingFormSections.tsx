@@ -1,7 +1,6 @@
 'use client';
 
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/button-group';
 import { Label } from '@/components/ui/label/label';
 import { RadioButtonGroup } from '@/components/ui/radioButtonGroup/radioButtonGroup';
 
