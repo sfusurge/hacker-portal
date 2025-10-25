@@ -11,6 +11,8 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import ApplicationSelfDelete from '@/components/testmenu/ApplicationSelfDelete';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 const VISIBILITY_KEY = 'timeShift.visible';
 
@@ -70,6 +72,7 @@ export default function TimeShiftCond() {
             console.error('TimeShiftCond: Failed to dispatch toggle event', e);
         }
     };
+    const router = useRouter();
 
     return (
         <Dialog open={visible} onOpenChange={handleOpenChange}>
@@ -85,6 +88,21 @@ export default function TimeShiftCond() {
                     <ApplicationStatusSwitcher />
                     <ApplicationResponseReset />
                     <ApplicationSelfDelete />
+                    <Button
+                        size={'cozy'}
+                        variant="default"
+                        hierarchy={'primary'}
+                        className="text-sm"
+                        onChange={(e) => {
+                            try {
+                                router.refresh();
+                            } catch (e) {
+                                console.error('router.refresh() failed', e);
+                            }
+                        }}
+                    >
+                        Refresh
+                    </Button>
                 </div>
             </DialogContent>
         </Dialog>

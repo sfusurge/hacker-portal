@@ -95,7 +95,13 @@ export default function ApplicationStatusSwitcher() {
             );
         } finally {
             setIsUpdating(false);
+            try {
+                router.refresh();
+            } catch (e) {
+                console.error('router.refresh() failed', e);
+            }
         }
+        router.refresh();
     };
 
     return (

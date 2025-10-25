@@ -197,6 +197,11 @@ export default function TimeShift() {
             console.error('TimeShift: Failed to apply offset=0 on reset', e);
         }
         setNowTick((x) => x + 1);
+        try {
+            router.refresh();
+        } catch (e) {
+            console.error('TimeShift: router.refresh() failed', e);
+        }
     };
 
     function getShiftedNowFromStorage(): Date {
@@ -245,6 +250,14 @@ export default function TimeShift() {
                             const v = e.target.value;
                             setSelectedDateTime(v);
                             storeDateTime(v);
+                            try {
+                                router.refresh();
+                            } catch (e) {
+                                console.error(
+                                    'TimeShift: router.refresh() failed',
+                                    e
+                                );
+                            }
                         }}
                         className="rounded bg-neutral-800 px-2 py-1 outline-none"
                         aria-label="Set simulated date and time"
