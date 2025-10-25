@@ -75,7 +75,7 @@ export default function TimeShiftCond() {
         <Dialog open={visible} onOpenChange={handleOpenChange}>
             <DialogContent
                 overlayZIndex={200}
-                className="w-1/2 max-w-full overflow-x-hidden"
+                className="max-w-full overflow-x-hidden md:w-1/2"
             >
                 <DialogHeader>
                     <DialogTitle>Testing Menu</DialogTitle>

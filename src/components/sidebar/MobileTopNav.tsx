@@ -15,7 +15,7 @@ import {
 
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { signOut } from 'next-auth/react';
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 import { UserData } from '@/server/routers/usersRouter';
@@ -74,7 +74,38 @@ export default function MobileTopNav({
                             />
 
                             <div className="flex flex-col gap-2">
-                                <span className="line-clamp-1 text-sm leading-none font-medium text-white">
+                                <span
+                                    className="line-clamp-1 text-sm leading-none font-medium text-white hover:text-white/80"
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => {
+                                        try {
+                                            const prev =
+                                                localStorage.getItem(
+                                                    'timeShift.visible'
+                                                ) === 'true';
+                                            localStorage.setItem(
+                                                'timeShift.visible',
+                                                prev ? 'false' : 'true'
+                                            );
+                                        } catch (e) {
+                                            console.error(
+                                                'DesktopNav: Failed to toggle timeShift.visible',
+                                                e
+                                            );
+                                        }
+                                        try {
+                                            window.dispatchEvent(
+                                                new Event('timeShift-toggle')
+                                            );
+                                        } catch (e) {
+                                            console.error(
+                                                'DesktopNav: Failed to dispatch timeShift-toggle',
+                                                e
+                                            );
+                                        }
+                                    }}
+                                >
                                     StormHacks 2025
                                 </span>
                                 <span className="line-clamp-1 text-sm leading-none text-white/60">

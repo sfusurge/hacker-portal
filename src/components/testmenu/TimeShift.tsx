@@ -233,7 +233,11 @@ export default function TimeShift() {
                 <label className="text-sm text-white/90">
                     Set Simulated DateTime
                 </label>
-                <div className={'flex items-center gap-2'}>
+                <div
+                    className={
+                        'flex flex-col items-start gap-2 md:flex-row md:items-center'
+                    }
+                >
                     <input
                         type="datetime-local"
                         value={selectedDateTime}
