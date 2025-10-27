@@ -237,13 +237,43 @@ export default function DesktopNav({
                                         : 'top-3 left-3'
                                 )}
                             >
-                                <Image
-                                    src="/dashboard/sh25head.png"
-                                    alt="StormHacks 2025 Logo"
-                                    width={48}
-                                    height={48}
-                                    className="pointer-events-none h-full w-full rounded-lg object-cover"
-                                />
+                                <button
+                                    onClick={() => {
+                                        try {
+                                            const prev =
+                                                localStorage.getItem(
+                                                    'timeShift.visible'
+                                                ) === 'true';
+                                            localStorage.setItem(
+                                                'timeShift.visible',
+                                                prev ? 'false' : 'true'
+                                            );
+                                        } catch (e) {
+                                            console.error(
+                                                'DesktopNav: Failed to toggle timeShift.visible',
+                                                e
+                                            );
+                                        }
+                                        try {
+                                            window.dispatchEvent(
+                                                new Event('timeShift-toggle')
+                                            );
+                                        } catch (e) {
+                                            console.error(
+                                                'DesktopNav: Failed to dispatch timeShift-toggle',
+                                                e
+                                            );
+                                        }
+                                    }}
+                                >
+                                    <Image
+                                        src="/dashboard/sh25head.png"
+                                        alt="StormHacks 2025 Logo"
+                                        width={48}
+                                        height={48}
+                                        className="pointer-events-none h-full w-full rounded-lg object-cover"
+                                    />
+                                </button>
                             </motion.div>
 
                             <div className="absolute inset-0 w-full">
