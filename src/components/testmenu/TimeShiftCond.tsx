@@ -18,6 +18,7 @@ const VISIBILITY_KEY = 'timeShift.visible';
 
 export default function TimeShiftCond() {
     const [visible, setVisible] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         try {
@@ -72,7 +73,6 @@ export default function TimeShiftCond() {
             console.error('TimeShiftCond: Failed to dispatch toggle event', e);
         }
     };
-    const router = useRouter();
 
     return (
         <Dialog open={visible} onOpenChange={handleOpenChange}>
@@ -93,8 +93,9 @@ export default function TimeShiftCond() {
                         variant="default"
                         hierarchy={'primary'}
                         className="text-sm"
-                        onChange={(e) => {
+                        onClick={(e) => {
                             try {
+                                handleOpenChange(false);
                                 router.refresh();
                             } catch (e) {
                                 console.error('router.refresh() failed', e);
