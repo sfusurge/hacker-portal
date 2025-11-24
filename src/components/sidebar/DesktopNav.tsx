@@ -238,8 +238,8 @@ export default function DesktopNav({
                                 )}
                             >
                                 <Image
-                                    src="/dashboard/sh25head.png"
-                                    alt="StormHacks 2025 Logo"
+                                    src="/dashboard/jh26head.png"
+                                    alt="JourneyHacks 2026 Logo"
                                     width={48}
                                     height={48}
                                     className="pointer-events-none h-full w-full rounded-lg object-cover"
@@ -268,12 +268,12 @@ export default function DesktopNav({
                                                     <div className="h-6 w-6 shrink-0 opacity-0" />
                                                     <div className="mt-1 flex flex-col gap-2 overflow-hidden">
                                                         <span className="line-clamp-1 text-sm font-medium whitespace-nowrap text-white">
-                                                            StormHacks 2025
+                                                            JourneyHacks 2026
                                                         </span>
                                                     </div>
                                                 </div>
                                                 <Image
-                                                    src="/dashboard/sh25header.png"
+                                                    src="/dashboard/jh26header.png"
                                                     alt="StormHacks"
                                                     width={200}
                                                     height={150}

@@ -9,6 +9,7 @@ export function isApplicationQuestionFilled(question: InputFormQuestion) {
             case 'text-area':
             case 'text-line':
             case 'date':
+            case 'date-ymd':
                 return (
                     question.value !== undefined && question.value.length > 0
                 );
@@ -42,10 +43,38 @@ export function isApplicationQuestionFilled(question: InputFormQuestion) {
                     question.selection !== undefined &&
                     question.selection.length > 0
                 );
+            case 'dropdown':
+                if (question.allowMultiple) {
+                    return (
+                        Array.isArray(question.value) &&
+                        question.value.length > 0
+                    );
+                }
+                return (
+                    question.value !== undefined &&
+                    question.value !== null &&
+                    question.value !== ''
+                );
+            case 'inline':
+                // For inline questions, check if all required content questions are filled
+                if (!question.content || question.content.length === 0) {
+                    return true; // Empty inline is considered filled
+                }
+                // If the inline question itself is required, all content questions must be filled
+                // Otherwise, check if at least one is filled
+                if (question.required) {
+                    return question.content.every((contentQuestion) =>
+                        isApplicationQuestionFilled(contentQuestion)
+                    );
+                } else {
+                    return question.content.some((contentQuestion) =>
+                        isApplicationQuestionFilled(contentQuestion)
+                    );
+                }
         }
     } catch (error) {
         console.error(
-            `Error checking if question ${question.questionId} is filled:`,
+            `Error checking if question ${question.questionId ?? 'inline'} is filled:`,
             error
         );
         return false;

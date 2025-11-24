@@ -10,6 +10,7 @@ import type {
     QuestionMultipleChoice,
     QuestionMultipleCheckBox,
     QuestionDatePicker,
+    QuestionDateYmd,
     QuestionSchoolName,
     QuestionNameInput,
     QuestionFileUploads,
@@ -135,6 +136,10 @@ export function ReviewPage({
             case 'date':
                 const dateQuestion = question as QuestionDatePicker;
                 return dateQuestion.value || 'N/A';
+
+            case 'date-ymd':
+                const dateYmdQuestion = question as QuestionDateYmd;
+                return dateYmdQuestion.value || 'N/A';
 
             case 'school-name':
                 const schoolQuestion = question as QuestionSchoolName;

@@ -52,6 +52,7 @@ export interface InputFormPageData extends Entry {
 export type InputFormQuestion =
     | QuestionCheckBoxInput
     | QuestionDatePicker
+    | QuestionDateYmd
     | QuestionTextAreaInput
     | QuestionTextLineInput
     | QuestionNumberInput
@@ -61,7 +62,9 @@ export type InputFormQuestion =
     | QuestionNameInput
     | QuestionFileUploads
     | QuestionRichTextInput
-    | QuestionTextLinkInput;
+    | QuestionTextLinkInput
+    | QuestionDropdown
+    | QuestionInline;
 
 export type ApplicationQuestionType = InputFormQuestion['type'];
 
@@ -198,6 +201,38 @@ export interface QuestionSchoolName extends Question {
 export interface QuestionDatePicker extends Question {
     type: 'date';
     value?: string;
+}
+
+/**
+ * Date input with YYYY/MM/DD format
+ */
+export interface QuestionDateYmd extends Question {
+    type: 'date-ymd';
+    value?: string;
+    placeHolder?: string;
+}
+
+/**
+ * Dropdown/select input with optional custom input support
+ */
+export interface QuestionDropdown extends Question {
+    type: 'dropdown';
+    value?: string | string[]; // string if allowMultiple is false, string[] if true
+    choices: ChoiceOption[];
+    allowCustom?: boolean;
+    customPlaceHolder?: string;
+    allowMultiple?: boolean;
+    placeHoldder?: string; // Placeholder text for the dropdown button (note: typo in field name)
+    dropdownDescription?: string; // Description text shown inside the dropdown menu header
+}
+
+/**
+ * Inline container that groups multiple questions horizontally
+ */
+export interface QuestionInline extends Omit<Question, 'questionId'> {
+    type: 'inline';
+    questionId?: number; // Optional for inline questions as they're containers
+    content: InputFormQuestion[]; // Array of questions to display inline
 }
 
 export interface JudgeQuestion extends Question {

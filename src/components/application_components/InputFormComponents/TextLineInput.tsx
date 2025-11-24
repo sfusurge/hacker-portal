@@ -22,6 +22,9 @@ export function TextLineInput({
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
 
+    const normalizedValue =
+        typeof question.value === 'string' ? question.value : undefined;
+
     return (
         <FormTextInput
             type="search"
@@ -30,7 +33,7 @@ export function TextLineInput({
             onLazyChange={(newVal) => {
                 setQuestion({ ...question, value: `${newVal}` });
             }}
-            defaultValue={question.value}
+            defaultValue={normalizedValue}
             placeholder={question.placeHolder ?? ''}
             required={question.required}
             pattern={

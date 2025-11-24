@@ -25,6 +25,9 @@ import type {
     QuestionRichTextInput,
     QuestionTextLinkInput,
     QuestionSchoolName,
+    QuestionDropdown,
+    QuestionInline,
+    QuestionDateYmd,
 } from './types';
 import { splitAtom } from 'jotai/utils';
 import style from './InputForm.module.css';
@@ -62,6 +65,9 @@ import { cn } from '@/lib/utils';
 import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
 import { FileUploadInput } from '@/components/application_components/InputFormComponents/FileUploadInput';
 import { RichTextInput } from '@/components/application_components/InputFormComponents/RichTextInput';
+import { DropdownInput } from '@/components/application_components/InputFormComponents/DropdownInput';
+import { InlineInput } from '@/components/application_components/InputFormComponents/InlineInput';
+import { DateInput } from '@/components/application_components/InputFormComponents/DateInput';
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
@@ -476,6 +482,30 @@ function Question({
                     <SchoolNameInput
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionSchoolName>
+                        }
+                    />
+                );
+            case 'dropdown':
+                return (
+                    <DropdownInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionDropdown>
+                        }
+                    />
+                );
+            case 'inline':
+                return (
+                    <InlineInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionInline>
+                        }
+                    />
+                );
+            case 'date-ymd':
+                return (
+                    <DateInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionDateYmd>
                         }
                     />
                 );
