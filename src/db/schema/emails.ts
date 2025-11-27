@@ -110,3 +110,18 @@ export const getEmailTemplateSchema = z.object({
 export const deleteEmailTemplateSchema = z.object({
     id: z.number().int(),
 });
+
+export const emailQueue = pgTable('email_queue', {
+    id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
+    userId: integer('user_id').notNull(),
+    templateId: integer('template_id').notNull(),
+    email: varchar('email', { length: 256 }).notNull(),
+    firstName: varchar('first_name', { length: 256 }),
+    lastName: varchar('last_name', { length: 256 }),
+    hackathonId: integer('hackathon_id'),
+    emailType: varchar('email_type', { length: 256 }),
+    status: varchar('status', { length: 50 }).notNull().default('pending'), // 'pending', 'sent', 'failed'
+    errorMessage: text('error_message'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    sentAt: timestamp('sent_at'),
+});
