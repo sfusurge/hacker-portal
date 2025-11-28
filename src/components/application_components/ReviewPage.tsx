@@ -16,6 +16,8 @@ import type {
     QuestionFileUploads,
     QuestionRichTextInput,
     QuestionTextLinkInput,
+    QuestionDropdown,
+    QuestionInline,
 } from './types';
 import style from './ReviewPage.module.css';
 import { useMemo, useEffect, CSSProperties, useState } from 'react';
@@ -94,6 +96,7 @@ export function ReviewPage({
 
             case 'checkbox':
                 const checkboxQuestion = question as QuestionCheckBoxInput;
+                checkboxQuestion.title = checkboxQuestion.label;
                 return checkboxQuestion.value === true ? 'Yes' : 'No';
 
             case 'multiple-checkbox':
@@ -118,6 +121,10 @@ export function ReviewPage({
                 }
                 return 'N/A';
 
+            case 'dropdown':
+                const dropdownQuestion = question as QuestionDropdown;
+                return dropdownQuestion.value || 'N/A';
+
             case 'multiple-choice':
                 const multiChoiceQuestion = question as QuestionMultipleChoice;
 
@@ -132,6 +139,36 @@ export function ReviewPage({
                 }
 
                 return 'N/A';
+
+            case 'inline': {
+                const inlineQuestion = question as QuestionInline;
+
+                if (!inlineQuestion.content?.length) return 'N/A';
+
+                return (
+                    <div className="grid grid-cols-2 gap-6">
+                        {inlineQuestion.content.map((child, i) => (
+                            <div key={i}>
+                                <h3 className={style.title}>
+                                    <div
+                                        className={style.htmlHolder}
+                                        style={{ display: 'inline' }}
+                                        dangerouslySetInnerHTML={{
+                                            __html:
+                                                child.title ??
+                                                `Question ${i + 1}`,
+                                        }}
+                                    />
+                                </h3>
+
+                                <div className={`${style.description} block`}>
+                                    {getQuestionResponse(child)}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                );
+            }
 
             case 'date':
                 const dateQuestion = question as QuestionDatePicker;
@@ -228,44 +265,58 @@ export function ReviewPage({
 
     return (
         <div className="mb-28 flex flex-col gap-6 p-6 pb-10">
-            <h1 className="text-2xl font-medium">Review Application</h1>
+            <h1 className="text-3xl font-semibold">Review Application</h1>
+            <Alert variant={'info'} className="-mt-2 max-w-[480px]">
+                <AlertTitle>
+                    Take the time to review your responses carefully!
+                </AlertTitle>
+                <AlertDescription>
+                    Make sure everything&apos;s filled out correctly. Once you
+                    submit your application, you won&apos;t be able to make
+                    changes.
+                </AlertDescription>
+            </Alert>
 
-            {flattenedQuestions.length === 0 ? (
+            {response.length === 0 ? (
                 <div className="py-4 text-center">No questions to review</div>
             ) : (
-                <>
-                    <Alert variant={'info'} className="-mt-2 max-w-[480px]">
-                        <AlertTitle>
-                            Take the time to review your responses carefully!
-                        </AlertTitle>
-                        <AlertDescription>
-                            Make sure everything&apos;s filled out correctly.
-                            Once you submit your application you won&apos;t be
-                            able to make changes.
-                        </AlertDescription>
-                    </Alert>
-                    {flattenedQuestions.map((question, index) => {
-                        const response = getQuestionResponse(question);
-                        return (
-                            <div key={index}>
-                                <h3 className={style.title}>
-                                    <div
-                                        className={style.htmlHolder}
-                                        style={{ display: 'inline' }}
-                                        dangerouslySetInnerHTML={{
-                                            __html: question.title ?? '',
-                                        }}
-                                    ></div>
-                                </h3>
-                                <span
-                                    className={`${style.description} mt-2 block`}
-                                >
-                                    {response}
-                                </span>
-                            </div>
-                        );
-                    })}
-                </>
+                response.map((page, pageIndex) => (
+                    <div
+                        key={pageIndex}
+                        className="bg-neutral-850 flex max-w-[480px] flex-col gap-4 rounded-lg border border-neutral-700/18 p-6"
+                    >
+                        <h2 className="text-2xl font-semibold">
+                            {page.title || `Page ${pageIndex + 1}`}
+                        </h2>
+
+                        <div className="flex flex-col gap-6">
+                            {page.questions?.map((question, questionIndex) => {
+                                const resp = getQuestionResponse(question);
+
+                                return (
+                                    <div key={questionIndex}>
+                                        <h3 className={style.title}>
+                                            <div
+                                                className={style.htmlHolder}
+                                                style={{ display: 'inline' }}
+                                                dangerouslySetInnerHTML={{
+                                                    __html:
+                                                        question.title ?? '',
+                                                }}
+                                            />
+                                        </h3>
+
+                                        <div
+                                            className={`${style.description} block`}
+                                        >
+                                            {resp}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ))
             )}
 
             {mobileMode && !disableSubmitBtn && (

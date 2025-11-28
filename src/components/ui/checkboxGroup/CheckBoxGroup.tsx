@@ -37,6 +37,7 @@ export function CheckboxGroup({
     const [usingOther, setUsingOther] = useState<boolean>(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const [errorMsg, setErrorMsg] = useState('');
+    const [touched, setTouched] = useState<boolean>(false);
 
     useEffect(() => {
         if (allowOther) {
@@ -55,7 +56,7 @@ export function CheckboxGroup({
             message = "Please fill the 'Other' value.";
         }
 
-        if (required && !message) {
+        if (required && !message && touched) {
             const count = selectedItems.size + (usingOther ? 1 : 0);
 
             if (count > max) message = `Too many selections! Max: ${max}`;
@@ -65,13 +66,22 @@ export function CheckboxGroup({
 
         inputRef.current.setCustomValidity(message);
         setErrorMsg(message);
-    }, [max, min, otherValue, required, selectedItems.size, usingOther]);
+    }, [
+        max,
+        min,
+        otherValue,
+        required,
+        selectedItems.size,
+        usingOther,
+        touched,
+    ]);
 
     const handleCheckboxChange = (
         item: string,
         checked: boolean,
         exclusive: boolean
     ) => {
+        setTouched(true);
         let newSelected = new Set(exclusive ? [] : selectedItems);
 
         if (checked) {
@@ -137,21 +147,21 @@ export function CheckboxGroup({
                     }}
                     required={false}
                     id={`Other${id}`}
+                    className="w-full"
                 >
-                    {usingOther && (
-                        <FormTextInput
-                            type="text"
-                            lazy
-                            timeOut={300}
-                            onLazyChange={(val) => {
-                                onSelection(selectedItems, val);
-                            }}
-                            defaultValue={otherValue}
-                            required={required && usingOther}
-                            placeholder="Please specify"
-                            hideBackground
-                        />
-                    )}
+                    <FormTextInput
+                        type="text"
+                        lazy
+                        timeOut={300}
+                        onLazyChange={(val) => {
+                            onSelection(selectedItems, val);
+                        }}
+                        defaultValue={otherValue}
+                        required={required && usingOther}
+                        placeholder="Please specify"
+                        hideBackground
+                        className="w-full placeholder:!text-white/60"
+                    />
                 </CheckBoxWithLabel>
             )}
         </fieldset>

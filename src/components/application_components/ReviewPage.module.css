@@ -7,12 +7,12 @@
 }
 
 .title {
-    font-size: 14px;
+    font-size: 12px;
+    color: var(--text-secondary);
 }
 
 .description {
-    font-size: 14px;
-    color: var(--text-secondary);
+    font-size: 16px;
 }
 
 .displayImage {

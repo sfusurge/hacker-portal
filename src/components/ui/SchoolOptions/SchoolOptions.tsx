@@ -1,21 +1,13 @@
-import { CSSProperties, useEffect, useRef, useState } from 'react';
-import { Check, ChevronsUpDown, Plus } from 'lucide-react';
+'use client';
+
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { ChevronsUpDown, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from '@/components/ui/command';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
-import styles from './SchoolOptions.module.css';
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '../collapsible';
 
 type SchoolOptionsProps = {
     apiUrl: string;
@@ -24,15 +16,14 @@ type SchoolOptionsProps = {
     required?: boolean;
     readOnly?: boolean;
     placeholder?: string;
+    debounceMs?: number;
 };
 
-type SchoolOption = { value: string; name: string };
+type SchoolOption = {
+    value: string;
+    name: string;
+};
 
-/**
- * initialData should a 'Delta' object like Quill expects.
- * Treat Delta like a Pojo
- * @returns
- */
 export function SchoolOptions({
     apiUrl,
     initialData = '',
@@ -40,138 +31,259 @@ export function SchoolOptions({
     required,
     readOnly,
     placeholder = 'Select a School',
+    debounceMs = 300,
 }: SchoolOptionsProps) {
     const [schoolOptions, setSchoolOptions] = useState<SchoolOption[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
     const [value, setValue] = useState(initialData);
     const [open, setOpen] = useState(false);
-    const [search, setSearch] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
 
+    const [offset, setOffset] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+
+    const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+    const scrollRef = useRef<HTMLDivElement | null>(null);
+
+    const fetchSchools = useCallback(
+        async (query: string, currentOffset: number) => {
+            const effectiveQuery = query.trim() || '';
+
+            setIsSearching(true);
+            try {
+                const res = await fetch(
+                    `${apiUrl}?query=${encodeURIComponent(
+                        effectiveQuery
+                    )}&limit=50&offset=${currentOffset}`,
+                    { cache: 'no-store' }
+                );
+
+                const data = res.ok ? await res.json() : [];
+
+                const options = Array.isArray(data)
+                    ? data.map((school: { value: string; name: string }) => ({
+                          value: school.value,
+                          name: school.name,
+                      }))
+                    : [];
+
+                // append if offset > 0, replace otherwise
+                if (currentOffset === 0) {
+                    setSchoolOptions(options);
+                } else {
+                    setSchoolOptions((prev) => [...prev, ...options]);
+                }
+
+                setHasMore(options.length === 50);
+            } finally {
+                setIsSearching(false);
+            }
+        },
+        [apiUrl]
+    );
+
+    // debouncer search input
     useEffect(() => {
-        fetch(`${apiUrl}?query=${encodeURIComponent(search)}&limit=50`, {
-            cache: 'no-store',
-        })
-            .then((r) => (r.ok ? r.json() : []))
-            .then((data) =>
-                setSchoolOptions(
-                    Array.isArray(data)
-                        ? data.map(
-                              (school: { value: string; name: string }) => ({
-                                  value: school.value,
-                                  name: school.name,
-                              })
-                          )
-                        : []
-                )
-            )
-            .catch(() => {});
-    }, [apiUrl, search]);
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+        debounceTimer.current = setTimeout(() => {
+            setOffset(0);
+            setHasMore(true);
+            fetchSchools(searchQuery, 0);
+        }, debounceMs);
+
+        return () => {
+            if (debounceTimer.current) clearTimeout(debounceTimer.current);
+        };
+    }, [searchQuery, debounceMs, fetchSchools]);
 
     useEffect(() => {
         setValue(initialData);
     }, [initialData]);
 
-    const getDisplayValue = () => {
-        if (!value) return 'Search your School Name';
-        const matchedSchool = schoolOptions.find(
-            (school) => school.value === value
+    const filteredChoices = useMemo(() => {
+        return schoolOptions;
+    }, [schoolOptions]);
+
+    // infinite scroll handler
+    const onScroll = useCallback(() => {
+        const el = scrollRef.current;
+        if (!el || isSearching || !hasMore) return;
+
+        const nearBottom =
+            el.scrollTop + el.clientHeight >= el.scrollHeight - 50;
+
+        if (nearBottom) {
+            const nextOffset = offset + 50;
+            setOffset(nextOffset);
+            fetchSchools(searchQuery, nextOffset);
+        }
+    }, [offset, isSearching, hasMore, fetchSchools, searchQuery]);
+
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+
+        el.addEventListener('scroll', onScroll);
+        return () => el.removeEventListener('scroll', onScroll);
+    }, [onScroll]);
+
+    const handleAddCustom = () => {
+        const customValue = searchQuery.trim();
+        setValue(customValue);
+        onChange(customValue);
+        setOpen(false);
+    };
+
+    const resultList = useMemo(() => {
+        return (
+            <div className="flex flex-col gap-1">
+                {isSearching && offset === 0 && (
+                    <div className="px-3 py-3 text-center text-sm text-neutral-400">
+                        Loading...
+                    </div>
+                )}
+
+                {!isSearching &&
+                    filteredChoices.length === 0 &&
+                    searchQuery.trim() === '' && (
+                        <div className="px-3 py-3 text-center text-sm text-neutral-400">
+                            No results found
+                        </div>
+                    )}
+
+                {filteredChoices.map((school) => {
+                    const selected = value === school.value;
+                    return (
+                        <label
+                            key={school.value}
+                            className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-neutral-700/30"
+                        >
+                            <input
+                                type="radio"
+                                name="school-select"
+                                checked={selected}
+                                onChange={() => {
+                                    setValue(school.value);
+                                    onChange(school.value);
+                                    setOpen(false);
+                                }}
+                                className="sr-only"
+                            />
+
+                            <div
+                                className={cn(
+                                    'flex size-5 min-w-5 items-center justify-center rounded-full border-2',
+                                    selected
+                                        ? 'border-brand-500'
+                                        : 'border-neutral-600'
+                                )}
+                            >
+                                {selected && (
+                                    <div className="bg-brand-500 size-2.5 rounded-full" />
+                                )}
+                            </div>
+
+                            <span className="truncate text-base font-normal text-white">
+                                {school.name}
+                            </span>
+                        </label>
+                    );
+                })}
+
+                {searchQuery.trim() &&
+                    filteredChoices.length === 0 &&
+                    !isSearching && (
+                        <button
+                            onClick={handleAddCustom}
+                            className="mt-2 flex w-full cursor-pointer items-center gap-3 rounded-lg border-t border-neutral-700 px-3 py-3 pt-2 text-left transition-colors hover:bg-neutral-700/30"
+                        >
+                            <Plus className="size-4 flex-shrink-0 text-neutral-400" />
+                            <span className="truncate text-base font-normal text-white">
+                                Add &quot;{searchQuery.trim()}&quot;
+                            </span>
+                        </button>
+                    )}
+
+                {isSearching && offset > 0 && (
+                    <div className="px-3 py-3 text-center text-sm text-neutral-400">
+                        Loading more...
+                    </div>
+                )}
+            </div>
         );
-        return matchedSchool ? matchedSchool.name : value;
+    }, [filteredChoices, isSearching, value, onChange, offset, searchQuery]);
+
+    const getDisplayText = () => {
+        if (!value) return placeholder;
+        const matched = schoolOptions.find((x) => x.value === value);
+        return matched ? matched.name : value;
     };
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-                <Button
-                    role="combobox"
-                    aria-expanded={open}
-                    className="bg-neutral-850 hover:bg-neutral-80 -p-2 flex h-14 w-full max-w-[480px] items-center justify-start rounded border border-neutral-700 px-6 py-6 text-lg text-white [&>span]:w-full"
+        <Collapsible
+            open={open}
+            onOpenChange={(newOpen) => {
+                setOpen(newOpen);
+                if (newOpen) {
+                    setSearchQuery('');
+                    setOffset(0);
+                    setHasMore(true);
+                    fetchSchools('', 0);
+                }
+            }}
+        >
+            <CollapsibleTrigger asChild>
+                <button
+                    type="button"
                     disabled={readOnly}
-                    size="cozy"
-                >
-                    <span className="flex w-full items-center justify-between">
-                        <span className="mr-2 flex-1 truncate text-left">
-                            {getDisplayValue()}
-                        </span>
-                        <ChevronsUpDown className="ml-2 flex-shrink-0 opacity-50" />
-                    </span>
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent
-                className={cn(
-                    'bg-neutral-850 mr-0 w-full max-w-[480px]',
-                    styles.popperContentWrapper
-                )}
-            >
-                <Command
                     className={cn(
-                        'bg-neutral-850 w-full max-w-[480px]',
-                        styles.commandContainer
+                        'flex items-center justify-between gap-2',
+                        'min-h-[44px] w-full max-w-[480px]',
+                        'rounded-lg border border-neutral-700/60',
+                        'bg-neutral-800/60 backdrop-blur',
+                        'px-4 py-2',
+                        'text-base font-medium text-white',
+                        'hover:border-neutral-600',
+                        'focus:ring-brand-500/50 focus:ring-2 focus:outline-none',
+                        readOnly && 'cursor-not-allowed opacity-50'
                     )}
                 >
-                    <CommandInput
-                        placeholder={'Search your School Name'}
+                    <span className="text-left">{getDisplayText()}</span>
+                    <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
+                </button>
+            </CollapsibleTrigger>
+
+            <CollapsibleContent
+                className={cn(
+                    'mt-2 w-full max-w-[480px] overflow-y-hidden p-1',
+                    'bg-neutral-800/60 backdrop-blur',
+                    'rounded-lg border border-neutral-700/30'
+                )}
+            >
+                <div className="px-2 py-2 pb-1">
+                    <input
+                        type="text"
+                        placeholder="Search..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        autoFocus
                         className={cn(
-                            'bg-neutral-850 h-9 w-full border-neutral-700 text-white placeholder:text-neutral-400'
+                            'w-full rounded px-3 py-2 text-sm',
+                            'border border-neutral-600/50 bg-neutral-700/40',
+                            'text-white placeholder:text-neutral-500',
+                            'focus:ring-brand-500/50 focus:ring-2 focus:outline-none'
                         )}
-                        value={search}
-                        onValueChange={setSearch}
                     />
-                    <CommandList
-                        className={cn(
-                            'bg-neutral-850 w-full max-w-[480px] text-white',
-                            styles.commandList
-                        )}
-                    >
-                        <CommandEmpty>No school found.</CommandEmpty>
-                        <CommandGroup>
-                            {schoolOptions.map((school) => (
-                                <CommandItem
-                                    className={cn(
-                                        'commandItem text-white',
-                                        styles.commandItem
-                                    )}
-                                    key={school.value}
-                                    value={school.value}
-                                    onSelect={(currentValue) => {
-                                        setValue(currentValue);
-                                        setOpen(false);
-                                        onChange(currentValue);
-                                    }}
-                                >
-                                    <span className="mr-2 flex-1 truncate text-left">
-                                        {school.name}
-                                    </span>
-                                </CommandItem>
-                            ))}
-                            {search.trim() && schoolOptions.length === 0 && (
-                                <CommandItem
-                                    className={cn(
-                                        'commandItem mt-2 border-t border-neutral-700 pt-2 text-white',
-                                        styles.commandItem
-                                    )}
-                                    value={`__custom__${search.trim()}`}
-                                    onSelect={(currentValue) => {
-                                        const customValue =
-                                            currentValue.startsWith(
-                                                '__custom__'
-                                            )
-                                                ? currentValue.substring(10)
-                                                : search.trim();
-                                        setValue(customValue);
-                                        setOpen(false);
-                                        onChange(customValue);
-                                    }}
-                                >
-                                    <Plus className="mr-2 h-4 w-4 text-neutral-400" />
-                                    <span className="flex-1 text-left">
-                                        Add &#34;{search.trim()}&#34;
-                                    </span>
-                                </CommandItem>
-                            )}
-                        </CommandGroup>
-                    </CommandList>
-                </Command>
-            </PopoverContent>
-        </Popover>
+                </div>
+
+                <div
+                    ref={scrollRef}
+                    className="mt-2 max-h-80 truncate overflow-y-auto px-1"
+                >
+                    {resultList}
+                </div>
+            </CollapsibleContent>
+        </Collapsible>
     );
 }

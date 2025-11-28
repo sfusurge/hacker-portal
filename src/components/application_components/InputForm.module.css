@@ -18,8 +18,9 @@
 }
 
 .mainTitle {
-    font-size: 30px;
-    font-weight: 200;
+    line-height: normal;
+    font-size: 29px;
+    font-weight: 600;
 }
 
 .appFormWrapper {
@@ -54,7 +55,8 @@
 }
 
 .description {
-    font-size: 14px;
+    font-weight: 300;
+    font-size: 16px;
     max-width: 480px;
     color: var(--text-secondary);
 }

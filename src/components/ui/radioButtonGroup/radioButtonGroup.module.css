@@ -50,9 +50,9 @@
     border-radius: 50%;
     border: 1px solid var(--border-neutral-secondary);
 
-    width: 16px;
-    min-width: 16px;
-    height: 16px;
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
     box-sizing: border-box;
     margin-right: 12px;
 
@@ -63,7 +63,7 @@
 
 .optionLabel:has(input:checked)::before {
     border-color: var(--outline-brand-primary);
-    border-width: 5px;
+    border-width: 6px;
     background-color: white;
 }
 

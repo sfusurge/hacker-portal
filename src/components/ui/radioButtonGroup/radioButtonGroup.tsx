@@ -155,10 +155,11 @@ export function RadioButtonGroup({
                         Other
                         {
                             // Custom input field
-                            allowCustomInput && usingCustomInput && (
+                            allowCustomInput && (
                                 <FormTextInput
                                     type="text"
                                     lazy
+                                    timeOut={200}
                                     onLazyChange={(val) => {
                                         if (!disabled) {
                                             setSelection(val as string);
@@ -166,14 +167,17 @@ export function RadioButtonGroup({
                                     }}
                                     placeholder="Please specify"
                                     errorMsg="Required!"
-                                    required={required}
+                                    required={usingCustomInput && required}
                                     style={{
                                         flexBasis: '100%',
                                         marginLeft: '1.75rem',
                                     }}
-                                    defaultValue={selection}
+                                    defaultValue={
+                                        usingCustomInput ? selection : ''
+                                    }
                                     hideBackground
                                     disabled={disabled}
+                                    className="placeholder:!text-white/60"
                                 />
                             )
                         }

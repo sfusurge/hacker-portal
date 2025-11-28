@@ -52,7 +52,7 @@ export const CheckBoxWithLabel = forwardRef<
                 ></input>
 
                 {name && (
-                    <div>
+                    <div className="w-full">
                         {renderHtml ? (
                             <span
                                 className={formStyle.htmlHolder}

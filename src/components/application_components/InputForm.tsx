@@ -364,10 +364,14 @@ function Page({
             style={hidden ? { display: 'none' } : {}}
             noValidate
         >
-            {page.title && <h2 className={style.mainTitle}>{page.title}</h2>}
-            {page.description && (
-                <p className={style.description}>{page.description}</p>
-            )}
+            <div className="flex flex-col gap-4">
+                {page.title && (
+                    <h2 className={style.mainTitle}>{page.title}</h2>
+                )}
+                {page.description && (
+                    <p className={style.description}>{page.description}</p>
+                )}
+            </div>
             {page.alert && (
                 <Alert variant={'info'} className="-mt-4 max-w-[480px]">
                     <AlertTitle>{page.alert.title}</AlertTitle>
@@ -627,7 +631,7 @@ function PageButtons({
                     }}
                     className={style.nextButton}
                 >
-                    Next
+                    Next Section
                 </SkewmorphicButton>
             )}
             {index === pageCount - 1 && (

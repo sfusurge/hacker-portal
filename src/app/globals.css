@@ -261,6 +261,8 @@ body {
     --brand-950_60: color-mix(in srgb, var(--brand-950) 60%, transparent);
 
     /* Neutral */
+    --neutral-500: #737373;
+    --neutral-500_60: color-mix(in srgb, var(--neutral-500) 60%, transparent);
     --neutral-600: #525252;
     --neutral-600_60: color-mix(in srgb, var(--neutral-600) 60%, transparent);
     --neutral-600_30: color-mix(in srgb, var(--neutral-600) 30%, transparent);
