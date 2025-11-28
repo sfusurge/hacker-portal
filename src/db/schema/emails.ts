@@ -122,6 +122,7 @@ export const emailQueue = pgTable('email_queue', {
     emailType: varchar('email_type', { length: 256 }),
     status: varchar('status', { length: 50 }).notNull().default('pending'), // 'pending', 'sent', 'failed'
     errorMessage: text('error_message'),
+    failedCount: integer('failed_count').notNull().default(0),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     sentAt: timestamp('sent_at'),
 });

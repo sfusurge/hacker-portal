@@ -2,7 +2,7 @@
     "crons": [
         {
             "path": "/api/cron/process-emails",
-            "schedule": "*/1 * * * *"
+            "schedule": "*/5 * * * *"
         }
     ]
 }
