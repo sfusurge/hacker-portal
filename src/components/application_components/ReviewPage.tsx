@@ -20,9 +20,7 @@ import type {
     QuestionInline,
 } from './types';
 import style from './ReviewPage.module.css';
-import { useMemo, useEffect, CSSProperties, useState } from 'react';
-import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
-import { Card, CardContent } from '@/components/ui/card';
+import { useState } from 'react';
 import { DocumentIcon } from '@heroicons/react/20/solid';
 import { getFileSize } from '@/components/ui/FileUpload/FileUpload';
 import { RichText } from '@/components/ui/RichText/RichText';
@@ -30,6 +28,7 @@ import { atom } from 'jotai';
 import { IframeEmbed } from './IframeEmbed';
 import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
 import { Button } from '../ui/button';
+import ReviewApplicationDialog from './ReviewApplicationDialog';
 
 export interface ReviewPageProps {
     submit: () => void | Promise<void>;
@@ -53,19 +52,8 @@ export function ReviewPage({
     disableSubmitBtn = false,
 }: ReviewPageProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
 
-    const handleSubmit = async () => {
-        if (isSubmitting) return;
-
-        setIsSubmitting(true);
-        try {
-            await submit();
-        } catch (error) {
-            console.error('Submission error:', error);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
     function getQuestionResponse(question: InputFormQuestion) {
         // Type-specific handling based on question type
         switch (question.type) {
@@ -149,7 +137,7 @@ export function ReviewPage({
                 return (
                     <div className="grid grid-cols-2 gap-6">
                         {inlineQuestion.content.map((child, i) => (
-                            <div key={i}>
+                            <div key={i} className="min-w-0">
                                 <h3 className={style.title}>
                                     <div
                                         className={style.htmlHolder}
@@ -162,7 +150,10 @@ export function ReviewPage({
                                     />
                                 </h3>
 
-                                <div className={`${style.description} block`}>
+                                <div
+                                    className={`${style.description} truncate`}
+                                    style={{ minWidth: 0 }}
+                                >
                                     {getQuestionResponse(child)}
                                 </div>
                             </div>
@@ -295,13 +286,23 @@ export function ReviewPage({
                     variant={'brand'}
                     hierarchy={'primary'}
                     size="cozy"
-                    onClick={handleSubmit}
+                    onClick={() => setDialogOpen(true)}
                     disabled={isSubmitting}
                     className="w-full"
                 >
-                    {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                    Submit Application
                 </Button>
             )}
+            <ReviewApplicationDialog
+                isOpen={dialogOpen}
+                closeDialog={() => setDialogOpen(false)}
+                onSubmit={async () => {
+                    setIsSubmitting(true);
+                    await submit();
+                    setIsSubmitting(false);
+                }}
+                isSubmitting={isSubmitting}
+            />
         </div>
     );
 }

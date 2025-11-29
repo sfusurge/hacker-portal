@@ -173,7 +173,7 @@ export function SchoolOptions({
 
                             <div
                                 className={cn(
-                                    'flex size-5 min-w-5 items-center justify-center rounded-full border-2',
+                                    'flex size-5 min-w-5 shrink-0 items-center justify-center rounded-full border-2',
                                     selected
                                         ? 'border-brand-500'
                                         : 'border-neutral-600'
@@ -184,7 +184,7 @@ export function SchoolOptions({
                                 )}
                             </div>
 
-                            <span className="truncate text-base font-normal text-white">
+                            <span className="w-48 min-w-0 flex-1 truncate text-base font-normal text-white">
                                 {school.name}
                             </span>
                         </label>
@@ -198,8 +198,8 @@ export function SchoolOptions({
                             onClick={handleAddCustom}
                             className="mt-2 flex w-full cursor-pointer items-center gap-3 rounded-lg border-t border-neutral-700 px-3 py-3 pt-2 text-left transition-colors hover:bg-neutral-700/30"
                         >
-                            <Plus className="size-4 flex-shrink-0 text-neutral-400" />
-                            <span className="truncate text-base font-normal text-white">
+                            <Plus className="size-4 shrink-0 text-neutral-400" />
+                            <span className="min-w-0 flex-1 truncate text-base font-normal text-white">
                                 Add &quot;{searchQuery.trim()}&quot;
                             </span>
                         </button>
@@ -232,6 +232,7 @@ export function SchoolOptions({
                     fetchSchools('', 0);
                 }
             }}
+            className="w-full max-w-[480px]"
         >
             <CollapsibleTrigger asChild>
                 <button
@@ -239,7 +240,7 @@ export function SchoolOptions({
                     disabled={readOnly}
                     className={cn(
                         'flex items-center justify-between gap-2',
-                        'min-h-[44px] w-full max-w-[480px]',
+                        'min-h-[44px] w-full',
                         'rounded-lg border border-neutral-700/60',
                         'bg-neutral-800/60 backdrop-blur',
                         'px-4 py-2',
@@ -249,14 +250,16 @@ export function SchoolOptions({
                         readOnly && 'cursor-not-allowed opacity-50'
                     )}
                 >
-                    <span className="text-left">{getDisplayText()}</span>
+                    <span className="min-w-0 flex-1 truncate text-left text-wrap">
+                        {getDisplayText()}
+                    </span>
                     <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
                 </button>
             </CollapsibleTrigger>
 
             <CollapsibleContent
                 className={cn(
-                    'mt-2 w-full max-w-[480px] overflow-y-hidden p-1',
+                    'mt-2 w-full overflow-y-hidden p-1',
                     'bg-neutral-800/60 backdrop-blur',
                     'rounded-lg border border-neutral-700/30'
                 )}
@@ -279,7 +282,7 @@ export function SchoolOptions({
 
                 <div
                     ref={scrollRef}
-                    className="mt-2 max-h-80 truncate overflow-y-auto px-1"
+                    className="mt-2 max-h-80 overflow-y-auto px-1"
                 >
                     {resultList}
                 </div>

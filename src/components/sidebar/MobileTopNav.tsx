@@ -78,7 +78,7 @@ export default function MobileTopNav({
                                     JourneyHacks 2026
                                 </span>
                                 <span className="line-clamp-1 text-sm leading-none text-white/60">
-                                    October 4–5, 2025
+                                    January 10, 2026
                                 </span>
                             </div>
                         </div>
