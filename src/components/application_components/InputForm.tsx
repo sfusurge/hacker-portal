@@ -247,14 +247,18 @@ export function InputForm({
 
             {
                 // mobile page status indicator also includes buttons.
-                (!isMobile || disablePageTab) && !submitted && (
+                (!isMobile || disablePageTab) && (
                     <PageButtons
                         indexAtom={pageIndexAtom}
                         pageCount={pagesAtoms.length}
                         pageStatesAtom={pageStatesAtom}
                         submit={async () => {
+                            setSubmitted(true);
                             await onSubmit();
+                            setSubmitted(false);
                         }}
+                        submitted={submitted}
+                        setSubmitted={setSubmitted}
                     />
                 )
             }
@@ -369,7 +373,11 @@ function Page({
                     <h2 className={style.mainTitle}>{page.title}</h2>
                 )}
                 {page.description && (
-                    <p className={style.description}>{page.description}</p>
+                    <p
+                        className={`${style.mainDescription} ${style.description}`}
+                    >
+                        {page.description}
+                    </p>
                 )}
             </div>
             {page.alert && (
@@ -553,11 +561,15 @@ function PageButtons({
     pageCount,
     pageStatesAtom,
     submit,
+    submitted,
+    setSubmitted,
 }: {
     indexAtom: PrimitiveAtom<number>;
     pageCount: number;
     pageStatesAtom: Atom<PageFormState[]>;
     submit?: () => void | Promise<void>;
+    submitted: boolean;
+    setSubmitted: (val: boolean) => void;
 }) {
     const [index, setIndex] = useAtom(indexAtom);
     const pageStates = useAtomValue(pageStatesAtom);
@@ -644,12 +656,14 @@ function PageButtons({
             )}
             {index === pageCount && (
                 <SkewmorphicButton
-                    className={cn(style.nextButton)}
+                    disabled={submitted}
+                    className={cn(style.nextButton, submitted && 'opacity-50')}
                     onClick={async () => {
+                        if (submitted) return;
                         submit && (await submit());
                     }}
                 >
-                    Submit!
+                    {submitted ? 'Submitting…' : 'Submit!'}
                 </SkewmorphicButton>
             )}
         </div>

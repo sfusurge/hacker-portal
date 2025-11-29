@@ -29,6 +29,7 @@ import { RichText } from '@/components/ui/RichText/RichText';
 import { atom } from 'jotai';
 import { IframeEmbed } from './IframeEmbed';
 import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
+import { Button } from '../ui/button';
 
 export interface ReviewPageProps {
     submit: () => void | Promise<void>;
@@ -205,50 +206,24 @@ export function ReviewPage({
                 return (
                     <div className={style.fileList}>
                         {fileQuestion.fileList?.map((f, index) => {
-                            if (f.type.startsWith('image')) {
-                                return (
-                                    <div
-                                        className={style.displayImage}
-                                        style={
-                                            {
-                                                '--imageName': `"${f.name}"`,
-                                            } as CSSProperties
-                                        }
-                                        key={`${index}${f.name}`}
-                                    >
-                                        <img
-                                            src={URL.createObjectURL(f)}
-                                            alt={f.name}
-                                        />
-                                    </div>
-                                );
-                            }
                             return (
-                                <Card key={f.name}>
-                                    <CardContent>
-                                        <div className={style.hor}>
-                                            <DocumentIcon
-                                                style={{ width: '2rem' }}
-                                            />
-                                            <div className={style.ver}>
-                                                <span
-                                                    style={{
-                                                        color: 'var(--text-secondary)',
-                                                    }}
-                                                >
-                                                    {f.name}
-                                                </span>
-                                                <span
-                                                    style={{
-                                                        color: 'var(--text-secondary)',
-                                                    }}
-                                                >
-                                                    {getFileSize(f.size)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                                <div
+                                    key={index}
+                                    className="flex items-center gap-3"
+                                >
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-neutral-600/30">
+                                        <DocumentIcon className="h-5 w-5 text-neutral-400" />
+                                    </div>
+
+                                    <div className="flex flex-1 flex-col gap-1 overflow-hidden text-left">
+                                        <span className="truncate">
+                                            {f.name}
+                                        </span>
+                                        <span className="shrink-0 text-xs text-white/60">
+                                            {getFileSize(f.size)}
+                                        </span>
+                                    </div>
+                                </div>
                             );
                         })}
                     </div>
@@ -258,10 +233,6 @@ export function ReviewPage({
                 return 'N/A';
         }
     }
-
-    const flattenedQuestions = useMemo(() => {
-        return response.flatMap(({ questions }) => questions || []);
-    }, [response]);
 
     return (
         <div className="mb-28 flex flex-col gap-6 p-6 pb-10">
@@ -320,14 +291,16 @@ export function ReviewPage({
             )}
 
             {mobileMode && !disableSubmitBtn && (
-                <SkewmorphicButton
+                <Button
+                    variant={'brand'}
+                    hierarchy={'primary'}
+                    size="cozy"
                     onClick={handleSubmit}
-                    className="mt-4"
-                    style={{ background: 'var(--brand-500)' }}
                     disabled={isSubmitting}
+                    className="w-full"
                 >
-                    {isSubmitting ? 'Submitting...' : 'Submit!'}
-                </SkewmorphicButton>
+                    {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                </Button>
             )}
         </div>
     );

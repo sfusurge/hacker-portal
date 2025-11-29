@@ -56,9 +56,13 @@
 
 .description {
     font-weight: 300;
-    font-size: 16px;
+    font-size: 12px;
     max-width: 480px;
     color: var(--text-secondary);
+}
+
+.mainDescription {
+    font-size: 16px;
 }
 
 .ver {
