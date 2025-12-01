@@ -47,7 +47,6 @@ export function SchoolNameInput({
                     'after:text-xs',
                     'after:text-danger-400',
                     'after:mt-2',
-                    'after:font-medium',
                 ]
             )}
             style={
@@ -66,9 +65,7 @@ export function SchoolNameInput({
             <SchoolOptions
                 apiUrl={question.apiUrl}
                 initialData={question.selection}
-                onChange={(newSelection) =>
-                    setQuestion({ ...question, selection: newSelection })
-                }
+                onChange={(val) => setQuestion({ ...question, selection: val })}
                 required={question.required}
                 readOnly={false}
                 placeholder={question.title}

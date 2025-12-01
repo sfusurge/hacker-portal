@@ -134,7 +134,6 @@ export function SchoolOptions({
         const customValue = searchQuery.trim();
         setValue(customValue);
         onChange(customValue);
-        setOpen(false);
     };
 
     const resultList = useMemo(() => {
@@ -168,7 +167,6 @@ export function SchoolOptions({
                                 onChange={() => {
                                     setValue(school.value);
                                     onChange(school.value);
-                                    setOpen(false);
                                 }}
                                 className="sr-only"
                             />

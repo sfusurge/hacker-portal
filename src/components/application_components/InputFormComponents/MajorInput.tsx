@@ -65,9 +65,7 @@ export function MajorInput({
             <MajorOptions
                 apiUrl={question.apiUrl}
                 initialData={question.selection || []}
-                onChange={(newSelection) =>
-                    setQuestion({ ...question, selection: newSelection })
-                }
+                onChange={(val) => setQuestion({ ...question, selection: val })}
                 required={question.required}
                 readOnly={false}
                 placeholder={question.title}

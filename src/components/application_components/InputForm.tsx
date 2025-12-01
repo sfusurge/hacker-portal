@@ -543,7 +543,7 @@ function Question({
 
     return (
         <div className={cn(style.ver)} style={{ width: '100%' }}>
-            {question.title && (
+            {question.title && question.type !== 'checkbox' && (
                 <Label required={question.required}>
                     <div
                         className={style.htmlHolder}

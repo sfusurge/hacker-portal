@@ -1,13 +1,21 @@
 'use client';
 
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { ChevronsUpDown, Plus, Check, X } from 'lucide-react';
+import {
+    ChevronsUpDown,
+    Plus,
+    Check,
+    X,
+    ChevronDown,
+    ChevronUp,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
     Collapsible,
     CollapsibleContent,
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { useToast } from '@/hooks/use-toast';
 
 export type MajorOptions = {
     value: string;
@@ -34,7 +42,9 @@ export function MajorOptions({
     debounceMs = 300,
     isInvalid = false,
 }: MajorOptionsProps) {
+    const { toast } = useToast();
     const [fetchedOptions, setFetchedOptions] = useState<MajorOptions[]>([]);
+    const MAX_SELECTIONS = 5;
 
     const [selectedValues, setSelectedValues] = useState<string[]>(initialData);
     const [selectedObjects, setSelectedObjects] = useState<MajorOptions[]>([]);
@@ -42,6 +52,7 @@ export function MajorOptions({
     const [isSearching, setIsSearching] = useState(false);
     const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedExpanded, setSelectedExpanded] = useState(true);
 
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(true);
@@ -130,7 +141,6 @@ export function MajorOptions({
         return () => el.removeEventListener('scroll', onScroll);
     }, [onScroll]);
 
-    // --- Handlers ---
     const handleToggle = (option: MajorOptions) => {
         const isSelected = selectedValues.includes(option.value);
 
@@ -139,6 +149,14 @@ export function MajorOptions({
         if (isSelected) {
             newValues = selectedValues.filter((v) => v !== option.value);
         } else {
+            if (selectedValues.length >= MAX_SELECTIONS) {
+                toast({
+                    title: 'Maximum selections reached',
+                    description: `You can only select up to ${MAX_SELECTIONS} majors.`,
+                    variant: 'error',
+                });
+                return;
+            }
             newValues = [...selectedValues, option.value];
         }
 
@@ -160,6 +178,15 @@ export function MajorOptions({
     const handleAddCustom = () => {
         const customValue = searchQuery.trim();
         if (!customValue) return;
+
+        if (selectedValues.length >= MAX_SELECTIONS) {
+            toast({
+                title: 'Maximum selections reached',
+                description: `You can only add up to ${MAX_SELECTIONS} majors.`,
+                variant: 'error',
+            });
+            return;
+        }
 
         const existingOption = fetchedOptions.find(
             (o) => o.name.toLowerCase() === customValue.toLowerCase()
@@ -195,7 +222,7 @@ export function MajorOptions({
             );
             return found ? found.name : selectedValues[0];
         }
-        return 'Multiple Selected';
+        return `Multiple Selected (${selectedValues.length})`;
     };
 
     return (
@@ -268,30 +295,49 @@ export function MajorOptions({
                         className="relative mt-2 max-h-[60vh] overflow-y-auto px-1"
                     >
                         {selectedObjects.length > 0 && (
-                            <div className="sticky top-0 z-10 mb-2 rounded-xl border-b border-neutral-700/50 bg-neutral-900/95 p-1 pb-2 backdrop-blur-sm">
-                                <div className="px-2 py-1 text-xs font-semibold tracking-wider text-neutral-400 uppercase">
-                                    Selected ({selectedObjects.length})
-                                </div>
-                                {selectedObjects.map((major) => (
-                                    <label
-                                        key={`selected-${major.value}`}
-                                        className="bg-brand-500/10 mb-0.5 flex w-full cursor-pointer items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-neutral-700/30"
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={true}
-                                            onChange={() => handleToggle(major)}
-                                            className="sr-only"
-                                        />
-                                        <div className="border-brand-500 bg-brand-500 flex size-5 min-w-5 shrink-0 items-center justify-center rounded border text-white">
-                                            <Check className="size-3.5" />
-                                        </div>
-                                        <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">
-                                            {major.name}
-                                        </span>
-                                        <X className="size-4 shrink-0 text-neutral-400 hover:text-white" />
-                                    </label>
-                                ))}
+                            <div className="sticky top-0 z-10 mb-2 rounded-xl border-b border-neutral-700/50 bg-neutral-900/95 backdrop-blur-sm">
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setSelectedExpanded(!selectedExpanded)
+                                    }
+                                    className="flex w-full items-center justify-between px-2 py-1 text-xs font-semibold tracking-wider text-neutral-400 uppercase transition-colors hover:text-neutral-300"
+                                >
+                                    <span>
+                                        Selected ({selectedObjects.length})
+                                    </span>
+                                    {selectedExpanded ? (
+                                        <ChevronUp className="size-4" />
+                                    ) : (
+                                        <ChevronDown className="size-4" />
+                                    )}
+                                </button>
+                                {selectedExpanded && (
+                                    <div className="max-h-48 overflow-y-auto px-1 pb-1">
+                                        {selectedObjects.map((major) => (
+                                            <label
+                                                key={`selected-${major.value}`}
+                                                className="bg-brand-500/10 mb-0.5 flex w-full cursor-pointer items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-neutral-700/30"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={true}
+                                                    onChange={() =>
+                                                        handleToggle(major)
+                                                    }
+                                                    className="sr-only"
+                                                />
+                                                <div className="border-brand-500 bg-brand-500 flex size-5 min-w-5 shrink-0 items-center justify-center rounded border text-white">
+                                                    <Check className="size-3.5" />
+                                                </div>
+                                                <span className="w-40 min-w-0 flex-1 truncate text-sm font-medium text-white">
+                                                    {major.name}
+                                                </span>
+                                                <X className="size-4 shrink-0 text-neutral-400 hover:text-white" />
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -323,7 +369,7 @@ export function MajorOptions({
                                         className="sr-only"
                                     />
                                     <div className="flex size-5 min-w-5 shrink-0 items-center justify-center rounded border border-neutral-600 transition-colors group-hover:border-neutral-500" />
-                                    <span className="min-w-0 flex-1 truncate text-base font-normal text-neutral-300">
+                                    <span className="w-40 min-w-0 flex-1 truncate text-base font-normal text-neutral-300">
                                         {major.name}
                                     </span>
                                     <Plus className="size-4 text-neutral-500 opacity-0 transition-opacity group-hover:opacity-100" />
