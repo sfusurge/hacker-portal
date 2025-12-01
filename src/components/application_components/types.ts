@@ -64,6 +64,7 @@ export type InputFormQuestion =
     | QuestionRichTextInput
     | QuestionTextLinkInput
     | QuestionDropdown
+    | QuestionMajorInput
     | QuestionInline;
 
 export type ApplicationQuestionType = InputFormQuestion['type'];
@@ -196,6 +197,16 @@ export interface QuestionSchoolName extends Question {
     questionId: number;
     apiUrl: string;
     selection: string;
+    placeHolder?: string;
+}
+
+export interface QuestionMajorInput extends Question {
+    type: 'major';
+    title: string;
+    required: boolean;
+    questionId: number;
+    apiUrl: string;
+    selection: string[];
 }
 
 export interface QuestionDatePicker extends Question {

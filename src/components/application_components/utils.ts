@@ -74,6 +74,9 @@ export function getResponseMap(pages: InputFormPageData[]) {
             case 'school-name':
                 res[id] = question.selection;
                 break;
+            case 'major':
+                res[id] = question.selection;
+                break;
             case 'dropdown':
                 res[id] = question.value;
                 break;
@@ -97,6 +100,7 @@ export function getResponseMap(pages: InputFormPageData[]) {
                         case 'file-upload':
                             res[contentId] = contentQuestion.fileLinks ?? [];
                             break;
+                        case 'major':
                         case 'school-name':
                             res[contentId] = contentQuestion.selection;
                             break;
@@ -162,6 +166,15 @@ export function loadResponseIntoSchema(
                         case 'file-upload':
                             contentQuestion.fileLinks = dataSource[contentId];
                             break;
+
+                        case 'major':
+                            contentQuestion.selection =
+                                dataSource[contentId] || [];
+                            break;
+                        case 'school-name':
+                            contentQuestion.selection = dataSource[contentId];
+                            break;
+
                         case 'rich-text':
                             contentQuestion.value = dataSource[contentId];
                             break;
@@ -210,6 +223,9 @@ export function loadResponseIntoSchema(
                         break;
                     case 'school-name':
                         question.selection = dataSource[id];
+                        break;
+                    case 'major':
+                        (question as any).selection = dataSource[id] || [];
                         break;
                     case 'dropdown':
                         question.value = dataSource[id];

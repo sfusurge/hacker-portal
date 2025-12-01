@@ -1,9 +1,11 @@
 'use client';
 
 import { type CSSProperties, useEffect, useRef, useState } from 'react';
+import { useAtomValue } from 'jotai';
 import { CheckBoxWithLabel } from '../checkbox/checkboxWithLabel';
 import style from './CheckBoxGroup.module.css';
 import { FormTextInput } from '../input/input';
+import { finalErrCheckAtom } from '@/components/application_components/InputForm';
 
 interface CheckBoxGroupProps {
     id: string | number;
@@ -37,7 +39,7 @@ export function CheckboxGroup({
     const [usingOther, setUsingOther] = useState<boolean>(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const [errorMsg, setErrorMsg] = useState('');
-    const [touched, setTouched] = useState<boolean>(false);
+    const showErrors = useAtomValue(finalErrCheckAtom);
 
     useEffect(() => {
         if (allowOther) {
@@ -56,7 +58,7 @@ export function CheckboxGroup({
             message = "Please fill the 'Other' value.";
         }
 
-        if (required && !message && touched) {
+        if (required && !message && showErrors) {
             const count = selectedItems.size + (usingOther ? 1 : 0);
 
             if (count > max) message = `Too many selections! Max: ${max}`;
@@ -73,7 +75,7 @@ export function CheckboxGroup({
         required,
         selectedItems.size,
         usingOther,
-        touched,
+        showErrors,
     ]);
 
     const handleCheckboxChange = (
@@ -81,7 +83,6 @@ export function CheckboxGroup({
         checked: boolean,
         exclusive: boolean
     ) => {
-        setTouched(true);
         let newSelected = new Set(exclusive ? [] : selectedItems);
 
         if (checked) {

@@ -12,7 +12,7 @@
 .optionsContainer:user-invalid::after {
     content: 'Required, please make a selection';
     color: var(--color-danger-400);
-    font-size: smaller;
+    font-size: 12px;
 }
 
 .optionLabel {

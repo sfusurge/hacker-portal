@@ -52,12 +52,18 @@ export const CheckBoxWithLabel = forwardRef<
                 ></input>
 
                 {name && (
-                    <div className="w-full">
+                    <div
+                        className={cn(
+                            'w-full',
+                            required &&
+                                "after:text-brand-500 after:ml-1 after:content-['*']"
+                        )}
+                    >
                         {renderHtml ? (
                             <span
                                 className={formStyle.htmlHolder}
                                 dangerouslySetInnerHTML={{ __html: name }}
-                            />
+                            ></span>
                         ) : (
                             <span>{name}</span>
                         )}

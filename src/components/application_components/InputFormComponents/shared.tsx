@@ -43,6 +43,11 @@ export function isApplicationQuestionFilled(question: InputFormQuestion) {
                     question.selection !== undefined &&
                     question.selection.length > 0
                 );
+            case 'major':
+                const majorSelection = (question as any).selection;
+                return (
+                    Array.isArray(majorSelection) && majorSelection.length > 0
+                );
             case 'dropdown':
                 if (question.allowMultiple) {
                     return (

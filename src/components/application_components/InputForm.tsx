@@ -28,6 +28,7 @@ import type {
     QuestionDropdown,
     QuestionInline,
     QuestionDateYmd,
+    QuestionMajorInput,
 } from './types';
 import { splitAtom } from 'jotai/utils';
 import style from './InputForm.module.css';
@@ -51,6 +52,7 @@ import { CheckBoxGroupInput } from './InputFormComponents/CheckboxGroupInput';
 import { TextAreaInput } from './InputFormComponents/TextAreaInput';
 import { TextLinkInput } from './InputFormComponents/TextLinkInput';
 import { SchoolNameInput } from './InputFormComponents/SchoolNameInput';
+import { MajorInput } from './InputFormComponents/MajorInput';
 import { ReviewPage } from './ReviewPage';
 import {
     type PageFormState,
@@ -522,6 +524,15 @@ function Question({
                     <DateInput
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionDateYmd>
+                        }
+                    />
+                );
+
+            case 'major':
+                return (
+                    <MajorInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionMajorInput>
                         }
                     />
                 );

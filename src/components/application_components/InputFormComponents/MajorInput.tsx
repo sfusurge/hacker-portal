@@ -1,18 +1,18 @@
 'use client';
 
 import { type PrimitiveAtom, useAtom, useAtomValue, WritableAtom } from 'jotai';
-import type { QuestionSchoolName } from '../types';
+import type { QuestionMajorInput } from '../types';
 import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { SchoolOptions } from '@/components/ui/SchoolOptions/SchoolOptions';
+import { MajorOptions } from './MajorOptions';
 import { finalErrCheckAtom } from '../InputForm';
 
-export function SchoolNameInput({
+export function MajorInput({
     dataAtom,
 }: {
     dataAtom:
-        | PrimitiveAtom<QuestionSchoolName>
-        | WritableAtom<QuestionSchoolName, [QuestionSchoolName], void>;
+        | PrimitiveAtom<QuestionMajorInput>
+        | WritableAtom<QuestionMajorInput, [QuestionMajorInput], void>;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
     const [errorMsg, setErrorMsg] = useState('');
@@ -24,11 +24,11 @@ export function SchoolNameInput({
         if (!inputRef.current) return;
 
         let message = '';
-        const selection = question.selection || '';
+        const selection = question.selection || [];
 
         if (question.required && showErrors) {
-            if (!selection || selection.trim().length === 0) {
-                message = 'Required, please select a school';
+            if (!Array.isArray(selection) || selection.length === 0) {
+                message = 'Required, please select at least one major';
             }
         }
 
@@ -47,7 +47,6 @@ export function SchoolNameInput({
                     'after:text-xs',
                     'after:text-danger-400',
                     'after:mt-2',
-                    'after:font-medium',
                 ]
             )}
             style={
@@ -63,9 +62,9 @@ export function SchoolNameInput({
                 required={question.required}
                 defaultValue="na"
             />
-            <SchoolOptions
+            <MajorOptions
                 apiUrl={question.apiUrl}
-                initialData={question.selection}
+                initialData={question.selection || []}
                 onChange={(newSelection) =>
                     setQuestion({ ...question, selection: newSelection })
                 }

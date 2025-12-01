@@ -17,6 +17,7 @@ type SchoolOptionsProps = {
     readOnly?: boolean;
     placeholder?: string;
     debounceMs?: number;
+    isInvalid?: boolean;
 };
 
 type SchoolOption = {
@@ -32,6 +33,7 @@ export function SchoolOptions({
     readOnly,
     placeholder = 'Select a School',
     debounceMs = 300,
+    isInvalid = false,
 }: SchoolOptionsProps) {
     const [schoolOptions, setSchoolOptions] = useState<SchoolOption[]>([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -241,13 +243,17 @@ export function SchoolOptions({
                     className={cn(
                         'flex items-center justify-between gap-2',
                         'min-h-[44px] w-full',
-                        'rounded-lg border border-neutral-700/60',
+                        'rounded-lg border',
                         'bg-neutral-800/60 backdrop-blur',
                         'px-4 py-2',
                         'text-base font-medium text-white',
                         'hover:border-neutral-600',
                         'focus:ring-brand-500/50 focus:ring-2 focus:outline-none',
-                        readOnly && 'cursor-not-allowed opacity-50'
+                        'transition-colors',
+                        readOnly && 'cursor-not-allowed opacity-50',
+                        isInvalid
+                            ? 'border-danger-400'
+                            : 'border-neutral-700/60'
                     )}
                 >
                     <span className="min-w-0 flex-1 truncate text-left text-wrap">
@@ -266,6 +272,7 @@ export function SchoolOptions({
             >
                 <div className="px-2 py-2 pb-1">
                     <input
+                        required={required}
                         type="text"
                         placeholder="Search..."
                         value={searchQuery}

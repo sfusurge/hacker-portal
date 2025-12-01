@@ -18,6 +18,7 @@ import type {
     QuestionTextLinkInput,
     QuestionDropdown,
     QuestionInline,
+    QuestionMajorInput,
 } from './types';
 import style from './ReviewPage.module.css';
 import { useState } from 'react';
@@ -191,6 +192,13 @@ export function ReviewPage({
                         initialData={richQuestion.value}
                     />
                 );
+
+            case 'major':
+                const majorQuestion = question as QuestionMajorInput;
+                return Array.isArray(majorQuestion.selection) &&
+                    majorQuestion.selection.length > 0
+                    ? majorQuestion.selection.join(', ')
+                    : 'N/A';
 
             case 'file-upload':
                 const fileQuestion = question as QuestionFileUploads;
