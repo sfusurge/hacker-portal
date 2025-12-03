@@ -31,7 +31,7 @@ export function NumberInput({
                 }
             }}
             errorMsg={question.errMsg}
-            style={{ maxWidth: '200px' }}
+            style={{ maxWidth: '480px' }}
         ></FormTextInput>
     );
 }

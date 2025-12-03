@@ -57,7 +57,7 @@ export type InputFormQuestion =
     | QuestionTextLineInput
     | QuestionNumberInput
     | QuestionMultipleChoice
-    | QuestionSchoolName
+    | QuestionApiDropdown
     | QuestionMultipleCheckBox
     | QuestionNameInput
     | QuestionFileUploads
@@ -187,11 +187,10 @@ export interface QuestionFileUploads extends Question {
 }
 
 /**
- * Auto completes based on user input, from a near infinite list of uni names.
+ * Auto completes based on user input from an API endpoint (e.g., schools, countries).
  */
-export interface QuestionSchoolName extends Question {
-    // TODO
-    type: 'school-name';
+export interface QuestionApiDropdown extends Question {
+    type: 'api-dropdown';
     title: string;
     required: boolean;
     questionId: number;

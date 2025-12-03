@@ -9,7 +9,12 @@ import {
     CollapsibleTrigger,
 } from '../collapsible';
 
-type SchoolOptionsProps = {
+export type ApiDropdownOption = {
+    value: string;
+    name: string;
+};
+
+type ApiDropdownProps = {
     apiUrl: string;
     initialData?: string;
     onChange: (val: string) => void;
@@ -20,22 +25,17 @@ type SchoolOptionsProps = {
     isInvalid?: boolean;
 };
 
-type SchoolOption = {
-    value: string;
-    name: string;
-};
-
-export function SchoolOptions({
+export function ApiDropdown({
     apiUrl,
     initialData = '',
     onChange,
     required,
     readOnly,
-    placeholder = 'Select a School',
+    placeholder = 'Select an option',
     debounceMs = 300,
     isInvalid = false,
-}: SchoolOptionsProps) {
-    const [schoolOptions, setSchoolOptions] = useState<SchoolOption[]>([]);
+}: ApiDropdownProps) {
+    const [options, setOptions] = useState<ApiDropdownOption[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [value, setValue] = useState(initialData);
     const [open, setOpen] = useState(false);
@@ -47,7 +47,7 @@ export function SchoolOptions({
     const debounceTimer = useRef<NodeJS.Timeout | null>(null);
     const scrollRef = useRef<HTMLDivElement | null>(null);
 
-    const fetchSchools = useCallback(
+    const fetchOptions = useCallback(
         async (query: string, currentOffset: number) => {
             const effectiveQuery = query.trim() || '';
 
@@ -62,21 +62,23 @@ export function SchoolOptions({
 
                 const data = res.ok ? await res.json() : [];
 
-                const options = Array.isArray(data)
-                    ? data.map((school: { value: string; name: string }) => ({
-                          value: school.value,
-                          name: school.name,
+                const fetchedOptions = Array.isArray(data)
+                    ? data.map((item: { value: string; name: string }) => ({
+                          value: item.value,
+                          name: item.name,
                       }))
                     : [];
 
-                // append if offset > 0, replace otherwise
                 if (currentOffset === 0) {
-                    setSchoolOptions(options);
+                    setOptions(fetchedOptions);
                 } else {
-                    setSchoolOptions((prev) => [...prev, ...options]);
+                    setOptions((prev) => [...prev, ...fetchedOptions]);
                 }
 
-                setHasMore(options.length === 50);
+                setHasMore(fetchedOptions.length === 50);
+            } catch (error) {
+                console.error('Failed to fetch options', error);
+                setOptions([]);
             } finally {
                 setIsSearching(false);
             }
@@ -84,30 +86,28 @@ export function SchoolOptions({
         [apiUrl]
     );
 
-    // debouncer search input
     useEffect(() => {
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
         debounceTimer.current = setTimeout(() => {
             setOffset(0);
             setHasMore(true);
-            fetchSchools(searchQuery, 0);
+            fetchOptions(searchQuery, 0);
         }, debounceMs);
 
         return () => {
             if (debounceTimer.current) clearTimeout(debounceTimer.current);
         };
-    }, [searchQuery, debounceMs, fetchSchools]);
+    }, [searchQuery, debounceMs, fetchOptions]);
 
     useEffect(() => {
         setValue(initialData);
     }, [initialData]);
 
     const filteredChoices = useMemo(() => {
-        return schoolOptions;
-    }, [schoolOptions]);
+        return options;
+    }, [options]);
 
-    // infinite scroll handler
     const onScroll = useCallback(() => {
         const el = scrollRef.current;
         if (!el || isSearching || !hasMore) return;
@@ -118,9 +118,9 @@ export function SchoolOptions({
         if (nearBottom) {
             const nextOffset = offset + 50;
             setOffset(nextOffset);
-            fetchSchools(searchQuery, nextOffset);
+            fetchOptions(searchQuery, nextOffset);
         }
-    }, [offset, isSearching, hasMore, fetchSchools, searchQuery]);
+    }, [offset, isSearching, hasMore, fetchOptions, searchQuery]);
 
     useEffect(() => {
         const el = scrollRef.current;
@@ -134,6 +134,7 @@ export function SchoolOptions({
         const customValue = searchQuery.trim();
         setValue(customValue);
         onChange(customValue);
+        setOpen(false);
     };
 
     const resultList = useMemo(() => {
@@ -153,20 +154,21 @@ export function SchoolOptions({
                         </div>
                     )}
 
-                {filteredChoices.map((school) => {
-                    const selected = value === school.value;
+                {filteredChoices.map((option) => {
+                    const selected = value === option.value;
                     return (
                         <label
-                            key={school.value}
+                            key={option.value}
                             className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-neutral-700/30"
                         >
                             <input
                                 type="radio"
-                                name="school-select"
+                                name="api-dropdown-select"
                                 checked={selected}
                                 onChange={() => {
-                                    setValue(school.value);
-                                    onChange(school.value);
+                                    setValue(option.value);
+                                    onChange(option.value);
+                                    setOpen(false);
                                 }}
                                 className="sr-only"
                             />
@@ -185,7 +187,7 @@ export function SchoolOptions({
                             </div>
 
                             <span className="w-48 min-w-0 flex-1 truncate text-base font-normal text-white">
-                                {school.name}
+                                {option.name}
                             </span>
                         </label>
                     );
@@ -212,11 +214,11 @@ export function SchoolOptions({
                 )}
             </div>
         );
-    }, [filteredChoices, isSearching, value, onChange, offset, searchQuery]);
+    }, [filteredChoices, isSearching, value, offset, searchQuery]);
 
     const getDisplayText = () => {
         if (!value) return placeholder;
-        const matched = schoolOptions.find((x) => x.value === value);
+        const matched = options.find((x) => x.value === value);
         return matched ? matched.name : value;
     };
 
@@ -229,7 +231,7 @@ export function SchoolOptions({
                     setSearchQuery('');
                     setOffset(0);
                     setHasMore(true);
-                    fetchSchools('', 0);
+                    fetchOptions('', 0);
                 }
             }}
             className="w-full max-w-[480px]"

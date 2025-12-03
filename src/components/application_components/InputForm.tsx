@@ -4,11 +4,10 @@ import {
     Atom,
     atom,
     type PrimitiveAtom,
-    SetStateAction,
     useAtom,
-    useAtomValue,
     useSetAtom,
     WritableAtom,
+    useAtomValue,
 } from 'jotai';
 import type {
     HackathonData,
@@ -24,7 +23,7 @@ import type {
     InputFormData,
     QuestionRichTextInput,
     QuestionTextLinkInput,
-    QuestionSchoolName,
+    QuestionApiDropdown,
     QuestionDropdown,
     QuestionInline,
     QuestionDateYmd,
@@ -51,7 +50,7 @@ import { CheckBoxInput } from './InputFormComponents/CheckboxInput';
 import { CheckBoxGroupInput } from './InputFormComponents/CheckboxGroupInput';
 import { TextAreaInput } from './InputFormComponents/TextAreaInput';
 import { TextLinkInput } from './InputFormComponents/TextLinkInput';
-import { SchoolNameInput } from './InputFormComponents/SchoolNameInput';
+import { ApiDropdownInput } from './InputFormComponents/ApiDropdownInput';
 import { MajorInput } from './InputFormComponents/MajorInput';
 import { ReviewPage } from './ReviewPage';
 import {
@@ -495,11 +494,11 @@ function Question({
                         }
                     />
                 );
-            case 'school-name':
+            case 'api-dropdown':
                 return (
-                    <SchoolNameInput
+                    <ApiDropdownInput
                         dataAtom={
-                            _questionAtom as PrimitiveAtom<QuestionSchoolName>
+                            _questionAtom as PrimitiveAtom<QuestionApiDropdown>
                         }
                     />
                 );
@@ -541,8 +540,31 @@ function Question({
         }
     }
 
+    const showNonCanadaWarning = useMemo(() => {
+        if (question.type !== 'api-dropdown') return false;
+        const apiDropdownQuestion = question as QuestionApiDropdown;
+        const isCountryQuestion =
+            apiDropdownQuestion.apiUrl.includes('country') ||
+            apiDropdownQuestion.title.toLowerCase().includes('country');
+        if (!isCountryQuestion || !apiDropdownQuestion.selection) return false;
+        const selectedCountry = apiDropdownQuestion.selection.trim();
+        return selectedCountry.toLowerCase() !== 'canada';
+    }, [question]);
+
     return (
         <div className={cn(style.ver)} style={{ width: '100%' }}>
+            {showNonCanadaWarning && (
+                <Alert variant="warning" className="mb-4 max-w-[480px]">
+                    <AlertTitle>
+                        This event requires in-person attendance
+                    </AlertTitle>
+                    <AlertDescription>
+                        Journeyhacks is an in-person event and requires
+                        attendance at SFU Burnaby. For questions about travel
+                        reimbursements, please read our FAQ.
+                    </AlertDescription>
+                </Alert>
+            )}
             {question.title && question.type !== 'checkbox' && (
                 <Label required={question.required}>
                     <div

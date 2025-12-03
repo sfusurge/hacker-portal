@@ -38,7 +38,7 @@ export function isApplicationQuestionFilled(question: InputFormQuestion) {
             case 'multiple-choice':
                 return question.value !== undefined;
 
-            case 'school-name':
+            case 'api-dropdown':
                 return (
                     question.selection !== undefined &&
                     question.selection.length > 0

@@ -12,7 +12,7 @@ import { CheckBoxGroupInput } from './CheckboxGroupInput';
 import { TextAreaInput } from './TextAreaInput';
 import { FileUploadInput } from './FileUploadInput';
 import { RichTextInput } from './RichTextInput';
-import { SchoolNameInput } from './SchoolNameInput';
+import { ApiDropdownInput } from './ApiDropdownInput';
 import { DateInput } from './DateInput';
 import type {
     QuestionTextLineInput,
@@ -24,7 +24,7 @@ import type {
     QuestionTextAreaInput,
     QuestionFileUploads,
     QuestionRichTextInput,
-    QuestionSchoolName,
+    QuestionApiDropdown,
     QuestionDateYmd,
 } from '../types';
 import { Label } from '@/components/ui/label/label';
@@ -136,11 +136,11 @@ export function InlineInput({
                         }
                     />
                 );
-            case 'school-name':
+            case 'api-dropdown':
                 return (
-                    <SchoolNameInput
+                    <ApiDropdownInput
                         dataAtom={
-                            contentAtom as PrimitiveAtom<QuestionSchoolName>
+                            contentAtom as PrimitiveAtom<QuestionApiDropdown>
                         }
                     />
                 );

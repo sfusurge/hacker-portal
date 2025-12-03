@@ -11,7 +11,7 @@ import type {
     QuestionMultipleCheckBox,
     QuestionDatePicker,
     QuestionDateYmd,
-    QuestionSchoolName,
+    QuestionApiDropdown,
     QuestionNameInput,
     QuestionFileUploads,
     QuestionRichTextInput,
@@ -171,9 +171,9 @@ export function ReviewPage({
                 const dateYmdQuestion = question as QuestionDateYmd;
                 return dateYmdQuestion.value || 'N/A';
 
-            case 'school-name':
-                const schoolQuestion = question as QuestionSchoolName;
-                return schoolQuestion.selection || 'N/A';
+            case 'api-dropdown':
+                const apiDropdownQuestion = question as QuestionApiDropdown;
+                return apiDropdownQuestion.selection || 'N/A';
 
             case 'name':
                 const nameQuestion = question as QuestionNameInput;

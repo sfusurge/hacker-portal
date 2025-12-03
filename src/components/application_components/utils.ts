@@ -71,7 +71,7 @@ export function getResponseMap(pages: InputFormPageData[]) {
             case 'file-upload':
                 res[id] = question.fileLinks ?? [];
                 break;
-            case 'school-name':
+            case 'api-dropdown':
                 res[id] = question.selection;
                 break;
             case 'major':
@@ -101,7 +101,7 @@ export function getResponseMap(pages: InputFormPageData[]) {
                             res[contentId] = contentQuestion.fileLinks ?? [];
                             break;
                         case 'major':
-                        case 'school-name':
+                        case 'api-dropdown':
                             res[contentId] = contentQuestion.selection;
                             break;
                         default:
@@ -171,15 +171,12 @@ export function loadResponseIntoSchema(
                             contentQuestion.selection =
                                 dataSource[contentId] || [];
                             break;
-                        case 'school-name':
+                        case 'api-dropdown':
                             contentQuestion.selection = dataSource[contentId];
                             break;
 
                         case 'rich-text':
                             contentQuestion.value = dataSource[contentId];
-                            break;
-                        case 'school-name':
-                            contentQuestion.selection = dataSource[contentId];
                             break;
                         default:
                             contentQuestion.value = dataSource[contentId];
@@ -221,7 +218,7 @@ export function loadResponseIntoSchema(
                     case 'rich-text':
                         question.value = dataSource[id];
                         break;
-                    case 'school-name':
+                    case 'api-dropdown':
                         question.selection = dataSource[id];
                         break;
                     case 'major':
