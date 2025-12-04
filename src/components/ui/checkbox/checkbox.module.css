@@ -2,8 +2,8 @@
     content: '';
     display: block;
 
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
 
     align-self: flex-start;
 
@@ -34,7 +34,7 @@
     background-color: #6466f1;
     border-color: #6466f1;
     background-image: url('/icons/check.svg');
-    background-size: 12px 12px;
+    background-size: 16px 16px;
     background-position: center center;
 }
 
@@ -45,7 +45,7 @@
 
 .label {
     cursor: pointer;
-    line-height: 100%;
+    line-height: 125%;
     display: flex;
     align-items: center;
     flex-wrap: nowrap;

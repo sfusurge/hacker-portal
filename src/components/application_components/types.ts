@@ -52,16 +52,20 @@ export interface InputFormPageData extends Entry {
 export type InputFormQuestion =
     | QuestionCheckBoxInput
     | QuestionDatePicker
+    | QuestionDateYmd
     | QuestionTextAreaInput
     | QuestionTextLineInput
     | QuestionNumberInput
     | QuestionMultipleChoice
-    | QuestionSchoolName
+    | QuestionApiDropdown
     | QuestionMultipleCheckBox
     | QuestionNameInput
     | QuestionFileUploads
     | QuestionRichTextInput
-    | QuestionTextLinkInput;
+    | QuestionTextLinkInput
+    | QuestionDropdown
+    | QuestionMajorInput
+    | QuestionInline;
 
 export type ApplicationQuestionType = InputFormQuestion['type'];
 
@@ -183,21 +187,62 @@ export interface QuestionFileUploads extends Question {
 }
 
 /**
- * Auto completes based on user input, from a near infinite list of uni names.
+ * Auto completes based on user input from an API endpoint (e.g., schools, countries).
  */
-export interface QuestionSchoolName extends Question {
-    // TODO
-    type: 'school-name';
+export interface QuestionApiDropdown extends Question {
+    type: 'api-dropdown';
     title: string;
     required: boolean;
     questionId: number;
     apiUrl: string;
     selection: string;
+    placeHolder?: string;
+}
+
+export interface QuestionMajorInput extends Question {
+    type: 'major';
+    title: string;
+    required: boolean;
+    questionId: number;
+    apiUrl: string;
+    selection: string[];
 }
 
 export interface QuestionDatePicker extends Question {
     type: 'date';
     value?: string;
+}
+
+/**
+ * Date input with YYYY/MM/DD format
+ */
+export interface QuestionDateYmd extends Question {
+    type: 'date-ymd';
+    value?: string;
+    placeHolder?: string;
+}
+
+/**
+ * Dropdown/select input with optional custom input support
+ */
+export interface QuestionDropdown extends Question {
+    type: 'dropdown';
+    value?: string | string[]; // string if allowMultiple is false, string[] if true
+    choices: ChoiceOption[];
+    allowCustom?: boolean;
+    customPlaceHolder?: string;
+    allowMultiple?: boolean;
+    placeHoldder?: string; // Placeholder text for the dropdown button (note: typo in field name)
+    dropdownDescription?: string; // Description text shown inside the dropdown menu header
+}
+
+/**
+ * Inline container that groups multiple questions horizontally
+ */
+export interface QuestionInline extends Omit<Question, 'questionId'> {
+    type: 'inline';
+    questionId?: number; // Optional for inline questions as they're containers
+    content: InputFormQuestion[]; // Array of questions to display inline
 }
 
 export interface JudgeQuestion extends Question {

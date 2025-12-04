@@ -1,18 +1,17 @@
 .fileList {
     display: flex;
     flex-direction: column;
-    width: fit-content;
-    max-width: 100%;
+    width: 100%;
     gap: 0.5rem;
 }
 
 .title {
-    font-size: 14px;
+    font-size: 12px;
+    color: var(--text-secondary);
 }
 
 .description {
-    font-size: 14px;
-    color: var(--text-secondary);
+    font-size: 16px;
 }
 
 .displayImage {
@@ -42,6 +41,7 @@
     display: flex;
     gap: 0.5rem;
     align-items: center;
+    width: 100%;
 }
 
 .ver {
