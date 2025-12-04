@@ -105,6 +105,7 @@ export function StaticDropdown({
         setSelectedValue(option.value);
         setSelectedObject(option);
         onChange(option.value);
+        setOpen(false);
     };
 
     const handleAddCustom = () => {
@@ -115,12 +116,14 @@ export function StaticDropdown({
         setSelectedValue(customVal);
         setSelectedObject(null);
         onChange(customVal);
+        setOpen(false);
     };
 
     const handleCustomInputChange = (value: string) => {
         setCustomValue(value);
         setSelectedValue(value);
         onChange(value);
+        setOpen(false);
     };
 
     const searchResults = useMemo(() => {
@@ -202,7 +205,7 @@ export function StaticDropdown({
                     className={cn(
                         'bg-neutral-800/60 p-1 backdrop-blur',
                         'rounded-lg border border-neutral-700/30',
-                        'max-h-80 w-full max-w-[480px] overflow-y-auto'
+                        'max-h-120 w-full max-w-[480px] overflow-y-auto'
                     )}
                 >
                     {staticChoices.length > 10 && (
