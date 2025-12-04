@@ -338,12 +338,6 @@ export default function ReviewApplicationsTable({
             },
         },
         {
-            accessorKey: 'tShirtSize',
-            header: 'T-Shirt Size',
-            size: 120,
-            minSize: 100,
-        },
-        {
             accessorKey: 'resume',
             header: 'Resume',
             size: 200,

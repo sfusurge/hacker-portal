@@ -6,7 +6,12 @@ import { useEffect, useMemo, useState } from 'react';
 import {
     InputFormQuestion,
     QuestionMultipleCheckBox,
-    QuestionSchoolName,
+    QuestionApiDropdown,
+    QuestionInline,
+    QuestionDateYmd,
+    QuestionDropdown,
+    QuestionMajorInput,
+    QuestionFileUploads,
 } from '@/components/application_components/types';
 import { CheckBoxInput } from '@/components/application_components/InputFormComponents/CheckboxInput';
 import { NumberInput } from '@/components/application_components/InputFormComponents/NumberInput';
@@ -24,7 +29,12 @@ import { trpc } from '@/trpc/client';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { Applicant } from '../page';
 import { TextLinkInput } from '@/components/application_components/InputFormComponents/TextLinkInput';
-import { SchoolNameInput } from '@/components/application_components/InputFormComponents/SchoolNameInput';
+import { ApiDropdownInput } from '@/components/application_components/InputFormComponents/ApiDropdownInput';
+import { InlineInput } from '@/components/application_components/InputFormComponents/InlineInput';
+import { DateInput } from '@/components/application_components/InputFormComponents/DateInput';
+import { DropdownInput } from '@/components/application_components/InputFormComponents/DropdownInput';
+import { MajorInput } from '@/components/application_components/InputFormComponents/MajorInput';
+import { FileUploadInput } from '@/components/application_components/InputFormComponents/FileUploadInput';
 
 export interface SideCardProps {
     visible: boolean;
@@ -112,7 +122,6 @@ export default function SideCard({
     }
 
     const questionTypeMap = useMemo(() => {
-        // converts question id to Application question type
         const map = new Map<string, InputFormQuestion>();
 
         if (!hackathon) {
@@ -121,7 +130,21 @@ export default function SideCard({
 
         for (const page of hackathon.applicationQuestionPages) {
             for (const question of page.questions) {
-                map.set(`${question.questionId}`, question);
+                if (question.questionId) {
+                    map.set(`${question.questionId}`, question);
+                }
+
+                if (question.type === 'inline') {
+                    const inlineQuestion = question as QuestionInline;
+                    for (const contentQuestion of inlineQuestion.content) {
+                        if (contentQuestion.questionId) {
+                            map.set(
+                                `${contentQuestion.questionId}`,
+                                contentQuestion
+                            );
+                        }
+                    }
+                }
             }
         }
 
@@ -166,17 +189,17 @@ export default function SideCard({
 
                 return <TextLinkInput dataAtom={linkAtom} />;
 
-            case 'school-name':
-                const schoolAtom = atom(
+            case 'api-dropdown':
+                const apiDropdownAtom = atom(
                     (get) => {
                         return { ...question, selection: get(dataAtom) };
                     },
-                    (get, set, val: QuestionSchoolName) => {
+                    (get, set, val: QuestionApiDropdown) => {
                         set(dataAtom, val.selection);
                     }
                 );
 
-                return <SchoolNameInput dataAtom={schoolAtom} />;
+                return <ApiDropdownInput dataAtom={apiDropdownAtom} />;
 
             case 'text-line':
                 const textLineAtom = getGenericInputAtom(question, dataAtom);
@@ -229,6 +252,85 @@ export default function SideCard({
                 );
                 // @ts-ignore
                 return <CheckBoxGroupInput dataAtom={multiCheckboxAtom} />;
+
+            case 'inline':
+                const inlineQuestion = question as QuestionInline;
+                const inlineAtom = atom(
+                    (get) => {
+                        const contentWithData = inlineQuestion.content.map(
+                            (contentQ) => {
+                                if (!contentQ.questionId) return contentQ;
+                                const contentDataAtom = focusAtom(
+                                    responseAtom,
+                                    (optics) =>
+                                        optics.prop(String(contentQ.questionId))
+                                );
+                                const contentValue = get(contentDataAtom);
+
+                                return {
+                                    ...contentQ,
+                                    value: contentValue,
+                                    selection: contentValue,
+                                };
+                            }
+                        );
+                        return { ...question, content: contentWithData };
+                    },
+                    (get, set, val: QuestionInline) => {
+                        for (const contentQ of val.content) {
+                            if (contentQ.questionId) {
+                                const contentDataAtom = focusAtom(
+                                    responseAtom,
+                                    (optics) =>
+                                        optics.prop(String(contentQ.questionId))
+                                );
+                                if ('value' in contentQ) {
+                                    set(contentDataAtom, contentQ.value);
+                                } else if ('selection' in contentQ) {
+                                    set(contentDataAtom, contentQ.selection);
+                                }
+                            }
+                        }
+                    }
+                );
+                return <InlineInput dataAtom={inlineAtom} />;
+
+            case 'date-ymd':
+                const dateAtom = getGenericInputAtom(question, dataAtom);
+                return <DateInput dataAtom={dateAtom} />;
+
+            case 'dropdown':
+                const dropdownAtom = atom(
+                    (get) => {
+                        return { ...question, value: get(dataAtom) };
+                    },
+                    (get, set, val: QuestionDropdown) => {
+                        set(dataAtom, val.value);
+                    }
+                );
+                return <DropdownInput dataAtom={dropdownAtom} />;
+
+            case 'major':
+                const majorAtom = atom(
+                    (get) => {
+                        return { ...question, selection: get(dataAtom) };
+                    },
+                    (get, set, val: QuestionMajorInput) => {
+                        set(dataAtom, val.selection);
+                    }
+                );
+                return <MajorInput dataAtom={majorAtom} />;
+
+            case 'file-upload':
+                const fileUploadAtom = atom(
+                    (get) => {
+                        return { ...question, fileLinks: get(dataAtom) };
+                    },
+                    (get, set, val: QuestionFileUploads) => {
+                        set(dataAtom, val.fileLinks);
+                    }
+                );
+                return <FileUploadInput dataAtom={fileUploadAtom} />;
 
             default:
                 return <p>Unknown question type: {question.type}</p>;

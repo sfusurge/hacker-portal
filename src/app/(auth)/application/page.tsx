@@ -15,7 +15,7 @@ export default async function ApplicationPage({
     dayjs.extend(utc);
     dayjs.extend(timezone);
     const currentTime = dayjs();
-    const cutoffTime = dayjs.tz('2026-01-03 23:59:00', 'America/Los_Angeles');
+    const cutoffTime = dayjs.tz('2025-12-27 23:59:00', 'America/Los_Angeles');
     const params = await searchParams;
 
     const trpcClient = createCaller({});

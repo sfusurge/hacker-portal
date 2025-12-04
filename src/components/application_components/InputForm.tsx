@@ -561,7 +561,16 @@ function Question({
                     <AlertDescription>
                         Journeyhacks is an in-person event and requires
                         attendance at SFU Burnaby. For questions about travel
-                        reimbursements, please read our FAQ.
+                        reimbursements, please{' '}
+                        <a
+                            className="underline"
+                            href="https://journeyhacks.sfusurge.com/#faq"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Read our FAQ
+                        </a>
+                        .
                     </AlertDescription>
                 </Alert>
             )}

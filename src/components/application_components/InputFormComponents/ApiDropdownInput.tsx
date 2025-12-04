@@ -49,10 +49,18 @@ export function ApiDropdownInput({
             }
         }
 
+        const inputValue =
+            selection && selection.trim().length > 0 ? selection : '';
+        inputRef.current.value = inputValue;
         inputRef.current.setCustomValidity(message);
         setErrorMsg(message);
         setIsInvalid(message !== '');
     }, [question.selection, question.required, showErrors, getErrorMessage]);
+
+    const inputValue =
+        question.selection && question.selection.trim().length > 0
+            ? question.selection
+            : '';
 
     return (
         <div
@@ -77,13 +85,28 @@ export function ApiDropdownInput({
                 type="text"
                 style={{ display: 'none' }}
                 required={question.required}
-                defaultValue="na"
+                value={inputValue}
+                onChange={() => {}}
             />
 
             <ApiDropdown
                 apiUrl={question.apiUrl}
                 initialData={question.selection}
-                onChange={(val) => setQuestion({ ...question, selection: val })}
+                onChange={(val) => {
+                    setQuestion({ ...question, selection: val });
+                    if (inputRef.current) {
+                        const inputValue =
+                            val && val.trim().length > 0 ? val : '';
+                        inputRef.current.value = inputValue;
+                        const message =
+                            question.required &&
+                            (!val || val.trim().length === 0) &&
+                            showErrors
+                                ? getErrorMessage()
+                                : '';
+                        inputRef.current.setCustomValidity(message);
+                    }
+                }}
                 required={question.required}
                 readOnly={false}
                 placeholder={question.placeHolder || question.title}

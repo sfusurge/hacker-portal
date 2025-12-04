@@ -202,7 +202,7 @@ export function StaticDropdown({
                     className={cn(
                         'bg-neutral-800/60 p-1 backdrop-blur',
                         'rounded-lg border border-neutral-700/30',
-                        'w-full max-w-[480px] overflow-hidden'
+                        'max-h-80 w-full max-w-[480px] overflow-y-auto'
                     )}
                 >
                     {staticChoices.length > 10 && (
