@@ -123,7 +123,6 @@ export function StaticDropdown({
         setCustomValue(value);
         setSelectedValue(value);
         onChange(value);
-        setOpen(false);
     };
 
     const searchResults = useMemo(() => {
