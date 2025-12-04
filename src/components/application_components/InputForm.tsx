@@ -626,9 +626,11 @@ function PageButtons({
     function tryReview() {
         setErrCheck(true);
 
-        setTimeout(() => {
-            setValidationPerformed(true);
-        }, 0);
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                setValidationPerformed(true);
+            }, 0);
+        });
     }
 
     useEffect(() => {

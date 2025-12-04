@@ -32,10 +32,21 @@ export function MajorInput({
             }
         }
 
+        const inputValue =
+            Array.isArray(selection) && selection.length > 0
+                ? selection.join(',')
+                : '';
+        inputRef.current.value = inputValue;
         inputRef.current.setCustomValidity(message);
         setErrorMsg(message);
         setIsInvalid(message !== '');
     }, [question.selection, question.required, showErrors]);
+
+    const selection = question.selection || [];
+    const inputValue =
+        Array.isArray(selection) && selection.length > 0
+            ? selection.join(',')
+            : '';
 
     return (
         <div
@@ -60,12 +71,41 @@ export function MajorInput({
                 type="text"
                 style={{ display: 'none' }}
                 required={question.required}
-                defaultValue="na"
+                value={inputValue}
+                onChange={() => {}}
             />
             <MajorOptions
                 apiUrl={question.apiUrl}
                 initialData={question.selection || []}
-                onChange={(val) => setQuestion({ ...question, selection: val })}
+                onChange={(val) => {
+                    if (inputRef.current) {
+                        const inputVal =
+                            Array.isArray(val) && val.length > 0
+                                ? val.join(',')
+                                : '';
+                        inputRef.current.value = inputVal;
+                        const message =
+                            question.required &&
+                            (!Array.isArray(val) || val.length === 0)
+                                ? 'Required, please select at least one major'
+                                : '';
+                        inputRef.current.setCustomValidity(message);
+                        // Dispatch both input and change events to ensure form sees the update
+                        inputRef.current.dispatchEvent(
+                            new Event('input', {
+                                bubbles: true,
+                                cancelable: true,
+                            })
+                        );
+                        inputRef.current.dispatchEvent(
+                            new Event('change', {
+                                bubbles: true,
+                                cancelable: true,
+                            })
+                        );
+                    }
+                    setQuestion({ ...question, selection: val });
+                }}
                 required={question.required}
                 readOnly={false}
                 placeholder={question.title}

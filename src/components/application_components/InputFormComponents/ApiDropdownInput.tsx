@@ -93,19 +93,30 @@ export function ApiDropdownInput({
                 apiUrl={question.apiUrl}
                 initialData={question.selection}
                 onChange={(val) => {
-                    setQuestion({ ...question, selection: val });
                     if (inputRef.current) {
                         const inputValue =
                             val && val.trim().length > 0 ? val : '';
                         inputRef.current.value = inputValue;
                         const message =
                             question.required &&
-                            (!val || val.trim().length === 0) &&
-                            showErrors
+                            (!val || val.trim().length === 0)
                                 ? getErrorMessage()
                                 : '';
                         inputRef.current.setCustomValidity(message);
+                        inputRef.current.dispatchEvent(
+                            new Event('input', {
+                                bubbles: true,
+                                cancelable: true,
+                            })
+                        );
+                        inputRef.current.dispatchEvent(
+                            new Event('change', {
+                                bubbles: true,
+                                cancelable: true,
+                            })
+                        );
                     }
+                    setQuestion({ ...question, selection: val });
                 }}
                 required={question.required}
                 readOnly={false}
