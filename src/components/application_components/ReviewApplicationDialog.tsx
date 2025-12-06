@@ -55,6 +55,9 @@ export default function ReviewApplicationDialog({
         <ResponsiveDialog
             open={isOpen}
             onOpenChange={(open) => {
+                if (!open && isSubmitting) {
+                    return;
+                }
                 if (!open) {
                     handleClose();
                 }

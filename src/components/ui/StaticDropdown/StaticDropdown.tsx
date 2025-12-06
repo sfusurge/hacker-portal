@@ -183,7 +183,6 @@ export function StaticDropdown({
                         'bg-neutral-800/60 backdrop-blur',
                         'px-4 py-2',
                         'text-base font-medium text-white',
-                        'hover:border-neutral-600',
                         'focus:ring-brand-500/50 focus:ring-2 focus:outline-none',
                         'transition-colors',
                         readOnly && 'cursor-not-allowed opacity-50',

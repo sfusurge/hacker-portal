@@ -40,6 +40,7 @@ export function ApiDropdown({
     const [value, setValue] = useState(initialData);
     const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(true);
@@ -74,12 +75,28 @@ export function ApiDropdown({
                 } else {
                     setOptions((prev) => [...prev, ...fetchedOptions]);
                 }
+                const hasMoreData = fetchedOptions.length === 50;
+                setHasMore(hasMoreData);
+                setIsSearching(false);
+                setHasLoadedOnce(true);
 
-                setHasMore(fetchedOptions.length === 50);
+                if (currentOffset === 0 && hasMoreData && open) {
+                    setTimeout(() => {
+                        const el = scrollRef.current;
+                        if (el) {
+                            const isScrollable =
+                                el.scrollHeight > el.clientHeight;
+                            if (!isScrollable && hasMoreData) {
+                                const nextOffset = 50;
+                                setOffset(nextOffset);
+                                fetchOptions(searchQuery, nextOffset);
+                            }
+                        }
+                    }, 100);
+                }
             } catch (error) {
                 console.error('Failed to fetch options', error);
                 setOptions([]);
-            } finally {
                 setIsSearching(false);
             }
         },
@@ -110,10 +127,12 @@ export function ApiDropdown({
 
     const onScroll = useCallback(() => {
         const el = scrollRef.current;
-        if (!el || isSearching || !hasMore) return;
+        if (!el || !hasMore || isSearching) return;
 
-        const nearBottom =
-            el.scrollTop + el.clientHeight >= el.scrollHeight - 50;
+        const scrollTop = el.scrollTop;
+        const scrollHeight = el.scrollHeight;
+        const clientHeight = el.clientHeight;
+        const nearBottom = scrollTop + clientHeight >= scrollHeight - 100;
 
         if (nearBottom) {
             const nextOffset = offset + 50;
@@ -140,7 +159,7 @@ export function ApiDropdown({
     const resultList = useMemo(() => {
         return (
             <div className="flex flex-col gap-1">
-                {isSearching && offset === 0 && (
+                {isSearching && offset === 0 && !hasLoadedOnce && (
                     <div className="px-3 py-3 text-center text-sm text-neutral-400">
                         Loading...
                     </div>
@@ -247,7 +266,6 @@ export function ApiDropdown({
                         'bg-neutral-800/60 backdrop-blur',
                         'px-4 py-2',
                         'text-base font-medium text-white',
-                        'hover:border-neutral-600',
                         'focus:ring-brand-500/50 focus:ring-2 focus:outline-none',
                         'transition-colors',
                         readOnly && 'cursor-not-allowed opacity-50',
