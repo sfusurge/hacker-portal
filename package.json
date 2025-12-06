@@ -64,7 +64,7 @@
         "mime-types": "^2.1.35",
         "motion": "^12.1.0",
         "net": "^1.0.2",
-        "next": "15.0.3",
+        "next": "15.0.5",
         "next-auth": "5.0.0-beta.25",
         "optics-ts": "^2.4.1",
         "perf_hooks": "^0.0.1",
