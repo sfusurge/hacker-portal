@@ -24,7 +24,10 @@ import { object, z } from 'zod';
 import { InternalServerError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
 import Handlebars from 'handlebars';
-import { welcomeStormhacksTemplate } from '@/server/routers/templates';
+import {
+    welcomeEmailTemplate,
+    welcomeStormhacksTemplate,
+} from '@/server/routers/templates';
 import { transporter } from '@/server/nodemailerTransporter';
 import { teams } from '@/db/schema/teams';
 import { members } from '@/db/schema/members';
@@ -73,6 +76,7 @@ export const applicationsRouter = router({
 
             if (application) {
                 //based on code copied from rewviewappplications table lmao
+
                 const tempDummy = (item: any) => {
                     const { '1': firstName, '4': email } = item.response || {};
                     return { firstName, email };
@@ -90,7 +94,7 @@ export const applicationsRouter = router({
                     );
                 }
 
-                const template = Handlebars.compile(welcomeStormhacksTemplate);
+                const template = Handlebars.compile(welcomeEmailTemplate);
                 const htmlContent = template({
                     firstName: tempDummy(input).firstName,
                 });
@@ -98,16 +102,16 @@ export const applicationsRouter = router({
                 let oAuthMailOptions = {
                     from: process.env.SENDINGEMAIL,
                     to: user.email,
-                    subject: 'Your StormHacks Application Has Been Received!',
-                    text: 'Your StormHacks Application Has Been Received!',
+                    subject: 'Your JourneyHacks Application Has Been Received!',
+                    text: 'Your JourneyHacks Application Has Been Received!',
                     html: htmlContent,
                 };
 
                 let sfuMailOptions = {
                     from: process.env.SENDINGEMAIL,
                     to: extractedEmail,
-                    subject: 'Your StormHacks Application Has Been Received!',
-                    text: 'Your StormHacks Application Has Been Received!',
+                    subject: 'Your JourneyHacks Application Has Been Received!',
+                    text: 'Your JourneyHacks Application Has Been Received!',
                     html: htmlContent,
                 };
 
