@@ -78,7 +78,7 @@ export const applicationsRouter = router({
                 //based on code copied from rewviewappplications table lmao
 
                 const tempDummy = (item: any) => {
-                    const { '1': firstName, '4': email } = item.response || {};
+                    const { '1': firstName, '5': email } = item.response || {};
                     return { firstName, email };
                 };
 
