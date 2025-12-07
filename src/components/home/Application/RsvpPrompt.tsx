@@ -140,20 +140,20 @@ export default function RsvpPrompt({
                                 <ResponsiveDialogDescription>
                                     Congratulations on your acceptance to{' '}
                                     {hackathon?.hackathonName ||
-                                        'StormHacks 2025'}
+                                        'JourneyHacks 2026'}
                                     . Please check the box below to
                                     indicate/confirm your attendance to{' '}
                                     {hackathon?.hackathonName ||
-                                        'StormHacks 2025'}
+                                        'JourneyHacks 2026'}
                                     .
                                 </ResponsiveDialogDescription>
                                 <div>
                                     <ResponsiveDialogDescription>
-                                        Day 1: October 4, 2025 (Required)
+                                        Day 1: January 10, 2026 (Required)
                                     </ResponsiveDialogDescription>
-                                    <ResponsiveDialogDescription>
+                                    {/* <ResponsiveDialogDescription>
                                         Day 2: October 5, 2025 (Recommended)
-                                    </ResponsiveDialogDescription>
+                                    </ResponsiveDialogDescription> */}
                                 </div>
                             </div>
                             <div className="w-full px-2">

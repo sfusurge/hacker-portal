@@ -22,7 +22,6 @@ export type Applicant = {
     haveHackathonExperience: string;
     howHeardAbout: string[];
     dietaryRestrictions?: string[];
-    tShirtSize: string;
     resume?: string[];
     discord: string;
     instagram?: string;
@@ -33,14 +32,14 @@ export type Applicant = {
 
     // School Information
     school?: string;
-    background: string;
+    background?: string;
     yearOfStudy?: string;
     major: string;
 
     // Short Answer Questions
-    excitement: string;
-    problemOrSkill: string;
-    dreamProject: string;
+    // excitement: string;
+    // problemOrSkill: string;
+    // dreamProject: string;
 
     // Sponsors / Agreements
     shareResume: boolean;
@@ -191,30 +190,28 @@ function transformResponse(response: any[]) {
                 '2': lastName,
                 '3': pronouns,
                 '4': email,
-                '5': haveHackathonExperience,
-                '6': howHeardAbout,
-                '7': dietaryRestrictions,
-                '8': tShirtSize,
-                '9': resume,
-                '10': discord,
-                '11': instagram,
-                '12': github,
-                '13': linkedin,
-                '14': portfolio,
-                '15': otherLinks,
+                '5': dateOfBirth,
+                '6': phoneNumber,
+                '7': country,
                 '16': school,
                 '17': background,
                 '18': yearOfStudy,
                 '19': major,
-                '20': excitement,
-                '21': problemOrSkill,
-                '22': dreamProject,
-                '23': shareResume,
-                '24': acceptMLH,
-                '25': acceptSFSS,
-                '26': acceptEmails,
-                '27': authorizeMLH,
-                '28': photoRelease,
+                '20': haveHackathonExperience,
+                '21': howHeardAbout,
+                '22': dietaryRestrictions,
+                '23': resume,
+                '24': discord,
+                '25': portfolio,
+                '26': github,
+                '27': linkedin,
+                '28': otherLinks,
+                '29': shareResume,
+                '30': acceptMLH,
+                '31': acceptSFSS,
+                '32': acceptEmails,
+                '33': photoRelease,
+                '34': authorizeMLH,
             } = item.response as Record<string, any>;
 
             const members = item.members;
@@ -234,37 +231,36 @@ function transformResponse(response: any[]) {
                 applicationDate: new Date(item.createdDate),
                 dietaryRestrictions: Array.isArray(dietaryRestrictions)
                     ? dietaryRestrictions
-                    : [dietaryRestrictions],
+                    : dietaryRestrictions
+                      ? [dietaryRestrictions]
+                      : [],
                 howHeardAbout: Array.isArray(howHeardAbout)
                     ? howHeardAbout
-                    : [howHeardAbout],
+                    : howHeardAbout
+                      ? [howHeardAbout]
+                      : [],
                 members,
-                firstName,
-                lastName,
-                pronouns,
-                email,
-                haveHackathonExperience,
-                tShirtSize,
-                resume,
-                discord,
-                instagram,
-                github,
-                linkedin,
-                portfolio,
-                otherLinks,
-                school,
-                background,
-                yearOfStudy,
-                major,
-                excitement,
-                problemOrSkill,
-                dreamProject,
-                shareResume,
-                acceptMLH,
-                acceptSFSS,
-                acceptEmails,
-                authorizeMLH,
-                photoRelease,
+                firstName: firstName || '',
+                lastName: lastName || '',
+                pronouns: pronouns || '',
+                email: email || '',
+                haveHackathonExperience: haveHackathonExperience || '',
+                resume: Array.isArray(resume) ? resume : resume ? [resume] : [],
+                discord: discord || '',
+                github: github || '',
+                linkedin: linkedin || '',
+                portfolio: portfolio || '',
+                otherLinks: otherLinks || '',
+                school: school || '',
+                background: background || '',
+                yearOfStudy: yearOfStudy || '',
+                major: Array.isArray(major) ? major.join(', ') : major || '',
+                shareResume: shareResume || false,
+                acceptMLH: acceptMLH || false,
+                acceptSFSS: acceptSFSS || false,
+                acceptEmails: acceptEmails || false,
+                authorizeMLH: authorizeMLH || false,
+                photoRelease: photoRelease || false,
                 checkIns,
             };
         })

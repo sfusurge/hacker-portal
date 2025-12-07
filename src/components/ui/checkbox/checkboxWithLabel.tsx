@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { ComponentProps, CSSProperties, forwardRef } from 'react';
 import style from './checkbox.module.css';
+import formStyle from '@/components/application_components/InputForm.module.css';
 
 export const CheckBoxWithLabel = forwardRef<
     HTMLInputElement,
@@ -8,6 +9,7 @@ export const CheckBoxWithLabel = forwardRef<
         defaultChecked?: boolean;
         other?: boolean;
         inline?: boolean;
+        renderHtml?: boolean; // If true, render name as HTML
     }
 >(
     (
@@ -22,6 +24,7 @@ export const CheckBoxWithLabel = forwardRef<
             id,
             onChange,
             inline = false,
+            renderHtml = false,
             ...props
         },
         ref
@@ -49,8 +52,21 @@ export const CheckBoxWithLabel = forwardRef<
                 ></input>
 
                 {name && (
-                    <div>
-                        <span>{name}</span>
+                    <div
+                        className={cn(
+                            'w-full',
+                            required &&
+                                "after:text-brand-500 after:ml-1 after:content-['*']"
+                        )}
+                    >
+                        {renderHtml ? (
+                            <span
+                                className={formStyle.htmlHolder}
+                                dangerouslySetInnerHTML={{ __html: name }}
+                            ></span>
+                        ) : (
+                            <span>{name}</span>
+                        )}
                         {children && <span>{children}</span>}
                     </div>
                 )}

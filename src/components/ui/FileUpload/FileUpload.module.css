@@ -3,6 +3,7 @@
     content: var(--errorMsg);
     color: var(--color-danger-400);
     font-size: smaller;
+    font-weight: 400;
 }
 
 .inputContainer {
@@ -25,7 +26,7 @@
 
     padding: 0.5rem;
     width: 100%;
-    max-width: 500px;
+    max-width: 480px;
 
     color: var(--text-secondary);
     font-size: 14px;
