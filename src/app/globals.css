@@ -41,7 +41,7 @@
     --color-brand-700: #4338ca;
     --color-brand-800: #3730a3;
     --color-brand-900: #302e81;
-    --color-brand-925: #252169;
+    --color-brand-925: #252267;
     --color-brand-950: #1d1b4b;
 
     /* Neutral color palette */
@@ -261,6 +261,8 @@ body {
     --brand-950_60: color-mix(in srgb, var(--brand-950) 60%, transparent);
 
     /* Neutral */
+    --neutral-500: #737373;
+    --neutral-500_60: color-mix(in srgb, var(--neutral-500) 60%, transparent);
     --neutral-600: #525252;
     --neutral-600_60: color-mix(in srgb, var(--neutral-600) 60%, transparent);
     --neutral-600_30: color-mix(in srgb, var(--neutral-600) 30%, transparent);

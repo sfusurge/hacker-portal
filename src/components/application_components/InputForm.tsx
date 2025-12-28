@@ -4,11 +4,10 @@ import {
     Atom,
     atom,
     type PrimitiveAtom,
-    SetStateAction,
     useAtom,
-    useAtomValue,
     useSetAtom,
     WritableAtom,
+    useAtomValue,
 } from 'jotai';
 import type {
     HackathonData,
@@ -24,7 +23,11 @@ import type {
     InputFormData,
     QuestionRichTextInput,
     QuestionTextLinkInput,
-    QuestionSchoolName,
+    QuestionApiDropdown,
+    QuestionDropdown,
+    QuestionInline,
+    QuestionDateYmd,
+    QuestionMajorInput,
 } from './types';
 import { splitAtom } from 'jotai/utils';
 import style from './InputForm.module.css';
@@ -47,7 +50,8 @@ import { CheckBoxInput } from './InputFormComponents/CheckboxInput';
 import { CheckBoxGroupInput } from './InputFormComponents/CheckboxGroupInput';
 import { TextAreaInput } from './InputFormComponents/TextAreaInput';
 import { TextLinkInput } from './InputFormComponents/TextLinkInput';
-import { SchoolNameInput } from './InputFormComponents/SchoolNameInput';
+import { ApiDropdownInput } from './InputFormComponents/ApiDropdownInput';
+import { MajorInput } from './InputFormComponents/MajorInput';
 import { ReviewPage } from './ReviewPage';
 import {
     type PageFormState,
@@ -62,8 +66,12 @@ import { cn } from '@/lib/utils';
 import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
 import { FileUploadInput } from '@/components/application_components/InputFormComponents/FileUploadInput';
 import { RichTextInput } from '@/components/application_components/InputFormComponents/RichTextInput';
+import { DropdownInput } from '@/components/application_components/InputFormComponents/DropdownInput';
+import { InlineInput } from '@/components/application_components/InputFormComponents/InlineInput';
+import { DateInput } from '@/components/application_components/InputFormComponents/DateInput';
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import ReviewApplicationDialog from './ReviewApplicationDialog';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -189,9 +197,9 @@ export function InputForm({
 
     return (
         <div className={style.appFormRoot}>
-            {isMobile && !disablePageTab && (
+            <div className="flex flex-col gap-1">
                 <button
-                    className={cn(style.homeButton, 'md:hidden')}
+                    className={cn(style.homeButton)}
                     onClick={() => {
                         router.push('/home');
                     }}
@@ -199,7 +207,10 @@ export function InputForm({
                     <ArrowLeftIcon className="h-6 w-6" />
                     <span>Dashboard</span>
                 </button>
-            )}
+                <h1 className="text-xl font-semibold">
+                    JourneyHacks 2026 Application
+                </h1>
+            </div>
             <div className={style.appFormWrapper}>
                 <div className={style.appFormContent} ref={pageContainerRef}>
                     {!disablePageTab &&
@@ -241,14 +252,18 @@ export function InputForm({
 
             {
                 // mobile page status indicator also includes buttons.
-                (!isMobile || disablePageTab) && !submitted && (
+                (!isMobile || disablePageTab) && (
                     <PageButtons
                         indexAtom={pageIndexAtom}
                         pageCount={pagesAtoms.length}
                         pageStatesAtom={pageStatesAtom}
                         submit={async () => {
+                            setSubmitted(true);
                             await onSubmit();
+                            setSubmitted(false);
                         }}
+                        submitted={submitted}
+                        setSubmitted={setSubmitted}
                     />
                 )
             }
@@ -358,10 +373,18 @@ function Page({
             style={hidden ? { display: 'none' } : {}}
             noValidate
         >
-            {page.title && <h2 className={style.mainTitle}>{page.title}</h2>}
-            {page.description && (
-                <p className={style.description}>{page.description}</p>
-            )}
+            <div className="flex flex-col gap-4">
+                {page.title && (
+                    <h2 className={style.mainTitle}>{page.title}</h2>
+                )}
+                {page.description && (
+                    <p
+                        className={`${style.mainDescription} ${style.description}`}
+                    >
+                        {page.description}
+                    </p>
+                )}
+            </div>
             {page.alert && (
                 <Alert variant={'info'} className="-mt-4 max-w-[480px]">
                     <AlertTitle>{page.alert.title}</AlertTitle>
@@ -471,11 +494,44 @@ function Question({
                         }
                     />
                 );
-            case 'school-name':
+            case 'api-dropdown':
                 return (
-                    <SchoolNameInput
+                    <ApiDropdownInput
                         dataAtom={
-                            _questionAtom as PrimitiveAtom<QuestionSchoolName>
+                            _questionAtom as PrimitiveAtom<QuestionApiDropdown>
+                        }
+                    />
+                );
+            case 'dropdown':
+                return (
+                    <DropdownInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionDropdown>
+                        }
+                    />
+                );
+            case 'inline':
+                return (
+                    <InlineInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionInline>
+                        }
+                    />
+                );
+            case 'date-ymd':
+                return (
+                    <DateInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionDateYmd>
+                        }
+                    />
+                );
+
+            case 'major':
+                return (
+                    <MajorInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionMajorInput>
                         }
                     />
                 );
@@ -484,9 +540,41 @@ function Question({
         }
     }
 
+    const showNonCanadaWarning = useMemo(() => {
+        if (question.type !== 'api-dropdown') return false;
+        const apiDropdownQuestion = question as QuestionApiDropdown;
+        const isCountryQuestion =
+            apiDropdownQuestion.apiUrl.includes('country') ||
+            apiDropdownQuestion.title.toLowerCase().includes('country');
+        if (!isCountryQuestion || !apiDropdownQuestion.selection) return false;
+        const selectedCountry = apiDropdownQuestion.selection.trim();
+        return selectedCountry.toLowerCase() !== 'canada';
+    }, [question]);
+
     return (
         <div className={cn(style.ver)} style={{ width: '100%' }}>
-            {question.title && (
+            {showNonCanadaWarning && (
+                <Alert variant="warning" className="mb-4 max-w-[480px]">
+                    <AlertTitle>
+                        This event requires in-person attendance
+                    </AlertTitle>
+                    <AlertDescription>
+                        Journeyhacks is an in-person event and requires
+                        attendance at SFU Burnaby. For questions about travel
+                        reimbursements, please{' '}
+                        <a
+                            className="underline"
+                            href="https://journeyhacks.sfusurge.com/#faq"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Read our FAQ
+                        </a>
+                        .
+                    </AlertDescription>
+                </Alert>
+            )}
+            {question.title && question.type !== 'checkbox' && (
                 <Label required={question.required}>
                     <div
                         className={style.htmlHolder}
@@ -519,23 +607,30 @@ function PageButtons({
     pageCount,
     pageStatesAtom,
     submit,
+    submitted,
+    setSubmitted,
 }: {
     indexAtom: PrimitiveAtom<number>;
     pageCount: number;
     pageStatesAtom: Atom<PageFormState[]>;
     submit?: () => void | Promise<void>;
+    submitted: boolean;
+    setSubmitted: (val: boolean) => void;
 }) {
     const [index, setIndex] = useAtom(indexAtom);
     const pageStates = useAtomValue(pageStatesAtom);
     const setErrCheck = useSetAtom(finalErrCheckAtom);
+    const [dialogOpen, setDialogOpen] = useState(false);
 
     const [validationPerformed, setValidationPerformed] = useState(false);
     function tryReview() {
         setErrCheck(true);
 
-        setTimeout(() => {
-            setValidationPerformed(true);
-        }, 0);
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                setValidationPerformed(true);
+            }, 0);
+        });
     }
 
     useEffect(() => {
@@ -565,59 +660,77 @@ function PageButtons({
     }, [validationPerformed]);
 
     return (
-        <div className={style.pageButtons}>
-            <span
-                style={{
-                    color: 'var( --text-secondary)',
-                    marginRight: 'auto',
-                }}
-                className="text-sm"
-            >
-                Progress saved locally.
-            </span>
-            {index > 0 && (
-                <SkewmorphicButton
-                    onClick={() => {
-                        if (index > 0) {
-                            setIndex(index - 1);
-                        }
+        <>
+            <div className={style.pageButtons}>
+                <span
+                    style={{
+                        color: 'var( --text-secondary)',
+                        marginRight: 'auto',
                     }}
-                    className={style.prevButton}
+                    className="text-sm"
                 >
-                    Previous
-                </SkewmorphicButton>
-            )}
+                    Progress saved locally.
+                </span>
+                {index > 0 && (
+                    <SkewmorphicButton
+                        onClick={() => {
+                            if (index > 0) {
+                                setIndex(index - 1);
+                            }
+                        }}
+                        className={style.prevButton}
+                    >
+                        Previous
+                    </SkewmorphicButton>
+                )}
 
-            {index < pageCount - 1 && (
-                <SkewmorphicButton
-                    onClick={() => {
-                        if (index < pageCount) {
-                            setIndex(index + 1);
+                {index < pageCount - 1 && (
+                    <SkewmorphicButton
+                        onClick={() => {
+                            if (index < pageCount) {
+                                setIndex(index + 1);
+                            }
+                        }}
+                        className={style.nextButton}
+                    >
+                        Next Section
+                    </SkewmorphicButton>
+                )}
+                {index === pageCount - 1 && (
+                    <SkewmorphicButton
+                        onClick={tryReview}
+                        className={style.nextButton}
+                    >
+                        Review
+                    </SkewmorphicButton>
+                )}
+                {index === pageCount && (
+                    <SkewmorphicButton
+                        className={cn(style.nextButton)}
+                        onClick={() => {
+                            if (submitted) return;
+                            setDialogOpen(true);
+                        }}
+                    >
+                        Submit
+                    </SkewmorphicButton>
+                )}
+            </div>
+            <ReviewApplicationDialog
+                isOpen={dialogOpen}
+                closeDialog={() => setDialogOpen(false)}
+                onSubmit={async () => {
+                    if (submit) {
+                        setSubmitted(true);
+                        try {
+                            await submit();
+                        } finally {
+                            setSubmitted(false);
                         }
-                    }}
-                    className={style.nextButton}
-                >
-                    Next
-                </SkewmorphicButton>
-            )}
-            {index === pageCount - 1 && (
-                <SkewmorphicButton
-                    onClick={tryReview}
-                    className={style.nextButton}
-                >
-                    Review
-                </SkewmorphicButton>
-            )}
-            {index === pageCount && (
-                <SkewmorphicButton
-                    className={cn(style.nextButton)}
-                    onClick={async () => {
-                        submit && (await submit());
-                    }}
-                >
-                    Submit!
-                </SkewmorphicButton>
-            )}
-        </div>
+                    }
+                }}
+                isSubmitting={submitted}
+            />
+        </>
     );
 }

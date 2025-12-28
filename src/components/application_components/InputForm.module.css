@@ -3,7 +3,7 @@
 .appFormRoot {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 1.5rem;
     height: calc(100dvh - 124px);
     max-width: 1200px;
     color: white;
@@ -18,8 +18,9 @@
 }
 
 .mainTitle {
-    font-size: 30px;
-    font-weight: 200;
+    line-height: normal;
+    font-size: 29px;
+    font-weight: 600;
 }
 
 .appFormWrapper {
@@ -54,9 +55,14 @@
 }
 
 .description {
-    font-size: 14px;
+    font-weight: 300;
+    font-size: 12px;
     max-width: 480px;
     color: var(--text-secondary);
+}
+
+.mainDescription {
+    font-size: 16px;
 }
 
 .ver {
@@ -79,12 +85,18 @@
     display: flex;
     flex-direction: column;
     gap: 32px;
-    padding-bottom: 7rem;
 }
 
 @media only screen and (min-width: 768px) {
     .page {
         padding-bottom: 24px;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+    .page {
+        padding: 0;
+        padding-bottom: 7rem;
     }
 }
 
@@ -117,6 +129,11 @@
     align-self: flex-start;
     display: flex;
     gap: 0.75rem;
+    border-radius: 8px;
+}
+.homeButton:hover {
+    background-color: var(--neutral-800);
+    transition: background-color 300ms ease-in-out;
 }
 
 /* mobile */

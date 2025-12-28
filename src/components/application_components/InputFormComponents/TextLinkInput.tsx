@@ -25,6 +25,9 @@ export function TextLinkInput({
     const urlPattern =
         "^(https?:\\/\\/)?(www\\.)?[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?\\.[a-zA-Z]{2,}(\\/[a-zA-Z0-9\\-._~:/?#\\[\\]@!$&'()*+,;=%]*)?$";
 
+    const normalizedValue =
+        typeof question.value === 'string' ? question.value : undefined;
+
     return (
         <FormTextInput
             type="search"
@@ -33,7 +36,7 @@ export function TextLinkInput({
             onLazyChange={(newVal) => {
                 setQuestion({ ...question, value: `${newVal}` });
             }}
-            defaultValue={question.value}
+            defaultValue={normalizedValue}
             placeholder={question.placeHolder ?? ''}
             required={question.required}
             pattern={question.validator?.pattern ?? urlPattern}

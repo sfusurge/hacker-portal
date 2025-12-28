@@ -14,11 +14,14 @@ export function CheckBoxInput({
           >;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
+    const hasHtml =
+        question.label?.includes('<') && question.label?.includes('>');
     return (
         <CheckBoxWithLabel
             name={question.label}
             required={question.required ?? false}
             checked={question.value ?? false}
+            renderHtml={hasHtml}
             onChange={(e) => {
                 setQuestion({
                     ...question,

@@ -108,6 +108,7 @@ export default function RsvpPrompt({
     };
 
     const handleWithdrawClick = () => {
+        closePrompt();
         openWithdrawPrompt();
     };
 
@@ -120,7 +121,7 @@ export default function RsvpPrompt({
                 }
             }}
         >
-            <ResponsiveDialogContent className="p-0 sm:max-w-[28rem]">
+            <ResponsiveDialogContent className="p-0 sm:max-w-[27rem]">
                 <div className="flex flex-col items-center justify-center gap-6 text-center">
                     <Image
                         src={pfp}
@@ -132,27 +133,27 @@ export default function RsvpPrompt({
 
                     <Conditional showWhen={!RSVP}>
                         <ResponsiveDialogHeader className="gap-4 px-6">
-                            <ResponsiveDialogTitle className="text-center text-2xl font-semibold">
+                            <ResponsiveDialogTitle className="text-center">
                                 Confirm your attendance.
                             </ResponsiveDialogTitle>
                             <div className="flex flex-col gap-2 px-2 text-start">
                                 <ResponsiveDialogDescription>
                                     Congratulations on your acceptance to{' '}
                                     {hackathon?.hackathonName ||
-                                        'StormHacks 2025'}
+                                        'JourneyHacks 2026'}
                                     . Please check the box below to
                                     indicate/confirm your attendance to{' '}
                                     {hackathon?.hackathonName ||
-                                        'StormHacks 2025'}
+                                        'JourneyHacks 2026'}
                                     .
                                 </ResponsiveDialogDescription>
                                 <div>
                                     <ResponsiveDialogDescription>
-                                        Day 1: October 4, 2025 (Required)
+                                        Day 1: January 10, 2026 (Required)
                                     </ResponsiveDialogDescription>
-                                    <ResponsiveDialogDescription>
+                                    {/* <ResponsiveDialogDescription>
                                         Day 2: October 5, 2025 (Recommended)
-                                    </ResponsiveDialogDescription>
+                                    </ResponsiveDialogDescription> */}
                                 </div>
                             </div>
                             <div className="w-full px-2">
@@ -162,15 +163,15 @@ export default function RsvpPrompt({
                                     onChange={(e) =>
                                         setIsConfirmed(e.target.checked)
                                     }
-                                    label={`I confirm that I will be attending ${hackathon?.hackathonName || 'StormHacks 2025'}.`}
+                                    label={`I confirm that I will be attending ${hackathon?.hackathonName || 'StormHacks'}.`}
                                 />
                             </div>
                         </ResponsiveDialogHeader>
                     </Conditional>
 
                     <Conditional showWhen={RSVP}>
-                        <ResponsiveDialogHeader className="gap-4 text-center text-2xl">
-                            <ResponsiveDialogTitle className="leading-tighter font-semibold">
+                        <ResponsiveDialogHeader className="gap-4 text-center">
+                            <ResponsiveDialogTitle className="text-center">
                                 Your spot has been reserved!
                             </ResponsiveDialogTitle>
                             <ResponsiveDialogDescription>
@@ -184,7 +185,7 @@ export default function RsvpPrompt({
                         <div className="grid w-full grid-cols-2 gap-3 px-6">
                             <Button
                                 variant="default"
-                                size="cozy"
+                                size="compact"
                                 hierarchy="secondary"
                                 onClick={handleClose}
                             >
@@ -193,7 +194,7 @@ export default function RsvpPrompt({
 
                             <Button
                                 variant="brand"
-                                size="cozy"
+                                size="compact"
                                 hierarchy="primary"
                                 onClick={handleRSVP}
                                 disabled={
@@ -209,7 +210,7 @@ export default function RsvpPrompt({
                     </Conditional>
 
                     <Conditional showWhen={!RSVP}>
-                        <ResponsiveDialogFooter className="border-neutral-750 flex w-full flex-col items-center justify-center border-t p-5">
+                        <ResponsiveDialogFooter className="border-neutral-750 flex w-full flex-col items-center justify-center border-t p-6">
                             <ResponsiveDialogDescription className="justify-center text-xs text-white/30">
                                 No longer able to make it to the event?
                                 <br />
@@ -224,10 +225,10 @@ export default function RsvpPrompt({
                     </Conditional>
 
                     <Conditional showWhen={RSVP}>
-                        <ResponsiveDialogFooter className="border-neutral-750 flex w-full flex-col-reverse justify-end gap-4 border-t p-5 sm:flex-row">
+                        <ResponsiveDialogFooter className="border-neutral-750 flex w-full border-t p-6">
                             <Button
                                 variant="brand"
-                                size="cozy"
+                                size="compact"
                                 hierarchy="primary"
                                 className="w-full"
                                 onClick={() => (window.location.href = '/home')}

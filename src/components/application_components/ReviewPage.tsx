@@ -10,22 +10,26 @@ import type {
     QuestionMultipleChoice,
     QuestionMultipleCheckBox,
     QuestionDatePicker,
-    QuestionSchoolName,
+    QuestionDateYmd,
+    QuestionApiDropdown,
     QuestionNameInput,
     QuestionFileUploads,
     QuestionRichTextInput,
     QuestionTextLinkInput,
+    QuestionDropdown,
+    QuestionInline,
+    QuestionMajorInput,
 } from './types';
 import style from './ReviewPage.module.css';
-import { useMemo, useEffect, CSSProperties, useState } from 'react';
-import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
-import { Card, CardContent } from '@/components/ui/card';
+import { useState } from 'react';
 import { DocumentIcon } from '@heroicons/react/20/solid';
 import { getFileSize } from '@/components/ui/FileUpload/FileUpload';
 import { RichText } from '@/components/ui/RichText/RichText';
 import { atom } from 'jotai';
 import { IframeEmbed } from './IframeEmbed';
 import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
+import { Button } from '../ui/button';
+import ReviewApplicationDialog from './ReviewApplicationDialog';
 
 export interface ReviewPageProps {
     submit: () => void | Promise<void>;
@@ -49,19 +53,8 @@ export function ReviewPage({
     disableSubmitBtn = false,
 }: ReviewPageProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
 
-    const handleSubmit = async () => {
-        if (isSubmitting) return;
-
-        setIsSubmitting(true);
-        try {
-            await submit();
-        } catch (error) {
-            console.error('Submission error:', error);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
     function getQuestionResponse(question: InputFormQuestion) {
         // Type-specific handling based on question type
         switch (question.type) {
@@ -93,6 +86,7 @@ export function ReviewPage({
 
             case 'checkbox':
                 const checkboxQuestion = question as QuestionCheckBoxInput;
+                checkboxQuestion.title = checkboxQuestion.label;
                 return checkboxQuestion.value === true ? 'Yes' : 'No';
 
             case 'multiple-checkbox':
@@ -117,6 +111,10 @@ export function ReviewPage({
                 }
                 return 'N/A';
 
+            case 'dropdown':
+                const dropdownQuestion = question as QuestionDropdown;
+                return dropdownQuestion.value || 'N/A';
+
             case 'multiple-choice':
                 const multiChoiceQuestion = question as QuestionMultipleChoice;
 
@@ -132,13 +130,50 @@ export function ReviewPage({
 
                 return 'N/A';
 
+            case 'inline': {
+                const inlineQuestion = question as QuestionInline;
+
+                if (!inlineQuestion.content?.length) return 'N/A';
+
+                return (
+                    <div className="grid grid-cols-2 gap-6">
+                        {inlineQuestion.content.map((child, i) => (
+                            <div key={i} className="min-w-0">
+                                <h3 className={style.title}>
+                                    <div
+                                        className={style.htmlHolder}
+                                        style={{ display: 'inline' }}
+                                        dangerouslySetInnerHTML={{
+                                            __html:
+                                                child.title ??
+                                                `Question ${i + 1}`,
+                                        }}
+                                    />
+                                </h3>
+
+                                <div
+                                    className={`${style.description} truncate`}
+                                    style={{ minWidth: 0 }}
+                                >
+                                    {getQuestionResponse(child)}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                );
+            }
+
             case 'date':
                 const dateQuestion = question as QuestionDatePicker;
                 return dateQuestion.value || 'N/A';
 
-            case 'school-name':
-                const schoolQuestion = question as QuestionSchoolName;
-                return schoolQuestion.selection || 'N/A';
+            case 'date-ymd':
+                const dateYmdQuestion = question as QuestionDateYmd;
+                return dateYmdQuestion.value || 'N/A';
+
+            case 'api-dropdown':
+                const apiDropdownQuestion = question as QuestionApiDropdown;
+                return apiDropdownQuestion.selection || 'N/A';
 
             case 'name':
                 const nameQuestion = question as QuestionNameInput;
@@ -158,55 +193,36 @@ export function ReviewPage({
                     />
                 );
 
+            case 'major':
+                const majorQuestion = question as QuestionMajorInput;
+                return Array.isArray(majorQuestion.selection) &&
+                    majorQuestion.selection.length > 0
+                    ? majorQuestion.selection.join(', ')
+                    : 'N/A';
+
             case 'file-upload':
                 const fileQuestion = question as QuestionFileUploads;
                 return (
                     <div className={style.fileList}>
                         {fileQuestion.fileList?.map((f, index) => {
-                            if (f.type.startsWith('image')) {
-                                return (
-                                    <div
-                                        className={style.displayImage}
-                                        style={
-                                            {
-                                                '--imageName': `"${f.name}"`,
-                                            } as CSSProperties
-                                        }
-                                        key={`${index}${f.name}`}
-                                    >
-                                        <img
-                                            src={URL.createObjectURL(f)}
-                                            alt={f.name}
-                                        />
-                                    </div>
-                                );
-                            }
                             return (
-                                <Card key={f.name}>
-                                    <CardContent>
-                                        <div className={style.hor}>
-                                            <DocumentIcon
-                                                style={{ width: '2rem' }}
-                                            />
-                                            <div className={style.ver}>
-                                                <span
-                                                    style={{
-                                                        color: 'var(--text-secondary)',
-                                                    }}
-                                                >
-                                                    {f.name}
-                                                </span>
-                                                <span
-                                                    style={{
-                                                        color: 'var(--text-secondary)',
-                                                    }}
-                                                >
-                                                    {getFileSize(f.size)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                                <div
+                                    key={index}
+                                    className="flex items-center gap-3"
+                                >
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-neutral-600/30">
+                                        <DocumentIcon className="h-5 w-5 text-neutral-400" />
+                                    </div>
+
+                                    <div className="flex flex-1 flex-col gap-1 overflow-hidden text-left">
+                                        <span className="truncate">
+                                            {f.name}
+                                        </span>
+                                        <span className="shrink-0 text-xs text-white/60">
+                                            {getFileSize(f.size)}
+                                        </span>
+                                    </div>
+                                </div>
                             );
                         })}
                     </div>
@@ -217,62 +233,84 @@ export function ReviewPage({
         }
     }
 
-    const flattenedQuestions = useMemo(() => {
-        return response.flatMap(({ questions }) => questions || []);
-    }, [response]);
-
     return (
         <div className="mb-28 flex flex-col gap-6 p-6 pb-10">
-            <h1 className="text-2xl font-medium">Review Application</h1>
+            <h1 className="text-3xl font-semibold">Review Application</h1>
+            <Alert variant={'info'} className="-mt-2 max-w-[480px]">
+                <AlertTitle>
+                    Take the time to review your responses carefully!
+                </AlertTitle>
+                <AlertDescription>
+                    Make sure everything&apos;s filled out correctly. Once you
+                    submit your application, you won&apos;t be able to make
+                    changes.
+                </AlertDescription>
+            </Alert>
 
-            {flattenedQuestions.length === 0 ? (
+            {response.length === 0 ? (
                 <div className="py-4 text-center">No questions to review</div>
             ) : (
-                <>
-                    <Alert variant={'info'} className="-mt-2 max-w-[480px]">
-                        <AlertTitle>
-                            Take the time to review your responses carefully!
-                        </AlertTitle>
-                        <AlertDescription>
-                            Make sure everything&apos;s filled out correctly.
-                            Once you submit your application you won&apos;t be
-                            able to make changes.
-                        </AlertDescription>
-                    </Alert>
-                    {flattenedQuestions.map((question, index) => {
-                        const response = getQuestionResponse(question);
-                        return (
-                            <div key={index}>
-                                <h3 className={style.title}>
-                                    <div
-                                        className={style.htmlHolder}
-                                        style={{ display: 'inline' }}
-                                        dangerouslySetInnerHTML={{
-                                            __html: question.title ?? '',
-                                        }}
-                                    ></div>
-                                </h3>
-                                <span
-                                    className={`${style.description} mt-2 block`}
-                                >
-                                    {response}
-                                </span>
-                            </div>
-                        );
-                    })}
-                </>
+                response.map((page, pageIndex) => (
+                    <div
+                        key={pageIndex}
+                        className="bg-neutral-850 flex max-w-[480px] flex-col gap-4 rounded-lg border border-neutral-700/18 p-6"
+                    >
+                        <h2 className="text-2xl font-semibold">
+                            {page.title || `Page ${pageIndex + 1}`}
+                        </h2>
+
+                        <div className="flex flex-col gap-6">
+                            {page.questions?.map((question, questionIndex) => {
+                                const resp = getQuestionResponse(question);
+
+                                return (
+                                    <div key={questionIndex}>
+                                        <h3 className={style.title}>
+                                            <div
+                                                className={style.htmlHolder}
+                                                style={{ display: 'inline' }}
+                                                dangerouslySetInnerHTML={{
+                                                    __html:
+                                                        question.title ?? '',
+                                                }}
+                                            />
+                                        </h3>
+
+                                        <div
+                                            className={`${style.description} block`}
+                                        >
+                                            {resp}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ))
             )}
 
             {mobileMode && !disableSubmitBtn && (
-                <SkewmorphicButton
-                    onClick={handleSubmit}
-                    className="mt-4"
-                    style={{ background: 'var(--brand-500)' }}
+                <Button
+                    variant={'brand'}
+                    hierarchy={'primary'}
+                    size="cozy"
+                    onClick={() => setDialogOpen(true)}
                     disabled={isSubmitting}
+                    className="w-full"
                 >
-                    {isSubmitting ? 'Submitting...' : 'Submit!'}
-                </SkewmorphicButton>
+                    Submit Application
+                </Button>
             )}
+            <ReviewApplicationDialog
+                isOpen={dialogOpen}
+                closeDialog={() => setDialogOpen(false)}
+                onSubmit={async () => {
+                    setIsSubmitting(true);
+                    await submit();
+                    setIsSubmitting(false);
+                }}
+                isSubmitting={isSubmitting}
+            />
         </div>
     );
 }

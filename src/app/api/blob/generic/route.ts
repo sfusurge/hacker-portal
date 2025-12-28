@@ -99,7 +99,7 @@ export async function POST(request: Request) {
                 return {
                     allowedContentTypes: allowedFormats,
                     addRandomSuffix: false,
-                    allowOverwrite: false,
+                    allowOverwrite: true,
                     maximumSizeInBytes: maxAllowedSize,
                     tokenPayload: pathname,
                 };

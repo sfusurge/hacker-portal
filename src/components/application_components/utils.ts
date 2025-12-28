@@ -71,8 +71,43 @@ export function getResponseMap(pages: InputFormPageData[]) {
             case 'file-upload':
                 res[id] = question.fileLinks ?? [];
                 break;
-            case 'school-name':
+            case 'api-dropdown':
                 res[id] = question.selection;
+                break;
+            case 'major':
+                res[id] = question.selection;
+                break;
+            case 'dropdown':
+                res[id] = question.value;
+                break;
+            case 'inline':
+                for (const contentQuestion of question.content) {
+                    const contentId = contentQuestion.questionId;
+                    if (!contentId) continue;
+                    switch (contentQuestion.type) {
+                        case 'multiple-checkbox':
+                            res[contentId] = contentQuestion.choices
+                                .filter((item) => item.value)
+                                .map((item) => item.data);
+                            if (contentQuestion.otherValue) {
+                                res[contentId].push(contentQuestion.otherValue);
+                            }
+                            break;
+                        case 'name':
+                            res[contentId] =
+                                `${contentQuestion.firstName} ${contentQuestion.lastName}`;
+                            break;
+                        case 'file-upload':
+                            res[contentId] = contentQuestion.fileLinks ?? [];
+                            break;
+                        case 'major':
+                        case 'api-dropdown':
+                            res[contentId] = contentQuestion.selection;
+                            break;
+                        default:
+                            res[contentId] = contentQuestion.value;
+                    }
+                }
                 break;
             default:
                 res[id] = question.value;
@@ -88,6 +123,68 @@ export function loadResponseIntoSchema(
     // load question
     for (const page of pages) {
         for (const question of page.questions) {
+            // For inline questions, process content even if inline itself has no questionId
+            if (question.type === 'inline') {
+                // Process inline question content
+                for (const contentQuestion of question.content) {
+                    const contentId = contentQuestion.questionId;
+                    if (!contentId || !(contentId in dataSource)) continue;
+                    switch (contentQuestion.type) {
+                        case 'name':
+                            // pass, name not used yet
+                            break;
+                        case 'multiple-checkbox': {
+                            const selected = Array.isArray(
+                                dataSource[contentId]
+                            )
+                                ? dataSource[contentId]
+                                : [];
+                            const selectedSet = new Set(selected);
+                            contentQuestion.choices =
+                                contentQuestion.choices.map((choice) => {
+                                    const checked = selectedSet.has(
+                                        choice.data
+                                    );
+                                    if (checked)
+                                        selectedSet.delete(choice.data);
+                                    return {
+                                        ...choice,
+                                        value: checked,
+                                    };
+                                });
+                            if (
+                                contentQuestion.allowOther &&
+                                selectedSet.size > 0
+                            ) {
+                                contentQuestion.otherValue =
+                                    Array.from(selectedSet)[0];
+                            } else if (contentQuestion.allowOther) {
+                                contentQuestion.otherValue = '';
+                            }
+                            break;
+                        }
+                        case 'file-upload':
+                            contentQuestion.fileLinks = dataSource[contentId];
+                            break;
+
+                        case 'major':
+                            contentQuestion.selection =
+                                dataSource[contentId] || [];
+                            break;
+                        case 'api-dropdown':
+                            contentQuestion.selection = dataSource[contentId];
+                            break;
+
+                        case 'rich-text':
+                            contentQuestion.value = dataSource[contentId];
+                            break;
+                        default:
+                            contentQuestion.value = dataSource[contentId];
+                    }
+                }
+                continue;
+            }
+
             if (question.questionId in dataSource) {
                 const id = question.questionId;
                 switch (question.type) {
@@ -121,8 +218,14 @@ export function loadResponseIntoSchema(
                     case 'rich-text':
                         question.value = dataSource[id];
                         break;
-                    case 'school-name':
+                    case 'api-dropdown':
                         question.selection = dataSource[id];
+                        break;
+                    case 'major':
+                        (question as any).selection = dataSource[id] || [];
+                        break;
+                    case 'dropdown':
+                        question.value = dataSource[id];
                         break;
                     default:
                         question.value = dataSource[id];
