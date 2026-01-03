@@ -136,6 +136,15 @@ export default function ReviewApplicationsTable({
     onRowClick,
     hackathonId,
 }: ReviewApplicationsTableProps) {
+    // const hackathon = useAtomValue(hackathonAtom);
+
+    // Fetch email templates
+    const { data: emailTemplates, isLoading: templatesLoading } =
+        trpc.emailTemplates.getEmailTemplates.useQuery();
+
+    // Data state
+    //const data: Applicant[] = transformResponse(applications);
+
     const checkedInInfoColumns: ColumnDef<Applicant>[] =
         data[0]?.checkIns?.map(({ eventTitle, eventId }) => {
             return {
@@ -436,6 +445,7 @@ function MyTable({
 
     const setSideCardInfo = useSetAtom(sideCardAtomSJ);
 
+    // const sendEmail = trpc.emails.sendEmail.useMutation();
     const updateLastEmailSent =
         trpc.applications.updateLastEmailSent.useMutation();
     const queueBatchEmails = trpc.emailQueue.queueBatchEmails.useMutation();
