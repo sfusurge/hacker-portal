@@ -1,14 +1,13 @@
 import { sideCardAtomSJ } from '@/app/(auth)/admin/review/components/ReviewApplicationsTable';
-import { atom, useAtom, useAtomValue, useSetAtom, WritableAtom } from 'jotai';
+import { atom, useAtom, useAtomValue, WritableAtom } from 'jotai';
 import { focusAtom } from 'jotai-optics';
 import style from './SideCard.module.css';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
     InputFormQuestion,
     QuestionMultipleCheckBox,
     QuestionApiDropdown,
     QuestionInline,
-    QuestionDateYmd,
     QuestionDropdown,
     QuestionMajorInput,
     QuestionFileUploads,
@@ -19,7 +18,6 @@ import { TextLineInput } from '@/components/application_components/InputFormComp
 import { TextAreaInput } from '@/components/application_components/InputFormComponents/TextAreaInput';
 import { RadioInput } from '@/components/application_components/InputFormComponents/RadioInput';
 import { CheckBoxGroupInput } from '@/components/application_components/InputFormComponents/CheckboxGroupInput';
-import { Label } from '@/components/ui/label/label';
 import { XMarkIcon } from '@heroicons/react/20/solid';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
 import { Button } from '@/components/ui/button';
@@ -27,7 +25,6 @@ import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 import { StatusEnum } from '@/db/schema/applications';
 import { trpc } from '@/trpc/client';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
-import { Applicant } from '../page';
 import { TextLinkInput } from '@/components/application_components/InputFormComponents/TextLinkInput';
 import { ApiDropdownInput } from '@/components/application_components/InputFormComponents/ApiDropdownInput';
 import { InlineInput } from '@/components/application_components/InputFormComponents/InlineInput';
@@ -74,15 +71,60 @@ export default function SideCard({
     selected,
     onRefresh,
 }: SideCardProps) {
+    const utils = trpc.useUtils();
+
     const responseData = useAtomValue(responseAtom);
     const applicationData = useAtomValue(sideCardAtomSJ);
     const [status, _setStatus] = useAtom(statusAtom);
     const [editing, setEditing] = useState(false);
     const [updateCurrentStatus, setUpdateCurrentStatus] = useState(false);
     const hackathon = useAtomValue(hackathonAtom);
-    const updateApplication = trpc.applications.updateApplication.useMutation(
-        {}
-    );
+    const updateApplication = trpc.applications.updateApplication.useMutation({
+        onSuccess: async (updatedEntry) => {
+            await utils.applications.getApplications.cancel();
+
+            utils.applications.getApplications.setInfiniteData(
+                {
+                    hackathonId: hackathon.id,
+                },
+                (old) => {
+                    if (!old) {
+                        return {
+                            pageParams: [],
+                            pages: [],
+                        };
+                    }
+
+                    return {
+                        ...old,
+                        pages: old.pages.map((page) => {
+                            return {
+                                ...page,
+                                applications: page.applications.map(
+                                    (application) => {
+                                        if (
+                                            application.userId !==
+                                            updatedEntry.userId
+                                        ) {
+                                            return application;
+                                        }
+
+                                        return {
+                                            ...application,
+                                            currentStatus:
+                                                updatedEntry.currentStatus,
+                                            pendingStatus:
+                                                updatedEntry.pendingStatus,
+                                        };
+                                    }
+                                ),
+                            };
+                        }),
+                    };
+                }
+            );
+        },
+    });
     const cardId = applicationData?.userId;
     /*
     useEffect(() => {
@@ -91,7 +133,6 @@ export default function SideCard({
         }
     }, [selected, setSideCardAtom]);
 */
-    const utils = trpc.useUtils();
 
     const ready = useMemo(
         () => visible && hackathon !== undefined,
