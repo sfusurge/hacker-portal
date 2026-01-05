@@ -277,6 +277,12 @@ export default function ReviewApplicationsTable({
             minSize: 150,
         },
         {
+            accessorKey: 'age',
+            header: 'Age',
+            size: 100,
+            minSize: 100,
+        },
+        {
             accessorKey: 'discord',
             header: 'Discord',
             size: 150,
