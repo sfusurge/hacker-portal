@@ -18,6 +18,7 @@ export type Applicant = {
     firstName: string;
     lastName: string;
     pronouns: string;
+    age: string;
     email: string;
     haveHackathonExperience: string;
     howHeardAbout: string[];
@@ -189,8 +190,8 @@ function transformResponse(response: any[]) {
                 '1': firstName,
                 '2': lastName,
                 '3': pronouns,
-                '4': email,
-                '5': dateOfBirth,
+                '4': age,
+                '5': email,
                 '6': phoneNumber,
                 '7': country,
                 '16': school,
@@ -228,6 +229,7 @@ function transformResponse(response: any[]) {
                 currentStatus: item.currentStatus,
                 pendingStatus: item.pendingStatus,
                 lastEmailSent,
+                age: age || '',
                 applicationDate: new Date(item.createdDate),
                 dietaryRestrictions: Array.isArray(dietaryRestrictions)
                     ? dietaryRestrictions
