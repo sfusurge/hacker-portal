@@ -68,7 +68,6 @@ export function ClientCalendarPage({
     const [showSchedule, setShowSchedule] = useState(true);
     const showCalendar = useMemo(() => !showSchedule, [showSchedule]);
     const eventStarted = useMemo(() => {
-        return true;
         return (
             dayjs().isAfter(dayjs(hackathon.startDate).startOf('day')) &&
             dayjs().isBefore(hackathon.endDate)
@@ -90,14 +89,8 @@ export function ClientCalendarPage({
         const dayOffset = weekOffset * period;
         const today = dayjs().startOf('day');
         const firstDay = dayjs(hackathon.startDate);
-        // const lastDay = dayjs(hackathon.endDate);
-        // if (today.isBefore(firstDay)) {
-        //     return firstDay.add(dayOffset, 'day');
-        // }
+        const lastDay = dayjs(hackathon.endDate).endOf('day');
 
-        // if (today.isBefore(lastDay)) {
-        //     return lastDay.subtract(dayOffset, 'day').subtract(7, 'day');
-        // }
         let minDate = dayjs(new Date(2099, 1, 1));
         for (const e of events) {
             if (e.startTime.isAfter(today) && e.startTime.isBefore(minDate)) {
@@ -107,11 +100,12 @@ export function ClientCalendarPage({
 
         if (today.isBefore(firstDay)) {
             return minDate.startOf('day').add(dayOffset, 'day');
-        } else {
+        } else if (today.isBefore(lastDay)) {
             return firstDay.startOf('day').add(dayOffset, 'day');
+        } else {
+            // after event, just display today
+            return today.add(dayOffset, 'day');
         }
-
-        return today.add(dayOffset, 'day');
     }
 
     useEffect(() => {
@@ -228,9 +222,9 @@ export function ClientCalendarPage({
                     {!isMobile && showSchedule && (
                         <DaySchedule
                             days={eventStarted ? 2 : 7}
-                            minColumnWidth={eventStarted ? 600 : 200}
                             startDate={getStartDate(eventStarted ? 2 : 7)}
                             events={events}
+                            minColumnWidth={200}
                         />
                     )}
                     {!isMobile && showCalendar && (

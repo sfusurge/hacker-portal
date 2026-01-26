@@ -4,13 +4,12 @@ import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import style from './DaySchedule.module.css';
 import {
     currentTimeAtom,
-    DayjsifyEvents,
     groupEventsByDay,
     InternalCalendarEventType,
     selectedEventAtom,
 } from '../MonthCalendarShared';
 import dayjs, { Dayjs } from 'dayjs';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { DynamicMessage } from '../DynamicMessage/DynamicMessage';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { EventCard } from '../EventCard/EventCard';
@@ -58,28 +57,30 @@ export function DaySchedule({
         );
     }, [events, startDate, days]);
 
-    // auto calculate _minColWidth
-    const _minColumnWidth = useMemo(() => {
-        if (!minColumnWidth) {
-            // in case minColWidth is not provided, assign at least 100px per column
-            return (
-                Math.max(
-                    ...Object.values(processedEvents).map((day) => day.length)
-                ) * 100
-            );
-        }
-        return minColumnWidth;
-    }, [minColumnWidth, processedEvents]);
-
     const rootRef = useRef<HTMLDivElement>(null);
     const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
 
     const [containerHeight, setContainerHeight] = useState(0);
-    const currentTime = useAtomValue(currentTimeAtom);
 
     const [showMore, setShowMore] = useState(false);
 
+    const columnWidths = useMemo(() => {
+        return Object.values(processedEvents).map((dayEventsCols) => {
+            return Math.max(dayEventsCols.length * 100, minColumnWidth ?? 200);
+        });
+    }, [processedEvents]);
+
     let zero = dayjs().hour(0);
+
+    const timeLabelColumn = useMemo(() => {
+        console.log(dayjs().diff(startDate, 'day'));
+        const diff = dayjs().diff(startDate, 'day');
+        if (diff >= 0 && diff < days) {
+            return diff;
+        }
+        return days - 1;
+    }, [startDate]);
+
     return (
         <div
             style={{
@@ -131,7 +132,6 @@ export function DaySchedule({
                 style={
                     {
                         '--rowHeight': `${rowHeight}px`,
-                        '--minColWidth': `${_minColumnWidth}px`,
                         '--headerHeight': `${headerHeight}px`,
                     } as CSSProperties
                 }
@@ -172,6 +172,11 @@ export function DaySchedule({
                                 <div
                                     key={`${epochTimeString}_${index}`}
                                     className={style.dayColumn}
+                                    style={
+                                        {
+                                            '--minColWidth': `${columnWidths[index]}px`,
+                                        } as CSSProperties
+                                    }
                                 >
                                     <div
                                         className={style.header}
@@ -187,15 +192,7 @@ export function DaySchedule({
                                     </div>
                                     <div className={style.dayColumnContent}>
                                         {containerHeight > 0 &&
-                                            ((currentTime.isBefore(startDate) &&
-                                                Object.keys(processedEvents)
-                                                    .length -
-                                                    1 ===
-                                                    index) ||
-                                                day.isSame(
-                                                    currentTime,
-                                                    'day'
-                                                )) && (
+                                            index == timeLabelColumn && (
                                                 <TimelineMarker
                                                     startDate={startDate}
                                                     parentHeight={

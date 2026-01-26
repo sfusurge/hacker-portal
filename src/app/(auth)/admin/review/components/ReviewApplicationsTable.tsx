@@ -277,6 +277,12 @@ export default function ReviewApplicationsTable({
             minSize: 150,
         },
         {
+            accessorKey: 'age',
+            header: 'Age',
+            size: 100,
+            minSize: 100,
+        },
+        {
             accessorKey: 'discord',
             header: 'Discord',
             size: 150,
@@ -336,12 +342,6 @@ export default function ReviewApplicationsTable({
                 const value = info.getValue();
                 return Array.isArray(value) ? value.join(', ') : value || 'N/A';
             },
-        },
-        {
-            accessorKey: 'tShirtSize',
-            header: 'T-Shirt Size',
-            size: 120,
-            minSize: 100,
         },
         {
             accessorKey: 'resume',
@@ -442,6 +442,7 @@ function MyTable({
     const sendEmail = trpc.emails.sendEmail.useMutation();
     const updateLastEmailSent =
         trpc.applications.updateLastEmailSent.useMutation();
+    const queueBatchEmails = trpc.emailQueue.queueBatchEmails.useMutation();
     const [isEmailPopupOpen, setIsEmailPopupOpen] = useState(false);
     const [isSending, setIsSending] = useState(false);
     const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(
@@ -613,61 +614,51 @@ function MyTable({
                 currentStatus: row.original.currentStatus,
             }));
 
-            let successCount = 0;
-            let failureCount = 0;
-            let statusUpdateCount = 0;
+            // Queue emails for sending
+            const queueResult = await queueBatchEmails.mutateAsync({
+                templateId: selectedTemplateId,
+                users: rowData.map((r) => ({
+                    id: r.id,
+                    email: r.email,
+                    firstName: r.firstName,
+                    lastName: r.lastName,
+                })),
+                hackathonId,
+                emailType: selectedTemplate.purpose,
+            });
 
-            const updateApplicationStatusInfos: {
-                id: number;
-                status: StatusEnum;
-            }[] = [];
-
-            for (let i = 0; i < rowData.length; i++) {
+            // Update statuses immediately
+            for (const row of rowData) {
                 try {
-                    // Send email
-                    await sendEmail.mutateAsync({
-                        templateId: selectedTemplateId,
-                        user: {
-                            id: rowData[i].id,
-                            email: rowData[i].email.trim(),
-                            firstName: rowData[i].firstName,
-                            lastName: rowData[i].lastName,
-                        },
-                    });
-
                     await updateLastEmailSent.mutateAsync({
                         hackathonId,
-                        userId: rowData[i].id,
+                        userId: row.id,
                         emailType: selectedTemplate.purpose,
                     });
 
-                    const status = rowData[i].pendingStatus;
-
-                    if (
-                        status !== 'N/A' &&
-                        rowData[i].currentStatus !== 'Accepted'
-                    ) {
-                        updateApplicationStatusInfos.push({
-                            id: rowData[i].id,
-                            status: status as StatusEnum,
-                        });
-                    }
-
                     await batchUpdateApplicationStatus.mutateAsync({
-                        userIds: [rowData[i].id],
+                        userIds: [row.id],
                         hackathonId,
                         pendingStatus: 'N/A',
                     });
-
-                    successCount++;
                 } catch (error) {
                     console.error(
-                        `Error sending email to ${rowData[i].email}:`,
+                        `Error updating status for ${row.email}:`,
                         error
                     );
-                    failureCount++;
                 }
             }
+
+            const updateApplicationStatusInfos = rowData
+                .filter(
+                    (r) =>
+                        r.pendingStatus !== 'N/A' &&
+                        r.currentStatus !== 'Accepted'
+                )
+                .map((r) => ({
+                    id: r.id,
+                    status: r.pendingStatus as StatusEnum,
+                }));
 
             const statusToIds = Object.groupBy(
                 updateApplicationStatusInfos,
@@ -701,22 +692,12 @@ function MyTable({
                 })
             );
 
-            if (successCount > 0) {
-                toast({
-                    title: 'Success',
-                    description: `${successCount} email${successCount !== 1 ? 's' : ''} sent successfully${failureCount > 0 ? ` (${failureCount} failed)` : ''}${statusUpdateCount > 0 ? ` and ${statusUpdateCount} status${statusUpdateCount !== 1 ? 'es' : ''} updated` : ''}`,
-                    className:
-                        'bg-neutral-900 text-white border-neutral-700/18',
-                });
-
-                // applicationData.refetch();
-            } else if (failureCount > 0) {
-                toast({
-                    title: 'Error',
-                    description: `Failed to send ${failureCount} email${failureCount !== 1 ? 's' : ''}. Check console for details.`,
-                    variant: 'default',
-                });
-            }
+            // TODO: update text
+            toast({
+                title: 'Emails Queued',
+                description: `${queueResult.queued} emails queued for sending`,
+                className: 'bg-neutral-900 text-white border-neutral-700/18',
+            });
 
             setIsEmailPopupOpen(false);
             setIsSending(false);
@@ -724,7 +705,7 @@ function MyTable({
             console.error('Error in email sending process:', error);
             toast({
                 title: 'Error',
-                description: 'Failed to send emails.',
+                description: 'Failed to queue emails.',
             });
             setIsSending(false);
         }

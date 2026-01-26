@@ -133,7 +133,7 @@ function CheckoutForm({ userEmail }: { userEmail: string }) {
     return (
         <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white">
-                StormHacks Ticket
+                JourneyHacks Ticket
             </h3>
             <h3 className="text-gray-400">
                 Amount: <span className="text-white">$15.00</span>

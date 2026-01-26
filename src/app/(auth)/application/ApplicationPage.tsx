@@ -2,9 +2,10 @@
 
 import { trpc } from '@/trpc/client';
 import { useSession } from 'next-auth/react';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { InputForm } from '../../../components/application_components/InputForm';
+import { toast } from '@/hooks/use-toast';
 
 import { atom, useAtomValue } from 'jotai';
 import { InputFormData } from '@/components/application_components/types';
@@ -83,6 +84,7 @@ const applicationWithLocalAtom = atom(
  * https://jotai.org/docs/utilities/storage#server-side-rendering
  */
 export default function ApplicationPageComponent() {
+    const router = useRouter();
     const hackathon = useAtomValue(hackathonAtom);
     const user = useAtomValue(userInfoAtom);
     const hackathonWithResponse = useAtomValue(applicationWithLocalAtom);
@@ -101,10 +103,15 @@ export default function ApplicationPageComponent() {
 
     useEffect(() => {
         if (application.data !== null && application.data !== undefined) {
-            alert('Already applied!');
-            redirect('/home'); // TODO make this look good
+            toast({
+                title: 'Application submitted',
+                description:
+                    'You have submitted your application for this hackathon.',
+                variant: 'info',
+            });
+            router.push('/application/submitted');
         }
-    }, [application]);
+    }, [application, router]);
 
     // reserve extra top padding for this page
     useEffect(() => {
@@ -136,12 +143,22 @@ export default function ApplicationPageComponent() {
 
                 const response = getResponseMap(pagesWithFileUrl);
 
-                submitApplication.mutate({
-                    hackathonId: hackathon.id,
-                    response,
+                await new Promise<void>((resolve, reject) => {
+                    submitApplication.mutate(
+                        {
+                            hackathonId: hackathon.id,
+                            response,
+                        },
+                        {
+                            onSuccess: () => {
+                                resolve();
+                            },
+                            onError: (error) => {
+                                reject(error);
+                            },
+                        }
+                    );
                 });
-
-                redirect('/application/submitted');
             }}
         ></InputForm>
     );

@@ -1508,9 +1508,8 @@ export const welcomeEmailTemplate = `<!doctype html>
                         
                         <td valign="top" class="mcnTextContent" style="padding-top:0; padding-right:18px; padding-bottom:9px; padding-left:18px;">
                         
-                            <h1 class="null" data-pm-slice="1 1 []" style="text-align: center;"><img data-file-id="14708117" height="165" src="https://mcusercontent.com/33345c9bc17f10bac6afdd0ac/images/5176a243-4b0f-190e-8898-5c29ca42784c.png" style="border: 0px  ; width: 660px; height: 165px; margin: 0px;" width="660"><br>
-<br>
-<span style="color:#a87570"><strong><span style="font-size:31px"><span style="font-family:helvetica neue,helvetica,arial,verdana,sans-serif">Your JourneyHacks 2025 Application is in Review 🦦</span></span></strong></span></h1>
+                            <h1 class="null" data-pm-slice="1 1 []" style="text-align: center;">
+<span style="color:#a87570"><strong><span style="font-size:31px"><span style="font-family:helvetica neue,helvetica,arial,verdana,sans-serif">Your JourneyHacks 2026 Application is in Review 🦦</span></span></strong></span></h1>
 
 <p style="text-align: center;">&nbsp;</p>
 
@@ -1518,13 +1517,13 @@ export const welcomeEmailTemplate = `<!doctype html>
 <br>
 <span style="font-size:14px">Hello {{firstName}},<br>
 <br>
-Thank you for submitting your application for JourneyHacks 2025!<br>
+Thank you for submitting your application for JourneyHacks 2026!<br>
 <br>
 We have received your submission and will notify you within a week after the application deadline with any updates.<br>
 <br>
 If you would like to withdraw your application, please email us at sfusurgelogistics@gmail.com before the application deadline. Otherwise, there is no further action item on your end.&nbsp;<br>
 <br>
-We appreciate your commitment to JourneyHacks! Please do not hesitate to reach out to us on our <a href="https://discord.gg/gBGWckz2" target="_blank">discord</a>&nbsp;if you have any questions.<br>
+We appreciate your commitment to JourneyHacks! Please do not hesitate to reach out to us on our <a href="https://discord.gg/Zk7VXpNA5X" target="_blank">discord</a>&nbsp;if you have any questions.<br>
 <br>
 Warm regards,<br>
 SFU Surge</span>&nbsp;</p>
@@ -1555,7 +1554,7 @@ SFU Surge</span>&nbsp;</p>
                 <table border="0" cellpadding="0" cellspacing="0" width="100%" class="mcnFollowContentContainer" style="min-width:100%;">
     <tbody><tr>
         <td align="center" style="padding-left:9px;padding-right:9px;">
-            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="min-width: 100%;background-color: #B5CA80;border: 1px none;" class="mcnFollowContent">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="min-width: 100%;background-color: #FFE798;border: 1px none;" class="mcnFollowContent">
                 <tbody><tr>
                     <td align="center" valign="top" style="padding-top:9px; padding-right:9px; padding-left:9px;">
                         <table align="center" border="0" cellpadding="0" cellspacing="0">
