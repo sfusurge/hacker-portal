@@ -2,6 +2,6 @@
     content: var(--errorMsg);
 
     display: block;
-    color: var(--danger-500);
-    font-size: smaller;
+    color: var(--color-danger-400);
+    font-size: 12px;
 }

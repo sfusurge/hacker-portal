@@ -237,6 +237,13 @@ export default function DesktopNav({
                                         : 'top-3 left-3'
                                 )}
                             >
+                                <Image
+                                    src="/dashboard/jh26head.png"
+                                    alt="JourneyHacks 2026 Logo"
+                                    width={48}
+                                    height={48}
+                                    className="pointer-events-none h-full w-full rounded-lg object-cover"
+                                />
                                 <button
                                     onClick={() => {
                                         try {
@@ -334,12 +341,12 @@ export default function DesktopNav({
                                                                 }
                                                             }}
                                                         >
-                                                            StormHacks 2025
+                                                            JourneyHacks 2026
                                                         </span>
                                                     </div>
                                                 </div>
                                                 <Image
-                                                    src="/dashboard/sh25header.png"
+                                                    src="/dashboard/jh26header.png"
                                                     alt="StormHacks"
                                                     width={200}
                                                     height={150}

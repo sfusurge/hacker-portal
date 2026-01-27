@@ -9,16 +9,16 @@ import Image from 'next/image';
 import ApplicationPageComponent from '@/app/(auth)/application/ApplicationPage';
 // import { createCaller } from '@/server/appRouter';
 
-export default function ApplicationPage({
+export default async function ApplicationPage({
     searchParams,
 }: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
     dayjs.extend(utc);
     dayjs.extend(timezone);
-    const currentTime = dayjs();
-    const cutoffTime = dayjs.tz('2025-09-26 23:59:00', 'America/Los_Angeles');
-    // const params = await searchParams;
+    const currentTime = dayjs(new Date());
+    const cutoffTime = dayjs.tz('2026-01-03 23:59:00', 'America/Los_Angeles');
+    const params = await searchParams;
 
     // const trpcClient = createCaller({});
 
