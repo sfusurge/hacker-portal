@@ -20,7 +20,7 @@ const meta: Meta<React.ComponentProps<typeof Dialog>> = {
         docs: {
             description: {
                 component:
-                    'Dialogs are modal overlays that focus user attention on specific content or actions. They appear above the main interface and require user interaction to dismiss.\n\n## Anatomy\n\nA dialog consists of a trigger, overlay, content area with header, body, and footer sections.',
+                    'Dialogs are modal overlays that focus user attention on specific content or actions. They appear above the main interface and require user interaction to dismiss.\n\n## Notes\n\nA dialog consists of a trigger, overlay, content area with header, body, and footer sections.',
             },
         },
     },

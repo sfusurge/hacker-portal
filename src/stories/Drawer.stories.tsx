@@ -21,7 +21,7 @@ const meta: Meta<React.ComponentProps<typeof Drawer>> = {
         docs: {
             description: {
                 component:
-                    "A sliding panel or menu often used in mobile applications that contains additional content, options, or navigation links.\n\n## Notes\n\nDrawers are typically used for tablet and mobile. Instances where you'd use a drawer component on either of those platforms, you'd use a Dialog on desktop. With that being said, ShadCN allows you to combine the Dialog and Drawer components to create a responsive dialog to render a Dialog component on desktop and a Drawer on mobile.\n\nDrawer components are usually emphasized by being placed over a Blanket component to conceal the underlying interface.",
+                    "A sliding panel or menu often used in mobile applications that contains additional content, options, or navigation links.\n\n## Notes\n\nDrawers are typically used for tablet and mobile. Instances where you'd use a drawer component on either of those platforms, you'd use a Dialog on desktop.",
             },
         },
     },

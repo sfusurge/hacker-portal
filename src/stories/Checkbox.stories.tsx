@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/nextjs';
-import React from 'react';
+import React, { useState } from 'react';
 
 import { CheckBox } from '@/components/ui/checkbox/checkbox';
 import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 
-const meta: Meta<React.ComponentProps<typeof CheckBox>> = {
+const meta: Meta<typeof CheckBox> = {
     title: 'Strike/Checkbox',
     component: CheckBox,
     parameters: {
@@ -49,15 +49,69 @@ const meta: Meta<React.ComponentProps<typeof CheckBox>> = {
     },
 };
 export default meta;
+type Story = StoryObj<typeof CheckBox>;
 
-export const Default = {
+const ControlledCheckbox = ({
+    label,
+    name,
+    initialChecked = false,
+    disabled = false,
+}: {
+    label?: string;
+    name: string;
+    initialChecked?: boolean;
+    disabled?: boolean;
+}) => {
+    const [checked, setChecked] = useState(initialChecked);
+    return (
+        <CheckBox
+            name={name}
+            label={label}
+            checked={checked}
+            onChange={(e) => setChecked(e.target.checked)}
+            disabled={disabled}
+        />
+    );
+};
+
+const ControlledCheckboxWithLabel = ({
+    name,
+    initialChecked = false,
+    disabled = false,
+    inline = false,
+}: {
+    name: string;
+    initialChecked?: boolean;
+    disabled?: boolean;
+    inline?: boolean;
+}) => {
+    const [checked, setChecked] = useState(initialChecked);
+    return (
+        <CheckBoxWithLabel
+            name={name}
+            checked={checked}
+            onChange={(e) => setChecked(e.target.checked)}
+            disabled={disabled}
+            inline={inline}
+        />
+    );
+};
+
+export const Default: Story = {
     args: {
         name: 'checkbox-default',
         label: 'Default checkbox',
     },
+    render: (args) => (
+        <ControlledCheckbox
+            name={args.name || 'checkbox-default'}
+            label={args.label}
+            disabled={args.disabled}
+        />
+    ),
 };
 
-export const Checked = {
+export const Checked: Story = {
     parameters: {
         docs: {
             description: {
@@ -68,11 +122,18 @@ export const Checked = {
     args: {
         name: 'checkbox-checked',
         label: 'Checked checkbox',
-        checked: true,
     },
+    render: (args) => (
+        <ControlledCheckbox
+            name={args.name || 'checkbox-checked'}
+            label={args.label}
+            initialChecked={true}
+            disabled={args.disabled}
+        />
+    ),
 };
 
-export const Disabled = {
+export const Disabled: Story = {
     parameters: {
         docs: {
             description: {
@@ -85,9 +146,16 @@ export const Disabled = {
         label: 'Disabled checkbox',
         disabled: true,
     },
+    render: (args) => (
+        <ControlledCheckbox
+            name={args.name || 'checkbox-disabled'}
+            label={args.label}
+            disabled={args.disabled}
+        />
+    ),
 };
 
-export const DisabledChecked = {
+export const DisabledChecked: Story = {
     parameters: {
         docs: {
             description: {
@@ -98,12 +166,19 @@ export const DisabledChecked = {
     args: {
         name: 'checkbox-disabled-checked',
         label: 'Disabled checked checkbox',
-        checked: true,
         disabled: true,
     },
+    render: (args) => (
+        <ControlledCheckbox
+            name={args.name || 'checkbox-disabled-checked'}
+            label={args.label}
+            initialChecked={true}
+            disabled={args.disabled}
+        />
+    ),
 };
 
-export const WithoutLabel = {
+export const WithoutLabel: Story = {
     parameters: {
         docs: {
             description: {
@@ -114,9 +189,15 @@ export const WithoutLabel = {
     args: {
         name: 'checkbox-no-label',
     },
+    render: (args) => (
+        <ControlledCheckbox
+            name={args.name || 'checkbox-no-label'}
+            disabled={args.disabled}
+        />
+    ),
 };
 
-export const MultipleCheckboxes = {
+export const MultipleCheckboxes: Story = {
     parameters: {
         docs: {
             description: {
@@ -124,20 +205,52 @@ export const MultipleCheckboxes = {
             },
         },
     },
-    decorators: [
-        () => (
+    render: () => {
+        const [checked, setChecked] = useState<Record<string, boolean>>({
+            option1: false,
+            option2: true,
+            option3: false,
+            option4: false,
+        });
+
+        const handleChange =
+            (name: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+                setChecked((prev) => ({ ...prev, [name]: e.target.checked }));
+            };
+
+        return (
             <div className="flex flex-col gap-3">
-                <CheckBox name="option1" label="Option 1" />
-                <CheckBox name="option2" label="Option 2" checked />
-                <CheckBox name="option3" label="Option 3" />
-                <CheckBox name="option4" label="Disabled option" disabled />
+                <CheckBox
+                    name="option1"
+                    label="Option 1"
+                    checked={checked.option1}
+                    onChange={handleChange('option1')}
+                />
+                <CheckBox
+                    name="option2"
+                    label="Option 2"
+                    checked={checked.option2}
+                    onChange={handleChange('option2')}
+                />
+                <CheckBox
+                    name="option3"
+                    label="Option 3"
+                    checked={checked.option3}
+                    onChange={handleChange('option3')}
+                />
+                <CheckBox
+                    name="option4"
+                    label="Disabled option"
+                    checked={checked.option4}
+                    onChange={handleChange('option4')}
+                    disabled
+                />
             </div>
-        ),
-    ],
+        );
+    },
 };
 
-// CheckBoxWithLabel stories
-export const WithLabelComponent = {
+export const WithLabelComponent: Story = {
     name: 'With Label Component',
     parameters: {
         docs: {
@@ -146,14 +259,10 @@ export const WithLabelComponent = {
             },
         },
     },
-    render: (args: any) => (
-        <CheckBoxWithLabel name="Terms and Conditions">
-            I agree to the terms and conditions
-        </CheckBoxWithLabel>
-    ),
+    render: () => <ControlledCheckboxWithLabel name="Terms and Conditions" />,
 };
 
-export const WithLabelChecked = {
+export const WithLabelChecked: Story = {
     name: 'With Label Checked',
     parameters: {
         docs: {
@@ -162,14 +271,12 @@ export const WithLabelChecked = {
             },
         },
     },
-    render: (args: any) => (
-        <CheckBoxWithLabel name="Newsletter" checked>
-            Subscribe to newsletter
-        </CheckBoxWithLabel>
+    render: () => (
+        <ControlledCheckboxWithLabel name="Newsletter" initialChecked />
     ),
 };
 
-export const WithLabelInline = {
+export const WithLabelInline: Story = {
     name: 'With Label Inline',
     parameters: {
         docs: {
@@ -178,9 +285,5 @@ export const WithLabelInline = {
             },
         },
     },
-    render: (args: any) => (
-        <CheckBoxWithLabel name="Inline option" inline>
-            Inline checkbox option
-        </CheckBoxWithLabel>
-    ),
+    render: () => <ControlledCheckboxWithLabel name="Inline option" inline />,
 };

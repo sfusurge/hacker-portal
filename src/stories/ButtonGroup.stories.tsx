@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/nextjs';
-import React from 'react';
+import React, { useState } from 'react';
 
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/button-group';
 
-const meta: Meta<React.ComponentProps<typeof ToggleGroup>> = {
+const meta: Meta<typeof ToggleGroup> = {
     title: 'Strike/ButtonGroup',
     component: ToggleGroup,
     parameters: {
@@ -25,7 +25,7 @@ const meta: Meta<React.ComponentProps<typeof ToggleGroup>> = {
         },
         variant: {
             control: 'select',
-            options: ['default', 'outline'],
+            options: ['default', 'outline', 'rating'],
             description: 'The visual variant of the button items',
         },
         size: {
@@ -47,18 +47,6 @@ const meta: Meta<React.ComponentProps<typeof ToggleGroup>> = {
                 defaultValue: { summary: 'false' },
             },
         },
-        value: {
-            control: false,
-            description: 'The controlled value of the button group',
-        },
-        defaultValue: {
-            control: false,
-            description: 'The default value when uncontrolled',
-        },
-        onValueChange: {
-            control: false,
-            description: 'Callback when the value changes',
-        },
     },
 };
 
@@ -66,23 +54,39 @@ export default meta;
 
 type Story = StoryObj<typeof ToggleGroup>;
 
-export const Default: Story = {
-    args: {
-        type: 'single',
-        defaultValue: '3',
-    },
-    render: (args) => (
+interface ControlledToggleGroupProps {
+    disabled?: boolean;
+    readOnly?: boolean;
+    initialValue?: string;
+}
+
+const ControlledToggleGroup = ({
+    disabled,
+    readOnly,
+    initialValue = '3',
+}: ControlledToggleGroupProps) => {
+    const [value, setValue] = useState(initialValue);
+
+    return (
         <div className="w-full space-y-2">
-            <div className="justify-content flex w-full">
+            <div className="justify-content flex w-[410px]">
                 <h4 className="font-medium text-white">
                     Overall Rating
                     <span className="text-brand-500 ml-1">*</span>
                 </h4>
                 <span className="ml-auto font-semibold text-nowrap text-white">
-                    {args.defaultValue || 'Not scored'} / 5
+                    {value || 'Not scored'} / 5
                 </span>
             </div>
-            <ToggleGroup {...args}>
+            <ToggleGroup
+                type="single"
+                value={value}
+                onValueChange={(newValue) => {
+                    if (newValue) setValue(newValue);
+                }}
+                disabled={disabled}
+                readOnly={readOnly}
+            >
                 {[1, 2, 3, 4, 5].map((num) => (
                     <ToggleGroupItem
                         key={num}
@@ -97,17 +101,82 @@ export const Default: Story = {
             <div className="flex justify-between px-1 text-xs text-white/60">
                 {['Poor', 'Fair', 'Good', 'Very good', 'Excellent'].map(
                     (label, index) => (
-                        <span key={index} className="text-center">
+                        <span
+                            key={index}
+                            className="text-center"
+                            style={{ width: '20%' }}
+                        >
                             {label}
                         </span>
                     )
                 )}
             </div>
         </div>
+    );
+};
+
+export const Default: Story = {
+    args: {
+        type: 'single',
+        disabled: false,
+        readOnly: false,
+    },
+    render: (args) => (
+        <ControlledToggleGroup
+            disabled={args.disabled}
+            readOnly={args.readOnly}
+            initialValue="3"
+        />
     ),
 };
 
-export const RatingScale = {
+const RatingScaleComponent = ({
+    disabled,
+    readOnly,
+    initialValue = '3',
+}: ControlledToggleGroupProps) => {
+    const [value, setValue] = useState(initialValue);
+
+    return (
+        <div className="w-[400px] space-y-2">
+            <ToggleGroup
+                type="single"
+                value={value}
+                onValueChange={(newValue) => {
+                    if (newValue) setValue(newValue);
+                }}
+                disabled={disabled}
+                readOnly={readOnly}
+            >
+                {[1, 2, 3, 4, 5].map((num) => (
+                    <ToggleGroupItem
+                        key={num}
+                        value={String(num)}
+                        variant="rating"
+                        className="flex-1"
+                    >
+                        {num}
+                    </ToggleGroupItem>
+                ))}
+            </ToggleGroup>
+            <div className="flex justify-between px-1 text-xs text-white/60">
+                {['Poor', 'Fair', 'Good', 'Very good', 'Excellent'].map(
+                    (label, index) => (
+                        <span
+                            key={index}
+                            className="text-center"
+                            style={{ width: '20%' }}
+                        >
+                            {label}
+                        </span>
+                    )
+                )}
+            </div>
+        </div>
+    );
+};
+
+export const RatingScale: Story = {
     name: 'Rating Scale',
     parameters: {
         docs: {
@@ -116,42 +185,21 @@ export const RatingScale = {
             },
         },
     },
-    decorators: [
-        () => (
-            <div className="space-y-2">
-                <div className="justify-content flex w-full">
-                    <ToggleGroup type="single" defaultValue="3">
-                        {[1, 2, 3, 4, 5].map((num) => (
-                            <ToggleGroupItem
-                                key={num}
-                                value={String(num)}
-                                variant="rating"
-                                className="flex-1"
-                            >
-                                {num}
-                            </ToggleGroupItem>
-                        ))}
-                    </ToggleGroup>
-                </div>
-                <div className="flex justify-between px-1 text-xs text-white/60">
-                    {['Poor', 'Fair', 'Good', 'Very good', 'Excellent'].map(
-                        (label, index) => (
-                            <span
-                                key={index}
-                                className="text-center"
-                                style={{ width: '20%' }}
-                            >
-                                {label}
-                            </span>
-                        )
-                    )}
-                </div>
-            </div>
-        ),
-    ],
+    args: {
+        type: 'single',
+        disabled: false,
+        readOnly: false,
+    },
+    render: (args) => (
+        <RatingScaleComponent
+            disabled={args.disabled}
+            readOnly={args.readOnly}
+            initialValue="3"
+        />
+    ),
 };
 
-export const Disabled = {
+export const Disabled: Story = {
     name: 'Disabled State',
     parameters: {
         docs: {
@@ -160,41 +208,16 @@ export const Disabled = {
             },
         },
     },
-    decorators: [
-        () => (
-            <div className="flex flex-col gap-4">
-                <ToggleGroup type="single" defaultValue="3" disabled={true}>
-                    <ToggleGroupItem value="1">1</ToggleGroupItem>
-                    <ToggleGroupItem value="2">2</ToggleGroupItem>
-                    <ToggleGroupItem value="3">3</ToggleGroupItem>
-                    <ToggleGroupItem value="4">4</ToggleGroupItem>
-                    <ToggleGroupItem value="5">5</ToggleGroupItem>
-                </ToggleGroup>
-            </div>
-        ),
-    ],
-};
-
-export const ReadOnly = {
-    name: 'Read-Only State',
-    parameters: {
-        docs: {
-            description: {
-                story: 'Read-only button groups display the current selection but prevent changes. Useful for showing responses without allowing edits.',
-            },
-        },
+    args: {
+        type: 'single',
+        disabled: true,
+        readOnly: false,
     },
-    decorators: [
-        () => (
-            <div className="flex flex-col gap-4">
-                <ToggleGroup type="single" defaultValue="4" readOnly>
-                    <ToggleGroupItem value="1">1</ToggleGroupItem>
-                    <ToggleGroupItem value="2">2</ToggleGroupItem>
-                    <ToggleGroupItem value="3">3</ToggleGroupItem>
-                    <ToggleGroupItem value="4">4</ToggleGroupItem>
-                    <ToggleGroupItem value="5">5</ToggleGroupItem>
-                </ToggleGroup>
-            </div>
-        ),
-    ],
+    render: (args) => (
+        <ControlledToggleGroup
+            disabled={args.disabled}
+            readOnly={args.readOnly}
+            initialValue="3"
+        />
+    ),
 };

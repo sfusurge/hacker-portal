@@ -168,26 +168,65 @@ const Button = forwardRef<
                   : 'md:h-11 md:rounded-lg md:text-md'
         );
 
+        const hasLeadingIcon = leadingIcon || leadingIconChild;
+        const hasTrailingIcon = trailingIcon || trailingIconChild;
+        const isIconOnly =
+            (hasLeadingIcon || hasTrailingIcon) && !props.children;
+
         const leadingIconStyles = cn({
-            'ml-2': size === 'compact' && (leadingIcon || leadingIconChild),
-            'ml-3': size === 'cozy' && (leadingIcon || leadingIconChild),
-            'md:ml-2':
-                desktopSize === 'compact' && (leadingIcon || leadingIconChild),
-            'md:ml-3':
-                desktopSize === 'cozy' && (leadingIcon || leadingIconChild),
+            'ml-2': size === 'compact' && hasLeadingIcon,
+            'ml-3': size === 'cozy' && hasLeadingIcon,
+            'md:ml-2': desktopSize === 'compact' && hasLeadingIcon,
+            'md:ml-3': desktopSize === 'cozy' && hasLeadingIcon,
+            'mr-2':
+                size === 'compact' &&
+                isIconOnly &&
+                hasLeadingIcon &&
+                !hasTrailingIcon,
+            'mr-3':
+                size === 'cozy' &&
+                isIconOnly &&
+                hasLeadingIcon &&
+                !hasTrailingIcon,
+            'md:mr-2':
+                desktopSize === 'compact' &&
+                isIconOnly &&
+                hasLeadingIcon &&
+                !hasTrailingIcon,
+            'md:mr-3':
+                desktopSize === 'cozy' &&
+                isIconOnly &&
+                hasLeadingIcon &&
+                !hasTrailingIcon,
         });
 
         const trailingIconStyles = cn({
-            'mr-2': size === 'compact' && (trailingIcon || trailingIconChild),
-            'mr-3': size === 'cozy' && (trailingIcon || trailingIconChild),
-            'md:mr-2':
+            'mr-2': size === 'compact' && hasTrailingIcon,
+            'mr-3': size === 'cozy' && hasTrailingIcon,
+            'md:mr-2': desktopSize === 'compact' && hasTrailingIcon,
+            'md:mr-3': desktopSize === 'cozy' && hasTrailingIcon,
+            'ml-2':
+                size === 'compact' &&
+                isIconOnly &&
+                hasTrailingIcon &&
+                !hasLeadingIcon,
+            'ml-3':
+                size === 'cozy' &&
+                isIconOnly &&
+                hasTrailingIcon &&
+                !hasLeadingIcon,
+            'md:ml-2':
                 desktopSize === 'compact' &&
-                (trailingIcon || trailingIconChild),
-            'md:mr-3':
-                desktopSize === 'cozy' && (trailingIcon || trailingIconChild),
+                isIconOnly &&
+                hasTrailingIcon &&
+                !hasLeadingIcon,
+            'md:ml-3':
+                desktopSize === 'cozy' &&
+                isIconOnly &&
+                hasTrailingIcon &&
+                !hasLeadingIcon,
         });
 
-        // Handle padding for text content
         const contentStyles = cn({
             'p-2': size === 'compact',
             'p-3': size === 'cozy',
@@ -227,7 +266,9 @@ const Button = forwardRef<
                     </span>
                 )}
 
-                <span className={contentStyles}>{props.children}</span>
+                {props.children && (
+                    <span className={contentStyles}>{props.children}</span>
+                )}
 
                 {trailingIcon && trailingIconAlt && (
                     <Image
