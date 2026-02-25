@@ -4,7 +4,6 @@ import { trpc } from '@/trpc/client';
 import {
     Fragment,
     HTMLProps,
-    useCallback,
     useEffect,
     useMemo,
     useRef,
@@ -24,7 +23,7 @@ import {
     PaginationState,
 } from '@tanstack/react-table';
 
-import { atom, useAtomValue, useSetAtom } from 'jotai';
+import { atom, useSetAtom } from 'jotai';
 
 import { Input } from '@/components/ui/input';
 import { mkConfig, generateCsv, download } from 'export-to-csv';
@@ -36,7 +35,6 @@ import { DocumentArrowDownIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/16/solid';
 import dayjs from 'dayjs';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
-import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import {
     StatusEnum,
     ApplicationStatus,
@@ -123,7 +121,7 @@ export default function ReviewApplicationsTable({
     onRowClick,
     hackathonId,
 }: ReviewApplicationsTableProps) {
-    const hackathon = useAtomValue(hackathonAtom);
+    // const hackathon = useAtomValue(hackathonAtom);
 
     // Fetch email templates
     const { data: emailTemplates, isLoading: templatesLoading } =
@@ -439,7 +437,7 @@ function MyTable({
 
     const setSideCardInfo = useSetAtom(sideCardAtomSJ);
 
-    const sendEmail = trpc.emails.sendEmail.useMutation();
+    // const sendEmail = trpc.emails.sendEmail.useMutation();
     const updateLastEmailSent =
         trpc.applications.updateLastEmailSent.useMutation();
     const queueBatchEmails = trpc.emailQueue.queueBatchEmails.useMutation();
