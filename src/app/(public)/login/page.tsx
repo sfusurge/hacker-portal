@@ -75,7 +75,7 @@ export default async function Login({
                 src="/dashboard/sillyhacksheader.png"
                 alt="Sparky Studying"
                 fill
-                className="absolute h-full w-full"
+                className="absolute h-full w-full object-cover"
                 priority
             />
 
