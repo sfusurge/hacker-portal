@@ -61,6 +61,7 @@
         "jotai": "^2.12.2",
         "jotai-optics": "^0.4.0",
         "lucide-react": "^0.460.0",
+        "marked": "^15.0.12",
         "mime-types": "^2.1.35",
         "motion": "^12.1.0",
         "net": "^1.0.2",
