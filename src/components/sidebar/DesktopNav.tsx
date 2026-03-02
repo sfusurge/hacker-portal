@@ -238,7 +238,7 @@ export default function DesktopNav({
                                 )}
                             >
                                 <Image
-                                    src="/dashboard/jh26head.png"
+                                    src="/dashboard/sillyhackshead.png"
                                     alt="JourneyHacks 2026 Logo"
                                     width={48}
                                     height={48}
@@ -268,16 +268,16 @@ export default function DesktopNav({
                                                     <div className="h-6 w-6 shrink-0 opacity-0" />
                                                     <div className="mt-1 flex flex-col gap-2 overflow-hidden">
                                                         <span className="line-clamp-1 text-sm font-medium whitespace-nowrap text-white">
-                                                            JourneyHacks 2026
+                                                            SillyHacks 2026
                                                         </span>
                                                     </div>
                                                 </div>
                                                 <Image
-                                                    src="/dashboard/jh26header.png"
+                                                    src="/dashboard/sillyhacksheader.png"
                                                     alt="StormHacks"
                                                     width={200}
                                                     height={150}
-                                                    className="h-full w-full object-cover"
+                                                    className="h-full w-full"
                                                 />
                                             </div>
                                         </motion.div>

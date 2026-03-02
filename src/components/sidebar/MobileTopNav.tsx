@@ -66,7 +66,7 @@ export default function MobileTopNav({
                     <div className="flex w-full flex-row items-center justify-between">
                         <div className="my-auto flex flex-row gap-3">
                             <Image
-                                src="/dashboard/jh26head.png"
+                                src="/dashboard/sillyhackshead.png"
                                 alt="JourneyHacks 2026 Logo"
                                 width={36}
                                 height={36}
@@ -75,10 +75,10 @@ export default function MobileTopNav({
 
                             <div className="flex flex-col gap-2">
                                 <span className="line-clamp-1 text-sm leading-none font-medium text-white">
-                                    JourneyHacks 2026
+                                    SillyHacks 2026
                                 </span>
                                 <span className="line-clamp-1 text-sm leading-none text-white/60">
-                                    January 10, 2026
+                                    April 1, 2026
                                 </span>
                             </div>
                         </div>
