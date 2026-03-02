@@ -49,11 +49,27 @@ export type EmailAttachment = {
     };
 };
 
+/**
+ * Reusable HTML wrapper (doctype, head, styles, body shell).
+ * Use {{bodyContent}} in html where the email body should be injected.
+ */
+export const emailTemplateStyling = pgTable('email_template_styling', {
+    id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
+    name: varchar('name', { length: 256 }).notNull(),
+    html: text('html').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 export const emailTemplates = pgTable('email_templates', {
     id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
     title: varchar('title', { length: 256 }).notNull(),
     purpose: varchar('purpose', { length: 256 }).notNull(),
     description: text('description'),
+    /** When set, content is body-only and is injected into styling.html at __BODY_CONTENT__. */
+    stylingId: integer('styling_id').references(() => emailTemplateStyling.id, {
+        onDelete: 'set null',
+    }),
     content: text('content').notNull(),
     attachments: jsonb('attachments'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -62,7 +78,7 @@ export const emailTemplates = pgTable('email_templates', {
 
 export const emails = pgTable('sh_25_emails', {
     id: uuid('id')
-        .default(sql`uuid_generate_v4()`)
+        .default(sql`gen_random_uuid()`)
         .primaryKey(),
     email: varchar('email', { length: 256 }).notNull().unique(),
     createdAt: timestamp('created_at', { withTimezone: true })
@@ -70,10 +86,19 @@ export const emails = pgTable('sh_25_emails', {
         .defaultNow(),
 });
 
+/** Placeholder in styling HTML where body content is injected. */
+export const EMAIL_STYLING_BODY_PLACEHOLDER = '{{bodyContent}}';
+
+export const emailTemplateStylingSchema = z.object({
+    name: z.string().min(1, 'Name is required'),
+    html: z.string().min(1, 'Styling HTML is required'),
+});
+
 export const emailTemplateSchema = z.object({
     title: z.string().min(1, 'Title is required'),
     purpose: z.string().min(1, 'Purpose is required'),
     description: z.string().optional(),
+    stylingId: z.number().int().nullable().optional(),
     content: z.string().min(1, 'Email content is required'),
     attachments: z
         .array(
@@ -102,6 +127,8 @@ export const emailTemplateIdSchema = selectEmailTemplateSchema.pick({
 
 export type EmailTemplate = z.infer<typeof selectEmailTemplateSchema>;
 export type NewEmailTemplate = z.infer<typeof emailTemplateSchema>;
+export type EmailTemplateStyling = typeof emailTemplateStyling.$inferSelect;
+export type NewEmailTemplateStyling = typeof emailTemplateStyling.$inferInsert;
 
 export const getEmailTemplateSchema = z.object({
     id: z.number().int(),

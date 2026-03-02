@@ -3,10 +3,14 @@ import generateQRCode from '../generateQRCode';
 import { sendEmailSchema } from '@/db/schema/emails';
 import { transporter } from '@/server/nodemailerTransporter';
 import { databaseClient } from '@/db/client';
-import { emailTemplates } from '@/db/schema/emails';
+import { emailTemplates, emailTemplateStyling } from '@/db/schema/emails';
 import { user } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
-import { prepareEmailContent } from '@/app/(auth)/admin/email/templates/emailPreview';
+import {
+    prepareEmailContent,
+    mergeBodyIntoStyling,
+    markdownToHtml,
+} from '@/app/(auth)/admin/email/templates/emailPreview';
 import { getFileFromR2 } from '@/lib/cloudflare/r2';
 const env = process.env;
 
@@ -27,7 +31,11 @@ export const sendEmailRouter = router({
                     );
                 }
 
-                let processedTemplateContent = template.content;
+                // Body content with styling = Markdown → HTML; no styling = HTML as-is
+                let processedTemplateContent =
+                    template.stylingId != null
+                        ? markdownToHtml(template.content)
+                        : template.content;
                 let qrcodeBase64: string | undefined;
                 let attachments = [];
 
@@ -113,10 +121,24 @@ export const sendEmailRouter = router({
                     userId: input.user.id,
                 };
 
-                const finalHtmlContent = prepareEmailContent(
+                let finalHtmlContent = prepareEmailContent(
                     processedTemplateContent,
                     templateData
                 );
+
+                if (template.stylingId != null) {
+                    const [styling] = await databaseClient
+                        .select()
+                        .from(emailTemplateStyling)
+                        .where(eq(emailTemplateStyling.id, template.stylingId))
+                        .limit(1);
+                    if (styling?.html) {
+                        finalHtmlContent = mergeBodyIntoStyling(
+                            styling.html,
+                            finalHtmlContent
+                        );
+                    }
+                }
 
                 const mailOptions = {
                     from: env.SENDINGEMAIL,

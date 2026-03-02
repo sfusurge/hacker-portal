@@ -84,6 +84,7 @@ export default function EmailEditPage() {
                     title: data.title,
                     purpose: data.purpose,
                     description: data.description || '',
+                    stylingId: data.stylingId ?? undefined,
                     content: data.content,
                     attachments:
                         data.attachments?.map((attachment) => ({
@@ -97,6 +98,7 @@ export default function EmailEditPage() {
                     title: data.title,
                     purpose: data.purpose,
                     description: data.description || '',
+                    stylingId: data.stylingId ?? undefined,
                     content: data.content,
                     attachments:
                         data.attachments?.map((attachment) => ({

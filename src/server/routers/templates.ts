@@ -1509,7 +1509,7 @@ export const welcomeEmailTemplate = `<!doctype html>
                         <td valign="top" class="mcnTextContent" style="padding-top:0; padding-right:18px; padding-bottom:9px; padding-left:18px;">
                         
                             <h1 class="null" data-pm-slice="1 1 []" style="text-align: center;">
-<span style="color:#a87570"><strong><span style="font-size:31px"><span style="font-family:helvetica neue,helvetica,arial,verdana,sans-serif">Your JourneyHacks 2026 Application is in Review 🦦</span></span></strong></span></h1>
+<span style="color:#a87570"><strong><span style="font-size:31px"><span style="font-family:helvetica neue,helvetica,arial,verdana,sans-serif">Your SillyHacks 2026 Application is in Review 🦦</span></span></strong></span></h1>
 
 <p style="text-align: center;">&nbsp;</p>
 
@@ -1517,13 +1517,13 @@ export const welcomeEmailTemplate = `<!doctype html>
 <br>
 <span style="font-size:14px">Hello {{firstName}},<br>
 <br>
-Thank you for submitting your application for JourneyHacks 2026!<br>
+Thank you for submitting your application for SillyHacks 2026!<br>
 <br>
 We have received your submission and will notify you within a week after the application deadline with any updates.<br>
 <br>
 If you would like to withdraw your application, please email us at sfusurgelogistics@gmail.com before the application deadline. Otherwise, there is no further action item on your end.&nbsp;<br>
 <br>
-We appreciate your commitment to JourneyHacks! Please do not hesitate to reach out to us on our <a href="https://discord.gg/Zk7VXpNA5X" target="_blank">discord</a>&nbsp;if you have any questions.<br>
+We appreciate your commitment to SillyHacks! Please do not hesitate to reach out to us on our <a href="https://discord.gg/Zk7VXpNA5X" target="_blank">discord</a>&nbsp;if you have any questions.<br>
 <br>
 Warm regards,<br>
 SFU Surge</span>&nbsp;</p>

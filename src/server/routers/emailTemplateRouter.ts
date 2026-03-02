@@ -45,6 +45,7 @@ export const emailTemplatesRouter = router({
                     title: input.title,
                     purpose: input.purpose,
                     description: input.description || null,
+                    stylingId: input.stylingId ?? null,
                     content: input.content,
                     attachments: attachmentsWithCropData,
                 })
@@ -164,6 +165,7 @@ export const emailTemplatesRouter = router({
                     title: input.title,
                     purpose: input.purpose,
                     description: input.description || null,
+                    stylingId: input.stylingId ?? null,
                     content: input.content,
                     attachments: attachmentsWithCropData,
                     updatedAt: new Date(),

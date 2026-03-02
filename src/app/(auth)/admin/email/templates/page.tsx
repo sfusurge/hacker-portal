@@ -92,11 +92,26 @@ export default function EmailTemplatesPage() {
             <div className="w-full py-10">
                 <div className="mb-6 flex items-center justify-between">
                     <h1 className="text-2xl font-bold">Email Templates</h1>
-                    <Link href="/admin/email/templates/edit">
-                        <Button variant="brand" hierarchy="primary" size="cozy">
-                            Create Template
-                        </Button>
-                    </Link>
+                    <div className="flex gap-2">
+                        <Link href="/admin/email/templates/styling">
+                            <Button
+                                variant="brand"
+                                hierarchy="secondary"
+                                size="cozy"
+                            >
+                                Manage stylings
+                            </Button>
+                        </Link>
+                        <Link href="/admin/email/templates/edit">
+                            <Button
+                                variant="brand"
+                                hierarchy="primary"
+                                size="cozy"
+                            >
+                                Create Template
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
                 <div className="py-10 text-center">
                     <p className="text-lg">No email templates found.</p>
@@ -109,11 +124,22 @@ export default function EmailTemplatesPage() {
         <div className="w-full py-10">
             <div className="mb-6 flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Email Templates</h1>
-                <Link href="/admin/email/templates/edit">
-                    <Button variant="brand" hierarchy="primary" size="cozy">
-                        Create Template
-                    </Button>
-                </Link>
+                <div className="flex gap-2">
+                    <Link href="/admin/email/templates/styling">
+                        <Button
+                            variant="brand"
+                            hierarchy="secondary"
+                            size="cozy"
+                        >
+                            Manage stylings
+                        </Button>
+                    </Link>
+                    <Link href="/admin/email/templates/edit">
+                        <Button variant="brand" hierarchy="primary" size="cozy">
+                            Create Template
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
             <div className="grid gap-6">

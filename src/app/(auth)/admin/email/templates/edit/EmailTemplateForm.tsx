@@ -16,6 +16,13 @@ import {
     AttachmentsSection,
     Attachment,
 } from '@/components/attachments/AttachmentsSection';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 export type EmailTemplateFormData = NewEmailTemplate;
 
@@ -68,6 +75,7 @@ export function EmailTemplateForm({
         title: '',
         purpose: '',
         description: '',
+        stylingId: null,
         content: '',
         attachments: [],
     });
@@ -76,6 +84,14 @@ export function EmailTemplateForm({
     const [deletedAttachments, setDeletedAttachments] = useState<string[]>([]);
 
     const deleteFileMutation = trpc.files.deleteFile.useMutation();
+
+    const { data: stylingList = [] } =
+        trpc.emailTemplateStyling.getList.useQuery();
+    const { data: selectedStyling, isLoading: isStylingLoading } =
+        trpc.emailTemplateStyling.getById.useQuery(
+            { id: formData.stylingId! },
+            { enabled: formData.stylingId != null }
+        );
 
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {};
@@ -176,6 +192,7 @@ export function EmailTemplateForm({
                 title: initialData.title || '',
                 purpose: initialData.purpose || '',
                 description: initialData.description || '',
+                stylingId: initialData.stylingId ?? null,
                 content: initialData.content || '',
                 attachments: initialData.attachments || [],
             });
@@ -244,8 +261,54 @@ export function EmailTemplateForm({
                         </div>
 
                         <div>
+                            <Label htmlFor="styling">
+                                Email Template Styling
+                            </Label>
+                            <Select
+                                value={
+                                    formData.stylingId != null
+                                        ? String(formData.stylingId)
+                                        : 'none'
+                                }
+                                onValueChange={(value) => {
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        stylingId:
+                                            value === 'none'
+                                                ? null
+                                                : parseInt(value, 10),
+                                    }));
+                                }}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="None (full HTML)" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">
+                                        None (full HTML)
+                                    </SelectItem>
+                                    {stylingList.map((s) => (
+                                        <SelectItem
+                                            key={s.id}
+                                            value={String(s.id)}
+                                        >
+                                            {s.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="mt-1 text-xs text-neutral-500">
+                                {formData.stylingId != null
+                                    ? 'Content below is injected into the selected styling at the body slot.'
+                                    : 'Use a styling to share the same wrapper (header, footer, styles) across templates.'}
+                            </p>
+                        </div>
+
+                        <div>
                             <Label htmlFor="content" required>
-                                Email Content (HTML)
+                                {formData.stylingId != null
+                                    ? 'Body content (Markdown)'
+                                    : 'Email Content (HTML)'}
                             </Label>
                             <FormTextArea
                                 id="content"
@@ -255,9 +318,17 @@ export function EmailTemplateForm({
                                 onLazyChange={(value) =>
                                     handleInputChange(value, 'content')
                                 }
-                                placeholder="<p>Dear {{firstName}},</p><p>We are pleased to inform you...</p>"
+                                placeholder={
+                                    formData.stylingId != null
+                                        ? 'Hello {{firstName}}!\n\nWe are pleased to inform you...\n\n**Bold** and *italic* supported.'
+                                        : '<p>Dear {{firstName}},</p><p>We are pleased to inform you...</p>'
+                                }
                                 rows={12}
-                                className="font-mono text-sm"
+                                className={
+                                    formData.stylingId != null
+                                        ? ''
+                                        : 'font-mono text-sm'
+                                }
                             />
                             {errors.content && (
                                 <p className="text-danger-500 mt-1 text-sm">
@@ -343,18 +414,32 @@ export function EmailTemplateForm({
                             </span>
                         </div>
                         <div className="h-[500px] overflow-auto">
-                            <iframe
-                                srcDoc={prepareEmailPreview(formData.content, {
-                                    showPlaceholders: showHighlights,
-                                    placeholders: getDetectedPlaceholders(
+                            {formData.stylingId != null && isStylingLoading ? (
+                                <div className="flex h-full items-center justify-center text-neutral-500">
+                                    Loading styling…
+                                </div>
+                            ) : (
+                                <iframe
+                                    key={`preview-${formData.stylingId ?? 'none'}-${selectedStyling?.id ?? ''}-${formData.content.length}`}
+                                    srcDoc={prepareEmailPreview(
                                         formData.content,
-                                        AVAILABLE_PLACEHOLDERS
-                                    ),
-                                })}
-                                title="Email Preview"
-                                className="h-full w-full border-0"
-                                sandbox="allow-same-origin allow-scripts"
-                            />
+                                        {
+                                            showPlaceholders: showHighlights,
+                                            placeholders:
+                                                getDetectedPlaceholders(
+                                                    formData.content,
+                                                    AVAILABLE_PLACEHOLDERS
+                                                ),
+                                            stylingHtml:
+                                                selectedStyling?.html ??
+                                                undefined,
+                                        }
+                                    )}
+                                    title="Email Preview"
+                                    className="h-full w-full border-0"
+                                    sandbox="allow-same-origin allow-scripts"
+                                />
+                            )}
                         </div>
                     </div>
                 </div>
