@@ -102,16 +102,16 @@ export const applicationsRouter = router({
                 let oAuthMailOptions = {
                     from: process.env.SENDINGEMAIL,
                     to: user.email,
-                    subject: 'Your JourneyHacks Application Has Been Received!',
-                    text: 'Your JourneyHacks Application Has Been Received!',
+                    subject: 'Your SillyHacks Application Has Been Received!',
+                    text: 'Your SillyHacks Application Has Been Received!',
                     html: htmlContent,
                 };
 
                 let sfuMailOptions = {
                     from: process.env.SENDINGEMAIL,
                     to: extractedEmail,
-                    subject: 'Your JourneyHacks Application Has Been Received!',
-                    text: 'Your JourneyHacks Application Has Been Received!',
+                    subject: 'Your SillyHacks Application Has Been Received!',
+                    text: 'Your SillyHacks Application Has Been Received!',
                     html: htmlContent,
                 };
 

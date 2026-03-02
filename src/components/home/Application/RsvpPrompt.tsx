@@ -140,11 +140,11 @@ export default function RsvpPrompt({
                                 <ResponsiveDialogDescription>
                                     Congratulations on your acceptance to{' '}
                                     {hackathon?.hackathonName ||
-                                        'JourneyHacks 2026'}
+                                        'SillyHacks 2026'}
                                     . Please check the box below to
                                     indicate/confirm your attendance to{' '}
                                     {hackathon?.hackathonName ||
-                                        'JourneyHacks 2026'}
+                                        'SillyHacks 2026'}
                                     .
                                 </ResponsiveDialogDescription>
                                 <div>

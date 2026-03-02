@@ -21,7 +21,7 @@ export function CountdownContent() {
     dayjs.extend(utc);
     dayjs.extend(timezone);
 
-    const cutoffTime = dayjs.tz('2026-01-03 23:59:00', 'America/Los_Angeles');
+    const cutoffTime = dayjs.tz('2026-03-22 23:59:00', 'America/Los_Angeles');
     const overdue = useMemo(
         () => currentTime.isAfter(cutoffTime),
         [currentTime]
