@@ -172,6 +172,53 @@ export const applicationsRouter = router({
                         error
                     );
                 }
+
+                const template = Handlebars.compile(welcomeEmailTemplate);
+                const htmlContent = template({
+                    firstName: tempDummy(input).firstName,
+                });
+
+                let oAuthMailOptions = {
+                    from: process.env.SENDINGEMAIL,
+                    to: user.email,
+                    subject: 'Your SillyHacks Application Has Been Received!',
+                    text: 'Your SillyHacks Application Has Been Received!',
+                    html: htmlContent,
+                };
+
+                let sfuMailOptions = {
+                    from: process.env.SENDINGEMAIL,
+                    to: extractedEmail,
+                    subject: 'Your SillyHacks Application Has Been Received!',
+                    text: 'Your SillyHacks Application Has Been Received!',
+                    html: htmlContent,
+                };
+
+                if (user.email != extractedEmail) {
+                    transporter.sendMail(oAuthMailOptions, (error, info) => {
+                        if (error) {
+                            console.error('Error sending email:', error);
+                        } else {
+                            console.log('Email sent:', info.response);
+                        }
+                    });
+
+                    transporter.sendMail(sfuMailOptions, (error, info) => {
+                        if (error) {
+                            console.error('Error sending email:', error);
+                        } else {
+                            console.log('Email sent:', info.response);
+                        }
+                    });
+                } else {
+                    transporter.sendMail(oAuthMailOptions, (error, info) => {
+                        if (error) {
+                            console.error('Error sending email:', error);
+                        } else {
+                            console.log('Email sent:', info.response);
+                        }
+                    });
+                }
             }
 
             return {

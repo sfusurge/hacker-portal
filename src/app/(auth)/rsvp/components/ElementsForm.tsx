@@ -310,72 +310,13 @@ function CheckoutForm({
     };
 
     return (
-        <div className="mb-8 grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:gap-8">
-            <div className="relative rounded-xl border border-neutral-600/30 bg-neutral-900/60 px-5 py-6 sm:px-6 sm:py-7">
-                <form onSubmit={handleSubmit} className="space-y-10">
-                    <div className="flex flex-col gap-5">
-                        <h2 className="text-base font-semibold text-white">
-                            Cardholder information
-                        </h2>
-                        <div className="flex flex-col gap-4">
-                            <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2">
-                                <div className="flex flex-col gap-1.5">
-                                    <Label htmlFor="rsvp-first-name">
-                                        First Name
-                                    </Label>
-                                    <Input
-                                        id="rsvp-first-name"
-                                        name="firstName"
-                                        type="text"
-                                        autoComplete="given-name"
-                                        placeholder="First Name"
-                                        className={RSVP_FIELD}
-                                        value={firstName}
-                                        onChange={(ev) =>
-                                            setFirstName(ev.target.value)
-                                        }
-                                        required
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-1.5">
-                                    <Label htmlFor="rsvp-last-name">
-                                        Last Name
-                                    </Label>
-                                    <Input
-                                        id="rsvp-last-name"
-                                        name="lastName"
-                                        type="text"
-                                        autoComplete="family-name"
-                                        className={RSVP_FIELD}
-                                        placeholder="Last Name"
-                                        value={lastName}
-                                        onChange={(ev) =>
-                                            setLastName(ev.target.value)
-                                        }
-                                        required
-                                    />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-1 gap-4">
-                                <div className="flex flex-col gap-1.5">
-                                    <Label htmlFor="rsvp-email">Email</Label>
-                                    <Input
-                                        id="rsvp-email"
-                                        name="email"
-                                        type="email"
-                                        autoComplete="email"
-                                        placeholder="email@email.com"
-                                        className={RSVP_FIELD}
-                                        value={email}
-                                        onChange={(ev) =>
-                                            setEmail(ev.target.value)
-                                        }
-                                        required
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white">
+                SillyHacks Ticket
+            </h3>
+            <h3 className="text-gray-400">
+                Amount: <span className="text-white">$15.00</span>
+            </h3>
 
                     {expressPhase !== 'hidden' && (
                         <div

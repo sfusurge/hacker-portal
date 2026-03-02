@@ -24,6 +24,11 @@ export function CountdownContent({
 }) {
     const [currentTime, setCurrentTime] = useState(Date.now());
 
+    const cutoffTime = dayjs.tz('2026-03-22 23:59:00', 'America/Los_Angeles');
+    const overdue = useMemo(
+        () => currentTime.isAfter(cutoffTime),
+        [currentTime]
+    );
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentTime(Date.now());

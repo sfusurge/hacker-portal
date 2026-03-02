@@ -211,7 +211,7 @@ export function InputForm({
                     <span>Dashboard</span>
                 </button>
                 <h1 className="text-xl font-semibold">
-                    SparkJam 2026 Application
+                    SillyHacks 2026 Application
                 </h1>
             </div>
             <div className={style.appFormWrapper}>
@@ -563,12 +563,12 @@ function Question({
                         This event requires in-person attendance
                     </AlertTitle>
                     <AlertDescription>
-                        {hackathon?.hackathonName} is an in-person event and
-                        requires attendance at SFU Burnaby. For questions about
-                        travel reimbursements, please{' '}
+                        Sillyhacks is an in-person event and requires attendance
+                        at SFU Burnaby. For questions about travel
+                        reimbursements, please{' '}
                         <a
                             className="underline"
-                            href={`${hackathon?.eventPagePayload?.websiteHref}#faq`}
+                            href="https://sillyhacks.sfusurge.com/#faq"
                             target="_blank"
                             rel="noopener noreferrer"
                         >

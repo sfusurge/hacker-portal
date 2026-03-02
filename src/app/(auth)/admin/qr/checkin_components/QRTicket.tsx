@@ -95,7 +95,7 @@ export default function QRTicket({
                         </h2>
 
                         <h1 className="tracking-tightest text-center text-xl leading-5 font-semibold text-white">
-                            {hackathon?.hackathonName}
+                            SillyHacks
                         </h1>
                     </header>
 
