@@ -11,7 +11,6 @@ import {
     mergeBodyIntoStyling,
     markdownToHtml,
 } from '@/app/(auth)/admin/email/templates/emailPreview';
-import { getFileFromR2 } from '@/lib/cloudflare/r2';
 const env = process.env;
 
 export const sendEmailRouter = router({
@@ -31,7 +30,6 @@ export const sendEmailRouter = router({
                     );
                 }
 
-                // Body content with styling = Markdown → HTML; no styling = HTML as-is
                 let processedTemplateContent =
                     template.stylingId != null
                         ? markdownToHtml(template.content)
@@ -79,31 +77,6 @@ export const sendEmailRouter = router({
                         console.error('Error generating QR code:', qrError);
                         processedTemplateContent =
                             processedTemplateContent.replace(/{{qrCode}}/g, '');
-                    }
-                }
-
-                if (
-                    template.attachments &&
-                    Array.isArray(template.attachments)
-                ) {
-                    for (const attachment of template.attachments) {
-                        try {
-                            const fileData = await getFileFromR2(
-                                attachment.key,
-                                process.env.NEXT_PUBLIC_R2_BUCKET_EMAILS ?? ''
-                            );
-
-                            attachments.push({
-                                filename: attachment.fileName,
-                                content: Buffer.from(fileData.buffer),
-                                contentType: fileData.contentType,
-                            });
-                        } catch (error) {
-                            console.error(
-                                `Error retrieving attachment ${attachment.key}:`,
-                                error
-                            );
-                        }
                     }
                 }
 

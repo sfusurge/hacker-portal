@@ -1,15 +1,16 @@
 import { sql } from 'drizzle-orm';
 import {
     pgTable,
+    pgEnum,
     text,
     timestamp,
     integer,
     varchar,
-    jsonb,
     uuid,
 } from 'drizzle-orm/pg-core';
 import { createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
+import { hackathons } from '@/db/schema/hackathons';
 
 export const sendEmailSchema = z.object({
     templateId: z.number(),
@@ -36,17 +37,41 @@ export type EmailUser = {
     name: string;
 };
 
-export type EmailAttachment = {
-    key: string;
-    fileName: string;
-    cropData?: {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-        originalWidth: number;
-        originalHeight: number;
-    };
+/**
+ * Reusable HTML wrapper (doctype, head, styles, body shell).
+ * Use {{bodyContent}} in html where the email body should be injected.
+ */
+export const emailTemplateStyling = pgTable('email_template_styling', {
+    id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
+    name: varchar('name', { length: 256 }).notNull(),
+    html: text('html').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+/**
+ * Type of hackathon-related email. Used to categorize templates per hackathon.
+ */
+export const hackathonEmailTypeEnum = pgEnum('hackathon_email_type', [
+    'hacker_applied',
+    'rsvp_received',
+    'hacker_declined',
+    'hacker_accepted',
+    'hacker_waitlisted',
+    'custom',
+]);
+
+export type HackathonEmailType =
+    (typeof hackathonEmailTypeEnum.enumValues)[number];
+
+/** Human-readable labels for email types (for UI). */
+export const HACKATHON_EMAIL_TYPE_LABELS: Record<HackathonEmailType, string> = {
+    hacker_applied: 'Hacker applied',
+    rsvp_received: 'RSVP received',
+    hacker_declined: 'Hacker declined',
+    hacker_accepted: 'Hacker accepted',
+    hacker_waitlisted: 'Hacker waitlisted',
+    custom: 'Custom',
 };
 
 /**
@@ -66,12 +91,16 @@ export const emailTemplates = pgTable('email_templates', {
     title: varchar('title', { length: 256 }).notNull(),
     purpose: varchar('purpose', { length: 256 }).notNull(),
     description: text('description'),
-    /** When set, content is body-only and is injected into styling.html at __BODY_CONTENT__. */
     stylingId: integer('styling_id').references(() => emailTemplateStyling.id, {
         onDelete: 'set null',
     }),
     content: text('content').notNull(),
-    attachments: jsonb('attachments'),
+    hackathonId: integer('hackathon_id')
+        .references(() => hackathons.id, {
+            onDelete: 'restrict',
+        })
+        .notNull(),
+    emailType: hackathonEmailTypeEnum('email_type'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -100,24 +129,8 @@ export const emailTemplateSchema = z.object({
     description: z.string().optional(),
     stylingId: z.number().int().nullable().optional(),
     content: z.string().min(1, 'Email content is required'),
-    attachments: z
-        .array(
-            z.object({
-                key: z.string(),
-                fileName: z.string(),
-                cropData: z
-                    .object({
-                        x: z.number(),
-                        y: z.number(),
-                        width: z.number(),
-                        height: z.number(),
-                        originalWidth: z.number(),
-                        originalHeight: z.number(),
-                    })
-                    .optional(),
-            })
-        )
-        .optional(),
+    hackathonId: z.number().int(),
+    emailType: z.enum(hackathonEmailTypeEnum.enumValues).nullable().optional(),
 });
 
 export const selectEmailTemplateSchema = createSelectSchema(emailTemplates);

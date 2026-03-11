@@ -88,7 +88,7 @@ export default function EmailTemplateStylingPage() {
                                             {s.name}
                                         </h2>
                                         {!hasPlaceholder && (
-                                            <span className="rounded bg-amber-500/20 px-2 py-0.5 text-xs text-amber-400">
+                                            <span className="bg-caution-500/20 text-caution-400 rounded px-2 py-0.5 text-xs">
                                                 Missing{' '}
                                                 {EMAIL_STYLING_BODY_PLACEHOLDER}
                                             </span>

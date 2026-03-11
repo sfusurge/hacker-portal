@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Chip } from '@/components/ui/chip';
 import { FormTextInput } from '@/components/ui/input/input';
 import { FormTextArea } from '@/components/ui/formTextArea/FormTextArea';
 import { Label } from '@/components/ui/label/label';
@@ -85,7 +86,7 @@ export default function NewEmailTemplateStylingPage() {
             </div>
 
             {html.trim() && !hasPlaceholder && (
-                <div className="mb-6 rounded-lg border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-amber-200">
+                <div className="border-caution-500/50 bg-caution-500/10 text-caution-200 mb-6 rounded-lg border px-4 py-3">
                     <strong>{EMAIL_STYLING_BODY_PLACEHOLDER} not found.</strong>{' '}
                     Add it to your HTML where the email body should be injected.
                     Save is blocked until it is present.
@@ -113,14 +114,22 @@ export default function NewEmailTemplateStylingPage() {
                     <Label htmlFor="html" required>
                         Styling HTML
                     </Label>
-                    <p className="mt-1 mb-2 text-sm text-neutral-500">
-                        Paste the full HTML wrapper. Put{' '}
-                        <code className="rounded bg-neutral-800 px-1">
-                            {EMAIL_STYLING_BODY_PLACEHOLDER}
-                        </code>{' '}
-                        exactly where the email body content should be injected
-                        (e.g. inside the body cell).
+                    <p className="mt-1 text-sm text-neutral-500">
+                        Paste the full HTML wrapper and place the body
+                        placeholder token where the email content should be
+                        injected (e.g. inside the body cell).
                     </p>
+                    <div className="mt-2 mb-2 flex items-center gap-2">
+                        <Chip
+                            variant="brand"
+                            className="font-mono text-xs tracking-tight"
+                        >
+                            {EMAIL_STYLING_BODY_PLACEHOLDER}
+                        </Chip>
+                        <span className="text-xs text-neutral-400">
+                            This token will be replaced with the email body.
+                        </span>
+                    </div>
                     <div className="mb-2 flex flex-wrap gap-2">
                         <Button
                             type="button"

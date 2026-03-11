@@ -30,8 +30,11 @@ export const emailTemplateStylingRouter = router({
     }),
 
     getById: publicProcedure
-        .input(z.object({ id: z.number().int() }))
+        .input(z.object({ id: z.number().int().nullable() }))
         .query(async ({ input }) => {
+            if (input.id == null) {
+                return null;
+            }
             const user = await getUserData();
             if (!user) {
                 throw new InternalServerError('User not authenticated');

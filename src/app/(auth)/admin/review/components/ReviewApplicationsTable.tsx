@@ -121,15 +121,6 @@ export default function ReviewApplicationsTable({
     onRowClick,
     hackathonId,
 }: ReviewApplicationsTableProps) {
-    // const hackathon = useAtomValue(hackathonAtom);
-
-    // Fetch email templates
-    const { data: emailTemplates, isLoading: templatesLoading } =
-        trpc.emailTemplates.getEmailTemplates.useQuery();
-
-    // Data state
-    //const data: Applicant[] = transformResponse(applications);
-
     const checkedInInfoColumns: ColumnDef<Applicant>[] =
         data[0]?.checkIns?.map(({ eventTitle, eventId }) => {
             return {
@@ -374,9 +365,6 @@ export default function ReviewApplicationsTable({
             applicationDataMap={applicationDataMap}
             data={data}
             defaultColumns={defaultColumns}
-            emailTemplates={emailTemplates}
-            templatesLoading={templatesLoading}
-            //toggleSideCard={toggleSideCard}
             fetchNextPage={fetchNextPage}
             onRowClick={onRowClick}
             hackathonId={hackathonId}
@@ -413,8 +401,6 @@ function MyTable({
     applicationCount,
     data,
     defaultColumns,
-    emailTemplates,
-    templatesLoading,
     //toggleSideCard,
     applicationDataMap,
     fetchNextPage,
@@ -424,8 +410,6 @@ function MyTable({
     applicationCount: number;
     data: Applicant[];
     defaultColumns: ColumnDef<Applicant>[];
-    emailTemplates?: any[];
-    templatesLoading: boolean;
     //toggleSideCard: () => void;
     applicationDataMap: Map<number, ApplicationWithTeamInfo>;
     fetchNextPage: () => Promise<void>;
@@ -441,12 +425,22 @@ function MyTable({
     const updateLastEmailSent =
         trpc.applications.updateLastEmailSent.useMutation();
     const queueBatchEmails = trpc.emailQueue.queueBatchEmails.useMutation();
+    const { data: hackathons = [] } = trpc.hackathons.getHackathons.useQuery();
     const [isEmailPopupOpen, setIsEmailPopupOpen] = useState(false);
     const [isSending, setIsSending] = useState(false);
     const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(
         null
     );
+    const [selectedHackathonForEmail, setSelectedHackathonForEmail] = useState<
+        number | null
+    >(hackathonId);
     const { toast } = useToast();
+
+    const effectiveHackathonForEmail = selectedHackathonForEmail ?? hackathonId;
+    const { data: emailTemplates, isLoading: templatesLoading } =
+        trpc.emailTemplates.getEmailTemplates.useQuery({
+            hackathonId: effectiveHackathonForEmail,
+        });
 
     const statusCounts = useMemo(() => getStatusCounts(data), [data]);
 
@@ -476,6 +470,14 @@ function MyTable({
         onPaginationChange: setPagination,
         autoResetPageIndex: false,
     });
+
+    useEffect(() => {
+        setSelectedHackathonForEmail(hackathonId);
+    }, [hackathonId]);
+
+    useEffect(() => {
+        setSelectedTemplateId(null);
+    }, [effectiveHackathonForEmail]);
 
     const toggleEmailPopup = () => {
         setIsEmailPopupOpen(!isEmailPopupOpen);
@@ -612,6 +614,8 @@ function MyTable({
                 currentStatus: row.original.currentStatus,
             }));
 
+            const effectiveHackathonId = effectiveHackathonForEmail;
+
             // Queue emails for sending
             const queueResult = await queueBatchEmails.mutateAsync({
                 templateId: selectedTemplateId,
@@ -621,8 +625,9 @@ function MyTable({
                     firstName: r.firstName,
                     lastName: r.lastName,
                 })),
-                hackathonId,
-                emailType: selectedTemplate.purpose,
+                hackathonId: effectiveHackathonId,
+                emailType:
+                    selectedTemplate.emailType ?? selectedTemplate.purpose,
             });
 
             // Update statuses immediately
@@ -1174,6 +1179,35 @@ function MyTable({
                         <h2 className="mb-2 text-xl font-semibold">
                             Send Emails
                         </h2>
+
+                        <div className="mb-4">
+                            <Label className="mb-2 text-white/60">
+                                Hackathon
+                            </Label>
+                            {hackathons.length === 0 ? (
+                                <div className="text-sm text-white/60">
+                                    Loading hackathons...
+                                </div>
+                            ) : (
+                                <select
+                                    className="mt-1 w-full rounded-md border border-neutral-700/60 bg-neutral-800 px-3 py-2 text-sm text-white"
+                                    value={
+                                        selectedHackathonForEmail ?? hackathonId
+                                    }
+                                    onChange={(e) =>
+                                        setSelectedHackathonForEmail(
+                                            Number(e.target.value)
+                                        )
+                                    }
+                                >
+                                    {hackathons.map((h) => (
+                                        <option key={h.id} value={h.id}>
+                                            {h.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
+                        </div>
 
                         <div className="mb-4">
                             <Label className="mb-2 text-white/60">

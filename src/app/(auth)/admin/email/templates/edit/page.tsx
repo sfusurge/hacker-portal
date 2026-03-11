@@ -1,14 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { trpc } from '@/trpc/client';
 import Link from 'next/link';
 import { EmailTemplateForm, EmailTemplateFormData } from './EmailTemplateForm';
+import {
+    type HackathonEmailType,
+    hackathonEmailTypeEnum,
+} from '@/db/schema/emails';
 import { FolderArrowDownIcon } from '@heroicons/react/24/solid';
 import { Loader2 } from 'lucide-react';
+
+const VALID_EMAIL_TYPES =
+    hackathonEmailTypeEnum.enumValues as HackathonEmailType[];
 
 export default function EmailEditPage() {
     const { toast } = useToast();
@@ -17,6 +24,15 @@ export default function EmailEditPage() {
     const templateId = searchParams.get('id')
         ? parseInt(searchParams.get('id')!)
         : null;
+    const hackathonIdParam = searchParams.get('hackathonId')
+        ? parseInt(searchParams.get('hackathonId')!, 10)
+        : null;
+    const emailTypeParam = searchParams.get('emailType');
+    const validEmailType =
+        emailTypeParam &&
+        VALID_EMAIL_TYPES.includes(emailTypeParam as HackathonEmailType)
+            ? (emailTypeParam as HackathonEmailType)
+            : null;
 
     const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -32,6 +48,26 @@ export default function EmailEditPage() {
             setSelectedTemplate(template);
         }
     }, [template]);
+
+    const initialDataForForm = useMemo(
+        () =>
+            template ??
+            (templateId != null
+                ? selectedTemplate
+                : hackathonIdParam != null || validEmailType != null
+                  ? {
+                        hackathonId: hackathonIdParam ?? undefined,
+                        emailType: validEmailType ?? undefined,
+                    }
+                  : undefined),
+        [
+            template,
+            templateId,
+            selectedTemplate,
+            hackathonIdParam,
+            validEmailType,
+        ]
+    );
 
     const createTemplateMutation =
         trpc.emailTemplates.createEmailTemplate.useMutation({
@@ -86,12 +122,8 @@ export default function EmailEditPage() {
                     description: data.description || '',
                     stylingId: data.stylingId ?? undefined,
                     content: data.content,
-                    attachments:
-                        data.attachments?.map((attachment) => ({
-                            key: attachment.key,
-                            fileName: attachment.fileName,
-                            cropData: attachment.cropData,
-                        })) || [],
+                    hackathonId: data.hackathonId ?? undefined,
+                    emailType: data.emailType ?? undefined,
                 });
             } else {
                 await createTemplateMutation.mutateAsync({
@@ -100,12 +132,8 @@ export default function EmailEditPage() {
                     description: data.description || '',
                     stylingId: data.stylingId ?? undefined,
                     content: data.content,
-                    attachments:
-                        data.attachments?.map((attachment) => ({
-                            key: attachment.key,
-                            fileName: attachment.fileName,
-                            cropData: attachment.cropData,
-                        })) || [],
+                    hackathonId: data.hackathonId ?? undefined,
+                    emailType: data.emailType ?? undefined,
                 });
             }
         } finally {
@@ -141,7 +169,8 @@ export default function EmailEditPage() {
                 </div>
             ) : (
                 <EmailTemplateForm
-                    initialData={selectedTemplate}
+                    key={`${templateId ?? 'new'}-${hackathonIdParam ?? ''}-${validEmailType ?? ''}`}
+                    initialData={initialDataForForm}
                     onSubmit={handleSubmit}
                     onCancel={handleCancel}
                     isLoading={isLoading}

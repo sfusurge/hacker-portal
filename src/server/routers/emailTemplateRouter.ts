@@ -9,7 +9,8 @@ import {
     getEmailTemplateSchema,
     deleteEmailTemplateSchema,
 } from '@/db/schema/emails';
-import { eq, desc } from 'drizzle-orm';
+import { hackathonEmailTypeEnum } from '@/db/schema/emails';
+import { eq, desc, and } from 'drizzle-orm';
 import { getUserData } from '@/server/routers/usersRouter';
 
 export const emailTemplatesRouter = router({
@@ -26,19 +27,6 @@ export const emailTemplatesRouter = router({
                 });
             }
 
-            const attachmentsWithCropData =
-                input.attachments?.map((attachment) => {
-                    console.log(
-                        'Attachment with cropData:',
-                        JSON.stringify(attachment)
-                    );
-                    return {
-                        key: attachment.key,
-                        fileName: attachment.fileName,
-                        cropData: attachment.cropData,
-                    };
-                }) || null;
-
             const [template] = await databaseClient
                 .insert(emailTemplates)
                 .values({
@@ -47,35 +35,39 @@ export const emailTemplatesRouter = router({
                     description: input.description || null,
                     stylingId: input.stylingId ?? null,
                     content: input.content,
-                    attachments: attachmentsWithCropData,
+                    hackathonId: input.hackathonId,
+                    emailType: input.emailType ?? null,
                 })
                 .returning();
 
             return template;
         }),
 
-    getEmailTemplates: publicProcedure.query(async () => {
-        const user = await getUserData();
+    getEmailTemplates: publicProcedure
+        .input(z.object({ hackathonId: z.number().int() }))
+        .query(async ({ input }) => {
+            const user = await getUserData();
 
-        if (!user) {
-            throw new InternalServerError('User not authenticated');
-        }
+            if (!user) {
+                throw new InternalServerError('User not authenticated');
+            }
 
-        // Only admin can view all templates
-        if (user.userRole !== UserRoleEnum.admin) {
-            throw new UnauthorizedError({
-                email: user.email,
-                role: user.userRole,
-            });
-        }
+            // Only admin can view all templates
+            if (user.userRole !== UserRoleEnum.admin) {
+                throw new UnauthorizedError({
+                    email: user.email,
+                    role: user.userRole,
+                });
+            }
 
-        const templates = await databaseClient
-            .select()
-            .from(emailTemplates)
-            .orderBy(desc(emailTemplates.updatedAt));
+            const templates = await databaseClient
+                .select()
+                .from(emailTemplates)
+                .where(eq(emailTemplates.hackathonId, input.hackathonId))
+                .orderBy(desc(emailTemplates.updatedAt));
 
-        return templates;
-    }),
+            return templates;
+        }),
 
     getEmailTemplate: publicProcedure
         .input(getEmailTemplateSchema)
@@ -133,6 +125,28 @@ export const emailTemplatesRouter = router({
             return template || null;
         }),
 
+    getEmailTemplateByHackathonAndType: publicProcedure
+        .input(
+            z.object({
+                hackathonId: z.number().int(),
+                emailType: z.enum(hackathonEmailTypeEnum.enumValues),
+            })
+        )
+        .query(async ({ input }) => {
+            const [template] = await databaseClient
+                .select()
+                .from(emailTemplates)
+                .where(
+                    and(
+                        eq(emailTemplates.hackathonId, input.hackathonId),
+                        eq(emailTemplates.emailType, input.emailType)
+                    )
+                )
+                .limit(1);
+
+            return template || null;
+        }),
+
     updateEmailTemplate: publicProcedure
         .input(emailTemplateSchema.extend({ id: z.number().int() }))
         .mutation(async ({ input }) => {
@@ -145,20 +159,6 @@ export const emailTemplatesRouter = router({
                 });
             }
 
-            // Ensure attachments with cropData are properly preserved
-            const attachmentsWithCropData =
-                input.attachments?.map((attachment) => {
-                    console.log(
-                        'Update attachment with cropData:',
-                        JSON.stringify(attachment)
-                    );
-                    return {
-                        key: attachment.key,
-                        fileName: attachment.fileName,
-                        cropData: attachment.cropData,
-                    };
-                }) || null;
-
             const [template] = await databaseClient
                 .update(emailTemplates)
                 .set({
@@ -167,7 +167,8 @@ export const emailTemplatesRouter = router({
                     description: input.description || null,
                     stylingId: input.stylingId ?? null,
                     content: input.content,
-                    attachments: attachmentsWithCropData,
+                    hackathonId: input.hackathonId,
+                    emailType: input.emailType ?? null,
                     updatedAt: new Date(),
                 })
                 .where(eq(emailTemplates.id, input.id))
