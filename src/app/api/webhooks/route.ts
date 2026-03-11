@@ -85,9 +85,10 @@ export async function POST(req: Request) {
                     // Send confirmation email after successful payment
                     try {
                         const rsvpTemplate =
-                            await trpcClient.emailTemplates.getEmailTemplateByPurpose(
+                            await trpcClient.emailTemplates.getEmailTemplateByHackathonAndType(
                                 {
-                                    purpose: 'RSVP Received',
+                                    hackathonId: application.hackathonId,
+                                    emailType: 'rsvp_received',
                                 }
                             );
 
@@ -111,7 +112,7 @@ export async function POST(req: Request) {
                             );
                         } else {
                             console.error(
-                                'Email template with purpose "RSVP Received" not found'
+                                `No RSVP template found for hackathon ${application.hackathonId} (emailType: rsvp_received)`
                             );
                         }
                     } catch (emailError) {

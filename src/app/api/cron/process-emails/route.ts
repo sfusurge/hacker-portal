@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { databaseClient } from '@/db/client';
-import { emailQueue, emailTemplates } from '@/db/schema/emails';
+import {
+    emailQueue,
+    emailTemplates,
+    emailTemplateStyling,
+} from '@/db/schema/emails';
 import { user } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
 import { transporter } from '@/server/nodemailerTransporter';
 import generateQRCode from '@/server/generateQRCode';
-import { prepareEmailContent } from '@/app/(auth)/admin/email/templates/emailPreview';
-import { getFileFromR2 } from '@/lib/cloudflare/r2';
+import {
+    prepareEmailContent,
+    mergeBodyIntoStyling,
+    markdownToHtml,
+} from '@/app/(auth)/admin/email/templates/emailPreview';
 import { and, gte, lt, sql } from 'drizzle-orm';
 
 const env = process.env;
@@ -87,7 +94,11 @@ export async function GET(request: NextRequest) {
                     );
                 }
 
-                let processedTemplateContent = template.content;
+                // Body content with styling = Markdown → HTML; no styling = HTML as-is
+                let processedTemplateContent =
+                    template.stylingId != null
+                        ? markdownToHtml(template.content)
+                        : template.content;
                 let qrcodeBase64: string | undefined;
                 let attachments = [];
 
@@ -134,31 +145,6 @@ export async function GET(request: NextRequest) {
                     }
                 }
 
-                if (
-                    template.attachments &&
-                    Array.isArray(template.attachments)
-                ) {
-                    for (const attachment of template.attachments) {
-                        try {
-                            const fileData = await getFileFromR2(
-                                attachment.key,
-                                process.env.NEXT_PUBLIC_R2_BUCKET_EMAILS ?? ''
-                            );
-
-                            attachments.push({
-                                filename: attachment.fileName,
-                                content: Buffer.from(fileData.buffer),
-                                contentType: fileData.contentType,
-                            });
-                        } catch (error) {
-                            console.error(
-                                `Error retrieving attachment ${attachment.key}:`,
-                                error
-                            );
-                        }
-                    }
-                }
-
                 const [userData] = await databaseClient
                     .select()
                     .from(user)
@@ -175,10 +161,24 @@ export async function GET(request: NextRequest) {
                     userId: pendingEmail.userId,
                 };
 
-                const finalHtmlContent = prepareEmailContent(
+                let finalHtmlContent = prepareEmailContent(
                     processedTemplateContent,
                     templateData
                 );
+
+                if (template.stylingId != null) {
+                    const [styling] = await databaseClient
+                        .select()
+                        .from(emailTemplateStyling)
+                        .where(eq(emailTemplateStyling.id, template.stylingId))
+                        .limit(1);
+                    if (styling?.html) {
+                        finalHtmlContent = mergeBodyIntoStyling(
+                            styling.html,
+                            finalHtmlContent
+                        );
+                    }
+                }
 
                 const mailOptions = {
                     from: env.SENDINGEMAIL,

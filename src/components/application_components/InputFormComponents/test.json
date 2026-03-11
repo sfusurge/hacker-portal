@@ -1,0 +1,452 @@
+[
+    {
+        "alert": {
+            "title": "Complete your application carefully!",
+            "description": "Take your time and complete this application carefully. Edits or resubmissions are generally not possible except in special cases."
+        },
+        "title": "Personal Information",
+        "questions": [
+            {
+                "type": "inline",
+                "content": [
+                    {
+                        "type": "text-line",
+                        "title": "First Name",
+                        "maxCount": 50,
+                        "required": true,
+                        "questionId": 1,
+                        "placeHolder": "First Name"
+                    },
+                    {
+                        "type": "text-line",
+                        "title": "Last Name",
+                        "maxCount": 50,
+                        "required": true,
+                        "questionId": 2,
+                        "placeHolder": "Last Name"
+                    }
+                ]
+            },
+            {
+                "type": "dropdown",
+                "title": "Pronouns",
+                "choices": [
+                    {
+                        "data": "She/Her/Hers",
+                        "name": "She/Her/Hers"
+                    },
+                    {
+                        "data": "He/Him/His",
+                        "name": "He/Him/His"
+                    },
+                    {
+                        "data": "She/They/Theirs",
+                        "name": "She/They/Theirs"
+                    },
+                    {
+                        "data": "He/They/Theirs",
+                        "name": "He/They/Theirs"
+                    },
+                    {
+                        "data": "They/Them/Theirs",
+                        "name": "They/Them/Theirs"
+                    }
+                ],
+                "required": true,
+                "questionId": 3,
+                "allowCustom": true,
+                "placeHolder": "Select your pronouns",
+                "customPlaceHolder": "Please Specify",
+                "dropdownDescription": "SELECT PRONOUNS"
+            },
+            {
+                "type": "dropdown",
+                "title": "Age",
+                "choices": [
+                    {
+                        "data": "<=16",
+                        "name": "<=16"
+                    },
+                    {
+                        "data": "17",
+                        "name": "17"
+                    },
+                    {
+                        "data": "18",
+                        "name": "18"
+                    },
+                    {
+                        "data": "19",
+                        "name": "19"
+                    },
+                    {
+                        "data": "20",
+                        "name": "20"
+                    },
+                    {
+                        "data": "21",
+                        "name": "21"
+                    },
+                    {
+                        "data": "22",
+                        "name": "22"
+                    },
+                    {
+                        "data": "23",
+                        "name": "23"
+                    },
+                    {
+                        "data": "24+",
+                        "name": "24+"
+                    }
+                ],
+                "required": true,
+                "questionId": 4,
+                "allowCustom": false,
+                "placeHolder": "Select your age",
+                "dropdownDescription": "SELECT AGE"
+            },
+            {
+                "type": "text-line",
+                "title": "Email Address",
+                "required": true,
+                "questionId": 5,
+                "validator": {
+                    "pattern": "^[a-zA-Z0-9._%\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$",
+                    "errorMsg": "Please enter a valid email address."
+                }
+            },
+            {
+                "type": "text-line",
+                "title": "Phone Number",
+                "required": true,
+                "validator": {
+                    "pattern": "^[0-9]{7,15}$",
+                    "errorMsg": "Please enter a valid phone number."
+                },
+                "questionId": 6
+            },
+            {
+                "type": "api-dropdown",
+                "title": "Current Country of Residence",
+                "apiUrl": "/api/csv/countries",
+                "required": true,
+                "selection": "",
+                "questionId": 7,
+                "placeHolder": "Current Country"
+            }
+        ]
+    },
+    {
+        "title": "School Information",
+        "questions": [
+            {
+                "type": "api-dropdown",
+                "title": "School Name",
+                "apiUrl": "/api/csv/schools",
+                "required": true,
+                "selection": "",
+                "questionId": 16,
+                "placeHolder": "Search for school name"
+            },
+            {
+                "type": "multiple-choice",
+                "title": "Highest Level of Education",
+                "choices": [
+                    {
+                        "data": "I am currently in high school.",
+                        "name": "I am currently in high school"
+                    },
+                    {
+                        "data": "I have completed high school and am not currently enrolled in any post-secondary program.",
+                        "name": "I have completed high school and am not currently enrolled in any post-secondary program."
+                    },
+                    {
+                        "data": "I am currently enrolled in a post-secondary program for undergraduate studies. ",
+                        "name": "I am currently enrolled in a post-secondary program for undergraduate studies. "
+                    },
+                    {
+                        "data": "I am currently enrolled in a post-secondary program for graduate studies.",
+                        "name": "I am currently enrolled in a post-secondary program for graduate studies."
+                    },
+                    {
+                        "data": "I graduated from a post-secondary program within the last 4 months.",
+                        "name": "I graduated from a post-secondary program within the last 4 months."
+                    },
+                    {
+                        "data": "I graduated from a post-secondary program more than 4 months ago.",
+                        "name": "I graduated from a post-secondary program more than 4 months ago."
+                    }
+                ],
+                "required": true,
+                "questionId": 17,
+                "allowCustom": true,
+                "customPlaceHolder": "Please specify your highest level of education"
+            },
+            {
+                "type": "dropdown",
+                "title": "Current Year of Study",
+                "choices": [
+                    {
+                        "data": "Not Applicable",
+                        "name": "Not Applicable"
+                    },
+                    {
+                        "data": "1st Year",
+                        "name": "1st Year"
+                    },
+                    {
+                        "data": "2nd Year",
+                        "name": "2nd Year"
+                    },
+                    {
+                        "data": "3rd Year",
+                        "name": "3rd Year"
+                    },
+                    {
+                        "data": "4th Year",
+                        "name": "4th Year"
+                    },
+                    {
+                        "data": "5th Year+",
+                        "name": "5th Year+"
+                    }
+                ],
+                "required": true,
+                "questionId": 18,
+                "allowCustom": false,
+                "placeholder": "Select your year of study",
+                "allowMultiple": false,
+                "dropdownDescription": "SELECT YEAR"
+            },
+            {
+                "type": "major",
+                "title": "Major or Area of Study",
+                "apiUrl": "/api/csv/majors",
+                "required": true,
+                "selection": [],
+                "questionId": 19,
+                "placeHolder": "Search for Major / Area of Study"
+            }
+        ],
+        "description": "Enter your school information."
+    },
+    {
+        "title": "Logistics Information",
+        "questions": [
+            {
+                "type": "number",
+                "title": "How many hackathons have you previously attended?",
+                "min": 0,
+                "max": 100,
+                "required": true,
+                "questionId": 20,
+                "placeHolder": "Enter a number e.g. “0”"
+            },
+            {
+                "type": "multiple-checkbox",
+                "title": "How did you find out about this event?",
+                "choices": [
+                    {
+                        "data": "Social media (Instagram, Discord, etc.)",
+                        "name": "Social media (Instagram, Discord, etc.)"
+                    },
+                    {
+                        "data": "Word of mouth",
+                        "name": "Word of mouth"
+                    },
+                    {
+                        "data": "Website",
+                        "name": "Website"
+                    },
+                    {
+                        "data": "Flyer or poster",
+                        "name": "Flyer or poster"
+                    },
+                    {
+                        "data": "On Campus Promotion",
+                        "name": "On Campus Promotion"
+                    },
+                    {
+                        "data": "Clubs Day",
+                        "name": "Clubs Day"
+                    },
+                    {
+                        "data": "Collaborating organization",
+                        "name": "Collaborating organization"
+                    },
+                    {
+                        "data": "Online community (e.g., Reddit, LinkedIn)",
+                        "name": "Online community (e.g., Reddit, LinkedIn)"
+                    }
+                ],
+                "required": true,
+                "allowOther": true,
+                "questionId": 21,
+                "allowMultiple": true,
+                "otherPlaceHolder": "Please specify"
+            },
+            {
+                "type": "multiple-checkbox",
+                "title": "Do you have any dietary needs the organizing team should be aware of? Select all that apply. (Optional)",
+                "choices": [
+                    {
+                        "data": "vegetarian",
+                        "name": "Vegetarian"
+                    },
+                    {
+                        "data": "vegan",
+                        "name": "Vegan"
+                    },
+                    {
+                        "data": "pescetarian",
+                        "name": "Pescetarian"
+                    },
+                    {
+                        "data": "halal",
+                        "name": "Halal"
+                    },
+                    {
+                        "data": "kosher",
+                        "name": "Kosher"
+                    },
+                    {
+                        "data": "gluten_free",
+                        "name": "Gluten-Free"
+                    },
+                    {
+                        "data": "dairy_free",
+                        "name": "Dairy Free"
+                    },
+                    {
+                        "data": "egg_allergy",
+                        "name": "Egg Allergy"
+                    },
+                    {
+                        "data": "nut_allergy",
+                        "name": "Nut Allergy"
+                    },
+                    {
+                        "data": "seafood_allergy",
+                        "name": "Seafood Allergy"
+                    }
+                ],
+                "required": false,
+                "allowOther": true,
+                "questionId": 22,
+                "allowMultiple": true
+            },
+            {
+                "type": "file-upload",
+                "title": "Resume",
+                "maxSize": 5,
+                "required": false,
+                "questionId": 23,
+                "description": "Your Resume will only be seen by sponsors, and will not be used in the application evaluation process. Supported files include PDF formats up to 5 MB.",
+                "allowedTypes": ["application/pdf"],
+                "allowMultiple": false
+            },
+            {
+                "type": "text-line",
+                "title": "Discord Username",
+                "maxCount": 50,
+                "required": false,
+                "questionId": 24,
+                "placeHolder": "Username"
+            },
+            {
+                "type": "link",
+                "title": "Portfolio/Personal Site Link",
+                "required": false,
+                "validator": {
+                    "pattern": "^https?:\\/\\/(www\\.)?[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.[a-zA-Z]{2,}(\\/.*)?$",
+                    "errorMsg": "Please enter a link with the format “https://”"
+                },
+                "questionId": 25,
+                "placeHolder": "https://example.com"
+            },
+            {
+                "type": "link",
+                "title": "GitHub link",
+                "required": false,
+                "validator": {
+                    "pattern": "^https?:\\/\\/(www\\.)?github\\.com\\/.+",
+                    "errorMsg": "Please enter a Github link with the format “https://github.com/username”"
+                },
+                "questionId": 26,
+                "placeHolder": "https://github.com/username"
+            },
+            {
+                "type": "link",
+                "title": "LinkedIn link",
+                "required": false,
+                "validator": {
+                    "pattern": "^https?:\\/\\/(www\\.)?linkedin\\.com\\/(in|company)\\/.+",
+                    "errorMsg": "Please enter a LinkedIn link with the format “https://linkedin.com/in/username”"
+                },
+                "questionId": 27,
+                "placeHolder": "https://linkedin.com/in/username"
+            },
+            {
+                "type": "link",
+                "title": "Other link: ",
+                "required": false,
+                "validator": {
+                    "pattern": "^https?:\\/\\/(www\\.)?[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.[a-zA-Z]{2,}(\\/.*)?$",
+                    "errorMsg": "Please enter a valid URL (e.g. https://example.com)"
+                },
+                "questionId": 28,
+                "placeHolder": "https://example.com"
+            }
+        ],
+        "description": "We want to hear about your experience and needs!"
+    },
+    {
+        "title": "Agreements",
+        "questions": [
+            {
+                "type": "checkbox",
+                "label": "I would like to share my resume with sponsors.",
+                "value": false,
+                "required": false,
+                "questionId": 29
+            },
+            {
+                "type": "checkbox",
+                "label": "I accept to abide by <a href='https://github.com/MLH/mlh-policies/blob/main/code-of-conduct.md' target='_blank'>MLH guidelines</a>.",
+                "value": false,
+                "required": true,
+                "questionId": 30
+            },
+            {
+                "type": "checkbox",
+                "label": "I agree to abide by <a href='https://drive.google.com/file/d/1gL6FSHX9-KeitAk_t0_r7A1u4lQsxyDq/view' target='_blank'>SFSS guidelines</a>.",
+                "value": false,
+                "required": true,
+                "questionId": 31
+            },
+            {
+                "type": "checkbox",
+                "label": "I agree to share my application in line with the <a href='https://mlh.io/privacy' target='_blank'>MLH Privacy Policy</a>.",
+                "value": false,
+                "required": true,
+                "questionId": 32
+            },
+            {
+                "type": "checkbox",
+                "label": "I agree to the <a href='https://drive.google.com/file/d/1dr61I7hqCPFq13O7RYQ6M4XDAHIZtTaq/view' target='_blank'>SFSS photo release terms</a>.",
+                "value": false,
+                "required": true,
+                "questionId": 33
+            },
+            {
+                "type": "checkbox",
+                "label": "I agree to receiving emails from SFU Surge and MLH.",
+                "value": false,
+                "required": true,
+                "questionId": 34
+            }
+        ],
+        "description": "Please read each statement and check the box to agree."
+    }
+]
