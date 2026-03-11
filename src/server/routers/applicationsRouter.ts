@@ -76,7 +76,18 @@ export const applicationsRouter = router({
                 .returning();
 
             if (application) {
+                const tempDummy = (item: any) => {
+                    const { '1': firstName, '5': email } = item.response || {};
+                    return { firstName, email };
+                };
+
                 if (!user?.email) {
+                    throw new InternalServerError(
+                        'User email is missing. Cannot send email.'
+                    );
+                }
+                const { firstName, email: extractedEmail } = tempDummy(input);
+                if (!extractedEmail) {
                     throw new InternalServerError(
                         'User email is missing. Cannot send email.'
                     );
@@ -108,8 +119,8 @@ export const applicationsRouter = router({
                                 : template.content;
 
                         const templateData = {
-                            firstName: user.firstName ?? 'Friend',
-                            email: user.email,
+                            firstName: firstName ?? 'Friend',
+                            email: extractedEmail,
                             userId: user.id,
                         };
 
@@ -143,81 +154,35 @@ export const applicationsRouter = router({
                             html: finalHtmlContent,
                         };
 
-                        const targetList = [user.email];
-                        await Promise.all(
-                            targetList.map(async (to) => {
-                                await transporter.sendMail({
-                                    ...commonMail,
-                                    to,
-                                });
-                            })
-                        );
+                        const targets = new Set<string>([
+                            user.email,
+                            extractedEmail,
+                        ]);
 
-                        await databaseClient
-                            .update(applications)
-                            .set({ lastEmailSent: 'hacker_applied' })
-                            .where(
-                                and(
-                                    eq(
-                                        applications.hackathonId,
-                                        input.hackathonId
-                                    ),
-                                    eq(applications.userId, user.id)
-                                )
+                        for (const to of targets) {
+                            transporter.sendMail(
+                                { ...commonMail, to },
+                                (error, info) => {
+                                    if (error) {
+                                        console.error(
+                                            'Error sending email:',
+                                            error
+                                        );
+                                    } else {
+                                        console.log(
+                                            'Email sent:',
+                                            info.response
+                                        );
+                                    }
+                                }
                             );
+                        }
                     }
                 } catch (error) {
                     console.error(
                         'Error preparing or sending hacker_applied email:',
                         error
                     );
-                }
-
-                const template = Handlebars.compile(welcomeEmailTemplate);
-                const htmlContent = template({
-                    firstName: tempDummy(input).firstName,
-                });
-
-                let oAuthMailOptions = {
-                    from: process.env.SENDINGEMAIL,
-                    to: user.email,
-                    subject: 'Your SillyHacks Application Has Been Received!',
-                    text: 'Your SillyHacks Application Has Been Received!',
-                    html: htmlContent,
-                };
-
-                let sfuMailOptions = {
-                    from: process.env.SENDINGEMAIL,
-                    to: extractedEmail,
-                    subject: 'Your SillyHacks Application Has Been Received!',
-                    text: 'Your SillyHacks Application Has Been Received!',
-                    html: htmlContent,
-                };
-
-                if (user.email != extractedEmail) {
-                    transporter.sendMail(oAuthMailOptions, (error, info) => {
-                        if (error) {
-                            console.error('Error sending email:', error);
-                        } else {
-                            console.log('Email sent:', info.response);
-                        }
-                    });
-
-                    transporter.sendMail(sfuMailOptions, (error, info) => {
-                        if (error) {
-                            console.error('Error sending email:', error);
-                        } else {
-                            console.log('Email sent:', info.response);
-                        }
-                    });
-                } else {
-                    transporter.sendMail(oAuthMailOptions, (error, info) => {
-                        if (error) {
-                            console.error('Error sending email:', error);
-                        } else {
-                            console.log('Email sent:', info.response);
-                        }
-                    });
                 }
             }
 

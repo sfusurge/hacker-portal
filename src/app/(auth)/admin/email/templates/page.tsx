@@ -21,10 +21,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 
-const pageShellClass =
-    'w-full max-w-full min-w-0 overflow-x-hidden px-3 py-6 sm:px-4 sm:py-10';
-
-const hackathonSelectTriggerClass = 'w-full min-w-0 sm:w-[min(100%,280px)]';
+const ALL_EMAIL_TYPES =
+    hackathonEmailTypeEnum.enumValues as HackathonEmailType[];
 
 export default function EmailTemplatesPage() {
     const { toast } = useToast();
@@ -42,7 +40,8 @@ export default function EmailTemplatesPage() {
     const hasSetInitialHackathon = useRef(false);
 
     const { data: hackathons = [] } = trpc.hackathons.getHackathons.useQuery();
-    const activeHackathon = useAtomValue(hackathonAtom);
+    const { data: activeHackathon } =
+        trpc.hackathons.getActiveHackathon.useQuery();
 
     const {
         data: templates,
@@ -120,9 +119,6 @@ export default function EmailTemplatesPage() {
         setShowHighlights((prev) => !prev);
     };
 
-    const ALL_EMAIL_TYPES =
-        hackathonEmailTypeEnum.enumValues as HackathonEmailType[];
-
     const missingEmailTypes =
         selectedHackathonId != null && templates
             ? ALL_EMAIL_TYPES.filter(
@@ -146,43 +142,19 @@ export default function EmailTemplatesPage() {
             <div className={pageShellClass}>
                 <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <h1 className="text-2xl font-bold">Email Templates</h1>
-                    <div className="flex flex-wrap gap-2">
-                        <Link href="/admin/email/templates/styling">
-                            <Button
-                                variant="brand"
-                                hierarchy="secondary"
-                                size="cozy"
-                                className="w-full sm:w-auto"
-                            >
-                                Manage stylings
-                            </Button>
-                        </Link>
-                        <Link href="/admin/email/templates/edit">
-                            <Button
-                                variant="brand"
-                                hierarchy="primary"
-                                size="cozy"
-                                className="w-full sm:w-auto"
-                            >
-                                Create Template
-                            </Button>
-                        </Link>
-                    </div>
                 </div>
                 <div className="py-10 text-center">
-                    <p className="text-lg text-white/60">
+                    <p className="text-lg text-white/70">
                         Select a hackathon to view and manage email templates.
                     </p>
-                    <div className="mx-auto mt-4 flex max-w-md justify-center px-1">
+                    <div className="mt-4 flex justify-center">
                         <Select
                             value=""
                             onValueChange={(value) =>
                                 setSelectedHackathonId(Number(value))
                             }
                         >
-                            <SelectTrigger
-                                className={hackathonSelectTriggerClass}
-                            >
+                            <SelectTrigger className="w-[220px]">
                                 <SelectValue placeholder="Select hackathon" />
                             </SelectTrigger>
                             <SelectContent>
@@ -201,8 +173,8 @@ export default function EmailTemplatesPage() {
 
     if (!hasHackathon && hackathons.length === 0) {
         return (
-            <div className={`${pageShellClass} text-center`}>
-                <p className="text-lg text-white/60">
+            <div className="w-full py-10 text-center">
+                <p className="text-lg text-white/70">
                     No hackathons found. Create a hackathon first to manage
                     email templates.
                 </p>
@@ -212,12 +184,12 @@ export default function EmailTemplatesPage() {
 
     if (templatesList.length === 0) {
         return (
-            <div className={pageShellClass}>
-                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="w-full py-10">
+                <div className="mb-6 flex items-center justify-between">
                     <h1 className="text-2xl font-bold">Email Templates</h1>
-                    <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-                        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
-                            <span className="shrink-0 text-sm text-white/60">
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-white/70">
                                 Hackathon:
                             </span>
                             <Select
@@ -226,9 +198,7 @@ export default function EmailTemplatesPage() {
                                     setSelectedHackathonId(Number(value))
                                 }
                             >
-                                <SelectTrigger
-                                    className={hackathonSelectTriggerClass}
-                                >
+                                <SelectTrigger className="w-[220px]">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -243,13 +213,12 @@ export default function EmailTemplatesPage() {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex gap-2">
                             <Link href="/admin/email/templates/styling">
                                 <Button
                                     variant="brand"
                                     hierarchy="secondary"
                                     size="cozy"
-                                    className="w-full sm:w-auto"
                                 >
                                     Manage stylings
                                 </Button>
@@ -261,7 +230,6 @@ export default function EmailTemplatesPage() {
                                     variant="brand"
                                     hierarchy="primary"
                                     size="cozy"
-                                    className="w-full sm:w-auto"
                                 >
                                     Create Template
                                 </Button>
@@ -277,7 +245,7 @@ export default function EmailTemplatesPage() {
                         <h2 className="text-caution-200 mb-2 font-semibold">
                             Missing templates for this hackathon
                         </h2>
-                        <p className="mb-4 text-sm text-white/60">
+                        <p className="mb-4 text-sm text-white/70">
                             Create templates for each email type to cover all
                             hackathon flows.
                         </p>
@@ -307,9 +275,9 @@ export default function EmailTemplatesPage() {
         <div className={pageShellClass}>
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <h1 className="text-2xl font-bold">Email Templates</h1>
-                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-                    <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
-                        <span className="shrink-0 text-sm text-white/60">
+                <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-white/70">
                             Hackathon:
                         </span>
                         <Select
@@ -318,9 +286,7 @@ export default function EmailTemplatesPage() {
                                 setSelectedHackathonId(Number(value))
                             }
                         >
-                            <SelectTrigger
-                                className={hackathonSelectTriggerClass}
-                            >
+                            <SelectTrigger className="w-[220px]">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -332,13 +298,12 @@ export default function EmailTemplatesPage() {
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex gap-2">
                         <Link href="/admin/email/templates/styling">
                             <Button
                                 variant="brand"
                                 hierarchy="secondary"
                                 size="cozy"
-                                className="w-full sm:w-auto"
                             >
                                 Manage stylings
                             </Button>
@@ -350,7 +315,6 @@ export default function EmailTemplatesPage() {
                                 variant="brand"
                                 hierarchy="primary"
                                 size="cozy"
-                                className="w-full sm:w-auto"
                             >
                                 Create Template
                             </Button>
@@ -364,7 +328,7 @@ export default function EmailTemplatesPage() {
                     <h2 className="text-caution-200 mb-2 text-lg font-semibold">
                         Missing templates for this hackathon
                     </h2>
-                    <p className="mb-4 text-sm text-white/60">
+                    <p className="mb-4 text-sm text-white/70">
                         You don&apos;t have an email template for these types
                         yet. Create one to cover all hackathon email flows.
                     </p>

@@ -136,15 +136,6 @@ export default function ReviewApplicationsTable({
     onRowClick,
     hackathonId,
 }: ReviewApplicationsTableProps) {
-    // const hackathon = useAtomValue(hackathonAtom);
-
-    // Fetch email templates
-    const { data: emailTemplates, isLoading: templatesLoading } =
-        trpc.emailTemplates.getEmailTemplates.useQuery();
-
-    // Data state
-    //const data: Applicant[] = transformResponse(applications);
-
     const checkedInInfoColumns: ColumnDef<Applicant>[] =
         data[0]?.checkIns?.map(({ eventTitle, eventId }) => {
             return {
@@ -461,17 +452,10 @@ function MyTable({
     const { toast } = useToast();
 
     const effectiveHackathonForEmail = selectedHackathonForEmail ?? hackathonId;
-    const currentHackathon = hackathons.find((h) => h.id === hackathonId);
-    const isPaidHackathon = currentHackathon?.isPaid ?? false;
     const { data: emailTemplates, isLoading: templatesLoading } =
         trpc.emailTemplates.getEmailTemplates.useQuery({
             hackathonId: effectiveHackathonForEmail,
         });
-
-    const selectedEmailTemplate = useMemo(() => {
-        if (selectedTemplateId == null) return null;
-        return emailTemplates?.find((t) => t.id === selectedTemplateId) ?? null;
-    }, [emailTemplates, selectedTemplateId]);
 
     const statusCounts = useMemo(() => getStatusCounts(data), [data]);
 

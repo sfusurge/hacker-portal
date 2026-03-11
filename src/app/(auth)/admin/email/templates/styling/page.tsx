@@ -59,6 +59,16 @@ export default function EmailTemplateStylingPage() {
                         No styling templates yet. Create one to reuse the same
                         layout across email templates.
                     </p>
+                    <Link href="/admin/email/templates/styling/new">
+                        <Button
+                            variant="brand"
+                            hierarchy="primary"
+                            size="cozy"
+                            className="mt-4"
+                        >
+                            Create Styling
+                        </Button>
+                    </Link>
                 </div>
             ) : (
                 <div className="grid gap-4">
