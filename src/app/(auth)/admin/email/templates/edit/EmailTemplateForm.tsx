@@ -98,14 +98,6 @@ export function EmailTemplateForm({
             { enabled: formData.stylingId != null }
         );
 
-    const { data: stylingList = [] } =
-        trpc.emailTemplateStyling.getList.useQuery();
-    const { data: selectedStyling, isLoading: isStylingLoading } =
-        trpc.emailTemplateStyling.getById.useQuery(
-            { id: formData.stylingId! },
-            { enabled: formData.stylingId != null }
-        );
-
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {};
 

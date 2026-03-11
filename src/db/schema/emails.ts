@@ -74,18 +74,6 @@ export const HACKATHON_EMAIL_TYPE_LABELS: Record<HackathonEmailType, string> = {
     custom: 'Custom',
 };
 
-/**
- * Reusable HTML wrapper (doctype, head, styles, body shell).
- * Use {{bodyContent}} in html where the email body should be injected.
- */
-export const emailTemplateStyling = pgTable('email_template_styling', {
-    id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
-    name: varchar('name', { length: 256 }).notNull(),
-    html: text('html').notNull(),
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
-
 export const emailTemplates = pgTable('email_templates', {
     id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
     title: varchar('title', { length: 256 }).notNull(),
