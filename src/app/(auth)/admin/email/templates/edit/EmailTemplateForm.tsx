@@ -6,20 +6,31 @@ import { FormTextArea } from '@/components/ui/formTextArea/FormTextArea';
 import { Label } from '@/components/ui/label/label';
 import { FormTextInput } from '@/components/ui/input/input';
 import { prepareEmailPreview } from '../emailPreview';
-import { type NewEmailTemplate } from '@/db/schema/emails';
+import {
+    type NewEmailTemplate,
+    HACKATHON_EMAIL_TYPE_LABELS,
+    hackathonEmailTypeEnum,
+} from '@/db/schema/emails';
+import type { HackathonEmailType } from '@/db/schema/emails';
 import { trpc } from '@/trpc/client';
 import {
     PlaceholdersSection,
     getDetectedPlaceholders,
 } from './PlaceholdersSection';
 import {
-    AttachmentsSection,
-    Attachment,
-} from '@/components/attachments/AttachmentsSection';
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 export type EmailTemplateFormData = NewEmailTemplate;
 
-const bucketName = 'email-attachments';
+/** Form state allows hackathonId to be null until user selects one (or it's defaulted). */
+type EmailTemplateFormState = Omit<EmailTemplateFormData, 'hackathonId'> & {
+    hackathonId: number | null;
+};
 
 const AVAILABLE_PLACEHOLDERS = [
     { placeholder: '{{firstName}}', description: "Applicant's first name" },
@@ -29,20 +40,7 @@ const AVAILABLE_PLACEHOLDERS = [
         placeholder: '{{eventName}}',
         description: 'Name of the event (e.g., JourneyHacks 2025)',
     },
-    // { placeholder: '{{teamMate1}}', description: 'Team mate 1 name' },
-    // { placeholder: '{{teamMate2}}', description: 'Team mate 2 name' },
-    // { placeholder: '{{teamMate3}}', description: 'Team mate 3 name' },
     { placeholder: '{{qrCode}}', description: 'URL to a unique QR code image' },
-    // {
-    //     placeholder: '{{acceptanceStatus}}',
-    //     description: "Applicant's acceptance status",
-    // },
-    // { placeholder: '{{eventDate}}', description: 'Date of the event' },
-    // { placeholder: '{{eventLocation}}', description: 'Location of the event' },
-    // {
-    //     placeholder: '{{rsvpDeadline}}',
-    //     description: 'Deadline to RSVP for the event',
-    // },
 ];
 
 interface EmailTemplateFormProps {
@@ -60,22 +58,45 @@ export function EmailTemplateForm({
     onCancel,
     isLoading = false,
 }: EmailTemplateFormProps) {
-    const [formData, setFormData] = useState<
-        EmailTemplateFormData & {
-            attachments: Array<Attachment>;
+    const [formData, setFormData] = useState<EmailTemplateFormState>(() => {
+        const base = {
+            title: '',
+            purpose: '',
+            description: '',
+            stylingId: null as number | null,
+            content: '',
+            hackathonId: null as number | null,
+            emailType: 'custom' as HackathonEmailType,
+        };
+        if (initialData) {
+            return {
+                ...base,
+                title: initialData.title || '',
+                purpose: initialData.purpose || '',
+                description: initialData.description ?? '',
+                stylingId: initialData.stylingId ?? null,
+                content: initialData.content || '',
+                hackathonId:
+                    initialData.hackathonId != null
+                        ? Number(initialData.hackathonId)
+                        : null,
+                emailType:
+                    (initialData.emailType as HackathonEmailType) ?? 'custom',
+            };
         }
-    >({
-        title: '',
-        purpose: '',
-        description: '',
-        content: '',
-        attachments: [],
+        return base;
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [showHighlights, setShowHighlights] = useState<boolean>(true);
-    const [deletedAttachments, setDeletedAttachments] = useState<string[]>([]);
 
-    const deleteFileMutation = trpc.files.deleteFile.useMutation();
+    const { data: stylingList = [] } =
+        trpc.emailTemplateStyling.getList.useQuery();
+    const { data: hackathons = [] } = trpc.hackathons.getHackathons.useQuery();
+    const { data: selectedStyling, isLoading: isStylingLoading } =
+        trpc.emailTemplateStyling.getById.useQuery(
+            { id: formData.stylingId ?? 0 },
+            { enabled: formData.stylingId != null }
+        );
 
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {};
@@ -90,6 +111,10 @@ export function EmailTemplateForm({
 
         if (!formData.content.trim()) {
             newErrors.content = 'Email content is required';
+        }
+
+        if (formData.hackathonId == null) {
+            newErrors.hackathon = 'Hackathon is required';
         }
 
         setErrors(newErrors);
@@ -114,73 +139,56 @@ export function EmailTemplateForm({
 
     const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!validateForm()) return;
+        if (!validateForm() || formData.hackathonId == null) return;
         try {
-            if (deletedAttachments.length > 0) {
-                await Promise.all(
-                    deletedAttachments.map((key) =>
-                        deleteFileMutation.mutateAsync({
-                            key,
-                            bucketName: bucketName,
-                        })
-                    )
-                );
-                setDeletedAttachments([]);
-            }
-
-            const formattedAttachments = formData.attachments.map(
-                (attachment) => ({
-                    key: attachment.key,
-                    fileName: attachment.fileName,
-                    cropData: attachment.cropData,
-                })
-            );
-
             await onSubmit({
                 ...formData,
+                hackathonId: formData.hackathonId as number,
                 id: initialData?.id,
-                attachments: formattedAttachments,
             });
         } catch (error) {
             console.error('Error submitting form:', error);
         }
     };
 
-    const handleAttachmentsChange = (newAttachments: Array<Attachment>) => {
-        setFormData((prev) => {
-            if (
-                JSON.stringify(prev.attachments) !==
-                JSON.stringify(newAttachments)
-            ) {
-                return {
-                    ...prev,
-                    attachments: newAttachments,
-                };
-            }
-            return prev;
+    useEffect(() => {
+        if (!initialData) return;
+        setFormData({
+            title: initialData.title || '',
+            purpose: initialData.purpose || '',
+            description: initialData.description ?? '',
+            stylingId: initialData.stylingId ?? null,
+            content: initialData.content || '',
+            hackathonId:
+                initialData.hackathonId != null
+                    ? Number(initialData.hackathonId)
+                    : null,
+            emailType:
+                (initialData.emailType as HackathonEmailType) ?? 'custom',
         });
-    };
-
-    const handleAttachmentDeleted = (key: string) => {
-        setDeletedAttachments((prev) => [...prev, key]);
-
-        setFormData((prev) => ({
-            ...prev,
-            attachments: prev.attachments.filter((a) => a.key !== key),
-        }));
-    };
+    }, [
+        initialData?.id,
+        initialData?.title,
+        initialData?.purpose,
+        initialData?.description,
+        initialData?.stylingId,
+        initialData?.content,
+        initialData?.hackathonId,
+        initialData?.emailType,
+    ]);
 
     useEffect(() => {
-        if (initialData) {
-            setFormData({
-                title: initialData.title || '',
-                purpose: initialData.purpose || '',
-                description: initialData.description || '',
-                content: initialData.content || '',
-                attachments: initialData.attachments || [],
-            });
-        }
-    }, [initialData]);
+        if (
+            initialData?.id != null ||
+            hackathons.length === 0 ||
+            formData.hackathonId != null
+        )
+            return;
+        setFormData((prev) => ({
+            ...prev,
+            hackathonId: hackathons[0].id,
+        }));
+    }, [hackathons, initialData?.id, formData.hackathonId]);
 
     return (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
@@ -244,8 +252,132 @@ export function EmailTemplateForm({
                         </div>
 
                         <div>
+                            <Label htmlFor="hackathon" required>
+                                Hackathon
+                            </Label>
+                            <Select
+                                value={
+                                    formData.hackathonId != null
+                                        ? String(formData.hackathonId)
+                                        : ''
+                                }
+                                onValueChange={(value) => {
+                                    const id = value
+                                        ? parseInt(value, 10)
+                                        : null;
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        hackathonId: id,
+                                    }));
+                                    if (errors.hackathon) {
+                                        setErrors((prev) => {
+                                            const next = { ...prev };
+                                            delete next.hackathon;
+                                            return next;
+                                        });
+                                    }
+                                }}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select hackathon" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {hackathons.map((h) => (
+                                        <SelectItem
+                                            key={h.id}
+                                            value={String(h.id)}
+                                        >
+                                            {h.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {errors.hackathon && (
+                                <p className="text-danger-500 mt-1 text-sm">
+                                    {errors.hackathon}
+                                </p>
+                            )}
+                        </div>
+
+                        <div>
+                            <Label htmlFor="emailType">Email type</Label>
+                            <Select
+                                value={formData.emailType ?? 'custom'}
+                                onValueChange={(value) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        emailType: value as HackathonEmailType,
+                                    }))
+                                }
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Custom" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {(
+                                        hackathonEmailTypeEnum.enumValues as HackathonEmailType[]
+                                    ).map((key) => (
+                                        <SelectItem key={key} value={key}>
+                                            {HACKATHON_EMAIL_TYPE_LABELS[key]}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="mt-1 text-xs text-neutral-500">
+                                Category for this hackathon email (e.g. Hacker
+                                applied, RSVP received).
+                            </p>
+                        </div>
+
+                        <div>
+                            <Label htmlFor="styling">
+                                Email Template Styling
+                            </Label>
+                            <Select
+                                value={
+                                    formData.stylingId != null
+                                        ? String(formData.stylingId)
+                                        : 'none'
+                                }
+                                onValueChange={(value) => {
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        stylingId:
+                                            value === 'none'
+                                                ? null
+                                                : parseInt(value, 10),
+                                    }));
+                                }}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="None (full HTML)" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">
+                                        None (full HTML)
+                                    </SelectItem>
+                                    {stylingList.map((s) => (
+                                        <SelectItem
+                                            key={s.id}
+                                            value={String(s.id)}
+                                        >
+                                            {s.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="mt-1 text-xs text-neutral-500">
+                                {formData.stylingId != null
+                                    ? 'Content below is injected into the selected styling at the body slot.'
+                                    : 'Use a styling to share the same wrapper (header, footer, styles) across templates.'}
+                            </p>
+                        </div>
+
+                        <div>
                             <Label htmlFor="content" required>
-                                Email Content (HTML)
+                                {formData.stylingId != null
+                                    ? 'Body content (Markdown)'
+                                    : 'Email Content (HTML)'}
                             </Label>
                             <FormTextArea
                                 id="content"
@@ -255,9 +387,17 @@ export function EmailTemplateForm({
                                 onLazyChange={(value) =>
                                     handleInputChange(value, 'content')
                                 }
-                                placeholder="<p>Dear {{firstName}},</p><p>We are pleased to inform you...</p>"
+                                placeholder={
+                                    formData.stylingId != null
+                                        ? 'Hello {{firstName}}!\n\nWe are pleased to inform you...\n\n**Bold** and *italic* supported.'
+                                        : '<p>Dear {{firstName}},</p><p>We are pleased to inform you...</p>'
+                                }
                                 rows={12}
-                                className="font-mono text-sm"
+                                className={
+                                    formData.stylingId != null
+                                        ? ''
+                                        : 'font-mono text-sm'
+                                }
                             />
                             {errors.content && (
                                 <p className="text-danger-500 mt-1 text-sm">
@@ -265,13 +405,6 @@ export function EmailTemplateForm({
                                 </p>
                             )}
                         </div>
-
-                        <AttachmentsSection
-                            attachments={formData.attachments || []}
-                            onAttachmentsChange={handleAttachmentsChange}
-                            onAttachmentDeleted={handleAttachmentDeleted}
-                            bucketName={bucketName}
-                        />
                     </div>
 
                     <div className="flex w-full justify-end space-x-4">
@@ -343,18 +476,32 @@ export function EmailTemplateForm({
                             </span>
                         </div>
                         <div className="h-[500px] overflow-auto">
-                            <iframe
-                                srcDoc={prepareEmailPreview(formData.content, {
-                                    showPlaceholders: showHighlights,
-                                    placeholders: getDetectedPlaceholders(
+                            {formData.stylingId != null && isStylingLoading ? (
+                                <div className="flex h-full items-center justify-center text-neutral-500">
+                                    Loading styling…
+                                </div>
+                            ) : (
+                                <iframe
+                                    key={`preview-${formData.stylingId ?? 'none'}-${selectedStyling?.id ?? ''}-${formData.content.length}`}
+                                    srcDoc={prepareEmailPreview(
                                         formData.content,
-                                        AVAILABLE_PLACEHOLDERS
-                                    ),
-                                })}
-                                title="Email Preview"
-                                className="h-full w-full border-0"
-                                sandbox="allow-same-origin allow-scripts"
-                            />
+                                        {
+                                            showPlaceholders: showHighlights,
+                                            placeholders:
+                                                getDetectedPlaceholders(
+                                                    formData.content,
+                                                    AVAILABLE_PLACEHOLDERS
+                                                ),
+                                            stylingHtml:
+                                                selectedStyling?.html ??
+                                                undefined,
+                                        }
+                                    )}
+                                    title="Email Preview"
+                                    className="h-full w-full border-0"
+                                    sandbox="allow-same-origin allow-scripts"
+                                />
+                            )}
                         </div>
                     </div>
                 </div>

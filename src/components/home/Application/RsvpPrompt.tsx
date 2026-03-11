@@ -37,10 +37,14 @@ export default function RsvpPrompt({
 
     const hackathon = useAtomValue(hackathonAtom);
     const updateApplication = trpc.applications.updateApplication.useMutation();
-    const getEmailTemplate =
-        trpc.emailTemplates.getEmailTemplateByPurpose.useQuery({
-            purpose: 'RSVP Received',
-        });
+    const { data: rsvpTemplate } =
+        trpc.emailTemplates.getEmailTemplateByHackathonAndType.useQuery(
+            {
+                hackathonId: hackathon?.id ?? 0,
+                emailType: 'rsvp_received',
+            },
+            { enabled: !!hackathon?.id }
+        );
     const sendEmail = trpc.emails.sendEmail.useMutation();
     const updateLastEmailSent =
         trpc.applications.updateLastEmailSent.useMutation();
@@ -70,9 +74,9 @@ export default function RsvpPrompt({
                 userId: userId,
             });
 
-            if (getEmailTemplate.data?.id && userEmail) {
+            if (rsvpTemplate?.id && userEmail) {
                 await sendEmail.mutateAsync({
-                    templateId: getEmailTemplate.data.id,
+                    templateId: rsvpTemplate.id,
                     user: {
                         id: userId,
                         firstName,
@@ -100,7 +104,7 @@ export default function RsvpPrompt({
         firstName,
         lastName,
         isConfirmed,
-        getEmailTemplate.data?.id,
+        rsvpTemplate?.id,
     ]);
 
     const handleClose = () => {
