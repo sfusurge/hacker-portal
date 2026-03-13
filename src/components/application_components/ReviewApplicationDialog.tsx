@@ -19,6 +19,7 @@ export type ReviewApplicationDialogProps = {
     isOpen: boolean;
     onSubmit: () => void | Promise<void>;
     isSubmitting?: boolean;
+    applicationType?: 'application' | 'submission';
 };
 
 export default function ReviewApplicationDialog({
@@ -26,6 +27,7 @@ export default function ReviewApplicationDialog({
     isOpen,
     onSubmit,
     isSubmitting = false,
+    applicationType = 'application',
 }: ReviewApplicationDialogProps) {
     const pfp = '/Stormy-letter.webp';
     const [submitted, setSubmitted] = useState(false);
@@ -76,18 +78,18 @@ export default function ReviewApplicationDialog({
                         <Conditional showWhen={!submitted}>
                             <ResponsiveDialogHeader className="gap-4 px-6">
                                 <ResponsiveDialogTitle className="text-center text-pretty">
-                                    Are you sure you want to submit your
-                                    application?
+                                    {applicationType === 'submission'
+                                        ? 'Are you sure you want to submit your submission?'
+                                        : 'Are you sure you want to submit your application?'}
                                 </ResponsiveDialogTitle>
                                 <Alert variant={'info'} className="text-left">
                                     <AlertTitle>
                                         Please read before submitting!
                                     </AlertTitle>
                                     <AlertDescription className="text-white/60">
-                                        Once you submit your application, you
-                                        won&apos;t be able to make changes.
-                                        Withdrawn applications cannot be
-                                        resubmitted.
+                                        {applicationType === 'submission'
+                                            ? "Once you submit your submission, you won't be able to make changes. Withdrawn submissions cannot be resubmitted."
+                                            : "Once you submit your application, you won't be able to make changes. Withdrawn applications cannot be resubmitted."}
                                     </AlertDescription>
                                 </Alert>
                             </ResponsiveDialogHeader>
@@ -96,11 +98,14 @@ export default function ReviewApplicationDialog({
                         <Conditional showWhen={submitted}>
                             <ResponsiveDialogHeader className="gap-4 p-6 pb-0 text-center">
                                 <ResponsiveDialogTitle className="text-center">
-                                    Your application has been submitted.
+                                    {applicationType === 'submission'
+                                        ? 'Your submission has been submitted.'
+                                        : 'Your application has been submitted.'}
                                 </ResponsiveDialogTitle>
                                 <ResponsiveDialogDescription className="text-base text-pretty">
-                                    Thank you for applying! We&apos;ll review
-                                    your application and get back to you soon.
+                                    {applicationType === 'submission'
+                                        ? "Thank you for submitting! We'll review your submission and get back to you soon."
+                                        : "Thank you for applying! We'll review your application and get back to you soon."}
                                 </ResponsiveDialogDescription>
                             </ResponsiveDialogHeader>
                         </Conditional>
@@ -129,7 +134,9 @@ export default function ReviewApplicationDialog({
                                 >
                                     {isSubmitting
                                         ? 'Submitting...'
-                                        : 'Submit application'}
+                                        : applicationType === 'submission'
+                                          ? 'Submit submission'
+                                          : 'Submit application'}
                                 </Button>
                             </div>
                         </ResponsiveDialogFooter>

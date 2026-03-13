@@ -96,6 +96,7 @@ interface InputFormProps {
     appDataAtom: WritableAtom<InputFormData, [val: InputFormData], void>;
     onSubmit: () => Promise<void>;
     disablePageTab?: boolean;
+    applicationType?: 'application' | 'submission';
 }
 
 /**
@@ -106,6 +107,7 @@ export function InputForm({
     appDataAtom,
     onSubmit,
     disablePageTab = false,
+    applicationType = 'application',
 }: InputFormProps) {
     const [submitted, setSubmitted] = useAtom(submittedAtom);
     const router = useRouter();
@@ -208,7 +210,7 @@ export function InputForm({
                     <span>Dashboard</span>
                 </button>
                 <h1 className="text-xl font-semibold">
-                    SillyHacks 2026 Application
+                    SparkJam 2026 Application
                 </h1>
             </div>
             <div className={style.appFormWrapper}>
@@ -257,6 +259,7 @@ export function InputForm({
                         indexAtom={pageIndexAtom}
                         pageCount={pagesAtoms.length}
                         pageStatesAtom={pageStatesAtom}
+                        applicationType={applicationType}
                         submit={async () => {
                             setSubmitted(true);
                             await onSubmit();
@@ -609,6 +612,7 @@ function PageButtons({
     submit,
     submitted,
     setSubmitted,
+    applicationType,
 }: {
     indexAtom: PrimitiveAtom<number>;
     pageCount: number;
@@ -616,6 +620,7 @@ function PageButtons({
     submit?: () => void | Promise<void>;
     submitted: boolean;
     setSubmitted: (val: boolean) => void;
+    applicationType: 'application' | 'submission';
 }) {
     const [index, setIndex] = useAtom(indexAtom);
     const pageStates = useAtomValue(pageStatesAtom);
@@ -730,6 +735,7 @@ function PageButtons({
                     }
                 }}
                 isSubmitting={submitted}
+                applicationType={applicationType}
             />
         </>
     );

@@ -66,12 +66,12 @@ const navLinks = [
     //     iconAlt: 'Notifications logo',
     //     disabled: true,
     // },
-    // {
-    //     href: '/projects',
-    //     label: 'Projects',
-    //     icon: <InboxStackIcon className="h-6 w-6" />,
-    //     iconAlt: 'Projects logo',
-    // },
+    {
+        href: '/projects',
+        label: 'Project Gallery',
+        icon: <InboxStackIcon className="h-6 w-6" />,
+        iconAlt: 'Project gallery logo',
+    },
 ];
 
 const adminLinks = [
@@ -268,7 +268,7 @@ export default function DesktopNav({
                                                     <div className="h-6 w-6 shrink-0 opacity-0" />
                                                     <div className="mt-1 flex flex-col gap-2 overflow-hidden">
                                                         <span className="line-clamp-1 text-sm font-medium whitespace-nowrap text-white">
-                                                            SillyHacks 2026
+                                                            SparkJam 2026
                                                         </span>
                                                     </div>
                                                 </div>

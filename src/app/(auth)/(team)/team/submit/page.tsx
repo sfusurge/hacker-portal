@@ -15,16 +15,6 @@ export default async function SubmitPage() {
         redirect('/login');
     }
 
-    const now = new Date();
-    const pstNow = new Date(
-        now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
-    );
-    const deadline = new Date('2025-05-29T00:30:00');
-
-    if (pstNow > deadline) {
-        return <GoHome title="Submission deadline has passed!" />;
-    }
-
     const trpcClient = createCaller({});
     const hackathon = await trpcClient.hackathons.getActiveHackathon();
 
@@ -41,21 +31,10 @@ export default async function SubmitPage() {
     }
 
     if (!application || application.currentStatus !== 'Accepted') {
-        return <GoHome title="You were not accepted in this event!" />;
+        return (
+            <GoHome title="You can't submit a project because you were not accepted to this event." />
+        );
     }
-
-    const teamPictureUrl = currentTeam?.teamPictureUrl;
-
-    // const image = teamPictureUrl
-    //               .getFile({
-    //               key: teamPictureUrl,
-    //               bucketName: 'team-pictures',
-    //           })
-    //           .catch((error) => {
-    //               console.error('Error fetching image:', error);
-    //               return null;
-    //           })
-    //     : null;
 
     const questions = await trpcClient.submissions.getSubmissionQuestions({
         hackathonId: hackathon.id,
