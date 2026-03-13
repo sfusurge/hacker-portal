@@ -282,12 +282,9 @@ function SubmitCardContent({
                         Submission deadline has passed!
                     </h3>
                     <span className="text-sm text-pretty text-white/60 lg:max-w-[550px]">
-                        The submission period ended on{' '}
-                        {hackathon.submissionDeadline.format(
-                            'MMM D, YYYY h:mm A'
-                        )}
-                        . Judges will evaluate projects before results are
-                        announced at the closing ceremony.
+                        The submission period ended on May 28th at 11:59 PM PST.
+                        Judges will evaluate the projects from May 29th to 30th,
+                        2026.
                     </span>
                 </>
             );
@@ -297,9 +294,11 @@ function SubmitCardContent({
                     {!teamdata.data && <p>You are not in a team yet!</p>}
                     <span
                         className={'text-sm text-white/60'}
-                    >{`Projects are due on ${hackathon.submissionDeadline.format('MMM D, h:mm A')}!`}</span>
+                    >{`Projects are due on ${dayjs(
+                        new Date(2026, 4, 28, 23, 59, 59)
+                    ).format('MMM DD, hh:mm')}!`}</span>
                     <CountdownTimer
-                        targetDate={hackathon.submissionDeadline.toDate()}
+                        targetDate={new Date(2026, 4, 28, 23, 59, 59)}
                     />
                 </>
             );

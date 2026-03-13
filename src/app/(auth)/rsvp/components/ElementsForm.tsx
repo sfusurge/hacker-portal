@@ -21,92 +21,6 @@ import getStripe from '@/utils/get-stripejs';
 import { createPaymentIntent } from '@/actions/stripe';
 import { useAtomValue } from 'jotai';
 import { hackathonAtom, userInfoAtom } from '@/app/(auth)/ClientContext';
-import { LockClosedIcon } from '@heroicons/react/24/solid';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input/input';
-import inputStyles from '@/components/ui/input/input.module.css';
-import { Label } from '@/components/ui/label/label';
-
-const TICKET_AMOUNT = 15;
-const TICKET_CENTS = 1500;
-
-const elementsAppearance = {
-    theme: 'night' as const,
-    variables: {
-        colorIcon: '#6772e5',
-        colorPrimary: '#6466f1',
-        colorBackground: '#171717',
-        colorText: '#FFFFFF',
-        colorTextSecondary: 'rgba(255, 255, 255, 0.6)',
-        colorDanger: '#f87171',
-        borderRadius: '8px',
-        fontFamily: 'Inter, sans-serif',
-    },
-    rules: {
-        '.Input': {
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            boxShadow: 'none',
-        },
-        '.Input:focus': {
-            border: '1px solid rgba(129, 140, 248, 0.6)',
-            boxShadow: 'none',
-        },
-        '.Tab': {
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            boxShadow: 'none',
-        },
-        '.Tab--selected': {
-            border: '1px solid rgba(48, 46, 129, 1)',
-            backgroundColor: 'rgba(29, 27, 75, 0.6)',
-            boxShadow: 'none',
-        },
-        '.Tab:focus': {
-            border: '1px solid rgba(129, 140, 248, 0.45)',
-            boxShadow: 'none',
-        },
-        '.Label': {
-            marginBottom: '0.5rem',
-            fontSize: '0.8125rem',
-            fontWeight: '500',
-            color: 'rgba(255, 255, 255, 0.65)',
-        },
-    },
-};
-
-const expressCheckoutOptions = {
-    paymentMethods: {
-        applePay: 'auto' as const,
-        googlePay: 'auto' as const,
-        link: 'never' as const,
-        paypal: 'never' as const,
-        amazonPay: 'never' as const,
-    },
-    layout: {
-        maxColumns: 2,
-        maxRows: 1,
-    },
-    buttonType: {
-        applePay: 'buy' as const,
-        googlePay: 'pay' as const,
-    },
-};
-
-const RSVP_FIELD = `${inputStyles.textinput} w-full truncate`;
-
-const paymentElementOptions = {
-    layout: {
-        type: 'tabs' as const,
-        radios: true,
-    },
-    fields: {
-        billingDetails: {
-            name: 'never' as const,
-            email: 'never' as const,
-            address: 'auto' as const,
-        },
-    },
-};
 
 export default function ElementsForm({
     userEmail,
@@ -127,9 +41,7 @@ export default function ElementsForm({
             }}
         >
             <CheckoutForm
-                initialEmail={userEmail}
-                initialFirstName={userInfo?.firstName ?? ''}
-                initialLastName={userInfo?.lastName ?? ''}
+                userEmail={userEmail}
                 hackathonName={hackathon?.hackathonName}
                 hackathonId={hackathon?.id}
                 userId={userInfo?.id}
@@ -139,24 +51,18 @@ export default function ElementsForm({
 }
 
 function CheckoutForm({
-    initialEmail,
-    initialFirstName,
-    initialLastName,
+    userEmail,
     hackathonName,
     hackathonId,
     userId,
 }: {
-    initialEmail: string;
-    initialFirstName: string;
-    initialLastName: string;
+    userEmail: string;
     hackathonName?: string;
     hackathonId?: number;
     userId?: number;
 }) {
-    const [firstName, setFirstName] = useState(initialFirstName);
-    const [lastName, setLastName] = useState(initialLastName);
-    const [email, setEmail] = useState(initialEmail);
-
+    const [cardholderName, setCardholderName] = useState<string>('');
+    const [paymentType, setPaymentType] = useState<string>('');
     const [payment, setPayment] = useState<{
         status: 'initial' | 'processing' | 'error';
     }>({ status: 'initial' });
@@ -282,6 +188,18 @@ function CheckoutForm({
                 return;
             }
 
+            const paymentAmount = 15;
+
+            const { client_secret: clientSecret } = await createPaymentIntent(
+                paymentAmount,
+                userEmail,
+                {
+                    hackathonId,
+                    userId,
+                    hackathonName,
+                }
+            );
+
             const { error: confirmError } = await stripe.confirmPayment({
                 elements,
                 clientSecret,
@@ -312,7 +230,7 @@ function CheckoutForm({
     return (
         <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white">
-                SillyHacks Ticket
+                {(hackathonName ?? 'Hackathon') + ' ticket'}
             </h3>
             <h3 className="text-gray-400">
                 Amount: <span className="text-white">$15.00</span>
