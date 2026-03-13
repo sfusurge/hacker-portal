@@ -13,12 +13,17 @@ import {
 import getStripe from '@/utils/get-stripejs';
 
 import { createPaymentIntent } from '@/actions/stripe';
+import { useAtomValue } from 'jotai';
+import { hackathonAtom, userInfoAtom } from '@/app/(auth)/ClientContext';
 
 export default function ElementsForm({
     userEmail,
 }: {
     userEmail: string;
 }): JSX.Element {
+    const hackathon = useAtomValue(hackathonAtom);
+    const userInfo = useAtomValue(userInfoAtom);
+
     return (
         <Elements
             stripe={getStripe()}
@@ -37,12 +42,27 @@ export default function ElementsForm({
                 amount: 1500,
             }}
         >
-            <CheckoutForm userEmail={userEmail} />
+            <CheckoutForm
+                userEmail={userEmail}
+                hackathonName={hackathon?.hackathonName}
+                hackathonId={hackathon?.id}
+                userId={userInfo?.id}
+            />
         </Elements>
     );
 }
 
-function CheckoutForm({ userEmail }: { userEmail: string }) {
+function CheckoutForm({
+    userEmail,
+    hackathonName,
+    hackathonId,
+    userId,
+}: {
+    userEmail: string;
+    hackathonName?: string;
+    hackathonId?: number;
+    userId?: number;
+}) {
     const [cardholderName, setCardholderName] = useState<string>('');
     const [paymentType, setPaymentType] = useState<string>('');
     const [payment, setPayment] = useState<{
@@ -101,7 +121,12 @@ function CheckoutForm({ userEmail }: { userEmail: string }) {
 
             const { client_secret: clientSecret } = await createPaymentIntent(
                 paymentAmount,
-                userEmail
+                userEmail,
+                {
+                    hackathonId,
+                    userId,
+                    hackathonName,
+                }
             );
 
             const { error: confirmError } = await stripe.confirmPayment({
@@ -133,7 +158,7 @@ function CheckoutForm({ userEmail }: { userEmail: string }) {
     return (
         <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white">
-                SillyHacks Ticket
+                {(hackathonName ?? 'Hackathon') + ' ticket'}
             </h3>
             <h3 className="text-gray-400">
                 Amount: <span className="text-white">$15.00</span>

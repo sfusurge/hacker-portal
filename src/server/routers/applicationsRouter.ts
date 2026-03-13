@@ -443,6 +443,28 @@ export const applicationsRouter = router({
             return application as ApplicationInfo;
         }),
 
+    getApplicationByHackathonAndUserId: publicProcedure
+        .input(
+            z.object({
+                hackathonId: z.number().int(),
+                userId: z.number().int(),
+            })
+        )
+        .query(async ({ input }) => {
+            const [application] = await databaseClient
+                .select(getTableColumns(applications))
+                .from(applications)
+                .where(
+                    and(
+                        eq(applications.hackathonId, input.hackathonId),
+                        eq(applications.userId, input.userId)
+                    )
+                )
+                .limit(1);
+
+            return (application ?? null) as ApplicationInfo | null;
+        }),
+
     getApplicationsByEmail: publicProcedure
         .input(
             z.object({

@@ -112,6 +112,59 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
     );
 }
 
+export function PendingPaymentContent({ userData }: { userData: UserData }) {
+    const hackathon = useAtomValue(hackathonAtom);
+    const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
+
+    const handleOpenWithdrawPrompt = () => setIsWithdrawPromptOpen(true);
+    const handleCloseWithdrawPrompt = () => setIsWithdrawPromptOpen(false);
+
+    return (
+        <>
+            <div className="flex max-w-full flex-col gap-2 text-start md:pr-0 md:pl-0">
+                <CardTitle className="font-inter text-pretty">
+                    You&#39;ve been accepted into{' '}
+                    {hackathon?.hackathonName ||
+                        process.env.NEXT_PUBLIC_CURRENT_EVENT}
+                    ! 🥳
+                </CardTitle>
+                <CardDescription className="text-base">
+                    Complete your payment to secure your spot at{' '}
+                    {hackathon?.hackathonName ||
+                        process.env.NEXT_PUBLIC_CURRENT_EVENT}
+                    .
+                </CardDescription>
+                <CardDescription>
+                    {
+                        "If you're no longer able to make it to the event, please "
+                    }
+                    <button
+                        className="inline text-white underline hover:text-white/70"
+                        onClick={handleOpenWithdrawPrompt}
+                    >
+                        withdraw your application
+                    </button>
+                    .
+                </CardDescription>
+            </div>
+            <Image
+                src="/login/application-review.webp"
+                width={434}
+                height={320}
+                className="-order-1 max-w-72 md:order-last"
+                alt="Four otters are gathered around a table, reviewing application submissions."
+            />
+            {userData?.id && (
+                <WithdrawPrompt
+                    isOpen={isWithdrawPromptOpen}
+                    userId={userData.id}
+                    closePrompt={handleCloseWithdrawPrompt}
+                />
+            )}
+        </>
+    );
+}
+
 export function AcceptedContent({
     userData,
     image,

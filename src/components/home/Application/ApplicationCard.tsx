@@ -23,6 +23,7 @@ import {
     QRCodeButton,
     RejectedContent,
     AwaitingRSVPContent,
+    PendingPaymentContent,
     WaitlistContent,
 } from './ApplicationContent';
 import { ArrowRightIcon } from 'lucide-react';
@@ -157,18 +158,12 @@ function determineApplicationStatus(
     questionSetExists?: boolean
 ): AppStatus {
     if (applicationSubmitted && currentStatus) {
-        if (
-            currentStatus === 'Accepted - Pending Payment' ||
-            currentStatus === 'Accepted - RSVP to Confirm'
-        ) {
-            return 'Accepted - RSVP to Confirm';
-        }
         return currentStatus as AppStatus;
-    } else if (questionSetExists) {
-        return 'In Progress';
-    } else {
-        return 'Not Yet Started';
     }
+    if (questionSetExists) {
+        return 'In Progress';
+    }
+    return 'Not Yet Started';
 }
 
 // Helpers to render different parts based on status
@@ -303,7 +298,7 @@ function getCardContent(
         case 'Wait List':
             return <WaitlistContent />;
         case 'Accepted - Pending Payment':
-            return <AwaitingRSVPContent userData={userData} />;
+            return <PendingPaymentContent userData={userData} />;
         case 'Accepted - RSVP to Confirm':
             return <AwaitingRSVPContent userData={userData} />;
         case 'Accepted':
