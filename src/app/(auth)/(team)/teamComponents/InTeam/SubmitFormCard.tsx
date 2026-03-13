@@ -109,7 +109,6 @@ export function SubmitFormCard({ teamId }: { teamId: number }) {
         try {
             await submitSubmission.mutateAsync({
                 teamId,
-                hackathonId: submitData.id,
                 response,
             });
             setProgress('done!');
@@ -164,7 +163,7 @@ export function SubmitFormCard({ teamId }: { teamId: number }) {
             {progressMsg.length > 0 && !projectSubmitted && (
                 <Card className="mt-4">
                     <CardContent>
-                        <p className="text-sm text-white/60">{progressMsg}</p>
+                        <p className="text-sm text-white/70">{progressMsg}</p>
                     </CardContent>
                 </Card>
             )}

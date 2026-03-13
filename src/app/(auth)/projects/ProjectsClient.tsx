@@ -75,17 +75,6 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
         return <ProjectGridSkeleton />;
     }
 
-    if (!hackathonId) {
-        return (
-            <div className="flex h-full items-center justify-center">
-                <p className="text-white/60">
-                    No active event. Projects will show when an event is
-                    selected.
-                </p>
-            </div>
-        );
-    }
-
     if (!submissionsQuery.data) {
         return (
             <div className="flex h-full items-center justify-center">
@@ -202,10 +191,7 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
 
     return (
         <div className="flex h-full flex-col">
-            <PublicProjectList
-                projects={publicProjects}
-                hackathonName={hackathon?.name ?? 'Current event'}
-            />
+            <PublicProjectList projects={publicProjects} />
         </div>
     );
 }

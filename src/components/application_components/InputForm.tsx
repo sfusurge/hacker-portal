@@ -211,7 +211,7 @@ export function InputForm({
                     <span>Dashboard</span>
                 </button>
                 <h1 className="text-xl font-semibold">
-                    SillyHacks 2026 Application
+                    SparkJam 2026 Application
                 </h1>
             </div>
             <div className={style.appFormWrapper}>
