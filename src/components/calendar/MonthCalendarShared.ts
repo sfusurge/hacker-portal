@@ -82,7 +82,7 @@ export function groupEventsByDay(
     days?: number
 ) {
     function dateId(time: Dayjs) {
-        return `${Math.floor(time.diff(firstDayOfMonth, 'hour') / 24) + 1}`;
+        return `${time.diff(firstDayOfMonth, 'day')}`;
     }
 
     const grouped = {
