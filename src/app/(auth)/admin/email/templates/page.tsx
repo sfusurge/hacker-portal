@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { trpc } from '@/trpc/client';
@@ -18,9 +18,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-
-const ALL_EMAIL_TYPES =
-    hackathonEmailTypeEnum.enumValues as HackathonEmailType[];
 
 export default function EmailTemplatesPage() {
     const { toast } = useToast();
@@ -116,6 +113,9 @@ export default function EmailTemplatesPage() {
     const toggleHighlights = () => {
         setShowHighlights((prev) => !prev);
     };
+
+    const ALL_EMAIL_TYPES =
+        hackathonEmailTypeEnum.enumValues as HackathonEmailType[];
 
     const missingEmailTypes =
         selectedHackathonId != null && templates

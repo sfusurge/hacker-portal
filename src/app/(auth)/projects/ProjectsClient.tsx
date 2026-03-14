@@ -1,0 +1,197 @@
+'use client';
+
+import PublicProjectList from '@/components/projects/PublicProjectList';
+import ProjectList from '@/components/projects/ProjectList';
+import { Skeleton } from '@/components/ui/skeleton';
+import { trpc } from '@/trpc/client';
+import type { UserData } from '@/server/routers/usersRouter';
+import { useAtomValue } from 'jotai';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
+
+interface ProjectsClientProps {
+    user: UserData | null;
+}
+
+function ProjectGridSkeleton() {
+    const items = Array.from({ length: 8 });
+    return (
+        <div className="flex h-full flex-col">
+            <div className="sticky z-10 -m-6 mb-0 flex flex-col gap-6 bg-neutral-900 p-6 sm:-m-6 md:-m-10 md:border-b md:border-b-neutral-600/30 md:p-10">
+                <div className="flex flex-col gap-4">
+                    <Skeleton className="h-8 w-64" />
+                    <Skeleton className="h-4 w-40" />
+                </div>
+                <div className="flex flex-col gap-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-9 w-full max-w-xs" />
+                </div>
+            </div>
+
+            <div className="h-fill mt-6 flex-grow overflow-y-auto pb-12 sm:-mx-6 sm:p-10 md:-mx-10 md:mt-10">
+                <div className="@container">
+                    <div className="mb-16 grid grid-cols-1 gap-8 sm:mb-0 @[450px]:grid-cols-2 @[650px]:grid-cols-3 @[925px]:grid-cols-4">
+                        {items.map((_, idx) => (
+                            <div
+                                key={idx}
+                                className="flex flex-col overflow-hidden rounded-xl"
+                            >
+                                <div className="relative">
+                                    <Skeleton className="absolute top-3 left-3 h-6 w-24 rounded-xl" />
+                                    <Skeleton className="aspect-video w-full" />
+                                    <div className="bg-neutral-850 flex flex-col gap-2 p-4">
+                                        <Skeleton className="h-6 w-3/4" />
+                                        <Skeleton className="h-4 w-full" />
+                                        <Skeleton className="h-4 w-2/3" />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export default function ProjectsClient({ user }: ProjectsClientProps) {
+    const hackathon = useAtomValue(hackathonAtom);
+    const hackathonId = hackathon?.id;
+    const isJudge = user?.userRole === 'judge';
+
+    const submissionsQuery = trpc.submissions.getAllSubmissions.useQuery(
+        { hackathonId },
+        { enabled: !!hackathonId }
+    );
+
+    const judgingProjectsQuery = trpc.judging.getJudgingProjects.useQuery(
+        { hackathonId },
+        { enabled: isJudge && !!hackathonId }
+    );
+
+    if (
+        submissionsQuery.isLoading ||
+        (isJudge && judgingProjectsQuery.isLoading)
+    ) {
+        return <ProjectGridSkeleton />;
+    }
+
+    if (!submissionsQuery.data) {
+        return (
+            <div className="flex h-full items-center justify-center">
+                <p className="text-white/60">Failed to load projects.</p>
+            </div>
+        );
+    }
+
+    const submissions = submissionsQuery.data;
+
+    if (isJudge && judgingProjectsQuery.data && user) {
+        const assignedProjects = judgingProjectsQuery.data;
+
+        const assignedProjectMap = new Map(
+            assignedProjects.map((project) => [project.teamId, project])
+        );
+
+        const allProjectsData = submissions.map((submission) => {
+            const response = submission.response as Record<string, any>;
+            const assignedProject = assignedProjectMap.get(submission.teamId);
+            const getPlainTextFromRichText = (richText: any): string => {
+                if (!richText?.ops) return '';
+                return richText.ops
+                    .map((op: any) => op.insert)
+                    .join('')
+                    .trim();
+            };
+
+            return {
+                id: submission.teamId,
+                teamName: submission.teamName || `Team #${submission.teamId}`,
+                displayId:
+                    assignedProject?.displayId ||
+                    response[0] ||
+                    submission.teamId.toString(),
+                0: submission.teamId.toString(),
+                1: response[1] || `Team #${submission.teamId}`,
+                2: response[2] || 'No track selected',
+                3: response[3]?.[0] || '/hacker-portal-preview.webp',
+                4:
+                    getPlainTextFromRichText(response[4]) ||
+                    'No description available',
+                fullSubmissionResponse: response,
+                status: assignedProject ? assignedProject.status : 'unassigned',
+            };
+        });
+
+        const projects = assignedProjects
+            .map((project) => {
+                const submission = submissions.find(
+                    (s) => s.teamId === project.teamId
+                );
+                if (!submission) return null;
+
+                const response =
+                    (submission.response as Record<string, any>) || {};
+
+                return {
+                    id: project.teamId,
+                    teamName: project.teamName || `Team #${project.teamId}`,
+                    displayId: project.displayId || project.teamId.toString(),
+                    0: project.teamId.toString(),
+                    1: response[1] || `Team #${project.teamId}`,
+                    2: response[2] || 'No track selected',
+                    3: response[3]?.[0] || '/hacker-portal-preview.webp',
+                    4: response[4]
+                        ? (response[4]?.ops
+                              ?.map((op: any) => op.insert)
+                              .join('')
+                              .trim() as string)
+                        : 'No description available',
+                    fullSubmissionResponse: response,
+                    status: project.status,
+                };
+            })
+            .filter((p) => p !== null) as any[];
+
+        return (
+            <div className="flex h-full flex-col">
+                <ProjectList
+                    projects={projects}
+                    userData={user}
+                    judgedProjects={assignedProjects}
+                    allProjects={allProjectsData}
+                />
+            </div>
+        );
+    }
+
+    // Public gallery
+    const publicProjects = submissions.map((submission) => {
+        const response = submission.response as Record<string, any>;
+        const getPlainTextFromRichText = (richText: any): string => {
+            if (!richText?.ops) return '';
+            return richText.ops
+                .map((op: any) => op.insert)
+                .join('')
+                .trim();
+        };
+
+        return {
+            id: submission.teamId,
+            teamName: submission.teamName || `Team #${submission.teamId}`,
+            displayId: response[0] || submission.teamId.toString(),
+            0: submission.teamId.toString(),
+            1: response[1] || `Team #${submission.teamId}`,
+            2: response[2] || 'No track selected',
+            3: response[3]?.[0] || '/hacker-portal-preview.webp',
+            4:
+                getPlainTextFromRichText(response[4]) ||
+                'No description available',
+        };
+    });
+
+    return (
+        <div className="flex h-full flex-col">
+            <PublicProjectList projects={publicProjects} />
+        </div>
+    );
+}

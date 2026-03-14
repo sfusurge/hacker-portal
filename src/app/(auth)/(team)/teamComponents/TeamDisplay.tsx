@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { UserData } from '@/server/routers/usersRouter';
 
 import { useState } from 'react';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import InviteCard from '@/app/(auth)/(team)/teamComponents/InTeam/InviteCard';
 import { SubmitCard } from '@/app/(auth)/(team)/teamComponents/InTeam/SubmitCard';
 import TeamList from '@/app/(auth)/(team)/teamComponents/InTeam/TeamList';
@@ -32,6 +32,7 @@ export default function TeamDisplay({
     imageUrl = '/teams/default.webp',
 }: TeamDisplayProps) {
     const [showFeedBacks, setShowFeedBacks] = useState(false);
+    const router = useRouter();
 
     // If user is not in a team for the current hackathon, show join team UI
     if (!currentTeam) {
@@ -89,12 +90,11 @@ export default function TeamDisplay({
 
             <div className="flex flex-col gap-4">
                 <div className="grid grid-cols-1 gap-6 pb-24 md:pb-0 xl:grid-cols-2">
-                    {/* <div className="grid grid-cols-1 gap-6 pb-24 md:pb-0 xl:grid-cols-[1fr_clamp(29rem,33vw,30.5rem)]"> */}
-                    {/*<SubmitCard*/}
-                    {/*    onShowSubmit={() => {*/}
-                    {/*        redirect('/team/submit');*/}
-                    {/*    }}*/}
-                    {/*/>*/}
+                    <SubmitCard
+                        onShowSubmit={() => {
+                            router.push('/team/submit');
+                        }}
+                    />
                     <TeamList currentUserEmail={userEmail} team={currentTeam} />
                     <InviteCard teamId={currentTeam.displayId} />
                 </div>

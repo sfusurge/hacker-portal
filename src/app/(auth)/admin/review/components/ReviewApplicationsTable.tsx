@@ -421,7 +421,6 @@ function MyTable({
 
     const setSideCardInfo = useSetAtom(sideCardAtomSJ);
 
-    // const sendEmail = trpc.emails.sendEmail.useMutation();
     const updateLastEmailSent =
         trpc.applications.updateLastEmailSent.useMutation();
     const queueBatchEmails = trpc.emailQueue.queueBatchEmails.useMutation();
@@ -437,6 +436,8 @@ function MyTable({
     const { toast } = useToast();
 
     const effectiveHackathonForEmail = selectedHackathonForEmail ?? hackathonId;
+    const currentHackathon = hackathons.find((h) => h.id === hackathonId);
+    const isPaidHackathon = currentHackathon?.isPaid ?? false;
     const { data: emailTemplates, isLoading: templatesLoading } =
         trpc.emailTemplates.getEmailTemplates.useQuery({
             hackathonId: effectiveHackathonForEmail,
@@ -1092,7 +1093,12 @@ function MyTable({
                         batchUpdateApplicants(
                             table.getSelectedRowModel().rows,
                             {
-                                pendingStatus: 'Accepted - RSVP to Confirm',
+                                status: isPaidHackathon
+                                    ? 'Accepted - Pending Payment'
+                                    : 'Accepted - RSVP to Confirm',
+                                pendingStatus: isPaidHackathon
+                                    ? 'Accepted - Pending Payment'
+                                    : 'Accepted - RSVP to Confirm',
                             }
                         )
                     }

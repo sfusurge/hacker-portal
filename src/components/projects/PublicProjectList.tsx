@@ -44,7 +44,7 @@ export default function PublicProjectList({
             <div className="sticky z-10 -m-6 mb-0 flex flex-col gap-10 bg-neutral-900 p-6 sm:-m-6 md:-m-10 md:border-b md:border-b-neutral-600/30 md:p-10">
                 <div className="flex flex-col gap-4">
                     <h1 className="text-3xl font-semibold text-pretty text-white">
-                        SparkJam 2025 project gallery
+                        SparkJam 2026 project gallery
                     </h1>
                 </div>
                 <div className="flex flex-col gap-2">

@@ -12,6 +12,7 @@ import {
     UserIcon,
     ArrowLeftEndOnRectangleIcon,
 } from '@heroicons/react/24/outline';
+import { InboxStackIcon } from '@heroicons/react/24/outline';
 
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { signOut } from 'next-auth/react';
@@ -75,7 +76,7 @@ export default function MobileTopNav({
 
                             <div className="flex flex-col gap-2">
                                 <span className="line-clamp-1 text-sm leading-none font-medium text-white">
-                                    SillyHacks 2026
+                                    SparkJam 2026
                                 </span>
                                 <span className="line-clamp-1 text-sm leading-none text-white/60">
                                     April 1, 2026

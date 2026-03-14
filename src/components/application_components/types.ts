@@ -23,6 +23,8 @@ export interface HackathonData {
     version: number;
     hackathonName: string; // should this be hackathon id in table instead?
     submissionTime?: string;
+    /** When true, accepted applicants go to Pending Payment and must pay via Stripe. */
+    isPaid?: boolean;
 
     applicationQuestionPages: InputFormPageData[];
     submissionQuestionPages: InputFormPageData[];
