@@ -32,8 +32,8 @@ export default function VoteButton({
     const pstNow = new Date(
         now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
     );
-    const startTime = new Date('2025-05-31T10:00:00');
-    const endTime = new Date('2025-05-31T14:00:00');
+    const startTime = new Date('2026-01-01T00:00:00-08:00');
+    const endTime = new Date('2026-05-24T23:59:59-07:00');
 
     const isOnSameTeam = userTeam.data?.id === teamId;
 

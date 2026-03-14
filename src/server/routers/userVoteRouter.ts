@@ -5,13 +5,38 @@ import {
     getHasUserVotedSchema,
     getAllUserVotesSchema,
 } from '@/db/schema/userVote';
+import { applications } from '@/db/schema/applications';
 import { databaseClient } from '@/db/client';
 import { eq, and, getTableColumns } from 'drizzle-orm';
+import { getBasicUserInfo } from '@/server/routers/usersRouter';
 
 export const userVoteRouter = router({
     insertUserVote: publicProcedure
         .input(insertUserVoteSchema)
         .mutation(async ({ input }) => {
+            const user = await getBasicUserInfo();
+            if (!user) {
+                throw new Error('You must be signed in to vote.');
+            }
+            if (input.userId !== user.id) {
+                throw new Error('You can only submit a vote for yourself.');
+            }
+            const [application] = await databaseClient
+                .select({ currentStatus: applications.currentStatus })
+                .from(applications)
+                .where(
+                    and(
+                        eq(applications.hackathonId, input.hackathonId),
+                        eq(applications.userId, input.userId)
+                    )
+                )
+                .limit(1);
+            if (!application || application.currentStatus !== 'Accepted') {
+                throw new Error(
+                    'Only accepted participants can vote for the Audience Choice award.'
+                );
+            }
+
             try {
                 const existingVote = await databaseClient
                     .select()
