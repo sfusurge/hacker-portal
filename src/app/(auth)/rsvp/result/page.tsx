@@ -6,14 +6,15 @@ import { createCaller } from '@/server/appRouter';
 import { redirect } from 'next/navigation';
 
 interface PageProps {
-    searchParams: { payment_intent?: string };
+    searchParams: Promise<{ payment_intent?: string }>;
 }
 
 export default async function ResultPage(
     props: PageProps
 ): Promise<JSX.Element> {
     console.log('payment results:');
-    const paymentIntentId = props.searchParams.payment_intent;
+    const searchParams = await props.searchParams;
+    const paymentIntentId = searchParams.payment_intent;
 
     if (paymentIntentId) {
         try {
@@ -55,6 +56,47 @@ export default async function ResultPage(
                             status: 'Accepted',
                             pendingStatus: 'N/A',
                         });
+
+                        const payerEmail =
+                            typeof paymentIntent.receipt_email === 'string'
+                                ? paymentIntent.receipt_email
+                                : null;
+                        if (payerEmail) {
+                            try {
+                                const rsvpTemplate =
+                                    await trpcClient.emailTemplates.getEmailTemplateByHackathonAndType(
+                                        {
+                                            hackathonId:
+                                                application.hackathonId,
+                                            emailType: 'rsvp_received',
+                                        }
+                                    );
+                                if (rsvpTemplate) {
+                                    const response =
+                                        (application.response as Record<
+                                            string,
+                                            any
+                                        > | null) ?? null;
+                                    const firstName =
+                                        response?.['2'] ?? 'Friend';
+                                    const lastName = response?.['3'] ?? '';
+                                    await trpcClient.emails.sendEmail({
+                                        templateId: rsvpTemplate.id,
+                                        user: {
+                                            id: application.userId,
+                                            firstName,
+                                            lastName,
+                                            email: payerEmail,
+                                        },
+                                    });
+                                }
+                            } catch (e) {
+                                console.error(
+                                    'Failed to send RSVP confirmation email:',
+                                    e
+                                );
+                            }
+                        }
                     }
                 } else {
                     console.warn(
