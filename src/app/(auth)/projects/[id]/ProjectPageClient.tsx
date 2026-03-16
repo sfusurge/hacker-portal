@@ -96,8 +96,11 @@ function useProjectPageData(id: string): ProjectPageState {
     const teamId = teamResolve.data?.id;
 
     const submissionQuery = trpc.submissions.getSubmissionForTeam.useQuery(
-        { teamId: teamId ?? 0 },
-        { enabled: !!teamId }
+        {
+            teamId: teamId ?? 0,
+            hackathonId: hackathonId ?? undefined,
+        },
+        { enabled: !!teamId && !!hackathonId }
     );
     const teamQuery = trpc.teams.getTeamById.useQuery(
         { teamId: teamId ?? 0 },

@@ -109,6 +109,7 @@ export function SubmitFormCard({ teamId }: { teamId: number }) {
         try {
             await submitSubmission.mutateAsync({
                 teamId,
+                hackathonId: submitData.id,
                 response,
             });
             setProgress('done!');
