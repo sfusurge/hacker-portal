@@ -6,8 +6,6 @@ import { SessionProvider } from 'next-auth/react';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Toaster } from '@/components/ui/toaster';
 import { Provider as JotaiProivder } from 'jotai';
-import { Analytics } from '@vercel/analytics/react';
-
 const inter = Inter({ subsets: ['latin'] });
 
 const dmMono = DM_Mono({
@@ -48,7 +46,6 @@ export default function RootLayout({
                         </JotaiProivder>
                     </TRPCProvider>
                 </SessionProvider>
-                <Analytics />
             </body>
             <GoogleAnalytics gaId="G-99DQSJDLRK" />
         </html>
