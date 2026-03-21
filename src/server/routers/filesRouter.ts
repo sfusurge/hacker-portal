@@ -1,14 +1,14 @@
 import { publicProcedure, router } from '../trpc';
-import { object, z } from 'zod';
+import { z } from 'zod';
 import {
-    uploadFileToR2,
-    deleteFileFromR2,
+    deleteFileFromVercel,
+    uploadFileToVercelBlob,
     validateFile,
-    getFileFromR2,
     FileValidationType,
-} from '@/lib/cloudflare/r2';
+} from '@/lib/blobs';
 import { InternalServerError } from '../exceptions';
 import { getUserData } from '@/server/routers/usersRouter';
+import { head } from '@vercel/blob';
 
 // Input validation schemas
 const uploadFileSchema = z.object({
@@ -56,25 +56,33 @@ export const filesRouter = router({
                 fileType as FileValidationType
             );
 
-            return await uploadFileToR2({
-                key,
+            const blobPath = buildBlobPath(input.bucketName, key);
+            const blob = await uploadFileToVercelBlob({
+                path: blobPath,
                 mimeType,
                 fileContent: fileBuffer,
-                userId: `${userData.id}`,
-                bucketName: input.bucketName,
             });
+
+            return {
+                success: true,
+                key,
+                url: blob.url,
+                pathname: blob.pathname,
+            };
         }),
 
     deleteFile: publicProcedure
         .input(deleteFileSchema)
         .mutation(async ({ input }) => {
             const { key, bucketName } = input;
+            const blobPath = buildBlobPath(bucketName, key);
+
             try {
-                await deleteFileFromR2(key, bucketName);
+                await deleteFileFromVercel({ key: blobPath });
                 return { success: true, key };
             } catch (error) {
                 console.error(
-                    `Error deleting file ${key} from bucket ${bucketName}:`,
+                    `Error deleting file ${blobPath} from blob storage:`,
                     error
                 );
                 throw new InternalServerError(
@@ -84,8 +92,8 @@ export const filesRouter = router({
         }),
 
     getFile: publicProcedure.input(getFileSchema).query(async ({ input }) => {
-        const { key, bucketName } = input;
-        return await getFileFromR2(key, bucketName);
+        const blobPath = buildBlobPath(input.bucketName, input.key);
+        return await getFileFromBlob(blobPath);
     }),
 
     getFiles: publicProcedure
@@ -94,8 +102,9 @@ export const filesRouter = router({
             const { keys, bucketName } = input;
 
             const filePromises = keys.map(async (key) => {
+                const blobPath = buildBlobPath(bucketName, key);
                 try {
-                    const file = await getFileFromR2(key, bucketName);
+                    const file = await getFileFromBlob(blobPath);
 
                     // Check if the file is an image based on content type
                     const isImage = file.contentType?.startsWith('image/');
@@ -112,7 +121,7 @@ export const filesRouter = router({
                     };
                 } catch (error) {
                     console.error(
-                        `Error fetching file with key ${key}:`,
+                        `Error fetching file with key ${blobPath}:`,
                         error
                     );
                     return {
@@ -147,10 +156,10 @@ export const filesRouter = router({
             }
 
             try {
-                return Buffer.from(
-                    (await getFileFromR2(userData.image, 'profile-pictures'))
-                        .buffer
-                ).toString('base64');
+                const file = await getFileFromBlob(
+                    buildBlobPath('profile-pictures', userData.image)
+                );
+                return Buffer.from(file.buffer).toString('base64');
             } catch (error) {
                 console.error('error while fetching user image', error);
                 return '';
@@ -161,9 +170,8 @@ export const filesRouter = router({
         .input(z.object({ imageId: z.string() }))
         .query(async ({ input }) => {
             try {
-                const dataFetch = await getFileFromR2(
-                    input.imageId,
-                    'profile-pictures'
+                const dataFetch = await getFileFromBlob(
+                    buildBlobPath('profile-pictures', input.imageId)
                 );
                 return {
                     data: Buffer.from(dataFetch.buffer).toString('base64'),
@@ -178,3 +186,31 @@ export const filesRouter = router({
             }
         }),
 });
+
+function buildBlobPath(bucketName: string, key: string): string {
+    const normalizedBucket = bucketName.replace(/^\/+|\/+$/g, '');
+    const normalizedKey = key.replace(/^\/+/, '');
+    return `${normalizedBucket}/${normalizedKey}`;
+}
+
+async function getFileFromBlob(pathname: string) {
+    const blobInfo = await head(pathname);
+    const response = await fetch(blobInfo.url);
+
+    if (!response.ok) {
+        throw new InternalServerError(
+            `Failed to fetch blob content for path: ${pathname}`
+        );
+    }
+
+    const contentType =
+        response.headers.get('content-type') ??
+        blobInfo.contentType ??
+        'application/octet-stream';
+    const buffer = new Uint8Array(await response.arrayBuffer());
+
+    return {
+        buffer,
+        contentType,
+    };
+}

@@ -15,8 +15,7 @@
         "test:e2e": "npm run vitest -- run --project e2e",
         "previtest": "mkdir -p vitest-db",
         "vitest": "vitest",
-        "postvitest": "rm -rf vitest-db",
-        "test:r2": "vitest run --project r2"
+        "postvitest": "rm -rf vitest-db"
     },
     "dependencies": {
         "@auth/drizzle-adapter": "^1.8.0",

@@ -34,7 +34,7 @@ import { user as userTable } from '@/db/schema/users/users';
 
 import { getSixDigitId, teamRNGParams } from '@/lib/PRNG/LCG';
 import { z } from 'zod';
-import { deleteFileFromR2 } from '@/lib/cloudflare/r2';
+import { deleteFileFromVercel } from '@/lib/blobs';
 import { getBasicUserInfo, getUserData } from '@/server/routers/usersRouter';
 import { auth } from '@/auth/auth';
 import slugify from '@/utils/slugify';
@@ -270,14 +270,14 @@ export const teamsRouter = router({
 
             if (teamPictureUrl) {
                 console.log(
-                    `Last member left the team, removing ${teamPictureUrl} from R2`
+                    `Last member left the team, removing ${teamPictureUrl} from blob storage`
                 );
 
                 try {
-                    await deleteFileFromR2('team-pictures', teamPictureUrl);
+                    await deleteFileFromVercel({ key: teamPictureUrl });
                 } catch (error) {
                     console.error(
-                        `Failed to delete team picture ${teamPictureUrl} from R2:`,
+                        `Failed to delete team picture ${teamPictureUrl} from blob storage:`,
                         error
                     );
                 }
