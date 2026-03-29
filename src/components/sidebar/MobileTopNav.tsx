@@ -10,8 +10,8 @@ import {
 import { NavLink } from './NavLink';
 import { ReactNode, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-
 import { UserData } from '@/server/routers/usersRouter';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface MobileTopNavProps {
     className?: string;
@@ -89,13 +89,31 @@ export default function MobileTopNav({
                     </div>
                 </div>
             )}
-            {!hideTopNav && showMobileSidebar && (
-                <div className="fixed inset-0 top-20 z-[90] md:hidden">
-                    <div className="h-full w-[280px] bg-neutral-950 shadow-2xl">
-                        {children}
-                    </div>
-                </div>
-            )}
+            <AnimatePresence>
+                {!hideTopNav && showMobileSidebar && (
+                    <>
+                        <motion.button
+                            type="button"
+                            aria-label="Close sidebar backdrop"
+                            className="fixed inset-0 top-20 z-[85] bg-black/40 md:hidden"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowMobileSidebar(false)}
+                        />
+
+                        <motion.div
+                            className="fixed inset-y-20 left-0 z-[90] w-[280px] bg-neutral-950 shadow-2xl md:hidden"
+                            initial={{ x: -24, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: -24, opacity: 0 }}
+                            transition={{ duration: 0.25, ease: 'easeInOut' }}
+                        >
+                            {children}
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </>
     );
 }

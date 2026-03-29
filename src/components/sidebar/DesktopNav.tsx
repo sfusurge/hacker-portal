@@ -1,7 +1,6 @@
 'use client';
 
 import clsx from 'clsx';
-import Image from 'next/image';
 import {
     InboxStackIcon,
     CalendarDaysIcon,
@@ -19,7 +18,6 @@ import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
 import { IdentificationIcon, QrCodeIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
-
 import { signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
