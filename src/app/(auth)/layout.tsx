@@ -31,11 +31,16 @@ export default async function Layout({ children }: { children: ReactNode }) {
                 <MobileTopNav
                     initialData={userData}
                     className="fixed top-0 left-0 z-100 md:hidden"
-                />
-                <MobileBottomNav
+                >
+                    <DesktopNav
+                        initialData={userData}
+                        className="block h-full md:hidden"
+                    />
+                </MobileTopNav>
+                {/* <MobileBottomNav
                     initialData={userData}
                     className="fixed bottom-0 left-0 z-100 md:hidden"
-                />
+                /> */}
                 <DesktopNav
                     initialData={userData}
                     className="hidden md:block"

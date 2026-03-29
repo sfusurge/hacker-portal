@@ -222,7 +222,7 @@ export default function DesktopNav({
                 const isLarge = window.innerWidth >= 1080;
                 setIsLargeScreen(isLarge);
                 if (!isLarge) {
-                    setCollapsed(true);
+                    setCollapsed(false);
                 }
             }
         };
