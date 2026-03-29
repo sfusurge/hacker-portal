@@ -34,7 +34,7 @@ import { navLinkVariants, NavLink } from './NavLink';
 import { UserData } from '@/server/routers/usersRouter';
 import { getIcon } from '@/utils/blobHelper';
 
-interface DesktopNavProps {
+interface NavProps {
     className?: string;
     initialData?: UserData;
 }
@@ -188,10 +188,7 @@ const eventLinks = [
     },
 ];
 
-export default function DesktopNav({
-    className,
-    initialData,
-}: DesktopNavProps) {
+export default function Navigation({ className, initialData }: NavProps) {
     const [collapsed, setCollapsed] = useState(false);
     const [isLargeScreen, setIsLargeScreen] = useState(true);
     const [profilePopoverOpen, setProfilePopoverOpen] = useState(false);
@@ -217,7 +214,7 @@ export default function DesktopNav({
     useEffect(() => {
         const checkScreenSize = () => {
             if (typeof window !== 'undefined') {
-                const isLarge = window.innerWidth >= 1080;
+                const isLarge = window.innerWidth >= 768;
                 setIsLargeScreen(isLarge);
                 if (!isLarge) {
                     setCollapsed(false);
@@ -255,7 +252,7 @@ export default function DesktopNav({
                     <div className={clsx('flex w-full flex-col gap-5')}>
                         <div
                             className={clsx(
-                                'links flex w-full flex-1 flex-col items-stretch gap-1'
+                                'links flex w-full flex-1 flex-col items-stretch gap-1 px-4 md:px-0'
                             )}
                         >
                             {initialData?.userRole === 'judge' ? (

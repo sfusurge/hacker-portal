@@ -127,7 +127,6 @@ export function NavLink({
                                 isCollapsed
                                     ? 'justify-start'
                                     : 'w-full justify-start',
-                                'mx-4 md:mx-0',
                                 className
                             )}
                         >

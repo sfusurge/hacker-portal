@@ -50,10 +50,12 @@ export default function MobileTopNav({
 
     return (
         <>
+            <div className="hidden h-full md:block">{children}</div>
+
             {!hideTopNav && (
                 <div
                     className={clsx(
-                        'h-20 w-screen border-b border-b-neutral-600/30 bg-neutral-900/60 px-4 py-5 backdrop-blur-xl',
+                        'h-20 w-screen border-b border-b-neutral-600/30 bg-neutral-900/60 px-4 py-5 backdrop-blur-xl md:hidden',
                         className
                     )}
                 >
@@ -109,7 +111,7 @@ export default function MobileTopNav({
                             exit={{ x: -24, opacity: 0 }}
                             transition={{ duration: 0.25, ease: 'easeInOut' }}
                         >
-                            {children}
+                            <div className="h-full md:hidden">{children}</div>
                         </motion.div>
                     </>
                 )}
