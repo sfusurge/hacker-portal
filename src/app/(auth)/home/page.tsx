@@ -8,6 +8,7 @@ import { redirect } from 'next/navigation';
 import SubmissionCardHomepage from '@/components/home/SubmissionCard';
 import SponsorDashboard from './sponsor/index';
 import DiscordCard from '@/components/home/DiscordCard';
+import ActiveHackathonCard from '@/components/home/ActiveHackathonCard';
 
 export default async function Home() {
     const data = await getUserData();
@@ -65,6 +66,8 @@ export default async function Home() {
                     {/* <SubmissionCardHomepage /> */}
                     {!isAdmin && (
                         <>
+                            <ActiveHackathonCard hackathon={activeHackathon} />
+
                             <ApplicationCard
                                 userData={data}
                                 image={userQR}
@@ -88,21 +91,9 @@ export default async function Home() {
                 <div className="hidden xl:grid xl:grid-cols-11 xl:gap-8">
                     {!isAdmin && (
                         <>
-                            <div className="col-span-7 flex flex-col gap-8">
-                                <ApplicationCard
-                                    userData={data}
-                                    image={userQR}
-                                    applicationStatus={
-                                        application?.currentStatus
-                                    }
-                                    applicationSubmitted={application !== null}
-                                />
+                            <div className="col-span-11 flex flex-col gap-8">
+                                <ActiveHackathonCard />
                             </div>
-                            <TeamCard
-                                userData={data}
-                                hackathonId={hackathonId}
-                                team={team}
-                            />
                         </>
                     )}
                     <div

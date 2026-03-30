@@ -159,7 +159,7 @@ const eventLinks = [
     {
         href: '/stormhacks', // TODO: Fill it up with Steph's work
         label: 'Stormhacks',
-        icon: '/dashboard/sh25head.png',
+        icon: '/dashboard/sh25head.svg',
         iconAlt: 'Stormhacks logo',
     },
     {
@@ -177,7 +177,7 @@ const eventLinks = [
     {
         href: '/sillyhacks', // TODO: Fill it up with Steph's work
         label: 'Sillyhacks',
-        icon: '/dashboard/sillyhackshead.png',
+        icon: '/dashboard/sillyhackshead.svg',
         iconAlt: 'Sillyhacks logo',
     },
     {

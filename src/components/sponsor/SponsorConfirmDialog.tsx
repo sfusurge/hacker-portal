@@ -105,7 +105,7 @@ export default function SponsorConfirmDialog({
                         <Image
                             width={64}
                             height={64}
-                            src="/dashboard/sillyhackshead.png"
+                            src="/dashboard/sillyhackshead.svg"
                             alt="JourneyHacks 2026 logo"
                             className="h-16 w-16 rounded-xl"
                         />
@@ -150,7 +150,7 @@ export default function SponsorConfirmDialog({
                     <Image
                         width={64}
                         height={64}
-                        src="/dashboard/sillyhackshead.png"
+                        src="/dashboard/sillyhackshead.svg"
                         alt="Sponsor logo"
                         className="h-16 w-16 rounded-xl"
                     />
