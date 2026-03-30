@@ -105,7 +105,7 @@ export default function MobileTopNav({
                         />
 
                         <motion.div
-                            className="fixed inset-y-20 left-0 z-[90] w-[280px] bg-neutral-950 shadow-2xl md:hidden"
+                            className="fixed top-20 bottom-0 left-0 z-[90] w-[280px] bg-neutral-950 shadow-2xl md:hidden"
                             initial={{ x: -24, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: -24, opacity: 0 }}
