@@ -256,8 +256,12 @@ export default function SideCard({
             case 'multiple-checkbox':
                 const multiCheckboxAtom = atom(
                     (get) => {
+                        const value = get(dataAtom) as unknown;
+                        const arr: unknown[] = Array.isArray(value)
+                            ? value
+                            : [];
                         const choices = new Set<string>(
-                            get(dataAtom).map((v: string) => v.toLowerCase())
+                            arr.map((v) => String(v).toLowerCase())
                         );
                         for (const c of question.choices) {
                             if (choices.has(c.data.toLowerCase())) {
