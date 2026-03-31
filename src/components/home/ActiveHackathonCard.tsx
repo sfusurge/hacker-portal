@@ -40,23 +40,20 @@ type StatusBadge = {
 
 type ActiveHackathonCardProps = {
     hackathon: {
-        id: number;
         name: string;
     };
     applicationStatus?: string;
     applicationSubmitted: boolean;
     applicationOpen?: Date | null;
     applicationCloses?: Date | null;
-    userEmail?: string;
 };
 
 export default function ActiveHackathonCard({
     hackathon,
-    applicationStatus: _applicationStatus,
+    applicationStatus,
     applicationSubmitted,
-    applicationOpen: _applicationOpen,
-    applicationCloses: _applicationCloses,
-    userEmail: _userEmail,
+    applicationOpen,
+    applicationCloses,
 }: ActiveHackathonCardProps) {
     const [now, setNow] = useState(Date.now());
     const [hasInProgressDraft, setHasInProgressDraft] = useState(false);
@@ -87,20 +84,20 @@ export default function ActiveHackathonCard({
         return { d, h, m };
     };
 
-    const open = getCountdown(_applicationOpen);
-    const close = getCountdown(_applicationCloses);
+    const open = getCountdown(applicationOpen);
+    const close = getCountdown(applicationCloses);
 
-    const applicationOpened = _applicationOpen
-        ? now >= new Date(_applicationOpen).getTime()
+    const applicationOpened = applicationOpen
+        ? now >= new Date(applicationOpen).getTime()
         : false;
 
-    const applicationClosed = _applicationCloses
-        ? now > new Date(_applicationCloses).getTime()
+    const applicationClosed = applicationCloses
+        ? now > new Date(applicationCloses).getTime()
         : false;
 
     const status = determineApplicationStatus(
         applicationSubmitted,
-        _applicationStatus as ApplicationStatus | undefined,
+        applicationStatus as ApplicationStatus | undefined,
         hasInProgressDraft
     );
 

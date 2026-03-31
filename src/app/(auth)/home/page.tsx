@@ -76,7 +76,6 @@ export default async function Home() {
                                 applicationCloses={
                                     activeHackathon?.applicationCloses
                                 }
-                                userEmail={data?.email}
                             />
 
                             <ApplicationCard
@@ -117,7 +116,6 @@ export default async function Home() {
                                     applicationCloses={
                                         activeHackathon?.applicationCloses
                                     }
-                                    userEmail={data?.email}
                                 />
                             </div>
                         </>
