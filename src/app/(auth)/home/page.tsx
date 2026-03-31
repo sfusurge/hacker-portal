@@ -5,10 +5,9 @@ import generateQRCode, { QROptions } from '@/server/generateQRCode';
 import { createCaller } from '@/server/appRouter';
 import { getUserData } from '@/server/routers/usersRouter';
 import { redirect } from 'next/navigation';
-import SubmissionCardHomepage from '@/components/home/SubmissionCard';
 import SponsorDashboard from './sponsor/index';
 import DiscordCard from '@/components/home/DiscordCard';
-import ActiveHackathonCard from '@/components/home/ActiveHackathonCard';
+import HackathonCard from '@/components/home/HackathonCard';
 
 export default async function Home() {
     const data = await getUserData();
@@ -26,20 +25,21 @@ export default async function Home() {
     const trpcClient = createCaller({});
 
     const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
+    const hackathonId = activeHackathon?.id ?? -1;
 
-    const hackathonId = activeHackathon.id;
-
-    const [application, team, events] = await Promise.all([
-        trpcClient.applications.getCurrentApplication({
-            hackathonId: hackathonId,
-        }),
-        trpcClient.teams.getCurrentTeam({
-            hackathonId: hackathonId,
-        }),
-        trpcClient.events.getEvents({
-            hackathonId: hackathonId,
-        }),
-    ]);
+    const [application, team, events] = activeHackathon
+        ? await Promise.all([
+              trpcClient.applications.getCurrentApplication({
+                  hackathonId,
+              }),
+              trpcClient.teams.getCurrentTeam({
+                  hackathonId,
+              }),
+              trpcClient.events.getEvents({
+                  hackathonId,
+              }),
+          ])
+        : [null, null, []];
 
     const opts: QROptions = {
         margin: 1,
@@ -66,7 +66,18 @@ export default async function Home() {
                     {/* <SubmissionCardHomepage /> */}
                     {!isAdmin && (
                         <>
-                            <ActiveHackathonCard hackathon={activeHackathon} />
+                            <HackathonCard
+                                hackathon={activeHackathon}
+                                applicationStatus={application?.currentStatus}
+                                applicationSubmitted={application !== null}
+                                applicationOpen={
+                                    activeHackathon?.applicationOpen
+                                }
+                                applicationCloses={
+                                    activeHackathon?.applicationCloses
+                                }
+                                userEmail={data?.email}
+                            />
 
                             <ApplicationCard
                                 userData={data}
@@ -74,11 +85,13 @@ export default async function Home() {
                                 applicationStatus={application?.currentStatus}
                                 applicationSubmitted={application !== null}
                             />
-                            <TeamCard
-                                userData={data}
-                                hackathonId={hackathonId}
-                                team={team}
-                            />
+                            {activeHackathon && (
+                                <TeamCard
+                                    userData={data}
+                                    hackathonId={hackathonId}
+                                    team={team}
+                                />
+                            )}
                         </>
                     )}
                     <EventsCard events={events} />
@@ -92,7 +105,20 @@ export default async function Home() {
                     {!isAdmin && (
                         <>
                             <div className="col-span-11 flex flex-col gap-8">
-                                <ActiveHackathonCard />
+                                <HackathonCard
+                                    hackathon={activeHackathon}
+                                    applicationStatus={
+                                        application?.currentStatus
+                                    }
+                                    applicationSubmitted={application !== null}
+                                    applicationOpen={
+                                        activeHackathon?.applicationOpen
+                                    }
+                                    applicationCloses={
+                                        activeHackathon?.applicationCloses
+                                    }
+                                    userEmail={data?.email}
+                                />
                             </div>
                         </>
                     )}

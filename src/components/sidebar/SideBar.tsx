@@ -188,7 +188,7 @@ const eventLinks = [
     },
 ];
 
-export default function Navigation({ className, initialData }: NavProps) {
+export default function SideBar({ className, initialData }: NavProps) {
     const [collapsed, setCollapsed] = useState(false);
     const [isLargeScreen, setIsLargeScreen] = useState(true);
     const [profilePopoverOpen, setProfilePopoverOpen] = useState(false);
