@@ -153,7 +153,7 @@ export default function RsvpPrompt({
                                 </ResponsiveDialogDescription>
                                 <div>
                                     <ResponsiveDialogDescription>
-                                        Day 1: January 10, 2026 (Required)
+                                        Day 1: April 1, 2026 (Required)
                                     </ResponsiveDialogDescription>
                                     {/* <ResponsiveDialogDescription>
                                         Day 2: October 5, 2025 (Recommended)
