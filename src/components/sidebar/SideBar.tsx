@@ -1,7 +1,6 @@
 'use client';
 
 import clsx from 'clsx';
-import Image from 'next/image';
 import {
     InboxStackIcon,
     CalendarDaysIcon,
@@ -11,6 +10,7 @@ import {
     ChevronDoubleRightIcon,
     ChevronRightIcon,
     ChartBarIcon,
+    MegaphoneIcon,
 } from '@heroicons/react/24/outline';
 
 import { HomeIcon } from '@heroicons/react/24/outline';
@@ -18,7 +18,6 @@ import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
 import { IdentificationIcon, QrCodeIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
-
 import { signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
@@ -35,7 +34,7 @@ import { navLinkVariants, NavLink } from './NavLink';
 import { UserData } from '@/server/routers/usersRouter';
 import { getIcon } from '@/utils/blobHelper';
 
-interface DesktopNavProps {
+interface NavProps {
     className?: string;
     initialData?: UserData;
 }
@@ -47,17 +46,23 @@ const navLinks = [
         icon: <HomeIcon className="h-6 w-6" />,
         iconAlt: 'Home logo',
     },
-    {
-        href: '/team',
-        label: 'Team',
-        icon: <UserGroupIcon className="h-6 w-6" />,
-        iconAlt: 'Teams logo',
-    },
+    // {
+    //     href: '/team',
+    //     label: 'Team',
+    //     icon: <UserGroupIcon className="h-6 w-6" />,
+    //     iconAlt: 'Teams logo',
+    // },
     {
         href: '/schedule',
         label: 'Schedule',
         icon: <CalendarDaysIcon className="h-6 w-6" />,
         iconAlt: 'Schedule logo',
+    },
+    {
+        href: '/src/auth/annoucments/page.tsx',
+        label: 'Announcement',
+        icon: <MegaphoneIcon className="h-6 w-6" />,
+        iconAlt: 'Announcement logo',
     },
     // {
     //     href: '/notifications',
@@ -66,12 +71,12 @@ const navLinks = [
     //     iconAlt: 'Notifications logo',
     //     disabled: true,
     // },
-    {
-        href: '/projects',
-        label: 'Project Gallery',
-        icon: <InboxStackIcon className="h-6 w-6" />,
-        iconAlt: 'Project gallery logo',
-    },
+    // {
+    //     href: '/projects',
+    //     label: 'Project Gallery',
+    //     icon: <InboxStackIcon className="h-6 w-6" />,
+    //     iconAlt: 'Project gallery logo',
+    // },
 ];
 
 const adminLinks = [
@@ -149,10 +154,41 @@ const sponsorNavLinks = [
     },
 ];
 
-export default function DesktopNav({
-    className,
-    initialData,
-}: DesktopNavProps) {
+// USER ONLY EVENT LINKS
+const eventLinks = [
+    {
+        href: '/stormhacks', // TODO: Fill it up with Steph's work
+        label: 'Stormhacks',
+        icon: '/dashboard/sh25head.svg',
+        iconAlt: 'Stormhacks logo',
+    },
+    {
+        href: '/journeyhacks', // TODO: Fill it up with Steph's work
+        label: 'Journeyhacks',
+        icon: '/dashboard/jh26head.png',
+        iconAlt: 'Journeyhacks logo',
+    },
+    {
+        href: '/stormforge', // TODO: Fill it up with Steph's work
+        label: 'StormForge',
+        icon: '/dashboard/sf26head.png',
+        iconAlt: 'StormForge logo',
+    },
+    {
+        href: '/sillyhacks', // TODO: Fill it up with Steph's work
+        label: 'Sillyhacks',
+        icon: '/dashboard/sillyhackshead.svg',
+        iconAlt: 'Sillyhacks logo',
+    },
+    {
+        href: '/sparkjam', // TODO: Fill it up with Steph's work
+        label: 'Sparkjam',
+        icon: '/dashboard/OtterHead.png',
+        iconAlt: 'Sparkjam logo',
+    },
+];
+
+export default function SideBar({ className, initialData }: NavProps) {
     const [collapsed, setCollapsed] = useState(false);
     const [isLargeScreen, setIsLargeScreen] = useState(true);
     const [profilePopoverOpen, setProfilePopoverOpen] = useState(false);
@@ -178,10 +214,10 @@ export default function DesktopNav({
     useEffect(() => {
         const checkScreenSize = () => {
             if (typeof window !== 'undefined') {
-                const isLarge = window.innerWidth >= 1080;
+                const isLarge = window.innerWidth >= 768;
                 setIsLargeScreen(isLarge);
                 if (!isLarge) {
-                    setCollapsed(true);
+                    setCollapsed(false);
                 }
             }
         };
@@ -214,81 +250,9 @@ export default function DesktopNav({
             >
                 <div className="flex h-full flex-col items-center justify-between">
                     <div className={clsx('flex w-full flex-col gap-5')}>
-                        <motion.div
-                            className="relative overflow-hidden"
-                            initial={false}
-                            animate={{
-                                height: collapsed ? '48px' : 'auto',
-                                paddingBottom: collapsed ? '0px' : '60.25%',
-                            }}
-                            transition={{ duration: 0.5, ease: 'easeInOut' }}
-                        >
-                            <motion.div
-                                layout
-                                transition={{
-                                    duration: 0.5,
-                                    ease: 'easeInOut',
-                                }}
-                                className={clsx(
-                                    'absolute z-10 flex shrink-0 items-center justify-center',
-                                    'h-6 w-6',
-                                    collapsed
-                                        ? 'top-0 left-0 h-12 w-12'
-                                        : 'top-3 left-3'
-                                )}
-                            >
-                                <Image
-                                    src="/dashboard/sillyhackshead.png"
-                                    alt="JourneyHacks 2026 Logo"
-                                    width={48}
-                                    height={48}
-                                    className="pointer-events-none h-full w-full rounded-lg object-cover"
-                                />
-                            </motion.div>
-
-                            <div className="absolute inset-0 w-full">
-                                <AnimatePresence mode="wait">
-                                    {!collapsed && (
-                                        <motion.div
-                                            key="expanded"
-                                            initial={{
-                                                opacity: 0,
-                                                scale: 0.95,
-                                            }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0, scale: 0.95 }}
-                                            transition={{
-                                                duration: 0.5,
-                                                ease: 'easeInOut',
-                                            }}
-                                            className="h-full w-full rounded-xl"
-                                        >
-                                            <div className="relative h-full w-full overflow-hidden rounded-xl border border-neutral-800">
-                                                <div className="absolute top-0 flex w-full flex-row items-center gap-3 bg-neutral-900/50 p-3 backdrop-blur-lg">
-                                                    <div className="h-6 w-6 shrink-0 opacity-0" />
-                                                    <div className="mt-1 flex flex-col gap-2 overflow-hidden">
-                                                        <span className="line-clamp-1 text-sm font-medium whitespace-nowrap text-white">
-                                                            SparkJam 2026
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <Image
-                                                    src="/dashboard/sillyhacksheader.png"
-                                                    alt="StormHacks"
-                                                    width={200}
-                                                    height={150}
-                                                    className="h-full w-full"
-                                                />
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-                        </motion.div>
-
                         <div
                             className={clsx(
-                                'links flex w-full flex-1 flex-col items-stretch gap-1'
+                                'links flex w-full flex-1 flex-col items-stretch gap-1 px-4 md:px-0'
                             )}
                         >
                             {initialData?.userRole === 'judge' ? (
@@ -444,6 +408,53 @@ export default function DesktopNav({
                                     <PopoverPrimitive.Arrow className="fill-neutral-850 mr-4 shadow-lg" />
                                 </PopoverContent>
                             </Popover>
+
+                            {initialData?.userRole === 'user' && (
+                                <>
+                                    <div className="my-4 border-t border-white/10" />
+
+                                    {!collapsed ? (
+                                        <motion.span
+                                            className="mb-2 px-3 text-sm leading-[125%] font-semibold tracking-[-0.0075em] text-white/30"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{
+                                                duration: 0.5,
+                                                ease: 'easeInOut',
+                                            }}
+                                        >
+                                            Our Events
+                                        </motion.span>
+                                    ) : null}
+
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{
+                                            duration: 0.5,
+                                            ease: 'easeInOut',
+                                        }}
+                                        className="flex flex-col gap-1"
+                                    >
+                                        {eventLinks.map((link) => (
+                                            <NavLink
+                                                key={link.href}
+                                                href={link.href}
+                                                label={link.label}
+                                                icon={link.icon}
+                                                iconAlt={link.iconAlt}
+                                                platform="desktop"
+                                                active={url.startsWith(
+                                                    link.href
+                                                )}
+                                                collapsed={collapsed}
+                                            />
+                                        ))}
+                                    </motion.div>
+                                </>
+                            )}
                         </div>
                     </div>
 

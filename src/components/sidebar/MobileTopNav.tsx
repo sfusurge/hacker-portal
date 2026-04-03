@@ -1,53 +1,46 @@
 'use client';
 
-import Image from 'next/image';
 import clsx from 'clsx';
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
-import { NavLink } from './NavLink';
-import {
-    UserIcon,
     ArrowLeftEndOnRectangleIcon,
+    Bars3Icon,
+    MegaphoneIcon,
+    UserIcon,
 } from '@heroicons/react/24/outline';
-import { InboxStackIcon } from '@heroicons/react/24/outline';
-
-import * as PopoverPrimitive from '@radix-ui/react-popover';
-import { signOut } from 'next-auth/react';
-import { useEffect, useMemo, useState } from 'react';
+import { NavLink } from './NavLink';
+import { ReactNode, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-
 import { UserData } from '@/server/routers/usersRouter';
-import { getIcon } from '@/utils/blobHelper';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface MobileTopNavProps {
     className?: string;
     initialData?: UserData;
+    children?: ReactNode;
 }
 
 const excludedUrls = ['/application', '/admin/qr'];
 
+const announcement = {
+    href: '/src/auth/annoucments/page.tsx',
+    label: 'Announcement',
+    icon: <MegaphoneIcon className="h-6 w-6" />,
+    iconAlt: 'Announcement logo',
+};
+
 export default function MobileTopNav({
-    initialData,
     className,
+    children,
 }: MobileTopNavProps) {
     const [hideTopNav, setHideTopNav] = useState(false);
-    const [popoverOpen, setPopoverOpen] = useState(false);
+    const [showMobileSidebar, setShowMobileSidebar] = useState(false);
     const url = usePathname();
-
-    const avatarUrl = useMemo(() => {
-        if (initialData && initialData.image) {
-            return getIcon('user_icon', initialData.image);
-        }
-        return '/sidebar/default-avatar.webp';
-    }, [initialData]);
 
     useEffect(() => {
         for (const excludeURL of excludedUrls) {
             if (url.startsWith(excludeURL)) {
                 document.body.style.setProperty('--paddingTop', '0rem');
+                setShowMobileSidebar(false);
                 return setHideTopNav(true);
             }
             setHideTopNav(false);
@@ -57,90 +50,72 @@ export default function MobileTopNav({
 
     return (
         <>
+            <div className="hidden h-full md:block">{children}</div>
+
             {!hideTopNav && (
                 <div
                     className={clsx(
-                        'h-20 w-screen border-b border-b-neutral-600/30 bg-neutral-900/60 px-4 py-5 backdrop-blur-xl',
+                        'h-20 w-screen border-b border-b-neutral-600/30 bg-neutral-900/60 px-4 py-5 backdrop-blur-xl md:hidden',
                         className
                     )}
                 >
                     <div className="flex w-full flex-row items-center justify-between">
-                        <div className="my-auto flex flex-row gap-3">
-                            <Image
-                                src="/dashboard/sillyhackshead.png"
-                                alt="JourneyHacks 2026 Logo"
-                                width={36}
-                                height={36}
-                                className="h-9 w-9 rounded-lg"
+                        <NavLink
+                            href="#"
+                            label=""
+                            icon={
+                                <Bars3Icon className="h-6 w-6 text-white/80" />
+                            }
+                            iconAlt="Toggle sidebar"
+                            platform="desktop"
+                            className="justify-center px-0"
+                            collapsed
+                            onClick={(e) => {
+                                e.preventDefault();
+                                setShowMobileSidebar((prev) => !prev);
+                            }}
+                        />
+
+                        <div className="flex items-center justify-end">
+                            <NavLink
+                                key={announcement.href}
+                                href={announcement.href}
+                                label={announcement.label}
+                                icon={announcement.icon}
+                                iconAlt={announcement.iconAlt}
+                                platform="desktop"
+                                active={url.startsWith(announcement.href)}
+                                collapsed={true}
                             />
-
-                            <div className="flex flex-col gap-2">
-                                <span className="line-clamp-1 text-sm leading-none font-medium text-white">
-                                    SparkJam 2026
-                                </span>
-                                <span className="line-clamp-1 text-sm leading-none text-white/60">
-                                    April 1, 2026
-                                </span>
-                            </div>
                         </div>
-
-                        <Popover
-                            open={popoverOpen}
-                            onOpenChange={setPopoverOpen}
-                        >
-                            <PopoverTrigger asChild>
-                                <button className="rounded-full focus:ring-2 focus:ring-white/20 focus:outline-none">
-                                    <img
-                                        alt="Default avatar for the user"
-                                        src={avatarUrl}
-                                        className="aspect-square h-10 w-10 rounded-full"
-                                    />
-                                </button>
-                            </PopoverTrigger>
-                            <PopoverContent
-                                sideOffset={8}
-                                side="bottom"
-                                align="end"
-                                className="z-200"
-                            >
-                                <NavLink
-                                    href="/profile"
-                                    label="Edit profile"
-                                    icon={
-                                        <UserIcon className="h-6 w-6 text-white/60" />
-                                    }
-                                    className="px-2"
-                                    iconAlt="Profile"
-                                    platform="desktop"
-                                    active={url.startsWith('/profile')}
-                                    onClick={() => setPopoverOpen(false)}
-                                />
-                                <NavLink
-                                    href="#"
-                                    label="Sign out"
-                                    icon={
-                                        <ArrowLeftEndOnRectangleIcon></ArrowLeftEndOnRectangleIcon>
-                                    }
-                                    iconAlt="Sign out logo"
-                                    platform="desktop"
-                                    variant="error"
-                                    className="px-2"
-                                    onClick={async () => {
-                                        setPopoverOpen(false);
-                                        await signOut();
-                                        if (typeof window !== 'undefined') {
-                                            localStorage.removeItem(
-                                                'auth-login-success'
-                                            );
-                                        }
-                                    }}
-                                ></NavLink>
-                                <PopoverPrimitive.Arrow className="fill-neutral-850 mr-4 shadow-lg" />
-                            </PopoverContent>
-                        </Popover>
                     </div>
                 </div>
             )}
+            <AnimatePresence>
+                {!hideTopNav && showMobileSidebar && (
+                    <>
+                        <motion.button
+                            type="button"
+                            aria-label="Close sidebar backdrop"
+                            className="fixed inset-0 top-20 z-[85] bg-black/40 md:hidden"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowMobileSidebar(false)}
+                        />
+
+                        <motion.div
+                            className="fixed top-20 bottom-0 left-0 z-[90] w-[280px] bg-neutral-950 shadow-2xl md:hidden"
+                            initial={{ x: -24, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: -24, opacity: 0 }}
+                            transition={{ duration: 0.25, ease: 'easeInOut' }}
+                        >
+                            <div className="h-full md:hidden">{children}</div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </>
     );
 }

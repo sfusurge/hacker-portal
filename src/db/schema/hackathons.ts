@@ -47,6 +47,8 @@ const hackathons = pgTable('hackathons', {
         .default([])
         .$type<SubmissionJudgeRubric[]>(),
     isPaid: boolean('is_paid').notNull().default(false),
+    applicationOpen: timestamp('application_open'),
+    applicationCloses: timestamp('application_closes'),
 });
 
 const insertHackathonSchema = createInsertSchema(hackathons, {
