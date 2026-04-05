@@ -16,20 +16,22 @@ import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
 import { redirect } from 'next/navigation';
 
-export function CountdownContent() {
-    const [currentTime, setime] = useState(dayjs());
-    dayjs.extend(utc);
-    dayjs.extend(timezone);
+export function CountdownContent({
+    targetDate,
+    title,
+    description,
+    overdueTitle = 'Application closed!',
+}: {
+    targetDate?: Date | null;
+    title: string;
+    description: string;
+    overdueTitle?: string;
+}) {
+    const [currentTime, setCurrentTime] = useState(Date.now());
 
-    const cutoffTime = dayjs.tz('2026-03-22 23:59:00', 'America/Los_Angeles');
-    const overdue = useMemo(
-        () => currentTime.isAfter(cutoffTime),
-        [currentTime]
-    );
     useEffect(() => {
         const interval = setInterval(() => {
-            setime(dayjs());
-            // 10 seconds
+            setCurrentTime(Date.now());
         }, 10_000);
 
         return () => {
@@ -37,10 +39,14 @@ export function CountdownContent() {
         };
     }, []);
 
+    if (!targetDate) return null;
+
+    const overdue = currentTime > new Date(targetDate).getTime();
+
     if (overdue) {
         return (
             <div className="text-center">
-                <CardTitle className="mb-1">Application closed!</CardTitle>
+                <CardTitle className="mb-1">{overdueTitle}</CardTitle>
             </div>
         );
     }
@@ -48,13 +54,33 @@ export function CountdownContent() {
     return (
         <>
             <div className="text-center">
-                <CardTitle className="mb-1">Don&apos;t miss out!</CardTitle>
+                <CardTitle className="mb-1">{title}</CardTitle>
                 <CardDescription className="text-sm">
-                    Hacker registration closes in...
+                    {description}
                 </CardDescription>
             </div>
-            <CountdownTimer targetDate={cutoffTime.toDate()} />
+            <CountdownTimer targetDate={targetDate} />
         </>
+    );
+}
+
+export function InactiveHackathonContent() {
+    return (
+        <div className="flex flex-col items-center justify-center gap-6 text-center">
+            <Image
+                src="/dashboard/moon-otters.webp"
+                width={1444}
+                height={1276}
+                alt="A bunch of otters on the moon"
+                className="pointer-events-none mx-auto h-auto w-full max-w-56"
+            />
+            <div className="flex flex-col gap-2">
+                <CardTitle>The event is over.</CardTitle>
+                <CardDescription className="text-base">
+                    Stay tuned for a recap!
+                </CardDescription>
+            </div>
+        </div>
     );
 }
 
@@ -177,54 +203,25 @@ export function AcceptedContent({
     setIsTicketOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
     const hackathon = useAtomValue(hackathonAtom);
-    const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
     const [localTicketOpen, setLocalTicketOpen] = useState(false);
 
     const setTicketOpen = setIsTicketOpen || setLocalTicketOpen;
 
-    const handleOpenWithdrawPrompt = () => setIsWithdrawPromptOpen(true);
-    const handleCloseWithdrawPrompt = () => setIsWithdrawPromptOpen(false);
     const handleCloseTicket = () => setTicketOpen(false);
 
     return (
         <>
             <div className="flex max-w-full flex-col gap-2 text-start md:pr-0 md:pl-0">
                 <CardTitle className="text-pretty">
-                    You&#39;ve been accepted into{' '}
+                    You RSVP&apos;d to{' '}
                     {hackathon?.hackathonName ||
                         process.env.NEXT_PUBLIC_CURRENT_EVENT}
                     !
                 </CardTitle>
                 <CardDescription className="text-base">
-                    You&apos;ve been assigned the following QR code, which
-                    you&apos;ll need to check in to the hackathon and pick up
-                    meals throughout the event.
-                </CardDescription>
-
-                <CardDescription>
-                    {
-                        "If you're no longer able to make it to the event, please "
-                    }
-                    <button
-                        className="inline text-white underline hover:text-white/70"
-                        onClick={handleOpenWithdrawPrompt}
-                    >
-                        withdraw your application
-                    </button>
-                    .
-                </CardDescription>
-
-                <CardDescription className={'font-semibold text-white'}>
-                    {'Your Hacker package can be found '}
-                    <a
-                        className="inline text-white underline hover:text-white/70"
-                        href="https://verbena-oregano-a56.notion.site/StormHacks-2025-Hacker-Package-26a82a4e770680298cd7e708cd39648e"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        here
-                    </a>
-                    .
+                    Use this ticket to check in to the hackathon and pick up
+                    meals throughout the event. Don&apos;t forget to read the
+                    Hacker Package ahead of the event.
                 </CardDescription>
             </div>
 
@@ -253,14 +250,6 @@ export function AcceptedContent({
                 </section>
             )}
 
-            {userData?.id && (
-                <WithdrawPrompt
-                    isOpen={isWithdrawPromptOpen}
-                    userId={userData.id}
-                    closePrompt={handleCloseWithdrawPrompt}
-                />
-            )}
-
             <div
                 className={`bg-opacity-80 fixed inset-0 z-200 w-full bg-black transition-opacity duration-300 ${isTicketOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
             >
@@ -283,19 +272,6 @@ export function AcceptedContent({
     );
 }
 
-export function QRCodeButton({ onOpen }: { onOpen: () => void }) {
-    return (
-        <Button
-            variant={'brand'}
-            hierarchy={'primary'}
-            size="cozy"
-            onClick={onOpen}
-        >
-            Open Ticket
-        </Button>
-    );
-}
-
 export function ReviewContent({ userData }: { userData: UserData }) {
     const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
 
@@ -305,23 +281,23 @@ export function ReviewContent({ userData }: { userData: UserData }) {
     return (
         <>
             <div className="flex max-w-full flex-col gap-2 text-start">
-                <CardTitle>
-                    We&apos;re currently reviewing your application 📝
+                <CardTitle className="text-pretty">
+                    We&apos;re currently reviewing your application.
                 </CardTitle>
 
-                <CardDescription>
+                <CardDescription className="text-base">
                     Your application has been submitted and is being reviewed by
-                    the Surge team. You will receive an update once the
+                    the Surge team. 📝 You will receive an update once the
                     submission period closes.
-                    <br />
-                    <br />
-                    If you&apos;re no longer able to make it to the event,
-                    please{' '}
+                </CardDescription>
+
+                <CardDescription>
+                    No longer able to make it?{' '}
                     <button
                         className="inline text-left text-white underline hover:text-white/70"
                         onClick={handleOpenWithdrawPrompt}
                     >
-                        withdraw your application
+                        Withdraw Application
                     </button>
                     .
                 </CardDescription>
@@ -429,11 +405,11 @@ export function RejectedContent() {
             </div>
 
             <Image
-                src="/login/application-review.webp"
-                width={434}
-                height={320}
-                className="-order-1 max-w-72 md:order-last"
-                alt="Four otters are gathered around a table, reviewing application submissions."
+                src="/login/sad-otter.webp"
+                width={699}
+                height={725}
+                className="max-w-[240px]"
+                alt="An otter has dropped their mint chocolate ice cream. They look distraught."
             />
         </>
     );
