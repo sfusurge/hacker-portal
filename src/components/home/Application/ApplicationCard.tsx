@@ -223,14 +223,15 @@ function getStatusStyleForTitle(status: AppStatus): string {
     switch (status) {
         case 'Accepted - Pending Payment':
         case 'Accepted - RSVP to Confirm':
-            return 'text-brand-400';
+            return 'inline-flex w-fit rounded-lg bg-brand-950/60 px-3 py-1 text-brand-400';
         case 'Accepted':
-            return 'text-brand-400';
+            return 'inline-flex w-fit rounded-lg bg-success-950 px-3 py-1 text-success-300';
         case 'Withdrawn':
+            return 'inline-flex w-fit rounded-lg bg-danger-950/60 px-3 py-1 text-danger-400';
         case 'Wait List':
             return 'text-yellow-500';
         case 'Awaiting Review':
-            return 'text-yellow-500';
+            return 'inline-flex w-fit rounded-lg bg-yellow-950/60 px-3 py-1 text-yellow-400';
         case 'Not Yet Started':
             return 'text-white';
         case 'Countdown To Open':
@@ -241,7 +242,7 @@ function getStatusStyleForTitle(status: AppStatus): string {
         case 'Loading':
             return 'text-white/50';
         case 'Declined':
-            return 'text-danger-500';
+            return 'inline-flex w-fit rounded-lg bg-danger-950/60 px-3 py-1 text-danger-400';
         default:
             return 'text-white';
     }

@@ -46,7 +46,9 @@ export function CountdownContent({
     if (overdue) {
         return (
             <div className="text-center">
-                <CardTitle className="mb-1">{overdueTitle}</CardTitle>
+                <CardTitle className="mb-1 text-xl tracking-tight">
+                    {overdueTitle}
+                </CardTitle>
             </div>
         );
     }
@@ -54,7 +56,9 @@ export function CountdownContent({
     return (
         <>
             <div className="text-center">
-                <CardTitle className="mb-1">{title}</CardTitle>
+                <CardTitle className="mb-1 text-xl tracking-tight">
+                    {title}
+                </CardTitle>
                 <CardDescription className="text-sm">
                     {description}
                 </CardDescription>
@@ -75,7 +79,9 @@ export function InactiveHackathonContent() {
                 className="pointer-events-none mx-auto h-auto w-full max-w-56"
             />
             <div className="flex flex-col gap-2">
-                <CardTitle>The event is over.</CardTitle>
+                <CardTitle className="text-xl tracking-tight">
+                    The event is over.
+                </CardTitle>
                 <CardDescription className="text-base">
                     Stay tuned for a recap!
                 </CardDescription>
@@ -93,12 +99,12 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
 
     return (
         <>
-            <div className="flex max-w-full flex-col gap-2 text-start md:pr-0 md:pl-0">
-                <CardTitle className="font-inter text-pretty">
+            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+                <CardTitle className="font-inter text-xl tracking-tight text-pretty">
                     You&#39;ve been accepted into{' '}
                     {hackathon?.hackathonName ||
                         process.env.NEXT_PUBLIC_CURRENT_EVENT}
-                    ! 🥳
+                    !
                 </CardTitle>
                 <CardDescription className="text-base">
                     SFU Surge is excited to offer you acceptance to{' '}
@@ -107,12 +113,10 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
                     . Please RSVP to reserve your spot and confirm your
                     attendance.
                 </CardDescription>
-                <CardDescription>
-                    {
-                        "If you're no longer able to make it to the event, please "
-                    }
+                <CardDescription className="mt-6 inline text-white/30">
+                    {'No longer able to make it?'}
                     <button
-                        className="inline text-white underline hover:text-white/70"
+                        className="ml-1 inline text-white/60 underline hover:text-white/70"
                         onClick={handleOpenWithdrawPrompt}
                     >
                         withdraw your application
@@ -147,8 +151,8 @@ export function PendingPaymentContent({ userData }: { userData: UserData }) {
 
     return (
         <>
-            <div className="flex max-w-full flex-col gap-2 text-start md:pr-0 md:pl-0">
-                <CardTitle className="font-inter text-pretty">
+            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+                <CardTitle className="font-inter text-xl tracking-tight text-pretty">
                     You&#39;ve been accepted into{' '}
                     {hackathon?.hackathonName ||
                         process.env.NEXT_PUBLIC_CURRENT_EVENT}
@@ -160,12 +164,10 @@ export function PendingPaymentContent({ userData }: { userData: UserData }) {
                         process.env.NEXT_PUBLIC_CURRENT_EVENT}
                     .
                 </CardDescription>
-                <CardDescription>
-                    {
-                        "If you're no longer able to make it to the event, please "
-                    }
+                <CardDescription className="mt-6 inline text-white/30">
+                    {'No longer able to make it?'}
                     <button
-                        className="inline text-white underline hover:text-white/70"
+                        className="ml-1 inline text-white/60 underline hover:text-white/70"
                         onClick={handleOpenWithdrawPrompt}
                     >
                         withdraw your application
@@ -211,8 +213,8 @@ export function AcceptedContent({
 
     return (
         <>
-            <div className="flex max-w-full flex-col gap-2 text-start md:pr-0 md:pl-0">
-                <CardTitle className="text-pretty">
+            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+                <CardTitle className="text-xl tracking-tight text-pretty">
                     You RSVP&apos;d to{' '}
                     {hackathon?.hackathonName ||
                         process.env.NEXT_PUBLIC_CURRENT_EVENT}
@@ -221,7 +223,7 @@ export function AcceptedContent({
                 <CardDescription className="text-base">
                     Use this ticket to check in to the hackathon and pick up
                     meals throughout the event. Don&apos;t forget to read the
-                    Hacker Package ahead of the event.
+                    Hacker Package ahead of the event 🫶
                 </CardDescription>
             </div>
 
@@ -280,8 +282,8 @@ export function ReviewContent({ userData }: { userData: UserData }) {
 
     return (
         <>
-            <div className="flex max-w-full flex-col gap-2 text-start">
-                <CardTitle className="text-pretty">
+            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+                <CardTitle className="text-xl tracking-tight text-pretty">
                     We&apos;re currently reviewing your application.
                 </CardTitle>
 
@@ -291,10 +293,10 @@ export function ReviewContent({ userData }: { userData: UserData }) {
                     submission period closes.
                 </CardDescription>
 
-                <CardDescription>
+                <CardDescription className="mt-6 inline text-white/30">
                     No longer able to make it?{' '}
                     <button
-                        className="inline text-left text-white underline hover:text-white/70"
+                        className="ml-1 inline text-left text-white/60 underline hover:text-white/70"
                         onClick={handleOpenWithdrawPrompt}
                     >
                         Withdraw Application
@@ -326,8 +328,8 @@ export function WithdrawnContent() {
     const hackathon = useAtomValue(hackathonAtom);
     return (
         <>
-            <div className="flex max-w-full flex-col gap-2 text-start">
-                <CardTitle>
+            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+                <CardTitle className="text-xl tracking-tight">
                     You&apos;ve withdrawn your application to{' '}
                     {hackathon?.hackathonName}.
                 </CardTitle>
@@ -362,8 +364,8 @@ export function WaitlistContent() {
 
     return (
         <>
-            <div className="flex max-w-full flex-col gap-2 text-start">
-                <CardTitle>
+            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+                <CardTitle className="text-xl tracking-tight">
                     You&#39;ve been placed on the waitlist for{' '}
                     {hackathon?.hackathonName}.
                 </CardTitle>
@@ -391,8 +393,8 @@ export function RejectedContent() {
 
     return (
         <>
-            <div className="flex max-w-full flex-col gap-2 text-start">
-                <CardTitle>
+            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+                <CardTitle className="text-xl tracking-tight">
                     Thanks for applying to {hackathon?.hackathonName}.
                 </CardTitle>
 

@@ -14,7 +14,7 @@ export default function EventIsOverCard({
         <Card className="h-full">
             <CardContent className="flex min-h-[360px] flex-col items-center justify-center gap-5 text-center">
                 <Image
-                    src="/dashboard/messy-otters.webp"
+                    src="/otter-team.png"
                     alt="Four otters celebrating together"
                     width={360}
                     height={250}

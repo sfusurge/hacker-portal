@@ -58,7 +58,6 @@ export default function EventPageLayout({
             showEventNotActiveState
         />
     ) : null;
-
     return (
         <div className="flex flex-col gap-6 md:gap-8">
             <EventHeroBanner
@@ -80,14 +79,16 @@ export default function EventPageLayout({
                 {activeHackathon ? (
                     applicationsOpened ? (
                         <div className="grid grid-cols-1 gap-6 xl:grid-cols-11 xl:gap-8">
-                            <div className="flex flex-col gap-6 xl:col-span-7 xl:gap-8">
+                            <div className="flex flex-col gap-6 xl:col-span-6 xl:gap-8">
                                 {applicationCard}
                             </div>
-                            <TeamCard
-                                userData={userData}
-                                hackathonId={activeHackathon.id}
-                                team={team}
-                            />
+                            <div className="xl:col-span-5">
+                                <TeamCard
+                                    userData={userData}
+                                    hackathonId={activeHackathon.id}
+                                    team={team}
+                                />
+                            </div>
                             <div className="grid grid-cols-1 gap-6 xl:col-span-11 xl:grid-cols-2 xl:gap-8">
                                 <EventsCard events={events} />
                                 <DiscordCard
