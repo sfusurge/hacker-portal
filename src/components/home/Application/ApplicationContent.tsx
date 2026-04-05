@@ -16,20 +16,22 @@ import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
 import { redirect } from 'next/navigation';
 
-export function CountdownContent() {
-    const [currentTime, setime] = useState(dayjs());
-    dayjs.extend(utc);
-    dayjs.extend(timezone);
+export function CountdownContent({
+    targetDate,
+    title,
+    description,
+    overdueTitle = 'Application closed!',
+}: {
+    targetDate?: Date | null;
+    title: string;
+    description: string;
+    overdueTitle?: string;
+}) {
+    const [currentTime, setCurrentTime] = useState(Date.now());
 
-    const cutoffTime = dayjs.tz('2026-04-22 23:59:00', 'America/Los_Angeles');
-    const overdue = useMemo(
-        () => currentTime.isAfter(cutoffTime),
-        [currentTime]
-    );
     useEffect(() => {
         const interval = setInterval(() => {
-            setime(dayjs());
-            // 10 seconds
+            setCurrentTime(Date.now());
         }, 10_000);
 
         return () => {
@@ -37,10 +39,16 @@ export function CountdownContent() {
         };
     }, []);
 
+    if (!targetDate) return null;
+
+    const overdue = currentTime > new Date(targetDate).getTime();
+
     if (overdue) {
         return (
             <div className="text-center">
-                <CardTitle className="mb-1">Application closed!</CardTitle>
+                <CardTitle className="mb-1 text-xl tracking-tight">
+                    {overdueTitle}
+                </CardTitle>
             </div>
         );
     }
@@ -48,13 +56,37 @@ export function CountdownContent() {
     return (
         <>
             <div className="text-center">
-                <CardTitle className="mb-1">Don&apos;t miss out!</CardTitle>
+                <CardTitle className="mb-1 text-xl tracking-tight">
+                    {title}
+                </CardTitle>
                 <CardDescription className="text-sm">
-                    Hacker registration closes in...
+                    {description}
                 </CardDescription>
             </div>
-            <CountdownTimer targetDate={cutoffTime.toDate()} />
+            <CountdownTimer targetDate={targetDate} />
         </>
+    );
+}
+
+export function InactiveHackathonContent() {
+    return (
+        <div className="flex flex-col items-center justify-center gap-6 text-center">
+            <Image
+                src="/dashboard/moon-otters.webp"
+                width={1444}
+                height={1276}
+                alt="A bunch of otters on the moon"
+                className="pointer-events-none mx-auto h-auto w-full max-w-56"
+            />
+            <div className="flex flex-col gap-2">
+                <CardTitle className="text-xl tracking-tight">
+                    The event is over.
+                </CardTitle>
+                <CardDescription className="text-base">
+                    Stay tuned for a recap!
+                </CardDescription>
+            </div>
+        </div>
     );
 }
 
@@ -67,12 +99,12 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
 
     return (
         <>
-            <div className="flex max-w-full flex-col gap-2 text-start md:pr-0 md:pl-0">
-                <CardTitle className="font-inter text-pretty">
+            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+                <CardTitle className="font-inter text-xl tracking-tight text-pretty">
                     You&#39;ve been accepted into{' '}
                     {hackathon?.hackathonName ||
                         process.env.NEXT_PUBLIC_CURRENT_EVENT}
-                    ! 🥳
+                    !
                 </CardTitle>
                 <CardDescription className="text-base">
                     SFU Surge is excited to offer you acceptance to{' '}
@@ -81,12 +113,10 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
                     . Please RSVP to reserve your spot and confirm your
                     attendance.
                 </CardDescription>
-                <CardDescription>
-                    {
-                        "If you're no longer able to make it to the event, please "
-                    }
+                <CardDescription className="mt-6 inline text-white/30">
+                    {'No longer able to make it?'}
                     <button
-                        className="inline text-white underline hover:text-white/70"
+                        className="ml-1 inline text-white/60 underline hover:text-white/70"
                         onClick={handleOpenWithdrawPrompt}
                     >
                         withdraw your application
@@ -95,7 +125,7 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
                 </CardDescription>
             </div>
             <Image
-                src="/login/application-review.webp"
+                src="/otter-team.png"
                 width={434}
                 height={320}
                 className="-order-1 max-w-72 md:order-last"
@@ -121,8 +151,8 @@ export function PendingPaymentContent({ userData }: { userData: UserData }) {
 
     return (
         <>
-            <div className="flex max-w-full flex-col gap-2 text-start md:pr-0 md:pl-0">
-                <CardTitle className="font-inter text-pretty">
+            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+                <CardTitle className="font-inter text-xl tracking-tight text-pretty">
                     You&#39;ve been accepted into{' '}
                     {hackathon?.hackathonName ||
                         process.env.NEXT_PUBLIC_CURRENT_EVENT}
@@ -134,12 +164,10 @@ export function PendingPaymentContent({ userData }: { userData: UserData }) {
                         process.env.NEXT_PUBLIC_CURRENT_EVENT}
                     .
                 </CardDescription>
-                <CardDescription>
-                    {
-                        "If you're no longer able to make it to the event, please "
-                    }
+                <CardDescription className="mt-6 inline text-white/30">
+                    {'No longer able to make it?'}
                     <button
-                        className="inline text-white underline hover:text-white/70"
+                        className="ml-1 inline text-white/60 underline hover:text-white/70"
                         onClick={handleOpenWithdrawPrompt}
                     >
                         withdraw your application
@@ -177,54 +205,25 @@ export function AcceptedContent({
     setIsTicketOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
     const hackathon = useAtomValue(hackathonAtom);
-    const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
     const [localTicketOpen, setLocalTicketOpen] = useState(false);
 
     const setTicketOpen = setIsTicketOpen || setLocalTicketOpen;
 
-    const handleOpenWithdrawPrompt = () => setIsWithdrawPromptOpen(true);
-    const handleCloseWithdrawPrompt = () => setIsWithdrawPromptOpen(false);
     const handleCloseTicket = () => setTicketOpen(false);
 
     return (
         <>
-            <div className="flex max-w-full flex-col gap-2 text-start md:pr-0 md:pl-0">
-                <CardTitle className="text-pretty">
-                    You&#39;ve been accepted into{' '}
+            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+                <CardTitle className="text-xl tracking-tight text-pretty">
+                    You RSVP&apos;d to{' '}
                     {hackathon?.hackathonName ||
                         process.env.NEXT_PUBLIC_CURRENT_EVENT}
                     !
                 </CardTitle>
                 <CardDescription className="text-base">
-                    You&apos;ve been assigned the following QR code, which
-                    you&apos;ll need to check in to the hackathon and pick up
-                    meals throughout the event.
-                </CardDescription>
-
-                <CardDescription>
-                    {
-                        "If you're no longer able to make it to the event, please "
-                    }
-                    <button
-                        className="inline text-white underline hover:text-white/70"
-                        onClick={handleOpenWithdrawPrompt}
-                    >
-                        withdraw your application
-                    </button>
-                    .
-                </CardDescription>
-
-                <CardDescription className={'font-semibold text-white'}>
-                    {'Your Hacker package can be found '}
-                    <a
-                        className="inline text-white underline hover:text-white/70"
-                        href="https://verbena-oregano-a56.notion.site/StormHacks-2025-Hacker-Package-26a82a4e770680298cd7e708cd39648e"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        here
-                    </a>
-                    .
+                    Use this ticket to check in to the hackathon and pick up
+                    meals throughout the event. Don&apos;t forget to read the
+                    Hacker Package ahead of the event 🫶
                 </CardDescription>
             </div>
 
@@ -253,14 +252,6 @@ export function AcceptedContent({
                 </section>
             )}
 
-            {userData?.id && (
-                <WithdrawPrompt
-                    isOpen={isWithdrawPromptOpen}
-                    userId={userData.id}
-                    closePrompt={handleCloseWithdrawPrompt}
-                />
-            )}
-
             <div
                 className={`bg-opacity-80 fixed inset-0 z-200 w-full bg-black transition-opacity duration-300 ${isTicketOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
             >
@@ -283,19 +274,6 @@ export function AcceptedContent({
     );
 }
 
-export function QRCodeButton({ onOpen }: { onOpen: () => void }) {
-    return (
-        <Button
-            variant={'brand'}
-            hierarchy={'primary'}
-            size="cozy"
-            onClick={onOpen}
-        >
-            Open Ticket
-        </Button>
-    );
-}
-
 export function ReviewContent({ userData }: { userData: UserData }) {
     const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
 
@@ -304,35 +282,35 @@ export function ReviewContent({ userData }: { userData: UserData }) {
 
     return (
         <>
-            <div className="flex max-w-full flex-col gap-2 text-start">
-                <CardTitle>
-                    We&apos;re currently reviewing your application 📝
+            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+                <CardTitle className="text-xl tracking-tight text-pretty">
+                    We&apos;re currently reviewing your application.
                 </CardTitle>
 
-                <CardDescription>
+                <CardDescription className="text-base">
                     Your application has been submitted and is being reviewed by
-                    the Surge team. You will receive an update once the
+                    the Surge team. 📝 You will receive an update once the
                     submission period closes.
-                    <br />
-                    <br />
-                    If you&apos;re no longer able to make it to the event,
-                    please{' '}
+                </CardDescription>
+
+                <CardDescription className="mt-6 inline text-white/30">
+                    No longer able to make it?{' '}
                     <button
-                        className="inline text-left text-white underline hover:text-white/70"
+                        className="ml-1 inline text-left text-white/60 underline hover:text-white/70"
                         onClick={handleOpenWithdrawPrompt}
                     >
-                        withdraw your application
+                        Withdraw Application
                     </button>
                     .
                 </CardDescription>
             </div>
 
             <Image
-                src="/login/application-review.webp"
+                src="/otter-review.png"
                 width={434}
                 height={320}
                 className="-order-1 max-w-72 md:order-last"
-                alt="Four otters are gathered around a table, reviewing application submissions."
+                alt="Twp otters are gathered around a table, reviewing application submissions."
             />
 
             {userData?.id && (
@@ -350,8 +328,8 @@ export function WithdrawnContent() {
     const hackathon = useAtomValue(hackathonAtom);
     return (
         <>
-            <div className="flex max-w-full flex-col gap-2 text-start">
-                <CardTitle>
+            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+                <CardTitle className="text-xl tracking-tight">
                     You&apos;ve withdrawn your application to{' '}
                     {hackathon?.hackathonName}.
                 </CardTitle>
@@ -371,7 +349,7 @@ export function WithdrawnContent() {
             </div>
 
             <Image
-                src="/login/sad-otter.webp"
+                src="/otter-sad.png"
                 width={699}
                 height={725}
                 className="max-w-[240px]"
@@ -386,8 +364,8 @@ export function WaitlistContent() {
 
     return (
         <>
-            <div className="flex max-w-full flex-col gap-2 text-start">
-                <CardTitle>
+            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+                <CardTitle className="text-xl tracking-tight">
                     You&#39;ve been placed on the waitlist for{' '}
                     {hackathon?.hackathonName}.
                 </CardTitle>
@@ -415,8 +393,8 @@ export function RejectedContent() {
 
     return (
         <>
-            <div className="flex max-w-full flex-col gap-2 text-start">
-                <CardTitle>
+            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+                <CardTitle className="text-xl tracking-tight">
                     Thanks for applying to {hackathon?.hackathonName}.
                 </CardTitle>
 
@@ -429,11 +407,11 @@ export function RejectedContent() {
             </div>
 
             <Image
-                src="/login/application-review.webp"
-                width={434}
-                height={320}
-                className="-order-1 max-w-72 md:order-last"
-                alt="Four otters are gathered around a table, reviewing application submissions."
+                src="/otter-sad.png"
+                width={699}
+                height={725}
+                className="max-w-[240px]"
+                alt="An otter has dropped their mint chocolate ice cream. They look distraught."
             />
         </>
     );

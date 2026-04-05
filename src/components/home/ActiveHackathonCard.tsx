@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { ReactNode, useEffect, useState } from 'react';
 import {
     Card,
@@ -14,10 +15,13 @@ import { Chip } from '../ui/chip';
 
 import { ArrowRightIcon } from 'lucide-react';
 import { Barcode } from 'lucide-react';
+import { getEventBannerConfigByName } from './eventPageConfig';
+import QRTicket from '@/app/(auth)/admin/qr/checkin_components/QRTicket';
 
 type ApplicationStatus =
     | 'Awaiting Review'
     | 'Accepted'
+    | "Accepted and RSVP'd"
     | 'Declined'
     | 'Wait List'
     | 'Withdrawn'
@@ -46,6 +50,10 @@ type ActiveHackathonCardProps = {
     applicationSubmitted: boolean;
     applicationOpen?: Date | null;
     applicationCloses?: Date | null;
+    ticketQr?: string;
+    userDisplayId?: string;
+    userFirstName?: string | null;
+    userLastName?: string | null;
 };
 
 export default function ActiveHackathonCard({
@@ -54,9 +62,14 @@ export default function ActiveHackathonCard({
     applicationSubmitted,
     applicationOpen,
     applicationCloses,
+    ticketQr,
+    userDisplayId,
+    userFirstName,
+    userLastName,
 }: ActiveHackathonCardProps) {
     const [now, setNow] = useState(Date.now());
     const [hasInProgressDraft, setHasInProgressDraft] = useState(false);
+    const [isTicketOpen, setIsTicketOpen] = useState(false);
 
     useEffect(() => {
         const interval = setInterval(() => setNow(Date.now()), 60000);
@@ -100,11 +113,14 @@ export default function ActiveHackathonCard({
         applicationStatus as ApplicationStatus | undefined,
         hasInProgressDraft
     );
+    const bannerConfig = getEventBannerConfigByName(hackathon.name);
 
     const applicationAction = getApplicationAction({
         status,
         hackathonName: hackathon.name,
     });
+    const isAcceptedStatus = isAcceptedAndRsvpdStatus(status);
+    const hasTicketData = Boolean(ticketQr && userDisplayId);
 
     // Closed registration
     const closedRegistration = applicationClosed && !applicationSubmitted;
@@ -118,7 +134,7 @@ export default function ActiveHackathonCard({
                             {hackathon.name}
                         </CardHeaderTitle>
                         <CardHeaderDescription>
-                            Our Creative Design Jam
+                            {bannerConfig.tagline}
                         </CardHeaderDescription>
                     </CardHeader>
 
@@ -141,8 +157,7 @@ export default function ActiveHackathonCard({
                                 <div className="border-t border-white/10" />
 
                                 <p className="text-pretty text-white/60">
-                                    Applications opening soon! A two-week design
-                                    sprint for solving real problems.
+                                    {bannerConfig.overview}
                                 </p>
 
                                 <Button
@@ -151,8 +166,9 @@ export default function ActiveHackathonCard({
                                     hierarchy="secondary"
                                     className="w-full"
                                 >
-                                    {/* TODO: update endpoint */}
-                                    <a href="/sparkjam">SparkJam event page</a>
+                                    <a href={bannerConfig.websiteHref}>
+                                        {bannerConfig.websiteLabel}
+                                    </a>
                                 </Button>
                             </>
                         ) : (
@@ -198,11 +214,36 @@ export default function ActiveHackathonCard({
 
                                 <p className="text-pretty text-white/60">
                                     {closedRegistration
-                                        ? 'SparkJam is a 2-week design sprint to solve real problems. Visit the event page for more details.'
+                                        ? `${hackathon.name} is currently closed for applications. Visit the event page for the latest updates.`
                                         : applicationSubmitted
-                                          ? getMessage(status)
+                                          ? getMessage(status, hackathon.name)
                                           : 'Applications are open! Apply now to get your shot at participating in our creative design jam!'}
                                 </p>
+
+                                {isAcceptedStatus && ticketQr && (
+                                    <section className="hidden pt-1 md:block">
+                                        <div className="flex w-full rounded-xl bg-neutral-800">
+                                            <div className="flex flex-1 items-center justify-center p-4">
+                                                <div className="flex aspect-square h-44 w-44">
+                                                    <Image
+                                                        src={ticketQr}
+                                                        alt="Ticket QR Code"
+                                                        width={300}
+                                                        height={300}
+                                                        className="object-contain"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="large-dashes-vertical relative w-0 border-neutral-200">
+                                                <div className="absolute -top-2.5 -left-2.5 h-5 w-5 rounded-full bg-neutral-900"></div>
+                                                <div className="absolute -bottom-2.5 -left-2.5 h-5 w-5 rounded-full bg-neutral-900"></div>
+                                            </div>
+
+                                            <section className="flex w-8 flex-1" />
+                                        </div>
+                                    </section>
+                                )}
 
                                 <div className="flex w-full flex-col gap-2 sm:flex-row">
                                     <Button
@@ -216,8 +257,8 @@ export default function ActiveHackathonCard({
                                                 : 'w-full'
                                         }
                                     >
-                                        <a href="/sparkjam">
-                                            SparkJam event page
+                                        <a href={bannerConfig.websiteHref}>
+                                            {bannerConfig.websiteLabel}
                                         </a>
                                     </Button>
 
@@ -229,11 +270,19 @@ export default function ActiveHackathonCard({
                                                     applicationAction.variant
                                                 }
                                                 hierarchy="primary"
-                                                onClick={() =>
+                                                onClick={() => {
+                                                    if (
+                                                        isAcceptedStatus &&
+                                                        hasTicketData
+                                                    ) {
+                                                        setIsTicketOpen(true);
+                                                        return;
+                                                    }
+
                                                     redirect(
                                                         applicationAction.href
-                                                    )
-                                                }
+                                                    );
+                                                }}
                                                 className="w-full sm:w-1/2"
                                                 trailingIconChild={
                                                     applicationAction.icon ??
@@ -250,19 +299,78 @@ export default function ActiveHackathonCard({
                 </Card>
             </div>
 
-            {/*  Hard coded for now */}
-            <div className="col-span-12 hidden lg:col-span-6 xl:flex">
+            <div className="col-span-12 xl:col-span-6">
                 <Card className="flex h-full w-full">
-                    <CardContent className="flex h-full flex-1 flex-col items-center justify-center gap-2 text-center">
-                        <p className="font-semibold text-pretty text-white">
-                            Stay tuned for more surge events 👀
-                        </p>
-                        <p className="text-pretty text-white/60">
-                            We have more hackathons coming.
-                        </p>
+                    <CardHeader className="pb-0">
+                        <CardHeaderTitle className="text-lg">
+                            Event metadata
+                        </CardHeaderTitle>
+                        <CardHeaderDescription>
+                            Overview, location, dates, admission, website
+                        </CardHeaderDescription>
+                    </CardHeader>
+                    <CardContent className="flex h-full flex-1 flex-col gap-4">
+                        <div className="space-y-1">
+                            <p className="text-xs font-medium tracking-wide text-white/50 uppercase">
+                                Overview
+                            </p>
+                            <p className="text-sm text-white/80">
+                                {bannerConfig.overview}
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div className="space-y-1">
+                                <p className="text-xs font-medium tracking-wide text-white/50 uppercase">
+                                    Location
+                                </p>
+                                <p className="text-sm text-white/80">
+                                    {bannerConfig.location}
+                                </p>
+                            </div>
+
+                            <div className="space-y-1">
+                                <p className="text-xs font-medium tracking-wide text-white/50 uppercase">
+                                    Dates
+                                </p>
+                                <p className="text-sm text-white/80">
+                                    {bannerConfig.dates}
+                                </p>
+                            </div>
+
+                            <div className="space-y-1">
+                                <p className="text-xs font-medium tracking-wide text-white/50 uppercase">
+                                    Admission
+                                </p>
+                                <p className="text-sm text-white/80">
+                                    {bannerConfig.admission}
+                                </p>
+                            </div>
+
+                            <div className="space-y-1">
+                                <p className="text-xs font-medium tracking-wide text-white/50 uppercase">
+                                    Website
+                                </p>
+                                <a
+                                    href={bannerConfig.websiteHref}
+                                    className="text-sm text-blue-300 underline underline-offset-2 hover:text-blue-200"
+                                >
+                                    {bannerConfig.websiteLabel}
+                                </a>
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
+            {isTicketOpen && hasTicketData && (
+                <QRTicket
+                    userId={userDisplayId}
+                    firstName={userFirstName ?? ''}
+                    lastName={userLastName ?? ''}
+                    image={ticketQr}
+                    closeTicket={() => setIsTicketOpen(false)}
+                />
+            )}
         </div>
     );
 }
@@ -298,6 +406,7 @@ function getApplicationAction({
                 icon: <ArrowRightIcon className="h-4 w-4" />,
             };
         case 'Accepted':
+        case "Accepted and RSVP'd":
             return {
                 label: `View Ticket`,
                 variant: 'brand',
@@ -330,6 +439,7 @@ function getStatusBadge(status: AppStatus): StatusBadge {
         case 'Awaiting Review':
             return { label: 'Submitted - Under Review', variant: 'yellow' };
         case 'Accepted':
+        case "Accepted and RSVP'd":
             return { label: "Accepted - RSVP'd", variant: 'success' };
         case 'Declined':
             return { label: 'Rejected', variant: 'danger' };
@@ -345,16 +455,17 @@ function getStatusBadge(status: AppStatus): StatusBadge {
     }
 }
 
-function getMessage(status: AppStatus): ReactNode {
+function getMessage(status: AppStatus, hackathonName: string): ReactNode {
     switch (status) {
         case 'Awaiting Review':
             return 'Your application was submitted and is under review. 📝 Check back soon for updates!';
         case 'Accepted':
+        case "Accepted and RSVP'd":
             return 'All Set! View the hacker package on the event page, and use your ticket to check-in during the event.';
         case 'Declined':
             return 'Thanks for applying  — Unfortunately we are unable to offer you a spot but hope to see you apply again!';
         case 'Wait List':
-            return 'You’ve been waitlisted for Sparkjam — we’ll let you know soon if a spot opens up for you!';
+            return `You’ve been waitlisted for ${hackathonName} — we’ll let you know soon if a spot opens up for you!`;
         case 'Withdrawn':
             return (
                 <>
@@ -373,7 +484,7 @@ function getMessage(status: AppStatus): ReactNode {
             );
         case 'Accepted - Pending Payment':
         case 'Accepted - RSVP to Confirm':
-            return 'You’ve been accepted to SparkJam! 🎉 Please RSVP to reserve your spot and confirm attendance.';
+            return `You’ve been accepted to ${hackathonName}! 🎉 Please RSVP to reserve your spot and confirm attendance.`;
         case 'In Progress':
             return 'Complete your application soon. Head back, wrap it up, and hit submit before the deadline.';
         case 'Not Yet Started':
@@ -381,4 +492,8 @@ function getMessage(status: AppStatus): ReactNode {
         default:
             return 'Your application was submitted and is under review. 📝 Check back soon for updates!';
     }
+}
+
+function isAcceptedAndRsvpdStatus(status: AppStatus): boolean {
+    return status === 'Accepted' || status === "Accepted and RSVP'd";
 }

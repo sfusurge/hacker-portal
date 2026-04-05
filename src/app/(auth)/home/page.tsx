@@ -76,6 +76,10 @@ export default async function Home() {
                                 applicationCloses={
                                     activeHackathon?.applicationCloses
                                 }
+                                ticketQr={userQR}
+                                userDisplayId={data?.displayId}
+                                userFirstName={data?.firstName}
+                                userLastName={data?.lastName}
                             />
 
                             <ApplicationCard
@@ -116,6 +120,10 @@ export default async function Home() {
                                     applicationCloses={
                                         activeHackathon?.applicationCloses
                                     }
+                                    ticketQr={userQR}
+                                    userDisplayId={data?.displayId}
+                                    userFirstName={data?.firstName}
+                                    userLastName={data?.lastName}
                                 />
                             </div>
                         </>
