@@ -59,8 +59,8 @@ const navLinks = [
         iconAlt: 'Schedule logo',
     },
     {
-        href: '/src/auth/annoucments/page.tsx',
-        label: 'Announcement',
+        href: '/announcements',
+        label: 'Announcements',
         icon: <MegaphoneIcon className="h-6 w-6" />,
         iconAlt: 'Announcement logo',
     },
@@ -244,7 +244,7 @@ export default function SideBar({ className, initialData }: NavProps) {
         >
             <div
                 className={clsx(
-                    'relative h-full bg-neutral-950 transition-all duration-300 ease-in-out',
+                    'relative h-full bg-neutral-950 pt-5 transition-all duration-300 ease-in-out sm:pt-10',
                     collapsed ? 'w-12' : 'w-[280px]'
                 )}
             >
@@ -341,7 +341,7 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                 'flex h-6 w-6 items-center justify-center transition-colors',
                                                 url.startsWith('/profile')
                                                     ? 'text-brand-400 group-hover:text-brand-200'
-                                                    : 'text-white/30 group-hover:text-white/60'
+                                                    : 'group-text-white/70 text-white/30'
                                             )}
                                         >
                                             <div className="h-6 w-6 overflow-hidden rounded-full">

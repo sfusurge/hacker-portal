@@ -1,20 +1,22 @@
 'use client';
 
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { trpc } from '@/trpc/client';
+import { useAtomValue } from 'jotai';
 
 export default function VoteStatsPage() {
-    const getActiveHackathon = trpc.hackathons.getActiveHackathon.useQuery();
+    const hackathon = useAtomValue(hackathonAtom);
 
     const userVotes = trpc.userVote.getAllUserVotes.useQuery(
         {
-            hackathonId: getActiveHackathon.data?.id,
+            hackathonId: hackathon.id,
         },
         {
-            enabled: !!getActiveHackathon.data?.id,
+            enabled: !!hackathon?.id,
         }
     );
 
-    if (getActiveHackathon.isLoading || userVotes.isLoading) {
+    if (userVotes.isLoading) {
         return <div className="w-full py-10">Loading...</div>;
     }
 

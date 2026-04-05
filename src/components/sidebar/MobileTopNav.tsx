@@ -22,8 +22,8 @@ interface MobileTopNavProps {
 const excludedUrls = ['/application', '/admin/qr'];
 
 const announcement = {
-    href: '/src/auth/annoucments/page.tsx',
-    label: 'Announcement',
+    href: '/announcements',
+    label: 'Announcements',
     icon: <MegaphoneIcon className="h-6 w-6" />,
     iconAlt: 'Announcement logo',
 };

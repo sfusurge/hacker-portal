@@ -3,16 +3,15 @@ import { CacheClearer } from '@/app/(auth)/CacheClear';
 import { redirect } from 'next/navigation';
 import { ClientContext } from './ClientContext';
 import { getUserData } from '@/server/routers/usersRouter';
-import { createCaller } from '@/server/appRouter';
+import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 
 import ClientLayoutWrapper from './ClientLayoutWrapper';
 import MobileTopNav from '@/components/sidebar/MobileTopNav';
 import SideBar from '@/components/sidebar/SideBar';
 
 export default async function Layout({ children }: { children: ReactNode }) {
-    const trpcClient = createCaller({});
     const [hackathon, userData] = await Promise.all([
-        trpcClient.hackathons.getActiveHackathon(),
+        getCachedActiveHackathon(),
         getUserData(),
     ]);
 

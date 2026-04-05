@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import SponsorDashboard from '@/app/(auth)/home/sponsor';
 import { createCaller } from '@/server/appRouter';
 import { getUserData } from '@/server/routers/usersRouter';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
@@ -20,10 +19,6 @@ export default async function EventPage({ slug }: { slug: EventPageSlug }) {
 
     if (userData?.userRole === 'judge') {
         redirect('/projects');
-    }
-
-    if (userData?.userRole === 'sponsor') {
-        return <SponsorDashboard />;
     }
 
     const config = getEventPageConfig(slug);

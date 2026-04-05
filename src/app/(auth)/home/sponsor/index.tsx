@@ -1,5 +1,6 @@
 import { getUserData } from '@/server/routers/usersRouter';
 import { createCaller } from '@/server/appRouter';
+import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 import DiscordCard from '@/components/home/DiscordCard';
 import EventsCard from '@/components/home/EventsCard';
 import DashboardCard from '@/components/home/DashboardCard';
@@ -9,9 +10,9 @@ export default async function SponsorDashboard() {
     const data = await getUserData();
     const trpcClient = createCaller({});
 
-    const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
+    const activeHackathon = await getCachedActiveHackathon();
 
-    const hackathonId = activeHackathon.id;
+    const hackathonId = activeHackathon!.id;
 
     const [events] = await Promise.all([
         trpcClient.events.getEvents({

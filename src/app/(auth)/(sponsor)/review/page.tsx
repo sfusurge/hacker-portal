@@ -1,10 +1,8 @@
-import { createCaller } from '@/server/appRouter';
+import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 import ResumeTable from './table/resumeBank';
 
 export default async function ResumeBankPage() {
-    const trpcClient = createCaller({});
-
-    const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
+    const activeHackathon = await getCachedActiveHackathon();
 
     if (!activeHackathon) {
         return (

@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { trpc } from '@/trpc/client';
+import { useAtomValue } from 'jotai';
 import Link from 'next/link';
 import { prepareEmailPreview } from './emailPreview';
 import {
@@ -35,8 +37,7 @@ export default function EmailTemplatesPage() {
     const hasSetInitialHackathon = useRef(false);
 
     const { data: hackathons = [] } = trpc.hackathons.getHackathons.useQuery();
-    const { data: activeHackathon } =
-        trpc.hackathons.getActiveHackathon.useQuery();
+    const activeHackathon = useAtomValue(hackathonAtom);
 
     const {
         data: templates,

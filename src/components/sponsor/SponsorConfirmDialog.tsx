@@ -5,7 +5,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { convertToSponsor } from './convertToSponsor';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { trpc } from '@/trpc/client';
+import { useAtomValue } from 'jotai';
 import { FormTextInput, Input } from '../ui/input/input';
 import { Label } from '../ui/label/label';
 
@@ -32,8 +34,7 @@ export default function SponsorConfirmDialog({
     const router = useRouter();
 
     const companyUpsert = trpc.company.upsert.useMutation();
-    const { data: activeHackathon, isLoading: isLoadingHackathon } =
-        trpc.hackathons.getActiveHackathon.useQuery();
+    const activeHackathon = useAtomValue(hackathonAtom);
     const utils = trpc.useUtils();
 
     const isButtonDisabled = isConverting || !companyTitle.trim();

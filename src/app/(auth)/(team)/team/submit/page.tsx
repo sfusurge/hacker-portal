@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createCaller } from '@/server/appRouter';
+import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 
 import { getUserData } from '@/server/routers/usersRouter';
 
@@ -16,7 +17,7 @@ export default async function SubmitPage() {
     }
 
     const trpcClient = createCaller({});
-    const hackathon = await trpcClient.hackathons.getActiveHackathon();
+    const hackathon = await getCachedActiveHackathon();
 
     const application = await trpcClient.applications.getCurrentApplication({
         hackathonId: hackathon.id,

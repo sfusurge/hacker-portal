@@ -46,17 +46,17 @@ export default function EventHeroBanner({
                         <img
                             src={mobileBannerSrc}
                             alt={`${eventName} banner background`}
-                            className="absolute inset-0 h-full w-full object-cover md:hidden"
+                            className="absolute inset-0 h-full w-full rounded-xl object-cover md:hidden"
                         />
                     ) : null}
                     {desktopBannerSrc ? (
                         <img
                             src={desktopBannerSrc}
                             alt={`${eventName} banner background`}
-                            className="absolute inset-0 hidden h-full w-full object-cover md:block"
+                            className="absolute inset-0 hidden h-full w-full rounded-t-xl object-cover md:block"
                         />
                     ) : null}
-                    <div className="absolute inset-0 bg-neutral-950/45" />
+                    <div className="absolute inset-0 rounded-t-xl bg-gradient-to-r from-black/60 to-transparent backdrop-blur-xs" />
 
                     <div className="relative flex items-center gap-3">
                         {iconSrc ? (
@@ -84,8 +84,8 @@ export default function EventHeroBanner({
 
                 <div className="grid gap-6 border-t border-white/10 p-4 md:grid-cols-2 md:p-5">
                     <div className="space-y-3">
-                        <div className="space-y-1">
-                            <h2 className="text-xl font-semibold text-white">
+                        <div className="space-y-3">
+                            <h2 className="font-semibold text-white">
                                 Event Overview
                             </h2>
                             <p className="text-pretty text-white/60">
@@ -97,7 +97,7 @@ export default function EventHeroBanner({
                             For more info, visit the{' '}
                             <Link
                                 href={websiteHref}
-                                className="text-brand-300 hover:text-brand-200 inline-flex items-center gap-1 underline underline-offset-2"
+                                className="text-brand-400 hover:text-brand-300 inline-flex items-center gap-1"
                             >
                                 {websiteLabel}
                                 <ArrowTopRightOnSquareIcon className="h-4 w-4" />
@@ -105,22 +105,22 @@ export default function EventHeroBanner({
                         </p>
                     </div>
 
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-2">
+                    <div className="flex h-full flex-col justify-center gap-4 text-sm font-medium">
+                        <div className="flex items-center justify-between gap-4 border-b border-neutral-700/18 pb-2">
                             <span className="inline-flex items-center gap-2 text-white/60">
                                 <MapPinIcon className="h-4 w-4" />
                                 Location
                             </span>
-                            <span className="text-right font-medium text-white">
+                            <span className="text-right text-white">
                                 {location}
                             </span>
                         </div>
-                        <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-2">
+                        <div className="flex items-center justify-between gap-4 border-b border-neutral-700/18 pb-2">
                             <span className="inline-flex items-center gap-2 text-white/60">
                                 <CalendarDaysIcon className="h-4 w-4" />
                                 Dates
                             </span>
-                            <span className="text-right font-medium text-white">
+                            <span className="text-right text-white">
                                 {dates}
                             </span>
                         </div>
@@ -129,7 +129,7 @@ export default function EventHeroBanner({
                                 <CurrencyDollarIcon className="h-4 w-4" />
                                 Admission
                             </span>
-                            <span className="text-right font-medium text-white">
+                            <span className="text-right text-white">
                                 {admission}
                             </span>
                         </div>

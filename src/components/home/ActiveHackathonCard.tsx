@@ -138,27 +138,30 @@ export default function ActiveHackathonCard({
                         </CardHeaderDescription>
                     </CardHeader>
 
-                    <CardContent className="flex flex-1 flex-col gap-4 px-6">
-                        {/* Registration has not started */}
+                    <CardContent className="flex flex-1 flex-col gap-6 px-6">
                         {!applicationOpened ? (
                             <>
-                                <div className="flex w-full overflow-hidden rounded-lg bg-neutral-800">
-                                    <div className="w-1/2 bg-neutral-700 px-4 py-2 text-center font-mono text-sm font-medium text-white">
-                                        REGISTER IN
+                                <div className="flex flex-col gap-4">
+                                    <div className="flex w-full overflow-hidden rounded-lg bg-neutral-800">
+                                        <div className="w-1/2 bg-neutral-700 px-4 py-2 text-center font-mono text-sm font-medium text-white">
+                                            REGISTER IN
+                                        </div>
+
+                                        <div className="w-1/2 px-4 py-2 text-center text-sm text-white/80">
+                                            {format(open?.d ?? 0)}d{' '}
+                                            {format(open?.h ?? 0)}h{' '}
+                                            {format(open?.m ?? 0)}m
+                                        </div>
                                     </div>
 
-                                    <div className="w-1/2 px-4 py-2 text-center text-sm text-white/80">
-                                        {format(open?.d ?? 0)}d{' '}
-                                        {format(open?.h ?? 0)}h{' '}
-                                        {format(open?.m ?? 0)}m
-                                    </div>
+                                    <div className="border-t border-white/10" />
+
+                                    <p className="text-pretty text-white/60">
+                                        Applications opening soon! Checkout the{' '}
+                                        {hackathon.name} event page for more
+                                        details.
+                                    </p>
                                 </div>
-
-                                <div className="border-t border-white/10" />
-
-                                <p className="text-pretty text-white/60">
-                                    {bannerConfig.overview}
-                                </p>
 
                                 <Button
                                     size="cozy"
@@ -301,67 +304,17 @@ export default function ActiveHackathonCard({
 
             <div className="col-span-12 xl:col-span-6">
                 <Card className="flex h-full w-full">
-                    <CardHeader className="pb-0">
-                        <CardHeaderTitle className="text-lg">
-                            Event metadata
-                        </CardHeaderTitle>
-                        <CardHeaderDescription>
-                            Overview, location, dates, admission, website
-                        </CardHeaderDescription>
-                    </CardHeader>
-                    <CardContent className="flex h-full flex-1 flex-col gap-4">
-                        <div className="space-y-1">
-                            <p className="text-xs font-medium tracking-wide text-white/50 uppercase">
-                                Overview
-                            </p>
-                            <p className="text-sm text-white/80">
-                                {bannerConfig.overview}
-                            </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <div className="space-y-1">
-                                <p className="text-xs font-medium tracking-wide text-white/50 uppercase">
-                                    Location
-                                </p>
-                                <p className="text-sm text-white/80">
-                                    {bannerConfig.location}
-                                </p>
-                            </div>
-
-                            <div className="space-y-1">
-                                <p className="text-xs font-medium tracking-wide text-white/50 uppercase">
-                                    Dates
-                                </p>
-                                <p className="text-sm text-white/80">
-                                    {bannerConfig.dates}
-                                </p>
-                            </div>
-
-                            <div className="space-y-1">
-                                <p className="text-xs font-medium tracking-wide text-white/50 uppercase">
-                                    Admission
-                                </p>
-                                <p className="text-sm text-white/80">
-                                    {bannerConfig.admission}
-                                </p>
-                            </div>
-
-                            <div className="space-y-1">
-                                <p className="text-xs font-medium tracking-wide text-white/50 uppercase">
-                                    Website
-                                </p>
-                                <a
-                                    href={bannerConfig.websiteHref}
-                                    className="text-sm text-blue-300 underline underline-offset-2 hover:text-blue-200"
-                                >
-                                    {bannerConfig.websiteLabel}
-                                </a>
-                            </div>
-                        </div>
+                    <CardContent className="flex h-full w-full flex-col items-center justify-center gap-2">
+                        <h4 className="font-semibold text-white">
+                            Stay tuned for more surge events 👀
+                        </h4>
+                        <p className="text-white/60">
+                            We have more hackathons coming soon.
+                        </p>
                     </CardContent>
                 </Card>
             </div>
+
             {isTicketOpen && hasTicketData && (
                 <QRTicket
                     userId={userDisplayId}
