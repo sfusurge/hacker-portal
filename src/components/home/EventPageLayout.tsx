@@ -65,6 +65,8 @@ export default function EventPageLayout({
                 eventName={eventConfig.name}
                 tagline={eventConfig.tagline}
                 iconSrc={eventConfig.iconSrc}
+                desktopBannerSrc={eventConfig.desktopBannerSrc}
+                mobileBannerSrc={eventConfig.mobileBannerSrc}
                 bannerClassName={eventConfig.bannerClassName}
                 overview={eventConfig.overview}
                 location={eventConfig.location}

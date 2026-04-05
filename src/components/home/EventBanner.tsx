@@ -11,6 +11,8 @@ type EventHeroBannerProps = {
     eventName: string;
     tagline: string;
     iconSrc?: string;
+    desktopBannerSrc?: string;
+    mobileBannerSrc?: string;
     bannerClassName?: string;
     overview: string;
     location: string;
@@ -24,6 +26,8 @@ export default function EventHeroBanner({
     eventName,
     tagline,
     iconSrc,
+    desktopBannerSrc,
+    mobileBannerSrc,
     bannerClassName,
     overview,
     location,
@@ -38,6 +42,20 @@ export default function EventHeroBanner({
                 <div
                     className={`relative p-4 md:p-5 ${bannerClassName ?? 'bg-neutral-900'}`}
                 >
+                    {mobileBannerSrc ? (
+                        <img
+                            src={mobileBannerSrc}
+                            alt={`${eventName} banner background`}
+                            className="absolute inset-0 h-full w-full object-cover md:hidden"
+                        />
+                    ) : null}
+                    {desktopBannerSrc ? (
+                        <img
+                            src={desktopBannerSrc}
+                            alt={`${eventName} banner background`}
+                            className="absolute inset-0 hidden h-full w-full object-cover md:block"
+                        />
+                    ) : null}
                     <div className="absolute inset-0 bg-neutral-950/45" />
 
                     <div className="relative flex items-center gap-3">

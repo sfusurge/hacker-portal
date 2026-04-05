@@ -3,6 +3,8 @@ type EventPageConfigShape = {
     name: string;
     tagline: string;
     iconSrc: string;
+    desktopBannerSrc?: string;
+    mobileBannerSrc?: string;
     bannerClassName: string;
     overview: string;
     location: string;
@@ -43,6 +45,8 @@ export const EVENT_PAGE_CONFIG = {
         name: 'StormHacks',
         tagline: 'Our annual flagship hackathon',
         iconSrc: '/dashboard/sh25head.svg',
+        desktopBannerSrc: '/dashboard/sh25-Desktop-Desktop.png',
+        mobileBannerSrc: '/dashboard/sh25-banner-mobile.png',
         bannerClassName:
             'bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900',
         overview:
@@ -63,6 +67,8 @@ export const EVENT_PAGE_CONFIG = {
         name: 'JourneyHacks',
         tagline: 'Kick off your locked-in journey',
         iconSrc: '/dashboard/sf26icon.svg',
+        desktopBannerSrc: '/dashboard/jh26-banner-Desktop.png',
+        mobileBannerSrc: '/dashboard/jh26-banner-mobile.png',
         bannerClassName:
             'bg-gradient-to-r from-cyan-900 via-sky-900 to-indigo-900',
         overview:
@@ -83,6 +89,8 @@ export const EVENT_PAGE_CONFIG = {
         name: 'StormForge',
         tagline: 'Forge your path',
         iconSrc: '/dashboard/sf26icon.svg',
+        desktopBannerSrc: '/dashboard/sf26-banner-desktop.png',
+        mobileBannerSrc: '/dashboard/sf26-banner-mobile.png',
         bannerClassName:
             'bg-gradient-to-r from-violet-900 via-fuchsia-900 to-slate-900',
         overview:
@@ -103,6 +111,8 @@ export const EVENT_PAGE_CONFIG = {
         name: 'SillyHacks',
         tagline: "Let's get silly",
         iconSrc: '/dashboard/sillyhackshead.svg',
+        desktopBannerSrc: '/dashboard/sillyHacks-banner-desktop.png',
+        mobileBannerSrc: '/dashboard/sillyHacks-banner-mobile.png',
         bannerClassName:
             'bg-gradient-to-r from-rose-900 via-pink-900 to-purple-900',
         overview:
@@ -122,7 +132,9 @@ export const EVENT_PAGE_CONFIG = {
         slug: 'sparkjam',
         name: 'SparkJam',
         tagline: 'Our creative design jam',
-        iconSrc: '/dashboard/sh25head.svg',
+        iconSrc: '/dashboard/sj26head.png',
+        desktopBannerSrc: '/dashboard/sj26-banner-Desktop.png',
+        mobileBannerSrc: '/dashboard/sj26-banner-mobile.png',
         bannerClassName:
             'bg-gradient-to-r from-amber-900 via-orange-900 to-rose-900',
         overview:
