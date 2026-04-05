@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import SponsorDashboard from '@/app/(auth)/home/sponsor';
 import { createCaller } from '@/server/appRouter';
 import { getUserData } from '@/server/routers/usersRouter';
+import generateQRCode, { QROptions } from '@/server/generateQRCode';
 import EventPageLayout from '@/components/home/EventPageLayout';
 import {
     EventPageSlug,
@@ -11,6 +12,8 @@ import {
 function normalizeEventName(value: string) {
     return value.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
+
+type CardArrangement = 'active-open' | 'active-closed' | 'inactive';
 
 export default async function EventPage({ slug }: { slug: EventPageSlug }) {
     const userData = await getUserData();
@@ -45,10 +48,26 @@ export default async function EventPage({ slug }: { slug: EventPageSlug }) {
         });
 
     const isActiveRoute = Boolean(targetHackathon?.isActive);
-    const [application, events] = targetHackathon
+    const applicationsOpened = Boolean(
+        isActiveRoute &&
+            targetHackathon?.applicationOpen &&
+            Date.now() >= new Date(targetHackathon.applicationOpen).getTime()
+    );
+    const cardArrangement: CardArrangement = !isActiveRoute
+        ? 'inactive'
+        : applicationsOpened
+          ? 'active-open'
+          : 'active-closed';
+
+    const [application, team, events] = targetHackathon
         ? await Promise.all([
               isActiveRoute
                   ? trpcClient.applications.getCurrentApplication({
+                        hackathonId: targetHackathon.id,
+                    })
+                  : Promise.resolve(null),
+              isActiveRoute
+                  ? trpcClient.teams.getCurrentTeam({
                         hackathonId: targetHackathon.id,
                     })
                   : Promise.resolve(null),
@@ -56,15 +75,31 @@ export default async function EventPage({ slug }: { slug: EventPageSlug }) {
                   hackathonId: targetHackathon.id,
               }),
           ])
-        : [null, []];
+        : [null, null, []];
+
+    const ticketQr =
+        userData?.id != null
+            ? await generateQRCode(userData.id.toString(), {
+                  margin: 1,
+                  scale: 10,
+                  color: {
+                      dark: '#FFFFFF',
+                      light: '#0000',
+                  },
+              } satisfies QROptions)
+            : null;
 
     return (
         <EventPageLayout
+            userData={userData}
             eventConfig={config}
-            activeHackathon={isActiveRoute ? targetHackathon : null}
+            activeHackathon={isActiveRoute ? (targetHackathon ?? null) : null}
             applicationStatus={application?.currentStatus}
             applicationSubmitted={application !== null}
+            team={team}
             events={events}
+            ticketQr={ticketQr}
+            cardArrangement={cardArrangement}
         />
     );
 }

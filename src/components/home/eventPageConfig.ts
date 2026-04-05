@@ -10,6 +10,8 @@ type EventPageConfigShape = {
     admission: string;
     websiteLabel: string;
     websiteHref: string;
+    discordHref: string;
+    acceptedDiscordHref?: string | null;
     recapHref: string | null;
     recapTitle: string;
     recapDescription: string;
@@ -50,6 +52,8 @@ export const EVENT_PAGE_CONFIG = {
         admission: 'Free',
         websiteLabel: 'StormHacks event page',
         websiteHref: '/stormhacks',
+        discordHref: 'https://discord.com/invite/U5q6RkHHtA/login',
+        acceptedDiscordHref: 'https://discord.gg/mfn8YkPCnp',
         recapHref: 'https://m.youtube.com/watch?v=lzFKBIZsHe4&feature=youtu.be',
         recapTitle: "Watch last year's Recap!",
         recapDescription: 'See the highlights of StormHacks 2025.',
@@ -68,6 +72,8 @@ export const EVENT_PAGE_CONFIG = {
         admission: 'Free',
         websiteLabel: 'JourneyHacks event page',
         websiteHref: '/journeyhacks',
+        discordHref: 'https://discord.com/invite/U5q6RkHHtA/login',
+        acceptedDiscordHref: null,
         recapHref: null,
         recapTitle: "Watch last year's Recap!",
         recapDescription: 'See the highlights from our last event.',
@@ -86,6 +92,8 @@ export const EVENT_PAGE_CONFIG = {
         admission: 'Free',
         websiteLabel: 'StormForge event page',
         websiteHref: '/stormforge',
+        discordHref: 'https://discord.com/invite/U5q6RkHHtA/login',
+        acceptedDiscordHref: null,
         recapHref: null,
         recapTitle: "Watch last year's Recap!",
         recapDescription: 'See the highlights from our last event.',
@@ -104,6 +112,8 @@ export const EVENT_PAGE_CONFIG = {
         admission: 'Free',
         websiteLabel: 'SillyHacks event page',
         websiteHref: '/sillyhacks',
+        discordHref: 'https://discord.com/invite/U5q6RkHHtA/login',
+        acceptedDiscordHref: null,
         recapHref: null,
         recapTitle: "Watch last year's Recap!",
         recapDescription: 'See the highlights from our last event.',
@@ -122,6 +132,8 @@ export const EVENT_PAGE_CONFIG = {
         admission: 'Paid (CA$15)',
         websiteLabel: 'SparkJam event page',
         websiteHref: '/sparkjam',
+        discordHref: 'https://discord.com/invite/U5q6RkHHtA/login',
+        acceptedDiscordHref: null,
         recapHref: null,
         recapTitle: "Watch last year's Recap!",
         recapDescription: 'See the highlights from our last event.',

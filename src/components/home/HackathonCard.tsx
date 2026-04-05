@@ -25,12 +25,20 @@ export default function HackathonCard({
     applicationSubmitted,
     applicationOpen,
     applicationCloses,
+    ticketQr,
+    userDisplayId,
+    userFirstName,
+    userLastName,
 }: {
     hackathon: ActiveHackathon | null;
     applicationStatus?: string;
     applicationSubmitted: boolean;
     applicationOpen?: Date | null;
     applicationCloses?: Date | null;
+    ticketQr?: string;
+    userDisplayId?: string;
+    userFirstName?: string | null;
+    userLastName?: string | null;
 }) {
     return (
         <Card className="h-full">
@@ -51,6 +59,10 @@ export default function HackathonCard({
                         applicationSubmitted={applicationSubmitted}
                         applicationOpen={applicationOpen}
                         applicationCloses={applicationCloses}
+                        ticketQr={ticketQr}
+                        userDisplayId={userDisplayId}
+                        userFirstName={userFirstName}
+                        userLastName={userLastName}
                     />
                 ) : (
                     <div className="flex flex-col items-center justify-center gap-6 text-center md:px-10 md:py-4">

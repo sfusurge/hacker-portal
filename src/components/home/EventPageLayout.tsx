@@ -1,11 +1,15 @@
 import DiscordCard from '@/components/home/DiscordCard';
-import EventsCard from '@/components/home/EventsCard';
+import ApplicationCard from '@/components/home/Application/ApplicationCard';
 import EventHeroBanner from '@/components/home/EventBanner';
 import EventIsOverCard from '@/components/home/EventIsOverCard';
-import HackathonCard from '@/components/home/HackathonCard';
+import EventsCard from '@/components/home/EventsCard';
 import RecapCard from '@/components/home/RecapCard';
-import { CalendarEvent } from '@/server/routers/eventsRouter';
+import TeamCard from '@/components/home/TeamCard';
 import { EventPageConfig } from '@/components/home/eventPageConfig';
+import { AppRouter } from '@/server/appRouter';
+import { CalendarEvent } from '@/server/routers/eventsRouter';
+import { UserData } from '@/server/routers/usersRouter';
+import { inferProcedureOutput } from '@trpc/server';
 
 type EventPageHackathon = {
     id: number;
@@ -16,21 +20,45 @@ type EventPageHackathon = {
     applicationCloses?: Date | null;
 };
 
+type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
+
 type EventPageLayoutProps = {
+    userData: UserData;
     eventConfig: EventPageConfig;
     activeHackathon: EventPageHackathon | null;
     applicationStatus?: string;
     applicationSubmitted: boolean;
+    team: TeamType | null;
     events: CalendarEvent[];
+    ticketQr?: string | null;
 };
 
 export default function EventPageLayout({
+    userData,
     eventConfig,
     activeHackathon,
     applicationStatus,
     applicationSubmitted,
+    team,
     events,
+    ticketQr,
 }: EventPageLayoutProps) {
+    const applicationsOpened = activeHackathon?.applicationOpen
+        ? Date.now() >= new Date(activeHackathon.applicationOpen).getTime()
+        : false;
+
+    const applicationCard = activeHackathon ? (
+        <ApplicationCard
+            userData={userData}
+            image={ticketQr ?? undefined}
+            applicationStatus={applicationStatus}
+            applicationSubmitted={applicationSubmitted}
+            applicationOpen={activeHackathon.applicationOpen}
+            applicationCloses={activeHackathon.applicationCloses}
+            showEventNotActiveState
+        />
+    ) : null;
+
     return (
         <div className="flex flex-col gap-6 md:gap-8">
             <EventHeroBanner
@@ -47,30 +75,49 @@ export default function EventPageLayout({
             />
 
             <div className="flex flex-col gap-6 md:gap-8">
-                {activeHackathon && (
-                    <HackathonCard
-                        hackathon={activeHackathon}
-                        applicationStatus={applicationStatus}
-                        applicationSubmitted={applicationSubmitted}
-                        applicationOpen={activeHackathon?.applicationOpen}
-                        applicationCloses={activeHackathon?.applicationCloses}
-                    />
-                )}
-
-                <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:gap-8">
-                    {activeHackathon ? (
-                        <EventsCard events={events} />
-                    ) : eventConfig.recapHref ? (
-                        <RecapCard
-                            recapHref={eventConfig.recapHref}
-                            title={eventConfig.recapTitle}
-                            description={eventConfig.recapDescription}
-                        />
+                {activeHackathon ? (
+                    applicationsOpened ? (
+                        <div className="grid grid-cols-1 gap-6 xl:grid-cols-11 xl:gap-8">
+                            <div className="flex flex-col gap-6 xl:col-span-7 xl:gap-8">
+                                {applicationCard}
+                            </div>
+                            <TeamCard
+                                userData={userData}
+                                hackathonId={activeHackathon.id}
+                                team={team}
+                            />
+                            <div className="grid grid-cols-1 gap-6 xl:col-span-11 xl:grid-cols-2 xl:gap-8">
+                                <EventsCard events={events} />
+                                <DiscordCard
+                                    applicationStatus={applicationStatus}
+                                />
+                            </div>
+                        </div>
                     ) : (
-                        <EventIsOverCard />
-                    )}
-                    <DiscordCard applicationStatus={applicationStatus} />
-                </div>
+                        <>
+                            {applicationCard}
+                            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:gap-8">
+                                <EventsCard events={events} />
+                                <DiscordCard
+                                    applicationStatus={applicationStatus}
+                                />
+                            </div>
+                        </>
+                    )
+                ) : (
+                    <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:gap-8">
+                        {eventConfig.recapHref ? (
+                            <RecapCard
+                                recapHref={eventConfig.recapHref}
+                                title={eventConfig.recapTitle}
+                                description={eventConfig.recapDescription}
+                            />
+                        ) : (
+                            <EventIsOverCard />
+                        )}
+                        <DiscordCard applicationStatus={applicationStatus} />
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { ReactNode, useEffect, useState } from 'react';
 import {
     Card,
@@ -15,10 +16,12 @@ import { Chip } from '../ui/chip';
 import { ArrowRightIcon } from 'lucide-react';
 import { Barcode } from 'lucide-react';
 import { getEventBannerConfigByName } from './eventPageConfig';
+import QRTicket from '@/app/(auth)/admin/qr/checkin_components/QRTicket';
 
 type ApplicationStatus =
     | 'Awaiting Review'
     | 'Accepted'
+    | "Accepted and RSVP'd"
     | 'Declined'
     | 'Wait List'
     | 'Withdrawn'
@@ -47,6 +50,10 @@ type ActiveHackathonCardProps = {
     applicationSubmitted: boolean;
     applicationOpen?: Date | null;
     applicationCloses?: Date | null;
+    ticketQr?: string;
+    userDisplayId?: string;
+    userFirstName?: string | null;
+    userLastName?: string | null;
 };
 
 export default function ActiveHackathonCard({
@@ -55,9 +62,14 @@ export default function ActiveHackathonCard({
     applicationSubmitted,
     applicationOpen,
     applicationCloses,
+    ticketQr,
+    userDisplayId,
+    userFirstName,
+    userLastName,
 }: ActiveHackathonCardProps) {
     const [now, setNow] = useState(Date.now());
     const [hasInProgressDraft, setHasInProgressDraft] = useState(false);
+    const [isTicketOpen, setIsTicketOpen] = useState(false);
 
     useEffect(() => {
         const interval = setInterval(() => setNow(Date.now()), 60000);
@@ -107,6 +119,8 @@ export default function ActiveHackathonCard({
         status,
         hackathonName: hackathon.name,
     });
+    const isAcceptedStatus = isAcceptedAndRsvpdStatus(status);
+    const hasTicketData = Boolean(ticketQr && userDisplayId);
 
     // Closed registration
     const closedRegistration = applicationClosed && !applicationSubmitted;
@@ -206,6 +220,31 @@ export default function ActiveHackathonCard({
                                           : 'Applications are open! Apply now to get your shot at participating in our creative design jam!'}
                                 </p>
 
+                                {isAcceptedStatus && ticketQr && (
+                                    <section className="hidden pt-1 md:block">
+                                        <div className="flex w-full rounded-xl bg-neutral-800">
+                                            <div className="flex flex-1 items-center justify-center p-4">
+                                                <div className="flex aspect-square h-44 w-44">
+                                                    <Image
+                                                        src={ticketQr}
+                                                        alt="Ticket QR Code"
+                                                        width={300}
+                                                        height={300}
+                                                        className="object-contain"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="large-dashes-vertical relative w-0 border-neutral-200">
+                                                <div className="absolute -top-2.5 -left-2.5 h-5 w-5 rounded-full bg-neutral-900"></div>
+                                                <div className="absolute -bottom-2.5 -left-2.5 h-5 w-5 rounded-full bg-neutral-900"></div>
+                                            </div>
+
+                                            <section className="flex w-8 flex-1" />
+                                        </div>
+                                    </section>
+                                )}
+
                                 <div className="flex w-full flex-col gap-2 sm:flex-row">
                                     <Button
                                         size="cozy"
@@ -231,11 +270,19 @@ export default function ActiveHackathonCard({
                                                     applicationAction.variant
                                                 }
                                                 hierarchy="primary"
-                                                onClick={() =>
+                                                onClick={() => {
+                                                    if (
+                                                        isAcceptedStatus &&
+                                                        hasTicketData
+                                                    ) {
+                                                        setIsTicketOpen(true);
+                                                        return;
+                                                    }
+
                                                     redirect(
                                                         applicationAction.href
-                                                    )
-                                                }
+                                                    );
+                                                }}
                                                 className="w-full sm:w-1/2"
                                                 trailingIconChild={
                                                     applicationAction.icon ??
@@ -315,6 +362,15 @@ export default function ActiveHackathonCard({
                     </CardContent>
                 </Card>
             </div>
+            {isTicketOpen && hasTicketData && (
+                <QRTicket
+                    userId={userDisplayId}
+                    firstName={userFirstName ?? ''}
+                    lastName={userLastName ?? ''}
+                    image={ticketQr}
+                    closeTicket={() => setIsTicketOpen(false)}
+                />
+            )}
         </div>
     );
 }
@@ -350,6 +406,7 @@ function getApplicationAction({
                 icon: <ArrowRightIcon className="h-4 w-4" />,
             };
         case 'Accepted':
+        case "Accepted and RSVP'd":
             return {
                 label: `View Ticket`,
                 variant: 'brand',
@@ -382,6 +439,7 @@ function getStatusBadge(status: AppStatus): StatusBadge {
         case 'Awaiting Review':
             return { label: 'Submitted - Under Review', variant: 'yellow' };
         case 'Accepted':
+        case "Accepted and RSVP'd":
             return { label: "Accepted - RSVP'd", variant: 'success' };
         case 'Declined':
             return { label: 'Rejected', variant: 'danger' };
@@ -402,6 +460,7 @@ function getMessage(status: AppStatus, hackathonName: string): ReactNode {
         case 'Awaiting Review':
             return 'Your application was submitted and is under review. 📝 Check back soon for updates!';
         case 'Accepted':
+        case "Accepted and RSVP'd":
             return 'All Set! View the hacker package on the event page, and use your ticket to check-in during the event.';
         case 'Declined':
             return 'Thanks for applying  — Unfortunately we are unable to offer you a spot but hope to see you apply again!';
@@ -433,4 +492,8 @@ function getMessage(status: AppStatus, hackathonName: string): ReactNode {
         default:
             return 'Your application was submitted and is under review. 📝 Check back soon for updates!';
     }
+}
+
+function isAcceptedAndRsvpdStatus(status: AppStatus): boolean {
+    return status === 'Accepted' || status === "Accepted and RSVP'd";
 }
