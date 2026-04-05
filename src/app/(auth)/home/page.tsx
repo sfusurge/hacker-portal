@@ -76,6 +76,10 @@ export default async function Home() {
                                 applicationCloses={
                                     activeHackathon?.applicationCloses
                                 }
+                                userDisplayId={data?.displayId}
+                                userFirstName={data?.firstName}
+                                userLastName={data?.lastName}
+                                userQrImage={userQR}
                             />
 
                             <ApplicationCard
@@ -116,6 +120,10 @@ export default async function Home() {
                                     applicationCloses={
                                         activeHackathon?.applicationCloses
                                     }
+                                    userDisplayId={data?.displayId}
+                                    userFirstName={data?.firstName}
+                                    userLastName={data?.lastName}
+                                    userQrImage={userQR}
                                 />
                             </div>
                         </>

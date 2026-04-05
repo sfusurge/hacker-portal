@@ -9,8 +9,9 @@ import {
     CardHeaderTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Chip } from '../ui/chip';
+import QRTicket from '@/app/(auth)/admin/qr/checkin_components/QRTicket';
 
 import { ArrowRightIcon } from 'lucide-react';
 import { Barcode } from 'lucide-react';
@@ -29,7 +30,8 @@ type AppStatus = 'Not Yet Started' | 'In Progress' | ApplicationStatus;
 type ApplicationAction = {
     label: string;
     variant: 'brand' | 'caution';
-    href: '/application' | '/rsvp' | '/application/submitted';
+    href?: '/application' | '/rsvp';
+    opensTicket?: boolean;
     icon: JSX.Element | undefined;
 };
 
@@ -46,6 +48,10 @@ type ActiveHackathonCardProps = {
     applicationSubmitted: boolean;
     applicationOpen?: Date | null;
     applicationCloses?: Date | null;
+    userDisplayId?: string;
+    userFirstName?: string | null;
+    userLastName?: string | null;
+    userQrImage?: string;
 };
 
 export default function ActiveHackathonCard({
@@ -54,9 +60,15 @@ export default function ActiveHackathonCard({
     applicationSubmitted,
     applicationOpen,
     applicationCloses,
+    userDisplayId,
+    userFirstName,
+    userLastName,
+    userQrImage,
 }: ActiveHackathonCardProps) {
+    const router = useRouter();
     const [now, setNow] = useState(Date.now());
     const [hasInProgressDraft, setHasInProgressDraft] = useState(false);
+    const [isTicketOpen, setIsTicketOpen] = useState(false);
 
     useEffect(() => {
         const interval = setInterval(() => setNow(Date.now()), 60000);
@@ -229,11 +241,21 @@ export default function ActiveHackathonCard({
                                                     applicationAction.variant
                                                 }
                                                 hierarchy="primary"
-                                                onClick={() =>
-                                                    redirect(
+                                                onClick={() => {
+                                                    if (
+                                                        applicationAction.opensTicket
+                                                    ) {
+                                                        setIsTicketOpen(true);
+                                                        return;
+                                                    }
+                                                    if (
                                                         applicationAction.href
-                                                    )
-                                                }
+                                                    ) {
+                                                        router.push(
+                                                            applicationAction.href
+                                                        );
+                                                    }
+                                                }}
                                                 className="w-full sm:w-1/2"
                                                 trailingIconChild={
                                                     applicationAction.icon ??
@@ -248,6 +270,25 @@ export default function ActiveHackathonCard({
                         )}
                     </CardContent>
                 </Card>
+            </div>
+
+            <div
+                className={`fixed inset-0 z-200 w-full bg-black/80 transition-opacity duration-300 ${isTicketOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+            >
+                <div
+                    className={`fixed right-0 bottom-0 left-0 h-[100vh] transform transition-transform duration-300 ${isTicketOpen ? 'translate-y-0' : 'translate-y-full'}`}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {userQrImage && (
+                        <QRTicket
+                            userId={userDisplayId}
+                            firstName={userFirstName}
+                            lastName={userLastName}
+                            image={userQrImage}
+                            closeTicket={() => setIsTicketOpen(false)}
+                        />
+                    )}
+                </div>
             </div>
 
             {/*  Hard coded for now */}
@@ -301,7 +342,7 @@ function getApplicationAction({
             return {
                 label: `View Ticket`,
                 variant: 'brand',
-                href: '/application/submitted', // TODO: Update these links
+                opensTicket: true,
                 icon: <Barcode className="h-4 w-4" />,
             };
         default:
