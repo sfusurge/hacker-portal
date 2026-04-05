@@ -121,7 +121,7 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
                 </CardDescription>
             </div>
             <Image
-                src="/login/application-review.webp"
+                src="/otter-team.png"
                 width={434}
                 height={320}
                 className="-order-1 max-w-72 md:order-last"
@@ -304,11 +304,11 @@ export function ReviewContent({ userData }: { userData: UserData }) {
             </div>
 
             <Image
-                src="/login/application-review.webp"
+                src="/otter-review.png"
                 width={434}
                 height={320}
                 className="-order-1 max-w-72 md:order-last"
-                alt="Four otters are gathered around a table, reviewing application submissions."
+                alt="Twp otters are gathered around a table, reviewing application submissions."
             />
 
             {userData?.id && (
@@ -347,7 +347,7 @@ export function WithdrawnContent() {
             </div>
 
             <Image
-                src="/login/sad-otter.webp"
+                src="/otter-sad.png"
                 width={699}
                 height={725}
                 className="max-w-[240px]"
@@ -405,7 +405,7 @@ export function RejectedContent() {
             </div>
 
             <Image
-                src="/login/sad-otter.webp"
+                src="/otter-sad.png"
                 width={699}
                 height={725}
                 className="max-w-[240px]"
