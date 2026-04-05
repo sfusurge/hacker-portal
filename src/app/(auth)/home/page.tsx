@@ -3,6 +3,7 @@ import EventsCard from '@/components/home/EventsCard';
 import TeamCard from '@/components/home/TeamCard';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
 import { createCaller } from '@/server/appRouter';
+import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 import { getUserData } from '@/server/routers/usersRouter';
 import { redirect } from 'next/navigation';
 import SponsorDashboard from './sponsor/index';
@@ -17,14 +18,9 @@ export default async function Home() {
         redirect('/projects');
     }
 
-    // Return sponsor dashboard for sponsors
-    if (data?.userRole === 'sponsor') {
-        return <SponsorDashboard />;
-    }
-
     const trpcClient = createCaller({});
 
-    const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
+    const activeHackathon = await getCachedActiveHackathon();
     const hackathonId = activeHackathon?.id ?? -1;
 
     const [application, team, events] = activeHackathon

@@ -8,7 +8,7 @@ import {
 } from '@/components/application_components/types';
 import { UserData } from '@/server/routers/usersRouter';
 import dayjs from 'dayjs';
-import { atom, useSetAtom } from 'jotai';
+import { atom } from 'jotai';
 import { useHydrateAtoms } from 'jotai/utils';
 import { ReactNode } from 'react';
 

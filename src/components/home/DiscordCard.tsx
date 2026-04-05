@@ -12,26 +12,26 @@ import {
     CardFooter,
     CardHeaderColumn,
 } from '@/components/ui/card';
+import { eventDiscordUrlForStatus } from '@/lib/eventDiscord';
+import { cn } from '@/lib/utils';
 
 type DiscordCardProps = {
     applicationStatus?: string;
+    className?: string;
 };
 
-const DISCORD_LINK_STANDARD = 'https://discord.com/invite/U5q6RkHHtA/login';
-const DISCORD_LINK_ACCEPTED = 'https://discord.gg/mfn8YkPCnp';
-
-export default function DiscordCard({ applicationStatus }: DiscordCardProps) {
-    const discordLink =
-        applicationStatus === 'Accepted'
-            ? DISCORD_LINK_ACCEPTED
-            : DISCORD_LINK_STANDARD;
+export default function DiscordCard({
+    applicationStatus,
+    className,
+}: DiscordCardProps) {
+    const discordLink = eventDiscordUrlForStatus(applicationStatus);
     const headerTitle =
         applicationStatus === 'Accepted'
             ? 'Join the StormHacks Discord!'
             : 'Join the Surge Discord!';
 
     return (
-        <Card className="h-full">
+        <Card className={cn(className)}>
             <CardHeader>
                 <CardHeaderColumn>
                     <CardHeaderDescription>Your Events</CardHeaderDescription>
