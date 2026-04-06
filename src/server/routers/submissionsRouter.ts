@@ -12,6 +12,8 @@ import {
 import { teams } from '@/db/schema/teams';
 import { and, eq, getTableColumns } from 'drizzle-orm';
 import { z } from 'zod';
+import { BadRequestError } from '@/server/exceptions';
+import { isSubmissionWindowOpen } from '@/lib/submissionWindow';
 import { publicProcedure, router } from '../trpc';
 import { getUserData } from './usersRouter';
 
@@ -70,6 +72,28 @@ export const submissionsRouter = router({
                 throw new Error('Team does not belong to this hackathon');
             }
 
+            const [hackathonRow] = await databaseClient
+                .select({
+                    submissionOpen: hackathons.submissionOpen,
+                    submissionDeadline: hackathons.submissionDeadline,
+                })
+                .from(hackathons)
+                .where(eq(hackathons.id, input.hackathonId))
+                .limit(1);
+
+            if (
+                !hackathonRow ||
+                !isSubmissionWindowOpen(
+                    Date.now(),
+                    hackathonRow.submissionOpen,
+                    hackathonRow.submissionDeadline
+                )
+            ) {
+                throw new BadRequestError(
+                    'Project submissions are only accepted during the open submission window.'
+                );
+            }
+
             const [submission] = await databaseClient
                 .insert(submissions)
                 .values({
@@ -83,7 +107,7 @@ export const submissionsRouter = router({
                 .returning();
 
             return {
-                userId: 0, // Optional: change if you track the user
+                userId: 0,
                 response: submission.response as Record<string, unknown>,
                 createdDate: submission.createdDate,
                 currentStatus: submission.currentStatus,

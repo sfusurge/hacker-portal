@@ -1,10 +1,15 @@
+'use client';
+
 import Image from 'next/image';
-import Link from 'next/link';
 import { X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 // import { databaseClient } from '@/db/client';
 // import { users } from '@/db/schema/users';
 // import generateQRCode, { QROptions } from '@/server/generateQRCode';
 // import {GetUsersOutput} from "@/trpc/client";
+import { useAtomValue } from 'jotai';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 
 export type QRTicketProps = {
     userId: string | undefined;
@@ -21,6 +26,13 @@ export default function QRTicket({
     image,
     closeTicket,
 }: QRTicketProps) {
+    const [mounted, setMounted] = useState(false);
+    const hackathon = useAtomValue(hackathonAtom);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     const pfp = '/favicon.png';
     // const opts: QROptions = {
     //     margin: 1,
@@ -40,9 +52,16 @@ export default function QRTicket({
 
     const role = 'Hacker';
 
-    return (
-        <div className="fixed inset-0 z-150 flex items-end justify-center overflow-hidden md:items-center">
-            <div className="border-neutral-750 animate-fadeIn relative w-full max-w-lg rounded-xl border bg-neutral-900 p-8 shadow-lg md:max-w-2xl">
+    const modal = (
+        <div
+            className="fixed inset-0 z-[300] flex items-end justify-center overflow-hidden bg-black/80 md:items-center"
+            onClick={closeTicket}
+            role="presentation"
+        >
+            <div
+                className="border-neutral-750 animate-fadeIn relative w-full max-w-lg rounded-xl border bg-neutral-900 p-8 shadow-lg md:max-w-2xl"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <button
                     className="absolute top-2 left-1/2 block -translate-x-1/2 transform rounded-full transition-colors duration-200 md:hidden"
                     onClick={closeTicket}
@@ -76,7 +95,7 @@ export default function QRTicket({
                         </h2>
 
                         <h1 className="tracking-tightest text-center text-xl leading-5 font-semibold text-white">
-                            SillyHacks
+                            {hackathon?.hackathonName}
                         </h1>
                     </header>
 
@@ -146,4 +165,8 @@ export default function QRTicket({
             </div>
         </div>
     );
+
+    if (!mounted) return null;
+
+    return createPortal(modal, document.body);
 }

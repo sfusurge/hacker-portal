@@ -1,7 +1,6 @@
 'use client';
 
 import clsx from 'clsx';
-import Image from 'next/image';
 import {
     InboxStackIcon,
     CalendarDaysIcon,
@@ -11,6 +10,7 @@ import {
     ChevronDoubleRightIcon,
     ChevronRightIcon,
     ChartBarIcon,
+    MegaphoneIcon,
 } from '@heroicons/react/24/outline';
 
 import { HomeIcon } from '@heroicons/react/24/outline';
@@ -18,7 +18,6 @@ import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { BellAlertIcon } from '@heroicons/react/24/outline';
 import { IdentificationIcon, QrCodeIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
-
 import { signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
@@ -32,10 +31,25 @@ import {
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { cn } from '@/lib/utils';
 import { navLinkVariants, NavLink } from './NavLink';
+import { EVENT_PAGE_NAV_LINKS } from '@/components/home/eventPageConfig';
 import { UserData } from '@/server/routers/usersRouter';
 import { getIcon } from '@/utils/blobHelper';
 
-interface DesktopNavProps {
+/** mobile (under 768px) user can expand/collapse. */
+const SIDEBAR_MOBILE_MAX_PX = 768;
+/** desktop (≥1180px) user can expand/collapse; preference is saved. between mobile max and this = tablet: always collapsed, no toggle. */
+const SIDEBAR_DESKTOP_MIN_PX = 1180;
+
+function isTabletWidth(w: number) {
+    return w >= SIDEBAR_MOBILE_MAX_PX && w < SIDEBAR_DESKTOP_MIN_PX;
+}
+
+/** desktop (≥1180px) collapse preference */
+const LS_SIDEBAR_DESKTOP = 'sidebar_collapsed_desktop';
+/** mobile (under 768px) collapse preference*/
+const LS_SIDEBAR_MOBILE = 'sidebar_collapsed_mobile';
+
+interface NavProps {
     className?: string;
     initialData?: UserData;
 }
@@ -47,17 +61,23 @@ const navLinks = [
         icon: <HomeIcon className="h-6 w-6" />,
         iconAlt: 'Home logo',
     },
-    {
-        href: '/team',
-        label: 'Team',
-        icon: <UserGroupIcon className="h-6 w-6" />,
-        iconAlt: 'Teams logo',
-    },
+    // {
+    //     href: '/team',
+    //     label: 'Team',
+    //     icon: <UserGroupIcon className="h-6 w-6" />,
+    //     iconAlt: 'Teams logo',
+    // },
     {
         href: '/schedule',
         label: 'Schedule',
         icon: <CalendarDaysIcon className="h-6 w-6" />,
         iconAlt: 'Schedule logo',
+    },
+    {
+        href: '/announcements',
+        label: 'Announcements',
+        icon: <MegaphoneIcon className="h-6 w-6" />,
+        iconAlt: 'Announcement logo',
     },
     // {
     //     href: '/notifications',
@@ -66,12 +86,12 @@ const navLinks = [
     //     iconAlt: 'Notifications logo',
     //     disabled: true,
     // },
-    {
-        href: '/projects',
-        label: 'Project Gallery',
-        icon: <InboxStackIcon className="h-6 w-6" />,
-        iconAlt: 'Project gallery logo',
-    },
+    // {
+    //     href: '/projects',
+    //     label: 'Project Gallery',
+    //     icon: <InboxStackIcon className="h-6 w-6" />,
+    //     iconAlt: 'Project gallery logo',
+    // },
 ];
 
 const adminLinks = [
@@ -82,21 +102,21 @@ const adminLinks = [
         iconAlt: 'Review Applications logo',
     },
     {
-        href: '/admin/email',
-        label: 'Emails',
+        href: '/admin/email/templates',
+        label: 'Emails Templates',
         icon: <EnvelopeIcon className="h-6 w-6" />,
         iconAlt: 'Emails logo',
-        dropdownItems: [
-            { label: 'Email Templates', href: '/admin/email/templates' },
-            { label: 'Subscribed Emails', href: '/admin/email/subscribed' },
-        ],
+        // dropdownItems: [
+        //     { label: 'Email Templates', href: '/admin/email/templates' },
+        //     { label: 'Subscribed Emails', href: '/admin/email/subscribed' },
+        // ],
     },
-    {
-        href: '/admin/judge',
-        label: 'Judge Assignment',
-        icon: <IdentificationIcon className="h-6 w-6" />,
-        iconAlt: 'judge',
-    },
+    // {
+    //     href: '/admin/judge',
+    //     label: 'Judge Assignment',
+    //     icon: <IdentificationIcon className="h-6 w-6" />,
+    //     iconAlt: 'judge',
+    // },
     {
         href: '/admin/qr',
         label: 'Hacker Checkin (Admin)',
@@ -149,46 +169,64 @@ const sponsorNavLinks = [
     },
 ];
 
-export default function DesktopNav({
-    className,
-    initialData,
-}: DesktopNavProps) {
+export default function SideBar({ className, initialData }: NavProps) {
     const [collapsed, setCollapsed] = useState(false);
-    const [isLargeScreen, setIsLargeScreen] = useState(true);
+    const [showCollapseToggle, setShowCollapseToggle] = useState(false);
     const [profilePopoverOpen, setProfilePopoverOpen] = useState(false);
+    const [profilePopoverSide, setProfilePopoverSide] = useState<
+        'right' | 'bottom'
+    >(() =>
+        typeof window !== 'undefined' &&
+        window.innerWidth < SIDEBAR_MOBILE_MAX_PX
+            ? 'bottom'
+            : 'right'
+    );
 
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const savedState = localStorage.getItem('sidebar_collapsed');
-            if (savedState) {
-                setCollapsed(JSON.parse(savedState));
-            }
+    const applyCollapsedForWidth = (w: number) => {
+        if (isTabletWidth(w)) {
+            setCollapsed(true);
+            return;
         }
-    }, []);
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem(
-                'sidebar_collapsed',
-                JSON.stringify(collapsed)
+        if (w < SIDEBAR_MOBILE_MAX_PX) {
+            const saved = localStorage.getItem(LS_SIDEBAR_MOBILE);
+            setCollapsed(
+                saved !== null ? (JSON.parse(saved) as boolean) : false
             );
+            return;
         }
-    }, [collapsed]);
+        const saved = localStorage.getItem(LS_SIDEBAR_DESKTOP);
+        setCollapsed(saved !== null ? (JSON.parse(saved) as boolean) : false);
+    };
 
     useEffect(() => {
         const checkScreenSize = () => {
-            if (typeof window !== 'undefined') {
-                const isLarge = window.innerWidth >= 1080;
-                setIsLargeScreen(isLarge);
-                if (!isLarge) {
-                    setCollapsed(true);
-                }
-            }
+            if (typeof window === 'undefined') return;
+            const w = window.innerWidth;
+            setShowCollapseToggle(w >= SIDEBAR_DESKTOP_MIN_PX);
+            setProfilePopoverSide(
+                w < SIDEBAR_MOBILE_MAX_PX ? 'bottom' : 'right'
+            );
+            applyCollapsedForWidth(w);
         };
         checkScreenSize();
         window.addEventListener('resize', checkScreenSize);
         return () => window.removeEventListener('resize', checkScreenSize);
     }, []);
+
+    const toggleCollapsed = () => {
+        if (typeof window === 'undefined') return;
+        const w = window.innerWidth;
+        if (isTabletWidth(w)) return;
+        setCollapsed((prev) => {
+            const next = !prev;
+            if (w < SIDEBAR_MOBILE_MAX_PX) {
+                localStorage.setItem(LS_SIDEBAR_MOBILE, JSON.stringify(next));
+            } else if (w >= SIDEBAR_DESKTOP_MIN_PX) {
+                localStorage.setItem(LS_SIDEBAR_DESKTOP, JSON.stringify(next));
+            }
+            return next;
+        });
+    };
 
     const avatarUrl = useMemo(() => {
         if (initialData && initialData.image) {
@@ -208,87 +246,15 @@ export default function DesktopNav({
         >
             <div
                 className={clsx(
-                    'relative h-full bg-neutral-950 transition-all duration-300 ease-in-out',
+                    'relative h-full bg-neutral-950 pt-5 transition-all duration-300 ease-in-out sm:pt-10',
                     collapsed ? 'w-12' : 'w-[280px]'
                 )}
             >
                 <div className="flex h-full flex-col items-center justify-between">
                     <div className={clsx('flex w-full flex-col gap-5')}>
-                        <motion.div
-                            className="relative overflow-hidden"
-                            initial={false}
-                            animate={{
-                                height: collapsed ? '48px' : 'auto',
-                                paddingBottom: collapsed ? '0px' : '60.25%',
-                            }}
-                            transition={{ duration: 0.5, ease: 'easeInOut' }}
-                        >
-                            <motion.div
-                                layout
-                                transition={{
-                                    duration: 0.5,
-                                    ease: 'easeInOut',
-                                }}
-                                className={clsx(
-                                    'absolute z-10 flex shrink-0 items-center justify-center',
-                                    'h-6 w-6',
-                                    collapsed
-                                        ? 'top-0 left-0 h-12 w-12'
-                                        : 'top-3 left-3'
-                                )}
-                            >
-                                <Image
-                                    src="/dashboard/sillyhackshead.png"
-                                    alt="JourneyHacks 2026 Logo"
-                                    width={48}
-                                    height={48}
-                                    className="pointer-events-none h-full w-full rounded-lg object-cover"
-                                />
-                            </motion.div>
-
-                            <div className="absolute inset-0 w-full">
-                                <AnimatePresence mode="wait">
-                                    {!collapsed && (
-                                        <motion.div
-                                            key="expanded"
-                                            initial={{
-                                                opacity: 0,
-                                                scale: 0.95,
-                                            }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0, scale: 0.95 }}
-                                            transition={{
-                                                duration: 0.5,
-                                                ease: 'easeInOut',
-                                            }}
-                                            className="h-full w-full rounded-xl"
-                                        >
-                                            <div className="relative h-full w-full overflow-hidden rounded-xl border border-neutral-800">
-                                                <div className="absolute top-0 flex w-full flex-row items-center gap-3 bg-neutral-900/50 p-3 backdrop-blur-lg">
-                                                    <div className="h-6 w-6 shrink-0 opacity-0" />
-                                                    <div className="mt-1 flex flex-col gap-2 overflow-hidden">
-                                                        <span className="line-clamp-1 text-sm font-medium whitespace-nowrap text-white">
-                                                            SparkJam 2026
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <Image
-                                                    src="/dashboard/sillyhacksheader.png"
-                                                    alt="StormHacks"
-                                                    width={200}
-                                                    height={150}
-                                                    className="h-full w-full"
-                                                />
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-                        </motion.div>
-
                         <div
                             className={clsx(
-                                'links flex w-full flex-1 flex-col items-stretch gap-1'
+                                'links flex w-full flex-1 flex-col items-stretch gap-1 px-4 md:px-0'
                             )}
                         >
                             {initialData?.userRole === 'judge' ? (
@@ -345,9 +311,9 @@ export default function DesktopNav({
                                                     link.href
                                                 )}
                                                 collapsed={collapsed}
-                                                dropdownItems={
-                                                    link.dropdownItems
-                                                }
+                                                // dropdownItems={
+                                                //     link.dropdownItems
+                                                // }
                                             />
                                         ))}
                                 </>
@@ -377,7 +343,7 @@ export default function DesktopNav({
                                                 'flex h-6 w-6 items-center justify-center transition-colors',
                                                 url.startsWith('/profile')
                                                     ? 'text-brand-400 group-hover:text-brand-200'
-                                                    : 'text-white/30 group-hover:text-white/60'
+                                                    : 'group-text-white/70 text-white/30'
                                             )}
                                         >
                                             <div className="h-6 w-6 overflow-hidden rounded-full">
@@ -405,9 +371,24 @@ export default function DesktopNav({
                                     </div>
                                 </PopoverTrigger>
                                 <PopoverContent
+                                    key={profilePopoverSide}
+                                    side={profilePopoverSide}
+                                    align={
+                                        profilePopoverSide === 'bottom'
+                                            ? 'end'
+                                            : 'center'
+                                    }
                                     sideOffset={8}
-                                    side="right"
-                                    className="z-200 w-48"
+                                    collisionPadding={
+                                        profilePopoverSide === 'bottom'
+                                            ? 16
+                                            : undefined
+                                    }
+                                    className={cn(
+                                        'z-200 w-48',
+                                        profilePopoverSide === 'bottom' &&
+                                            '!mr-0 max-w-[min(12rem,calc(100vw-2rem))]'
+                                    )}
                                 >
                                     <NavLink
                                         href="/profile"
@@ -441,16 +422,65 @@ export default function DesktopNav({
                                             }
                                         }}
                                     />
-                                    <PopoverPrimitive.Arrow className="fill-neutral-850 mr-4 shadow-lg" />
+                                    {profilePopoverSide === 'right' ? (
+                                        <PopoverPrimitive.Arrow className="fill-neutral-850 mr-4 shadow-lg" />
+                                    ) : null}
                                 </PopoverContent>
                             </Popover>
+
+                            {initialData?.userRole === 'user' && (
+                                <>
+                                    <div className="my-4 border-t border-white/10" />
+
+                                    {!collapsed ? (
+                                        <motion.span
+                                            className="mb-2 px-3 text-sm leading-[125%] font-semibold tracking-[-0.0075em] text-white/30"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{
+                                                duration: 0.5,
+                                                ease: 'easeInOut',
+                                            }}
+                                        >
+                                            Our Events
+                                        </motion.span>
+                                    ) : null}
+
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{
+                                            duration: 0.5,
+                                            ease: 'easeInOut',
+                                        }}
+                                        className="flex flex-col gap-1"
+                                    >
+                                        {EVENT_PAGE_NAV_LINKS.map((link) => (
+                                            <NavLink
+                                                key={link.href}
+                                                href={link.href}
+                                                label={link.label}
+                                                icon={link.icon}
+                                                iconAlt={link.iconAlt}
+                                                platform="desktop"
+                                                active={url.startsWith(
+                                                    link.href
+                                                )}
+                                                collapsed={collapsed}
+                                            />
+                                        ))}
+                                    </motion.div>
+                                </>
+                            )}
                         </div>
                     </div>
 
                     <div className="mt-auto w-full pt-5">
-                        {isLargeScreen && (
+                        {showCollapseToggle && (
                             <motion.button
-                                onClick={() => setCollapsed(!collapsed)}
+                                onClick={toggleCollapsed}
                                 className="hover:bg-neutral-750/30 flex w-full items-center justify-start gap-2 rounded-lg px-3 py-2 text-white transition-colors"
                                 initial={false}
                                 animate={{

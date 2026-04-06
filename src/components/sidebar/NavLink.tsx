@@ -21,7 +21,7 @@ interface DropdownItem {
 interface NavLinkProps {
     href: string;
     label: string;
-    icon?: ReactNode;
+    icon?: ReactNode | string;
     iconAlt?: string;
     collapsed?: boolean;
     disabled?: boolean;
@@ -72,14 +72,18 @@ export function NavLink({
     const linkContent = (
         <>
             {icon && iconAlt && (
-                <div
-                    className={cn(
-                        'flex h-6 w-6 items-center justify-center transition-colors'
+                <div className="flex h-6 w-6 items-center justify-center">
+                    {typeof icon === 'string' ? (
+                        <img
+                            src={icon}
+                            alt={iconAlt}
+                            className="h-6 w-6 rounded-lg object-contain"
+                        />
+                    ) : (
+                        <div className="h-6 w-6 [&>svg]:h-full [&>svg]:w-full">
+                            {icon}
+                        </div>
                     )}
-                >
-                    <div className="h-6 w-6 [&>svg]:h-full [&>svg]:w-full">
-                        {icon}
-                    </div>
                 </div>
             )}
             {!isCollapsed ? (
@@ -101,7 +105,6 @@ export function NavLink({
             initial={false}
             animate={{
                 width: isCollapsed ? '48px' : '100%',
-                height: isCollapsed ? '48px' : 'auto',
             }}
             transition={{ ease: 'easeInOut' }}
         >

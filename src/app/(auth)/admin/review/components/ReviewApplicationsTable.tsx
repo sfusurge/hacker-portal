@@ -41,6 +41,20 @@ import {
     APPLICATION_STATUS_ENUM,
 } from '@/db/schema/applications';
 import { FilterColumn } from './FilterColumn';
+import {
+    HACKATHON_EMAIL_TYPE_LABELS,
+    type HackathonEmailType,
+} from '@/db/schema/emails';
+
+function emailTypeDisplayLabel(emailType: string | null | undefined): string {
+    if (emailType && emailType in HACKATHON_EMAIL_TYPE_LABELS) {
+        return HACKATHON_EMAIL_TYPE_LABELS[emailType as HackathonEmailType];
+    }
+    if (emailType) {
+        return emailType;
+    }
+    return 'No type set';
+}
 
 export type Applicant = {
     members: string[] | null;
@@ -442,6 +456,11 @@ function MyTable({
         trpc.emailTemplates.getEmailTemplates.useQuery({
             hackathonId: effectiveHackathonForEmail,
         });
+
+    const selectedEmailTemplate = useMemo(() => {
+        if (selectedTemplateId == null) return null;
+        return emailTemplates?.find((t) => t.id === selectedTemplateId) ?? null;
+    }, [emailTemplates, selectedTemplateId]);
 
     const statusCounts = useMemo(() => getStatusCounts(data), [data]);
 
@@ -1259,7 +1278,13 @@ function MyTable({
                                                                 : 'border-neutral-500 bg-neutral-700'
                                                         }`}
                                                     />
-                                                    <div className="flex flex-col">
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <span className="text-brand-300 text-[11px] font-semibold tracking-wide uppercase">
+                                                            Email type:{' '}
+                                                            {emailTypeDisplayLabel(
+                                                                template.emailType
+                                                            )}
+                                                        </span>
                                                         <Label
                                                             htmlFor={`template-${template.id}`}
                                                             className="cursor-pointer font-medium text-white"
@@ -1282,6 +1307,31 @@ function MyTable({
                                 </div>
                             )}
                         </div>
+
+                        {selectedEmailTemplate && (
+                            <div className="border-brand-800/50 bg-brand-950/40 rounded-xl border px-4 py-3">
+                                <p className="text-sm font-medium tracking-wide text-white/60 uppercase">
+                                    About to send
+                                </p>
+                                <p className="mt-1 text-base font-semibold text-white">
+                                    {emailTypeDisplayLabel(
+                                        selectedEmailTemplate.emailType
+                                    )}
+                                </p>
+                                <p className="mt-0.5 text-xs text-white/60">
+                                    Template: {selectedEmailTemplate.title}
+                                </p>
+                                {!selectedEmailTemplate.emailType && (
+                                    <p className="mt-2 text-xs text-white/80">
+                                        No email type on this template; the
+                                        queue will use the purpose field as the
+                                        tag: &quot;
+                                        {selectedEmailTemplate.purpose}
+                                        &quot;
+                                    </p>
+                                )}
+                            </div>
+                        )}
 
                         <div className="mt-2 flex justify-between">
                             <button
@@ -1307,7 +1357,9 @@ function MyTable({
                             >
                                 {isSending
                                     ? 'Sending...'
-                                    : `Send Email to ${table.getSelectedRowModel().rows.length} Rows`}
+                                    : selectedEmailTemplate
+                                      ? `Send ${emailTypeDisplayLabel(selectedEmailTemplate.emailType)} — ${table.getSelectedRowModel().rows.length} recipient${table.getSelectedRowModel().rows.length === 1 ? '' : 's'}`
+                                      : `Send Email to ${table.getSelectedRowModel().rows.length} Rows`}
                             </button>
                         </div>
                     </div>

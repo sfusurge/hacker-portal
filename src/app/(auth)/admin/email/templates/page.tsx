@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { trpc } from '@/trpc/client';
+import { useAtomValue } from 'jotai';
 import Link from 'next/link';
 import { prepareEmailPreview } from './emailPreview';
 import {
@@ -35,8 +37,7 @@ export default function EmailTemplatesPage() {
     const hasSetInitialHackathon = useRef(false);
 
     const { data: hackathons = [] } = trpc.hackathons.getHackathons.useQuery();
-    const { data: activeHackathon } =
-        trpc.hackathons.getActiveHackathon.useQuery();
+    const activeHackathon = useAtomValue(hackathonAtom);
 
     const {
         data: templates,
@@ -160,7 +161,7 @@ export default function EmailTemplatesPage() {
                     </div>
                 </div>
                 <div className="py-10 text-center">
-                    <p className="text-lg text-white/70">
+                    <p className="text-lg text-white/60">
                         Select a hackathon to view and manage email templates.
                     </p>
                     <div className="mt-4 flex justify-center">
@@ -190,7 +191,7 @@ export default function EmailTemplatesPage() {
     if (!hasHackathon && hackathons.length === 0) {
         return (
             <div className="w-full py-10 text-center">
-                <p className="text-lg text-white/70">
+                <p className="text-lg text-white/60">
                     No hackathons found. Create a hackathon first to manage
                     email templates.
                 </p>
@@ -205,7 +206,7 @@ export default function EmailTemplatesPage() {
                     <h1 className="text-2xl font-bold">Email Templates</h1>
                     <div className="flex flex-wrap items-center gap-4">
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-white/70">
+                            <span className="text-sm text-white/60">
                                 Hackathon:
                             </span>
                             <Select
@@ -261,7 +262,7 @@ export default function EmailTemplatesPage() {
                         <h2 className="text-caution-200 mb-2 font-semibold">
                             Missing templates for this hackathon
                         </h2>
-                        <p className="mb-4 text-sm text-white/70">
+                        <p className="mb-4 text-sm text-white/60">
                             Create templates for each email type to cover all
                             hackathon flows.
                         </p>
@@ -293,7 +294,7 @@ export default function EmailTemplatesPage() {
                 <h1 className="text-2xl font-bold">Email Templates</h1>
                 <div className="flex flex-wrap items-center gap-4">
                     <div className="flex items-center gap-2">
-                        <span className="text-sm text-white/70">
+                        <span className="text-sm text-white/60">
                             Hackathon:
                         </span>
                         <Select
@@ -344,7 +345,7 @@ export default function EmailTemplatesPage() {
                     <h2 className="text-caution-200 mb-2 text-lg font-semibold">
                         Missing templates for this hackathon
                     </h2>
-                    <p className="mb-4 text-sm text-white/70">
+                    <p className="mb-4 text-sm text-white/60">
                         You don&apos;t have an email template for these types
                         yet. Create one to cover all hackathon email flows.
                     </p>

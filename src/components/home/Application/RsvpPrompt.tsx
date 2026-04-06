@@ -17,6 +17,90 @@ import {
     ResponsiveDialogDescription,
 } from '@/components/ui/responsive-dialog';
 import { CheckBox } from '@/components/ui/checkbox/checkbox';
+import type { Dayjs } from 'dayjs';
+
+const dateWithWeekday = (d: Dayjs) => d.format('dddd, MMMM D, YYYY');
+
+/** Plain-text summary for confirmation copy (e.g. success step). */
+function formatEventWhenSummary(start: Dayjs, end: Dayjs): string {
+    if (start.isSame(end, 'day')) {
+        return dateWithWeekday(start);
+    }
+
+    const diffDays = end.diff(start, 'day');
+    if (diffDays === 1) {
+        return `${dateWithWeekday(start)} and ${dateWithWeekday(end)}`;
+    }
+
+    return `${start.format('dddd, MMMM D')} – ${end.format('dddd, MMMM D, YYYY')}`;
+}
+
+function formatRsvpEventDates(start: Dayjs, end: Dayjs) {
+    if (start.isSame(end, 'day')) {
+        return (
+            <ResponsiveDialogDescription>
+                The event is on{' '}
+                <span className="font-medium text-white/90">
+                    {dateWithWeekday(start)}
+                </span>
+                . Your attendance is required.
+            </ResponsiveDialogDescription>
+        );
+    }
+
+    const diffDays = end.diff(start, 'day');
+    if (diffDays === 1) {
+        return (
+            <>
+                <ResponsiveDialogDescription>
+                    Day 1:{' '}
+                    <span className="font-medium text-white/90">
+                        {dateWithWeekday(start)}
+                    </span>{' '}
+                    (Required)
+                </ResponsiveDialogDescription>
+                <ResponsiveDialogDescription>
+                    Day 2:{' '}
+                    <span className="font-medium text-white/90">
+                        {dateWithWeekday(end)}
+                    </span>{' '}
+                    (Recommended)
+                </ResponsiveDialogDescription>
+            </>
+        );
+    }
+
+    return (
+        <>
+            <ResponsiveDialogDescription>
+                <span className="flex gap-2">
+                    <span className="text-white/60 select-none" aria-hidden>
+                        •
+                    </span>
+                    <span>
+                        Start:{' '}
+                        <span className="font-medium text-white/90">
+                            {start.format('dddd, MMMM D, YYYY')}
+                        </span>
+                    </span>
+                </span>
+            </ResponsiveDialogDescription>
+            <ResponsiveDialogDescription>
+                <span className="flex gap-2">
+                    <span className="text-white/60 select-none" aria-hidden>
+                        •
+                    </span>
+                    <span>
+                        End:{' '}
+                        <span className="font-medium text-white/90">
+                            {end.format('dddd, MMMM D, YYYY')}
+                        </span>
+                    </span>
+                </span>
+            </ResponsiveDialogDescription>
+        </>
+    );
+}
 
 export type RsvpPromptProps = {
     userData: UserData;
@@ -116,6 +200,11 @@ export default function RsvpPrompt({
         openWithdrawPrompt();
     };
 
+    const eventWhenSummary =
+        hackathon?.startDate?.isValid() && hackathon?.endDate?.isValid()
+            ? formatEventWhenSummary(hackathon.startDate, hackathon.endDate)
+            : null;
+
     return (
         <ResponsiveDialog
             open={isOpen}
@@ -151,13 +240,19 @@ export default function RsvpPrompt({
                                         'SparkJam 2026'}
                                     .
                                 </ResponsiveDialogDescription>
-                                <div>
-                                    <ResponsiveDialogDescription>
-                                        Day 1: January 10, 2026 (Required)
-                                    </ResponsiveDialogDescription>
-                                    {/* <ResponsiveDialogDescription>
-                                        Day 2: October 5, 2025 (Recommended)
-                                    </ResponsiveDialogDescription> */}
+                                <div className="flex flex-col gap-2">
+                                    {hackathon?.startDate?.isValid() &&
+                                    hackathon?.endDate?.isValid() ? (
+                                        formatRsvpEventDates(
+                                            hackathon.startDate,
+                                            hackathon.endDate
+                                        )
+                                    ) : (
+                                        <ResponsiveDialogDescription>
+                                            See the event page for the event
+                                            schedule.
+                                        </ResponsiveDialogDescription>
+                                    )}
                                 </div>
                             </div>
                             <div className="w-full px-2">
@@ -180,7 +275,17 @@ export default function RsvpPrompt({
                             </ResponsiveDialogTitle>
                             <ResponsiveDialogDescription>
                                 We&apos;re excited to see you at{' '}
-                                {hackathon?.hackathonName || 'StormHacks'}! 🫶
+                                {hackathon?.hackathonName || 'StormHacks'}
+                                {eventWhenSummary ? (
+                                    <>
+                                        {' '}
+                                        on{' '}
+                                        <span className="font-medium text-white/90">
+                                            {eventWhenSummary}
+                                        </span>
+                                    </>
+                                ) : null}
+                                ! 🫶
                             </ResponsiveDialogDescription>
                         </ResponsiveDialogHeader>
                     </Conditional>
