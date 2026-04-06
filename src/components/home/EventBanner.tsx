@@ -56,7 +56,7 @@ export default function EventHeroBanner({
                             className="absolute inset-0 hidden h-full w-full rounded-t-xl object-cover md:block"
                         />
                     ) : null}
-                    <div className="absolute inset-0 rounded-t-xl bg-gradient-to-r from-black/60 to-transparent backdrop-blur-xs" />
+                    <div className="absolute inset-0 rounded-t-xl bg-gradient-to-r from-black/75 to-transparent backdrop-blur-xs" />
 
                     <div className="relative flex items-center gap-3">
                         {iconSrc ? (

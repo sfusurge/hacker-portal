@@ -3,7 +3,6 @@ import { createCaller } from '@/server/appRouter';
 import { getUserData } from '@/server/routers/usersRouter';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
 import EventPageLayout from '@/components/home/EventPageLayout';
-import { getEventPageSlugSegment } from '@/components/home/eventPageConfig';
 
 function normalizeEventName(value: string) {
     return value.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -31,9 +30,7 @@ export default async function EventPage({ slug }: { slug: string }) {
     const config = payload;
 
     const normalizedConfigName = normalizeEventName(config.name);
-    const normalizedConfigSlug = normalizeEventName(
-        getEventPageSlugSegment(config, slug)
-    );
+    const normalizedConfigSlug = normalizeEventName(slug);
 
     const targetHackathon =
         slugMatchedHackathon ??

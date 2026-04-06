@@ -204,7 +204,7 @@ function HomeHackathonCardHero({
                         />
                     ) : null}
                     {hasBanner ? (
-                        <div className="absolute inset-0 rounded-t-xl bg-gradient-to-r from-black/65 to-transparent" />
+                        <div className="absolute inset-0 rounded-t-xl bg-gradient-to-r from-black/75 to-transparent" />
                     ) : (
                         <div
                             className="absolute inset-0 rounded-t-xl bg-gradient-to-br from-neutral-700/90 via-neutral-900 to-neutral-950"

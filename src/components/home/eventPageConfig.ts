@@ -3,7 +3,6 @@ import type { HackathonEventPagePayload } from '@/db/schema/hackathons';
 /** static snapshot of event payloads (reference / seeding). */
 
 export type EventPageConfigShape = {
-    slug?: string;
     name: string;
     tagline: string;
     iconSrc: string;
@@ -137,14 +136,6 @@ export const EVENT_PAGE_NAV_LINKS: EventPageNavLink[] = [
         iconAlt: 'SparkJam logo',
     },
 ];
-
-/** get the slug segment from the config. */
-export function getEventPageSlugSegment(
-    config: EventPageConfigShape,
-    pageSlug: string
-): string {
-    return config.slug ?? pageSlug;
-}
 
 function pickEventBannerFields(c: EventPageConfigShape): EventBannerConfig {
     return {
