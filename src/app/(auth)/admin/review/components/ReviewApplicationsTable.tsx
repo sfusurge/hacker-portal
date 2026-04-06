@@ -65,6 +65,7 @@ export type Applicant = {
     firstName: string;
     lastName: string;
     pronouns: string;
+    age: string;
     email: string;
     haveHackathonExperience: string;
     howHeardAbout: string[];

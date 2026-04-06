@@ -76,18 +76,7 @@ export const applicationsRouter = router({
                 .returning();
 
             if (application) {
-                const tempDummy = (item: any) => {
-                    const { '1': firstName, '5': email } = item.response || {};
-                    return { firstName, email };
-                };
-
                 if (!user?.email) {
-                    throw new InternalServerError(
-                        'User email is missing. Cannot send email.'
-                    );
-                }
-                const { firstName, email: extractedEmail } = tempDummy(input);
-                if (!extractedEmail) {
                     throw new InternalServerError(
                         'User email is missing. Cannot send email.'
                     );
@@ -119,8 +108,8 @@ export const applicationsRouter = router({
                                 : template.content;
 
                         const templateData = {
-                            firstName: firstName ?? 'Friend',
-                            email: extractedEmail,
+                            firstName: user.firstName ?? 'Friend',
+                            email: user.email,
                             userId: user.id,
                         };
 
@@ -154,12 +143,7 @@ export const applicationsRouter = router({
                             html: finalHtmlContent,
                         };
 
-                        const targets = new Set<string>([
-                            user.email,
-                            extractedEmail,
-                        ]);
-
-                        const targetList = [...targets];
+                        const targetList = [user.email];
                         await Promise.all(
                             targetList.map(async (to) => {
                                 await transporter.sendMail({

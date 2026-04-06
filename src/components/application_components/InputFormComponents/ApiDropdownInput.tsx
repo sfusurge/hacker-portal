@@ -41,7 +41,7 @@ export function ApiDropdownInput({
         if (!inputRef.current) return;
 
         let message = '';
-        const selection = question.selection || '';
+        const selection = question.selection ?? '';
 
         if (question.required && showErrors) {
             if (!selection || selection.trim().length === 0) {
@@ -57,10 +57,9 @@ export function ApiDropdownInput({
         setIsInvalid(message !== '');
     }, [question.selection, question.required, showErrors, getErrorMessage]);
 
+    const selectionStr = question.selection ?? '';
     const inputValue =
-        question.selection && question.selection.trim().length > 0
-            ? question.selection
-            : '';
+        selectionStr && selectionStr.trim().length > 0 ? selectionStr : '';
 
     return (
         <div
@@ -91,7 +90,7 @@ export function ApiDropdownInput({
 
             <ApiDropdown
                 apiUrl={question.apiUrl}
-                initialData={question.selection}
+                initialData={selectionStr}
                 onChange={(val) => {
                     if (inputRef.current) {
                         const inputValue =

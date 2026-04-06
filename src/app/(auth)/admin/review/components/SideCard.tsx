@@ -32,6 +32,7 @@ import { DateInput } from '@/components/application_components/InputFormComponen
 import { DropdownInput } from '@/components/application_components/InputFormComponents/DropdownInput';
 import { MajorInput } from '@/components/application_components/InputFormComponents/MajorInput';
 import { FileUploadInput } from '@/components/application_components/InputFormComponents/FileUploadInput';
+import { questionIdsInOrderFromPages } from '@/app/(auth)/admin/review/applicationQuestionOrder';
 
 export interface SideCardProps {
     visible: boolean;
@@ -162,6 +163,23 @@ export default function SideCard({
         _onclose();
     }
 
+    const orderedQuestionIds = useMemo(
+        () => questionIdsInOrderFromPages(hackathon?.applicationQuestionPages),
+        [hackathon?.applicationQuestionPages]
+    );
+
+    const sortedResponseKeys = useMemo(() => {
+        const keys = Object.keys(responseData);
+        return [...keys].sort((a, b) => {
+            const ia = orderedQuestionIds.indexOf(a);
+            const ib = orderedQuestionIds.indexOf(b);
+            if (ia === -1 && ib === -1) return a.localeCompare(b);
+            if (ia === -1) return 1;
+            if (ib === -1) return -1;
+            return ia - ib;
+        });
+    }, [responseData, orderedQuestionIds]);
+
     const questionTypeMap = useMemo(() => {
         const map = new Map<string, InputFormQuestion>();
 
@@ -286,7 +304,7 @@ export default function SideCard({
                         const res: string[] = [];
                         for (const c of val.choices) {
                             if (c.value) {
-                                res.push(c.name);
+                                res.push(c.data);
                             }
                         }
                         if (val.allowOther && val.otherValue) {
@@ -471,7 +489,7 @@ export default function SideCard({
 
                     {/* application data */}
 
-                    {Object.entries(responseData).map(([id, val]) => {
+                    {sortedResponseKeys.map((id) => {
                         const q = questionTypeMap.get(id);
 
                         if (!q) {
