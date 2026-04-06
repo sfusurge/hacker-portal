@@ -24,7 +24,7 @@ import {
     PencilIcon,
     PlusIcon,
 } from '@heroicons/react/24/solid';
-import { useWindowSize } from '@/lib/utils';
+import { useWindowSize } from '@/lib/useWindowSize';
 import { trpc } from '@/trpc/client';
 import { MobileCalendar } from '@/components/calendar/MobileMonthCalendar/MobileCalendar';
 

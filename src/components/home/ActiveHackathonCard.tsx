@@ -187,53 +187,54 @@ function HomeHackathonCardHero({
 
     return (
         <>
-            <div className="relative">
-                <div className="relative bg-neutral-900 p-4 md:p-5">
-                    {mobileBannerSrc ? (
-                        <img
-                            src={mobileBannerSrc}
-                            alt={`${name} banner`}
-                            className="absolute inset-0 h-full w-full rounded-t-xl object-cover md:hidden"
-                        />
-                    ) : null}
-                    {desktopBannerSrc ? (
-                        <img
-                            src={desktopBannerSrc}
-                            alt={`${name} banner`}
-                            className="absolute inset-0 hidden h-full w-full rounded-t-xl object-cover md:block"
-                        />
-                    ) : null}
-                    {hasBanner ? (
-                        <div className="absolute inset-0 rounded-t-xl bg-gradient-to-r from-black/75 to-transparent" />
-                    ) : (
-                        <div
-                            className="absolute inset-0 rounded-t-xl bg-gradient-to-br from-neutral-700/90 via-neutral-900 to-neutral-950"
-                            aria-hidden
-                        />
-                    )}
+            <div className="relative overflow-hidden rounded-t-xl bg-neutral-900 p-4 md:p-5">
+                {mobileBannerSrc ? (
+                    <img
+                        src={mobileBannerSrc}
+                        alt={`${name} banner`}
+                        className="absolute inset-0 h-full w-full object-cover md:hidden"
+                    />
+                ) : null}
+                {desktopBannerSrc ? (
+                    <img
+                        src={desktopBannerSrc}
+                        alt={`${name} banner`}
+                        className="absolute inset-0 hidden h-full w-full object-cover md:block"
+                    />
+                ) : null}
+                {hasBanner ? (
+                    <div
+                        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/75 to-transparent"
+                        aria-hidden
+                    />
+                ) : (
+                    <div
+                        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-neutral-700/90 via-neutral-900 to-neutral-950"
+                        aria-hidden
+                    />
+                )}
 
-                    <div className="relative flex items-center gap-3">
-                        {iconSrc ? (
-                            <img
-                                src={iconSrc}
-                                alt={`${name} icon`}
-                                width={56}
-                                height={56}
-                                className="h-14 w-14 shrink-0 rounded-lg object-cover"
-                            />
-                        ) : (
-                            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-white/15 text-xl font-semibold text-white">
-                                {name.charAt(0)}
-                            </div>
-                        )}
-                        <div className="min-w-0">
-                            <h2 className="text-2xl font-semibold tracking-tight text-white">
-                                {name}
-                            </h2>
-                            <p className="text-sm text-pretty text-white/70 md:text-base">
-                                {tagline}
-                            </p>
+                <div className="relative z-10 flex items-center gap-3">
+                    {iconSrc ? (
+                        <img
+                            src={iconSrc}
+                            alt={`${name} icon`}
+                            width={56}
+                            height={56}
+                            className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                        />
+                    ) : (
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-white/15 text-xl font-semibold text-white">
+                            {name.charAt(0)}
                         </div>
+                    )}
+                    <div className="min-w-0">
+                        <h2 className="text-2xl font-semibold tracking-tight text-white">
+                            {name}
+                        </h2>
+                        <p className="text-sm text-pretty text-white/70 md:text-base">
+                            {tagline}
+                        </p>
                     </div>
                 </div>
             </div>
