@@ -90,7 +90,7 @@ export function ActiveHackathonCardContent({
                     ticketViewFirstOnMobile && 'order-2 sm:order-1'
                 )}
             >
-                <Link href={`/${eventPageSlug}`}>
+                <Link href={`/${eventPageSlug}`} prefetch>
                     {bannerConfig.websiteLabel}
                 </Link>
             </Button>
@@ -145,9 +145,9 @@ export function ActiveHackathonCardContent({
                             hierarchy="secondary"
                             className="w-full"
                         >
-                            <a href={`/${eventPageSlug}`}>
+                            <Link href={`/${eventPageSlug}`} prefetch>
                                 {bannerConfig.websiteLabel}
-                            </a>
+                            </Link>
                         </Button>
                     </>
                 ) : (

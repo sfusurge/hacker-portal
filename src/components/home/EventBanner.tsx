@@ -37,28 +37,39 @@ export default function EventHeroBanner({
     websiteHref,
 }: EventHeroBannerProps) {
     const admissionLabel = isPaid ? PAID_ADMISSION_LABEL : 'Free';
+    const hasBanner = Boolean(desktopBannerSrc || mobileBannerSrc);
 
     return (
         <Card className="overflow-hidden">
             <div className="relative">
-                <div className="relative bg-neutral-900 p-4 md:p-5">
+                <div className="relative overflow-hidden rounded-t-xl bg-neutral-900 p-4 md:p-5">
                     {mobileBannerSrc ? (
                         <img
                             src={mobileBannerSrc}
                             alt={`${eventName} banner background`}
-                            className="absolute inset-0 h-full w-full rounded-xl object-cover md:hidden"
+                            className="absolute inset-0 h-full w-full object-cover md:hidden"
                         />
                     ) : null}
                     {desktopBannerSrc ? (
                         <img
                             src={desktopBannerSrc}
                             alt={`${eventName} banner background`}
-                            className="absolute inset-0 hidden h-full w-full rounded-t-xl object-cover md:block"
+                            className="absolute inset-0 hidden h-full w-full object-cover md:block"
                         />
                     ) : null}
-                    <div className="absolute inset-0 rounded-t-xl bg-gradient-to-r from-black/75 to-transparent backdrop-blur-xs" />
+                    {hasBanner ? (
+                        <div
+                            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/75 to-transparent"
+                            aria-hidden
+                        />
+                    ) : (
+                        <div
+                            className="absolute inset-0 bg-gradient-to-br from-neutral-700/90 via-neutral-900 to-neutral-950"
+                            aria-hidden
+                        />
+                    )}
 
-                    <div className="relative flex items-center gap-3">
+                    <div className="relative z-10 flex items-center gap-3">
                         {iconSrc ? (
                             <img
                                 src={iconSrc}
@@ -98,6 +109,8 @@ export default function EventHeroBanner({
                             <Link
                                 href={websiteHref}
                                 className="text-brand-400 hover:text-brand-300 inline-flex items-center gap-1"
+                                target="_blank"
+                                rel="noopener noreferrer"
                             >
                                 {websiteLabel}
                                 <ArrowTopRightOnSquareIcon className="h-4 w-4" />
