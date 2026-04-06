@@ -36,6 +36,9 @@ interface DbHackathonType {
     endDate: string;
     submissionDeadline: Date;
     submissionOpen: Date | null;
+    applicationOpen?: Date | null;
+    applicationCloses?: Date | null;
+    eventPagePayload?: HackathonData['eventPagePayload'];
     applicationQuestions: InputFormPageData[];
     version: number;
     submissionQuestions: InputFormPageData[];
@@ -44,9 +47,10 @@ interface DbHackathonType {
     isPaid?: boolean;
 }
 
-function DeserializeHackathonData(hackathon: DbHackathonType) {
+function DeserializeHackathonData(hackathon: DbHackathonType): HackathonData {
     return {
         ...hackathon,
+        eventPagePayload: hackathon.eventPagePayload ?? null,
         applicationQuestionPages: hackathon.applicationQuestions ?? [],
         submissionQuestionPages: hackathon.submissionQuestions ?? [],
         hackathonName: hackathon.name,
@@ -56,6 +60,14 @@ function DeserializeHackathonData(hackathon: DbHackathonType) {
         submissionOpen:
             hackathon.submissionOpen != null
                 ? dayjs(hackathon.submissionOpen)
+                : null,
+        applicationOpen:
+            hackathon.applicationOpen != null
+                ? dayjs(hackathon.applicationOpen)
+                : null,
+        applicationCloses:
+            hackathon.applicationCloses != null
+                ? dayjs(hackathon.applicationCloses)
                 : null,
         isPaid: hackathon.isPaid ?? false,
     };

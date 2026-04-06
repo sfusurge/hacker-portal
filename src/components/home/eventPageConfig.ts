@@ -15,6 +15,7 @@ export type EventPageConfigShape = {
     websiteLabel: string;
     websiteHref: string;
     recapHref: string | null;
+    hackerPackageHref?: string | null;
 };
 
 const DEFAULT_BANNER_CONFIG: Pick<
@@ -59,7 +60,20 @@ export function defaultEventPagePayload(
         websiteLabel: `${hackathonName} event page`,
         websiteHref: DEFAULT_BANNER_CONFIG.websiteHref,
         recapHref: null,
+        hackerPackageHref: null,
     };
+}
+
+/** URL for the Hacker Package link; uses DB payload when set, otherwise default copy for this hackathon name. */
+export function resolveHackerPackageHref(
+    payload: HackathonEventPagePayload | null | undefined,
+    hackathonName: string
+): string | null {
+    const raw = payload?.hackerPackageHref;
+    if (typeof raw === 'string' && raw.trim() !== '') {
+        return raw.trim();
+    }
+    return defaultEventPagePayload(hackathonName).hackerPackageHref ?? null;
 }
 
 /** Sidebar display order for “Our Events”. */

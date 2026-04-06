@@ -264,10 +264,15 @@ export function AcceptedContent({
 }
 
 export function ReviewContent({ userData }: { userData: UserData }) {
+    const hackathon = useAtomValue(hackathonAtom);
     const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
 
     const handleOpenWithdrawPrompt = () => setIsWithdrawPromptOpen(true);
     const handleCloseWithdrawPrompt = () => setIsWithdrawPromptOpen(false);
+
+    const applicationClosesLabel = hackathon.applicationCloses?.isValid()
+        ? hackathon.applicationCloses.format('MMMM D, YYYY')
+        : null;
 
     return (
         <>
@@ -286,7 +291,10 @@ export function ReviewContent({ userData }: { userData: UserData }) {
                 <CardDescription className="text-base">
                     Your application has been submitted and is being reviewed by
                     the Surge team. 📝 You will receive an update once the
-                    submission period closes.
+                    application period closes
+                    {applicationClosesLabel
+                        ? ` (deadline ${applicationClosesLabel}).`
+                        : '.'}
                 </CardDescription>
 
                 <CardDescription className="inline text-white/30">

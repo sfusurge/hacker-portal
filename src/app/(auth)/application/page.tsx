@@ -1,30 +1,28 @@
 import { Button } from '@/components/ui/button';
 import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import timezone from 'dayjs/plugin/timezone';
 
 import Image from 'next/image';
 import ApplicationPageComponent from '@/app/(auth)/application/ApplicationPage';
-import { createCaller } from '@/server/appRouter';
+import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 
 export default async function ApplicationPage({
     searchParams,
 }: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-    dayjs.extend(utc);
-    dayjs.extend(timezone);
-    const currentTime = dayjs();
-    const cutoffTime = dayjs.tz('2026-04-28 23:59:00', 'America/Los_Angeles');
     const params = await searchParams;
 
-    const trpcClient = createCaller({});
+    const hackathon = await getCachedActiveHackathon();
+    const applicationCloses = hackathon?.applicationCloses ?? null;
 
     const bypass =
         process.env.APPLY_BYPASS &&
         params['appbypass'] === process.env.APPLY_BYPASS;
 
-    if (currentTime.isAfter(cutoffTime) && !bypass) {
+    const pastDeadline =
+        applicationCloses != null && dayjs().isAfter(dayjs(applicationCloses));
+
+    if (pastDeadline && !bypass) {
         return (
             <div className="flex h-full w-full flex-col items-center justify-center gap-8">
                 <Image

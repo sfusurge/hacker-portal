@@ -29,11 +29,11 @@ import {
 import { ArrowRightIcon, Barcode, ExternalLink } from 'lucide-react';
 import { UserData } from '@/server/routers/usersRouter';
 import clsx from 'clsx';
+import { useAtomValue } from 'jotai';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { resolveHackerPackageHref } from '@/components/home/eventPageConfig';
 import RsvpPrompt from '@/components/home/Application/RsvpPrompt';
 import WithdrawPrompt from '@/components/home/Application/WithdrawPrompt';
-
-const HACKER_PACKAGE_NOTION_URL =
-    'https://verbena-oregano-a56.notion.site/StormHacks-2025-Hacker-Package-26a82a4e770680298cd7e708cd39648e';
 
 export type AppStatus =
     | 'Event Not Yet Active'
@@ -75,6 +75,23 @@ export default function ApplicationCard({
     const [questionSetExists, setQuestionSetExists] = useState(false);
     const [isTicketOpen, setIsTicketOpen] = useState(false);
 
+    const hackathonFromAtom = useAtomValue(hackathonAtom);
+    const applicationOpenResolved =
+        applicationOpen ??
+        (hackathonFromAtom.applicationOpen?.isValid()
+            ? hackathonFromAtom.applicationOpen.toDate()
+            : null);
+    const applicationClosesResolved =
+        applicationCloses ??
+        (hackathonFromAtom.applicationCloses?.isValid()
+            ? hackathonFromAtom.applicationCloses.toDate()
+            : null);
+
+    const hackerPackageHref = resolveHackerPackageHref(
+        hackathonFromAtom.eventPagePayload,
+        hackathonFromAtom.hackathonName || 'Hackathon'
+    );
+
     const [isRSVPPromptOpen, setIsRSVPPromptOpen] = useState(false);
     const handleOpenRSVPPrompt = () => setIsRSVPPromptOpen(true);
     const handleCloseRSVPPrompt = () => setIsRSVPPromptOpen(false);
@@ -98,8 +115,8 @@ export default function ApplicationCard({
         applicationSubmitted,
         applicationStatus,
         questionSetExists,
-        applicationOpen,
-        applicationCloses,
+        applicationOpenResolved,
+        applicationClosesResolved,
         showEventNotActiveState
     );
 
@@ -125,7 +142,8 @@ export default function ApplicationCard({
                     status,
                     image,
                     handleOpenTicket,
-                    handleOpenRSVPPrompt
+                    handleOpenRSVPPrompt,
+                    hackerPackageHref
                 )}
             </CardHeader>
 
@@ -145,8 +163,8 @@ export default function ApplicationCard({
                     image,
                     isTicketOpen,
                     setIsTicketOpen,
-                    applicationOpen,
-                    applicationCloses
+                    applicationOpenResolved,
+                    applicationClosesResolved
                 )}
             </CardContent>
 
@@ -277,7 +295,8 @@ function getHeaderAction(
     status: AppStatus,
     image?: string,
     onOpenTicket?: () => void,
-    onOpenRSVP?: () => void
+    onOpenRSVP?: () => void,
+    hackerPackageHref?: string | null
 ) {
     if (
         (status === 'Accepted' || status === "Accepted and RSVP'd") &&
@@ -286,21 +305,23 @@ function getHeaderAction(
     ) {
         return (
             <div className="hidden items-center gap-2 md:flex">
-                <Button
-                    size="cozy"
-                    variant="default"
-                    hierarchy="secondary"
-                    onClick={() =>
-                        window.open(
-                            HACKER_PACKAGE_NOTION_URL,
-                            '_blank',
-                            'noopener,noreferrer'
-                        )
-                    }
-                    trailingIconChild={<ExternalLink className="h-4 w-4" />}
-                >
-                    Hacker Package
-                </Button>
+                {hackerPackageHref ? (
+                    <Button
+                        size="cozy"
+                        variant="default"
+                        hierarchy="secondary"
+                        onClick={() =>
+                            window.open(
+                                hackerPackageHref,
+                                '_blank',
+                                'noopener,noreferrer'
+                            )
+                        }
+                        trailingIconChild={<ExternalLink className="h-4 w-4" />}
+                    >
+                        Hacker Package
+                    </Button>
+                ) : null}
                 <Button
                     size="cozy"
                     variant="brand"
@@ -448,7 +469,8 @@ function getCardFooter(
     status: AppStatus,
     onOpenRSVP?: () => void,
     onOpenTicket?: () => void,
-    image?: string
+    image?: string,
+    hackerPackageHref?: string | null
 ) {
     if (status === 'Accepted' || status === "Accepted and RSVP'd") {
         const viewTicketButton = image && onOpenTicket && (
@@ -464,7 +486,7 @@ function getCardFooter(
             </Button>
         );
 
-        const hackerPackageButton = (
+        const hackerPackageButton = hackerPackageHref ? (
             <Button
                 size="cozy"
                 variant="default"
@@ -472,7 +494,7 @@ function getCardFooter(
                 className="w-full"
                 onClick={() =>
                     window.open(
-                        HACKER_PACKAGE_NOTION_URL,
+                        hackerPackageHref,
                         '_blank',
                         'noopener,noreferrer'
                     )
@@ -481,7 +503,11 @@ function getCardFooter(
             >
                 Hacker Package
             </Button>
-        );
+        ) : null;
+
+        if (!hackerPackageButton && !viewTicketButton) {
+            return null;
+        }
 
         return (
             <CardFooter className="flex flex-col gap-2 md:hidden">
