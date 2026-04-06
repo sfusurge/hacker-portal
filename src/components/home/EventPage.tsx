@@ -1,34 +1,42 @@
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { createCaller } from '@/server/appRouter';
 import { getUserData } from '@/server/routers/usersRouter';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
 import EventPageLayout from '@/components/home/EventPageLayout';
-import {
-    EventPageSlug,
-    getEventPageConfig,
-} from '@/components/home/eventPageConfig';
+import { getEventPageSlugSegment } from '@/components/home/eventPageConfig';
 
 function normalizeEventName(value: string) {
     return value.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-type CardArrangement = 'active-open' | 'active-closed' | 'inactive';
-
-export default async function EventPage({ slug }: { slug: EventPageSlug }) {
+export default async function EventPage({ slug }: { slug: string }) {
     const userData = await getUserData();
 
     if (userData?.userRole === 'judge') {
         redirect('/projects');
     }
 
-    const config = getEventPageConfig(slug);
     const trpcClient = createCaller({});
 
     const hackathons = await trpcClient.hackathons.getHackathons();
+
+    const slugMatchedHackathon = hackathons.find(
+        (h) => normalizeEventName(h.eventPageSlug) === normalizeEventName(slug)
+    );
+
+    const payload = slugMatchedHackathon?.eventPagePayload;
+    if (payload == null) {
+        notFound();
+    }
+    const config = payload;
+
     const normalizedConfigName = normalizeEventName(config.name);
-    const normalizedConfigSlug = normalizeEventName(config.slug);
+    const normalizedConfigSlug = normalizeEventName(
+        getEventPageSlugSegment(config, slug)
+    );
 
     const targetHackathon =
+        slugMatchedHackathon ??
         hackathons.find(
             (hackathon) =>
                 normalizeEventName(hackathon.name) === normalizedConfigName
@@ -43,16 +51,6 @@ export default async function EventPage({ slug }: { slug: EventPageSlug }) {
         });
 
     const isActiveRoute = Boolean(targetHackathon?.isActive);
-    const applicationsOpened = Boolean(
-        isActiveRoute &&
-            targetHackathon?.applicationOpen &&
-            Date.now() >= new Date(targetHackathon.applicationOpen).getTime()
-    );
-    const cardArrangement: CardArrangement = !isActiveRoute
-        ? 'inactive'
-        : applicationsOpened
-          ? 'active-open'
-          : 'active-closed';
 
     const [application, team, events] = targetHackathon
         ? await Promise.all([
@@ -88,13 +86,13 @@ export default async function EventPage({ slug }: { slug: EventPageSlug }) {
         <EventPageLayout
             userData={userData}
             eventConfig={config}
+            eventHackathonIsPaid={targetHackathon?.isPaid ?? false}
             activeHackathon={isActiveRoute ? (targetHackathon ?? null) : null}
             applicationStatus={application?.currentStatus}
             applicationSubmitted={application !== null}
             team={team}
             events={events}
             ticketQr={ticketQr}
-            cardArrangement={cardArrangement}
         />
     );
 }

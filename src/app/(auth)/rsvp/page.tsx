@@ -114,10 +114,7 @@ function Declined() {
 function NeedPayment({ email }: { email: string }) {
     const hackathon = useAtomValue(hackathonAtom);
     const eventName = hackathon?.hackathonName ?? 'the event';
-    const deadline =
-        hackathon?.endDate?.format('MMMM D, YYYY') ??
-        hackathon?.submissionDeadline?.format('MMMM D, YYYY') ??
-        null;
+    const deadline = 'May 10';
 
     return (
         <div className="mx-auto flex w-full flex-col gap-8">
@@ -128,15 +125,9 @@ function NeedPayment({ email }: { email: string }) {
 
                 <p className="text-base leading-relaxed text-white/60">
                     Purchase your {eventName} ticket by the deadline{' '}
-                    {deadline ? (
-                        <strong className="font-semibold text-white">
-                            {deadline}
-                        </strong>
-                    ) : (
-                        <strong className="font-semibold text-white">
-                            listed in your invite
-                        </strong>
-                    )}{' '}
+                    <strong className="font-semibold text-white">
+                        {deadline}
+                    </strong>{' '}
                     or you&apos;ll be moved to the waitlist. Please{' '}
                     <Link
                         href="/home"

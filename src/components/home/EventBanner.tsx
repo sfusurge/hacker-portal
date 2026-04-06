@@ -7,17 +7,18 @@ import {
     MapPinIcon,
 } from '@heroicons/react/24/solid';
 
+const PAID_ADMISSION_LABEL = 'Paid (CA$15)';
+
 type EventHeroBannerProps = {
     eventName: string;
     tagline: string;
     iconSrc?: string;
     desktopBannerSrc?: string;
     mobileBannerSrc?: string;
-    bannerClassName?: string;
     overview: string;
     location: string;
     dates: string;
-    admission: string;
+    isPaid: boolean;
     websiteLabel: string;
     websiteHref: string;
 };
@@ -28,20 +29,19 @@ export default function EventHeroBanner({
     iconSrc,
     desktopBannerSrc,
     mobileBannerSrc,
-    bannerClassName,
     overview,
     location,
     dates,
-    admission,
+    isPaid,
     websiteLabel,
     websiteHref,
 }: EventHeroBannerProps) {
+    const admissionLabel = isPaid ? PAID_ADMISSION_LABEL : 'Free';
+
     return (
         <Card className="overflow-hidden">
             <div className="relative">
-                <div
-                    className={`relative p-4 md:p-5 ${bannerClassName ?? 'bg-neutral-900'}`}
-                >
+                <div className="relative bg-neutral-900 p-4 md:p-5">
                     {mobileBannerSrc ? (
                         <img
                             src={mobileBannerSrc}
@@ -130,7 +130,7 @@ export default function EventHeroBanner({
                                 Admission
                             </span>
                             <span className="text-right text-white">
-                                {admission}
+                                {admissionLabel}
                             </span>
                         </div>
                     </div>

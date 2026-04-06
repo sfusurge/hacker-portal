@@ -5,7 +5,7 @@ import EventIsOverCard from '@/components/home/EventIsOverCard';
 import EventsCard from '@/components/home/EventsCard';
 import RecapCard from '@/components/home/RecapCard';
 import TeamCard from '@/components/home/TeamCard';
-import { EventPageConfig } from '@/components/home/eventPageConfig';
+import type { EventPageConfigShape } from '@/components/home/eventPageConfig';
 import { AppRouter } from '@/server/appRouter';
 import { CalendarEvent } from '@/server/routers/eventsRouter';
 import { UserData } from '@/server/routers/usersRouter';
@@ -24,7 +24,8 @@ type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
 
 type EventPageLayoutProps = {
     userData: UserData;
-    eventConfig: EventPageConfig;
+    eventConfig: EventPageConfigShape;
+    eventHackathonIsPaid: boolean;
     activeHackathon: EventPageHackathon | null;
     applicationStatus?: string;
     applicationSubmitted: boolean;
@@ -36,6 +37,7 @@ type EventPageLayoutProps = {
 export default function EventPageLayout({
     userData,
     eventConfig,
+    eventHackathonIsPaid,
     activeHackathon,
     applicationStatus,
     applicationSubmitted,
@@ -66,11 +68,10 @@ export default function EventPageLayout({
                 iconSrc={eventConfig.iconSrc}
                 desktopBannerSrc={eventConfig.desktopBannerSrc}
                 mobileBannerSrc={eventConfig.mobileBannerSrc}
-                bannerClassName={eventConfig.bannerClassName}
                 overview={eventConfig.overview}
                 location={eventConfig.location}
                 dates={eventConfig.dates}
-                admission={eventConfig.admission}
+                isPaid={eventHackathonIsPaid}
                 websiteLabel={eventConfig.websiteLabel}
                 websiteHref={eventConfig.websiteHref}
             />
@@ -110,11 +111,7 @@ export default function EventPageLayout({
                 ) : (
                     <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:gap-8">
                         {eventConfig.recapHref ? (
-                            <RecapCard
-                                recapHref={eventConfig.recapHref}
-                                title={eventConfig.recapTitle}
-                                description={eventConfig.recapDescription}
-                            />
+                            <RecapCard recapHref={eventConfig.recapHref} />
                         ) : (
                             <EventIsOverCard />
                         )}

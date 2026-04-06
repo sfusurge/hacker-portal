@@ -31,8 +31,23 @@ import {
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { cn } from '@/lib/utils';
 import { navLinkVariants, NavLink } from './NavLink';
+import { EVENT_PAGE_NAV_LINKS } from '@/components/home/eventPageConfig';
 import { UserData } from '@/server/routers/usersRouter';
 import { getIcon } from '@/utils/blobHelper';
+
+/** mobile (under 768px) user can expand/collapse. */
+const SIDEBAR_MOBILE_MAX_PX = 768;
+/** desktop (≥1180px) user can expand/collapse; preference is saved. between mobile max and this = tablet: always collapsed, no toggle. */
+const SIDEBAR_DESKTOP_MIN_PX = 1180;
+
+function isTabletWidth(w: number) {
+    return w >= SIDEBAR_MOBILE_MAX_PX && w < SIDEBAR_DESKTOP_MIN_PX;
+}
+
+/** desktop (≥1180px) collapse preference */
+const LS_SIDEBAR_DESKTOP = 'sidebar_collapsed_desktop';
+/** mobile (under 768px) collapse preference*/
+const LS_SIDEBAR_MOBILE = 'sidebar_collapsed_mobile';
 
 interface NavProps {
     className?: string;
@@ -87,21 +102,21 @@ const adminLinks = [
         iconAlt: 'Review Applications logo',
     },
     {
-        href: '/admin/email',
-        label: 'Emails',
+        href: '/admin/email/templates',
+        label: 'Emails Templates',
         icon: <EnvelopeIcon className="h-6 w-6" />,
         iconAlt: 'Emails logo',
-        dropdownItems: [
-            { label: 'Email Templates', href: '/admin/email/templates' },
-            { label: 'Subscribed Emails', href: '/admin/email/subscribed' },
-        ],
+        // dropdownItems: [
+        //     { label: 'Email Templates', href: '/admin/email/templates' },
+        //     { label: 'Subscribed Emails', href: '/admin/email/subscribed' },
+        // ],
     },
-    {
-        href: '/admin/judge',
-        label: 'Judge Assignment',
-        icon: <IdentificationIcon className="h-6 w-6" />,
-        iconAlt: 'judge',
-    },
+    // {
+    //     href: '/admin/judge',
+    //     label: 'Judge Assignment',
+    //     icon: <IdentificationIcon className="h-6 w-6" />,
+    //     iconAlt: 'judge',
+    // },
     {
         href: '/admin/qr',
         label: 'Hacker Checkin (Admin)',
@@ -154,77 +169,64 @@ const sponsorNavLinks = [
     },
 ];
 
-// USER ONLY EVENT LINKS
-const eventLinks = [
-    {
-        href: '/stormhacks', // TODO: Fill it up with Steph's work
-        label: 'Stormhacks',
-        icon: '/dashboard/sh25head.svg',
-        iconAlt: 'Stormhacks logo',
-    },
-    {
-        href: '/journeyhacks', // TODO: Fill it up with Steph's work
-        label: 'Journeyhacks',
-        icon: '/dashboard/jh26head.png',
-        iconAlt: 'Journeyhacks logo',
-    },
-    {
-        href: '/stormforge', // TODO: Fill it up with Steph's work
-        label: 'StormForge',
-        icon: '/dashboard/sf26head.png',
-        iconAlt: 'StormForge logo',
-    },
-    {
-        href: '/sillyhacks', // TODO: Fill it up with Steph's work
-        label: 'Sillyhacks',
-        icon: '/dashboard/sillyhackshead.svg',
-        iconAlt: 'Sillyhacks logo',
-    },
-    {
-        href: '/sparkjam', // TODO: Fill it up with Steph's work
-        label: 'Sparkjam',
-        icon: '/dashboard/OtterHead.png',
-        iconAlt: 'Sparkjam logo',
-    },
-];
-
 export default function SideBar({ className, initialData }: NavProps) {
     const [collapsed, setCollapsed] = useState(false);
-    const [isLargeScreen, setIsLargeScreen] = useState(true);
+    const [showCollapseToggle, setShowCollapseToggle] = useState(false);
     const [profilePopoverOpen, setProfilePopoverOpen] = useState(false);
+    const [profilePopoverSide, setProfilePopoverSide] = useState<
+        'right' | 'bottom'
+    >(() =>
+        typeof window !== 'undefined' &&
+        window.innerWidth < SIDEBAR_MOBILE_MAX_PX
+            ? 'bottom'
+            : 'right'
+    );
 
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const savedState = localStorage.getItem('sidebar_collapsed');
-            if (savedState) {
-                setCollapsed(JSON.parse(savedState));
-            }
+    const applyCollapsedForWidth = (w: number) => {
+        if (isTabletWidth(w)) {
+            setCollapsed(true);
+            return;
         }
-    }, []);
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem(
-                'sidebar_collapsed',
-                JSON.stringify(collapsed)
+        if (w < SIDEBAR_MOBILE_MAX_PX) {
+            const saved = localStorage.getItem(LS_SIDEBAR_MOBILE);
+            setCollapsed(
+                saved !== null ? (JSON.parse(saved) as boolean) : false
             );
+            return;
         }
-    }, [collapsed]);
+        const saved = localStorage.getItem(LS_SIDEBAR_DESKTOP);
+        setCollapsed(saved !== null ? (JSON.parse(saved) as boolean) : false);
+    };
 
     useEffect(() => {
         const checkScreenSize = () => {
-            if (typeof window !== 'undefined') {
-                const isLarge = window.innerWidth >= 768;
-                setIsLargeScreen(isLarge);
-                if (!isLarge) {
-                    setCollapsed(false);
-                }
-            }
+            if (typeof window === 'undefined') return;
+            const w = window.innerWidth;
+            setShowCollapseToggle(w >= SIDEBAR_DESKTOP_MIN_PX);
+            setProfilePopoverSide(
+                w < SIDEBAR_MOBILE_MAX_PX ? 'bottom' : 'right'
+            );
+            applyCollapsedForWidth(w);
         };
         checkScreenSize();
         window.addEventListener('resize', checkScreenSize);
         return () => window.removeEventListener('resize', checkScreenSize);
     }, []);
+
+    const toggleCollapsed = () => {
+        if (typeof window === 'undefined') return;
+        const w = window.innerWidth;
+        if (isTabletWidth(w)) return;
+        setCollapsed((prev) => {
+            const next = !prev;
+            if (w < SIDEBAR_MOBILE_MAX_PX) {
+                localStorage.setItem(LS_SIDEBAR_MOBILE, JSON.stringify(next));
+            } else if (w >= SIDEBAR_DESKTOP_MIN_PX) {
+                localStorage.setItem(LS_SIDEBAR_DESKTOP, JSON.stringify(next));
+            }
+            return next;
+        });
+    };
 
     const avatarUrl = useMemo(() => {
         if (initialData && initialData.image) {
@@ -309,9 +311,9 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                     link.href
                                                 )}
                                                 collapsed={collapsed}
-                                                dropdownItems={
-                                                    link.dropdownItems
-                                                }
+                                                // dropdownItems={
+                                                //     link.dropdownItems
+                                                // }
                                             />
                                         ))}
                                 </>
@@ -369,9 +371,24 @@ export default function SideBar({ className, initialData }: NavProps) {
                                     </div>
                                 </PopoverTrigger>
                                 <PopoverContent
+                                    key={profilePopoverSide}
+                                    side={profilePopoverSide}
+                                    align={
+                                        profilePopoverSide === 'bottom'
+                                            ? 'end'
+                                            : 'center'
+                                    }
                                     sideOffset={8}
-                                    side="right"
-                                    className="z-200 w-48"
+                                    collisionPadding={
+                                        profilePopoverSide === 'bottom'
+                                            ? 16
+                                            : undefined
+                                    }
+                                    className={cn(
+                                        'z-200 w-48',
+                                        profilePopoverSide === 'bottom' &&
+                                            '!mr-0 max-w-[min(12rem,calc(100vw-2rem))]'
+                                    )}
                                 >
                                     <NavLink
                                         href="/profile"
@@ -405,7 +422,9 @@ export default function SideBar({ className, initialData }: NavProps) {
                                             }
                                         }}
                                     />
-                                    <PopoverPrimitive.Arrow className="fill-neutral-850 mr-4 shadow-lg" />
+                                    {profilePopoverSide === 'right' ? (
+                                        <PopoverPrimitive.Arrow className="fill-neutral-850 mr-4 shadow-lg" />
+                                    ) : null}
                                 </PopoverContent>
                             </Popover>
 
@@ -438,7 +457,7 @@ export default function SideBar({ className, initialData }: NavProps) {
                                         }}
                                         className="flex flex-col gap-1"
                                     >
-                                        {eventLinks.map((link) => (
+                                        {EVENT_PAGE_NAV_LINKS.map((link) => (
                                             <NavLink
                                                 key={link.href}
                                                 href={link.href}
@@ -459,9 +478,9 @@ export default function SideBar({ className, initialData }: NavProps) {
                     </div>
 
                     <div className="mt-auto w-full pt-5">
-                        {isLargeScreen && (
+                        {showCollapseToggle && (
                             <motion.button
-                                onClick={() => setCollapsed(!collapsed)}
+                                onClick={toggleCollapsed}
                                 className="hover:bg-neutral-750/30 flex w-full items-center justify-start gap-2 rounded-lg px-3 py-2 text-white transition-colors"
                                 initial={false}
                                 animate={{

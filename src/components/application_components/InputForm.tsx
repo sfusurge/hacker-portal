@@ -72,6 +72,7 @@ import { DateInput } from '@/components/application_components/InputFormComponen
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import ReviewApplicationDialog from './ReviewApplicationDialog';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -410,7 +411,7 @@ function Question({
 }) {
     const question = useAtomValue(questionAtom);
     const error = useMemo(() => atom<string | undefined>(undefined), []);
-
+    const hackathon = useAtomValue(hackathonAtom);
     function getInnerInput(
         type: InputFormQuestion['type'],
         _questionAtom: PrimitiveAtom<InputFormQuestion>,
@@ -562,12 +563,12 @@ function Question({
                         This event requires in-person attendance
                     </AlertTitle>
                     <AlertDescription>
-                        Sillyhacks is an in-person event and requires attendance
-                        at SFU Burnaby. For questions about travel
-                        reimbursements, please{' '}
+                        {hackathon?.hackathonName} is an in-person event and
+                        requires attendance at SFU Burnaby. For questions about
+                        travel reimbursements, please{' '}
                         <a
                             className="underline"
-                            href="https://sillyhacks.sfusurge.com/#faq"
+                            href={`${hackathon?.eventPagePayload?.websiteHref}#faq`}
                             target="_blank"
                             rel="noopener noreferrer"
                         >

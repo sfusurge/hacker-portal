@@ -1,22 +1,20 @@
-type EventPageConfigShape = {
-    slug: string;
+import type { HackathonEventPagePayload } from '@/db/schema/hackathons';
+
+/** static snapshot of event payloads (reference / seeding). */
+
+export type EventPageConfigShape = {
+    slug?: string;
     name: string;
     tagline: string;
     iconSrc: string;
     desktopBannerSrc?: string;
     mobileBannerSrc?: string;
-    bannerClassName: string;
     overview: string;
     location: string;
     dates: string;
-    admission: string;
     websiteLabel: string;
     websiteHref: string;
-    discordHref: string;
-    acceptedDiscordHref?: string | null;
     recapHref: string | null;
-    recapTitle: string;
-    recapDescription: string;
 };
 
 const DEFAULT_BANNER_CONFIG: Pick<
@@ -25,7 +23,6 @@ const DEFAULT_BANNER_CONFIG: Pick<
     | 'overview'
     | 'location'
     | 'dates'
-    | 'admission'
     | 'websiteLabel'
     | 'websiteHref'
 > = {
@@ -34,189 +31,124 @@ const DEFAULT_BANNER_CONFIG: Pick<
         'Join us for our latest hacker event. Apply to participate, collaborate, and build meaningful projects with other attendees.',
     location: 'TBA',
     dates: 'TBA',
-    admission: 'Free',
     websiteLabel: 'Event website',
     websiteHref: '/home',
 };
 
-export const EVENT_PAGE_CONFIG = {
-    stormhacks: {
-        slug: 'stormhacks',
-        name: 'StormHacks',
-        tagline: 'Our annual flagship hackathon',
-        iconSrc: '/dashboard/sh25head.svg',
-        desktopBannerSrc: '/dashboard/sh25-Desktop-Desktop.png',
-        mobileBannerSrc: '/dashboard/sh25-banner-mobile.png',
-        bannerClassName:
-            'bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900',
-        overview:
-            "Western Canada's largest hackathon, bringing together over 1000+ builders from across North America to build projects over one intense weekend.",
-        location: 'SFU Burnaby, In-Person',
-        dates: 'Oct 4 - Oct 5',
-        admission: 'Free',
-        websiteLabel: 'StormHacks event page',
-        websiteHref: 'https://stormhacks.com',
-        discordHref: 'https://discord.com/invite/U5q6RkHHtA/login',
-        acceptedDiscordHref: 'https://discord.gg/mfn8YkPCnp',
-        recapHref: 'https://m.youtube.com/watch?v=lzFKBIZsHe4&feature=youtu.be',
-        recapTitle: "Watch last year's Recap!",
-        recapDescription: 'See the highlights of StormHacks 2025.',
-    },
-    journeyhacks: {
-        slug: 'journeyhacks',
-        name: 'JourneyHacks',
-        tagline: 'Kick off your locked-in journey',
-        iconSrc: '/dashboard/sf26icon.svg',
-        desktopBannerSrc: '/dashboard/jh26-banner-Desktop.png',
-        mobileBannerSrc: '/dashboard/jh26-banner-mobile.png',
-        bannerClassName:
-            'bg-gradient-to-r from-cyan-900 via-sky-900 to-indigo-900',
-        overview:
-            'A beginner-friendly 12-hour hackathon built to kickstart your year and your journey in software development. Learn new skills and meet like-minded peers!',
-        location: 'SFU Burnaby, In-Person',
-        dates: 'Jan 10',
-        admission: 'Free',
-        websiteLabel: 'JourneyHacks event page',
-        websiteHref: 'https://journeyhacks.sfusurge.com',
-        discordHref: 'https://discord.com/invite/U5q6RkHHtA/login',
-        acceptedDiscordHref: null,
-        recapHref: null,
-        recapTitle: "Watch last year's Recap!",
-        recapDescription: 'See the highlights from our last event.',
-    },
-    stormforge: {
-        slug: 'stormforge',
-        name: 'StormForge',
-        tagline: 'Forge your path',
-        iconSrc: '/dashboard/sf26icon.svg',
-        desktopBannerSrc: '/dashboard/sf26-banner-desktop.png',
-        mobileBannerSrc: '/dashboard/sf26-banner-mobile.png',
-        bannerClassName:
-            'bg-gradient-to-r from-violet-900 via-fuchsia-900 to-slate-900',
-        overview:
-            'A semester-long incubation program that connects you with industry mentors and passionate peers across disciplines, bringing ideas to life!',
-        location: 'SFU Burnaby, In-Person',
-        dates: 'Jan - Apr',
-        admission: 'Free',
-        websiteLabel: 'StormForge Package',
-        websiteHref:
-            'https://drive.google.com/file/d/15blKokvy4uZuTuTuD76hVpm3kkBbZlY0/view?usp=sharing',
-        discordHref: 'https://discord.com/invite/U5q6RkHHtA/login',
-        acceptedDiscordHref: null,
-        recapHref: null,
-        recapTitle: "Watch last year's Recap!",
-        recapDescription: 'See the highlights from our last event.',
-    },
-    sillyhacks: {
-        slug: 'sillyhacks',
-        name: 'SillyHacks',
-        tagline: "Let's get silly",
-        iconSrc: '/dashboard/sillyhackshead.svg',
-        desktopBannerSrc: '/dashboard/sillyHacks-banner-desktop.png',
-        mobileBannerSrc: '/dashboard/sillyHacks-banner-mobile.png',
-        bannerClassName:
-            'bg-gradient-to-r from-rose-900 via-pink-900 to-purple-900',
-        overview:
-            'A 10-hour hackathon for building projects too silly or weird to exist anywhere else. Prioritizing creativity and laughs over technical complexity!',
-        location: 'SFU Burnaby, In-Person',
-        dates: 'Oct 4 - Oct 5',
-        admission: 'Free',
-        websiteLabel: 'SillyHacks event page',
-        websiteHref: 'https://sillyhacks.sfusurge.com',
-        discordHref: 'https://discord.com/invite/U5q6RkHHtA/login',
-        acceptedDiscordHref: null,
-        recapHref: null,
-        recapTitle: "Watch last year's Recap!",
-        recapDescription: 'See the highlights from our last event.',
-    },
-    sparkjam: {
-        slug: 'sparkjam',
-        name: 'SparkJam',
-        tagline: 'Our creative design jam',
-        iconSrc: '/dashboard/sj26head.png',
-        desktopBannerSrc: '/dashboard/sj26-banner-Desktop.png',
-        mobileBannerSrc: '/dashboard/sj26-banner-mobile.png',
-        bannerClassName:
-            'bg-gradient-to-r from-amber-900 via-orange-900 to-rose-900',
-        overview:
-            'SparkJam is a two-week design sprint focused on solving real-world problems with creativity and collaboration.',
-        location: 'SFU Burnaby & UWaterloo, In-Person',
-        dates: 'May 11 - May 23',
-        admission: 'Paid (CA$15)',
-        websiteLabel: 'SparkJam event page',
-        websiteHref: 'https://sparkjam.sfusurge.com',
-        discordHref: 'https://discord.com/invite/U5q6RkHHtA/login',
-        acceptedDiscordHref: null,
-        recapHref: null,
-        recapTitle: "Watch last year's Recap!",
-        recapDescription: 'See the highlights from our last event.',
-    },
-} as const satisfies Record<string, EventPageConfigShape>;
+/** banner copy + links when `event_page_payload` is missing (home card / buttons). */
+export function defaultEventBannerFallback(
+    eventName: string
+): EventBannerConfig {
+    return {
+        ...DEFAULT_BANNER_CONFIG,
+        websiteLabel: `${eventName} event page`,
+    };
+}
 
-export type EventPageSlug = keyof typeof EVENT_PAGE_CONFIG;
-export type EventPageConfig = (typeof EVENT_PAGE_CONFIG)[EventPageSlug];
+/** full default `event_page_payload` shape when the DB row has no JSON yet. */
+export function defaultEventPagePayload(
+    hackathonName: string
+): HackathonEventPagePayload {
+    return {
+        name: hackathonName,
+        tagline: DEFAULT_BANNER_CONFIG.tagline,
+        iconSrc: '/dashboard/sh25head.svg',
+        overview: DEFAULT_BANNER_CONFIG.overview,
+        location: DEFAULT_BANNER_CONFIG.location,
+        dates: DEFAULT_BANNER_CONFIG.dates,
+        websiteLabel: `${hackathonName} event page`,
+        websiteHref: DEFAULT_BANNER_CONFIG.websiteHref,
+        recapHref: null,
+    };
+}
+
+/** Sidebar display order for “Our Events”. */
+export const EVENT_PAGE_NAV_SLUG_ORDER = [
+    'stormhacks',
+    'journeyhacks',
+    'stormforge',
+    'sillyhacks',
+    'sparkjam',
+] as const;
+
+export type EventPageSlug = (typeof EVENT_PAGE_NAV_SLUG_ORDER)[number];
+
 export type EventBannerConfig = Pick<
     EventPageConfigShape,
     | 'tagline'
     | 'overview'
     | 'location'
     | 'dates'
-    | 'admission'
     | 'websiteLabel'
     | 'websiteHref'
 >;
 
-function normalizeEventName(value: string) {
-    return value.toLowerCase().replace(/[^a-z0-9]+/g, '');
+export type EventPageNavLink = {
+    href: string;
+    label: string;
+    icon: string;
+    iconAlt: string;
+};
+
+/** sidebar “Our Events” links (labels/icons; page content comes from the DB). */
+export const EVENT_PAGE_NAV_LINKS: EventPageNavLink[] = [
+    {
+        href: '/stormhacks',
+        label: 'StormHacks',
+        icon: '/dashboard/sh25head.svg',
+        iconAlt: 'StormHacks logo',
+    },
+    {
+        href: '/journeyhacks',
+        label: 'JourneyHacks',
+        icon: '/dashboard/jh26head.png',
+        iconAlt: 'JourneyHacks logo',
+    },
+    {
+        href: '/stormforge',
+        label: 'StormForge',
+        icon: '/dashboard/sf26icon.svg',
+        iconAlt: 'StormForge logo',
+    },
+    {
+        href: '/sillyhacks',
+        label: 'SillyHacks',
+        icon: '/dashboard/sillyhackshead.svg',
+        iconAlt: 'SillyHacks logo',
+    },
+    {
+        href: '/sparkjam',
+        label: 'SparkJam',
+        icon: '/dashboard/sj26head.png',
+        iconAlt: 'SparkJam logo',
+    },
+];
+
+/** get the slug segment from the config. */
+export function getEventPageSlugSegment(
+    config: EventPageConfigShape,
+    pageSlug: string
+): string {
+    return config.slug ?? pageSlug;
 }
 
-export function getEventPageConfig(slug: EventPageSlug): EventPageConfig {
-    return EVENT_PAGE_CONFIG[slug];
-}
-
-export function getEventBannerConfigByName(
-    eventName: string
-): EventBannerConfig {
-    const normalizedName = normalizeEventName(eventName);
-
-    const directMatch = Object.values(EVENT_PAGE_CONFIG).find(
-        (config) => normalizeEventName(config.slug) === normalizedName
-    );
-    if (directMatch) {
-        return {
-            tagline: directMatch.tagline,
-            overview: directMatch.overview,
-            location: directMatch.location,
-            dates: directMatch.dates,
-            admission: directMatch.admission,
-            websiteLabel: directMatch.websiteLabel,
-            websiteHref: directMatch.websiteHref,
-        };
-    }
-
-    const fuzzyMatch = Object.values(EVENT_PAGE_CONFIG).find((config) => {
-        const normalizedSlug = normalizeEventName(config.slug);
-        const normalizedConfigName = normalizeEventName(config.name);
-        return (
-            normalizedName.includes(normalizedSlug) ||
-            normalizedSlug.includes(normalizedName) ||
-            normalizedName.includes(normalizedConfigName)
-        );
-    });
-    if (fuzzyMatch) {
-        return {
-            tagline: fuzzyMatch.tagline,
-            overview: fuzzyMatch.overview,
-            location: fuzzyMatch.location,
-            dates: fuzzyMatch.dates,
-            admission: fuzzyMatch.admission,
-            websiteLabel: fuzzyMatch.websiteLabel,
-            websiteHref: fuzzyMatch.websiteHref,
-        };
-    }
-
+function pickEventBannerFields(c: EventPageConfigShape): EventBannerConfig {
     return {
-        ...DEFAULT_BANNER_CONFIG,
-        websiteLabel: `${eventName} event page`,
+        tagline: c.tagline,
+        overview: c.overview,
+        location: c.location,
+        dates: c.dates,
+        websiteLabel: c.websiteLabel,
+        websiteHref: c.websiteHref,
     };
+}
+
+export function eventBannerFieldsFromPayload(
+    payload: HackathonEventPagePayload
+): EventBannerConfig {
+    return pickEventBannerFields(payload);
+}
+
+export function isKnownNavEventSlug(value: string): value is EventPageSlug {
+    return (EVENT_PAGE_NAV_SLUG_ORDER as readonly string[]).includes(value);
 }
