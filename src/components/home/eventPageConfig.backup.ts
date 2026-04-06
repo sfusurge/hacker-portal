@@ -68,7 +68,7 @@ export const EVENT_PAGE_CONFIG_BACKUP = {
     sparkjam: {
         name: 'SparkJam',
         tagline: 'Our creative design jam',
-        iconSrc: '/dashboard/sparkjamhead.webp',
+        iconSrc: '/dashboard/sj26head.png',
         desktopBannerSrc: '/dashboard/sj26-banner-Desktop.png',
         mobileBannerSrc: '/dashboard/sj26-banner-mobile.png',
         overview:

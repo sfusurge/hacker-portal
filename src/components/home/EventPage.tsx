@@ -9,16 +9,15 @@ function normalizeEventName(value: string) {
 }
 
 export default async function EventPage({ slug }: { slug: string }) {
-    const trpcClient = createCaller({});
-
-    const [userData, hackathons] = await Promise.all([
-        getUserData(),
-        trpcClient.hackathons.getHackathons(),
-    ]);
+    const userData = await getUserData();
 
     if (userData?.userRole === 'judge') {
         redirect('/projects');
     }
+
+    const trpcClient = createCaller({});
+
+    const hackathons = await trpcClient.hackathons.getHackathons();
 
     const slugMatchedHackathon = hackathons.find(
         (h) => normalizeEventName(h.eventPageSlug) === normalizeEventName(slug)
@@ -50,16 +49,7 @@ export default async function EventPage({ slug }: { slug: string }) {
 
     const isActiveRoute = Boolean(targetHackathon?.isActive);
 
-    const qrOpts = {
-        margin: 1,
-        scale: 10,
-        color: {
-            dark: '#FFFFFF',
-            light: '#0000',
-        },
-    } satisfies QROptions;
-
-    const [application, team, events, ticketQr] = targetHackathon
+    const [application, team, events] = targetHackathon
         ? await Promise.all([
               isActiveRoute
                   ? trpcClient.applications.getCurrentApplication({
@@ -74,11 +64,20 @@ export default async function EventPage({ slug }: { slug: string }) {
               trpcClient.events.getEvents({
                   hackathonId: targetHackathon.id,
               }),
-              userData?.id != null
-                  ? generateQRCode(userData.id.toString(), qrOpts)
-                  : Promise.resolve(null),
           ])
-        : [null, null, [], null];
+        : [null, null, []];
+
+    const ticketQr =
+        userData?.id != null
+            ? await generateQRCode(userData.id.toString(), {
+                  margin: 1,
+                  scale: 10,
+                  color: {
+                      dark: '#FFFFFF',
+                      light: '#0000',
+                  },
+              } satisfies QROptions)
+            : null;
 
     return (
         <EventPageLayout

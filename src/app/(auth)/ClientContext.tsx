@@ -57,6 +57,18 @@ function DeserializeHackathonData(hackathon: DbHackathonType): HackathonData {
         startDate: dayjs(hackathon.startDate),
         endDate: dayjs(hackathon.endDate),
         submissionDeadline: dayjs(hackathon.submissionDeadline),
+        submissionOpen:
+            hackathon.submissionOpen != null
+                ? dayjs(hackathon.submissionOpen)
+                : null,
+        applicationOpen:
+            hackathon.applicationOpen != null
+                ? dayjs(hackathon.applicationOpen)
+                : null,
+        applicationCloses:
+            hackathon.applicationCloses != null
+                ? dayjs(hackathon.applicationCloses)
+                : null,
         isPaid: hackathon.isPaid ?? false,
     };
 }

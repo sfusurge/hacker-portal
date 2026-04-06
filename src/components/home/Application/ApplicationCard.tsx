@@ -203,13 +203,44 @@ function determineApplicationStatus(
     applicationCloses?: Date | null,
     showEventNotActiveState?: boolean
 ): AppStatus {
+    const now = Date.now();
+    const hasApplicationWindow = Boolean(applicationOpen || applicationCloses);
+
+    if (showEventNotActiveState && !hasApplicationWindow) {
+        return 'Event Not Yet Active';
+    }
+
+    if (applicationOpen && now < new Date(applicationOpen).getTime()) {
+        return 'Countdown To Open';
+    }
+
     if (applicationSubmitted && currentStatus) {
-        return currentStatus as AppStatus;
+        return normalizeApplicationStatus(currentStatus);
     }
     if (questionSetExists) {
         return 'In Progress';
     }
     return 'Not Yet Started';
+}
+
+function normalizeApplicationStatus(currentStatus: string): AppStatus {
+    const normalized = currentStatus.trim().toLowerCase();
+
+    const statusMap: Record<string, AppStatus> = {
+        'awaiting review': 'Awaiting Review',
+        'awating review': 'Awaiting Review',
+        awaiting_review: 'Awaiting Review',
+        accepted: 'Accepted',
+        "accepted and rsvp'd": "Accepted and RSVP'd",
+        declined: 'Declined',
+        'wait list': 'Wait List',
+        waitlist: 'Wait List',
+        withdrawn: 'Withdrawn',
+        'accepted - pending payment': 'Accepted - Pending Payment',
+        'accepted - rsvp to confirm': 'Accepted - RSVP to Confirm',
+    };
+
+    return statusMap[normalized] ?? (currentStatus as AppStatus);
 }
 
 // Helpers to render different parts based on status

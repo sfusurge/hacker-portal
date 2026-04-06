@@ -563,12 +563,12 @@ function Question({
                         This event requires in-person attendance
                     </AlertTitle>
                     <AlertDescription>
-                        Sillyhacks is an in-person event and requires attendance
-                        at SFU Burnaby. For questions about travel
-                        reimbursements, please{' '}
+                        {hackathon?.hackathonName} is an in-person event and
+                        requires attendance at SFU Burnaby. For questions about
+                        travel reimbursements, please{' '}
                         <a
                             className="underline"
-                            href="https://sillyhacks.sfusurge.com/#faq"
+                            href={`${hackathon?.eventPagePayload?.websiteHref}#faq`}
                             target="_blank"
                             rel="noopener noreferrer"
                         >

@@ -159,24 +159,28 @@ export const applicationsRouter = router({
                             extractedEmail,
                         ]);
 
-                        for (const to of targets) {
-                            transporter.sendMail(
-                                { ...commonMail, to },
-                                (error, info) => {
-                                    if (error) {
-                                        console.error(
-                                            'Error sending email:',
-                                            error
-                                        );
-                                    } else {
-                                        console.log(
-                                            'Email sent:',
-                                            info.response
-                                        );
-                                    }
-                                }
+                        const targetList = [...targets];
+                        await Promise.all(
+                            targetList.map(async (to) => {
+                                await transporter.sendMail({
+                                    ...commonMail,
+                                    to,
+                                });
+                            })
+                        );
+
+                        await databaseClient
+                            .update(applications)
+                            .set({ lastEmailSent: 'hacker_applied' })
+                            .where(
+                                and(
+                                    eq(
+                                        applications.hackathonId,
+                                        input.hackathonId
+                                    ),
+                                    eq(applications.userId, user.id)
+                                )
                             );
-                        }
                     }
                 } catch (error) {
                     console.error(

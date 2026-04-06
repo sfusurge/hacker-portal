@@ -7,11 +7,8 @@ import {
     MegaphoneIcon,
     UserIcon,
 } from '@heroicons/react/24/outline';
-import { InboxStackIcon } from '@heroicons/react/24/outline';
-
-import * as PopoverPrimitive from '@radix-ui/react-popover';
-import { signOut } from 'next-auth/react';
-import { useEffect, useMemo, useState } from 'react';
+import { NavLink } from './NavLink';
+import { ReactNode, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { UserData } from '@/server/routers/usersRouter';
 import { motion, AnimatePresence } from 'motion/react';
@@ -63,23 +60,33 @@ export default function MobileTopNav({
                     )}
                 >
                     <div className="flex w-full flex-row items-center justify-between">
-                        <div className="my-auto flex flex-row gap-3">
-                            <Image
-                                src="/dashboard/sillyhackshead.png"
-                                alt="JourneyHacks 2026 Logo"
-                                width={36}
-                                height={36}
-                                className="h-9 w-9 rounded-lg"
-                            />
+                        <NavLink
+                            href="#"
+                            label=""
+                            icon={
+                                <Bars3Icon className="h-6 w-6 text-white/80" />
+                            }
+                            iconAlt="Toggle sidebar"
+                            platform="desktop"
+                            className="justify-center px-0"
+                            collapsed
+                            onClick={(e) => {
+                                e.preventDefault();
+                                setShowMobileSidebar((prev) => !prev);
+                            }}
+                        />
 
-                            <div className="flex flex-col gap-2">
-                                <span className="line-clamp-1 text-sm leading-none font-medium text-white">
-                                    SparkJam 2026
-                                </span>
-                                <span className="line-clamp-1 text-sm leading-none text-white/60">
-                                    April 1, 2026
-                                </span>
-                            </div>
+                        <div className="flex items-center justify-end">
+                            <NavLink
+                                key={announcement.href}
+                                href={announcement.href}
+                                label={announcement.label}
+                                icon={announcement.icon}
+                                iconAlt={announcement.iconAlt}
+                                platform="desktop"
+                                active={url.startsWith(announcement.href)}
+                                collapsed={true}
+                            />
                         </div>
                     </div>
                 </div>

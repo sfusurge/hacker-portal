@@ -21,6 +21,92 @@ import getStripe from '@/utils/get-stripejs';
 import { createPaymentIntent } from '@/actions/stripe';
 import { useAtomValue } from 'jotai';
 import { hackathonAtom, userInfoAtom } from '@/app/(auth)/ClientContext';
+import { LockClosedIcon } from '@heroicons/react/24/solid';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input/input';
+import inputStyles from '@/components/ui/input/input.module.css';
+import { Label } from '@/components/ui/label/label';
+
+const TICKET_AMOUNT = 15;
+const TICKET_CENTS = 1500;
+
+const elementsAppearance = {
+    theme: 'night' as const,
+    variables: {
+        colorIcon: '#6772e5',
+        colorPrimary: '#6466f1',
+        colorBackground: '#171717',
+        colorText: '#FFFFFF',
+        colorTextSecondary: 'rgba(255, 255, 255, 0.6)',
+        colorDanger: '#f87171',
+        borderRadius: '8px',
+        fontFamily: 'Inter, sans-serif',
+    },
+    rules: {
+        '.Input': {
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            boxShadow: 'none',
+        },
+        '.Input:focus': {
+            border: '1px solid rgba(129, 140, 248, 0.6)',
+            boxShadow: 'none',
+        },
+        '.Tab': {
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: 'none',
+        },
+        '.Tab--selected': {
+            border: '1px solid rgba(48, 46, 129, 1)',
+            backgroundColor: 'rgba(29, 27, 75, 0.6)',
+            boxShadow: 'none',
+        },
+        '.Tab:focus': {
+            border: '1px solid rgba(129, 140, 248, 0.45)',
+            boxShadow: 'none',
+        },
+        '.Label': {
+            marginBottom: '0.5rem',
+            fontSize: '0.8125rem',
+            fontWeight: '500',
+            color: 'rgba(255, 255, 255, 0.65)',
+        },
+    },
+};
+
+const expressCheckoutOptions = {
+    paymentMethods: {
+        applePay: 'auto' as const,
+        googlePay: 'auto' as const,
+        link: 'never' as const,
+        paypal: 'never' as const,
+        amazonPay: 'never' as const,
+    },
+    layout: {
+        maxColumns: 2,
+        maxRows: 1,
+    },
+    buttonType: {
+        applePay: 'buy' as const,
+        googlePay: 'pay' as const,
+    },
+};
+
+const RSVP_FIELD = `${inputStyles.textinput} w-full truncate`;
+
+const paymentElementOptions = {
+    layout: {
+        type: 'tabs' as const,
+        radios: true,
+    },
+    fields: {
+        billingDetails: {
+            name: 'never' as const,
+            email: 'never' as const,
+            address: 'auto' as const,
+        },
+    },
+};
 
 export default function ElementsForm({
     userEmail,
@@ -41,7 +127,9 @@ export default function ElementsForm({
             }}
         >
             <CheckoutForm
-                userEmail={userEmail}
+                initialEmail={userEmail}
+                initialFirstName={userInfo?.firstName ?? ''}
+                initialLastName={userInfo?.lastName ?? ''}
                 hackathonName={hackathon?.hackathonName}
                 hackathonId={hackathon?.id}
                 userId={userInfo?.id}
@@ -51,18 +139,24 @@ export default function ElementsForm({
 }
 
 function CheckoutForm({
-    userEmail,
+    initialEmail,
+    initialFirstName,
+    initialLastName,
     hackathonName,
     hackathonId,
     userId,
 }: {
-    userEmail: string;
+    initialEmail: string;
+    initialFirstName: string;
+    initialLastName: string;
     hackathonName?: string;
     hackathonId?: number;
     userId?: number;
 }) {
-    const [cardholderName, setCardholderName] = useState<string>('');
-    const [paymentType, setPaymentType] = useState<string>('');
+    const [firstName, setFirstName] = useState(initialFirstName);
+    const [lastName, setLastName] = useState(initialLastName);
+    const [email, setEmail] = useState(initialEmail);
+
     const [payment, setPayment] = useState<{
         status: 'initial' | 'processing' | 'error';
     }>({ status: 'initial' });
@@ -188,18 +282,6 @@ function CheckoutForm({
                 return;
             }
 
-            const paymentAmount = 15;
-
-            const { client_secret: clientSecret } = await createPaymentIntent(
-                paymentAmount,
-                userEmail,
-                {
-                    hackathonId,
-                    userId,
-                    hackathonName,
-                }
-            );
-
             const { error: confirmError } = await stripe.confirmPayment({
                 elements,
                 clientSecret,
@@ -228,13 +310,72 @@ function CheckoutForm({
     };
 
     return (
-        <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">
-                {(hackathonName ?? 'Hackathon') + ' ticket'}
-            </h3>
-            <h3 className="text-gray-400">
-                Amount: <span className="text-white">$15.00</span>
-            </h3>
+        <div className="mb-8 grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:gap-8">
+            <div className="relative rounded-xl border border-neutral-600/30 bg-neutral-900/60 px-5 py-6 sm:px-6 sm:py-7">
+                <form onSubmit={handleSubmit} className="space-y-10">
+                    <div className="flex flex-col gap-5">
+                        <h2 className="text-base font-semibold text-white">
+                            Cardholder information
+                        </h2>
+                        <div className="flex flex-col gap-4">
+                            <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2">
+                                <div className="flex flex-col gap-1.5">
+                                    <Label htmlFor="rsvp-first-name">
+                                        First Name
+                                    </Label>
+                                    <Input
+                                        id="rsvp-first-name"
+                                        name="firstName"
+                                        type="text"
+                                        autoComplete="given-name"
+                                        placeholder="First Name"
+                                        className={RSVP_FIELD}
+                                        value={firstName}
+                                        onChange={(ev) =>
+                                            setFirstName(ev.target.value)
+                                        }
+                                        required
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                    <Label htmlFor="rsvp-last-name">
+                                        Last Name
+                                    </Label>
+                                    <Input
+                                        id="rsvp-last-name"
+                                        name="lastName"
+                                        type="text"
+                                        autoComplete="family-name"
+                                        className={RSVP_FIELD}
+                                        placeholder="Last Name"
+                                        value={lastName}
+                                        onChange={(ev) =>
+                                            setLastName(ev.target.value)
+                                        }
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 gap-4">
+                                <div className="flex flex-col gap-1.5">
+                                    <Label htmlFor="rsvp-email">Email</Label>
+                                    <Input
+                                        id="rsvp-email"
+                                        name="email"
+                                        type="email"
+                                        autoComplete="email"
+                                        placeholder="email@email.com"
+                                        className={RSVP_FIELD}
+                                        value={email}
+                                        onChange={(ev) =>
+                                            setEmail(ev.target.value)
+                                        }
+                                        required
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     {expressPhase !== 'hidden' && (
                         <div

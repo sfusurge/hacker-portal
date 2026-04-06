@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { redirect } from 'next/navigation';
 
@@ -170,7 +169,7 @@ export default function ActiveHackathonCard({
     );
 }
 
-/** Banner + overlay. */
+/** banner + title row for the home hackathon card */
 function HomeHackathonCardHero({
     name,
     tagline,
@@ -184,87 +183,59 @@ function HomeHackathonCardHero({
     desktopBannerSrc?: string;
     mobileBannerSrc?: string;
 }) {
-    const hasDesktopBanner = Boolean(desktopBannerSrc);
-    const hasMobileBanner = Boolean(mobileBannerSrc);
-
-    const titleRow = (
-        <div className="relative z-10 flex items-center gap-3">
-            {iconSrc ? (
-                <Image
-                    src={iconSrc}
-                    alt={`${name} icon`}
-                    width={56}
-                    height={56}
-                    className="h-14 w-14 shrink-0 rounded-lg object-cover"
-                />
-            ) : (
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-white/15 text-xl font-semibold text-white">
-                    {name.charAt(0)}
-                </div>
-            )}
-            <div className="min-w-0">
-                <h2 className="text-2xl font-semibold tracking-tight text-white">
-                    {name}
-                </h2>
-                <p className="text-sm text-pretty text-white/70 md:text-base">
-                    {tagline}
-                </p>
-            </div>
-        </div>
-    );
+    const hasBanner = Boolean(desktopBannerSrc || mobileBannerSrc);
 
     return (
         <>
-            <div className="relative md:hidden">
-                <div className="relative overflow-hidden bg-neutral-900 p-4">
+            <div className="relative">
+                <div className="relative bg-neutral-900 p-4 md:p-5">
                     {mobileBannerSrc ? (
-                        <Image
+                        <img
                             src={mobileBannerSrc}
-                            alt={`${name} banner background`}
-                            fill
-                            className="object-cover blur-[2px]"
-                            sizes="100vw"
+                            alt={`${name} banner`}
+                            className="absolute inset-0 h-full w-full rounded-t-xl object-cover md:hidden"
                         />
                     ) : null}
-                    {hasMobileBanner ? (
-                        <div
-                            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 to-black/60"
-                            aria-hidden
-                        />
-                    ) : (
-                        <div
-                            className="absolute inset-0 bg-gradient-to-br from-neutral-700/90 via-neutral-900 to-neutral-950"
-                            aria-hidden
-                        />
-                    )}
-                    {titleRow}
-                </div>
-            </div>
-
-            <div className="relative hidden md:block">
-                <CardContent className="relative overflow-hidden rounded-t-xl">
                     {desktopBannerSrc ? (
-                        <Image
+                        <img
                             src={desktopBannerSrc}
-                            alt={`${name} banner background`}
-                            fill
-                            className="object-cover blur-[2px]"
-                            sizes="(min-width: 768px) 100vw, 100vw"
+                            alt={`${name} banner`}
+                            className="absolute inset-0 hidden h-full w-full rounded-t-xl object-cover md:block"
                         />
                     ) : null}
-                    {hasDesktopBanner ? (
-                        <div
-                            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/85 to-black/30"
-                            aria-hidden
-                        />
+                    {hasBanner ? (
+                        <div className="absolute inset-0 rounded-t-xl bg-gradient-to-r from-black/75 to-transparent" />
                     ) : (
                         <div
-                            className="absolute inset-0 bg-gradient-to-br from-neutral-700/90 via-neutral-900 to-neutral-950"
+                            className="absolute inset-0 rounded-t-xl bg-gradient-to-br from-neutral-700/90 via-neutral-900 to-neutral-950"
                             aria-hidden
                         />
                     )}
-                    {titleRow}
-                </CardContent>
+
+                    <div className="relative flex items-center gap-3">
+                        {iconSrc ? (
+                            <img
+                                src={iconSrc}
+                                alt={`${name} icon`}
+                                width={56}
+                                height={56}
+                                className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                            />
+                        ) : (
+                            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-white/15 text-xl font-semibold text-white">
+                                {name.charAt(0)}
+                            </div>
+                        )}
+                        <div className="min-w-0">
+                            <h2 className="text-2xl font-semibold tracking-tight text-white">
+                                {name}
+                            </h2>
+                            <p className="text-sm text-pretty text-white/70 md:text-base">
+                                {tagline}
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </>
     );

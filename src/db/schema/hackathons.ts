@@ -67,6 +67,21 @@ const hackathons = pgTable('hackathons', {
         .default([])
         .$type<SubmissionJudgeRubric[]>(),
     isPaid: boolean('is_paid').notNull().default(false),
+    applicationOpen: timestamp('application_open', {
+        mode: 'date',
+        withTimezone: true,
+    }),
+    applicationCloses: timestamp('application_closes', {
+        mode: 'date',
+        withTimezone: true,
+    }),
+    eventPageSlug: varchar('event_page_slug', { length: 255 })
+        .notNull()
+        .default('stormhacks'),
+
+    eventPagePayload: jsonb('event_page_payload')
+        .$type<HackathonEventPagePayload | null>()
+        .default(null),
 });
 
 const insertHackathonSchema = createInsertSchema(hackathons, {

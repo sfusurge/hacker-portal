@@ -458,6 +458,11 @@ function MyTable({
             hackathonId: effectiveHackathonForEmail,
         });
 
+    const selectedEmailTemplate = useMemo(() => {
+        if (selectedTemplateId == null) return null;
+        return emailTemplates?.find((t) => t.id === selectedTemplateId) ?? null;
+    }, [emailTemplates, selectedTemplateId]);
+
     const statusCounts = useMemo(() => getStatusCounts(data), [data]);
 
     const [globalFilter, setGlobalFilter] = useState<string>('');

@@ -10,10 +10,6 @@ export default async function ApplicationPage({
 }: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-    dayjs.extend(utc);
-    dayjs.extend(timezone);
-    const currentTime = dayjs();
-    const cutoffTime = dayjs.tz('2026-04-02 23:59:00', 'America/Los_Angeles');
     const params = await searchParams;
 
     const hackathon = await getCachedActiveHackathon();

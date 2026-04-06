@@ -24,11 +24,6 @@ export function CountdownContent({
 }) {
     const [currentTime, setCurrentTime] = useState(Date.now());
 
-    const cutoffTime = dayjs.tz('2026-04-02 23:59:00', 'America/Los_Angeles');
-    const overdue = useMemo(
-        () => currentTime.isAfter(cutoffTime),
-        [currentTime]
-    );
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentTime(Date.now());
@@ -114,11 +109,10 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
                     !
                 </CardTitle>
                 <CardDescription className="text-base">
-                    SFU Surge is excited to offer you acceptance to{' '}
+                    Complete your payment to secure your spot at{' '}
                     {hackathon?.hackathonName ||
                         process.env.NEXT_PUBLIC_CURRENT_EVENT}
-                    . Please RSVP to reserve your spot and confirm your
-                    attendance.
+                    .
                 </CardDescription>
                 <CardDescription className="inline text-white/30">
                     {'No longer able to make it?'}
@@ -182,112 +176,6 @@ export function PendingPaymentContent({ userData }: { userData: UserData }) {
                     .
                 </CardDescription>
             </ApplicationStatusPanel>
-            {userData?.id && (
-                <WithdrawPrompt
-                    isOpen={isWithdrawPromptOpen}
-                    userId={userData.id}
-                    closePrompt={handleCloseWithdrawPrompt}
-                />
-            )}
-        </>
-    );
-}
-
-export function PendingPaymentContent({ userData }: { userData: UserData }) {
-    const hackathon = useAtomValue(hackathonAtom);
-    const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
-
-    const handleOpenWithdrawPrompt = () => setIsWithdrawPromptOpen(true);
-    const handleCloseWithdrawPrompt = () => setIsWithdrawPromptOpen(false);
-
-    return (
-        <>
-            <div className="flex max-w-full flex-col gap-2 text-start md:pr-0 md:pl-0">
-                <CardTitle className="font-inter text-pretty">
-                    You&#39;ve been accepted into{' '}
-                    {hackathon?.hackathonName ||
-                        process.env.NEXT_PUBLIC_CURRENT_EVENT}
-                    ! 🥳
-                </CardTitle>
-                <CardDescription className="text-base">
-                    Complete your payment to secure your spot at{' '}
-                    {hackathon?.hackathonName ||
-                        process.env.NEXT_PUBLIC_CURRENT_EVENT}
-                    .
-                </CardDescription>
-                <CardDescription>
-                    {
-                        "If you're no longer able to make it to the event, please "
-                    }
-                    <button
-                        className="inline text-white underline hover:text-white/70"
-                        onClick={handleOpenWithdrawPrompt}
-                    >
-                        withdraw your application
-                    </button>
-                    .
-                </CardDescription>
-            </div>
-            <Image
-                src="/login/application-review.webp"
-                width={434}
-                height={320}
-                className="-order-1 max-w-72 md:order-last"
-                alt="Four otters are gathered around a table, reviewing application submissions."
-            />
-            {userData?.id && (
-                <WithdrawPrompt
-                    isOpen={isWithdrawPromptOpen}
-                    userId={userData.id}
-                    closePrompt={handleCloseWithdrawPrompt}
-                />
-            )}
-        </>
-    );
-}
-
-export function PendingPaymentContent({ userData }: { userData: UserData }) {
-    const hackathon = useAtomValue(hackathonAtom);
-    const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
-
-    const handleOpenWithdrawPrompt = () => setIsWithdrawPromptOpen(true);
-    const handleCloseWithdrawPrompt = () => setIsWithdrawPromptOpen(false);
-
-    return (
-        <>
-            <div className="flex max-w-full flex-col gap-2 text-start md:pr-0 md:pl-0">
-                <CardTitle className="font-inter text-pretty">
-                    You&#39;ve been accepted into{' '}
-                    {hackathon?.hackathonName ||
-                        process.env.NEXT_PUBLIC_CURRENT_EVENT}
-                    ! 🥳
-                </CardTitle>
-                <CardDescription className="text-base">
-                    Complete your payment to secure your spot at{' '}
-                    {hackathon?.hackathonName ||
-                        process.env.NEXT_PUBLIC_CURRENT_EVENT}
-                    .
-                </CardDescription>
-                <CardDescription>
-                    {
-                        "If you're no longer able to make it to the event, please "
-                    }
-                    <button
-                        className="inline text-white underline hover:text-white/70"
-                        onClick={handleOpenWithdrawPrompt}
-                    >
-                        withdraw your application
-                    </button>
-                    .
-                </CardDescription>
-            </div>
-            <Image
-                src="/login/application-review.webp"
-                width={434}
-                height={320}
-                className="-order-1 max-w-72 md:order-last"
-                alt="Four otters are gathered around a table, reviewing application submissions."
-            />
             {userData?.id && (
                 <WithdrawPrompt
                     isOpen={isWithdrawPromptOpen}
@@ -375,10 +263,15 @@ export function AcceptedContent({
 }
 
 export function ReviewContent({ userData }: { userData: UserData }) {
+    const hackathon = useAtomValue(hackathonAtom);
     const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
 
     const handleOpenWithdrawPrompt = () => setIsWithdrawPromptOpen(true);
     const handleCloseWithdrawPrompt = () => setIsWithdrawPromptOpen(false);
+
+    const applicationClosesLabel = hackathon.applicationCloses?.isValid()
+        ? hackathon.applicationCloses.format('MMMM D, YYYY')
+        : null;
 
     return (
         <>
@@ -397,13 +290,16 @@ export function ReviewContent({ userData }: { userData: UserData }) {
                 <CardDescription className="text-base">
                     Your application has been submitted and is being reviewed by
                     the Surge team. 📝 You will receive an update once the
-                    application period closes.
+                    application period closes
+                    {applicationClosesLabel
+                        ? ` (deadline ${applicationClosesLabel}).`
+                        : '.'}
                 </CardDescription>
 
-                <CardDescription className="inline gap-1 text-white/30">
+                <CardDescription className="inline text-white/30">
                     No longer able to make it?{' '}
                     <button
-                        className="inline text-left text-white/60 underline hover:text-white/70"
+                        className="ml-1 inline text-left text-white/60 underline hover:text-white/70"
                         onClick={handleOpenWithdrawPrompt}
                     >
                         Withdraw Application

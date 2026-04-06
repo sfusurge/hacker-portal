@@ -72,6 +72,28 @@ export const submissionsRouter = router({
                 throw new Error('Team does not belong to this hackathon');
             }
 
+            const [hackathonRow] = await databaseClient
+                .select({
+                    submissionOpen: hackathons.submissionOpen,
+                    submissionDeadline: hackathons.submissionDeadline,
+                })
+                .from(hackathons)
+                .where(eq(hackathons.id, input.hackathonId))
+                .limit(1);
+
+            if (
+                !hackathonRow ||
+                !isSubmissionWindowOpen(
+                    Date.now(),
+                    hackathonRow.submissionOpen,
+                    hackathonRow.submissionDeadline
+                )
+            ) {
+                throw new BadRequestError(
+                    'Project submissions are only accepted during the open submission window.'
+                );
+            }
+
             const [submission] = await databaseClient
                 .insert(submissions)
                 .values({
