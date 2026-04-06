@@ -16,6 +16,21 @@ import {
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
+/** `event_page_payload`: marketing / event-page copy and assets. */
+export type HackathonEventPagePayload = {
+    name: string;
+    tagline: string;
+    iconSrc: string;
+    desktopBannerSrc?: string;
+    mobileBannerSrc?: string;
+    overview: string;
+    location: string;
+    dates: string;
+    websiteLabel: string;
+    websiteHref: string;
+    recapHref: string | null;
+};
+
 // Journey hack submission deadline, February 13th, 2025 at 23:59:59
 const JOURNEY_HACK_2025_DEADLINE = new Date(1_739_519_999 * 1_000);
 
@@ -27,6 +42,10 @@ const hackathons = pgTable('hackathons', {
     submissionDeadline: timestamp('submission_deadline')
         .notNull()
         .default(JOURNEY_HACK_2025_DEADLINE),
+    submissionOpen: timestamp('submission_open', {
+        mode: 'date',
+        withTimezone: true,
+    }),
     applicationQuestions: jsonb('questions')
         .$type<InputFormPageData[]>()
         .notNull()
@@ -55,6 +74,13 @@ const hackathons = pgTable('hackathons', {
         mode: 'date',
         withTimezone: true,
     }),
+    eventPageSlug: varchar('event_page_slug', { length: 255 })
+        .notNull()
+        .default('stormhacks'),
+
+    eventPagePayload: jsonb('event_page_payload')
+        .$type<HackathonEventPagePayload | null>()
+        .default(null),
 });
 
 const insertHackathonSchema = createInsertSchema(hackathons, {

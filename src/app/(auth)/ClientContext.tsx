@@ -35,6 +35,7 @@ interface DbHackathonType {
     startDate: string;
     endDate: string;
     submissionDeadline: Date;
+    submissionOpen: Date | null;
     applicationQuestions: InputFormPageData[];
     version: number;
     submissionQuestions: InputFormPageData[];
@@ -52,6 +53,10 @@ function DeserializeHackathonData(hackathon: DbHackathonType) {
         startDate: dayjs(hackathon.startDate),
         endDate: dayjs(hackathon.endDate),
         submissionDeadline: dayjs(hackathon.submissionDeadline),
+        submissionOpen:
+            hackathon.submissionOpen != null
+                ? dayjs(hackathon.submissionOpen)
+                : null,
         isPaid: hackathon.isPaid ?? false,
     };
 }

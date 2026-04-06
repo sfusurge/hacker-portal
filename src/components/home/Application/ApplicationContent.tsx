@@ -1,20 +1,15 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Conditional } from '@/lib/Conditional';
+import { useEffect, useState } from 'react';
 import QRTicket from '@/app/(auth)/admin/qr/checkin_components/QRTicket';
 import WithdrawPrompt from '@/components/home/Application/WithdrawPrompt';
 import CountdownTimer from '../Application/Countdown';
 import { CardTitle, CardDescription } from '@/components/ui/card';
-import dayjs from 'dayjs';
 import { UserData } from '@/server/routers/usersRouter';
 import { useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
-import utc from 'dayjs/plugin/utc.js';
-import timezone from 'dayjs/plugin/timezone.js';
-import { redirect } from 'next/navigation';
+import { ApplicationStatusPanel } from './ApplicationStatusPanel';
 
 export function CountdownContent({
     targetDate,
@@ -99,7 +94,14 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
 
     return (
         <>
-            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+            <ApplicationStatusPanel
+                illustration={{
+                    src: '/otter-team.webp',
+                    width: 434,
+                    height: 320,
+                    alt: 'Four otters are gathered around a table, reviewing application submissions.',
+                }}
+            >
                 <CardTitle className="font-inter text-xl tracking-tight text-pretty">
                     You&#39;ve been accepted into{' '}
                     {hackathon?.hackathonName ||
@@ -113,7 +115,7 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
                     . Please RSVP to reserve your spot and confirm your
                     attendance.
                 </CardDescription>
-                <CardDescription className="mt-6 inline text-white/30">
+                <CardDescription className="inline text-white/30">
                     {'No longer able to make it?'}
                     <button
                         className="ml-1 inline text-white/60 underline hover:text-white/70"
@@ -123,14 +125,7 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
                     </button>
                     .
                 </CardDescription>
-            </div>
-            <Image
-                src="/otter-team.png"
-                width={434}
-                height={320}
-                className="-order-1 max-w-72 md:order-last"
-                alt="Four otters are gathered around a table, reviewing application submissions."
-            />
+            </ApplicationStatusPanel>
             {userData?.id && (
                 <WithdrawPrompt
                     isOpen={isWithdrawPromptOpen}
@@ -151,7 +146,14 @@ export function PendingPaymentContent({ userData }: { userData: UserData }) {
 
     return (
         <>
-            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+            <ApplicationStatusPanel
+                illustration={{
+                    src: '/login/application-review.webp',
+                    width: 434,
+                    height: 320,
+                    alt: 'Four otters are gathered around a table, reviewing application submissions.',
+                }}
+            >
                 <CardTitle className="font-inter text-xl tracking-tight text-pretty">
                     You&#39;ve been accepted into{' '}
                     {hackathon?.hackathonName ||
@@ -164,7 +166,7 @@ export function PendingPaymentContent({ userData }: { userData: UserData }) {
                         process.env.NEXT_PUBLIC_CURRENT_EVENT}
                     .
                 </CardDescription>
-                <CardDescription className="mt-6 inline text-white/30">
+                <CardDescription className="inline text-white/30">
                     {'No longer able to make it?'}
                     <button
                         className="ml-1 inline text-white/60 underline hover:text-white/70"
@@ -174,14 +176,7 @@ export function PendingPaymentContent({ userData }: { userData: UserData }) {
                     </button>
                     .
                 </CardDescription>
-            </div>
-            <Image
-                src="/login/application-review.webp"
-                width={434}
-                height={320}
-                className="-order-1 max-w-72 md:order-last"
-                alt="Four otters are gathered around a table, reviewing application submissions."
-            />
+            </ApplicationStatusPanel>
             {userData?.id && (
                 <WithdrawPrompt
                     isOpen={isWithdrawPromptOpen}
@@ -211,9 +206,12 @@ export function AcceptedContent({
 
     const handleCloseTicket = () => setTicketOpen(false);
 
+    const ticketOpen =
+        isTicketOpen !== undefined ? isTicketOpen : localTicketOpen;
+
     return (
         <>
-            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+            <ApplicationStatusPanel>
                 <CardTitle className="text-xl tracking-tight text-pretty">
                     You RSVP&apos;d to{' '}
                     {hackathon?.hackathonName ||
@@ -225,7 +223,7 @@ export function AcceptedContent({
                     meals throughout the event. Don&apos;t forget to read the
                     Hacker Package ahead of the event 🫶
                 </CardDescription>
-            </div>
+            </ApplicationStatusPanel>
 
             {image && (
                 <section className="-mr-5 hidden md:block">
@@ -252,24 +250,15 @@ export function AcceptedContent({
                 </section>
             )}
 
-            <div
-                className={`bg-opacity-80 fixed inset-0 z-200 w-full bg-black transition-opacity duration-300 ${isTicketOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
-            >
-                <div
-                    className={`fixed right-0 bottom-0 left-0 h-[100vh] transform transition-transform duration-300 ${isTicketOpen ? 'translate-y-0' : 'translate-y-full'}`}
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    {image && (
-                        <QRTicket
-                            userId={userData?.displayId}
-                            firstName={userData?.firstName ?? ''}
-                            lastName={userData?.lastName ?? ''}
-                            image={image}
-                            closeTicket={handleCloseTicket}
-                        />
-                    )}
-                </div>
-            </div>
+            {ticketOpen && image && (
+                <QRTicket
+                    userId={userData?.displayId}
+                    firstName={userData?.firstName ?? ''}
+                    lastName={userData?.lastName ?? ''}
+                    image={image}
+                    closeTicket={handleCloseTicket}
+                />
+            )}
         </>
     );
 }
@@ -282,7 +271,14 @@ export function ReviewContent({ userData }: { userData: UserData }) {
 
     return (
         <>
-            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+            <ApplicationStatusPanel
+                illustration={{
+                    src: '/otter-review.webp',
+                    width: 434,
+                    height: 320,
+                    alt: 'Two otters are gathered around a table, reviewing application submissions.',
+                }}
+            >
                 <CardTitle className="text-xl tracking-tight text-pretty">
                     We&apos;re currently reviewing your application.
                 </CardTitle>
@@ -293,7 +289,7 @@ export function ReviewContent({ userData }: { userData: UserData }) {
                     submission period closes.
                 </CardDescription>
 
-                <CardDescription className="mt-6 inline text-white/30">
+                <CardDescription className="inline text-white/30">
                     No longer able to make it?{' '}
                     <button
                         className="ml-1 inline text-left text-white/60 underline hover:text-white/70"
@@ -303,15 +299,7 @@ export function ReviewContent({ userData }: { userData: UserData }) {
                     </button>
                     .
                 </CardDescription>
-            </div>
-
-            <Image
-                src="/otter-review.png"
-                width={434}
-                height={320}
-                className="-order-1 max-w-72 md:order-last"
-                alt="Twp otters are gathered around a table, reviewing application submissions."
-            />
+            </ApplicationStatusPanel>
 
             {userData?.id && (
                 <WithdrawPrompt
@@ -328,7 +316,7 @@ export function WithdrawnContent() {
     const hackathon = useAtomValue(hackathonAtom);
     return (
         <>
-            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 text-start">
                 <CardTitle className="text-xl tracking-tight">
                     You&apos;ve withdrawn your application to{' '}
                     {hackathon?.hackathonName}.
@@ -349,7 +337,7 @@ export function WithdrawnContent() {
             </div>
 
             <Image
-                src="/otter-sad.png"
+                src="/otter-sad.webp"
                 width={699}
                 height={725}
                 className="max-w-[240px]"
@@ -364,7 +352,14 @@ export function WaitlistContent() {
 
     return (
         <>
-            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+            <ApplicationStatusPanel
+                illustration={{
+                    src: '/login/application-review.webp',
+                    width: 434,
+                    height: 320,
+                    alt: 'Four otters are gathered around a table, reviewing application submissions.',
+                }}
+            >
                 <CardTitle className="text-xl tracking-tight">
                     You&#39;ve been placed on the waitlist for{' '}
                     {hackathon?.hackathonName}.
@@ -375,15 +370,7 @@ export function WaitlistContent() {
                         "We received a large number of applications and we unfortunately can't accept everyone, but you have been placed on the waitlist."
                     }
                 </CardDescription>
-            </div>
-
-            <Image
-                src="/login/application-review.webp"
-                width={434}
-                height={320}
-                className="-order-1 max-w-72 md:order-last"
-                alt="Four otters are gathered around a table, reviewing application submissions."
-            />
+            </ApplicationStatusPanel>
         </>
     );
 }
@@ -393,7 +380,15 @@ export function RejectedContent() {
 
     return (
         <>
-            <div className="flex flex-1 flex-col items-start justify-center gap-6 self-stretch pt-4 pr-0 pb-8 pl-5 text-start">
+            <ApplicationStatusPanel
+                illustration={{
+                    src: '/otter-sad.webp',
+                    width: 699,
+                    height: 725,
+                    alt: 'An otter has dropped their mint chocolate ice cream. They look distraught.',
+                    className: 'max-w-[240px]',
+                }}
+            >
                 <CardTitle className="text-xl tracking-tight">
                     Thanks for applying to {hackathon?.hackathonName}.
                 </CardTitle>
@@ -404,15 +399,7 @@ export function RejectedContent() {
                     applications and we unfortunately can&apos;t accept
                     everyone, but we encourage you to apply again in the future.
                 </CardDescription>
-            </div>
-
-            <Image
-                src="/otter-sad.png"
-                width={699}
-                height={725}
-                className="max-w-[240px]"
-                alt="An otter has dropped their mint chocolate ice cream. They look distraught."
-            />
+            </ApplicationStatusPanel>
         </>
     );
 }

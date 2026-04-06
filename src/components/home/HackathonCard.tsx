@@ -9,12 +9,15 @@ import {
     CardHeaderTitle,
 } from '@/components/ui/card';
 import ActiveHackathonCard from '@/components/home/ActiveHackathonCard';
+import type { HackathonEventPagePayload } from '@/db/schema/hackathons';
 
 type ActiveHackathon = {
     id: number;
     name: string;
     startDate: string;
     endDate: string;
+    eventPageSlug: string;
+    eventPagePayload?: HackathonEventPagePayload | null;
     applicationOpen?: Date | null;
     applicationCloses?: Date | null;
 };

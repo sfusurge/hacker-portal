@@ -13,6 +13,7 @@ import {
     CardHeaderTitle,
 } from '@/components/ui/card';
 import { trpc } from '@/trpc/client';
+import { isSubmissionUiHiddenBeforeOpen } from '@/lib/submissionWindow';
 import { ArrowRightIcon } from '@heroicons/react/24/solid';
 import dayjs from 'dayjs';
 import { useAtomValue } from 'jotai';
@@ -127,6 +128,15 @@ export function SubmitCard({ onShowSubmit }: { onShowSubmit: () => void }) {
 
     if (isVotingPeriod) {
         return <VotingCard />;
+    }
+
+    if (
+        isSubmissionUiHiddenBeforeOpen(
+            Date.now(),
+            hackathon.submissionOpen?.toDate() ?? null
+        )
+    ) {
+        return null;
     }
 
     return (
@@ -245,8 +255,6 @@ function SubmitCardContent({
     }
 
     function getContent() {
-        console.log(hackathon.submissionDeadline.format('MMM DD, hh:mm'));
-
         if (
             !userapplication.isLoading &&
             (!userapplication.data ||
@@ -274,9 +282,12 @@ function SubmitCardContent({
                         Submission deadline has passed!
                     </h3>
                     <span className="text-sm text-pretty text-white/60 lg:max-w-[550px]">
-                        The submission period ended on May 28th at 11:59 PM PST.
-                        Judges will evaluate the projects from May 29th to 30th,
-                        2026.
+                        The submission period ended on{' '}
+                        {hackathon.submissionDeadline.format(
+                            'MMM D, YYYY h:mm A'
+                        )}
+                        . Judges will evaluate projects before results are
+                        announced at the closing ceremony.
                     </span>
                 </>
             );
@@ -286,11 +297,9 @@ function SubmitCardContent({
                     {!teamdata.data && <p>You are not in a team yet!</p>}
                     <span
                         className={'text-sm text-white/60'}
-                    >{`Projects are due on ${dayjs(
-                        new Date(2026, 4, 28, 23, 59, 59)
-                    ).format('MMM DD, hh:mm')}!`}</span>
+                    >{`Projects are due on ${hackathon.submissionDeadline.format('MMM D, h:mm A')}!`}</span>
                     <CountdownTimer
-                        targetDate={new Date(2026, 4, 28, 23, 59, 59)}
+                        targetDate={hackathon.submissionDeadline.toDate()}
                     />
                 </>
             );

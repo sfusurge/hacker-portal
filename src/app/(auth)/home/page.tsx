@@ -78,7 +78,7 @@ export default async function Home() {
                                 userLastName={data?.lastName}
                             />
 
-                            <ApplicationCard
+                            {/* <ApplicationCard
                                 userData={data}
                                 image={userQR}
                                 applicationStatus={application?.currentStatus}
@@ -90,7 +90,7 @@ export default async function Home() {
                                     hackathonId={hackathonId}
                                     team={team}
                                 />
-                            )}
+                            )} */}
                         </>
                     )}
                     <EventsCard events={events} />

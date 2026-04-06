@@ -5,6 +5,7 @@ import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 import { getUserData } from '@/server/routers/usersRouter';
 
 import { GoHome } from '@/components/home/GoHome';
+import { isSubmissionWindowOpen } from '@/lib/submissionWindow';
 import SubmissionInfoCard from '@/app/(auth)/(team)/teamComponents/submit/SubmissionInfoCard';
 import { SubmitFormCard } from '@/app/(auth)/(team)/teamComponents/InTeam/SubmitFormCard';
 import TeamListSubmit from '@/app/(auth)/(team)/teamComponents/submit/TeamListSubmit';
@@ -18,6 +19,31 @@ export default async function SubmitPage() {
 
     const trpcClient = createCaller({});
     const hackathon = await getCachedActiveHackathon();
+
+    if (!hackathon) {
+        return <GoHome title="There is no active hackathon." />;
+    }
+
+    const nowMs = Date.now();
+    if (
+        !isSubmissionWindowOpen(
+            nowMs,
+            hackathon.submissionOpen,
+            hackathon.submissionDeadline
+        )
+    ) {
+        if (
+            hackathon.submissionOpen == null ||
+            nowMs < hackathon.submissionOpen.getTime()
+        ) {
+            return (
+                <GoHome title="Project submissions are not open yet. Check back when the submission period starts." />
+            );
+        }
+        return (
+            <GoHome title="The submission deadline has passed — you can no longer submit a project." />
+        );
+    }
 
     const application = await trpcClient.applications.getCurrentApplication({
         hackathonId: hackathon.id,

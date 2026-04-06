@@ -31,7 +31,7 @@ export default function DiscordCard({
             : 'Join the Surge Discord!';
 
     return (
-        <Card className={cn(className)}>
+        <Card className={cn('h-full', className)}>
             <CardHeader>
                 <CardHeaderColumn>
                     <CardHeaderDescription>Your Events</CardHeaderDescription>
@@ -48,7 +48,7 @@ export default function DiscordCard({
                     </Button>
                 </Link>
             </CardHeader>
-            <CardContent className="pb-0 text-center">
+            <CardContent className="flex h-full items-center justify-end pb-0 text-center">
                 <Image
                     src="/dashboard/join-our-discord.webp"
                     width={1444}

@@ -6,20 +6,14 @@ import { Button } from '../ui/button';
 
 type RecapCardProps = {
     recapHref: string;
-    title: string;
-    description: string;
 };
 
-export default function RecapCard({
-    recapHref,
-    title,
-    description,
-}: RecapCardProps) {
+export default function RecapCard({ recapHref }: RecapCardProps) {
     return (
         <Card className="h-full">
             <CardContent className="flex min-h-[360px] flex-col items-center justify-center gap-5 text-center">
                 <Image
-                    src="/otter-team.png"
+                    src="/otter-team.webp"
                     alt="Otter team celebrating together"
                     width={360}
                     height={250}
@@ -28,32 +22,32 @@ export default function RecapCard({
 
                 <div className="space-y-2">
                     <h3 className="text-xl font-semibold tracking-tight text-white">
-                        {title}
+                        Watch the recap
                     </h3>
-                    <p className="text-pretty text-white/60">{description}</p>
+                    <p className="text-pretty text-white/60">
+                        See highlights from this event.
+                    </p>
                 </div>
 
-                {recapHref && (
-                    <Link
-                        href={recapHref}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                <Link
+                    href={recapHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full"
+                >
+                    <Button
+                        size="cozy"
+                        variant="default"
+                        hierarchy="primary"
                         className="w-full"
+                        trailingIconChild={
+                            <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+                        }
+                        trailingIconAlt="Watch now"
                     >
-                        <Button
-                            size="cozy"
-                            variant="default"
-                            hierarchy="primary"
-                            className="w-full"
-                            trailingIconChild={
-                                <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-                            }
-                            trailingIconAlt="Watch Now"
-                        >
-                            <span>Watch Now</span>
-                        </Button>
-                    </Link>
-                )}
+                        <span>Watch now</span>
+                    </Button>
+                </Link>
             </CardContent>
         </Card>
     );

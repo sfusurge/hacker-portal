@@ -20,7 +20,6 @@ import {
     AcceptedContent,
     ReviewContent,
     WithdrawnContent,
-    //QRCodeButton,
     RejectedContent,
     AwaitingRSVPContent,
     PendingPaymentContent,
@@ -30,11 +29,11 @@ import {
 import { ArrowRightIcon, Barcode, ExternalLink } from 'lucide-react';
 import { UserData } from '@/server/routers/usersRouter';
 import clsx from 'clsx';
-import { useAtomValue } from 'jotai';
-import { hackathonAtom } from '@/app/(auth)/ClientContext';
-import { Conditional } from '@/lib/Conditional';
 import RsvpPrompt from '@/components/home/Application/RsvpPrompt';
 import WithdrawPrompt from '@/components/home/Application/WithdrawPrompt';
+
+const HACKER_PACKAGE_NOTION_URL =
+    'https://verbena-oregano-a56.notion.site/StormHacks-2025-Hacker-Package-26a82a4e770680298cd7e708cd39648e';
 
 export type AppStatus =
     | 'Event Not Yet Active'
@@ -75,8 +74,6 @@ export default function ApplicationCard({
 }: ApplicationCardProps) {
     const [questionSetExists, setQuestionSetExists] = useState(false);
     const [isTicketOpen, setIsTicketOpen] = useState(false);
-    const hackathon = useAtomValue(hackathonAtom);
-    const hackathonName = hackathon?.hackathonName || 'Hackathon';
 
     const [isRSVPPromptOpen, setIsRSVPPromptOpen] = useState(false);
     const handleOpenRSVPPrompt = () => setIsRSVPPromptOpen(true);
@@ -115,13 +112,17 @@ export default function ApplicationCard({
                             ? 'Upcoming'
                             : 'Your Application Status'}
                     </CardHeaderDescription>
-                    <CardHeaderTitle className={getStatusStyleForTitle(status)}>
+                    <CardHeaderTitle
+                        className={clsx(
+                            'text-lg font-medium',
+                            getStatusStyleForTitle(status)
+                        )}
+                    >
                         {getDisplayStatus(status)}
                     </CardHeaderTitle>
                 </CardHeaderColumn>
                 {getHeaderAction(
                     status,
-                    hackathonName,
                     image,
                     handleOpenTicket,
                     handleOpenRSVPPrompt
@@ -149,7 +150,12 @@ export default function ApplicationCard({
                 )}
             </CardContent>
 
-            {getCardFooter(status, hackathonName, handleOpenRSVPPrompt)}
+            {getCardFooter(
+                status,
+                handleOpenRSVPPrompt,
+                handleOpenTicket,
+                image
+            )}
             {userData?.id && (
                 <RsvpPrompt
                     isOpen={isRSVPPromptOpen}
@@ -257,7 +263,9 @@ function getDisplayStatus(status: AppStatus): string {
     ) {
         return 'Accepted - Awaiting RSVP';
     }
-    if (status === 'Accepted') return "Accepted - RSVP'd";
+    if (status === 'Accepted' || status === "Accepted and RSVP'd") {
+        return "Accepted - RSVP'd";
+    }
     if (status === 'Declined') return 'Rejected';
     if (status === 'Countdown To Open') return 'Event Countdown';
     if (status === 'Event Not Yet Active') return 'Not active yet';
@@ -267,12 +275,15 @@ function getDisplayStatus(status: AppStatus): string {
 
 function getHeaderAction(
     status: AppStatus,
-    hackathonName: string,
     image?: string,
     onOpenTicket?: () => void,
     onOpenRSVP?: () => void
 ) {
-    if (status === 'Accepted' && image && onOpenTicket) {
+    if (
+        (status === 'Accepted' || status === "Accepted and RSVP'd") &&
+        image &&
+        onOpenTicket
+    ) {
         return (
             <div className="hidden items-center gap-2 md:flex">
                 <Button
@@ -281,7 +292,7 @@ function getHeaderAction(
                     hierarchy="secondary"
                     onClick={() =>
                         window.open(
-                            'https://verbena-oregano-a56.notion.site/StormHacks-2025-Hacker-Package-26a82a4e770680298cd7e708cd39648e',
+                            HACKER_PACKAGE_NOTION_URL,
                             '_blank',
                             'noopener,noreferrer'
                         )
@@ -409,6 +420,7 @@ function getCardContent(
         case 'Accepted - RSVP to Confirm':
             return <AwaitingRSVPContent userData={userData} />;
         case 'Accepted':
+        case "Accepted and RSVP'd":
             return (
                 <AcceptedContent
                     userData={userData}
@@ -434,9 +446,51 @@ function getCardContent(
 
 function getCardFooter(
     status: AppStatus,
-    hackathonName: string,
-    onOpenRSVP?: () => void
+    onOpenRSVP?: () => void,
+    onOpenTicket?: () => void,
+    image?: string
 ) {
+    if (status === 'Accepted' || status === "Accepted and RSVP'd") {
+        const viewTicketButton = image && onOpenTicket && (
+            <Button
+                size="cozy"
+                variant="brand"
+                hierarchy="primary"
+                className="w-full"
+                onClick={onOpenTicket}
+                leadingIconChild={<Barcode className="h-4 w-4" />}
+            >
+                View ticket
+            </Button>
+        );
+
+        const hackerPackageButton = (
+            <Button
+                size="cozy"
+                variant="default"
+                hierarchy="secondary"
+                className="w-full"
+                onClick={() =>
+                    window.open(
+                        HACKER_PACKAGE_NOTION_URL,
+                        '_blank',
+                        'noopener,noreferrer'
+                    )
+                }
+                trailingIconChild={<ExternalLink className="h-4 w-4" />}
+            >
+                Hacker Package
+            </Button>
+        );
+
+        return (
+            <CardFooter className="flex flex-col gap-2 md:hidden">
+                {hackerPackageButton}
+                {viewTicketButton}
+            </CardFooter>
+        );
+    }
+
     const footerActions = {
         'Not Yet Started': (
             <Button
@@ -486,16 +540,6 @@ function getCardFooter(
                 onClick={onOpenRSVP}
             >
                 RSVP now
-            </Button>
-        ),
-        "Accepted and RSVP'd": (
-            <Button
-                size="cozy"
-                variant="brand"
-                hierarchy="primary"
-                className="w-full"
-            >
-                View QR code
             </Button>
         ),
     };

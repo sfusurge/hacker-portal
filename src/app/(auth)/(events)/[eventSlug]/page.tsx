@@ -1,22 +1,25 @@
 import { notFound } from 'next/navigation';
 import EventPage from '@/components/home/EventPage';
-import {
-    EVENT_PAGE_CONFIG,
-    EventPageSlug,
-} from '@/components/home/eventPageConfig';
+import { createCaller } from '@/server/appRouter';
 
 type PageProps = {
     params: Promise<{ eventSlug: string }>;
 };
 
-function isEventPageSlug(value: string): value is EventPageSlug {
-    return value in EVENT_PAGE_CONFIG;
+function normalizeSlug(value: string) {
+    return value.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 export default async function EventSlugPage({ params }: PageProps) {
     const { eventSlug } = await params;
 
-    if (!isEventPageSlug(eventSlug)) {
+    const trpcClient = createCaller({});
+    const hackathons = await trpcClient.hackathons.getHackathons();
+    const hasSlug = hackathons.some(
+        (h) => normalizeSlug(h.eventPageSlug) === normalizeSlug(eventSlug)
+    );
+
+    if (!hasSlug) {
         notFound();
     }
 
