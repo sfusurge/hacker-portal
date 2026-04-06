@@ -39,7 +39,7 @@ export function getApplicationAction({
                 label: 'Begin application',
                 variant: 'brand',
                 href: '/application',
-                icon: <ArrowRightIcon className="h-4 w-4" />,
+                icon: undefined,
             };
         case 'In Progress':
             return {
@@ -54,7 +54,7 @@ export function getApplicationAction({
                 label: `RSVP to ${hackathonName}`,
                 variant: 'brand',
                 href: '/rsvp', // TODO: Update this
-                icon: <ArrowRightIcon className="h-4 w-4" />,
+                icon: undefined,
             };
         case 'Accepted':
         case "Accepted and RSVP'd":
