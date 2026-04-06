@@ -105,7 +105,7 @@ export function ActiveHackathonCardContent({
                         'w-full sm:w-1/2',
                         ticketViewFirstOnMobile && 'order-1 sm:order-2'
                     )}
-                    trailingIconChild={applicationAction.icon ?? undefined}
+                    leadingIconChild={applicationAction.icon ?? undefined}
                 >
                     {applicationAction.label}
                 </Button>
@@ -115,7 +115,7 @@ export function ActiveHackathonCardContent({
 
     return (
         <>
-            <CardContent className="bg-neutral-850 flex flex-1 flex-col gap-6 px-6">
+            <CardContent className="bg-neutral-850 flex flex-1 flex-col gap-4 px-6">
                 {!applicationOpened ? (
                     <>
                         <div className="flex flex-col gap-4">
@@ -189,7 +189,7 @@ export function ActiveHackathonCardContent({
 
                         <div className="border-t border-white/10" />
 
-                        <p className="text-pretty text-white/60">
+                        <p className="mb-4 text-pretty text-white/60">
                             {closedRegistration
                                 ? `${payloadName} is currently closed for applications. Visit the event page for the latest updates.`
                                 : applicationSubmitted
@@ -197,7 +197,7 @@ export function ActiveHackathonCardContent({
                                   : 'Applications are open! Apply now to get your shot at participating in our creative design jam!'}
                         </p>
 
-                        {isAcceptedStatus && ticketQr && (
+                        {/* {isAcceptedStatus && ticketQr && (
                             <section className="hidden pt-1 md:block">
                                 <div className="flex w-full rounded-xl bg-neutral-800">
                                     <div className="flex flex-1 items-center justify-center p-4">
@@ -220,7 +220,7 @@ export function ActiveHackathonCardContent({
                                     <section className="flex w-8 flex-1" />
                                 </div>
                             </section>
-                        )}
+                        )} */}
 
                         {acceptedWithActions
                             ? actionButtonsRow('hidden md:flex')

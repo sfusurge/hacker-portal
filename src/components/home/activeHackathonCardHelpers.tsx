@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { ArrowRightIcon } from 'lucide-react';
-import { Barcode } from 'lucide-react';
+import { QrCodeIcon } from '@heroicons/react/24/outline';
 
 export type ApplicationStatus =
     | 'Awaiting Review'
@@ -62,7 +62,7 @@ export function getApplicationAction({
                 label: `View Ticket`,
                 variant: 'brand',
                 href: '/application/submitted', // TODO: Update these links
-                icon: <Barcode className="h-4 w-4" />,
+                icon: <QrCodeIcon className="h-4 w-4" />,
             };
         default:
             return null;

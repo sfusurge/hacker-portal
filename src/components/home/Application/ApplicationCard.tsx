@@ -26,7 +26,7 @@ import {
     WaitlistContent,
     InactiveHackathonContent,
 } from './ApplicationContent';
-import { ArrowRightIcon, Barcode, ExternalLink } from 'lucide-react';
+import { ArrowRightIcon, ExternalLink } from 'lucide-react';
 import { UserData } from '@/server/routers/usersRouter';
 import clsx from 'clsx';
 import { useAtomValue } from 'jotai';
@@ -34,6 +34,7 @@ import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { resolveHackerPackageHref } from '@/components/home/eventPageConfig';
 import RsvpPrompt from '@/components/home/Application/RsvpPrompt';
 import WithdrawPrompt from '@/components/home/Application/WithdrawPrompt';
+import { QrCodeIcon } from '@heroicons/react/24/outline';
 
 export type AppStatus =
     | 'Event Not Yet Active'
@@ -317,7 +318,7 @@ function getHeaderAction(
                                 'noopener,noreferrer'
                             )
                         }
-                        trailingIconChild={<ExternalLink className="h-4 w-4" />}
+                        leadingIconChild={<ExternalLink className="h-4 w-4" />}
                     >
                         Hacker Package
                     </Button>
@@ -327,7 +328,7 @@ function getHeaderAction(
                     variant="brand"
                     hierarchy="primary"
                     onClick={onOpenTicket}
-                    leadingIconChild={<Barcode className="h-4 w-4" />}
+                    leadingIconChild={<QrCodeIcon className="h-4 w-4" />}
                 >
                     View ticket
                 </Button>
@@ -480,7 +481,7 @@ function getCardFooter(
                 hierarchy="primary"
                 className="w-full"
                 onClick={onOpenTicket}
-                leadingIconChild={<Barcode className="h-4 w-4" />}
+                leadingIconChild={<QrCodeIcon className="h-4 w-4" />}
             >
                 View ticket
             </Button>
