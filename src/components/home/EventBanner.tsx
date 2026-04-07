@@ -1,4 +1,5 @@
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 import {
@@ -23,6 +24,26 @@ type EventHeroBannerProps = {
     websiteHref: string;
 };
 
+function WebsiteLinkLine({
+    websiteLabel,
+    websiteHref,
+}: Pick<EventHeroBannerProps, 'websiteLabel' | 'websiteHref'>) {
+    return (
+        <p className="text-sm text-white/60">
+            For more info, visit the{' '}
+            <Link
+                href={websiteHref}
+                className="text-brand-400 hover:text-brand-300 inline-flex items-center gap-1 font-medium"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                {websiteLabel}
+                <ArrowTopRightOnSquareIcon className="h-4 w-4 shrink-0" />
+            </Link>
+        </p>
+    );
+}
+
 export default function EventHeroBanner({
     eventName,
     tagline,
@@ -37,29 +58,26 @@ export default function EventHeroBanner({
     websiteHref,
 }: EventHeroBannerProps) {
     const admissionLabel = isPaid ? PAID_ADMISSION_LABEL : 'Free';
-    const hasBanner = Boolean(desktopBannerSrc || mobileBannerSrc);
+    const hasDesktopBanner = Boolean(desktopBannerSrc);
+    const hasMobileBanner = Boolean(mobileBannerSrc);
 
     return (
         <Card className="overflow-hidden">
-            <div className="relative">
-                <div className="relative overflow-hidden rounded-t-xl bg-neutral-900 p-4 md:p-5">
+            {/* Mobile hero: event banner image + overlay*/}
+            <div className="relative md:hidden">
+                <div className="relative overflow-hidden bg-neutral-900 p-4">
                     {mobileBannerSrc ? (
-                        <img
+                        <Image
                             src={mobileBannerSrc}
                             alt={`${eventName} banner background`}
-                            className="absolute inset-0 h-full w-full object-cover md:hidden"
+                            fill
+                            className="object-cover blur-[2px]"
+                            sizes="100vw"
                         />
                     ) : null}
-                    {desktopBannerSrc ? (
-                        <img
-                            src={desktopBannerSrc}
-                            alt={`${eventName} banner background`}
-                            className="absolute inset-0 hidden h-full w-full object-cover md:block"
-                        />
-                    ) : null}
-                    {hasBanner ? (
+                    {hasMobileBanner ? (
                         <div
-                            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/75 to-transparent"
+                            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 to-black/60"
                             aria-hidden
                         />
                     ) : (
@@ -71,7 +89,57 @@ export default function EventHeroBanner({
 
                     <div className="relative z-10 flex items-center gap-3">
                         {iconSrc ? (
-                            <img
+                            <Image
+                                src={iconSrc}
+                                alt={`${eventName} icon`}
+                                width={48}
+                                height={48}
+                                className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                            />
+                        ) : (
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/15 text-lg font-semibold text-white">
+                                {eventName.charAt(0)}
+                            </div>
+                        )}
+                        <div className="min-w-0">
+                            <h1 className="text-2xl font-bold tracking-tight text-white">
+                                {eventName}
+                            </h1>
+                            <p className="text-sm text-pretty text-white/70">
+                                {tagline}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Desktop/tablet hero: banner image + overlay */}
+            <div className="relative hidden md:block">
+                <CardContent className="relative overflow-hidden rounded-t-xl">
+                    {desktopBannerSrc ? (
+                        <Image
+                            src={desktopBannerSrc}
+                            alt={`${eventName} banner background`}
+                            fill
+                            className="object-cover blur-[2px]"
+                            sizes="(min-width: 768px) 100vw, 100vw"
+                        />
+                    ) : null}
+                    {hasDesktopBanner ? (
+                        <div
+                            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/85 to-black/30"
+                            aria-hidden
+                        />
+                    ) : (
+                        <div
+                            className="absolute inset-0 bg-gradient-to-br from-neutral-700/90 via-neutral-900 to-neutral-950"
+                            aria-hidden
+                        />
+                    )}
+
+                    <div className="relative z-10 flex items-center gap-3">
+                        {iconSrc ? (
+                            <Image
                                 src={iconSrc}
                                 alt={`${eventName} icon`}
                                 width={56}
@@ -91,61 +159,85 @@ export default function EventHeroBanner({
                             <p className="text-white/60">{tagline}</p>
                         </div>
                     </div>
-                </div>
+                </CardContent>
+            </div>
 
-                <div className="grid gap-6 border-t border-white/10 p-4 md:grid-cols-2 md:p-5">
-                    <div className="space-y-3">
-                        <div className="space-y-3">
-                            <h2 className="font-semibold text-white">
-                                Event Overview
-                            </h2>
-                            <p className="text-pretty text-white/60">
-                                {overview}
-                            </p>
-                        </div>
-
-                        <p className="text-white/60">
-                            For more info, visit the{' '}
-                            <Link
-                                href={websiteHref}
-                                className="text-brand-400 hover:text-brand-300 inline-flex items-center gap-1"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                {websiteLabel}
-                                <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-                            </Link>
-                        </p>
+            {/* Mobile body: metadata → divider → overview → link */}
+            <div className="space-y-4 bg-neutral-900 p-4 md:hidden">
+                <div className="flex flex-wrap gap-x-5 gap-y-3 text-sm text-white/60">
+                    <div className="inline-flex items-center gap-2">
+                        <MapPinIcon className="h-4 w-4 shrink-0" aria-hidden />
+                        <div>{location}</div>
                     </div>
 
-                    <div className="flex h-full flex-col justify-center gap-4 text-sm font-medium">
-                        <div className="flex items-center justify-between gap-4 border-b border-neutral-700/18 pb-2">
-                            <span className="inline-flex items-center gap-2 text-white/60">
-                                <MapPinIcon className="h-4 w-4" />
-                                Location
-                            </span>
-                            <span className="text-right text-white">
-                                {location}
-                            </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-4 border-b border-neutral-700/18 pb-2">
-                            <span className="inline-flex items-center gap-2 text-white/60">
-                                <CalendarDaysIcon className="h-4 w-4" />
-                                Dates
-                            </span>
-                            <span className="text-right text-white">
-                                {dates}
-                            </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-4">
-                            <span className="inline-flex items-center gap-2 text-white/60">
-                                <CurrencyDollarIcon className="h-4 w-4" />
-                                Admission
-                            </span>
-                            <span className="text-right text-white">
-                                {admissionLabel}
-                            </span>
-                        </div>
+                    <div className="inline-flex items-center gap-2">
+                        <CalendarDaysIcon
+                            className="h-4 w-4 shrink-0"
+                            aria-hidden
+                        />
+                        {dates}
+                    </div>
+                    <div className="inline-flex items-center gap-2">
+                        <CurrencyDollarIcon
+                            className="h-4 w-4 shrink-0"
+                            aria-hidden
+                        />
+                        {admissionLabel}
+                    </div>
+                </div>
+                <div className="border-t border-neutral-700/40" />
+
+                <p className="text-sm leading-relaxed text-pretty text-white/60">
+                    {overview}
+                </p>
+
+                <WebsiteLinkLine
+                    websiteLabel={websiteLabel}
+                    websiteHref={websiteHref}
+                />
+            </div>
+
+            {/* Desktop body */}
+            <div className="hidden gap-6 border-t border-white/10 p-4 md:grid md:grid-cols-2 md:p-5">
+                <div className="space-y-3">
+                    <div className="space-y-3">
+                        <h2 className="font-semibold text-white">
+                            Event Overview
+                        </h2>
+                        <p className="text-pretty text-white/60">{overview}</p>
+                    </div>
+
+                    <WebsiteLinkLine
+                        websiteLabel={websiteLabel}
+                        websiteHref={websiteHref}
+                    />
+                </div>
+
+                <div className="flex h-full flex-col justify-center gap-4 text-sm font-medium">
+                    <div className="flex items-center justify-between gap-4 border-b border-neutral-700/18 pb-2">
+                        <span className="inline-flex items-center gap-2 text-white/60">
+                            <MapPinIcon className="h-4 w-4" />
+                            Location
+                        </span>
+                        <span className="text-right text-white">
+                            {location}
+                        </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-4 border-b border-neutral-700/18 pb-2">
+                        <span className="inline-flex items-center gap-2 text-white/60">
+                            <CalendarDaysIcon className="h-4 w-4" />
+                            Dates
+                        </span>
+                        <span className="text-right text-white">{dates}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                        <span className="inline-flex items-center gap-2 text-white/60">
+                            <CurrencyDollarIcon className="h-4 w-4" />
+                            Admission
+                        </span>
+                        <span className="text-right text-white">
+                            {admissionLabel}
+                        </span>
                     </div>
                 </div>
             </div>

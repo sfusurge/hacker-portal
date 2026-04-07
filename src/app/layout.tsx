@@ -6,6 +6,7 @@ import { SessionProvider } from 'next-auth/react';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Toaster } from '@/components/ui/toaster';
 import { Provider as JotaiProivder } from 'jotai';
+
 const inter = Inter({ subsets: ['latin'] });
 
 const dmMono = DM_Mono({
