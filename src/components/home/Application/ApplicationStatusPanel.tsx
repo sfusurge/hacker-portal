@@ -1,7 +1,6 @@
 import Image from 'next/image';
 import { ReactNode } from 'react';
-
-const defaultIllustrationClassName = '-order-1 max-w-72 md:order-last';
+import { cn } from '@/lib/utils';
 
 type ApplicationStatusPanelProps = {
     children: ReactNode;
@@ -15,7 +14,7 @@ type ApplicationStatusPanelProps = {
 };
 
 /**
- * shared layout for application status cards: left text column + optional illustration.
+ * layout for application status cards: left text column + optional illustration.
  */
 export function ApplicationStatusPanel({
     children,
@@ -25,21 +24,29 @@ export function ApplicationStatusPanel({
         <>
             <div
                 className={
-                    'flex flex-1 flex-col items-start justify-center gap-3 self-stretch pt-4 pr-0 text-start md:gap-5'
+                    'flex min-w-[240px] flex-1 flex-col items-start justify-center gap-3 self-stretch pt-4 pr-0 text-start md:gap-5'
                 }
             >
                 {children}
             </div>
             {illustration ? (
-                <Image
-                    src={illustration.src}
-                    width={illustration.width}
-                    height={illustration.height}
-                    alt={illustration.alt}
-                    className={
-                        illustration.className ?? defaultIllustrationClassName
-                    }
-                />
+                <div
+                    className={cn(
+                        '-order-1 flex min-w-0 shrink justify-center self-center md:order-last md:self-center',
+                        'w-full max-w-72'
+                    )}
+                >
+                    <Image
+                        src={illustration.src}
+                        width={illustration.width}
+                        height={illustration.height}
+                        alt={illustration.alt}
+                        className={cn(
+                            'h-auto w-full object-contain',
+                            illustration.className
+                        )}
+                    />
+                </div>
             ) : null}
         </>
     );

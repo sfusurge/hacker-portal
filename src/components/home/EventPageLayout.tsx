@@ -83,8 +83,9 @@ export default function EventPageLayout({
                             <div className="flex flex-col gap-6 xl:col-span-6 xl:gap-8">
                                 {applicationCard}
                             </div>
-                            <div className="xl:col-span-5">
+                            <div className="h-full xl:col-span-5">
                                 <TeamCard
+                                    className="h-full xl:col-span-5"
                                     userData={userData}
                                     hackathonId={activeHackathon.id}
                                     team={team}
