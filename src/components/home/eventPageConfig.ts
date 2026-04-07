@@ -132,7 +132,7 @@ export const EVENT_PAGE_NAV_LINKS: EventPageNavLink[] = [
     {
         href: '/sparkjam',
         label: 'SparkJam',
-        icon: '/dashboard/sj26head.png',
+        icon: '/dashboard/sparkjamhead.webp',
         iconAlt: 'SparkJam logo',
     },
 ];

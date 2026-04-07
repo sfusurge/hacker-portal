@@ -19,11 +19,11 @@ export default function DefaultView({
     return (
         <div className="flex w-full flex-col items-start gap-10">
             <Image
-                src="/dashboard/sillyhackshead.svg"
+                src="/dashboard/sparkjamhead.webp"
                 width={100}
                 height={100}
                 className="h-16 w-16 rounded-lg sm:h-25 sm:w-25"
-                alt="JourneyHacks 2026 Logo"
+                alt="SparkJam 2026 Logo"
             />
             <div className="space-y-3 text-white">
                 <h1 className="text-3xl leading-tight font-semibold">
