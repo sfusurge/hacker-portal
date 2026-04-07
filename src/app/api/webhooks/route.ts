@@ -53,17 +53,45 @@ export async function POST(req: Request) {
                     break;
                 case 'payment_intent.succeeded':
                     data = event.data.object as Stripe.PaymentIntent;
-                    if (!data.receipt_email) {
-                        console.error('No Receipt email is found');
-                        break;
-                    }
+
                     // since payment succeeded, update application status
                     const trpcClient = createCaller({});
 
-                    const application =
-                        await trpcClient.applications.getApplicationByEmail({
-                            email: data.receipt_email,
-                        });
+                    const hackathonIdFromMetadata = data.metadata?.hackathonId
+                        ? Number(data.metadata.hackathonId)
+                        : null;
+                    const userIdFromMetadata = data.metadata?.userId
+                        ? Number(data.metadata.userId)
+                        : null;
+
+                    let application: any = null;
+
+                    if (
+                        hackathonIdFromMetadata &&
+                        Number.isFinite(hackathonIdFromMetadata) &&
+                        userIdFromMetadata &&
+                        Number.isFinite(userIdFromMetadata)
+                    ) {
+                        application =
+                            await trpcClient.applications.getApplicationByHackathonAndUserId(
+                                {
+                                    hackathonId: hackathonIdFromMetadata,
+                                    userId: userIdFromMetadata,
+                                }
+                            );
+                    } else if (data.receipt_email) {
+                        application =
+                            await trpcClient.applications.getApplicationByEmail(
+                                {
+                                    email: data.receipt_email,
+                                }
+                            );
+                    } else {
+                        console.error(
+                            'No metadata (hackathonId/userId) and no receipt_email; cannot locate application'
+                        );
+                        break;
+                    }
 
                     if (
                         !application ||
@@ -77,13 +105,24 @@ export async function POST(req: Request) {
                     }
 
                     await trpcClient.applications.updateApplication({
-                        ...application,
+                        hackathonId: application.hackathonId,
+                        userId: application.userId,
                         status: 'Accepted',
                         pendingStatus: 'N/A',
                     });
 
                     // Send confirmation email after successful payment
                     try {
+                        const payerEmail =
+                            typeof data.receipt_email === 'string'
+                                ? data.receipt_email
+                                : null;
+                        if (!payerEmail) {
+                            console.error(
+                                'No receipt_email on PaymentIntent; skipping RSVP email send'
+                            );
+                            break;
+                        }
                         const rsvpTemplate =
                             await trpcClient.emailTemplates.getEmailTemplateByHackathonAndType(
                                 {
@@ -94,9 +133,13 @@ export async function POST(req: Request) {
 
                         if (rsvpTemplate) {
                             // Extract name from application response if possible
-                            const firstName =
-                                application.response['2'] ?? 'Friend';
-                            const lastName = application.response['3'] ?? '';
+                            const response =
+                                (application.response as Record<
+                                    string,
+                                    any
+                                > | null) ?? null;
+                            const firstName = response?.['2'] ?? 'Friend';
+                            const lastName = response?.['3'] ?? '';
 
                             await trpcClient.emails.sendEmail({
                                 templateId: rsvpTemplate.id,
@@ -104,7 +147,7 @@ export async function POST(req: Request) {
                                     id: application.userId,
                                     firstName: firstName,
                                     lastName: lastName,
-                                    email: data.receipt_email,
+                                    email: payerEmail,
                                 },
                             });
                             console.log(

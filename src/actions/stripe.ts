@@ -6,7 +6,12 @@ import { stripe } from '@/lib/stripe';
 
 export async function createPaymentIntent(
     paymentAmount: number,
-    userEmail: string
+    userEmail: string,
+    options?: {
+        hackathonId?: number;
+        userId?: number;
+        hackathonName?: string;
+    }
 ): Promise<{ client_secret: string }> {
     const paymentIntent: Stripe.PaymentIntent =
         await stripe.paymentIntents.create({
@@ -16,6 +21,20 @@ export async function createPaymentIntent(
                 enabled: true, // Enable automatic payment methods
             },
             receipt_email: userEmail,
+            description: options?.hackathonName
+                ? `${options.hackathonName} ticket`
+                : undefined,
+            metadata: {
+                ...(options?.hackathonId != null
+                    ? { hackathonId: String(options.hackathonId) }
+                    : {}),
+                ...(options?.userId != null
+                    ? { userId: String(options.userId) }
+                    : {}),
+                ...(options?.hackathonName != null
+                    ? { hackathonName: options.hackathonName }
+                    : {}),
+            },
         });
 
     return {

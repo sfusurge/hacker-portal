@@ -10,8 +10,10 @@ import { toast } from '@/hooks/use-toast';
 import { atom, useAtomValue } from 'jotai';
 import { InputFormData } from '@/components/application_components/types';
 import {
+    getApplicationAutofillFromUser,
     getResponseMap,
     loadResponseIntoSchema,
+    mergeProfileDefaultsWithLocalResponse,
     processResponseForServer,
 } from '@/components/application_components/utils';
 import { atomWithStorage } from 'jotai/utils';
@@ -48,13 +50,18 @@ const applicationWithLocalAtom = atom(
             return unReadyValue;
         }
 
-        if (
+        const profileDefaults = getApplicationAutofillFromUser(user);
+        const hasSavedDraft =
             local.hackathonId !== -1 &&
             local.hackathonId === hackathon.id &&
-            user.email === local.email
-        ) {
-            loadResponseIntoSchema(pages, local.response);
-        }
+            user.email === local.email;
+
+        const responseToLoad = mergeProfileDefaultsWithLocalResponse(
+            profileDefaults,
+            hasSavedDraft ? local.response : {}
+        );
+
+        loadResponseIntoSchema(pages, responseToLoad);
         return {
             id: hackathon.id,
             pages,

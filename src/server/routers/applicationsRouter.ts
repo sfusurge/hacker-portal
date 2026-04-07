@@ -76,18 +76,7 @@ export const applicationsRouter = router({
                 .returning();
 
             if (application) {
-                const tempDummy = (item: any) => {
-                    const { '1': firstName, '5': email } = item.response || {};
-                    return { firstName, email };
-                };
-
                 if (!user?.email) {
-                    throw new InternalServerError(
-                        'User email is missing. Cannot send email.'
-                    );
-                }
-                const { firstName, email: extractedEmail } = tempDummy(input);
-                if (!extractedEmail) {
                     throw new InternalServerError(
                         'User email is missing. Cannot send email.'
                     );
@@ -119,8 +108,8 @@ export const applicationsRouter = router({
                                 : template.content;
 
                         const templateData = {
-                            firstName: firstName ?? 'Friend',
-                            email: extractedEmail,
+                            firstName: user.firstName ?? 'Friend',
+                            email: user.email,
                             userId: user.id,
                         };
 
@@ -154,29 +143,28 @@ export const applicationsRouter = router({
                             html: finalHtmlContent,
                         };
 
-                        const targets = new Set<string>([
-                            user.email,
-                            extractedEmail,
-                        ]);
+                        const targetList = [user.email];
+                        await Promise.all(
+                            targetList.map(async (to) => {
+                                await transporter.sendMail({
+                                    ...commonMail,
+                                    to,
+                                });
+                            })
+                        );
 
-                        for (const to of targets) {
-                            transporter.sendMail(
-                                { ...commonMail, to },
-                                (error, info) => {
-                                    if (error) {
-                                        console.error(
-                                            'Error sending email:',
-                                            error
-                                        );
-                                    } else {
-                                        console.log(
-                                            'Email sent:',
-                                            info.response
-                                        );
-                                    }
-                                }
+                        await databaseClient
+                            .update(applications)
+                            .set({ lastEmailSent: 'hacker_applied' })
+                            .where(
+                                and(
+                                    eq(
+                                        applications.hackathonId,
+                                        input.hackathonId
+                                    ),
+                                    eq(applications.userId, user.id)
+                                )
                             );
-                        }
                     }
                 } catch (error) {
                     console.error(
@@ -441,6 +429,28 @@ export const applicationsRouter = router({
                 .limit(1);
 
             return application as ApplicationInfo;
+        }),
+
+    getApplicationByHackathonAndUserId: publicProcedure
+        .input(
+            z.object({
+                hackathonId: z.number().int(),
+                userId: z.number().int(),
+            })
+        )
+        .query(async ({ input }) => {
+            const [application] = await databaseClient
+                .select(getTableColumns(applications))
+                .from(applications)
+                .where(
+                    and(
+                        eq(applications.hackathonId, input.hackathonId),
+                        eq(applications.userId, input.userId)
+                    )
+                )
+                .limit(1);
+
+            return (application ?? null) as ApplicationInfo | null;
         }),
 
     getApplicationsByEmail: publicProcedure

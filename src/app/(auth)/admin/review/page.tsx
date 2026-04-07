@@ -1,66 +1,17 @@
 'use client';
 
-import ReviewApplicationsTable from '@/app/(auth)/admin/review/components/ReviewApplicationsTable';
+import ReviewApplicationsTable, {
+    type Applicant,
+    sideCardAtomSJ,
+} from '@/app/(auth)/admin/review/components/ReviewApplicationsTable';
 import { useEffect, useMemo, useState } from 'react';
 import SideCard from '@/app/(auth)/admin/review/components/SideCard';
 import { atom, useSetAtom, useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { trpc } from '@/trpc/client';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
-import { sideCardAtomSJ } from '@/app/(auth)/admin/review/components/ReviewApplicationsTable'; // reuse the same atom
 
-export type Applicant = {
-    members: string[] | null;
-    id: number;
-    teamName: string | null;
-
-    // Basic Information
-    firstName: string;
-    lastName: string;
-    pronouns: string;
-    age: string;
-    email: string;
-    haveHackathonExperience: string;
-    howHeardAbout: string[];
-    dietaryRestrictions?: string[];
-    resume?: string[];
-    discord: string;
-    instagram?: string;
-    github?: string;
-    linkedin?: string;
-    portfolio?: string;
-    otherLinks?: string;
-
-    // School Information
-    school?: string;
-    background?: string;
-    yearOfStudy?: string;
-    major: string;
-
-    // Short Answer Questions
-    // excitement: string;
-    // problemOrSkill: string;
-    // dreamProject: string;
-
-    // Sponsors / Agreements
-    shareResume: boolean;
-    acceptMLH: boolean;
-    acceptSFSS: boolean;
-    acceptEmails: boolean;
-    authorizeMLH: boolean;
-    photoRelease: boolean;
-    currentStatus: string;
-    pendingStatus: string;
-    applicationDate: Date;
-    lastEmailSent: string;
-
-    checkIns: {
-        eventId: number;
-        eventTitle: string;
-        checkedIn: boolean;
-        checkInTime: Date | null;
-    }[];
-};
+export type { Applicant };
 
 export default function ReviewApplicationsPage() {
     const hackathon = useAtomValue(hackathonAtom);
@@ -91,7 +42,7 @@ export default function ReviewApplicationsPage() {
         const map = new Map<number, ApplicationWithTeamInfo>();
 
         for (const appData of applications) {
-            map.set(appData.userId, appData);
+            map.set(appData.userId, appData as ApplicationWithTeamInfo);
         }
 
         return map;
@@ -186,34 +137,34 @@ export default function ReviewApplicationsPage() {
 function transformResponse(response: any[]) {
     return response
         .map((item) => {
+            const r = item.response as Record<string, any>;
+
             const {
-                '1': firstName,
-                '2': lastName,
-                '3': pronouns,
-                '4': age,
-                '5': email,
-                '6': phoneNumber,
-                '7': country,
+                '5': firstName,
+                '6': lastName,
+                '7': pronouns,
+                '8': email,
+                '10': age,
                 '16': school,
                 '17': background,
                 '18': yearOfStudy,
                 '19': major,
-                '20': haveHackathonExperience,
-                '21': howHeardAbout,
-                '22': dietaryRestrictions,
-                '23': resume,
-                '24': discord,
-                '25': portfolio,
-                '26': github,
-                '27': linkedin,
-                '28': otherLinks,
-                '29': shareResume,
-                '30': acceptMLH,
-                '31': acceptSFSS,
-                '32': acceptEmails,
-                '33': photoRelease,
-                '34': authorizeMLH,
-            } = item.response as Record<string, any>;
+                '25': haveHackathonExperience,
+                '35': howHeardAbout,
+                '36': dietaryRestrictions,
+                '37': resume,
+                '38': discord,
+                '39': portfolio,
+                '40': github,
+                '41': linkedin,
+                '42': otherLinks,
+                '50': shareResume,
+                '51': acceptMLH,
+                '52': acceptSFSS,
+                '53': authorizeMLH,
+                '54': photoRelease,
+                '55': acceptEmails,
+            } = r;
 
             const members = item.members;
             const checkIns = item.checkIns;
@@ -223,6 +174,12 @@ function transformResponse(response: any[]) {
                 ? `${item.teamName} (${item.teamId})`
                 : '';
 
+            const majorStr: string = Array.isArray(major)
+                ? major.join(', ')
+                : typeof major === 'string'
+                  ? major
+                  : '';
+
             return {
                 id: Number(item.userId),
                 teamName,
@@ -230,6 +187,7 @@ function transformResponse(response: any[]) {
                 pendingStatus: item.pendingStatus,
                 lastEmailSent,
                 age: age || '',
+                tShirtSize: '',
                 applicationDate: new Date(item.createdDate),
                 dietaryRestrictions: Array.isArray(dietaryRestrictions)
                     ? dietaryRestrictions
@@ -256,7 +214,10 @@ function transformResponse(response: any[]) {
                 school: school || '',
                 background: background || '',
                 yearOfStudy: yearOfStudy || '',
-                major: Array.isArray(major) ? major.join(', ') : major || '',
+                major: majorStr,
+                excitement: '',
+                problemOrSkill: '',
+                dreamProject: '',
                 shareResume: shareResume || false,
                 acceptMLH: acceptMLH || false,
                 acceptSFSS: acceptSFSS || false,

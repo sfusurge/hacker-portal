@@ -19,15 +19,20 @@ type ChoiceOption = {
  * The server api can reject the request for any reason, so client modifying the question set is not a concern.
  */
 export interface HackathonData {
+    eventPagePayload: any;
     id: number;
     version: number;
     hackathonName: string; // should this be hackathon id in table instead?
     submissionTime?: string;
+    isPaid?: boolean;
 
     applicationQuestionPages: InputFormPageData[];
     submissionQuestionPages: InputFormPageData[];
 
     submissionDeadline: dayjs.Dayjs;
+    submissionOpen: dayjs.Dayjs | null;
+    applicationOpen: dayjs.Dayjs | null;
+    applicationCloses: dayjs.Dayjs | null;
     startDate: dayjs.Dayjs;
     endDate: dayjs.Dayjs;
 

@@ -147,9 +147,10 @@
     --font-sans-length: 2;
 
     /* Monospace font stack */
+
     --font-mono:
-        DM Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-        'Liberation Mono', 'Courier New', monospace;
+        var(--font-dm-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
+        Consolas, 'Liberation Mono', 'Courier New', monospace;
 
     /* Line height variables */
     --leading-none: 1;

@@ -1,6 +1,7 @@
 import { integer, json, pgEnum, pgTable, timestamp } from 'drizzle-orm/pg-core';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
+import { hackathons } from './hackathons';
 import { teams } from './teams';
 
 export const submissionStatusEnum = pgEnum('submission_status', [
@@ -15,6 +16,9 @@ export const submissions = pgTable('submissions', {
         .references(() => teams.id, { onDelete: 'no action' })
         .primaryKey()
         .notNull(),
+    hackathonId: integer('hackathon_id')
+        .notNull()
+        .references(() => hackathons.id, { onDelete: 'cascade' }),
     currentStatus: submissionStatusEnum('current_status')
         .default('Awaiting Review')
         .notNull(),
@@ -24,6 +28,7 @@ export const submissions = pgTable('submissions', {
 
 export const insertSubmissionSchema = createInsertSchema(submissions).pick({
     teamId: true,
+    hackathonId: true,
     response: true,
 });
 

@@ -5,12 +5,13 @@ import { UserRoleEnum } from '@/db/schema/users/users';
 import { UnauthorizedError, InternalServerError } from '../exceptions';
 import {
     emailTemplates,
+    emailTemplateStyling,
     emailTemplateSchema,
     getEmailTemplateSchema,
     deleteEmailTemplateSchema,
 } from '@/db/schema/emails';
 import { hackathonEmailTypeEnum } from '@/db/schema/emails';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, getTableColumns } from 'drizzle-orm';
 import { getUserData } from '@/server/routers/usersRouter';
 
 export const emailTemplatesRouter = router({
@@ -61,8 +62,15 @@ export const emailTemplatesRouter = router({
             }
 
             const templates = await databaseClient
-                .select()
+                .select({
+                    ...getTableColumns(emailTemplates),
+                    stylingHtml: emailTemplateStyling.html,
+                })
                 .from(emailTemplates)
+                .leftJoin(
+                    emailTemplateStyling,
+                    eq(emailTemplates.stylingId, emailTemplateStyling.id)
+                )
                 .where(eq(emailTemplates.hackathonId, input.hackathonId))
                 .orderBy(desc(emailTemplates.updatedAt));
 

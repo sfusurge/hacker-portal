@@ -32,6 +32,7 @@ import { DateInput } from '@/components/application_components/InputFormComponen
 import { DropdownInput } from '@/components/application_components/InputFormComponents/DropdownInput';
 import { MajorInput } from '@/components/application_components/InputFormComponents/MajorInput';
 import { FileUploadInput } from '@/components/application_components/InputFormComponents/FileUploadInput';
+import { questionIdsInOrderFromPages } from '@/app/(auth)/admin/review/applicationQuestionOrder';
 
 export interface SideCardProps {
     visible: boolean;
@@ -162,6 +163,23 @@ export default function SideCard({
         _onclose();
     }
 
+    const orderedQuestionIds = useMemo(
+        () => questionIdsInOrderFromPages(hackathon?.applicationQuestionPages),
+        [hackathon?.applicationQuestionPages]
+    );
+
+    const sortedResponseKeys = useMemo(() => {
+        const keys = Object.keys(responseData);
+        return [...keys].sort((a, b) => {
+            const ia = orderedQuestionIds.indexOf(a);
+            const ib = orderedQuestionIds.indexOf(b);
+            if (ia === -1 && ib === -1) return a.localeCompare(b);
+            if (ia === -1) return 1;
+            if (ib === -1) return -1;
+            return ia - ib;
+        });
+    }, [responseData, orderedQuestionIds]);
+
     const questionTypeMap = useMemo(() => {
         const map = new Map<string, InputFormQuestion>();
 
@@ -256,8 +274,12 @@ export default function SideCard({
             case 'multiple-checkbox':
                 const multiCheckboxAtom = atom(
                     (get) => {
+                        const value = get(dataAtom) as unknown;
+                        const arr: unknown[] = Array.isArray(value)
+                            ? value
+                            : [];
                         const choices = new Set<string>(
-                            get(dataAtom).map((v: string) => v.toLowerCase())
+                            arr.map((v) => String(v).toLowerCase())
                         );
                         for (const c of question.choices) {
                             if (choices.has(c.data.toLowerCase())) {
@@ -282,7 +304,7 @@ export default function SideCard({
                         const res: string[] = [];
                         for (const c of val.choices) {
                             if (c.value) {
-                                res.push(c.name);
+                                res.push(c.data);
                             }
                         }
                         if (val.allowOther && val.otherValue) {
@@ -401,14 +423,16 @@ export default function SideCard({
                         <Button onClick={onPrev}>Prev</Button>
                         <Button
                             className={
-                                status === 'Accepted - RSVP to Confirm'
+                                status === 'Accepted - Pending Payment'
                                     ? style.selectedButton
                                     : ''
                             }
                             onClick={() => {
-                                // TODO This shouldn't be hard coded
-                                // should which ever status in appropreiate for the hackathon. Sparkjam needs payment, but most others won't
-                                setStatus('Accepted - RSVP to Confirm');
+                                setStatus(
+                                    hackathon?.isPaid
+                                        ? 'Accepted - Pending Payment'
+                                        : 'Accepted - RSVP to Confirm'
+                                );
                             }}
                             variant={'brand'}
                             hierarchy={'primary'}
@@ -465,7 +489,7 @@ export default function SideCard({
 
                     {/* application data */}
 
-                    {Object.entries(responseData).map(([id, val]) => {
+                    {sortedResponseKeys.map((id) => {
                         const q = questionTypeMap.get(id);
 
                         if (!q) {
@@ -499,9 +523,11 @@ export default function SideCard({
                                     : ''
                             }
                             onClick={() => {
-                                // TODO This shouldn't be hard coded
-                                // should which ever status in appropreiate for the hackathon. Sparkjam needs payment, but most others won't
-                                setStatus('Accepted - RSVP to Confirm');
+                                setStatus(
+                                    hackathon?.isPaid
+                                        ? 'Accepted - Pending Payment'
+                                        : 'Accepted - RSVP to Confirm'
+                                );
                             }}
                             variant={'brand'}
                             hierarchy={'primary'}
