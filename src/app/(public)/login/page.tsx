@@ -72,7 +72,7 @@ export default async function Login({
             className="relative h-[100dvh] w-[100dvw] overflow-hidden"
         >
             <Image
-                src="/dashboard/sillyhacksheader.png"
+                src="/dashboard/sparkjamhead26.webp"
                 alt="Sparky Studying"
                 fill
                 className="absolute h-full w-full object-cover"
