@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/chip';
@@ -56,7 +55,7 @@ export function ActiveHackathonCardContent({
         applicationOpened &&
         !closedRegistration;
 
-    /** "View ticket" (QR) available after registration closes for accepted hackers. */
+    /** QR available after registration closes for accepted hackers. */
     const showPrimaryAction =
         Boolean(applicationAction) &&
         (!closedRegistration ||
@@ -65,7 +64,7 @@ export function ActiveHackathonCardContent({
                 applicationSubmitted &&
                 applicationOpened));
 
-    /** mobile (under 768px), put "View ticket" (QR) above the event link so it is not missed. */
+    /** mobile (under 768px), put QR above the event link */
     const ticketViewFirstOnMobile =
         Boolean(ticketQr) &&
         isAcceptedStatus &&
@@ -115,23 +114,23 @@ export function ActiveHackathonCardContent({
 
     return (
         <>
-            <CardContent className="bg-neutral-850 flex flex-1 flex-col gap-4 px-6">
+            <CardContent className="bg-neutral-850 flex flex-1 flex-col gap-4 px-4 sm:px-6">
                 {!applicationOpened ? (
                     <>
-                        <div className="flex flex-col gap-4">
-                            <div className="flex w-full overflow-hidden rounded-lg bg-neutral-800">
-                                <div className="w-1/2 bg-neutral-700 px-4 py-2 text-center font-mono text-sm font-medium text-white">
+                        <div className="flex flex-col gap-5">
+                            <div className="flex w-full overflow-hidden rounded-xl bg-neutral-800">
+                                <div className="w-1/2 bg-neutral-800/60 px-4 py-2 text-center font-mono text-sm font-medium">
                                     REGISTER IN
                                 </div>
 
-                                <div className="w-1/2 px-4 py-2 text-center text-sm text-white/80">
+                                <div className="w-1/2 bg-neutral-700 px-4 py-2 text-center text-sm">
                                     {format(open?.d ?? 0)}d{' '}
                                     {format(open?.h ?? 0)}h{' '}
                                     {format(open?.m ?? 0)}m
                                 </div>
                             </div>
 
-                            <div className="border-t border-white/10" />
+                            <div className="border-t border-neutral-700/18" />
 
                             <p className="text-pretty text-white/60">
                                 Applications opening soon! Checkout the{' '}
@@ -143,7 +142,7 @@ export function ActiveHackathonCardContent({
                             size="cozy"
                             variant="default"
                             hierarchy="secondary"
-                            className="w-full"
+                            className="mt-12 w-full sm:mt-4"
                         >
                             <Link href={`/${eventPageSlug}`} prefetch>
                                 {bannerConfig.websiteLabel}
