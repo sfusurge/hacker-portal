@@ -27,7 +27,7 @@ export default function DefaultView({
             />
             <div className="space-y-3 text-white">
                 <h1 className="text-3xl leading-tight font-semibold">
-                    Login or sign up to get started.
+                    Log in or sign up to get started.
                 </h1>
                 <p className="">Continue to the Surge Portal with:</p>
             </div>
