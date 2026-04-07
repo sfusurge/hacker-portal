@@ -15,8 +15,7 @@ import {
 
 import { HomeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
-import { BellAlertIcon } from '@heroicons/react/24/outline';
-import { IdentificationIcon, QrCodeIcon } from '@heroicons/react/24/solid';
+import { QrCodeIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
 import { signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
@@ -96,32 +95,22 @@ const navLinks = [
 
 const adminLinks = [
     {
-        href: '/admin/review',
-        label: 'Review Applications',
-        icon: <BellAlertIcon className="h-6 w-6" />,
-        iconAlt: 'Review Applications logo',
-    },
-    {
-        href: '/admin/email/templates',
-        label: 'Emails Templates',
-        icon: <EnvelopeIcon className="h-6 w-6" />,
-        iconAlt: 'Emails logo',
-        // dropdownItems: [
-        //     { label: 'Email Templates', href: '/admin/email/templates' },
-        //     { label: 'Subscribed Emails', href: '/admin/email/subscribed' },
-        // ],
-    },
-    // {
-    //     href: '/admin/judge',
-    //     label: 'Judge Assignment',
-    //     icon: <IdentificationIcon className="h-6 w-6" />,
-    //     iconAlt: 'judge',
-    // },
-    {
         href: '/admin/qr',
         label: 'Hacker Checkin (Admin)',
         icon: <QrCodeIcon className="h-6 w-6" />,
         iconAlt: 'QR logo',
+    },
+    {
+        href: '/admin/review',
+        label: 'Review Applications',
+        icon: <UserGroupIcon className="h-6 w-6" />,
+        iconAlt: 'Review Applications logo',
+    },
+    {
+        href: '/admin/email/templates',
+        label: 'Emails',
+        icon: <EnvelopeIcon className="h-6 w-6" />,
+        iconAlt: 'Emails logo',
     },
 ];
 
@@ -297,9 +286,161 @@ export default function SideBar({ className, initialData }: NavProps) {
                                             collapsed={collapsed}
                                         />
                                     ))}
+                                </>
+                            )}
+                            {initialData?.userRole !== 'judge' &&
+                                initialData?.userRole !== 'sponsor' && (
+                                    <Popover
+                                        open={profilePopoverOpen}
+                                        onOpenChange={setProfilePopoverOpen}
+                                    >
+                                        <PopoverTrigger asChild>
+                                            <div
+                                                className={cn(
+                                                    navLinkVariants({
+                                                        platform: 'desktop',
+                                                        active: url.startsWith(
+                                                            '/profile'
+                                                        ),
+                                                        disabled: false,
+                                                    }),
+                                                    collapsed
+                                                        ? 'justify-start'
+                                                        : 'w-full justify-start',
+                                                    'cursor-pointer'
+                                                )}
+                                            >
+                                                <div
+                                                    className={cn(
+                                                        'flex h-6 w-6 items-center justify-center transition-colors',
+                                                        url.startsWith(
+                                                            '/profile'
+                                                        )
+                                                            ? 'text-brand-400 group-hover:text-brand-200'
+                                                            : 'group-text-white/70 text-white/30'
+                                                    )}
+                                                >
+                                                    <div className="h-6 w-6 overflow-hidden rounded-full">
+                                                        <img
+                                                            alt="User avatar"
+                                                            src={avatarUrl}
+                                                            className="h-full w-full object-cover"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                {!collapsed && (
+                                                    <motion.div
+                                                        className="flex w-full items-center justify-between"
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        exit={{ opacity: 0 }}
+                                                        transition={{
+                                                            duration: 0.2,
+                                                        }}
+                                                    >
+                                                        <span className="leading-none whitespace-nowrap">
+                                                            Profile
+                                                        </span>
+                                                        <ChevronRightIcon className="ml-2 h-4 w-4" />
+                                                    </motion.div>
+                                                )}
+                                            </div>
+                                        </PopoverTrigger>
+                                        <PopoverContent
+                                            key={profilePopoverSide}
+                                            side={profilePopoverSide}
+                                            align={
+                                                profilePopoverSide === 'bottom'
+                                                    ? 'end'
+                                                    : 'center'
+                                            }
+                                            sideOffset={8}
+                                            collisionPadding={
+                                                profilePopoverSide === 'bottom'
+                                                    ? 16
+                                                    : undefined
+                                            }
+                                            className={cn(
+                                                'z-200 w-48',
+                                                profilePopoverSide ===
+                                                    'bottom' &&
+                                                    '!mr-0 max-w-[min(12rem,calc(100vw-2rem))]'
+                                            )}
+                                        >
+                                            <NavLink
+                                                href="/profile"
+                                                label="Edit profile"
+                                                icon={
+                                                    <UserIcon className="h-6 w-6 text-white/60" />
+                                                }
+                                                iconAlt="Profile"
+                                                platform="desktop"
+                                                active={url.startsWith(
+                                                    '/profile'
+                                                )}
+                                                onClick={() =>
+                                                    setProfilePopoverOpen(false)
+                                                }
+                                            />
+                                            <NavLink
+                                                href="#"
+                                                label="Sign out"
+                                                icon={
+                                                    <ArrowLeftEndOnRectangleIcon className="h-6 w-6 text-white/60" />
+                                                }
+                                                iconAlt="Sign out logo"
+                                                platform="desktop"
+                                                variant="error"
+                                                onClick={async () => {
+                                                    setProfilePopoverOpen(
+                                                        false
+                                                    );
+                                                    await signOut();
+                                                    if (
+                                                        typeof window !==
+                                                        'undefined'
+                                                    ) {
+                                                        localStorage.removeItem(
+                                                            'auth-login-success'
+                                                        );
+                                                    }
+                                                }}
+                                            />
+                                            {profilePopoverSide === 'right' ? (
+                                                <PopoverPrimitive.Arrow className="fill-neutral-850 mr-4 shadow-lg" />
+                                            ) : null}
+                                        </PopoverContent>
+                                    </Popover>
+                                )}
 
-                                    {initialData?.userRole === 'admin' &&
-                                        adminLinks.map((link) => (
+                            {initialData?.userRole === 'admin' && (
+                                <>
+                                    <div className="my-4 border-t border-white/10" />
+                                    {!collapsed ? (
+                                        <motion.span
+                                            className="mb-2 px-3 text-sm leading-[125%] font-semibold tracking-[-0.0075em] text-white/30"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{
+                                                duration: 0.5,
+                                                ease: 'easeInOut',
+                                            }}
+                                        >
+                                            Admin
+                                        </motion.span>
+                                    ) : null}
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{
+                                            duration: 0.5,
+                                            ease: 'easeInOut',
+                                        }}
+                                        className="flex flex-col gap-1"
+                                    >
+                                        {adminLinks.map((link) => (
                                             <NavLink
                                                 key={link.href}
                                                 href={link.href}
@@ -311,124 +452,14 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                     link.href
                                                 )}
                                                 collapsed={collapsed}
-                                                // dropdownItems={
-                                                //     link.dropdownItems
-                                                // }
                                             />
                                         ))}
+                                    </motion.div>
                                 </>
                             )}
-                            <Popover
-                                open={profilePopoverOpen}
-                                onOpenChange={setProfilePopoverOpen}
-                            >
-                                <PopoverTrigger asChild>
-                                    <div
-                                        className={cn(
-                                            navLinkVariants({
-                                                platform: 'desktop',
-                                                active: url.startsWith(
-                                                    '/profile'
-                                                ),
-                                                disabled: false,
-                                            }),
-                                            collapsed
-                                                ? 'justify-start'
-                                                : 'w-full justify-start',
-                                            'cursor-pointer'
-                                        )}
-                                    >
-                                        <div
-                                            className={cn(
-                                                'flex h-6 w-6 items-center justify-center transition-colors',
-                                                url.startsWith('/profile')
-                                                    ? 'text-brand-400 group-hover:text-brand-200'
-                                                    : 'group-text-white/70 text-white/30'
-                                            )}
-                                        >
-                                            <div className="h-6 w-6 overflow-hidden rounded-full">
-                                                <img
-                                                    alt="User avatar"
-                                                    src={avatarUrl}
-                                                    className="h-full w-full object-cover"
-                                                />
-                                            </div>
-                                        </div>
-                                        {!collapsed && (
-                                            <motion.div
-                                                className="flex w-full items-center justify-between"
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                exit={{ opacity: 0 }}
-                                                transition={{ duration: 0.2 }}
-                                            >
-                                                <span className="leading-none whitespace-nowrap">
-                                                    Profile
-                                                </span>
-                                                <ChevronRightIcon className="ml-2 h-4 w-4" />
-                                            </motion.div>
-                                        )}
-                                    </div>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                    key={profilePopoverSide}
-                                    side={profilePopoverSide}
-                                    align={
-                                        profilePopoverSide === 'bottom'
-                                            ? 'end'
-                                            : 'center'
-                                    }
-                                    sideOffset={8}
-                                    collisionPadding={
-                                        profilePopoverSide === 'bottom'
-                                            ? 16
-                                            : undefined
-                                    }
-                                    className={cn(
-                                        'z-200 w-48',
-                                        profilePopoverSide === 'bottom' &&
-                                            '!mr-0 max-w-[min(12rem,calc(100vw-2rem))]'
-                                    )}
-                                >
-                                    <NavLink
-                                        href="/profile"
-                                        label="Edit profile"
-                                        icon={
-                                            <UserIcon className="h-6 w-6 text-white/60" />
-                                        }
-                                        iconAlt="Profile"
-                                        platform="desktop"
-                                        active={url.startsWith('/profile')}
-                                        onClick={() =>
-                                            setProfilePopoverOpen(false)
-                                        }
-                                    />
-                                    <NavLink
-                                        href="#"
-                                        label="Sign out"
-                                        icon={
-                                            <ArrowLeftEndOnRectangleIcon className="h-6 w-6 text-white/60" />
-                                        }
-                                        iconAlt="Sign out logo"
-                                        platform="desktop"
-                                        variant="error"
-                                        onClick={async () => {
-                                            setProfilePopoverOpen(false);
-                                            await signOut();
-                                            if (typeof window !== 'undefined') {
-                                                localStorage.removeItem(
-                                                    'auth-login-success'
-                                                );
-                                            }
-                                        }}
-                                    />
-                                    {profilePopoverSide === 'right' ? (
-                                        <PopoverPrimitive.Arrow className="fill-neutral-850 mr-4 shadow-lg" />
-                                    ) : null}
-                                </PopoverContent>
-                            </Popover>
 
-                            {initialData?.userRole === 'user' && (
+                            {(initialData?.userRole === 'user' ||
+                                initialData?.userRole === 'admin') && (
                                 <>
                                     <div className="my-4 border-t border-white/10" />
 

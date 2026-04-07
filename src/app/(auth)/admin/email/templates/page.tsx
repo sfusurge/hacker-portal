@@ -21,6 +21,11 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 
+const pageShellClass =
+    'w-full max-w-full min-w-0 overflow-x-hidden px-3 py-6 sm:px-4 sm:py-10';
+
+const hackathonSelectTriggerClass = 'w-full min-w-0 sm:w-[min(100%,280px)]';
+
 export default function EmailTemplatesPage() {
     const { toast } = useToast();
     const [expandedTemplate, setExpandedTemplate] = useState<number | null>(
@@ -127,7 +132,9 @@ export default function EmailTemplatesPage() {
 
     if (isLoading) {
         return (
-            <div className="w-full py-10 text-center">Loading templates...</div>
+            <div className={`${pageShellClass} text-center`}>
+                Loading templates...
+            </div>
         );
     }
 
@@ -136,15 +143,16 @@ export default function EmailTemplatesPage() {
 
     if (!hasHackathon && hackathons.length > 0) {
         return (
-            <div className="w-full py-10">
-                <div className="mb-6 flex items-center justify-between">
+            <div className={pageShellClass}>
+                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <h1 className="text-2xl font-bold">Email Templates</h1>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         <Link href="/admin/email/templates/styling">
                             <Button
                                 variant="brand"
                                 hierarchy="secondary"
                                 size="cozy"
+                                className="w-full sm:w-auto"
                             >
                                 Manage stylings
                             </Button>
@@ -154,6 +162,7 @@ export default function EmailTemplatesPage() {
                                 variant="brand"
                                 hierarchy="primary"
                                 size="cozy"
+                                className="w-full sm:w-auto"
                             >
                                 Create Template
                             </Button>
@@ -164,14 +173,16 @@ export default function EmailTemplatesPage() {
                     <p className="text-lg text-white/60">
                         Select a hackathon to view and manage email templates.
                     </p>
-                    <div className="mt-4 flex justify-center">
+                    <div className="mx-auto mt-4 flex max-w-md justify-center px-1">
                         <Select
                             value=""
                             onValueChange={(value) =>
                                 setSelectedHackathonId(Number(value))
                             }
                         >
-                            <SelectTrigger className="w-[220px]">
+                            <SelectTrigger
+                                className={hackathonSelectTriggerClass}
+                            >
                                 <SelectValue placeholder="Select hackathon" />
                             </SelectTrigger>
                             <SelectContent>
@@ -190,7 +201,7 @@ export default function EmailTemplatesPage() {
 
     if (!hasHackathon && hackathons.length === 0) {
         return (
-            <div className="w-full py-10 text-center">
+            <div className={`${pageShellClass} text-center`}>
                 <p className="text-lg text-white/60">
                     No hackathons found. Create a hackathon first to manage
                     email templates.
@@ -201,12 +212,12 @@ export default function EmailTemplatesPage() {
 
     if (templatesList.length === 0) {
         return (
-            <div className="w-full py-10">
-                <div className="mb-6 flex items-center justify-between">
+            <div className={pageShellClass}>
+                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <h1 className="text-2xl font-bold">Email Templates</h1>
-                    <div className="flex flex-wrap items-center gap-4">
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-white/60">
+                    <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+                        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
+                            <span className="shrink-0 text-sm text-white/60">
                                 Hackathon:
                             </span>
                             <Select
@@ -215,7 +226,9 @@ export default function EmailTemplatesPage() {
                                     setSelectedHackathonId(Number(value))
                                 }
                             >
-                                <SelectTrigger className="w-[220px]">
+                                <SelectTrigger
+                                    className={hackathonSelectTriggerClass}
+                                >
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -230,12 +243,13 @@ export default function EmailTemplatesPage() {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                             <Link href="/admin/email/templates/styling">
                                 <Button
                                     variant="brand"
                                     hierarchy="secondary"
                                     size="cozy"
+                                    className="w-full sm:w-auto"
                                 >
                                     Manage stylings
                                 </Button>
@@ -247,6 +261,7 @@ export default function EmailTemplatesPage() {
                                     variant="brand"
                                     hierarchy="primary"
                                     size="cozy"
+                                    className="w-full sm:w-auto"
                                 >
                                     Create Template
                                 </Button>
@@ -289,12 +304,12 @@ export default function EmailTemplatesPage() {
     }
 
     return (
-        <div className="w-full py-10">
-            <div className="mb-6 flex items-center justify-between">
+        <div className={pageShellClass}>
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <h1 className="text-2xl font-bold">Email Templates</h1>
-                <div className="flex flex-wrap items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm text-white/60">
+                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+                    <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
+                        <span className="shrink-0 text-sm text-white/60">
                             Hackathon:
                         </span>
                         <Select
@@ -303,7 +318,9 @@ export default function EmailTemplatesPage() {
                                 setSelectedHackathonId(Number(value))
                             }
                         >
-                            <SelectTrigger className="w-[220px]">
+                            <SelectTrigger
+                                className={hackathonSelectTriggerClass}
+                            >
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -315,12 +332,13 @@ export default function EmailTemplatesPage() {
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         <Link href="/admin/email/templates/styling">
                             <Button
                                 variant="brand"
                                 hierarchy="secondary"
                                 size="cozy"
+                                className="w-full sm:w-auto"
                             >
                                 Manage stylings
                             </Button>
@@ -332,6 +350,7 @@ export default function EmailTemplatesPage() {
                                 variant="brand"
                                 hierarchy="primary"
                                 size="cozy"
+                                className="w-full sm:w-auto"
                             >
                                 Create Template
                             </Button>
@@ -375,10 +394,10 @@ export default function EmailTemplatesPage() {
                         className="overflow-hidden rounded-lg border border-white/60"
                     >
                         <div
-                            className="flex cursor-pointer items-center justify-between p-4"
+                            className="flex cursor-pointer flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
                             onClick={() => toggleExpand(template.id)}
                         >
-                            <div>
+                            <div className="min-w-0 flex-1">
                                 <h2 className="text-xl font-semibold">
                                     {template.title}
                                 </h2>
@@ -393,7 +412,7 @@ export default function EmailTemplatesPage() {
                                     </span>
                                 )}
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex shrink-0 flex-wrap items-center gap-2">
                                 <Link
                                     href={`/admin/email/templates/edit?id=${template.id}`}
                                     onClick={(e) => e.stopPropagation()}
@@ -402,6 +421,7 @@ export default function EmailTemplatesPage() {
                                         variant="default"
                                         hierarchy="secondary"
                                         size="cozy"
+                                        className="w-full sm:w-auto"
                                     >
                                         Edit
                                     </Button>
@@ -410,6 +430,7 @@ export default function EmailTemplatesPage() {
                                     variant="danger"
                                     hierarchy="primary"
                                     size="cozy"
+                                    className="w-full sm:w-auto"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         handleDelete(template.id);
@@ -434,7 +455,7 @@ export default function EmailTemplatesPage() {
                                 )}
 
                                 <div>
-                                    <div className="mb-2 flex items-center justify-between">
+                                    <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                         <h3 className="text-sm font-medium text-white/60">
                                             Content
                                         </h3>
@@ -444,6 +465,7 @@ export default function EmailTemplatesPage() {
                                             variant="brand"
                                             hierarchy="tertiary"
                                             size="cozy"
+                                            className="w-full shrink-0 sm:w-auto"
                                         >
                                             {showHighlights
                                                 ? 'Hide Placeholders'
@@ -473,8 +495,8 @@ export default function EmailTemplatesPage() {
                                         </div>
                                     )}
 
-                                    <div className="mt-2 overflow-hidden rounded-md">
-                                        <div className="h-[400px] overflow-auto bg-white">
+                                    <div className="mt-2 min-w-0 overflow-hidden rounded-md">
+                                        <div className="h-[min(50vh,420px)] min-h-[220px] w-full min-w-0 overflow-auto bg-white sm:h-[400px]">
                                             <iframe
                                                 srcDoc={prepareEmailPreview(
                                                     template.content,
@@ -485,10 +507,17 @@ export default function EmailTemplatesPage() {
                                                             detectedPlaceholders[
                                                                 template.id
                                                             ] || [],
+                                                        stylingHtml:
+                                                            template.stylingHtml?.trim() ||
+                                                            undefined,
+                                                        markdownBodyOnly:
+                                                            template.stylingId !=
+                                                                null &&
+                                                            !template.stylingHtml?.trim(),
                                                     }
                                                 )}
                                                 title={`${template.title} Preview`}
-                                                className="h-full w-full border-0"
+                                                className="h-full min-h-[inherit] w-full border-0"
                                                 sandbox="allow-same-origin allow-scripts"
                                             />
                                         </div>
