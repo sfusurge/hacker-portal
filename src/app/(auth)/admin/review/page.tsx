@@ -140,30 +140,30 @@ function transformResponse(response: any[]) {
             const r = item.response as Record<string, any>;
 
             const {
+                '2': eventLocation,
                 '5': firstName,
                 '6': lastName,
                 '7': pronouns,
                 '8': email,
                 '10': age,
                 '16': school,
-                '17': background,
-                '18': yearOfStudy,
-                '19': major,
-                '25': haveHackathonExperience,
-                '35': howHeardAbout,
-                '36': dietaryRestrictions,
-                '37': resume,
-                '38': discord,
-                '39': portfolio,
-                '40': github,
-                '41': linkedin,
-                '42': otherLinks,
-                '50': shareResume,
-                '51': acceptMLH,
-                '52': acceptSFSS,
-                '53': authorizeMLH,
-                '54': photoRelease,
-                '55': acceptEmails,
+                '17': schoolEmail,
+                '18': background,
+                '19': yearOfStudy,
+                '20': major,
+                '26': haveHackathonExperience,
+                '36': howHeardAbout,
+                '37': dietaryRestrictions,
+                '38': resume,
+                '39': discord,
+                '40': portfolio,
+                '41': github,
+                '42': linkedin,
+                '43': otherLinks,
+                '51': shareResume,
+                '53': acceptSFSS,
+                '55': photoRelease,
+                '57': acceptSurgeEmails,
             } = r;
 
             const members = item.members;
@@ -204,6 +204,16 @@ function transformResponse(response: any[]) {
                 lastName: lastName || '',
                 pronouns: pronouns || '',
                 email: email || '',
+                eventLocation:
+                    eventLocation === 'sfu'
+                        ? 'Simon Fraser University, Burnaby'
+                        : eventLocation === 'waterloo'
+                          ? 'University of Waterloo, Waterloo'
+                          : typeof eventLocation === 'string'
+                            ? eventLocation
+                            : '',
+                eventLocationKey:
+                    typeof eventLocation === 'string' ? eventLocation : '',
                 haveHackathonExperience: haveHackathonExperience || '',
                 resume: Array.isArray(resume) ? resume : resume ? [resume] : [],
                 discord: discord || '',
@@ -212,6 +222,7 @@ function transformResponse(response: any[]) {
                 portfolio: portfolio || '',
                 otherLinks: otherLinks || '',
                 school: school || '',
+                schoolEmail: schoolEmail || '',
                 background: background || '',
                 yearOfStudy: yearOfStudy || '',
                 major: majorStr,
@@ -219,10 +230,10 @@ function transformResponse(response: any[]) {
                 problemOrSkill: '',
                 dreamProject: '',
                 shareResume: shareResume || false,
-                acceptMLH: acceptMLH || false,
+                acceptMLH: false,
                 acceptSFSS: acceptSFSS || false,
-                acceptEmails: acceptEmails || false,
-                authorizeMLH: authorizeMLH || false,
+                acceptEmails: acceptSurgeEmails || false,
+                authorizeMLH: false,
                 photoRelease: photoRelease || false,
                 checkIns,
             };

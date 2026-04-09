@@ -108,7 +108,7 @@ export default function ActiveHackathonCard({
     return (
         <div className="grid grid-cols-12 gap-6">
             <div className="col-span-12 xl:col-span-6">
-                <Card className="flex flex-col overflow-hidden">
+                <Card className="@container flex flex-col overflow-hidden">
                     <HomeHackathonCardHero
                         name={payload.name}
                         tagline={payload.tagline}

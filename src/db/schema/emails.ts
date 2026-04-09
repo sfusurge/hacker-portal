@@ -103,7 +103,6 @@ export const emails = pgTable('sh_25_emails', {
         .defaultNow(),
 });
 
-/** Placeholder in styling HTML where body content is injected. */
 export const EMAIL_STYLING_BODY_PLACEHOLDER = '{{bodyContent}}';
 
 export const emailTemplateStylingSchema = z.object({

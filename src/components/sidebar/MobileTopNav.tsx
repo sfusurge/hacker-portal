@@ -8,7 +8,7 @@ import {
     UserIcon,
 } from '@heroicons/react/24/outline';
 import { NavLink } from './NavLink';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { UserData } from '@/server/routers/usersRouter';
 import { motion, AnimatePresence } from 'motion/react';
@@ -28,6 +28,9 @@ const announcement = {
     iconAlt: 'Announcement logo',
 };
 
+/** above this between down/up counts as scroll/drag, not an outside tap. */
+const OUTSIDE_TAP_MAX_MOVE_PX = 14;
+
 export default function MobileTopNav({
     className,
     children,
@@ -35,6 +38,62 @@ export default function MobileTopNav({
     const [hideTopNav, setHideTopNav] = useState(false);
     const [showMobileSidebar, setShowMobileSidebar] = useState(false);
     const url = usePathname();
+    const outsidePointerRef = useRef<{
+        id: number;
+        x: number;
+        y: number;
+    } | null>(null);
+
+    /** tap outside drawer closes, drag/scroll does not */
+    useEffect(() => {
+        if (!showMobileSidebar || hideTopNav) return;
+
+        const clear = () => {
+            outsidePointerRef.current = null;
+        };
+
+        const onPointerDown = (e: PointerEvent) => {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            outsidePointerRef.current = {
+                id: e.pointerId,
+                x: e.clientX,
+                y: e.clientY,
+            };
+        };
+
+        const onPointerUp = (e: PointerEvent) => {
+            const start = outsidePointerRef.current;
+            if (!start || e.pointerId !== start.id) return;
+            clear();
+
+            const dx = Math.abs(e.clientX - start.x);
+            const dy = Math.abs(e.clientY - start.y);
+            if (dx > OUTSIDE_TAP_MAX_MOVE_PX || dy > OUTSIDE_TAP_MAX_MOVE_PX) {
+                return;
+            }
+
+            const sidebar = document.querySelector(
+                '[data-mobile-sidebar-drawer]'
+            );
+            const topNav = document.querySelector('[data-mobile-top-nav]');
+            const t = e.target;
+            if (!(t instanceof Node)) return;
+            if (sidebar?.contains(t)) return;
+            if (topNav?.contains(t)) return;
+
+            setShowMobileSidebar(false);
+        };
+
+        document.addEventListener('pointerdown', onPointerDown, true);
+        document.addEventListener('pointerup', onPointerUp, true);
+        document.addEventListener('pointercancel', clear, true);
+
+        return () => {
+            document.removeEventListener('pointerdown', onPointerDown, true);
+            document.removeEventListener('pointerup', onPointerUp, true);
+            document.removeEventListener('pointercancel', clear, true);
+        };
+    }, [showMobileSidebar, hideTopNav]);
 
     useEffect(() => {
         for (const excludeURL of excludedUrls) {
@@ -54,8 +113,9 @@ export default function MobileTopNav({
 
             {!hideTopNav && (
                 <div
+                    data-mobile-top-nav
                     className={clsx(
-                        'h-20 w-screen border-b border-b-neutral-600/30 bg-neutral-900/60 px-4 py-5 backdrop-blur-xl md:hidden',
+                        'fixed inset-x-0 top-0 z-100 h-20 w-full min-w-0 border-b border-b-neutral-600/30 bg-neutral-900/60 px-4 py-5 backdrop-blur-xl md:hidden',
                         className
                     )}
                 >
@@ -94,24 +154,36 @@ export default function MobileTopNav({
             <AnimatePresence>
                 {!hideTopNav && showMobileSidebar && (
                     <>
-                        <motion.button
-                            type="button"
-                            aria-label="Close sidebar backdrop"
-                            className="fixed inset-0 top-20 z-[85] bg-black/40 md:hidden"
+                        <motion.div
+                            aria-hidden
+                            className="pointer-events-none fixed inset-0 top-20 z-[85] bg-black/40 md:hidden"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setShowMobileSidebar(false)}
                         />
 
                         <motion.div
-                            className="fixed top-20 bottom-0 left-0 z-[90] w-[280px] bg-neutral-950 shadow-2xl md:hidden"
+                            data-mobile-sidebar-drawer
+                            className="fixed top-20 bottom-0 left-0 z-[90] flex w-[280px] max-w-[min(280px,100vw)] touch-pan-y flex-col overflow-x-hidden overflow-y-hidden bg-neutral-950 shadow-2xl md:hidden"
                             initial={{ x: -24, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: -24, opacity: 0 }}
                             transition={{ duration: 0.25, ease: 'easeInOut' }}
+                            style={{
+                                touchAction: 'pan-y',
+                                overscrollBehaviorX: 'none',
+                                overscrollBehaviorY: 'contain',
+                            }}
                         >
-                            <div className="h-full md:hidden">{children}</div>
+                            <div
+                                className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain md:hidden"
+                                style={{
+                                    touchAction: 'pan-y',
+                                    overscrollBehaviorX: 'none',
+                                }}
+                            >
+                                {children}
+                            </div>
                         </motion.div>
                     </>
                 )}

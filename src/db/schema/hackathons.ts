@@ -30,6 +30,7 @@ export type HackathonEventPagePayload = {
     websiteHref: string;
     recapHref: string | null;
     hackerPackageHref?: string | null;
+    targetAudience?: string;
 };
 
 // Journey hack submission deadline, February 13th, 2025 at 23:59:59
