@@ -20,6 +20,7 @@ export const EVENT_PAGE_CONFIG_BACKUP = {
         websiteLabel: 'StormHacks event page',
         websiteHref: 'https://stormhacks.com',
         recapHref: 'https://m.youtube.com/watch?v=lzFKBIZsHe4&feature=youtu.be',
+        targetAudience: 'Hackers of all levels',
     },
     journeyhacks: {
         name: 'JourneyHacks',
@@ -35,6 +36,7 @@ export const EVENT_PAGE_CONFIG_BACKUP = {
         websiteHref: 'https://journeyhacks.sfusurge.com',
         recapHref: null,
         hackerPackageHref: null,
+        targetAudience: 'Beginner hackers',
     },
     stormforge: {
         name: 'StormForge',
@@ -50,6 +52,7 @@ export const EVENT_PAGE_CONFIG_BACKUP = {
         websiteHref:
             'https://drive.google.com/file/d/15blKokvy4uZuTuTuD76hVpm3kkBbZlY0/view?usp=sharing',
         recapHref: null,
+        targetAudience: 'Hackers of all levels',
     },
     sillyhacks: {
         name: 'SillyHacks',
@@ -64,6 +67,7 @@ export const EVENT_PAGE_CONFIG_BACKUP = {
         websiteLabel: 'SillyHacks event page',
         websiteHref: 'https://sillyhacks.sfusurge.com',
         recapHref: null,
+        targetAudience: 'Silly hackers',
     },
     sparkjam: {
         name: 'SparkJam',
@@ -78,5 +82,6 @@ export const EVENT_PAGE_CONFIG_BACKUP = {
         websiteLabel: 'SparkJam event page',
         websiteHref: 'https://sparkjam.sfusurge.com',
         recapHref: null,
+        targetAudience: 'Designers of all levels',
     },
 } as const satisfies Record<string, EventPageBackupEntry>;

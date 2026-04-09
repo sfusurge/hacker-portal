@@ -25,7 +25,6 @@ type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
 type EventPageLayoutProps = {
     userData: UserData;
     eventConfig: EventPageConfigShape;
-    eventHackathonIsPaid: boolean;
     activeHackathon: EventPageHackathon | null;
     applicationStatus?: string;
     applicationSubmitted: boolean;
@@ -37,7 +36,6 @@ type EventPageLayoutProps = {
 export default function EventPageLayout({
     userData,
     eventConfig,
-    eventHackathonIsPaid,
     activeHackathon,
     applicationStatus,
     applicationSubmitted,
@@ -71,7 +69,7 @@ export default function EventPageLayout({
                 overview={eventConfig.overview}
                 location={eventConfig.location}
                 dates={eventConfig.dates}
-                isPaid={eventHackathonIsPaid}
+                targetAudience={eventConfig.targetAudience}
                 websiteLabel={eventConfig.websiteLabel}
                 websiteHref={eventConfig.websiteHref}
             />
