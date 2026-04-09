@@ -2,12 +2,18 @@
 
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { redirect } from 'next/navigation';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { useRouter } from 'next/navigation';
+import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 
 export default function SubmitPage() {
+    const router = useRouter();
+    const hackathon = useAtomValue(hackathonAtom);
+    const hackathonName = hackathon.hackathonName?.trim();
+
     const goTeam = () => {
-        redirect('/team');
+        router.push('/team');
     };
 
     useEffect(() => {
@@ -15,45 +21,60 @@ export default function SubmitPage() {
     }, []);
 
     return (
-        <div className="flex h-full w-full flex-col items-center justify-center gap-20">
-            <div className="flex flex-col items-center justify-center gap-6">
-                <div className="flex flex-col gap-2 text-center">
-                    <h2 className="text-2xl font-semibold">
-                        Thank you for your application
-                    </h2>
-                    <h3>
-                        Your application will be reviewed after the application
-                        period ends.
-                    </h3>
-                </div>
+        <div className="mx-auto flex h-full w-full max-w-[430px] flex-col items-center justify-center gap-9 py-4 text-center">
+            <div className="flex w-full flex-col items-center gap-3">
+                <h1 className="font-semibold text-balance text-white">
+                    Thank you for your application! 😊
+                </h1>
+                <p className="text-base text-pretty text-white">
+                    Your submission will be reviewed after the application
+                    period ends.
+                </p>
+                <p className="leading-relaxed text-white/60">
+                    If you can no longer attend, your application can be
+                    withdrawn anytime
+                    {hackathonName ? (
+                        <> in the {hackathonName} event page.</>
+                    ) : (
+                        <> from the event page.</>
+                    )}
+                </p>
                 <Image
                     src="/login/otter-mail.png"
-                    width={1920}
-                    height={1080}
-                    className="aspect-auto h-auto max-h-[270px] w-full max-w-[480px] rounded-2xl"
-                    alt="Submission Successful"
-                ></Image>
+                    width={960}
+                    height={540}
+                    className="h-auto w-full rounded-xl object-contain"
+                    alt={
+                        hackathonName
+                            ? `${hackathonName} — thank you`
+                            : 'Thank you for your application'
+                    }
+                    priority
+                />
             </div>
-            <div className="flex flex-col items-center justify-center gap-8">
-                <div className="flex flex-col gap-2 text-center">
-                    <h1 className="text-3xl font-semibold">
-                        Next step: Join a team
-                    </h1>
-                    <p className="max-w-120">
-                        You can join a friend&apos;s team using their code or
-                        create your own team, even if you&apos;re participating
-                        solo!
-                    </p>
-                </div>
-                <Button
-                    variant="brand"
-                    hierarchy="primary"
-                    size="cozy"
-                    onClick={goTeam}
-                >
-                    Take me to the teams page
-                </Button>
+
+            <hr className="w-full border-neutral-600/60" />
+
+            <div className="flex w-full flex-col items-center gap-4">
+                <h2 className="text-2xl font-semibold text-white">
+                    Next Step: Join a Team
+                </h2>
+                <p className="text-sm leading-relaxed text-white/60">
+                    You can join a friend&apos;s team using their code or create
+                    your own team, even if you&apos;re participating solo!
+                </p>
             </div>
+            <Button
+                variant="brand"
+                hierarchy="primary"
+                size="cozy"
+                className="w-full"
+                onClick={goTeam}
+            >
+                {hackathonName
+                    ? `Go to ${hackathonName} Teams Page`
+                    : 'Go to Teams Page'}
+            </Button>
         </div>
     );
 }

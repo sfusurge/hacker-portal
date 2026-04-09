@@ -67,6 +67,7 @@ import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
 import { FileUploadInput } from '@/components/application_components/InputFormComponents/FileUploadInput';
 import { RichTextInput } from '@/components/application_components/InputFormComponents/RichTextInput';
 import { DropdownInput } from '@/components/application_components/InputFormComponents/DropdownInput';
+import { ChoiceConditionalAlert } from '@/components/application_components/InputFormComponents/ChoiceConditionalAlert';
 import { InlineInput } from '@/components/application_components/InputFormComponents/InlineInput';
 import { DateInput } from '@/components/application_components/InputFormComponents/DateInput';
 import { toast } from '@/hooks/use-toast';
@@ -578,6 +579,12 @@ function Question({
                     </AlertDescription>
                 </Alert>
             )}
+            {question.type === 'multiple-choice' && (
+                <ChoiceConditionalAlert
+                    questionAtom={questionAtom}
+                    placement="above-title"
+                />
+            )}
             {question.title && question.type !== 'checkbox' && (
                 <Label required={question.required}>
                     <div
@@ -597,6 +604,12 @@ function Question({
                 </span>
             )}
             {getInnerInput(question.type, questionAtom, error)}
+            {question.type === 'multiple-choice' && (
+                <ChoiceConditionalAlert
+                    questionAtom={questionAtom}
+                    placement="below-fieldset"
+                />
+            )}
         </div>
     );
 }

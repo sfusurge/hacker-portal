@@ -229,7 +229,7 @@ export default function SideBar({ className, initialData }: NavProps) {
     return (
         <div
             className={clsx(
-                'no-scrollbar flex max-h-screen flex-col overflow-y-auto pr-5',
+                'no-scrollbar flex h-full max-h-full min-h-0 w-full min-w-0 touch-pan-y flex-col overflow-x-hidden overflow-y-auto pr-5',
                 className
             )}
         >

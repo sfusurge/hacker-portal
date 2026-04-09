@@ -18,10 +18,21 @@ import { TextLineInput } from '@/components/application_components/InputFormComp
 import { TextAreaInput } from '@/components/application_components/InputFormComponents/TextAreaInput';
 import { RadioInput } from '@/components/application_components/InputFormComponents/RadioInput';
 import { CheckBoxGroupInput } from '@/components/application_components/InputFormComponents/CheckboxGroupInput';
-import { XMarkIcon } from '@heroicons/react/20/solid';
+import {
+    ArrowLeftIcon,
+    ArrowRightIcon,
+    XMarkIcon,
+} from '@heroicons/react/20/solid';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
 import { Button } from '@/components/ui/button';
 import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { StatusEnum } from '@/db/schema/applications';
 import { trpc } from '@/trpc/client';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
@@ -33,6 +44,7 @@ import { DropdownInput } from '@/components/application_components/InputFormComp
 import { MajorInput } from '@/components/application_components/InputFormComponents/MajorInput';
 import { FileUploadInput } from '@/components/application_components/InputFormComponents/FileUploadInput';
 import { questionIdsInOrderFromPages } from '@/app/(auth)/admin/review/applicationQuestionOrder';
+import { getAcceptPendingStatusForEventLocation } from '@/lib/applicationAcceptStatus';
 
 export interface SideCardProps {
     visible: boolean;
@@ -139,6 +151,50 @@ export default function SideCard({
         () => visible && hackathon !== undefined,
         [visible, hackathon]
     );
+
+    const acceptPendingStatus = useMemo(
+        () =>
+            getAcceptPendingStatusForEventLocation(
+                typeof responseData?.['2'] === 'string'
+                    ? responseData['2']
+                    : responseData?.['2'] != null
+                      ? String(responseData['2'])
+                      : undefined,
+                hackathon?.isPaid ?? false
+            ),
+        [responseData, hackathon?.isPaid]
+    );
+
+    /** pending status for dropdown. `N/A` is shown as "Awaiting review" (same option). */
+    const reviewerSelectValue = useMemo((): StatusEnum | undefined => {
+        if (status === 'N/A') {
+            return 'Awaiting Review';
+        }
+        const selectable = new Set<StatusEnum>([
+            'Awaiting Review',
+            acceptPendingStatus,
+            'Wait List',
+            'Declined',
+        ]);
+        if (status && selectable.has(status)) {
+            return status;
+        }
+        return undefined;
+    }, [status, acceptPendingStatus]);
+
+    /** name from application response (question ids 5 & 6) */
+    const applicantTitle = useMemo(() => {
+        const first =
+            typeof responseData?.['5'] === 'string'
+                ? responseData['5'].trim()
+                : '';
+        const last =
+            typeof responseData?.['6'] === 'string'
+                ? responseData['6'].trim()
+                : '';
+        const name = [first, last].filter(Boolean).join(' ');
+        return name ? `${name}'s Application` : 'Application';
+    }, [responseData]);
 
     function setStatus(s: StatusEnum) {
         _setStatus(s);
@@ -409,81 +465,93 @@ export default function SideCard({
             {ready && <div className={style.background} onClick={onclose} />}
             {ready && (
                 <div className={style.cardContainer} key={cardId}>
-                    {/* title and close button */}
-                    <div className={style.titleRow}>
-                        <h1 style={{ fontSize: '24px' }}>
-                            Review/Edit Application
-                        </h1>
-                        <button onClick={onclose}>
-                            <XMarkIcon style={{ width: '2rem' }} />
-                        </button>
-                    </div>
+                    <div className={style.headerBlock}>
+                        <div className={style.titleRow}>
+                            <h1 className={style.titleHeading}>
+                                {applicantTitle}
+                            </h1>
+                            <div className={`${style.titleRowNav} h-full`}>
+                                <Button
+                                    onClick={onPrev}
+                                    aria-label="Previous application"
+                                    type="button"
+                                >
+                                    <ArrowLeftIcon className="h-5 w-5" />
+                                </Button>
+                                <Button
+                                    onClick={onNext}
+                                    aria-label="Next application"
+                                    type="button"
+                                >
+                                    <ArrowRightIcon className="h-5 w-5" />
+                                </Button>
+                            </div>
+                            <button
+                                type="button"
+                                className={style.titleClose}
+                                onClick={onclose}
+                                aria-label="Close"
+                            >
+                                <XMarkIcon style={{ width: '2rem' }} />
+                            </button>
+                        </div>
 
-                    <div className={style.hor}>
-                        <Button onClick={onPrev}>Prev</Button>
-                        <Button
-                            className={
-                                status === 'Accepted - Pending Payment'
-                                    ? style.selectedButton
-                                    : ''
-                            }
-                            onClick={() => {
-                                setStatus(
-                                    hackathon?.isPaid
-                                        ? 'Accepted - Pending Payment'
-                                        : 'Accepted - RSVP to Confirm'
-                                );
-                            }}
-                            variant={'brand'}
-                            hierarchy={'primary'}
-                        >
-                            Accept
-                        </Button>
-                        <Button
-                            className={
-                                status === 'Wait List'
-                                    ? style.selectedButton
-                                    : ''
-                            }
-                            onClick={() => {
-                                setStatus('Wait List');
-                            }}
-                            variant={'caution'}
-                            hierarchy={'primary'}
-                        >
-                            Waitlist
-                        </Button>
-                        <Button
-                            className={
-                                status === 'Declined'
-                                    ? style.selectedButton
-                                    : ''
-                            }
-                            onClick={() => {
-                                setStatus('Declined');
-                            }}
-                            variant={'danger'}
-                            hierarchy={'primary'}
-                        >
-                            Decline
-                        </Button>
-                        <Button onClick={onNext}>Next</Button>
-                        <div className="flex flex-col gap-2">
-                            <CheckBoxWithLabel
-                                name="Editing"
-                                checked={editing}
-                                onChange={(e) => {
-                                    setEditing(e.target.checked);
-                                }}
-                            />
-
-                            <CheckBoxWithLabel
-                                name="Override Current Status"
-                                checked={updateCurrentStatus}
-                                onChange={(e) => {
-                                    setUpdateCurrentStatus(e.target.checked);
-                                }}
-                            />
+                        <div className={style.headerToolbar}>
+                            <div className={style.statusActions}>
+                                <label
+                                    className={style.statusSelectLabel}
+                                    htmlFor="sidecard-review-status"
+                                >
+                                    Select status
+                                </label>
+                                <Select
+                                    key={acceptPendingStatus}
+                                    value={reviewerSelectValue}
+                                    onValueChange={(v) =>
+                                        setStatus(v as StatusEnum)
+                                    }
+                                >
+                                    <SelectTrigger
+                                        id="sidecard-review-status"
+                                        className="h-11 w-full min-w-[12rem] border-neutral-700 bg-neutral-800"
+                                        aria-label="Select status"
+                                    >
+                                        <SelectValue placeholder="Select status" />
+                                    </SelectTrigger>
+                                    <SelectContent className="z-[21000] border-neutral-800 bg-neutral-900 text-white">
+                                        <SelectItem value="Awaiting Review">
+                                            Awaiting review
+                                        </SelectItem>
+                                        <SelectItem value={acceptPendingStatus}>
+                                            Accept
+                                        </SelectItem>
+                                        <SelectItem value="Wait List">
+                                            Waitlist
+                                        </SelectItem>
+                                        <SelectItem value="Declined">
+                                            Decline
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <div className={style.headerCheckboxes}>
+                                    <CheckBoxWithLabel
+                                        name="Editing"
+                                        checked={editing}
+                                        onChange={(e) => {
+                                            setEditing(e.target.checked);
+                                        }}
+                                    />
+                                    <CheckBoxWithLabel
+                                        name="Override Current Status"
+                                        checked={updateCurrentStatus}
+                                        onChange={(e) => {
+                                            setUpdateCurrentStatus(
+                                                e.target.checked
+                                            );
+                                        }}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -512,58 +580,6 @@ export default function SideCard({
                             </div>
                         );
                     })}
-
-                    {/* Status change (repeating at both top and bottom of page)*/}
-                    <div className={style.hor}>
-                        <Button onClick={onPrev}>Prev</Button>
-                        <Button
-                            className={
-                                status === 'Accepted - Pending Payment'
-                                    ? style.selectedButton
-                                    : ''
-                            }
-                            onClick={() => {
-                                setStatus(
-                                    hackathon?.isPaid
-                                        ? 'Accepted - Pending Payment'
-                                        : 'Accepted - RSVP to Confirm'
-                                );
-                            }}
-                            variant={'brand'}
-                            hierarchy={'primary'}
-                        >
-                            Accept
-                        </Button>
-                        <Button
-                            className={
-                                status === 'Wait List'
-                                    ? style.selectedButton
-                                    : ''
-                            }
-                            onClick={() => {
-                                setStatus('Wait List');
-                            }}
-                            variant={'caution'}
-                            hierarchy={'primary'}
-                        >
-                            Waitlist
-                        </Button>
-                        <Button
-                            className={
-                                status === 'Declined'
-                                    ? style.selectedButton
-                                    : ''
-                            }
-                            onClick={() => {
-                                setStatus('Declined');
-                            }}
-                            variant={'danger'}
-                            hierarchy={'primary'}
-                        >
-                            Decline
-                        </Button>
-                        <Button onClick={onNext}>Next</Button>
-                    </div>
                 </div>
             )}
         </>
