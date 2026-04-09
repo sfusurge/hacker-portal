@@ -211,7 +211,7 @@ export function AcceptedContent({
 
     return (
         <>
-            <ApplicationStatusPanel>
+            <ApplicationStatusPanel className="min-w-[180px]">
                 <CardTitle className="text-xl tracking-tight text-pretty">
                     You RSVP&apos;d to{' '}
                     {hackathon?.hackathonName ||

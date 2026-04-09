@@ -201,7 +201,7 @@ export default function EventHeroBanner({
                         <h2 className="font-semibold text-white">
                             Event Overview
                         </h2>
-                        <p className="max-w- text-pretty text-white/60">
+                        <p className="max-w-120 text-pretty text-white/60">
                             {overview}
                         </p>
                     </div>

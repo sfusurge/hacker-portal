@@ -71,10 +71,11 @@ export function ActiveHackathonCardContent({
         Boolean(applicationAction) &&
         showPrimaryAction;
 
+    /** stack buttons until card is wide enough */
     const actionButtonsRow = (wrapperClassName?: string) => (
         <div
             className={cn(
-                'flex w-full flex-col gap-2 sm:flex-row',
+                'flex w-full flex-col gap-2 @[448px]:flex-row',
                 wrapperClassName
             )}
         >
@@ -84,9 +85,9 @@ export function ActiveHackathonCardContent({
                 hierarchy="secondary"
                 className={cn(
                     showPrimaryAction && applicationAction
-                        ? 'w-full sm:w-1/2'
-                        : 'w-full',
-                    ticketViewFirstOnMobile && 'order-2 sm:order-1'
+                        ? 'w-full min-w-0 @[448px]:w-1/2'
+                        : 'w-full min-w-0',
+                    ticketViewFirstOnMobile && 'order-2 @[448px]:order-1'
                 )}
             >
                 <Link href={`/${eventPageSlug}`} prefetch>
@@ -101,8 +102,8 @@ export function ActiveHackathonCardContent({
                     hierarchy="primary"
                     onClick={onApplicationButtonClick}
                     className={cn(
-                        'w-full sm:w-1/2',
-                        ticketViewFirstOnMobile && 'order-1 sm:order-2'
+                        'w-full min-w-0 @[448px]:w-1/2',
+                        ticketViewFirstOnMobile && 'order-1 @[448px]:order-2'
                     )}
                     leadingIconChild={applicationAction.icon ?? undefined}
                 >
