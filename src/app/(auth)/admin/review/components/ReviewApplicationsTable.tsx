@@ -40,6 +40,7 @@ import {
     ApplicationStatus,
     APPLICATION_STATUS_ENUM,
 } from '@/db/schema/applications';
+import { getAcceptPendingStatusForEventLocation } from '@/lib/applicationAcceptStatus';
 import { FilterColumn } from './FilterColumn';
 import {
     HACKATHON_EMAIL_TYPE_LABELS,
@@ -67,6 +68,8 @@ export type Applicant = {
     pronouns: string;
     age: string;
     email: string;
+    eventLocation?: string;
+    eventLocationKey?: string;
     haveHackathonExperience: string;
     howHeardAbout: string[];
     dietaryRestrictions?: string[];
@@ -81,6 +84,7 @@ export type Applicant = {
 
     // School Information
     school?: string;
+    schoolEmail?: string;
     background?: string;
     yearOfStudy?: string;
     major: string;
@@ -186,6 +190,21 @@ export default function ReviewApplicationsTable({
                 </div>
             ),
             size: 50,
+        },
+        {
+            accessorKey: 'eventLocation',
+            header: 'Loc.',
+            size: 64,
+            minSize: 80,
+            maxSize: 240,
+            cell: (info) => {
+                const v = info.getValue<string>() ?? '';
+                return (
+                    <span className="block max-w-full" title={v}>
+                        {v}
+                    </span>
+                );
+            },
         },
         {
             // id: 'teamName',
@@ -295,6 +314,12 @@ export default function ReviewApplicationsTable({
         {
             accessorKey: 'school',
             header: 'School',
+            size: 225,
+            minSize: 150,
+        },
+        {
+            accessorKey: 'schoolEmail',
+            header: 'School Email',
             size: 225,
             minSize: 150,
         },
@@ -492,6 +517,11 @@ function MyTable({
         autoResetPageIndex: false,
     });
 
+    const selectColWidth = table.getColumn('select')?.getSize() ?? 50;
+    const eventLocationColWidth =
+        table.getColumn('eventLocation')?.getSize() ?? 64;
+    const teamNameStickyLeftPx = selectColWidth + eventLocationColWidth;
+
     useEffect(() => {
         setSelectedHackathonForEmail(hackathonId);
     }, [hackathonId]);
@@ -603,6 +633,25 @@ function MyTable({
 
             return newSelection;
         });
+    };
+
+    const batchAcceptSelectedByLocation = async (rows: Row<Applicant>[]) => {
+        const groups = new Map<StatusEnum, Row<Applicant>[]>();
+        for (const row of rows) {
+            const pending = getAcceptPendingStatusForEventLocation(
+                row.original.eventLocationKey,
+                isPaidHackathon
+            );
+            const list = groups.get(pending) ?? [];
+            list.push(row);
+            groups.set(pending, list);
+        }
+        for (const [status, groupRows] of groups) {
+            await batchUpdateApplicants(groupRows, {
+                status,
+                pendingStatus: status,
+            });
+        }
     };
 
     //sends emails to selected users
@@ -851,13 +900,25 @@ function MyTable({
                                                             header.column
                                                                 .columnDef
                                                                 .minSize,
+                                                        ...(index === 1
+                                                            ? {
+                                                                  left: selectColWidth,
+                                                              }
+                                                            : {}),
+                                                        ...(index === 2
+                                                            ? {
+                                                                  left: teamNameStickyLeftPx,
+                                                              }
+                                                            : {}),
                                                     }}
                                                     className={`relative overflow-hidden px-4 py-4 text-sm overflow-ellipsis ${
                                                         index === 0
-                                                            ? 'sticky left-0 z-20 bg-neutral-900' // First column
+                                                            ? 'sticky left-0 z-20 bg-neutral-900' // Checkbox
                                                             : index === 1
-                                                              ? 'sticky left-[50px] z-20 bg-neutral-900' // Second column
-                                                              : ''
+                                                              ? 'sticky z-20 bg-neutral-900' // Event Location — left from selectColWidth
+                                                              : index === 2
+                                                                ? 'sticky z-20 bg-neutral-900' // Team Name — left from column widths
+                                                                : ''
                                                     }`}
                                                     onClick={
                                                         header.column.getCanMultiSort()
@@ -912,13 +973,25 @@ function MyTable({
                                                             header.column
                                                                 .columnDef
                                                                 .minSize,
+                                                        ...(index === 1
+                                                            ? {
+                                                                  left: selectColWidth,
+                                                              }
+                                                            : {}),
+                                                        ...(index === 2
+                                                            ? {
+                                                                  left: teamNameStickyLeftPx,
+                                                              }
+                                                            : {}),
                                                     }}
                                                     className={`relative px-4 py-2 text-sm ${
                                                         index === 0
                                                             ? 'sticky left-0 z-20 bg-neutral-900'
                                                             : index === 1
-                                                              ? 'sticky left-[50px] z-20 bg-neutral-900'
-                                                              : ''
+                                                              ? 'sticky z-20 bg-neutral-900'
+                                                              : index === 2
+                                                                ? 'sticky z-20 bg-neutral-900'
+                                                                : ''
                                                     }`}
                                                 >
                                                     {header.column.getCanFilter() ? (
@@ -967,13 +1040,25 @@ function MyTable({
                                                             cell.column
                                                                 .columnDef
                                                                 .minSize,
+                                                        ...(index === 1
+                                                            ? {
+                                                                  left: selectColWidth,
+                                                              }
+                                                            : {}),
+                                                        ...(index === 2
+                                                            ? {
+                                                                  left: teamNameStickyLeftPx,
+                                                              }
+                                                            : {}),
                                                     }}
                                                     className={`border-b border-neutral-600/30 bg-neutral-800 px-4 py-4 text-sm ${
                                                         index === 0
-                                                            ? 'sticky left-0 z-10 bg-neutral-800' // First column
+                                                            ? 'sticky left-0 z-10 bg-neutral-800' // Checkbox
                                                             : index === 1
-                                                              ? 'sticky left-[50px] z-10 bg-neutral-800' // Second column
-                                                              : ''
+                                                              ? 'sticky z-10 bg-neutral-800' // Event Location
+                                                              : index === 2
+                                                                ? 'sticky z-10 bg-neutral-800' // Team Name
+                                                                : ''
                                                     }`}
                                                 >
                                                     <div
@@ -1110,16 +1195,8 @@ function MyTable({
                     }`}
                     type="button"
                     onClick={() =>
-                        batchUpdateApplicants(
-                            table.getSelectedRowModel().rows,
-                            {
-                                status: isPaidHackathon
-                                    ? 'Accepted - Pending Payment'
-                                    : 'Accepted - RSVP to Confirm',
-                                pendingStatus: isPaidHackathon
-                                    ? 'Accepted - Pending Payment'
-                                    : 'Accepted - RSVP to Confirm',
-                            }
+                        batchAcceptSelectedByLocation(
+                            table.getSelectedRowModel().rows
                         )
                     }
                     disabled={Object.keys(rowSelection).length === 0}

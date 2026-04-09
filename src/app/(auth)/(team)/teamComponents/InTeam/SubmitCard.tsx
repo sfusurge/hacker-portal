@@ -2,7 +2,6 @@
 import { hackathonAtom, userInfoAtom } from '@/app/(auth)/ClientContext';
 import { HackathonData } from '@/components/application_components/types';
 import CountdownTimer from '@/components/home/Application/Countdown';
-import { SubmitCardSkeleton } from '@/components/home/Skeletons';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -123,7 +122,7 @@ export function SubmitCard({ onShowSubmit }: { onShowSubmit: () => void }) {
     }, []);
 
     if (!hackathon || hackathon.startDate.isAfter(dayjs())) {
-        return <SubmitCardSkeleton />;
+        return null;
     }
 
     if (isVotingPeriod) {
