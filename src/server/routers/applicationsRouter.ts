@@ -109,6 +109,7 @@ export const applicationsRouter = router({
 
                         const templateData = {
                             firstName: user.firstName ?? 'Friend',
+                            lastName: user.lastName ?? '',
                             email: user.email,
                             userId: user.id,
                         };
