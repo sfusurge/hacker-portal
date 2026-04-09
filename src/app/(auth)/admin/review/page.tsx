@@ -163,6 +163,7 @@ function transformResponse(response: any[]) {
                 '51': shareResume,
                 '53': acceptSFSS,
                 '55': photoRelease,
+                '57': acceptSurgeEmails,
             } = r;
 
             const members = item.members;
@@ -231,7 +232,7 @@ function transformResponse(response: any[]) {
                 shareResume: shareResume || false,
                 acceptMLH: false,
                 acceptSFSS: acceptSFSS || false,
-                acceptEmails: false,
+                acceptEmails: acceptSurgeEmails || false,
                 authorizeMLH: false,
                 photoRelease: photoRelease || false,
                 checkIns,

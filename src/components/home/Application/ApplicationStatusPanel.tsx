@@ -11,6 +11,7 @@ type ApplicationStatusPanelProps = {
         alt: string;
         className?: string;
     };
+    className?: string;
 };
 
 /**
@@ -19,13 +20,15 @@ type ApplicationStatusPanelProps = {
 export function ApplicationStatusPanel({
     children,
     illustration,
+    className,
 }: ApplicationStatusPanelProps) {
     return (
         <>
             <div
-                className={
-                    'flex min-w-[240px] flex-1 flex-col items-start justify-center gap-3 self-stretch pt-4 pr-0 text-start md:gap-5'
-                }
+                className={cn(
+                    'flex min-w-[240px] flex-1 flex-col items-start justify-center gap-3 self-stretch pt-4 pr-0 text-start md:gap-5',
+                    className
+                )}
             >
                 {children}
             </div>
