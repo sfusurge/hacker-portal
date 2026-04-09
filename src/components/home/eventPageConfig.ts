@@ -15,6 +15,7 @@ export type EventPageConfigShape = {
     websiteHref: string;
     recapHref: string | null;
     hackerPackageHref?: string | null;
+    targetAudience?: string;
 };
 
 const DEFAULT_BANNER_CONFIG: Pick<

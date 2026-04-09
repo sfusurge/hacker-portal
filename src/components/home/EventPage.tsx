@@ -84,7 +84,6 @@ export default async function EventPage({ slug }: { slug: string }) {
         <EventPageLayout
             userData={userData}
             eventConfig={config}
-            eventHackathonIsPaid={targetHackathon?.isPaid ?? false}
             activeHackathon={isActiveRoute ? (targetHackathon ?? null) : null}
             applicationStatus={application?.currentStatus}
             applicationSubmitted={application !== null}
