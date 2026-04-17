@@ -27,7 +27,7 @@ export default function AnnouncementsPage() {
     return (
         <>
             <h1 className="text-3xl font-semibold text-white">Announcements</h1>
-            <div className="mt-10 mb-8 flex min-h-[calc(100vh-11rem)] flex-col gap-6 xl:grid xl:grid-cols-12 xl:items-start xl:gap-8">
+            <div className="mt-10 mb-10 flex h-full flex-col gap-6 md:min-h-[calc(100vh-11rem)] xl:grid xl:grid-cols-12 xl:items-start xl:gap-8">
                 <div className="h-full xl:col-span-8">
                     <Card className="h-full">
                         <CardContent className="gap-6 p-5 md:p-6">
@@ -75,9 +75,9 @@ export default function AnnouncementsPage() {
                     </Card>
                 </div>
 
-                <div className="h-full xl:col-span-4">
+                <div className="h-full pb-10 xl:col-span-4 xl:pb-0">
                     <Card className="h-full">
-                        <CardContent className="flex flex-col items-center justify-center gap-10 pb-0 text-center">
+                        <CardContent className="flex flex-col items-center justify-center gap-10 text-center">
                             <Image
                                 src="/dashboard/join-our-discord.webp"
                                 width={1444}

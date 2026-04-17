@@ -1,23 +1,45 @@
 import type { ApplicationStatus } from '@/db/schema/applications';
 
+/** label for application question `2` (event location choice keys). */
+export function formatEventLocationLabel(
+    eventLocationKey: string | undefined | null
+): string {
+    if (eventLocationKey == null || eventLocationKey === '') {
+        return '';
+    }
+    const key = eventLocationKey.trim().toLowerCase();
+    if (key === 'sfu') {
+        return 'Simon Fraser University, Burnaby';
+    }
+    if (key === 'waterloo') {
+        return 'University of Waterloo, Waterloo';
+    }
+    if (key === 'remote') {
+        return 'Virtual Conference Week Only';
+    }
+    return eventLocationKey;
+}
+
 /**
  * Pending status when an organizer accepts an applicant, based on event location
- * (question id `2`: `sfu` vs `waterloo`). Falls back to hackathon `isPaid` when unknown.
+ * (question id `2`: `sfu`, `waterloo`, or `remote` / virtual).
  */
 export function getAcceptPendingStatusForEventLocation(
-    eventLocationKey: string | undefined | null,
-    isPaidFallback: boolean
+    eventLocationKey: string | undefined | null
 ): Extract<
     ApplicationStatus,
-    'Accepted - Pending Payment' | 'Accepted - RSVP to Confirm'
+    'Accepted' | 'Accepted - Pending Payment' | 'Accepted - RSVP to Confirm'
 > {
-    if (eventLocationKey === 'waterloo') {
+    const key = eventLocationKey?.trim().toLowerCase();
+    if (key === 'waterloo') {
         return 'Accepted - RSVP to Confirm';
     }
-    if (eventLocationKey === 'sfu') {
+    if (key === 'sfu') {
         return 'Accepted - Pending Payment';
     }
-    return isPaidFallback
-        ? 'Accepted - Pending Payment'
-        : 'Accepted - RSVP to Confirm';
+    /** Virtual / online-only track: fully accepted */
+    if (key === 'remote') {
+        return 'Accepted';
+    }
+    return 'Accepted - RSVP to Confirm';
 }

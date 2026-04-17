@@ -3,7 +3,6 @@ import { FullPageInfo } from '@/components/ui/FullPageInfo';
 import { stripe } from '@/lib/stripe';
 import { JSX } from 'react';
 import { createCaller } from '@/server/appRouter';
-import { redirect } from 'next/navigation';
 
 interface PageProps {
     searchParams: Promise<{ payment_intent?: string }>;
@@ -64,11 +63,10 @@ export default async function ResultPage(
                         if (payerEmail) {
                             try {
                                 const rsvpTemplate =
-                                    await trpcClient.emailTemplates.getEmailTemplateByHackathonAndType(
+                                    await trpcClient.emailTemplates.getRsvpPaymentConfirmationTemplate(
                                         {
                                             hackathonId:
                                                 application.hackathonId,
-                                            emailType: 'rsvp_received',
                                         }
                                     );
                                 if (rsvpTemplate) {
