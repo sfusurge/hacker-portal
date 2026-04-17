@@ -389,11 +389,11 @@ function CheckoutForm({
                             {expressPhase === 'visible' ? (
                                 <>
                                     <h2 className="mb-1.5 text-base font-semibold text-white">
-                                        Apple Pay &amp; Google Pay
+                                        Pay with Apple Pay or Google Pay
                                     </h2>
-                                    <p className="mb-3.5 text-[0.8125rem] leading-snug text-white/50">
-                                        Available on supported devices and
-                                        browsers when enabled.
+                                    <p className="mb-3.5 text-[0.8125rem] leading-snug text-white/60">
+                                        Use the wallet button below to check out
+                                        with your saved card.
                                     </p>
                                 </>
                             ) : null}
