@@ -159,10 +159,9 @@ export default function SideCard({
                     ? responseData['2']
                     : responseData?.['2'] != null
                       ? String(responseData['2'])
-                      : undefined,
-                hackathon?.isPaid ?? false
+                      : undefined
             ),
-        [responseData, hackathon?.isPaid]
+        [responseData]
     );
 
     /** pending status for dropdown. `N/A` is shown as "Awaiting review" (same option). */

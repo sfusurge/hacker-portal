@@ -10,6 +10,7 @@ import { atom, useSetAtom, useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { trpc } from '@/trpc/client';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
+import { formatEventLocationLabel } from '@/lib/applicationAcceptStatus';
 
 export type { Applicant };
 
@@ -204,14 +205,9 @@ function transformResponse(response: any[]) {
                 lastName: lastName || '',
                 pronouns: pronouns || '',
                 email: email || '',
-                eventLocation:
-                    eventLocation === 'sfu'
-                        ? 'Simon Fraser University, Burnaby'
-                        : eventLocation === 'waterloo'
-                          ? 'University of Waterloo, Waterloo'
-                          : typeof eventLocation === 'string'
-                            ? eventLocation
-                            : '',
+                eventLocation: formatEventLocationLabel(
+                    typeof eventLocation === 'string' ? eventLocation : null
+                ),
                 eventLocationKey:
                     typeof eventLocation === 'string' ? eventLocation : '',
                 haveHackathonExperience: haveHackathonExperience || '',

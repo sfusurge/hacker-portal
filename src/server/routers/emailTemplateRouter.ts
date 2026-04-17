@@ -11,6 +11,7 @@ import {
     deleteEmailTemplateSchema,
 } from '@/db/schema/emails';
 import { hackathonEmailTypeEnum } from '@/db/schema/emails';
+import { hackathons } from '@/db/schema/hackathons';
 import { eq, desc, and, getTableColumns } from 'drizzle-orm';
 import { getUserData } from '@/server/routers/usersRouter';
 
@@ -153,6 +154,68 @@ export const emailTemplatesRouter = router({
                 .limit(1);
 
             return template || null;
+        }),
+
+    /**
+     * RSVP payment confirmation email: paid hackathons use `rsvp_paid` if set,
+     * else `rsvp_received`; unpaid hackathons use `rsvp_received` only.
+     */
+    getRsvpPaymentConfirmationTemplate: publicProcedure
+        .input(z.object({ hackathonId: z.number().int() }))
+        .query(async ({ input }) => {
+            const { hackathonId } = input;
+
+            const [h] = await databaseClient
+                .select({ isPaid: hackathons.isPaid })
+                .from(hackathons)
+                .where(eq(hackathons.id, hackathonId))
+                .limit(1);
+
+            if (!h) {
+                return null;
+            }
+
+            if (!h.isPaid) {
+                const [t] = await databaseClient
+                    .select()
+                    .from(emailTemplates)
+                    .where(
+                        and(
+                            eq(emailTemplates.hackathonId, hackathonId),
+                            eq(emailTemplates.emailType, 'rsvp_received')
+                        )
+                    )
+                    .limit(1);
+                return t ?? null;
+            }
+
+            const [paidTemplate] = await databaseClient
+                .select()
+                .from(emailTemplates)
+                .where(
+                    and(
+                        eq(emailTemplates.hackathonId, hackathonId),
+                        eq(emailTemplates.emailType, 'rsvp_paid')
+                    )
+                )
+                .limit(1);
+
+            if (paidTemplate) {
+                return paidTemplate;
+            }
+
+            const [fallback] = await databaseClient
+                .select()
+                .from(emailTemplates)
+                .where(
+                    and(
+                        eq(emailTemplates.hackathonId, hackathonId),
+                        eq(emailTemplates.emailType, 'rsvp_received')
+                    )
+                )
+                .limit(1);
+
+            return fallback ?? null;
         }),
 
     updateEmailTemplate: publicProcedure
