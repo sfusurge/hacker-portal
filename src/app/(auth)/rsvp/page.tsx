@@ -114,7 +114,7 @@ function Declined() {
 function NeedPayment({ email }: { email: string }) {
     const hackathon = useAtomValue(hackathonAtom);
     const eventName = hackathon?.hackathonName ?? 'the event';
-    const deadline = 'May 10';
+    const deadline = 'April 30';
 
     return (
         <div className="mx-auto flex w-full flex-col gap-8">
