@@ -45,6 +45,7 @@ interface DbHackathonType {
     judgeQuestions: JudgingFormQuestion[];
     judgeRubric: SubmissionJudgeRubric[];
     isPaid?: boolean;
+    paymentDeadline?: Date | null;
 }
 
 function DeserializeHackathonData(hackathon: DbHackathonType): HackathonData {
@@ -70,6 +71,10 @@ function DeserializeHackathonData(hackathon: DbHackathonType): HackathonData {
                 ? dayjs(hackathon.applicationCloses)
                 : null,
         isPaid: hackathon.isPaid ?? false,
+        paymentDeadline:
+            hackathon.paymentDeadline != null
+                ? dayjs(hackathon.paymentDeadline)
+                : null,
     };
 }
 
