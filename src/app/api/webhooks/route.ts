@@ -135,8 +135,8 @@ export async function POST(req: Request) {
                                     string,
                                     any
                                 > | null) ?? null;
-                            const firstName = response?.['2'] ?? 'Friend';
-                            const lastName = response?.['3'] ?? '';
+                            const firstName = response?.['5'] ?? 'Friend';
+                            const lastName = response?.['6'] ?? '';
 
                             await trpcClient.emails.sendEmail({
                                 templateId: rsvpTemplate.id,
@@ -146,6 +146,13 @@ export async function POST(req: Request) {
                                     lastName: lastName,
                                     email: payerEmail,
                                 },
+                            });
+                            await trpcClient.applications.updateLastEmailSent({
+                                hackathonId: application.hackathonId,
+                                userId: application.userId,
+                                emailType:
+                                    rsvpTemplate.emailType ??
+                                    rsvpTemplate.purpose,
                             });
                             console.log(
                                 'RSVP confirmation email sent successfully'

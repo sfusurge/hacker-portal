@@ -39,6 +39,7 @@ export interface HackathonData {
     hackathonName: string; // should this be hackathon id in table instead?
     submissionTime?: string;
     isPaid?: boolean;
+    paymentDeadline: dayjs.Dayjs | null;
 
     applicationQuestionPages: InputFormPageData[];
     submissionQuestionPages: InputFormPageData[];

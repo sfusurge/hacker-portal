@@ -11,7 +11,6 @@ interface PageProps {
 export default async function ResultPage(
     props: PageProps
 ): Promise<JSX.Element> {
-    console.log('payment results:');
     const searchParams = await props.searchParams;
     const paymentIntentId = searchParams.payment_intent;
 
@@ -73,11 +72,16 @@ export default async function ResultPage(
                                     const response =
                                         (application.response as Record<
                                             string,
-                                            any
+                                            unknown
                                         > | null) ?? null;
                                     const firstName =
-                                        response?.['2'] ?? 'Friend';
-                                    const lastName = response?.['3'] ?? '';
+                                        typeof response?.['5'] === 'string'
+                                            ? response['5']
+                                            : 'Friend';
+                                    const lastName =
+                                        typeof response?.['6'] === 'string'
+                                            ? response['6']
+                                            : '';
                                     await trpcClient.emails.sendEmail({
                                         templateId: rsvpTemplate.id,
                                         user: {
@@ -87,6 +91,16 @@ export default async function ResultPage(
                                             email: payerEmail,
                                         },
                                     });
+                                    await trpcClient.applications.updateLastEmailSent(
+                                        {
+                                            hackathonId:
+                                                application.hackathonId,
+                                            userId: application.userId,
+                                            emailType:
+                                                rsvpTemplate.emailType ??
+                                                rsvpTemplate.purpose,
+                                        }
+                                    );
                                 }
                             } catch (e) {
                                 console.error(

@@ -165,12 +165,25 @@ function CheckoutForm({
         'measuring' | 'visible' | 'hidden'
     >('measuring');
 
+    /**
+     * async guard to prevent two payment intents. checkoutLocked for button disabled state.
+     */
+    const paymentFlowLockRef = React.useRef(false);
+    const [checkoutLocked, setCheckoutLocked] = useState(false);
+
     const stripe = useStripe();
     const elements = useElements();
 
     const eventLabel = hackathonName ?? 'Hackathon';
 
     const billingName = [firstName, lastName].filter(Boolean).join(' ');
+
+    const rsvpResultUrl = React.useCallback((paymentIntentId: string) => {
+        const base = `${window.location.origin}/rsvp/result`;
+        window.location.assign(
+            `${base}?payment_intent=${encodeURIComponent(paymentIntentId)}`
+        );
+    }, []);
 
     const handleExpressReady = React.useCallback(
         (event: StripeExpressCheckoutElementReadyEvent) => {
@@ -206,6 +219,14 @@ function CheckoutForm({
                 return;
             }
 
+            if (paymentFlowLockRef.current) {
+                paymentFailed({
+                    message:
+                        'A payment is already in progress. Please wait or refresh the page.',
+                });
+                return;
+            }
+
             const payerEmail =
                 event.billingDetails?.email?.trim() || email.trim();
 
@@ -217,6 +238,9 @@ function CheckoutForm({
                 return;
             }
 
+            paymentFlowLockRef.current = true;
+            setCheckoutLocked(true);
+
             try {
                 const { client_secret: clientSecret } =
                     await createPaymentIntent(TICKET_AMOUNT, payerEmail, {
@@ -225,22 +249,27 @@ function CheckoutForm({
                         hackathonName,
                     });
 
+                const returnUrl = `${window.location.origin}/rsvp/result`;
+
                 const { error } = await stripe.confirmPayment({
                     elements,
                     clientSecret,
                     confirmParams: {
-                        return_url: `${window.location.origin}/rsvp/result`,
+                        return_url: returnUrl,
                     },
-                    redirect: 'if_required',
                 });
 
                 if (error) {
+                    paymentFlowLockRef.current = false;
+                    setCheckoutLocked(false);
                     paymentFailed({
                         message:
                             error.message ?? 'Payment could not be completed.',
                     });
                 }
             } catch (err) {
+                paymentFlowLockRef.current = false;
+                setCheckoutLocked(false);
                 paymentFailed({
                     message:
                         err instanceof Error
@@ -258,6 +287,16 @@ function CheckoutForm({
             if (!e.currentTarget.reportValidity()) return;
             if (!stripe || !elements) return;
 
+            if (paymentFlowLockRef.current) {
+                setPayment({ status: 'error' });
+                setErrorMessage(
+                    'A payment is already in progress. Please wait or refresh the page.'
+                );
+                return;
+            }
+
+            paymentFlowLockRef.current = true;
+            setCheckoutLocked(true);
             setPayment({ status: 'processing' });
             setErrorMessage('');
 
@@ -275,6 +314,8 @@ function CheckoutForm({
 
             const { error: submitError } = await elements.submit();
             if (submitError) {
+                paymentFlowLockRef.current = false;
+                setCheckoutLocked(false);
                 setPayment({ status: 'error' });
                 setErrorMessage(
                     submitError.message ?? 'An unknown error occurred'
@@ -282,27 +323,47 @@ function CheckoutForm({
                 return;
             }
 
-            const { error: confirmError } = await stripe.confirmPayment({
-                elements,
-                clientSecret,
-                confirmParams: {
-                    return_url: returnUrl,
-                    payment_method_data: {
-                        billing_details: {
-                            name: billingName || undefined,
-                            email: email.trim(),
+            const { error: confirmError, paymentIntent } =
+                await stripe.confirmPayment({
+                    elements,
+                    clientSecret,
+                    confirmParams: {
+                        return_url: returnUrl,
+                        payment_method_data: {
+                            billing_details: {
+                                name: billingName || undefined,
+                                email: email.trim(),
+                            },
                         },
                     },
-                },
-            });
+                    redirect: 'if_required',
+                });
 
             if (confirmError) {
+                paymentFlowLockRef.current = false;
+                setCheckoutLocked(false);
                 setPayment({ status: 'error' });
                 setErrorMessage(
                     confirmError.message ?? 'An unknown error occurred'
                 );
+                return;
             }
+
+            if (
+                paymentIntent?.id &&
+                (paymentIntent.status === 'succeeded' ||
+                    paymentIntent.status === 'processing')
+            ) {
+                rsvpResultUrl(paymentIntent.id);
+                return;
+            }
+
+            paymentFlowLockRef.current = false;
+            setCheckoutLocked(false);
+            setPayment({ status: 'initial' });
         } catch (err) {
+            paymentFlowLockRef.current = false;
+            setCheckoutLocked(false);
             const { message } = err as Error;
             setPayment({ status: 'error' });
             setErrorMessage(message ?? 'An unknown error occurred');
@@ -430,7 +491,9 @@ function CheckoutForm({
                                 />
                             }
                             disabled={
-                                payment.status === 'processing' || !stripe
+                                payment.status === 'processing' ||
+                                checkoutLocked ||
+                                !stripe
                             }
                             className="w-full"
                         >
