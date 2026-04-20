@@ -1,40 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { and, eq, or } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
+import { z } from 'zod';
 import { databaseClient } from '@/db/client';
 import {
+    announcementAttachments,
     announcementChannelMappings,
     announcements,
     ingestDiscordAnnouncementSchema,
 } from '@/db/schema/announcements';
 
+type IngestStatus = 'created' | 'duplicate' | 'updated';
+
 type IngestResult = {
     id: number;
-    status: 'created' | 'duplicate';
+    status: IngestStatus;
     hackathonId: number;
 };
 
+type IngestPayload = z.infer<typeof ingestDiscordAnnouncementSchema>;
+
+type ExistingAnnouncement = {
+    id: number;
+    hackathonId: number;
+    lastEditedAt: Date | null;
+};
+
 async function findExistingAnnouncement(
-    idempotencyKey: string,
     sourceMessageId: string
-): Promise<{ id: number; hackathonId: number } | undefined> {
+): Promise<ExistingAnnouncement | undefined> {
     const [existing] = await databaseClient
         .select({
             id: announcements.id,
             hackathonId: announcements.hackathonId,
+            lastEditedAt: announcements.lastEditedAt,
         })
         .from(announcements)
         .where(
-            or(
-                eq(announcements.idempotencyKey, idempotencyKey),
-                and(
-                    eq(announcements.source, 'discord'),
-                    eq(announcements.sourceMessageId, sourceMessageId)
-                )
+            and(
+                eq(announcements.source, 'discord'),
+                eq(announcements.sourceMessageId, sourceMessageId)
             )
         )
         .limit(1);
 
     return existing;
+}
+
+function buildAttachmentRows(announcementId: number, payload: IngestPayload) {
+    return payload.attachments.map((attachment, index) => ({
+        announcementId,
+        sourceUrl: attachment.url,
+        filename: attachment.filename ?? null,
+        contentType: attachment.contentType ?? null,
+        sizeBytes: attachment.sizeBytes ?? null,
+        width: attachment.width ?? null,
+        height: attachment.height ?? null,
+        position: index,
+    }));
 }
 
 export async function POST(request: NextRequest) {
@@ -66,21 +88,62 @@ export async function POST(request: NextRequest) {
 
     const payload = parsed.data;
     const idempotencyKey = payload.idempotencyKey ?? payload.messageId;
+    const editedAt = payload.editedTimestamp
+        ? new Date(payload.editedTimestamp)
+        : null;
 
     try {
-        const existing = await findExistingAnnouncement(
-            idempotencyKey,
-            payload.messageId
-        );
+        const existing = await findExistingAnnouncement(payload.messageId);
 
         if (existing) {
-            const duplicateResponse: IngestResult = {
-                id: existing.id,
-                status: 'duplicate',
-                hackathonId: existing.hackathonId,
-            };
+            const isDuplicate =
+                !editedAt ||
+                (existing.lastEditedAt &&
+                    editedAt.getTime() <= existing.lastEditedAt.getTime());
 
-            return NextResponse.json(duplicateResponse, { status: 200 });
+            if (isDuplicate) {
+                return NextResponse.json<IngestResult>(
+                    {
+                        id: existing.id,
+                        status: 'duplicate',
+                        hackathonId: existing.hackathonId,
+                    },
+                    { status: 200 }
+                );
+            }
+
+            await databaseClient.transaction(async (tx) => {
+                await tx
+                    .update(announcements)
+                    .set({
+                        content: payload.content,
+                        lastEditedAt: editedAt,
+                        rawPayload: payload.rawPayload ?? null,
+                        updatedAt: new Date(),
+                    })
+                    .where(eq(announcements.id, existing.id));
+
+                await tx
+                    .delete(announcementAttachments)
+                    .where(
+                        eq(announcementAttachments.announcementId, existing.id)
+                    );
+
+                if (payload.attachments.length > 0) {
+                    await tx
+                        .insert(announcementAttachments)
+                        .values(buildAttachmentRows(existing.id, payload));
+                }
+            });
+
+            return NextResponse.json<IngestResult>(
+                {
+                    id: existing.id,
+                    status: 'updated',
+                    hackathonId: existing.hackathonId,
+                },
+                { status: 200 }
+            );
         }
 
         const [mapping] = await databaseClient
@@ -114,50 +177,62 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const [created] = await databaseClient
-            .insert(announcements)
-            .values({
-                hackathonId: mapping.hackathonId,
-                source: 'discord',
-                sourceMessageId: payload.messageId,
-                sourceChannelId: payload.channelId,
-                sourceGuildId: payload.guildId,
-                sourceAuthorId: payload.authorId,
-                idempotencyKey,
-                content: payload.content,
-                rawPayload: payload.rawPayload ?? null,
-                sourceTimestamp: new Date(payload.timestamp),
-            })
-            .returning({
-                id: announcements.id,
-                hackathonId: announcements.hackathonId,
-            });
+        const created = await databaseClient.transaction(async (tx) => {
+            const [row] = await tx
+                .insert(announcements)
+                .values({
+                    hackathonId: mapping.hackathonId,
+                    source: 'discord',
+                    sourceMessageId: payload.messageId,
+                    sourceChannelId: payload.channelId,
+                    sourceGuildId: payload.guildId,
+                    sourceAuthorId: payload.authorId,
+                    idempotencyKey,
+                    content: payload.content,
+                    rawPayload: payload.rawPayload ?? null,
+                    sourceTimestamp: new Date(payload.timestamp),
+                    lastEditedAt: editedAt,
+                })
+                .returning({
+                    id: announcements.id,
+                    hackathonId: announcements.hackathonId,
+                });
 
-        const createdResponse: IngestResult = {
-            id: created.id,
-            status: 'created',
-            hackathonId: created.hackathonId,
-        };
+            if (payload.attachments.length > 0) {
+                await tx
+                    .insert(announcementAttachments)
+                    .values(buildAttachmentRows(row.id, payload));
+            }
 
-        return NextResponse.json(createdResponse, { status: 201 });
+            return row;
+        });
+
+        return NextResponse.json<IngestResult>(
+            {
+                id: created.id,
+                status: 'created',
+                hackathonId: created.hackathonId,
+            },
+            { status: 201 }
+        );
     } catch (error) {
         const errorCode = (error as { code?: string })?.code;
 
         // PostgreSQL SQLSTATE 23505 = unique_violation.
         if (errorCode === '23505') {
             const existingAfterConflict = await findExistingAnnouncement(
-                idempotencyKey,
                 payload.messageId
             );
 
             if (existingAfterConflict) {
-                const duplicateResponse: IngestResult = {
-                    id: existingAfterConflict.id,
-                    status: 'duplicate',
-                    hackathonId: existingAfterConflict.hackathonId,
-                };
-
-                return NextResponse.json(duplicateResponse, { status: 200 });
+                return NextResponse.json<IngestResult>(
+                    {
+                        id: existingAfterConflict.id,
+                        status: 'duplicate',
+                        hackathonId: existingAfterConflict.hackathonId,
+                    },
+                    { status: 200 }
+                );
             }
         }
 

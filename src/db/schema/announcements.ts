@@ -39,6 +39,11 @@ export const announcements = pgTable(
             mode: 'date',
             withTimezone: true,
         }).notNull(),
+        // mirrors Discord's `Message.editedTimestamp`; null = not edited
+        lastEditedAt: timestamp('last_edited_at', {
+            mode: 'date',
+            withTimezone: true,
+        }),
         isArchived: boolean('is_archived').notNull().default(false),
         createdAt: timestamp('created_at').notNull().defaultNow(),
         updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -55,6 +60,28 @@ export const announcements = pgTable(
             index().on(table.hackathonId, table.createdAt),
             index().on(table.sourceChannelId),
         ];
+    }
+);
+
+export const announcementAttachments = pgTable(
+    'announcement_attachments',
+    {
+        id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
+        announcementId: integer('announcement_id')
+            .notNull()
+            .references(() => announcements.id, { onDelete: 'cascade' }),
+        // TODO: Discord CDN URLs expire after a while so probably find a way to mirror to another CDN or something
+        sourceUrl: text('source_url').notNull(),
+        filename: varchar('filename', { length: 256 }),
+        contentType: varchar('content_type', { length: 128 }),
+        sizeBytes: integer('size_bytes'),
+        width: integer('width'),
+        height: integer('height'),
+        position: integer('position').notNull().default(0), // order of attachements
+        createdAt: timestamp('created_at').notNull().defaultNow(),
+    },
+    (table) => {
+        return [index().on(table.announcementId)];
     }
 );
 
@@ -84,19 +111,53 @@ export const announcementChannelMappings = pgTable(
     }
 );
 
-export const ingestDiscordAnnouncementSchema = z.object({
-    channelId: z.string().min(1),
-    guildId: z.string().min(1),
-    messageId: z.string().min(1),
-    authorId: z.string().min(1),
-    content: z.string().min(1),
-    timestamp: z.string().datetime({ offset: true }),
-    idempotencyKey: z.string().min(1).optional(),
-    rawPayload: z.record(z.unknown()).optional(),
+export const ingestDiscordAttachmentSchema = z.object({
+    url: z.string().url(),
+    filename: z.string().max(256).nullable().optional(),
+    contentType: z.string().max(128).nullable().optional(),
+    sizeBytes: z.number().int().nonnegative().nullable().optional(),
+    width: z.number().int().nonnegative().nullable().optional(),
+    height: z.number().int().nonnegative().nullable().optional(),
 });
+
+export const ingestDiscordAnnouncementSchema = z
+    .object({
+        channelId: z.string().min(1),
+        guildId: z.string().min(1),
+        messageId: z.string().min(1),
+        authorId: z.string().min(1),
+        content: z.string(),
+        timestamp: z.string().datetime({ offset: true }),
+        editedTimestamp: z
+            .string()
+            .datetime({ offset: true })
+            .nullable()
+            .optional(),
+        attachments: z
+            .array(ingestDiscordAttachmentSchema)
+            .optional()
+            .default([]),
+        idempotencyKey: z.string().min(1).optional(),
+        rawPayload: z.record(z.unknown()).optional(),
+    })
+    .refine(
+        (value) =>
+            value.content.trim().length > 0 || value.attachments.length > 0,
+        {
+            message: 'Either content or at least one attachment is required',
+            path: ['content'],
+        }
+    );
 
 export const selectAnnouncementSchema = createSelectSchema(announcements);
 export const insertAnnouncementSchema = createInsertSchema(announcements);
+
+export const selectAnnouncementAttachmentSchema = createSelectSchema(
+    announcementAttachments
+);
+export const insertAnnouncementAttachmentSchema = createInsertSchema(
+    announcementAttachments
+);
 
 export const selectAnnouncementChannelMappingSchema = createSelectSchema(
     announcementChannelMappings
