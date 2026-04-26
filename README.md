@@ -23,6 +23,22 @@ and then run `pnpm install` within the project directory to install the packages
 
 Copy and paste the following settings into your local `.env` file, and fill out all the fields with the correct credentials
 
+### Discord announcements ingestion
+
+If you are running the Discord announcements pipeline, also set:
+
+```env
+# Bearer secret for POST/DELETE /api/webhooks/discord. Must match PORTAL_API_SECRET
+# in the portal-discord-bot repo's .env. Treat as production secret.
+DISCORD_INGEST_SECRET=<long random string>
+
+# Optional. Set exactly to "false" to disable all Discord ingest (403 after auth).
+# DISCORD_INGEST_ENABLED=false
+
+# Optional. In-memory requests per minute per server instance (default 120).
+# DISCORD_INGEST_RATE_LIMIT_PER_MINUTE=120
+```
+
 ## Running the application
 
 #### Generating and Pushing `Drizzle` Migrations to your database
@@ -68,8 +84,8 @@ npm run start
 
 See notion page for login credentials are env variables
 
--   Neon auto scaling is in effect, currently in development, scaling range is set to 0 to 0.5x. In prod the max range can be up to 2x resource.
+- Neon auto scaling is in effect, currently in development, scaling range is set to 0 to 0.5x. In prod the max range can be up to 2x resource.
 
 ## Design
 
--   See design [figma workspace](https://www.figma.com/design/02aQ4FvurxQn9sPqaCTqZn/Ottertable-High-Fidelity-Wireframes?node-id=482-5020&p=f&m=dev)
+- See design [figma workspace](https://www.figma.com/design/02aQ4FvurxQn9sPqaCTqZn/Ottertable-High-Fidelity-Wireframes?node-id=482-5020&p=f&m=dev)

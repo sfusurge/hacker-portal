@@ -175,3 +175,10 @@ export const listAnnouncementsByHackathonSchema = z.object({
 export const getChannelMappingByChannelSchema = z.object({
     discordChannelId: z.string().min(1),
 });
+
+export const deleteDiscordAnnouncementSchema = z.object({
+    messageId: z.string().min(1),
+    channelId: z.string().min(1).optional(),
+    guildId: z.string().min(1).optional(),
+    idempotencyKey: z.string().min(1).optional(),
+});
