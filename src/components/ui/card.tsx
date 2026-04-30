@@ -22,12 +22,17 @@ Card.displayName = 'Card';
 
 const CardHeader = React.forwardRef<
     HTMLDivElement,
-    React.HTMLAttributes<HTMLDivElement> & { className?: string }
->(({ className, ...props }, ref) => (
+    React.HTMLAttributes<HTMLDivElement> & {
+        className?: string;
+        multiAction?: boolean;
+    }
+>(({ className, multiAction, ...props }, ref) => (
     <div
         ref={ref}
         className={cn(
             'flex w-full flex-row items-center justify-between border-b border-b-neutral-600/30 p-5',
+            multiAction &&
+                '@max-[565px]/header-actions:flex-col @max-[565px]/header-actions:items-stretch',
             className
         )}
         {...props}
