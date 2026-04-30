@@ -126,8 +126,10 @@ export default function ActiveHackathonCard({
                         applicationSubmitted={applicationSubmitted}
                         status={status}
                         payloadName={payload.name}
-                        bannerConfig={bannerConfig}
-                        eventPageSlug={hackathon.eventPageSlug}
+                        bannerConfig={{
+                            eventPageLabel: payload.eventPageLabel,
+                            eventPageSlug: hackathon.eventPageSlug,
+                        }}
                         isAcceptedStatus={isAcceptedStatus}
                         ticketQr={ticketQr}
                         applicationAction={applicationAction}

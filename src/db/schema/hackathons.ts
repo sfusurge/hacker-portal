@@ -18,6 +18,7 @@ import { z } from 'zod';
 
 /** `event_page_payload`: marketing / event-page copy and assets. */
 export type HackathonEventPagePayload = {
+    eventPageLabel: string;
     name: string;
     tagline: string;
     iconSrc: string;
