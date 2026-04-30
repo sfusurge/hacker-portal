@@ -130,9 +130,14 @@ export default function ApplicationCard({
         >
             <CardHeader
                 className={cn(
-                    'flex flex-row items-center justify-between gap-3',
-                    '@max-[565px]/header-actions:flex-col @max-[565px]/header-actions:items-stretch'
+                    'flex flex-row items-center justify-between gap-3'
                 )}
+                multiAction={
+                    (status === 'Accepted' ||
+                        status === "Accepted and RSVP'd") &&
+                    !!image &&
+                    !!hackerPackageHref
+                }
             >
                 <CardHeaderColumn
                     className={cn(

@@ -103,7 +103,16 @@ export function ActiveHackathonCardContent({
                         'w-full min-w-0 @[448px]:w-1/2',
                         ticketViewFirstOnMobile && 'order-1 @[448px]:order-2'
                     )}
-                    leadingIconChild={applicationAction.icon ?? undefined}
+                    leadingIconChild={
+                        !applicationAction.trailingIcon
+                            ? (applicationAction.icon ?? undefined)
+                            : undefined
+                    }
+                    trailingIconChild={
+                        applicationAction.trailingIcon
+                            ? (applicationAction.icon ?? undefined)
+                            : undefined
+                    }
                 >
                     {applicationAction.label}
                 </Button>
