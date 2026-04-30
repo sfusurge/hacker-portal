@@ -11,6 +11,7 @@ export type EventPageConfigShape = {
     overview: string;
     location: string;
     dates: string;
+    eventPageLabel: string;
     websiteLabel: string;
     websiteHref: string;
     recapHref: string | null;
@@ -61,6 +62,7 @@ export function defaultEventPagePayload(
         websiteHref: DEFAULT_BANNER_CONFIG.websiteHref,
         recapHref: null,
         hackerPackageHref: null,
+        eventPageLabel: `${hackathonName} event page`,
     };
 }
 

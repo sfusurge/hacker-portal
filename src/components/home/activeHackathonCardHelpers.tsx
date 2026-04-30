@@ -19,6 +19,7 @@ export type ApplicationAction = {
     variant: 'brand' | 'caution';
     href: '/application' | '/rsvp' | '/application/submitted';
     icon: JSX.Element | undefined;
+    trailingIcon?: boolean;
 };
 
 export type StatusBadge = {
@@ -36,17 +37,19 @@ export function getApplicationAction({
     switch (status) {
         case 'Not Yet Started':
             return {
-                label: 'Begin application',
+                label: 'Start application',
                 variant: 'brand',
                 href: '/application',
-                icon: undefined,
+                icon: <ArrowRightIcon className="inline-flex h-4 w-4" />,
+                trailingIcon: true,
             };
         case 'In Progress':
             return {
                 label: 'Continue Application',
                 variant: 'caution',
                 href: '/application',
-                icon: undefined,
+                icon: <ArrowRightIcon className="inline-flex h-4 w-4" />,
+                trailingIcon: true,
             };
         case 'Accepted - Pending Payment':
         case 'Accepted - RSVP to Confirm':

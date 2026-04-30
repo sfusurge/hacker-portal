@@ -22,9 +22,8 @@ export type ActiveHackathonCardContentProps = {
     closedRegistration: boolean;
     applicationSubmitted: boolean;
     status: AppStatus;
+    bannerConfig: { eventPageLabel: string; eventPageSlug: string };
     payloadName: string;
-    bannerConfig: { websiteLabel: string; websiteHref: string };
-    eventPageSlug: string;
     isAcceptedStatus: boolean;
     ticketQr?: string;
     applicationAction: ApplicationAction | null;
@@ -41,7 +40,6 @@ export function ActiveHackathonCardContent({
     status,
     payloadName,
     bannerConfig,
-    eventPageSlug,
     isAcceptedStatus,
     ticketQr,
     applicationAction,
@@ -90,8 +88,8 @@ export function ActiveHackathonCardContent({
                     ticketViewFirstOnMobile && 'order-2 @[448px]:order-1'
                 )}
             >
-                <Link href={`/${eventPageSlug}`} prefetch>
-                    {bannerConfig.websiteLabel}
+                <Link href={`/${bannerConfig.eventPageSlug}`} prefetch>
+                    {bannerConfig.eventPageLabel}
                 </Link>
             </Button>
 
@@ -105,7 +103,16 @@ export function ActiveHackathonCardContent({
                         'w-full min-w-0 @[448px]:w-1/2',
                         ticketViewFirstOnMobile && 'order-1 @[448px]:order-2'
                     )}
-                    leadingIconChild={applicationAction.icon ?? undefined}
+                    leadingIconChild={
+                        !applicationAction.trailingIcon
+                            ? (applicationAction.icon ?? undefined)
+                            : undefined
+                    }
+                    trailingIconChild={
+                        applicationAction.trailingIcon
+                            ? (applicationAction.icon ?? undefined)
+                            : undefined
+                    }
                 >
                     {applicationAction.label}
                 </Button>
@@ -145,8 +152,11 @@ export function ActiveHackathonCardContent({
                             hierarchy="secondary"
                             className="mt-12 w-full sm:mt-4"
                         >
-                            <Link href={`/${eventPageSlug}`} prefetch>
-                                {bannerConfig.websiteLabel}
+                            <Link
+                                href={`/${bannerConfig.eventPageSlug}`}
+                                prefetch
+                            >
+                                {bannerConfig.eventPageLabel}
                             </Link>
                         </Button>
                     </>
