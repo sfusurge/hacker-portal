@@ -159,6 +159,10 @@ export const insertAnnouncementAttachmentSchema = createInsertSchema(
     announcementAttachments
 );
 
+export type AnnouncementWithAttachments = typeof announcements.$inferSelect & {
+    attachments: Array<typeof announcementAttachments.$inferSelect>;
+};
+
 export const selectAnnouncementChannelMappingSchema = createSelectSchema(
     announcementChannelMappings
 );

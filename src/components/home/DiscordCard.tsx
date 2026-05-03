@@ -12,8 +12,10 @@ import {
     CardFooter,
     CardHeaderColumn,
 } from '@/components/ui/card';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { eventDiscordUrlForStatus } from '@/lib/eventDiscord';
 import { cn } from '@/lib/utils';
+import { useAtomValue } from 'jotai';
 
 type DiscordCardProps = {
     applicationStatus?: string;
@@ -24,10 +26,17 @@ export default function DiscordCard({
     applicationStatus,
     className,
 }: DiscordCardProps) {
-    const discordLink = eventDiscordUrlForStatus(applicationStatus);
+    const hackathon = useAtomValue(hackathonAtom);
+    const discordLink = eventDiscordUrlForStatus(
+        applicationStatus,
+        hackathon?.eventPagePayload
+    );
+    const hackathonName = hackathon?.hackathonName;
+    const hackathonIconSrc = hackathon?.eventPagePayload?.iconSrc;
+    const isAccepted = applicationStatus === 'Accepted';
     const headerTitle =
-        applicationStatus === 'Accepted'
-            ? 'Join the StormHacks Discord!'
+        isAccepted && hackathonName
+            ? `Join the ${hackathonName} Discord!`
             : 'Join the Surge Discord!';
 
     return (
@@ -48,14 +57,24 @@ export default function DiscordCard({
                     </Button>
                 </Link>
             </CardHeader>
-            <CardContent className="flex h-full items-center justify-end pb-0 text-center">
-                <Image
-                    src="/dashboard/join-our-discord.webp"
-                    width={1444}
-                    height={1276}
-                    alt="A bunch of otter heads surrounding a phone"
-                    className="pointer-events-none mx-auto h-auto w-full max-w-96"
-                />
+            <CardContent className="flex h-full items-center justify-center pb-0 text-center">
+                {isAccepted && hackathonIconSrc ? (
+                    <Image
+                        src={hackathonIconSrc}
+                        alt={`${hackathonName ?? 'Hackathon'} logo`}
+                        width={320}
+                        height={320}
+                        className="pointer-events-none h-32 w-32 rounded-xl object-contain"
+                    />
+                ) : (
+                    <Image
+                        src="/dashboard/join-our-discord.webp"
+                        width={1444}
+                        height={1276}
+                        alt="A bunch of otter heads surrounding a phone"
+                        className="pointer-events-none mx-auto h-auto w-full max-w-96"
+                    />
+                )}
             </CardContent>
             <CardFooter className="md:hidden">
                 <Link href={discordLink} target="_blank">

@@ -7,10 +7,17 @@ import {
     SubmissionJudgeRubric,
 } from '@/components/application_components/types';
 import { UserData } from '@/server/routers/usersRouter';
+import { AnnouncementWithAttachments } from '@/db/schema/announcements';
 import dayjs from 'dayjs';
 import { atom } from 'jotai';
 import { useHydrateAtoms } from 'jotai/utils';
 import { ReactNode } from 'react';
+
+export type { AnnouncementWithAttachments };
+
+export type AnnouncementsList = AnnouncementWithAttachments[];
+
+export const announcementsAtom = atom<AnnouncementsList>([]);
 
 export type UserDataType = Exclude<UserData, undefined>;
 /**
@@ -83,15 +90,18 @@ export type HackathonType = ReturnType<typeof DeserializeHackathonData>;
 export function ClientContext({
     userData,
     hackathonData,
+    initialAnnouncements,
     children,
 }: {
     userData: UserData;
     hackathonData: DbHackathonType;
+    initialAnnouncements: AnnouncementsList;
     children: ReactNode;
 }) {
     useHydrateAtoms([
         [userInfoAtom, userData!],
         [hackathonAtom, DeserializeHackathonData(hackathonData)],
+        [announcementsAtom, initialAnnouncements],
     ]);
 
     return <>{children}</>;
