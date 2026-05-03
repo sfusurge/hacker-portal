@@ -5,8 +5,10 @@ import {
     announcementAttachments,
     announcements,
 } from '@/db/schema/announcements';
+import { user } from '@/db/schema/users/users';
 import { asc, desc, eq, inArray, and } from 'drizzle-orm';
 import { InternalServerError } from '../exceptions';
+import { getUserData } from './usersRouter';
 
 export const announcementsRouter = router({
     getAnnouncements: publicProcedure
@@ -72,5 +74,16 @@ export const announcementsRouter = router({
                 console.error('Error fetching announcements:', err);
                 throw new InternalServerError('Failed to fetch announcements');
             }
+        }),
+
+    markSeen: publicProcedure
+        .input(z.object({ lastSeenAt: z.coerce.date() }))
+        .mutation(async ({ input }) => {
+            const userData = await getUserData();
+            if (!userData) return;
+            await databaseClient
+                .update(user)
+                .set({ lastSeenAnnouncementsAt: input.lastSeenAt })
+                .where(eq(user.id, userData.id));
         }),
 });

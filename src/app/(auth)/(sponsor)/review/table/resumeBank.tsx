@@ -243,7 +243,9 @@ export default function ResumeTable({ hackathonId }: ResumeTableProps) {
     if (isError) {
         return (
             <div className="flex min-h-screen w-full flex-col items-center justify-center gap-4 text-white">
-                <span className="text-red-400">Error loading applications</span>
+                <span className="text-danger-500">
+                    Error loading applications
+                </span>
                 <span className="text-sm text-white/60">{error?.message}</span>
             </div>
         );

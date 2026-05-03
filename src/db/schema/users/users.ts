@@ -43,6 +43,10 @@ export const user = pgTable(
         image: text('image'),
         userRole: userRoleDbEnum('user_role').default('user').notNull(),
         displayId: varchar('display_id', { length: 6 }).notNull().unique(),
+        lastSeenAnnouncementsAt: timestamp('last_seen_announcements_at', {
+            mode: 'date',
+            withTimezone: true,
+        }),
     },
     (table) => {
         return [

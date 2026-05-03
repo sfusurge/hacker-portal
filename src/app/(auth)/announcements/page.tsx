@@ -9,7 +9,7 @@ import {
 import {
     announcementsAtom,
     hackathonAtom,
-    type AnnouncementWithAttachments,
+    lastSeenAtAtom,
 } from '@/app/(auth)/ClientContext';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,8 +19,15 @@ import AnnouncementRow from '@/components/announcements/AnnouncementRow';
 import { eventDiscordUrlForStatus } from '@/lib/eventDiscord';
 import { useWindowSize } from '@/lib/useWindowSize';
 import { trpc } from '@/trpc/client';
-import { useAtomValue } from 'jotai';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useAtomValue, useSetAtom } from 'jotai';
+import {
+    Fragment,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 
 const ANNOUNCEMENT_BREAKPOINT_PX = 920;
 
@@ -44,7 +51,11 @@ export default function AnnouncementsPage() {
     const [query, setQuery] = useState('');
     const hackathon = useAtomValue(hackathonAtom);
     const announcements = useAtomValue(announcementsAtom);
-
+    const setLastSeenAt = useSetAtom(lastSeenAtAtom);
+    const lastSeenAt = useAtomValue(lastSeenAtAtom);
+    // freeze the "unread" baseline at page-load time so expanding rows
+    const initialLastSeenAtRef = useRef(lastSeenAt);
+    const markSeen = trpc.announcements.markSeen.useMutation();
     const { data: application } =
         trpc.applications.getCurrentApplication.useQuery(
             { hackathonId: hackathon?.id ?? 0 },
@@ -111,6 +122,42 @@ export default function AnnouncementsPage() {
             setSeenCount((prev) => Math.min(prev, announcements.length));
         }
     }, [isAtTop, announcements.length]);
+
+    // track if user has scrolled away from the top
+    const hasViewedTopRef = useRef(false);
+    const lastSeenAtRef = useRef<Date | null>(lastSeenAt);
+    const hasScrolledAwayRef = useRef(false);
+    useEffect(() => {
+        lastSeenAtRef.current = lastSeenAt;
+    }, [lastSeenAt]);
+
+    useEffect(() => {
+        if (!isAtTop) {
+            hasScrolledAwayRef.current = true;
+        }
+        if (isAtTop && hasScrolledAwayRef.current) {
+            const latestTimestamp = sortedDesc[0]
+                ? new Date(sortedDesc[0].sourceTimestamp)
+                : new Date();
+            hasViewedTopRef.current = true;
+            setLastSeenAt(latestTimestamp);
+        }
+    }, [isAtTop, setLastSeenAt, sortedDesc]);
+
+    useEffect(() => {
+        const flush = () => {
+            if (hasViewedTopRef.current && lastSeenAtRef.current) {
+                markSeen.mutate({ lastSeenAt: lastSeenAtRef.current });
+            }
+        };
+        window.addEventListener('beforeunload', flush);
+        document.addEventListener('visibilitychange', flush);
+        return () => {
+            flush();
+            window.removeEventListener('beforeunload', flush);
+            document.removeEventListener('visibilitychange', flush);
+        };
+    }, []);
 
     useEffect(() => {
         getScrollEl()?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -222,7 +269,7 @@ export default function AnnouncementsPage() {
                                 </form>
                             </CardHeader>
                             <CardContent
-                                className={`gap-4 rounded-xl border-x border-b border-neutral-600/30 p-5 md:p-6 ${FEED_BP.feedCardBody}`}
+                                className={`gap-4 rounded-b-xl border-x border-b border-neutral-600/30 p-5 md:p-6 ${FEED_BP.feedCardBody}`}
                             >
                                 {filtered.length === 0 ? (
                                     <div className="flex h-full flex-col items-center justify-center gap-3 px-4 py-16 text-center">
@@ -251,21 +298,110 @@ export default function AnnouncementsPage() {
                                         className={`@announcements:-mx-6 @announcements:pr-1 -mx-5 pr-0 ${FEED_BP.feedScroll}`}
                                     >
                                         <ul className="flex flex-col">
-                                            {sortedDesc.map((a) => (
-                                                <AnnouncementRow
-                                                    key={a.id}
-                                                    announcement={a}
-                                                    displayName={displayName}
-                                                    iconSrc={hackathonIconSrc}
-                                                    searchQuery={trimmedQuery}
-                                                    onJump={
-                                                        isSearching
-                                                            ? jumpToAnnouncement
-                                                            : undefined
-                                                    }
-                                                    flash={flashId === a.id}
-                                                />
-                                            ))}
+                                            {sortedDesc.map((a, i) => {
+                                                const initial =
+                                                    initialLastSeenAtRef.current;
+                                                const unread =
+                                                    initial == null ||
+                                                    new Date(
+                                                        a.sourceTimestamp
+                                                    ) > initial;
+                                                const prevUnread =
+                                                    i === 0
+                                                        ? true
+                                                        : initial == null ||
+                                                          new Date(
+                                                              sortedDesc[
+                                                                  i - 1
+                                                              ]!.sourceTimestamp
+                                                          ) > initial;
+                                                const nextUnread =
+                                                    i === sortedDesc.length - 1
+                                                        ? false
+                                                        : initial == null ||
+                                                          new Date(
+                                                              sortedDesc[
+                                                                  i + 1
+                                                              ]!.sourceTimestamp
+                                                          ) > initial;
+                                                const showDivider =
+                                                    !unread &&
+                                                    prevUnread &&
+                                                    i > 0;
+                                                const hideBorderBottom =
+                                                    unread &&
+                                                    !nextUnread &&
+                                                    i < sortedDesc.length - 1;
+                                                const hideBorderTop =
+                                                    showDivider;
+                                                return (
+                                                    <Fragment key={a.id}>
+                                                        {showDivider && (
+                                                            <li
+                                                                className="-mx-1 flex items-center gap-3 overflow-hidden py-2 select-none"
+                                                                aria-hidden
+                                                            >
+                                                                <div className="h-px flex-1 bg-neutral-600/50" />
+                                                                <span className="text-xs font-medium tracking-widest text-neutral-500 uppercase">
+                                                                    Older
+                                                                </span>
+                                                                <div className="h-px flex-1 bg-neutral-600/50" />
+                                                            </li>
+                                                        )}
+                                                        <AnnouncementRow
+                                                            announcement={a}
+                                                            displayName={
+                                                                displayName
+                                                            }
+                                                            iconSrc={
+                                                                hackathonIconSrc
+                                                            }
+                                                            searchQuery={
+                                                                trimmedQuery
+                                                            }
+                                                            onJump={
+                                                                isSearching
+                                                                    ? jumpToAnnouncement
+                                                                    : undefined
+                                                            }
+                                                            flash={
+                                                                flashId === a.id
+                                                            }
+                                                            isUnread={unread}
+                                                            hideBorderBottom={
+                                                                hideBorderBottom
+                                                            }
+                                                            hideBorderTop={
+                                                                hideBorderTop
+                                                            }
+                                                            onRead={
+                                                                unread
+                                                                    ? () => {
+                                                                          const ts =
+                                                                              new Date(
+                                                                                  a.sourceTimestamp
+                                                                              );
+                                                                          const prev =
+                                                                              lastSeenAtRef.current;
+                                                                          if (
+                                                                              prev ==
+                                                                                  null ||
+                                                                              ts >
+                                                                                  prev
+                                                                          ) {
+                                                                              setLastSeenAt(
+                                                                                  ts
+                                                                              );
+                                                                          }
+                                                                          hasViewedTopRef.current =
+                                                                              true;
+                                                                      }
+                                                                    : undefined
+                                                            }
+                                                        />
+                                                    </Fragment>
+                                                );
+                                            })}
                                         </ul>
                                         <p className="@announcements:mb-24 mb-36 py-6 text-center text-xl font-semibold text-white/60">
                                             You&apos;ve reached the end!

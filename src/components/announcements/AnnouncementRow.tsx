@@ -117,18 +117,21 @@ export type AnnouncementRowProps = {
     iconSrc?: string;
     searchQuery?: string;
     onJump?: (id: number) => void;
+    onRead?: () => void;
     flash?: boolean;
+    isUnread?: boolean;
+    hideBorderTop?: boolean;
+    hideBorderBottom?: boolean;
 };
 
 /**
  * Discord-style announcement row:
  * behaviour:
- * - Body markdown is clamped to 4 lines while collapsed; "Show more…" appears
- *   when text overflows OR there are images (clicking expands them).
- * - Images are capped at {@link MAX_IMAGES_PER_ANNOUNCEMENT}. While collapsed
- *   they sit inline as small thumbnails next to the body and act as expand
- *   triggers; while expanded they drop below the body at full size and become
- *   normal links to the source asset.
+ * body markdown clamped to 4 lines while collapsed, "Show more..."
+ * text overflow/images click to expnad
+ * images are capped at {@link MAX_IMAGES_PER_ANNOUNCEMENT}.
+ * collapsed: text + images side by side.
+ * expanded: text + images stacked.
  */
 export default function AnnouncementRow({
     announcement: a,
@@ -136,7 +139,11 @@ export default function AnnouncementRow({
     iconSrc,
     searchQuery,
     onJump,
+    onRead,
     flash,
+    isUnread,
+    hideBorderTop,
+    hideBorderBottom,
 }: AnnouncementRowProps) {
     const sourceTime = toSourceDate(a.sourceTimestamp);
     const trimmed = a.content.trim();
@@ -175,7 +182,11 @@ export default function AnnouncementRow({
     return (
         <li
             data-announcement-id={a.id}
-            className="group scroll-mt-24 list-none border-y border-neutral-600/30 p-1 pl-2 @[920px]:scroll-mt-0"
+            className={cn(
+                'group scroll-mt-24 list-none border-y border-neutral-600/30 p-1 pl-2 @[920px]:scroll-mt-0',
+                hideBorderTop && 'border-t-0',
+                hideBorderBottom && 'border-b-0'
+            )}
         >
             <div
                 className={cn(
@@ -215,6 +226,12 @@ export default function AnnouncementRow({
                     >
                         {formatAnnouncementTimestamp(sourceTime)}
                     </time>
+                    {isUnread && (
+                        <span
+                            className="bg-danger-500 h-2 w-2 shrink-0 rounded-full"
+                            aria-label="Unread"
+                        />
+                    )}
                     {onJump ? (
                         <Button
                             type="button"
@@ -286,6 +303,7 @@ export default function AnnouncementRow({
                                                     ) {
                                                         e.preventDefault();
                                                         setExpanded(true);
+                                                        onRead?.();
                                                     }
                                                 }}
                                             >
@@ -340,7 +358,10 @@ export default function AnnouncementRow({
                         {showToggle ? (
                             <button
                                 type="button"
-                                onClick={() => setExpanded((v) => !v)}
+                                onClick={() => {
+                                    setExpanded((v) => !v);
+                                    if (!expanded) onRead?.();
+                                }}
                                 className="text-brand-400 hover:text-brand-300 mt-2 text-sm underline-offset-2 hover:underline"
                             >
                                 {expanded ? 'Show less' : 'Show more…'}

@@ -21,7 +21,7 @@ import { signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
 import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import {
     Popover,
     PopoverContent,

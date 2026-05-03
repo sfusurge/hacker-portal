@@ -9,6 +9,8 @@ import { ReactNode, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { UserData } from '@/server/routers/usersRouter';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAtomValue } from 'jotai';
+import { unreadCountAtom } from '@/app/(auth)/ClientContext';
 
 interface MobileTopNavProps {
     className?: string;
@@ -55,6 +57,7 @@ export default function MobileTopNav({
         x: number;
         y: number;
     } | null>(null);
+    const unreadCount = useAtomValue(unreadCountAtom);
 
     /** tap outside drawer closes, drag/scroll does not */
     useEffect(() => {
@@ -169,6 +172,7 @@ export default function MobileTopNav({
                                 platform="desktop"
                                 active={url.startsWith(announcement.href)}
                                 collapsed={true}
+                                badge={unreadCount}
                                 className={cn(
                                     'bg-transparent hover:bg-transparent',
                                     url.startsWith(announcement.href)

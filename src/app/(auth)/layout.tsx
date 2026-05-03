@@ -27,6 +27,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
             userData={userData}
             hackathonData={hackathon}
             initialAnnouncements={initialAnnouncements}
+            initialLastSeenAt={userData.lastSeenAnnouncementsAt ?? null}
         >
             <ClientLayoutWrapper>
                 <CacheClearer initialData={userData} />
