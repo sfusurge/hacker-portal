@@ -95,24 +95,37 @@ export default function AnnouncementsPage() {
     const [isFarFromTop, setIsFarFromTop] = useState(false);
     const [seenCount, setSeenCount] = useState(announcements.length);
 
-    // resolve the element whose `scrollTop` we should be reading.
+    // listens on both inner feed div and outer main element
     const getScrollEl = useCallback((): HTMLElement | null => {
-        if (isDesktop) return feedScrollRef.current;
         if (typeof document === 'undefined') return null;
-        return document.querySelector('main');
-    }, [isDesktop]);
+        const feed = feedScrollRef.current;
+        const main = document.querySelector('main') as HTMLElement | null;
+        // prefer the feed div if it's the scrolling container
+        if (feed && feed.scrollHeight > feed.clientHeight) return feed;
+        return main;
+    }, []);
 
     useEffect(() => {
-        const el = getScrollEl();
-        if (!el) return;
+        const mainEl = getScrollEl();
+        const feedEl = feedScrollRef.current;
+
         const update = () => {
-            const top = el.scrollTop;
+            // use whichever scroll container is actually scrolling
+            const top =
+                (feedEl?.scrollTop ?? 0) > 0
+                    ? feedEl!.scrollTop
+                    : (mainEl?.scrollTop ?? 0);
             setIsAtTop(top < 64);
             setIsFarFromTop(top > FAR_FROM_TOP_PX);
         };
-        el.addEventListener('scroll', update, { passive: true });
+
+        mainEl?.addEventListener('scroll', update, { passive: true });
+        feedEl?.addEventListener('scroll', update, { passive: true });
         update();
-        return () => el.removeEventListener('scroll', update);
+        return () => {
+            mainEl?.removeEventListener('scroll', update);
+            feedEl?.removeEventListener('scroll', update);
+        };
     }, [getScrollEl, sortedDesc.length]);
 
     useEffect(() => {
