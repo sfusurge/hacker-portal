@@ -5,8 +5,11 @@ import { cn } from '@/lib/utils';
 
 const Card = React.forwardRef<
     HTMLDivElement,
-    React.HTMLAttributes<HTMLDivElement> & { className?: string }
->(({ className, children, ...props }, ref) => (
+    React.HTMLAttributes<HTMLDivElement> & {
+        className?: string;
+        backdropClassName?: string;
+    }
+>(({ className, children, backdropClassName, ...props }, ref) => (
     <div
         ref={ref}
         className={cn(
@@ -15,6 +18,14 @@ const Card = React.forwardRef<
         )}
         {...props}
     >
+        {backdropClassName && (
+            <div
+                className={cn(
+                    'pointer-events-none sticky -top-7 z-1 -m-2 w-auto shrink-0 bg-neutral-950 p-2',
+                    backdropClassName
+                )}
+            />
+        )}
         {children}
     </div>
 ));

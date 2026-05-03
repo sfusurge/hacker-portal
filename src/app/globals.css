@@ -7,6 +7,9 @@
     /* Border width for elements */
     --border-width-1: 1px;
 
+    /* Announcements feed two-column layout breakpoint */
+    --container-announcements: 920px;
+
     /* Small inset shadow for skeuomorphic effect */
     --shadow-skeumorphic-sm:
         0px 1px 0px 0px rgba(255, 255, 255, 0.24) inset,

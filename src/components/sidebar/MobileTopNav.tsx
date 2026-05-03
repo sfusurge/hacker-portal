@@ -1,12 +1,9 @@
 'use client';
 
 import clsx from 'clsx';
-import {
-    ArrowLeftEndOnRectangleIcon,
-    Bars3Icon,
-    MegaphoneIcon,
-    UserIcon,
-} from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
+import { Bars3Icon, UserIcon } from '@heroicons/react/24/outline';
+import { MegaphoneIcon } from '@heroicons/react/24/solid';
 import { NavLink } from './NavLink';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
@@ -27,6 +24,21 @@ const announcement = {
     icon: <MegaphoneIcon className="h-6 w-6" />,
     iconAlt: 'Announcement logo',
 };
+
+const PAGE_TITLE_MAP: { prefix: string; label: string }[] = [
+    { prefix: '/announcements', label: 'Announcements' },
+    { prefix: '/schedule', label: 'Schedule' },
+    { prefix: '/home', label: 'Home' },
+    { prefix: '/team', label: 'Team' },
+    { prefix: '/profile', label: 'Profile' },
+];
+
+function getPageTitle(pathname: string): string {
+    for (const { prefix, label } of PAGE_TITLE_MAP) {
+        if (pathname.startsWith(prefix)) return label;
+    }
+    return '';
+}
 
 /** above this between down/up counts as scroll/drag, not an outside tap. */
 const OUTSIDE_TAP_MAX_MOVE_PX = 14;
@@ -120,21 +132,32 @@ export default function MobileTopNav({
                     )}
                 >
                     <div className="flex w-full flex-row items-center justify-between">
-                        <NavLink
-                            href="#"
-                            label=""
-                            icon={
-                                <Bars3Icon className="h-6 w-6 text-white/80" />
-                            }
-                            iconAlt="Toggle sidebar"
-                            platform="desktop"
-                            className="justify-center px-0"
-                            collapsed
-                            onClick={(e) => {
-                                e.preventDefault();
-                                setShowMobileSidebar((prev) => !prev);
-                            }}
-                        />
+                        <div className="flex items-center gap-3">
+                            <NavLink
+                                href="#"
+                                label=""
+                                icon={
+                                    <Bars3Icon className="h-6 w-6 text-white/80" />
+                                }
+                                iconAlt="Toggle sidebar"
+                                platform="desktop"
+                                className="justify-center px-0"
+                                collapsed
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setShowMobileSidebar((prev) => !prev);
+                                }}
+                            />
+                            <span
+                                className="pt-2 text-base font-medium text-white"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setShowMobileSidebar((prev) => !prev);
+                                }}
+                            >
+                                {getPageTitle(url)}
+                            </span>
+                        </div>
 
                         <div className="flex items-center justify-end">
                             <NavLink
@@ -146,6 +169,12 @@ export default function MobileTopNav({
                                 platform="desktop"
                                 active={url.startsWith(announcement.href)}
                                 collapsed={true}
+                                className={cn(
+                                    'bg-transparent hover:bg-transparent',
+                                    url.startsWith(announcement.href)
+                                        ? 'text-white'
+                                        : 'text-white/60 hover:text-white'
+                                )}
                             />
                         </div>
                     </div>

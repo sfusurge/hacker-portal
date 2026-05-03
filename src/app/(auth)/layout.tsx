@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { ClientContext } from './ClientContext';
 import { getUserData } from '@/server/routers/usersRouter';
 import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
-
+import { getInitialAnnouncements } from '@/server/getInitialAnnouncements';
 import ClientLayoutWrapper from './ClientLayoutWrapper';
 import MobileTopNav from '@/components/sidebar/MobileTopNav';
 import SideBar from '@/components/sidebar/SideBar';
@@ -19,8 +19,15 @@ export default async function Layout({ children }: { children: ReactNode }) {
         return redirect('/signout');
     }
 
+    const initialAnnouncements =
+        hackathon != null ? await getInitialAnnouncements(hackathon.id) : [];
+
     return (
-        <ClientContext userData={userData} hackathonData={hackathon}>
+        <ClientContext
+            userData={userData}
+            hackathonData={hackathon}
+            initialAnnouncements={initialAnnouncements}
+        >
             <ClientLayoutWrapper>
                 <CacheClearer initialData={userData} />
                 <MobileTopNav initialData={userData}>
