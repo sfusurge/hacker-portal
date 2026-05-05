@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input/input';
 import { ToastWithButton } from '@/components/ui/ToastWithButton';
 import AnnouncementRow from '@/components/announcements/AnnouncementRow';
+import { PageHeader } from '@/components/PageHeader';
 import { eventDiscordUrlForStatus } from '@/lib/eventDiscord';
 import { useWindowSize } from '@/lib/useWindowSize';
 import { trpc } from '@/trpc/client';
@@ -229,9 +230,7 @@ export default function AnnouncementsPage() {
     return (
         <>
             <div className="@announcements:h-full @container flex min-h-0 flex-col">
-                <h1 className="hidden text-3xl font-semibold text-white md:block">
-                    Announcements
-                </h1>
+                <PageHeader title="Announcements" className="hidden md:flex" />
 
                 <div className={`${FEED_BP.layout}`}>
                     <div

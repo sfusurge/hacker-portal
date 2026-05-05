@@ -79,13 +79,6 @@ const navLinks = [
         iconAlt: 'Announcement logo',
     },
     // {
-    //     href: '/notifications',
-    //     label: 'Notifications',
-    //     icon: <BellAlertIcon className="h-6 w-6" />,
-    //     iconAlt: 'Notifications logo',
-    //     disabled: true,
-    // },
-    // {
     //     href: '/projects',
     //     label: 'Project Gallery',
     //     icon: <InboxStackIcon className="h-6 w-6" />,
@@ -96,7 +89,7 @@ const navLinks = [
 const adminLinks = [
     {
         href: '/admin/qr',
-        label: 'Hacker Checkin (Admin)',
+        label: 'Hacker Checkin',
         icon: <QrCodeIcon className="h-6 w-6" />,
         iconAlt: 'QR logo',
     },

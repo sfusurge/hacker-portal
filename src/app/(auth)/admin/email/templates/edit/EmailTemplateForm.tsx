@@ -356,8 +356,8 @@ export function EmailTemplateForm({
                                 Category for this hackathon email (e.g. Hacker
                                 applied, RSVP received).{' '}
                                 <span className="text-neutral-400">
-                                    &quot;RSVP &mdash; payment confirmed&quot;
-                                    is only for paid hackathons (Stripe RSVP).
+                                    &quot;RSVP payment confirmed&quot; is only
+                                    for paid hackathons.
                                 </span>
                             </p>
                         </div>
