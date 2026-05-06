@@ -28,6 +28,12 @@ export const unreadCountAtom = atom((get) => {
         .length;
 });
 
+export type { AnnouncementWithAttachments };
+
+export type AnnouncementsList = AnnouncementWithAttachments[];
+
+export const announcementsAtom = atom<AnnouncementsList>([]);
+
 export type UserDataType = Exclude<UserData, undefined>;
 /**
  * Trust that contents of this atom is never undefined.
