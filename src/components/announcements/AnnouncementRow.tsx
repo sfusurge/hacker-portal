@@ -16,6 +16,7 @@ import dayjs from 'dayjs';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import type { AnnouncementWithAttachments } from '@/app/(auth)/ClientContext';
+import { normalizeDiscordContentMentions } from '@/lib/discord/mentions';
 
 // max # of image attachments rendered
 export const MAX_IMAGES_PER_ANNOUNCEMENT = 2;
@@ -139,7 +140,11 @@ export default function AnnouncementRow({
     flash,
 }: AnnouncementRowProps) {
     const sourceTime = toSourceDate(a.sourceTimestamp);
-    const trimmed = a.content.trim();
+    const normalizedContent = normalizeDiscordContentMentions(
+        a.content,
+        a.mentionMetadata
+    );
+    const trimmed = normalizedContent.trim();
     const [expanded, setExpanded] = useState(false);
     const [hasOverflow, setHasOverflow] = useState(false);
     const [jumpRevealed, setJumpRevealed] = useState(false);
@@ -276,7 +281,10 @@ export default function AnnouncementRow({
                                     {imageAttachments.map((att) => (
                                         <li key={att.id}>
                                             <a
-                                                href={att.sourceUrl}
+                                                href={
+                                                    att.storedUrl ??
+                                                    att.sourceUrl
+                                                }
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="block overflow-hidden rounded-lg border border-neutral-700/50 bg-neutral-900/40 md:cursor-zoom-in"
@@ -291,7 +299,10 @@ export default function AnnouncementRow({
                                             >
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img
-                                                    src={att.sourceUrl}
+                                                    src={
+                                                        att.storedUrl ??
+                                                        att.sourceUrl
+                                                    }
                                                     alt={
                                                         att.filename ??
                                                         'Announcement image'
@@ -317,14 +328,19 @@ export default function AnnouncementRow({
                                 {imageAttachments.map((att) => (
                                     <li key={att.id}>
                                         <a
-                                            href={att.sourceUrl}
+                                            href={
+                                                att.storedUrl ?? att.sourceUrl
+                                            }
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="block overflow-hidden rounded-lg border border-neutral-700/50 bg-neutral-900/40"
                                         >
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img
-                                                src={att.sourceUrl}
+                                                src={
+                                                    att.storedUrl ??
+                                                    att.sourceUrl
+                                                }
                                                 alt={
                                                     att.filename ??
                                                     'Announcement image'
@@ -352,7 +368,7 @@ export default function AnnouncementRow({
                             {otherAttachments.map((att) => (
                                 <li key={att.id}>
                                     <a
-                                        href={att.sourceUrl}
+                                        href={att.storedUrl ?? att.sourceUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-brand-400 hover:text-brand-300 underline-offset-2 hover:underline"

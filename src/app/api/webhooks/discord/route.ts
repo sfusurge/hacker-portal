@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { databaseClient } from '@/db/client';
+import { rehostDiscordAttachmentIfEnabled } from '@/lib/discord/attachmentRehost';
 import {
     announcementAttachments,
     announcementChannelMappings,
@@ -132,16 +133,55 @@ async function findAnnouncementForDelete(
 }
 
 function buildAttachmentRows(announcementId: number, payload: IngestPayload) {
-    return payload.attachments.map((attachment, index) => ({
-        announcementId,
-        sourceUrl: attachment.url,
-        filename: attachment.filename ?? null,
-        contentType: attachment.contentType ?? null,
-        sizeBytes: attachment.sizeBytes ?? null,
-        width: attachment.width ?? null,
-        height: attachment.height ?? null,
-        position: index,
-    }));
+    return Promise.all(
+        payload.attachments.map(async (attachment, index) => {
+            let rehosted: Awaited<
+                ReturnType<typeof rehostDiscordAttachmentIfEnabled>
+            > = null;
+
+            try {
+                rehosted = await rehostDiscordAttachmentIfEnabled({
+                    sourceUrl: attachment.url,
+                    guildId: payload.guildId,
+                    channelId: payload.channelId,
+                    messageId: payload.messageId,
+                    position: index,
+                    filename: attachment.filename,
+                    contentType: attachment.contentType,
+                });
+            } catch (error) {
+                ingestLog({
+                    method: 'POST',
+                    outcome: 'attachment_rehost_failed',
+                    messageId: payload.messageId,
+                    channelId: payload.channelId,
+                    guildId: payload.guildId,
+                    position: index,
+                    errorName:
+                        error instanceof Error ? error.name : 'unknown_error',
+                    errorMessage:
+                        error instanceof Error
+                            ? error.message
+                            : 'unknown error while rehosting attachment',
+                });
+            }
+
+            return {
+                announcementId,
+                sourceUrl: attachment.url,
+                storedUrl: rehosted?.storedUrl ?? null,
+                storageProvider: rehosted?.storageProvider ?? null,
+                storageKey: rehosted?.storageKey ?? null,
+                uploadedAt: rehosted?.uploadedAt ?? null,
+                filename: attachment.filename ?? null,
+                contentType: attachment.contentType ?? null,
+                sizeBytes: attachment.sizeBytes ?? null,
+                width: attachment.width ?? null,
+                height: attachment.height ?? null,
+                position: index,
+            };
+        })
+    );
 }
 
 export async function POST(request: NextRequest) {
@@ -262,6 +302,7 @@ export async function POST(request: NextRequest) {
                     .update(announcements)
                     .set({
                         content: payload.content,
+                        mentionMetadata: payload.mentions,
                         lastEditedAt: editedAt,
                         rawPayload: payload.rawPayload ?? null,
                         updatedAt: new Date(),
@@ -275,9 +316,13 @@ export async function POST(request: NextRequest) {
                     );
 
                 if (payload.attachments.length > 0) {
+                    const attachmentRows = await buildAttachmentRows(
+                        existing.id,
+                        payload
+                    );
                     await tx
                         .insert(announcementAttachments)
-                        .values(buildAttachmentRows(existing.id, payload));
+                        .values(attachmentRows);
                 }
             });
 
@@ -357,6 +402,7 @@ export async function POST(request: NextRequest) {
                     sourceAuthorId: payload.authorId,
                     idempotencyKey,
                     content: payload.content,
+                    mentionMetadata: payload.mentions,
                     rawPayload: payload.rawPayload ?? null,
                     sourceTimestamp: new Date(payload.timestamp),
                     lastEditedAt: editedAt,
@@ -367,9 +413,11 @@ export async function POST(request: NextRequest) {
                 });
 
             if (payload.attachments.length > 0) {
-                await tx
-                    .insert(announcementAttachments)
-                    .values(buildAttachmentRows(row.id, payload));
+                const attachmentRows = await buildAttachmentRows(
+                    row.id,
+                    payload
+                );
+                await tx.insert(announcementAttachments).values(attachmentRows);
             }
 
             return row;
