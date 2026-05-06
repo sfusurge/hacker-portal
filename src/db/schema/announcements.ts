@@ -73,7 +73,6 @@ export const announcementAttachments = pgTable(
         announcementId: integer('announcement_id')
             .notNull()
             .references(() => announcements.id, { onDelete: 'cascade' }),
-        // TODO: Discord CDN URLs expire after a while so probably find a way to mirror to another CDN or something
         sourceUrl: text('source_url').notNull(),
         storedUrl: text('stored_url'),
         storageProvider: varchar('storage_provider', { length: 32 }),
