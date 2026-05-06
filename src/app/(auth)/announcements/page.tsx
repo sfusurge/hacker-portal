@@ -224,6 +224,29 @@ export default function AnnouncementsPage() {
         };
     }, [flashId]);
 
+    // mount, read id from hash and scroll to the matching announcement.
+    const hasScrolledToHashRef = useRef(false);
+    useEffect(() => {
+        if (hasScrolledToHashRef.current) return;
+        const hash = window.location.hash;
+        if (!hash || hash === '#') return;
+        const id = parseInt(hash.slice(1), 10);
+        if (isNaN(id)) return;
+        // wait for list to render, then scroll
+        const timer = setTimeout(() => {
+            const container = feedScrollRef.current;
+            const el = (container ?? document).querySelector<HTMLElement>(
+                `[data-announcement-id="${id}"]`
+            );
+            if (el) {
+                hasScrolledToHashRef.current = true;
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setFlashId(id);
+            }
+        }, 100);
+        return () => clearTimeout(timer);
+    }, [sortedDesc]);
+
     const trimmedQuery = query.trim();
     const isSearching = trimmedQuery.length > 0;
 

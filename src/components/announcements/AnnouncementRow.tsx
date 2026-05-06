@@ -14,6 +14,7 @@ import {
 import { useRemarkSync } from 'react-remark';
 import dayjs from 'dayjs';
 import { cn } from '@/lib/utils';
+import { useWindowSize } from '@/lib/useWindowSize';
 import { Button } from '@/components/ui/button';
 import type { AnnouncementWithAttachments } from '@/app/(auth)/ClientContext';
 
@@ -150,6 +151,8 @@ export default function AnnouncementRow({
     const [expanded, setExpanded] = useState(false);
     const [hasOverflow, setHasOverflow] = useState(false);
     const [jumpRevealed, setJumpRevealed] = useState(false);
+    const [windowWidth] = useWindowSize();
+    const isMobileOrTablet = windowWidth < 1024;
     const bodyRef = useRef<HTMLDivElement>(null);
     const rawRenderedBody = useRemarkSync(trimmed || '');
     const renderedBody = searchQuery
@@ -181,6 +184,7 @@ export default function AnnouncementRow({
 
     return (
         <li
+            id={String(a.id)}
             data-announcement-id={a.id}
             className={cn(
                 'group scroll-mt-24 list-none border-y border-neutral-600/30 p-1 pl-2 @[920px]:scroll-mt-0',
@@ -198,7 +202,11 @@ export default function AnnouncementRow({
                     onJump
                         ? (e) => {
                               e.stopPropagation();
-                              setJumpRevealed(true);
+                              if (isMobileOrTablet) {
+                                  onJump(a.id);
+                              } else {
+                                  setJumpRevealed(true);
+                              }
                           }
                         : undefined
                 }
