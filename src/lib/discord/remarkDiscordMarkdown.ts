@@ -1,17 +1,24 @@
 const UNDERLINE_RE = /__([^]*?)__/g;
 const STRIKE_RE = /~~([\s\S]+?)~~/g;
+// Discord allows ** text **, **text **, and ** text** as bold; CommonMark does not.
+const LOOSE_BOLD_RE = /\*\* ?([^\n*]+?) ?\*\*/g;
 
 /**
  * Preprocess Discord content string BEFORE passing to useRemarkSync.
  * - Normalises line endings
  * - Wraps ATX heading lines with blank lines so remark treats them as headings
  * - Ensures -# subtext lines get their own paragraph
+ * - Converts Discord-lenient `** text **` to strict `**text**`
  * - Converts __text__ → [text](discord-u:) (MentionAnchor renders as <u>)
  */
 export function preprocessDiscordMarkdown(content: string): string {
     let result = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     result = result.replace(/^(#{1,3} .+)$/gm, '\n$1\n');
     result = result.replace(/^(-# .+)$/gm, '\n$1');
+    result = result.replace(
+        LOOSE_BOLD_RE,
+        (_, inner: string) => `**${inner.trim()}**`
+    );
     result = result.replace(UNDERLINE_RE, (_, inner: string) => {
         const safe = inner.replace(/]/g, '\\]');
         return `[${safe}](discord-u:)`;

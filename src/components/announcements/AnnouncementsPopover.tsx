@@ -12,6 +12,7 @@ import {
     preprocessDiscordMarkdown,
 } from '@/lib/discord/remarkDiscordMarkdown';
 import { renderDiscordContentMentions } from '@/lib/discord/mentions';
+import { eventDiscordUrlForStatus } from '@/lib/eventDiscord';
 import type { ReactNode } from 'react';
 import dayjs from 'dayjs';
 import { cn } from '@/lib/utils';
@@ -318,6 +319,10 @@ export function AnnouncementsPopoverContent({
     const displayName = hackathon?.hackathonName || 'Announcements';
     const iconSrc: string | undefined =
         hackathon?.eventPagePayload?.iconSrc ?? undefined;
+    const discordHref = eventDiscordUrlForStatus(
+        undefined,
+        hackathon?.eventPagePayload
+    );
 
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
         trpc.announcements.getAnnouncements.useInfiniteQuery(
@@ -412,8 +417,22 @@ export function AnnouncementsPopoverContent({
 
             {/* List */}
             {sortedDesc.length === 0 ? (
-                <div className="py-8 text-center text-sm text-white/50">
-                    No announcements yet
+                <div className="flex h-[calc(70dvh-150px)] flex-col items-center justify-center gap-2 px-6 py-16 text-center">
+                    <p className="font-semibold text-white">
+                        You have no announcements!
+                    </p>
+                    <p className="text-sm text-white/60">
+                        <Link
+                            href={discordHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-brand-400 hover:text-brand-300"
+                            onClick={onClose}
+                        >
+                            Join our Discord server
+                        </Link>{' '}
+                        to stay updated on our events.
+                    </p>
                 </div>
             ) : (
                 <ul

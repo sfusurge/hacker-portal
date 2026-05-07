@@ -39,8 +39,8 @@ import type { AnnouncementWithAttachments } from '@/db/schema/announcements';
 const ANNOUNCEMENT_BREAKPOINT_PX = 920;
 
 const FEED_BP = {
-    layout: '@announcements:mt-8 mt-4 mb-4 @announcements:mb-0 @announcements:min-h-0 @announcements:flex-1 @announcements:grid @announcements:grid-cols-12 @announcements:items-stretch @announcements:gap-8 flex flex-col gap-6',
-    feedCol: '@announcements:col-span-8 @announcements:min-h-0',
+    layout: '@announcements:mt-8 mt-4 mb-4 @announcements:mb-0 @announcements:min-h-0 @announcements:flex-1 @announcements:grid @announcements:grid-cols-12 @announcements:items-stretch @announcements:gap-8 flex flex-col gap-6 h-full',
+    feedCol: '@announcements:col-span-8 @announcements:min-h-0 ',
     cardClip: '@announcements:overflow-hidden',
     feedCardBody: '@announcements:min-h-0 @announcements:overflow-hidden pt-0!',
     feedScroll:
@@ -330,7 +330,7 @@ export default function AnnouncementsPage() {
 
     return (
         <>
-            <div className="@announcements:h-full @container flex min-h-0 flex-col">
+            <div className="@container flex h-full min-h-0 flex-col">
                 <PageHeader title="Announcements" className="hidden md:flex" />
 
                 <div className={`${FEED_BP.layout}`}>
