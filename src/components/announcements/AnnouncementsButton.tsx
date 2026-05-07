@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { MegaphoneIcon } from '@heroicons/react/24/solid';
 import { useAtomValue, useSetAtom } from 'jotai';
 import {
     announcementsAtom,
+    hackathonAtom,
     unreadCountAtom,
     unreadLabelAtom,
     lastSeenAtAtom,
@@ -24,19 +25,43 @@ export function AnnouncementsButton({ className }: { className?: string }) {
     const [open, setOpen] = useState(false);
     const unreadCount = useAtomValue(unreadCountAtom);
     const unreadLabel = useAtomValue(unreadLabelAtom);
-    const announcements = useAtomValue(announcementsAtom);
+    const hackathon = useAtomValue(hackathonAtom);
+    const fallbackAnnouncements = useAtomValue(announcementsAtom);
     const setLastSeenAt = useSetAtom(lastSeenAtAtom);
     const markSeen = trpc.announcements.markSeen.useMutation();
 
+    const { data } = trpc.announcements.getAnnouncements.useInfiniteQuery(
+        { hackathonId: hackathon?.id ?? 0, limit: 10 },
+        {
+            getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+            initialCursor: undefined,
+            enabled: !!hackathon?.id,
+        }
+    );
+
+    const markAllSeenUpToLatest = useCallback(() => {
+        const fromQuery = data?.pages.flatMap((p) => p.items) ?? [];
+        const list = fromQuery.length > 0 ? fromQuery : fallbackAnnouncements;
+        const ts =
+            list.length > 0
+                ? new Date(
+                      Math.max(...list.map((a) => +new Date(a.sourceTimestamp)))
+                  )
+                : new Date();
+        setLastSeenAt(ts);
+        markSeen.mutate({ lastSeenAt: ts });
+    }, [data, fallbackAnnouncements, markSeen, setLastSeenAt]);
+
     function handleOpenChange(next: boolean) {
         if (!next && open) {
-            // popover closes, mark everything as read up to the latest event
-            const latest = announcements[0];
-            const ts = latest ? new Date(latest.sourceTimestamp) : new Date();
-            setLastSeenAt(ts);
-            markSeen.mutate({ lastSeenAt: ts });
+            markAllSeenUpToLatest();
         }
         setOpen(next);
+    }
+
+    function closePopover() {
+        markAllSeenUpToLatest();
+        setOpen(false);
     }
 
     return (
@@ -55,7 +80,12 @@ export function AnnouncementsButton({ className }: { className?: string }) {
                         className
                     )}
                 >
-                    <MegaphoneIcon className="h-6 w-6" />
+                    <MegaphoneIcon
+                        className={cn(
+                            'h-6 w-6 transition-colors duration-150',
+                            unreadCount > 0 && 'text-brand-300'
+                        )}
+                    />
                     {unreadCount > 0 && (
                         <span className="bg-danger-500 absolute -top-2 -right-2 flex h-6 min-w-6 items-center justify-center rounded-full px-0.5 text-xs leading-none font-bold text-white">
                             {unreadLabel}
@@ -67,9 +97,9 @@ export function AnnouncementsButton({ className }: { className?: string }) {
                 side="bottom"
                 align="end"
                 alignOffset={-15}
-                className="z-200 w-[583px] max-w-[min(583px,calc(100vw-2rem))] overflow-hidden p-0 backdrop-blur-3xl"
+                className="shadow-4xl z-200 w-[583px] max-w-[min(583px,calc(100vw-2rem))] overflow-hidden p-0"
             >
-                <AnnouncementsPopoverContent onClose={() => setOpen(false)} />
+                <AnnouncementsPopoverContent onClose={closePopover} />
                 <PopoverPrimitive.Arrow className="fill-neutral-850 shadow-lg" />
             </PopoverContent>
         </Popover>

@@ -173,6 +173,9 @@
     --tracking-wider: 0.01em;
     --tracking-widest: 0.015em;
 
+    /* Larger than default --shadow-2xl (announcements popover) */
+    --shadow-4xl: 0 35px 60px -15px rgb(0 0 0 / 0.35);
+
     /* Keyframes for caret blinking animation */
     @keyframes caret-blink {
         0%,

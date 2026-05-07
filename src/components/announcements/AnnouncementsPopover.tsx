@@ -256,7 +256,10 @@ function MiniRow({
                         </div>
                         {imageAttachment && !expanded && (
                             <a
-                                href={imageAttachment.sourceUrl}
+                                href={
+                                    imageAttachment.storedUrl ??
+                                    imageAttachment.sourceUrl
+                                }
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="mt-0.5 block shrink-0 overflow-hidden rounded-lg border border-neutral-700/50 bg-neutral-900/40"
@@ -267,7 +270,10 @@ function MiniRow({
                             >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
-                                    src={imageAttachment.sourceUrl}
+                                    src={
+                                        imageAttachment.storedUrl ??
+                                        imageAttachment.sourceUrl
+                                    }
                                     alt={
                                         imageAttachment.filename ??
                                         'Announcement image'
@@ -280,14 +286,20 @@ function MiniRow({
                     </div>
                     {imageAttachment && expanded && (
                         <a
-                            href={imageAttachment.sourceUrl}
+                            href={
+                                imageAttachment.storedUrl ??
+                                imageAttachment.sourceUrl
+                            }
                             target="_blank"
                             rel="noopener noreferrer"
                             className="mt-2 block overflow-hidden rounded-lg border border-neutral-700/50 bg-neutral-900/40"
                         >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
-                                src={imageAttachment.sourceUrl}
+                                src={
+                                    imageAttachment.storedUrl ??
+                                    imageAttachment.sourceUrl
+                                }
                                 alt={
                                     imageAttachment.filename ??
                                     'Announcement image'
