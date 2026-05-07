@@ -1,8 +1,11 @@
 import { cache } from 'react';
 import { createCaller } from '@/server/appRouter';
 
-/** Fetches announcements for the given hackathon, deduped per request via React cache. */
 export const getInitialAnnouncements = cache(async (hackathonId: number) => {
     const trpc = createCaller({});
-    return trpc.announcements.getAnnouncements({ hackathonId });
+    const result = await trpc.announcements.getAnnouncements({
+        hackathonId,
+        limit: 10,
+    });
+    return { items: result.items, hasMore: result.nextCursor !== null };
 });

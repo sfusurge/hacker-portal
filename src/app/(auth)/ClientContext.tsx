@@ -12,12 +12,26 @@ import dayjs from 'dayjs';
 import { atom } from 'jotai';
 import { useHydrateAtoms } from 'jotai/utils';
 import { ReactNode } from 'react';
+import { DynamicTitle } from '@/components/DynamicTitle';
 
 export type { AnnouncementWithAttachments };
 
 export type AnnouncementsList = AnnouncementWithAttachments[];
 
 export const announcementsAtom = atom<AnnouncementsList>([]);
+export const lastSeenAtAtom = atom<Date | null>(null);
+export const unreadCountAtom = atom((get) => {
+    const lastSeenAt = get(lastSeenAtAtom);
+    const announcements = get(announcementsAtom);
+    if (!lastSeenAt) return announcements.length;
+    return announcements.filter((a) => new Date(a.sourceTimestamp) > lastSeenAt)
+        .length;
+});
+export const unreadLabelAtom = atom((get) => {
+    const count = get(unreadCountAtom);
+    if (count >= 9) return '9+';
+    return count > 0 ? String(count) : '';
+});
 
 export type UserDataType = Exclude<UserData, undefined>;
 /**
@@ -91,18 +105,26 @@ export function ClientContext({
     userData,
     hackathonData,
     initialAnnouncements,
+    initialLastSeenAt,
     children,
 }: {
     userData: UserData;
     hackathonData: DbHackathonType;
     initialAnnouncements: AnnouncementsList;
+    initialLastSeenAt: Date | null;
     children: ReactNode;
 }) {
     useHydrateAtoms([
         [userInfoAtom, userData!],
         [hackathonAtom, DeserializeHackathonData(hackathonData)],
         [announcementsAtom, initialAnnouncements],
+        [lastSeenAtAtom, initialLastSeenAt],
     ]);
 
-    return <>{children}</>;
+    return (
+        <>
+            <DynamicTitle />
+            {children}
+        </>
+    );
 }

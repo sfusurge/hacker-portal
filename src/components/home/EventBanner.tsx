@@ -7,6 +7,7 @@ import {
     MapPinIcon,
     UserIcon,
 } from '@heroicons/react/24/solid';
+import { AnnouncementsButton } from '@/components/announcements/AnnouncementsButton';
 
 const DEFAULT_TARGET_AUDIENCE = 'Hackers of all levels';
 
@@ -158,6 +159,8 @@ export default function EventHeroBanner({
                             </h1>
                             <p className="text-white/60">{tagline}</p>
                         </div>
+
+                        <AnnouncementsButton className="ml-auto" />
                     </div>
                 </CardContent>
             </div>

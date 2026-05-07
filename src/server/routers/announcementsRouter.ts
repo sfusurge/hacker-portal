@@ -3,36 +3,59 @@ import { publicProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
 import {
     announcementAttachments,
+    announcementChannelMappings,
     announcements,
 } from '@/db/schema/announcements';
-import { asc, desc, eq, inArray, and } from 'drizzle-orm';
+import { user } from '@/db/schema/users/users';
+import { asc, desc, eq, inArray, and, lt, getTableColumns } from 'drizzle-orm';
 import { InternalServerError } from '../exceptions';
+import { getUserData } from './usersRouter';
 
 export const announcementsRouter = router({
     getAnnouncements: publicProcedure
         .input(
             z.object({
                 hackathonId: z.number(),
+                limit: z.number().int().min(1).max(100).default(10),
+                cursor: z.number().int().optional(),
             })
         )
         .query(async ({ input }) => {
             try {
                 const rows = await databaseClient
-                    .select()
+                    .select({
+                        ...getTableColumns(announcements),
+                        channelLabel: announcementChannelMappings.label,
+                    })
                     .from(announcements)
+                    .leftJoin(
+                        announcementChannelMappings,
+                        eq(
+                            announcements.sourceChannelId,
+                            announcementChannelMappings.discordChannelId
+                        )
+                    )
                     .where(
                         and(
                             eq(announcements.hackathonId, input.hackathonId),
-                            eq(announcements.isArchived, false)
+                            eq(announcements.isArchived, false),
+                            input.cursor !== undefined
+                                ? lt(announcements.id, input.cursor)
+                                : undefined
                         )
                     )
-                    .orderBy(desc(announcements.sourceTimestamp));
+                    .orderBy(desc(announcements.id))
+                    .limit(input.limit + 1);
 
-                if (rows.length === 0) {
-                    return [];
+                const hasMore = rows.length > input.limit;
+                const items = hasMore ? rows.slice(0, input.limit) : rows;
+                const nextCursor = hasMore ? items[items.length - 1]!.id : null;
+
+                if (items.length === 0) {
+                    return { items: [], nextCursor: null };
                 }
 
-                const announcementIds = rows.map((row) => row.id);
+                const announcementIds = items.map((row) => row.id);
 
                 const attachmentRows = await databaseClient
                     .select()
@@ -64,13 +87,28 @@ export const announcementsRouter = router({
                     );
                 }
 
-                return rows.map((row) => ({
-                    ...row,
-                    attachments: attachmentsByAnnouncement.get(row.id) ?? [],
-                }));
+                return {
+                    items: items.map((row) => ({
+                        ...row,
+                        attachments:
+                            attachmentsByAnnouncement.get(row.id) ?? [],
+                    })),
+                    nextCursor,
+                };
             } catch (err) {
                 console.error('Error fetching announcements:', err);
                 throw new InternalServerError('Failed to fetch announcements');
             }
+        }),
+
+    markSeen: publicProcedure
+        .input(z.object({ lastSeenAt: z.coerce.date() }))
+        .mutation(async ({ input }) => {
+            const userData = await getUserData();
+            if (!userData) return;
+            await databaseClient
+                .update(user)
+                .set({ lastSeenAnnouncementsAt: input.lastSeenAt })
+                .where(eq(user.id, userData.id));
         }),
 });

@@ -26,6 +26,7 @@ interface NavLinkProps {
     collapsed?: boolean;
     disabled?: boolean;
     dropdownItems?: DropdownItem[];
+    badge?: string;
 }
 
 export const navLinkVariants = cva(
@@ -64,6 +65,7 @@ export function NavLink({
     active: isActive,
     collapsed,
     dropdownItems,
+    badge,
     ...props
 }: ComponentProps<'a'> & NavLinkProps & VariantProps<typeof navLinkVariants>) {
     const pathname = usePathname();
@@ -72,7 +74,7 @@ export function NavLink({
     const linkContent = (
         <>
             {icon && iconAlt && (
-                <div className="flex h-6 w-6 items-center justify-center">
+                <div className="relative flex h-6 w-6 items-center justify-center">
                     {typeof icon === 'string' ? (
                         <img
                             src={icon}
@@ -83,6 +85,11 @@ export function NavLink({
                         <div className="h-6 w-6 [&>svg]:h-full [&>svg]:w-full">
                             {icon}
                         </div>
+                    )}
+                    {badge && (
+                        <span className="bg-danger-500 absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-0.5 text-[10px] leading-none font-bold text-white">
+                            {badge}
+                        </span>
                     )}
                 </div>
             )}

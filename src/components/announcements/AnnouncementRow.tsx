@@ -12,11 +12,16 @@ import {
     type ReactNode,
 } from 'react';
 import { useRemarkSync } from 'react-remark';
+import {
+    remarkDiscordMarkdown,
+    preprocessDiscordMarkdown,
+} from '@/lib/discord/remarkDiscordMarkdown';
 import dayjs from 'dayjs';
 import { cn } from '@/lib/utils';
+import { useWindowSize } from '@/lib/useWindowSize';
 import { Button } from '@/components/ui/button';
 import type { AnnouncementWithAttachments } from '@/app/(auth)/ClientContext';
-import { normalizeDiscordContentMentions } from '@/lib/discord/mentions';
+import { renderDiscordContentMentions } from '@/lib/discord/mentions';
 
 // max # of image attachments rendered
 export const MAX_IMAGES_PER_ANNOUNCEMENT = 2;
@@ -94,6 +99,42 @@ function highlightTree(node: ReactNode, query: string): ReactNode {
     return node;
 }
 
+function MentionAnchor({
+    href,
+    children,
+}: {
+    href?: string;
+    children?: ReactNode;
+}) {
+    if (href?.startsWith('mention:')) {
+        return (
+            <span className="bg-brand-500/20 text-brand-300 inline rounded px-1 py-0.5 text-[0.9em] font-medium">
+                {children}
+            </span>
+        );
+    }
+    if (href?.startsWith('discord-u:')) {
+        return <u className="underline underline-offset-2">{children}</u>;
+    }
+    return (
+        <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-brand-400 hover:text-brand-300 underline underline-offset-2"
+        >
+            {children}
+        </a>
+    );
+}
+
+const REMARK_OPTIONS = {
+    remarkPlugins: [remarkDiscordMarkdown],
+    rehypeReactOptions: {
+        components: { a: MentionAnchor },
+    },
+};
+
 // Tailwind classes shared by the markdown body in collapsed and expanded states.
 const ANNOUNCEMENT_BODY_CLASSES = [
     'text-sm leading-relaxed text-white/85',
@@ -110,6 +151,9 @@ const ANNOUNCEMENT_BODY_CLASSES = [
     '[&_hr]:my-3 [&_hr]:border-neutral-700/60',
     '[&_code]:rounded [&_code]:bg-neutral-900/80 [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-[12px]',
     '[&_pre]:my-2 [&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:bg-neutral-900/80 [&_pre]:p-3 [&_pre]:text-[12px]',
+    '[&_del]:line-through [&_del]:opacity-70',
+    '[&_u]:underline [&_u]:underline-offset-2',
+    '[&_small]:mt-1 [&_small]:block [&_small]:text-[0.75em] [&_small]:text-white/50',
 ];
 
 export type AnnouncementRowProps = {
@@ -118,18 +162,21 @@ export type AnnouncementRowProps = {
     iconSrc?: string;
     searchQuery?: string;
     onJump?: (id: number) => void;
+    onRead?: () => void;
     flash?: boolean;
+    isUnread?: boolean;
+    hideBorderTop?: boolean;
+    hideBorderBottom?: boolean;
 };
 
 /**
  * Discord-style announcement row:
  * behaviour:
- * - Body markdown is clamped to 4 lines while collapsed; "Show more…" appears
- *   when text overflows OR there are images (clicking expands them).
- * - Images are capped at {@link MAX_IMAGES_PER_ANNOUNCEMENT}. While collapsed
- *   they sit inline as small thumbnails next to the body and act as expand
- *   triggers; while expanded they drop below the body at full size and become
- *   normal links to the source asset.
+ * body markdown clamped to 4 lines while collapsed, "Show more..."
+ * text overflow/images click to expnad
+ * images are capped at {@link MAX_IMAGES_PER_ANNOUNCEMENT}.
+ * collapsed: text + images side by side.
+ * expanded: text + images stacked.
  */
 export default function AnnouncementRow({
     announcement: a,
@@ -137,19 +184,25 @@ export default function AnnouncementRow({
     iconSrc,
     searchQuery,
     onJump,
+    onRead,
     flash,
+    isUnread,
+    hideBorderTop,
+    hideBorderBottom,
 }: AnnouncementRowProps) {
     const sourceTime = toSourceDate(a.sourceTimestamp);
-    const normalizedContent = normalizeDiscordContentMentions(
+    const renderedContent = renderDiscordContentMentions(
         a.content,
         a.mentionMetadata
     );
-    const trimmed = normalizedContent.trim();
+    const trimmed = preprocessDiscordMarkdown(renderedContent.trim());
     const [expanded, setExpanded] = useState(false);
     const [hasOverflow, setHasOverflow] = useState(false);
     const [jumpRevealed, setJumpRevealed] = useState(false);
+    const [windowWidth] = useWindowSize();
+    const isMobileOrTablet = windowWidth < 1024;
     const bodyRef = useRef<HTMLDivElement>(null);
-    const rawRenderedBody = useRemarkSync(trimmed || '');
+    const rawRenderedBody = useRemarkSync(trimmed || '', REMARK_OPTIONS);
     const renderedBody = searchQuery
         ? highlightTree(rawRenderedBody, searchQuery)
         : rawRenderedBody;
@@ -179,8 +232,13 @@ export default function AnnouncementRow({
 
     return (
         <li
+            id={String(a.id)}
             data-announcement-id={a.id}
-            className="group scroll-mt-24 list-none border-y border-neutral-600/30 p-1 pl-2 @[920px]:scroll-mt-0"
+            className={cn(
+                'group scroll-mt-24 list-none border-y border-neutral-600/30 p-1 pl-2 @[920px]:scroll-mt-0',
+                hideBorderTop && 'border-t-0',
+                hideBorderBottom && 'border-b-0'
+            )}
         >
             <div
                 className={cn(
@@ -192,7 +250,11 @@ export default function AnnouncementRow({
                     onJump
                         ? (e) => {
                               e.stopPropagation();
-                              setJumpRevealed(true);
+                              if (isMobileOrTablet) {
+                                  onJump(a.id);
+                              } else {
+                                  setJumpRevealed(true);
+                              }
                           }
                         : undefined
                 }
@@ -214,6 +276,12 @@ export default function AnnouncementRow({
                     <span className="font-semibold text-white">
                         {displayName}
                     </span>
+                    {isUnread && (
+                        <span
+                            className="bg-danger-500 h-3 w-3 shrink-0 rounded-full"
+                            aria-label="Unread"
+                        />
+                    )}
                     <time
                         className="text-sm text-white/60"
                         dateTime={sourceTime.toISOString()}
@@ -294,6 +362,7 @@ export default function AnnouncementRow({
                                                     ) {
                                                         e.preventDefault();
                                                         setExpanded(true);
+                                                        onRead?.();
                                                     }
                                                 }}
                                             >
@@ -356,7 +425,10 @@ export default function AnnouncementRow({
                         {showToggle ? (
                             <button
                                 type="button"
-                                onClick={() => setExpanded((v) => !v)}
+                                onClick={() => {
+                                    setExpanded((v) => !v);
+                                    if (!expanded) onRead?.();
+                                }}
                                 className="text-brand-400 hover:text-brand-300 mt-2 text-sm underline-offset-2 hover:underline"
                             >
                                 {expanded ? 'Show less' : 'Show more…'}

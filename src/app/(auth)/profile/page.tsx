@@ -1,5 +1,6 @@
 import { getUserData } from '@/server/routers/usersRouter';
 import ProfileContent from './ProfileContent';
+import { PageHeader } from '@/components/PageHeader';
 
 export default async function ProfilePage() {
     const userData = await getUserData();
@@ -7,7 +8,7 @@ export default async function ProfilePage() {
     if (!userData) {
         return (
             <div className="flex flex-col gap-6 md:gap-8">
-                <h1 className="text-3xl font-semibold text-white">Profile</h1>
+                <PageHeader title="Account detail" />
                 <p className="text-white/60">User not found</p>
             </div>
         );
@@ -15,9 +16,7 @@ export default async function ProfilePage() {
 
     return (
         <div className="flex flex-col gap-6 md:gap-8">
-            <h1 className="text-3xl font-semibold text-white">
-                Account detail
-            </h1>
+            <PageHeader title="Account detail" />
             <ProfileContent userData={userData} />
         </div>
     );
