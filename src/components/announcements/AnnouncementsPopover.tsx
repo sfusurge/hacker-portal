@@ -7,6 +7,10 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { trpc } from '@/trpc/client';
 import { useRemarkSync } from 'react-remark';
+import {
+    remarkDiscordMarkdown,
+    preprocessDiscordMarkdown,
+} from '@/lib/discord/remarkDiscordMarkdown';
 import { renderDiscordContentMentions } from '@/lib/discord/mentions';
 import type { ReactNode } from 'react';
 import dayjs from 'dayjs';
@@ -37,6 +41,9 @@ const MINI_BODY_CLASSES = [
     '[&_ul]:list-disc [&_ul]:pl-4',
     '[&_ol]:list-decimal [&_ol]:pl-4',
     '[&_code]:rounded [&_code]:bg-neutral-900/80 [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-[11px]',
+    '[&_del]:line-through [&_del]:opacity-70',
+    '[&_u]:underline [&_u]:underline-offset-2',
+    '[&_small]:block [&_small]:mt-0.5 [&_small]:text-[0.75em] [&_small]:text-white/40',
 ].join(' ');
 
 function formatPopupTimestamp(date: Date): string {
@@ -59,6 +66,9 @@ function MentionAnchor({
             </span>
         );
     }
+    if (href?.startsWith('discord-u:')) {
+        return <u className="underline underline-offset-2">{children}</u>;
+    }
     return (
         <a
             href={href}
@@ -72,10 +82,11 @@ function MentionAnchor({
 }
 
 const MINI_REMARK_OPTIONS = {
+    remarkPlugins: [remarkDiscordMarkdown],
     rehypeReactOptions: {
         components: { a: MentionAnchor },
     },
-} as const;
+};
 
 function MiniBody({
     content,
@@ -85,7 +96,10 @@ function MiniBody({
     mentionMetadata: AnnouncementWithAttachments['mentionMetadata'];
 }) {
     const rendered = renderDiscordContentMentions(content, mentionMetadata);
-    const body = useRemarkSync(rendered.trim() || '', MINI_REMARK_OPTIONS);
+    const body = useRemarkSync(
+        preprocessDiscordMarkdown(rendered.trim()) || '',
+        MINI_REMARK_OPTIONS
+    );
     return <div className={MINI_BODY_CLASSES}>{body}</div>;
 }
 
