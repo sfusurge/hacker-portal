@@ -26,7 +26,7 @@ interface NavLinkProps {
     collapsed?: boolean;
     disabled?: boolean;
     dropdownItems?: DropdownItem[];
-    badge?: number;
+    badge?: string;
 }
 
 export const navLinkVariants = cva(
@@ -86,9 +86,9 @@ export function NavLink({
                             {icon}
                         </div>
                     )}
-                    {badge != null && badge > 0 && (
+                    {badge && (
                         <span className="bg-danger-500 absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-0.5 text-[10px] leading-none font-bold text-white">
-                            {badge > 99 ? '99+' : badge}
+                            {badge}
                         </span>
                     )}
                 </div>

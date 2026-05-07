@@ -136,7 +136,10 @@ export default function AnnouncementsPage() {
     const feedScrollRef = useRef<HTMLDivElement | null>(null);
     const [isAtTop, setIsAtTop] = useState(true);
     const [isFarFromTop, setIsFarFromTop] = useState(false);
-    const [seenCount, setSeenCount] = useState(announcements.length);
+    // track timestamp seen while at top
+    const seenNewestTimestampRef = useRef<number>(
+        sortedDesc[0] ? +new Date(sortedDesc[0].sourceTimestamp) : Date.now()
+    );
 
     // listens on both inner feed div and outer main element
     const getScrollEl = useCallback((): HTMLElement | null => {
@@ -193,7 +196,7 @@ export default function AnnouncementsPage() {
                 }
             },
             {
-                root: feedScrollRef.current ?? null,
+                root: null,
                 rootMargin: '400px',
             }
         );
@@ -225,12 +228,12 @@ export default function AnnouncementsPage() {
     }, [getScrollEl]);
 
     useEffect(() => {
-        if (isAtTop) {
-            setSeenCount(announcements.length);
-        } else {
-            setSeenCount((prev) => Math.min(prev, announcements.length));
+        if (isAtTop && sortedDesc[0]) {
+            seenNewestTimestampRef.current = +new Date(
+                sortedDesc[0].sourceTimestamp
+            );
         }
-    }, [isAtTop, announcements.length]);
+    }, [isAtTop, sortedDesc]);
 
     // mark all as read when visit page
     useEffect(() => {
@@ -248,7 +251,10 @@ export default function AnnouncementsPage() {
 
     const newCount = isAtTop
         ? 0
-        : Math.max(0, announcements.length - seenCount);
+        : sortedDesc.filter(
+              (a) =>
+                  +new Date(a.sourceTimestamp) > seenNewestTimestampRef.current
+          ).length;
 
     // surface the pill when there are unseen items (any scroll distance) OR when the user has scrolled noticeably far from the newest content.
     const showJumpPill = newCount > 0 || isFarFromTop;
@@ -261,7 +267,10 @@ export default function AnnouncementsPage() {
     const jumpToLatest = useCallback(() => {
         const el = getScrollEl();
         el?.scrollTo({ top: 0, behavior: 'smooth' });
-        setSeenCount(announcements.length);
+        if (sortedDesc[0])
+            seenNewestTimestampRef.current = +new Date(
+                sortedDesc[0].sourceTimestamp
+            );
         setIsAtTop(true);
         setIsFarFromTop(false);
     }, [announcements.length, getScrollEl]);
@@ -507,20 +516,17 @@ export default function AnnouncementsPage() {
                                         </ul>
                                         <div
                                             ref={sentinelRef}
-                                            className="@announcements:mb-24 mb-36 flex min-h-20 items-center justify-center"
+                                            className="@announcements:mb-24 mb-36 flex items-center justify-center pt-10"
                                         >
-                                            {isFetchingNextPage && (
-                                                <p className="text-sm text-white/40">
+                                            {hasNextPage ? (
+                                                <p className="text-sm text-white/60">
                                                     Loading more...
                                                 </p>
+                                            ) : (
+                                                <p className="text-xl font-semibold text-white/60">
+                                                    You&apos;ve reached the end!
+                                                </p>
                                             )}
-                                            {!isFetchingNextPage &&
-                                                !hasNextPage && (
-                                                    <p className="text-xl font-semibold text-white/60">
-                                                        You&apos;ve reached the
-                                                        end!
-                                                    </p>
-                                                )}
                                         </div>
                                     </div>
                                 )}

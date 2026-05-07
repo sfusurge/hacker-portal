@@ -433,12 +433,11 @@ export function AnnouncementsPopoverContent({
                         ref={sentinelRef}
                         className="flex min-h-12 items-center justify-center border-t border-neutral-600/30"
                     >
-                        {isFetchingNextPage && (
+                        {hasNextPage ? (
                             <p className="text-sm text-white/40">
                                 Loading more...
                             </p>
-                        )}
-                        {!isFetchingNextPage && !hasNextPage && (
+                        ) : (
                             <p className="py-10 font-semibold text-white/30">
                                 You&apos;ve reached the end!
                             </p>
