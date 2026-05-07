@@ -35,6 +35,9 @@ export const announcements = pgTable(
         rawPayload: jsonb('raw_payload')
             .$type<Record<string, unknown> | null>()
             .default(null),
+        mentionMetadata: jsonb('mention_metadata')
+            .$type<DiscordMentionMetadata | null>()
+            .default(null),
         sourceTimestamp: timestamp('source_timestamp', {
             mode: 'date',
             withTimezone: true,
@@ -70,8 +73,14 @@ export const announcementAttachments = pgTable(
         announcementId: integer('announcement_id')
             .notNull()
             .references(() => announcements.id, { onDelete: 'cascade' }),
-        // TODO: Discord CDN URLs expire after a while so probably find a way to mirror to another CDN or something
         sourceUrl: text('source_url').notNull(),
+        storedUrl: text('stored_url'),
+        storageProvider: varchar('storage_provider', { length: 32 }),
+        storageKey: text('storage_key'),
+        uploadedAt: timestamp('uploaded_at', {
+            mode: 'date',
+            withTimezone: true,
+        }),
         filename: varchar('filename', { length: 256 }),
         contentType: varchar('content_type', { length: 128 }),
         sizeBytes: integer('size_bytes'),
@@ -120,6 +129,30 @@ export const ingestDiscordAttachmentSchema = z.object({
     height: z.number().int().nonnegative().nullable().optional(),
 });
 
+export const discordMentionUserSchema = z.object({
+    displayName: z.string().min(1),
+    username: z.string().min(1),
+});
+
+export const discordMentionRoleSchema = z.object({
+    name: z.string().min(1),
+});
+
+export const discordMentionChannelSchema = z.object({
+    name: z.string().min(1),
+    type: z.number().int(),
+});
+
+export const discordMentionMetadataSchema = z.object({
+    users: z.record(z.string().min(1), discordMentionUserSchema),
+    roles: z.record(z.string().min(1), discordMentionRoleSchema),
+    channels: z.record(z.string().min(1), discordMentionChannelSchema),
+});
+
+export type DiscordMentionMetadata = z.infer<
+    typeof discordMentionMetadataSchema
+>;
+
 export const ingestDiscordAnnouncementSchema = z
     .object({
         channelId: z.string().min(1),
@@ -137,6 +170,9 @@ export const ingestDiscordAnnouncementSchema = z
             .array(ingestDiscordAttachmentSchema)
             .optional()
             .default([]),
+        mentions: discordMentionMetadataSchema
+            .optional()
+            .default({ users: {}, roles: {}, channels: {} }),
         idempotencyKey: z.string().min(1).optional(),
         rawPayload: z.record(z.unknown()).optional(),
     })

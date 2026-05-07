@@ -17,6 +17,10 @@ import { Input } from '@/components/ui/input/input';
 import { ToastWithButton } from '@/components/ui/ToastWithButton';
 import AnnouncementRow from '@/components/announcements/AnnouncementRow';
 import { PageHeader } from '@/components/PageHeader';
+import {
+    mentionDisplaySearchText,
+    normalizeDiscordContentMentions,
+} from '@/lib/discord/mentions';
 import { eventDiscordUrlForStatus } from '@/lib/eventDiscord';
 import { useWindowSize } from '@/lib/useWindowSize';
 import { trpc } from '@/trpc/client';
@@ -29,6 +33,7 @@ import {
     useRef,
     useState,
 } from 'react';
+import type { AnnouncementWithAttachments } from '@/db/schema/announcements';
 
 const ANNOUNCEMENT_BREAKPOINT_PX = 920;
 
@@ -43,6 +48,22 @@ const FEED_BP = {
         '@announcements:col-span-4 @announcements:min-h-0 @announcements:pb-0',
     sideCardBody: '@announcements:min-h-0',
 } as const;
+
+function announcementSearchText(a: AnnouncementWithAttachments): string {
+    const normalizedBody = normalizeDiscordContentMentions(
+        a.content,
+        a.mentionMetadata
+    );
+    const mentionText = mentionDisplaySearchText(a.mentionMetadata);
+    const attachmentNames = a.attachments
+        .map((attachment) => attachment.filename ?? '')
+        .filter(Boolean)
+        .join(' ');
+
+    return [normalizedBody, mentionText, attachmentNames]
+        .join(' ')
+        .toLowerCase();
+}
 
 export default function AnnouncementsPage() {
     // Two-state search:
@@ -74,7 +95,9 @@ export default function AnnouncementsPage() {
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
         if (!q) return announcements;
-        return announcements.filter((a) => a.content.toLowerCase().includes(q));
+        return announcements.filter((a) =>
+            announcementSearchText(a).includes(q)
+        );
     }, [announcements, query]);
 
     const sortedDesc = useMemo(

@@ -37,6 +37,18 @@ DISCORD_INGEST_SECRET=<long random string>
 
 # Optional. In-memory requests per minute per server instance (default 120).
 # DISCORD_INGEST_RATE_LIMIT_PER_MINUTE=120
+
+# Optional. Set to "true" to rehost Discord attachments into Cloudflare R2
+# during webhook ingest. Requires all R2 vars below.
+# DISCORD_ATTACHMENT_REHOST_ENABLED=true
+
+# Required when DISCORD_ATTACHMENT_REHOST_ENABLED=true.
+# R2 endpoint + credentials + bucket name.
+# R2_ENDPOINT=
+# R2_ACCESS_KEY_ID=
+# R2_SECRET_ACCESS_KEY=
+# R2_BUCKET_NAME=
+# R2_PUBLIC_DOMAIN=
 ```
 
 ## Running the application
