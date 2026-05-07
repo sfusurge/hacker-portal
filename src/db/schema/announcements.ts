@@ -197,6 +197,7 @@ export const insertAnnouncementAttachmentSchema = createInsertSchema(
 
 export type AnnouncementWithAttachments = typeof announcements.$inferSelect & {
     attachments: Array<typeof announcementAttachments.$inferSelect>;
+    channelLabel: string | null;
 };
 
 export const selectAnnouncementChannelMappingSchema = createSelectSchema(

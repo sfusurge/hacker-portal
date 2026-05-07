@@ -29,6 +29,7 @@ import {
     Fragment,
     useCallback,
     useEffect,
+    useLayoutEffect,
     useMemo,
     useRef,
     useState,
@@ -72,10 +73,9 @@ export default function AnnouncementsPage() {
     const [inputValue, setInputValue] = useState('');
     const [query, setQuery] = useState('');
     const hackathon = useAtomValue(hackathonAtom);
-    const announcements = useAtomValue(announcementsAtom);
+    const initialAnnouncements = useAtomValue(announcementsAtom);
     const setLastSeenAt = useSetAtom(lastSeenAtAtom);
     const lastSeenAt = useAtomValue(lastSeenAtAtom);
-    // freeze the "unread" baseline at page-load time so expanding rows
     const initialLastSeenAtRef = useRef(lastSeenAt);
     const markSeen = trpc.announcements.markSeen.useMutation();
     const { data: application } =
@@ -92,11 +92,30 @@ export default function AnnouncementsPage() {
     const hackathonIconSrc: string | undefined =
         hackathon?.eventPagePayload?.iconSrc ?? undefined;
 
+    const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+        trpc.announcements.getAnnouncements.useInfiniteQuery(
+            { hackathonId: hackathon?.id ?? 0, limit: 10 },
+            {
+                getNextPageParam: (lastPage) =>
+                    lastPage.nextCursor ?? undefined,
+                initialCursor: undefined,
+                enabled: !!hackathon?.id,
+            }
+        );
+
+    // fall bak to atom while query loads
+    const announcements = useMemo(
+        () =>
+            (data?.pages.flatMap((p) => p.items) ??
+                initialAnnouncements) as AnnouncementWithAttachments[],
+        [data, initialAnnouncements]
+    );
+
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
         if (!q) return announcements;
         return announcements.filter((a) =>
-            announcementSearchText(a).includes(q)
+            announcementSearchText(a as AnnouncementWithAttachments).includes(q)
         );
     }, [announcements, query]);
 
@@ -129,6 +148,59 @@ export default function AnnouncementsPage() {
         return main;
     }, []);
 
+    // intersection observer to fetch next page when near bottom of feed
+    const sentinelRef = useRef<HTMLDivElement | null>(null);
+    const fetchNextPageRef = useRef(fetchNextPage);
+    const hasNextPageRef = useRef(hasNextPage);
+    const isFetchingNextPageRef = useRef(isFetchingNextPage);
+    const getScrollElRef = useRef(getScrollEl);
+    useEffect(() => {
+        fetchNextPageRef.current = fetchNextPage;
+    }, [fetchNextPage]);
+    useEffect(() => {
+        hasNextPageRef.current = hasNextPage;
+    }, [hasNextPage]);
+    useEffect(() => {
+        isFetchingNextPageRef.current = isFetchingNextPage;
+    }, [isFetchingNextPage]);
+    useEffect(() => {
+        getScrollElRef.current = getScrollEl;
+    }, [getScrollEl]);
+
+    // save scroll position before fetching next page, restore after new items render
+    const savedScrollTopRef = useRef<number | null>(null);
+    const pageCount = data?.pages.length ?? 1;
+    useLayoutEffect(() => {
+        if (savedScrollTopRef.current === null) return;
+        const el = getScrollEl();
+        if (el) el.scrollTop = savedScrollTopRef.current;
+        savedScrollTopRef.current = null;
+    }, [pageCount, getScrollEl]);
+
+    useEffect(() => {
+        const sentinel = sentinelRef.current;
+        if (!sentinel) return;
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (
+                    entries[0]?.isIntersecting &&
+                    hasNextPageRef.current &&
+                    !isFetchingNextPageRef.current
+                ) {
+                    const el = getScrollElRef.current();
+                    if (el) savedScrollTopRef.current = el.scrollTop;
+                    fetchNextPageRef.current();
+                }
+            },
+            {
+                root: feedScrollRef.current ?? null,
+                rootMargin: '400px',
+            }
+        );
+        observer.observe(sentinel);
+        return () => observer.disconnect();
+    }, []);
+
     useEffect(() => {
         const mainEl = getScrollEl();
         const feedEl = feedScrollRef.current;
@@ -150,7 +222,7 @@ export default function AnnouncementsPage() {
             mainEl?.removeEventListener('scroll', update);
             feedEl?.removeEventListener('scroll', update);
         };
-    }, [getScrollEl, sortedDesc.length]);
+    }, [getScrollEl]);
 
     useEffect(() => {
         if (isAtTop) {
@@ -160,39 +232,13 @@ export default function AnnouncementsPage() {
         }
     }, [isAtTop, announcements.length]);
 
-    // track if user has scrolled away from the top
-    const hasViewedTopRef = useRef(false);
-    const lastSeenAtRef = useRef<Date | null>(lastSeenAt);
-    const hasScrolledAwayRef = useRef(false);
+    // mark all as read when visit page
     useEffect(() => {
-        lastSeenAtRef.current = lastSeenAt;
-    }, [lastSeenAt]);
-
-    useEffect(() => {
-        if (!isAtTop) {
-            hasScrolledAwayRef.current = true;
-        }
-        if (isAtTop && hasScrolledAwayRef.current) {
-            const latestTimestamp = sortedDesc[0]
-                ? new Date(sortedDesc[0].sourceTimestamp)
-                : new Date();
-            hasViewedTopRef.current = true;
-            setLastSeenAt(latestTimestamp);
-        }
-    }, [isAtTop, setLastSeenAt, sortedDesc]);
-
-    useEffect(() => {
-        const flush = () => {
-            if (hasViewedTopRef.current && lastSeenAtRef.current) {
-                markSeen.mutate({ lastSeenAt: lastSeenAtRef.current });
-            }
-        };
-        window.addEventListener('beforeunload', flush);
-        document.addEventListener('visibilitychange', flush);
+        const latest = initialAnnouncements[0];
+        const ts = latest ? new Date(latest.sourceTimestamp) : new Date();
+        setLastSeenAt(ts);
         return () => {
-            flush();
-            window.removeEventListener('beforeunload', flush);
-            document.removeEventListener('visibilitychange', flush);
+            markSeen.mutate({ lastSeenAt: ts });
         };
     }, []);
 
@@ -353,7 +399,7 @@ export default function AnnouncementsPage() {
                                 ) : (
                                     <div
                                         ref={feedScrollRef}
-                                        className={`@announcements:-mx-6 @announcements:pr-1 -mx-5 pr-0 ${FEED_BP.feedScroll}`}
+                                        className={`@announcements:-mx-6 @announcements:pr-1 -mx-5 pr-0 [overflow-anchor:none] ${FEED_BP.feedScroll}`}
                                     >
                                         <ul className="flex flex-col">
                                             {sortedDesc.map((a, i) => {
@@ -409,6 +455,7 @@ export default function AnnouncementsPage() {
                                                         <AnnouncementRow
                                                             announcement={a}
                                                             displayName={
+                                                                a.channelLabel ??
                                                                 displayName
                                                             }
                                                             iconSrc={
@@ -439,20 +486,17 @@ export default function AnnouncementsPage() {
                                                                               new Date(
                                                                                   a.sourceTimestamp
                                                                               );
-                                                                          const prev =
-                                                                              lastSeenAtRef.current;
-                                                                          if (
-                                                                              prev ==
-                                                                                  null ||
-                                                                              ts >
+                                                                          setLastSeenAt(
+                                                                              (
                                                                                   prev
-                                                                          ) {
-                                                                              setLastSeenAt(
-                                                                                  ts
-                                                                              );
-                                                                          }
-                                                                          hasViewedTopRef.current =
-                                                                              true;
+                                                                              ) =>
+                                                                                  prev ==
+                                                                                      null ||
+                                                                                  ts >
+                                                                                      prev
+                                                                                      ? ts
+                                                                                      : prev
+                                                                          );
                                                                       }
                                                                     : undefined
                                                             }
@@ -461,9 +505,23 @@ export default function AnnouncementsPage() {
                                                 );
                                             })}
                                         </ul>
-                                        <p className="@announcements:mb-24 mb-36 py-6 text-center text-xl font-semibold text-white/60">
-                                            You&apos;ve reached the end!
-                                        </p>
+                                        <div
+                                            ref={sentinelRef}
+                                            className="@announcements:mb-24 mb-36 flex min-h-20 items-center justify-center"
+                                        >
+                                            {isFetchingNextPage && (
+                                                <p className="text-sm text-white/40">
+                                                    Loading more...
+                                                </p>
+                                            )}
+                                            {!isFetchingNextPage &&
+                                                !hasNextPage && (
+                                                    <p className="text-xl font-semibold text-white/60">
+                                                        You&apos;ve reached the
+                                                        end!
+                                                    </p>
+                                                )}
+                                        </div>
                                     </div>
                                 )}
                             </CardContent>

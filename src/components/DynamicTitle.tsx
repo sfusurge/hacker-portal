@@ -3,7 +3,7 @@
 import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { unreadCountAtom } from '@/app/(auth)/ClientContext';
+import { unreadCountAtom, unreadLabelAtom } from '@/app/(auth)/ClientContext';
 
 const FAVICON_SRC = '/favicon.png';
 
@@ -73,17 +73,18 @@ function setFavicon(unreadCount: number) {
 
 export function DynamicTitle() {
     const unreadCount = useAtomValue(unreadCountAtom);
+    const unreadLabel = useAtomValue(unreadLabelAtom);
     const pathname = usePathname();
 
     useEffect(() => {
         const t = setTimeout(() => {
-            const base = document.title.replace(/^\(\d+\)\s*/, '');
+            const base = document.title.replace(/^\([^)]+\)\s*/, '');
             document.title =
-                unreadCount > 0 ? `(${unreadCount}) ${base}` : base;
+                unreadCount > 0 ? `(${unreadLabel}) ${base}` : base;
         }, 0);
 
         return () => clearTimeout(t);
-    }, [unreadCount, pathname]);
+    }, [unreadCount, unreadLabel, pathname]);
 
     useEffect(() => {
         setFavicon(unreadCount);

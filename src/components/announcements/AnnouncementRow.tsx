@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 import { useWindowSize } from '@/lib/useWindowSize';
 import { Button } from '@/components/ui/button';
 import type { AnnouncementWithAttachments } from '@/app/(auth)/ClientContext';
-import { normalizeDiscordContentMentions } from '@/lib/discord/mentions';
+import { renderDiscordContentMentions } from '@/lib/discord/mentions';
 
 // max # of image attachments rendered
 export const MAX_IMAGES_PER_ANNOUNCEMENT = 2;
@@ -95,6 +95,38 @@ function highlightTree(node: ReactNode, query: string): ReactNode {
     return node;
 }
 
+function MentionAnchor({
+    href,
+    children,
+}: {
+    href?: string;
+    children?: ReactNode;
+}) {
+    if (href?.startsWith('mention:')) {
+        return (
+            <span className="bg-brand-500/20 text-brand-300 inline rounded px-1 py-0.5 text-[0.9em] font-medium">
+                {children}
+            </span>
+        );
+    }
+    return (
+        <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-brand-400 hover:text-brand-300 underline underline-offset-2"
+        >
+            {children}
+        </a>
+    );
+}
+
+const REMARK_OPTIONS = {
+    rehypeReactOptions: {
+        components: { a: MentionAnchor },
+    },
+} as const;
+
 // Tailwind classes shared by the markdown body in collapsed and expanded states.
 const ANNOUNCEMENT_BODY_CLASSES = [
     'text-sm leading-relaxed text-white/85',
@@ -148,18 +180,18 @@ export default function AnnouncementRow({
     hideBorderBottom,
 }: AnnouncementRowProps) {
     const sourceTime = toSourceDate(a.sourceTimestamp);
-    const normalizedContent = normalizeDiscordContentMentions(
+    const renderedContent = renderDiscordContentMentions(
         a.content,
         a.mentionMetadata
     );
-    const trimmed = normalizedContent.trim();
+    const trimmed = renderedContent.trim();
     const [expanded, setExpanded] = useState(false);
     const [hasOverflow, setHasOverflow] = useState(false);
     const [jumpRevealed, setJumpRevealed] = useState(false);
     const [windowWidth] = useWindowSize();
     const isMobileOrTablet = windowWidth < 1024;
     const bodyRef = useRef<HTMLDivElement>(null);
-    const rawRenderedBody = useRemarkSync(trimmed || '');
+    const rawRenderedBody = useRemarkSync(trimmed || '', REMARK_OPTIONS);
     const renderedBody = searchQuery
         ? highlightTree(rawRenderedBody, searchQuery)
         : rawRenderedBody;
@@ -233,18 +265,18 @@ export default function AnnouncementRow({
                     <span className="font-semibold text-white">
                         {displayName}
                     </span>
+                    {isUnread && (
+                        <span
+                            className="bg-danger-500 h-3 w-3 shrink-0 rounded-full"
+                            aria-label="Unread"
+                        />
+                    )}
                     <time
                         className="text-sm text-white/60"
                         dateTime={sourceTime.toISOString()}
                     >
                         {formatAnnouncementTimestamp(sourceTime)}
                     </time>
-                    {isUnread && (
-                        <span
-                            className="bg-danger-500 h-2 w-2 shrink-0 rounded-full"
-                            aria-label="Unread"
-                        />
-                    )}
                     {onJump ? (
                         <Button
                             type="button"

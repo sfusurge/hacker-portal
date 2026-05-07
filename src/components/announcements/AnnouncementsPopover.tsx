@@ -3,9 +3,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
+import { trpc } from '@/trpc/client';
 import { useRemarkSync } from 'react-remark';
+import { renderDiscordContentMentions } from '@/lib/discord/mentions';
+import type { ReactNode } from 'react';
 import dayjs from 'dayjs';
 import { cn } from '@/lib/utils';
 import { useWindowSize } from '@/lib/useWindowSize';
@@ -42,9 +45,48 @@ function formatPopupTimestamp(date: Date): string {
     return d.format('MMMM D, h:mm A');
 }
 
-function MiniBody({ content }: { content: string }) {
-    const rendered = useRemarkSync(content.trim() || '');
-    return <div className={MINI_BODY_CLASSES}>{rendered}</div>;
+function MentionAnchor({
+    href,
+    children,
+}: {
+    href?: string;
+    children?: ReactNode;
+}) {
+    if (href?.startsWith('mention:')) {
+        return (
+            <span className="bg-brand-500/20 text-brand-300 inline rounded px-1 py-0.5 text-[0.9em] font-medium">
+                {children}
+            </span>
+        );
+    }
+    return (
+        <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-brand-400 underline underline-offset-2"
+        >
+            {children}
+        </a>
+    );
+}
+
+const MINI_REMARK_OPTIONS = {
+    rehypeReactOptions: {
+        components: { a: MentionAnchor },
+    },
+} as const;
+
+function MiniBody({
+    content,
+    mentionMetadata,
+}: {
+    content: string;
+    mentionMetadata: AnnouncementWithAttachments['mentionMetadata'];
+}) {
+    const rendered = renderDiscordContentMentions(content, mentionMetadata);
+    const body = useRemarkSync(rendered.trim() || '', MINI_REMARK_OPTIONS);
+    return <div className={MINI_BODY_CLASSES}>{body}</div>;
 }
 
 function MiniRow({
@@ -135,7 +177,7 @@ function MiniRow({
                         </span>
                         {isUnread && (
                             <span
-                                className="bg-danger-500 h-1.5 w-1.5 shrink-0 rounded-full"
+                                className="bg-danger-500 h-3 w-3 shrink-0 rounded-full"
                                 aria-label="Unread"
                             />
                         )}
@@ -179,7 +221,10 @@ function MiniRow({
                                     !expanded && 'line-clamp-3'
                                 )}
                             >
-                                <MiniBody content={a.content} />
+                                <MiniBody
+                                    content={a.content}
+                                    mentionMetadata={a.mentionMetadata}
+                                />
                             </div>
                             {showToggle && (
                                 <button
@@ -252,13 +297,32 @@ export function AnnouncementsPopoverContent({
 }: {
     onClose: () => void;
 }) {
-    const announcements = useAtomValue(announcementsAtom);
+    const initialAnnouncements = useAtomValue(announcementsAtom);
     const hackathon = useAtomValue(hackathonAtom);
     const lastSeenAt = useAtomValue(lastSeenAtAtom);
 
     const displayName = hackathon?.hackathonName || 'Announcements';
     const iconSrc: string | undefined =
         hackathon?.eventPagePayload?.iconSrc ?? undefined;
+
+    const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+        trpc.announcements.getAnnouncements.useInfiniteQuery(
+            { hackathonId: hackathon?.id ?? 0, limit: 10 },
+            {
+                getNextPageParam: (lastPage) =>
+                    lastPage.nextCursor ?? undefined,
+                initialCursor: undefined,
+                enabled: !!hackathon?.id,
+            }
+        );
+
+    // fall back to atom while query loads
+    const announcements = useMemo(
+        () =>
+            (data?.pages.flatMap((p) => p.items) ??
+                initialAnnouncements) as AnnouncementWithAttachments[],
+        [data, initialAnnouncements]
+    );
 
     const sortedDesc = useMemo(
         () =>
@@ -269,10 +333,55 @@ export function AnnouncementsPopoverContent({
         [announcements]
     );
 
+    const listRef = useRef<HTMLUListElement | null>(null);
+    const sentinelRef = useRef<HTMLLIElement | null>(null);
+    const fetchNextPageRef = useRef(fetchNextPage);
+    const hasNextPageRef = useRef(hasNextPage);
+    const isFetchingRef = useRef(isFetchingNextPage);
+    useEffect(() => {
+        fetchNextPageRef.current = fetchNextPage;
+    }, [fetchNextPage]);
+    useEffect(() => {
+        hasNextPageRef.current = hasNextPage;
+    }, [hasNextPage]);
+    useEffect(() => {
+        isFetchingRef.current = isFetchingNextPage;
+    }, [isFetchingNextPage]);
+
+    const savedScrollTopRef = useRef<number | null>(null);
+    const pageCount = data?.pages.length ?? 1;
+    useLayoutEffect(() => {
+        if (savedScrollTopRef.current === null) return;
+        const el = listRef.current;
+        if (el) el.scrollTop = savedScrollTopRef.current;
+        savedScrollTopRef.current = null;
+    }, [pageCount]);
+
+    useEffect(() => {
+        const sentinel = sentinelRef.current;
+        if (!sentinel) return;
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (
+                    entries[0]?.isIntersecting &&
+                    hasNextPageRef.current &&
+                    !isFetchingRef.current
+                ) {
+                    if (listRef.current)
+                        savedScrollTopRef.current = listRef.current.scrollTop;
+                    fetchNextPageRef.current();
+                }
+            },
+            { root: listRef.current, rootMargin: '200px' }
+        );
+        observer.observe(sentinel);
+        return () => observer.disconnect();
+    }, []);
+
     return (
         <>
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-neutral-600/30 px-5 py-3">
+            <div className="flex items-center justify-between border-b border-neutral-600/30 px-5 py-4">
                 <h2 className="text-xl font-semibold text-white">
                     Announcements
                 </h2>
@@ -293,7 +402,10 @@ export function AnnouncementsPopoverContent({
                     No announcements yet
                 </div>
             ) : (
-                <ul className="max-h-[calc(70dvh-150px)] overflow-y-auto">
+                <ul
+                    ref={listRef}
+                    className="max-h-[calc(70dvh-150px)] overflow-y-auto [overflow-anchor:none]"
+                >
                     {sortedDesc.map((a, i) => {
                         const isUnread =
                             lastSeenAt == null ||
@@ -308,7 +420,7 @@ export function AnnouncementsPopoverContent({
                             <MiniRow
                                 key={a.id}
                                 announcement={a}
-                                displayName={displayName}
+                                displayName={a.channelLabel ?? displayName}
                                 iconSrc={iconSrc}
                                 isUnread={isUnread}
                                 isFirst={i === 0}
@@ -317,8 +429,20 @@ export function AnnouncementsPopoverContent({
                             />
                         );
                     })}
-                    <li className="border-t border-neutral-600/30 py-10 text-center text-sm font-semibold text-white/30">
-                        You&apos;ve reached the end!
+                    <li
+                        ref={sentinelRef}
+                        className="flex min-h-12 items-center justify-center border-t border-neutral-600/30"
+                    >
+                        {isFetchingNextPage && (
+                            <p className="text-sm text-white/40">
+                                Loading more...
+                            </p>
+                        )}
+                        {!isFetchingNextPage && !hasNextPage && (
+                            <p className="py-10 font-semibold text-white/30">
+                                You&apos;ve reached the end!
+                            </p>
+                        )}
                     </li>
                 </ul>
             )}

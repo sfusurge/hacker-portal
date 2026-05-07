@@ -21,6 +21,7 @@ export type DiscordMentionMetadata = {
 const USER_MENTION_RE = /<@!?(\d+)>/g;
 const ROLE_MENTION_RE = /<@&(\d+)>/g;
 const CHANNEL_MENTION_RE = /<#(\d+)>/g;
+const EVERYONE_HERE_RE = /@(everyone|here)\b/g;
 
 function escapeInlineMarkdown(text: string): string {
     return text.replace(/([\\`*_[\]()~>#+\-=|{}.!])/g, '\\$1');
@@ -82,6 +83,49 @@ export function normalizeDiscordContentMentions(
         .replace(CHANNEL_MENTION_RE, (_, channelId: string) =>
             normalizeChannelMention(channelId, mentions)
         );
+}
+
+/**
+ * similar to normalizeDiscordContentMentions but outputs markdown link syntax so
+ * the renderer can display mentions as styled chips:
+ *   <@123>  →  [@DisplayName](mention:user)
+ *   <@&123> →  [@RoleName](mention:role)
+ *   <#123>  →  [#ChannelName](mention:channel)
+ */
+export function renderDiscordContentMentions(
+    content: string,
+    mentions: DiscordMentionMetadata | null | undefined
+): string {
+    if (!content) {
+        return '';
+    }
+
+    function linkText(text: string): string {
+        return text.replace(/[[\]]/g, '\\$&');
+    }
+
+    return content
+        .replace(USER_MENTION_RE, (_, userId: string) => {
+            const user = mentions?.users?.[userId];
+            const name =
+                user?.displayName.trim() ||
+                user?.username.trim() ||
+                `unknown-user-${userId}`;
+            return `[@${linkText(name)}](mention:user)`;
+        })
+        .replace(ROLE_MENTION_RE, (_, roleId: string) => {
+            const role = mentions?.roles?.[roleId];
+            const name = role?.name.trim() || `unknown-role-${roleId}`;
+            return `[@${linkText(name)}](mention:role)`;
+        })
+        .replace(CHANNEL_MENTION_RE, (_, channelId: string) => {
+            const channel = mentions?.channels?.[channelId];
+            const name = channel?.name.trim() || `unknown-channel-${channelId}`;
+            return `[#${linkText(name)}](mention:channel)`;
+        })
+        .replace(EVERYONE_HERE_RE, (_, word: string) => {
+            return `[@${word}](mention:everyone)`;
+        });
 }
 
 export function mentionDisplaySearchText(

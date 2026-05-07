@@ -10,7 +10,7 @@ import { usePathname } from 'next/navigation';
 import { UserData } from '@/server/routers/usersRouter';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAtomValue } from 'jotai';
-import { unreadCountAtom } from '@/app/(auth)/ClientContext';
+import { unreadLabelAtom } from '@/app/(auth)/ClientContext';
 
 interface MobileTopNavProps {
     className?: string;
@@ -57,7 +57,7 @@ export default function MobileTopNav({
         x: number;
         y: number;
     } | null>(null);
-    const unreadCount = useAtomValue(unreadCountAtom);
+    const unreadCount = useAtomValue(unreadLabelAtom);
 
     /** tap outside drawer closes, drag/scroll does not */
     useEffect(() => {

@@ -19,8 +19,10 @@ export default async function Layout({ children }: { children: ReactNode }) {
         return redirect('/signout');
     }
 
-    const initialAnnouncements =
-        hackathon != null ? await getInitialAnnouncements(hackathon.id) : [];
+    const { items: initialAnnouncements } =
+        hackathon != null
+            ? await getInitialAnnouncements(hackathon.id)
+            : { items: [] };
 
     return (
         <ClientContext

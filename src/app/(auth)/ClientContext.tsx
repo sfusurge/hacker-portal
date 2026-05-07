@@ -27,6 +27,11 @@ export const unreadCountAtom = atom((get) => {
     return announcements.filter((a) => new Date(a.sourceTimestamp) > lastSeenAt)
         .length;
 });
+export const unreadLabelAtom = atom((get) => {
+    const count = get(unreadCountAtom);
+    if (count >= 9) return '9+';
+    return count > 0 ? String(count) : '';
+});
 
 export type UserDataType = Exclude<UserData, undefined>;
 /**
