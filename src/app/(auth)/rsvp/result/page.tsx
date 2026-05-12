@@ -82,7 +82,6 @@ export default async function ResultPage(
                                         typeof response?.['6'] === 'string'
                                             ? response['6']
                                             : '';
-<<<<<<< development
                                     const sendResult =
                                         await trpcClient.emails.sendEmail({
                                             templateId: rsvpTemplate.id,
@@ -105,27 +104,6 @@ export default async function ResultPage(
                                             }
                                         );
                                     }
-=======
-                                    await trpcClient.emails.sendEmail({
-                                        templateId: rsvpTemplate.id,
-                                        user: {
-                                            id: application.userId,
-                                            firstName,
-                                            lastName,
-                                            email: payerEmail,
-                                        },
-                                    });
-                                    await trpcClient.applications.updateLastEmailSent(
-                                        {
-                                            hackathonId:
-                                                application.hackathonId,
-                                            userId: application.userId,
-                                            emailType:
-                                                rsvpTemplate.emailType ??
-                                                rsvpTemplate.purpose,
-                                        }
-                                    );
->>>>>>> production
                                 }
                             } catch (e) {
                                 console.error(

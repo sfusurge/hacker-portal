@@ -138,7 +138,6 @@ export async function POST(req: Request) {
                             const firstName = response?.['5'] ?? 'Friend';
                             const lastName = response?.['6'] ?? '';
 
-<<<<<<< development
                             const sendResult =
                                 await trpcClient.emails.sendEmail({
                                     templateId: rsvpTemplate.id,
@@ -167,27 +166,6 @@ export async function POST(req: Request) {
                                     'RSVP confirmation email was not delivered (SMTP or processing failure)'
                                 );
                             }
-=======
-                            await trpcClient.emails.sendEmail({
-                                templateId: rsvpTemplate.id,
-                                user: {
-                                    id: application.userId,
-                                    firstName: firstName,
-                                    lastName: lastName,
-                                    email: payerEmail,
-                                },
-                            });
-                            await trpcClient.applications.updateLastEmailSent({
-                                hackathonId: application.hackathonId,
-                                userId: application.userId,
-                                emailType:
-                                    rsvpTemplate.emailType ??
-                                    rsvpTemplate.purpose,
-                            });
-                            console.log(
-                                'RSVP confirmation email sent successfully'
-                            );
->>>>>>> production
                         } else {
                             console.error(
                                 `No RSVP confirmation template found for hackathon ${application.hackathonId} (rsvp_paid for paid events, else rsvp_received)`
