@@ -6,6 +6,7 @@ import { databaseClient } from '@/db/client';
 import { emailTemplates, emailTemplateStyling } from '@/db/schema/emails';
 import { user } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
+import type { SendMailOptions, SentMessageInfo } from 'nodemailer';
 import {
     prepareEmailContent,
     mergeBodyIntoStyling,
@@ -13,10 +14,19 @@ import {
 } from '@/app/(auth)/admin/email/templates/emailPreview';
 const env = process.env;
 
+function sendMailAsync(options: SendMailOptions): Promise<SentMessageInfo> {
+    return new Promise((resolve, reject) => {
+        transporter.sendMail(options, (error, info) => {
+            if (error) reject(error);
+            else resolve(info);
+        });
+    });
+}
+
 export const sendEmailRouter = router({
     sendEmail: publicProcedure
         .input(sendEmailSchema)
-        .mutation(async ({ input }) => {
+        .mutation(async ({ input }): Promise<{ emailSent: boolean }> => {
             try {
                 const [template] = await databaseClient
                     .select()
@@ -25,9 +35,10 @@ export const sendEmailRouter = router({
                     .limit(1);
 
                 if (!template) {
-                    throw new Error(
-                        `Email template with ID "${input.templateId}" not found`
+                    console.error(
+                        `[sendEmail] template not found: id ${input.templateId}`
                     );
+                    return { emailSent: false };
                 }
 
                 let processedTemplateContent =
@@ -35,11 +46,10 @@ export const sendEmailRouter = router({
                         ? markdownToHtml(template.content)
                         : template.content;
                 let qrcodeBase64: string | undefined;
-                let attachments = [];
+                const attachments: NonNullable<SendMailOptions['attachments']> =
+                    [];
 
-                // Only generate QR code if the template contains the placeholder
                 if (processedTemplateContent.includes('{{qrCode}}')) {
-                    // QRCode options
                     const opts = {
                         margin: 1,
                         scale: 10,
@@ -55,9 +65,7 @@ export const sendEmailRouter = router({
                             /^data:image\/png;base64,/,
                             ''
                         );
-                        console.log('QR code generated successfully');
 
-                        // Add QR code as embedded image for display in email
                         attachments.push({
                             filename: 'qr-inline.png',
                             content: Buffer.from(qrcodeBase64, 'base64'),
@@ -73,8 +81,10 @@ export const sendEmailRouter = router({
                                 qrCodeImgTag
                             );
                     } catch (qrError) {
-                        // Replace the placeholder with empty string if QR generation fails
-                        console.error('Error generating QR code:', qrError);
+                        console.error(
+                            '[sendEmail] QR generation failed:',
+                            qrError
+                        );
                         processedTemplateContent =
                             processedTemplateContent.replace(/{{qrCode}}/g, '');
                     }
@@ -113,26 +123,24 @@ export const sendEmailRouter = router({
                     }
                 }
 
-                const mailOptions = {
+                const mailOptions: SendMailOptions = {
                     from: env.SENDINGEMAIL,
                     to: input.user.email.trim(),
                     subject: template.title,
                     html: finalHtmlContent,
-                    attachments: attachments,
+                    attachments: attachments.length ? attachments : undefined,
                 };
 
-                transporter.sendMail(mailOptions, (error, info) => {
-                    if (error) {
-                        console.error('Error sending email:', error);
-                    } else {
-                        console.log('Email sent:', info.response);
-                    }
-                });
-
-                return { success: true };
+                try {
+                    await sendMailAsync(mailOptions);
+                    return { emailSent: true };
+                } catch (sendErr) {
+                    console.error('[sendEmail] SMTP error:', sendErr);
+                    return { emailSent: false };
+                }
             } catch (err) {
-                console.error('Error processing or sending email:', err);
-                throw new Error('Failed to send email.');
+                console.error('[sendEmail] processing error:', err);
+                return { emailSent: false };
             }
         }),
 });
