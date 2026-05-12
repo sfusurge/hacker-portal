@@ -51,6 +51,8 @@ export const hackathonAtom = atom<HackathonData>(
     {} as unknown as HackathonData
 );
 
+export const viewerAnnouncementLocationKeyAtom = atom<string | null>(null);
+
 interface DbHackathonType {
     id: number;
     name: string;
@@ -107,12 +109,14 @@ export function ClientContext({
     hackathonData,
     initialAnnouncements,
     initialLastSeenAt,
+    initialViewerAnnouncementLocationKey,
     children,
 }: {
     userData: UserData;
     hackathonData: DbHackathonType;
     initialAnnouncements: AnnouncementsList;
     initialLastSeenAt: Date | null;
+    initialViewerAnnouncementLocationKey: string | null;
     children: ReactNode;
 }) {
     useHydrateAtoms([
@@ -120,6 +124,10 @@ export function ClientContext({
         [hackathonAtom, DeserializeHackathonData(hackathonData)],
         [announcementsAtom, initialAnnouncements],
         [lastSeenAtAtom, initialLastSeenAt],
+        [
+            viewerAnnouncementLocationKeyAtom,
+            initialViewerAnnouncementLocationKey,
+        ],
     ]);
 
     return (

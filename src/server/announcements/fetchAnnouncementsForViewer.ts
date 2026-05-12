@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { databaseClient } from '@/db/client';
 import {
     announcementAttachments,
@@ -26,6 +27,37 @@ type FetchParams = {
     cursor?: number;
 };
 
+async function getViewerAnnouncementLocationKeyUncached(
+    hackathonId: number,
+    userId: number
+): Promise<string | null> {
+    const [app] = await databaseClient
+        .select({ response: applications.response })
+        .from(applications)
+        .where(
+            and(
+                eq(applications.hackathonId, hackathonId),
+                eq(applications.userId, userId)
+            )
+        )
+        .limit(1);
+    if (!app) return null;
+    return getApplicationEventLocationKey(
+        app.response as Record<string, unknown>
+    );
+}
+
+// deduped within a single RSC request
+export const getViewerAnnouncementLocationKey = cache(
+    async (
+        hackathonId: number,
+        userId: number | null
+    ): Promise<string | null> => {
+        if (userId == null) return null;
+        return getViewerAnnouncementLocationKeyUncached(hackathonId, userId);
+    }
+);
+
 function announcementVisibilityCondition(viewerLocationKey: string | null) {
     if (viewerLocationKey) {
         const k = viewerLocationKey.trim().toLowerCase();
@@ -42,24 +74,10 @@ function announcementVisibilityCondition(viewerLocationKey: string | null) {
 }
 
 export async function fetchAnnouncementsForViewer(input: FetchParams) {
-    let viewerLocationKey: string | null = null;
-    if (input.userId != null) {
-        const [app] = await databaseClient
-            .select({ response: applications.response })
-            .from(applications)
-            .where(
-                and(
-                    eq(applications.hackathonId, input.hackathonId),
-                    eq(applications.userId, input.userId)
-                )
-            )
-            .limit(1);
-        if (app) {
-            viewerLocationKey = getApplicationEventLocationKey(
-                app.response as Record<string, unknown>
-            );
-        }
-    }
+    const viewerLocationKey = await getViewerAnnouncementLocationKey(
+        input.hackathonId,
+        input.userId
+    );
 
     const rows = await databaseClient
         .select({

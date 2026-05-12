@@ -5,6 +5,7 @@ import { ClientContext } from './ClientContext';
 import { getUserData } from '@/server/routers/usersRouter';
 import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 import { getInitialAnnouncements } from '@/server/getInitialAnnouncements';
+import { getViewerAnnouncementLocationKey } from '@/server/announcements/fetchAnnouncementsForViewer';
 import ClientLayoutWrapper from './ClientLayoutWrapper';
 import MobileTopNav from '@/components/sidebar/MobileTopNav';
 import SideBar from '@/components/sidebar/SideBar';
@@ -19,10 +20,17 @@ export default async function Layout({ children }: { children: ReactNode }) {
         return redirect('/signout');
     }
 
-    const { items: initialAnnouncements } =
+    const [
+        { items: initialAnnouncements },
+        initialViewerAnnouncementLocationKey,
+    ] = await Promise.all([
         hackathon != null
-            ? await getInitialAnnouncements(hackathon.id, userData.id)
-            : { items: [] };
+            ? getInitialAnnouncements(hackathon.id, userData.id)
+            : Promise.resolve({ items: [], hasMore: false }),
+        hackathon != null
+            ? getViewerAnnouncementLocationKey(hackathon.id, userData.id)
+            : Promise.resolve(null),
+    ]);
 
     return (
         <ClientContext
@@ -30,6 +38,9 @@ export default async function Layout({ children }: { children: ReactNode }) {
             hackathonData={hackathon}
             initialAnnouncements={initialAnnouncements}
             initialLastSeenAt={userData.lastSeenAnnouncementsAt ?? null}
+            initialViewerAnnouncementLocationKey={
+                initialViewerAnnouncementLocationKey
+            }
         >
             <ClientLayoutWrapper>
                 <CacheClearer initialData={userData} />

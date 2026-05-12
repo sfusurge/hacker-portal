@@ -9,9 +9,10 @@ import {
     announcements,
     deleteDiscordAnnouncementSchema,
     ingestDiscordAnnouncementSchema,
+    type AnnouncementWithAttachments,
 } from '@/db/schema/announcements';
 import { publishAnnouncementEvent } from '@/lib/realtime/publishAnnouncementEvent';
-
+import { loadAnnouncementRealtimeSnapshot } from '@/server/announcements/loadAnnouncementRealtimeSnapshot';
 const INGEST_LOG_EVENT = 'discord_announcements_ingest';
 
 type IngestStatus = 'created' | 'duplicate' | 'updated';
@@ -58,6 +59,35 @@ function parseRateLimitPerMinute(): number {
 
 function isIngestEnabled(): boolean {
     return process.env.DISCORD_INGEST_ENABLED !== 'false';
+}
+
+function announcementRecordForAbly(
+    announcement: AnnouncementWithAttachments
+): Record<string, unknown> {
+    return JSON.parse(JSON.stringify(announcement)) as Record<string, unknown>;
+}
+
+async function publishAnnouncementLive(
+    kind: 'created' | 'updated',
+    announcementId: number,
+    fallbackHackathonId: number
+): Promise<void> {
+    const snap = await loadAnnouncementRealtimeSnapshot(announcementId);
+    if (!snap) {
+        await publishAnnouncementEvent({
+            kind,
+            hackathonId: fallbackHackathonId,
+            announcementId,
+        });
+        return;
+    }
+    await publishAnnouncementEvent({
+        kind,
+        hackathonId: snap.announcement.hackathonId,
+        announcementId: snap.announcement.id,
+        announcement: announcementRecordForAbly(snap.announcement),
+        visibility: snap.visibility,
+    });
 }
 
 function consumeRateLimitToken(): boolean {
@@ -343,11 +373,11 @@ export async function POST(request: NextRequest) {
                 attachmentCount,
                 isEdit: true,
             });
-            await publishAnnouncementEvent({
-                kind: 'updated',
-                hackathonId: existing.hackathonId,
-                announcementId: existing.id,
-            });
+            await publishAnnouncementLive(
+                'updated',
+                existing.id,
+                existing.hackathonId
+            );
             return NextResponse.json<IngestResult>(
                 {
                     id: existing.id,
@@ -445,11 +475,11 @@ export async function POST(request: NextRequest) {
             attachmentCount,
             isEdit,
         });
-        await publishAnnouncementEvent({
-            kind: 'created',
-            hackathonId: created.hackathonId,
-            announcementId: created.id,
-        });
+        await publishAnnouncementLive(
+            'created',
+            created.id,
+            created.hackathonId
+        );
         return NextResponse.json<IngestResult>(
             {
                 id: created.id,

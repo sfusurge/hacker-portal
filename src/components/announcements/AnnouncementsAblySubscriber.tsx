@@ -6,6 +6,7 @@ import { Realtime, type InboundMessage } from 'ably';
 import {
     announcementsAtom,
     hackathonAtom,
+    viewerAnnouncementLocationKeyAtom,
     type AnnouncementsList,
 } from '@/app/(auth)/ClientContext';
 import {
@@ -15,28 +16,19 @@ import {
 import {
     ANNOUNCEMENTS_ABLY_EVENT,
     announcementsChannelName,
-    type AnnouncementRealtimePayload,
 } from '@/lib/realtime/announcementChannels';
+import { parseAnnouncementAblyEnvelope } from '@/lib/realtime/parseAnnouncementAblyEnvelope';
+import { parseAnnouncementRealtimeWire } from '@/lib/announcements/parseAnnouncementRealtimeWire';
+import { announcementVisibleToViewer } from '@/lib/announcements/announcementRealtimeVisibility';
+import { upsertAnnouncementsTopN } from '@/lib/announcements/upsertAnnouncementsTopN';
 import { trpc } from '@/trpc/client';
 
-function parsePayload(data: unknown): AnnouncementRealtimePayload | null {
-    if (!data || typeof data !== 'object') return null;
-    const o = data as Record<string, unknown>;
-    const kind = o.kind;
-    const hackathonId = o.hackathonId;
-    const announcementId = o.announcementId;
-    if (kind !== 'created' && kind !== 'updated' && kind !== 'archived') {
-        return null;
-    }
-    if (typeof hackathonId !== 'number' || typeof announcementId !== 'number') {
-        return null;
-    }
-    return { kind, hackathonId, announcementId };
-}
+const ANNOUNCEMENTS_REALTIME_LIMIT = 10;
 
 export function AnnouncementsAblySubscriber() {
     const hackathon = useAtomValue(hackathonAtom);
     const hackathonId = hackathon?.id;
+    const viewerLocationKey = useAtomValue(viewerAnnouncementLocationKeyAtom);
     const setAnnouncements = useSetAtom(announcementsAtom);
     const utils = trpc.useUtils();
     const utilsRef = useRef(utils);
@@ -54,31 +46,74 @@ export function AnnouncementsAblySubscriber() {
             return;
         }
 
+        const refetchAnnouncements = async () => {
+            const u = utilsRef.current;
+            await u.announcements.getAnnouncements.invalidate();
+            try {
+                const next = await u.announcements.getAnnouncements.fetch({
+                    hackathonId,
+                    limit: ANNOUNCEMENTS_REALTIME_LIMIT,
+                });
+                setAnnouncements(next.items as unknown as AnnouncementsList);
+            } catch {
+                /* invalidate still lets mounted queries refetch */
+            }
+        };
+
         const channel = client.channels.get(
             announcementsChannelName(hackathonId)
         );
 
         const onMessage = (message: InboundMessage) => {
-            const payload = parsePayload(message.data);
-            if (!payload || payload.hackathonId !== hackathonId) {
+            const envelope = parseAnnouncementAblyEnvelope(message.data);
+            if (!envelope || envelope.hackathonId !== hackathonId) {
                 return;
             }
 
-            void (async () => {
-                const u = utilsRef.current;
-                await u.announcements.getAnnouncements.invalidate();
-                try {
-                    const next = await u.announcements.getAnnouncements.fetch({
-                        hackathonId,
-                        limit: 10,
-                    });
-                    setAnnouncements(
-                        next.items as unknown as AnnouncementsList
-                    );
-                } catch {
-                    /* invalidate still lets mounted queries refetch */
-                }
-            })();
+            if (envelope.kind === 'archived') {
+                setAnnouncements((prev) =>
+                    prev.filter((a) => a.id !== envelope.announcementId)
+                );
+                return;
+            }
+
+            if (!envelope.announcement || !envelope.visibility) {
+                void refetchAnnouncements();
+                return;
+            }
+
+            const announcement = parseAnnouncementRealtimeWire(
+                envelope.announcement
+            );
+            if (!announcement) {
+                void refetchAnnouncements();
+                return;
+            }
+
+            if (announcement.id !== envelope.announcementId) {
+                void refetchAnnouncements();
+                return;
+            }
+
+            if (
+                !announcementVisibleToViewer(
+                    viewerLocationKey,
+                    envelope.visibility
+                )
+            ) {
+                setAnnouncements((prev) =>
+                    prev.filter((a) => a.id !== envelope.announcementId)
+                );
+                return;
+            }
+
+            setAnnouncements((prev) =>
+                upsertAnnouncementsTopN(
+                    prev,
+                    announcement,
+                    ANNOUNCEMENTS_REALTIME_LIMIT
+                )
+            );
         };
 
         void channel
@@ -91,7 +126,7 @@ export function AnnouncementsAblySubscriber() {
             channel.unsubscribe(ANNOUNCEMENTS_ABLY_EVENT, onMessage);
             releaseRealtimeClient(hackathonId);
         };
-    }, [hackathonId, setAnnouncements]);
+    }, [hackathonId, viewerLocationKey, setAnnouncements]);
 
     return null;
 }

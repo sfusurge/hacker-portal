@@ -1,6 +1,6 @@
 /**
  * Application question id `2` stores which in-person / remote site the applicant
- * selected (`sfu`, `waterloo`, `remote`, …).
+ * selected (`sfu`, `waterloo`, `remote`, …). must match comparison in `fetchAnnouncementsForViewer`.
  */
 export function getApplicationEventLocationKey(
     response: Record<string, unknown> | null | undefined
