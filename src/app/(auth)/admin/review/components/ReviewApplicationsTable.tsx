@@ -528,9 +528,16 @@ function MyTable({
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
     const [pagination, setPagination] = useState<PaginationState>({
-        pageSize: parseInt(localStorage.getItem('pagesize') ?? '200'),
-        pageIndex: parseInt(localStorage.getItem('pageindex') ?? '0'),
+        pageSize: 200,
+        pageIndex: 0,
     });
+
+    useEffect(() => {
+        setPagination({
+            pageSize: parseInt(localStorage.getItem('pagesize') ?? '200', 10),
+            pageIndex: parseInt(localStorage.getItem('pageindex') ?? '0', 10),
+        });
+    }, []);
 
     const table = useReactTable({
         data,

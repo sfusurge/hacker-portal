@@ -1,54 +1,48 @@
-import { ErrorInfo, Realtime } from 'ably';
+import { Realtime } from 'ably';
 
-// TODO !!! DO CLIENT SIDE AUTH
-export function createConnection(
-    onOpen?: () => void,
-    onClosed?: () => void,
-    onError?: (message: ErrorInfo | undefined) => void
-) {
-    const client = new Realtime(process.env.NEXT_PUBLIC_ABLY_API_KEY!);
-    client.connection.once('connected', () => {
-        // TODO remove debug
-        if (onOpen) {
-            onOpen();
-        }
-        console.log('connect to ably');
-    });
+type PoolEntry = { client: Realtime; count: number };
 
-    client.connection.once('failed', (e) => {
-        onError && onError(e.reason);
-    });
+const clientsByHackathonId = new Map<number, PoolEntry>();
 
-    client.connection.once('closed', () => {
-        if (onClosed) {
-            onClosed();
-        }
-        console.log('ably connection closed');
-    });
-
-    return client;
+function authUrlFor(hackathonId: number): string {
+    return `/api/ably/auth?hackathonId=${encodeURIComponent(String(hackathonId))}`;
 }
 
 /**
- * genric is T message to send *AND* receive.
- * @param client
- * @param channleName
- * @param eventName
- * @param onMessage
- * @returns
+ * Real-time client for hackathon-scoped announcements and review table
  */
-export async function connectToChannel<T>(
-    client: Realtime,
-    channleName: string,
-    eventName: string,
-    onMessage: (msg: T) => void
-) {
-    const channel = client.channels.get(channleName);
-    await channel.subscribe(eventName, (message) => {
-        onMessage(message.data as T);
-    });
+export function acquireRealtimeClient(hackathonId: number): Realtime {
+    if (!hackathonId || Number.isNaN(hackathonId)) {
+        throw new Error('acquireRealtimeClient requires a valid hackathonId');
+    }
 
-    return (msg: T) => {
-        channel.publish(eventName, msg);
-    };
+    let entry = clientsByHackathonId.get(hackathonId);
+    if (!entry) {
+        entry = {
+            client: new Realtime({ authUrl: authUrlFor(hackathonId) }),
+            count: 0,
+        };
+        clientsByHackathonId.set(hackathonId, entry);
+    }
+
+    entry.count += 1;
+    return entry.client;
+}
+
+// release when component unmounts
+export function releaseRealtimeClient(hackathonId: number): void {
+    if (!hackathonId || Number.isNaN(hackathonId)) {
+        return;
+    }
+
+    const entry = clientsByHackathonId.get(hackathonId);
+    if (!entry) {
+        return;
+    }
+
+    entry.count -= 1;
+    if (entry.count <= 0) {
+        entry.client.close();
+        clientsByHackathonId.delete(hackathonId);
+    }
 }
