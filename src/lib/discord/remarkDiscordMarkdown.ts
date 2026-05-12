@@ -1,3 +1,42 @@
+import LinkifyIt from 'linkify-it';
+
+const announcementLinkify = new LinkifyIt();
+
+/**
+ * Wrap bare URLs in CommonMark angle-bracket autolinks (<https://...>)
+ */
+function linkifyBareUrlsForMarkdown(text: string): string {
+    const matches = announcementLinkify.match(text);
+    if (!matches?.length) return text;
+
+    const spans: { start: number; end: number; raw: string }[] = [];
+    for (const m of matches) {
+        const start = m.index;
+        const end = m.lastIndex;
+        const before = start > 0 ? text[start - 1] : '';
+        if (before === '<' || before === '(' || before === '[') continue;
+        if (start >= 2 && text.slice(start - 2, start) === '](') continue;
+
+        const ticksBefore = (text.slice(0, start).match(/`/g) ?? []).length;
+        if (ticksBefore % 2 === 1) continue;
+
+        spans.push({ start, end, raw: m.raw });
+    }
+    if (!spans.length) return text;
+
+    spans.sort((a, b) => a.start - b.start);
+    let out = '';
+    let cursor = 0;
+    for (const s of spans) {
+        if (s.start < cursor) continue;
+        out += text.slice(cursor, s.start);
+        out += `<${s.raw}>`;
+        cursor = s.end;
+    }
+    out += text.slice(cursor);
+    return out;
+}
+
 const UNDERLINE_RE = /__([^]*?)__/g;
 const STRIKE_RE = /~~([\s\S]+?)~~/g;
 // Discord allows ** text **, **text **, and ** text** as bold; CommonMark does not.
@@ -23,7 +62,7 @@ export function preprocessDiscordMarkdown(content: string): string {
         const safe = inner.replace(/]/g, '\\]');
         return `[${safe}](discord-u:)`;
     });
-    return result;
+    return linkifyBareUrlsForMarkdown(result);
 }
 
 function makeDelete(inner: string): any {

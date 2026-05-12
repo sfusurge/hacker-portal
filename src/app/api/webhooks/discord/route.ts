@@ -10,6 +10,7 @@ import {
     deleteDiscordAnnouncementSchema,
     ingestDiscordAnnouncementSchema,
 } from '@/db/schema/announcements';
+import { publishAnnouncementEvent } from '@/lib/realtime/publishAnnouncementEvent';
 
 const INGEST_LOG_EVENT = 'discord_announcements_ingest';
 
@@ -87,7 +88,11 @@ function ingestLog(fields: Record<string, unknown>): void {
 
 function verifyBearer(request: NextRequest): boolean {
     const authHeader = request.headers.get('authorization');
-    return authHeader === `Bearer ${process.env.DISCORD_INGEST_SECRET}`;
+    const secret = process.env.DISCORD_INGEST_SECRET?.trim();
+    if (!secret) {
+        return false;
+    }
+    return authHeader === `Bearer ${secret}`;
 }
 
 async function findExistingAnnouncement(
@@ -338,6 +343,11 @@ export async function POST(request: NextRequest) {
                 attachmentCount,
                 isEdit: true,
             });
+            await publishAnnouncementEvent({
+                kind: 'updated',
+                hackathonId: existing.hackathonId,
+                announcementId: existing.id,
+            });
             return NextResponse.json<IngestResult>(
                 {
                     id: existing.id,
@@ -434,6 +444,11 @@ export async function POST(request: NextRequest) {
             hackathonId: created.hackathonId,
             attachmentCount,
             isEdit,
+        });
+        await publishAnnouncementEvent({
+            kind: 'created',
+            hackathonId: created.hackathonId,
+            announcementId: created.id,
         });
         return NextResponse.json<IngestResult>(
             {
@@ -630,6 +645,11 @@ export async function DELETE(request: NextRequest) {
             messageId,
             channelId,
             guildId,
+            hackathonId: row.hackathonId,
+            announcementId: row.id,
+        });
+        await publishAnnouncementEvent({
+            kind: 'archived',
             hackathonId: row.hackathonId,
             announcementId: row.id,
         });

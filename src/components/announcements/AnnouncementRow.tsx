@@ -9,6 +9,7 @@ import {
     useLayoutEffect,
     useRef,
     useState,
+    type ComponentPropsWithoutRef,
     type ReactNode,
 } from 'react';
 import { useRemarkSync } from 'react-remark';
@@ -102,10 +103,10 @@ function highlightTree(node: ReactNode, query: string): ReactNode {
 function MentionAnchor({
     href,
     children,
-}: {
-    href?: string;
-    children?: ReactNode;
-}) {
+    className,
+    onClick,
+    ...rest
+}: ComponentPropsWithoutRef<'a'>) {
     if (href?.startsWith('mention:')) {
         return (
             <span className="bg-brand-500/20 text-brand-300 inline rounded px-1 py-0.5 text-[0.9em] font-medium">
@@ -118,10 +119,18 @@ function MentionAnchor({
     }
     return (
         <a
+            {...rest}
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-brand-400 hover:text-brand-300 underline underline-offset-2"
+            className={cn(
+                'text-brand-400 hover:text-brand-300 underline underline-offset-2',
+                className
+            )}
+            onClick={(e) => {
+                e.stopPropagation();
+                onClick?.(e);
+            }}
         >
             {children}
         </a>
@@ -256,7 +265,18 @@ export default function AnnouncementRow({
                                   setJumpRevealed(true);
                               }
                           }
-                        : undefined
+                        : onRead
+                          ? (e) => {
+                                if (
+                                    (e.target as HTMLElement).closest(
+                                        'a, button'
+                                    )
+                                ) {
+                                    return;
+                                }
+                                onRead();
+                            }
+                          : undefined
                 }
             >
                 <div className="relative flex items-center gap-2.5">
@@ -361,6 +381,7 @@ export default function AnnouncementRow({
                                                         window.innerWidth >= 768
                                                     ) {
                                                         e.preventDefault();
+                                                        e.stopPropagation();
                                                         setExpanded(true);
                                                         onRead?.();
                                                     }

@@ -13,6 +13,7 @@ import { atom } from 'jotai';
 import { useHydrateAtoms } from 'jotai/utils';
 import { ReactNode } from 'react';
 import { DynamicTitle } from '@/components/DynamicTitle';
+import { AnnouncementsAblySubscriber } from '@/components/announcements/AnnouncementsAblySubscriber';
 
 export type { AnnouncementWithAttachments };
 
@@ -124,6 +125,7 @@ export function ClientContext({
     return (
         <>
             <DynamicTitle />
+            <AnnouncementsAblySubscriber />
             {children}
         </>
     );

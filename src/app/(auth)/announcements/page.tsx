@@ -76,7 +76,7 @@ export default function AnnouncementsPage() {
     const initialAnnouncements = useAtomValue(announcementsAtom);
     const setLastSeenAt = useSetAtom(lastSeenAtAtom);
     const lastSeenAt = useAtomValue(lastSeenAtAtom);
-    const initialLastSeenAtRef = useRef(lastSeenAt);
+    const dotBaselineRef = useRef(lastSeenAt);
     const markSeen = trpc.announcements.markSeen.useMutation();
     const { data: application } =
         trpc.applications.getCurrentApplication.useQuery(
@@ -136,10 +136,23 @@ export default function AnnouncementsPage() {
     const feedScrollRef = useRef<HTMLDivElement | null>(null);
     const [isAtTop, setIsAtTop] = useState(true);
     const [isFarFromTop, setIsFarFromTop] = useState(false);
-    // track timestamp seen while at top
-    const seenNewestTimestampRef = useRef<number>(
-        sortedDesc[0] ? +new Date(sortedDesc[0].sourceTimestamp) : Date.now()
+    const [seenNewestMs, setSeenNewestMs] = useState<number>(() =>
+        sortedDesc[0]
+            ? +new Date(sortedDesc[0].sourceTimestamp)
+            : Number.MIN_SAFE_INTEGER
     );
+    const sortedDescRef = useRef(sortedDesc);
+    const didHydrateSeenRef = useRef(false);
+
+    useLayoutEffect(() => {
+        sortedDescRef.current = sortedDesc;
+    }, [sortedDesc]);
+
+    useLayoutEffect(() => {
+        if (!sortedDesc[0] || didHydrateSeenRef.current) return;
+        setSeenNewestMs(+new Date(sortedDesc[0].sourceTimestamp));
+        didHydrateSeenRef.current = true;
+    }, [sortedDesc]);
 
     // listens on both inner feed div and outer main element
     const getScrollEl = useCallback((): HTMLElement | null => {
@@ -214,8 +227,14 @@ export default function AnnouncementsPage() {
                 (feedEl?.scrollTop ?? 0) > 0
                     ? feedEl!.scrollTop
                     : (mainEl?.scrollTop ?? 0);
-            setIsAtTop(top < 64);
+            const atTop = top < 64;
+            setIsAtTop(atTop);
             setIsFarFromTop(top > FAR_FROM_TOP_PX);
+            if (atTop && sortedDescRef.current[0]) {
+                setSeenNewestMs(
+                    +new Date(sortedDescRef.current[0].sourceTimestamp)
+                );
+            }
         };
 
         mainEl?.addEventListener('scroll', update, { passive: true });
@@ -226,14 +245,6 @@ export default function AnnouncementsPage() {
             feedEl?.removeEventListener('scroll', update);
         };
     }, [getScrollEl]);
-
-    useEffect(() => {
-        if (isAtTop && sortedDesc[0]) {
-            seenNewestTimestampRef.current = +new Date(
-                sortedDesc[0].sourceTimestamp
-            );
-        }
-    }, [isAtTop, sortedDesc]);
 
     // mark all as read when visit page
     useEffect(() => {
@@ -249,12 +260,9 @@ export default function AnnouncementsPage() {
         getScrollEl()?.scrollTo({ top: 0, behavior: 'smooth' });
     }, [query, getScrollEl]);
 
-    const newCount = isAtTop
-        ? 0
-        : sortedDesc.filter(
-              (a) =>
-                  +new Date(a.sourceTimestamp) > seenNewestTimestampRef.current
-          ).length;
+    const newCount = sortedDesc.filter(
+        (a) => +new Date(a.sourceTimestamp) > seenNewestMs
+    ).length;
 
     // surface the pill when there are unseen items (any scroll distance) OR when the user has scrolled noticeably far from the newest content.
     const showJumpPill = newCount > 0 || isFarFromTop;
@@ -268,12 +276,10 @@ export default function AnnouncementsPage() {
         const el = getScrollEl();
         el?.scrollTo({ top: 0, behavior: 'smooth' });
         if (sortedDesc[0])
-            seenNewestTimestampRef.current = +new Date(
-                sortedDesc[0].sourceTimestamp
-            );
+            setSeenNewestMs(+new Date(sortedDesc[0].sourceTimestamp));
         setIsAtTop(true);
         setIsFarFromTop(false);
-    }, [announcements.length, getScrollEl]);
+    }, [getScrollEl, sortedDesc]);
 
     // search-result "Jump" handler.
     const [flashId, setFlashId] = useState<number | null>(null);
@@ -412,38 +418,43 @@ export default function AnnouncementsPage() {
                                     >
                                         <ul className="flex flex-col">
                                             {sortedDesc.map((a, i) => {
-                                                const initial =
-                                                    initialLastSeenAtRef.current;
-                                                const unread =
-                                                    initial == null ||
+                                                const baseline =
+                                                    dotBaselineRef.current;
+                                                const dotUnread =
+                                                    baseline == null ||
                                                     new Date(
                                                         a.sourceTimestamp
-                                                    ) > initial;
-                                                const prevUnread =
+                                                    ) > baseline;
+                                                const prevDotUnread =
                                                     i === 0
                                                         ? true
-                                                        : initial == null ||
+                                                        : baseline == null ||
                                                           new Date(
                                                               sortedDesc[
                                                                   i - 1
                                                               ]!.sourceTimestamp
-                                                          ) > initial;
-                                                const nextUnread =
+                                                          ) > baseline;
+                                                const nextDotUnread =
                                                     i === sortedDesc.length - 1
                                                         ? false
-                                                        : initial == null ||
+                                                        : baseline == null ||
                                                           new Date(
                                                               sortedDesc[
                                                                   i + 1
                                                               ]!.sourceTimestamp
-                                                          ) > initial;
+                                                          ) > baseline;
+                                                const needsAck =
+                                                    lastSeenAt == null ||
+                                                    new Date(
+                                                        a.sourceTimestamp
+                                                    ) > lastSeenAt;
                                                 const showDivider =
-                                                    !unread &&
-                                                    prevUnread &&
+                                                    !dotUnread &&
+                                                    prevDotUnread &&
                                                     i > 0;
                                                 const hideBorderBottom =
-                                                    unread &&
-                                                    !nextUnread &&
+                                                    dotUnread &&
+                                                    !nextDotUnread &&
                                                     i < sortedDesc.length - 1;
                                                 const hideBorderTop =
                                                     showDivider;
@@ -481,7 +492,7 @@ export default function AnnouncementsPage() {
                                                             flash={
                                                                 flashId === a.id
                                                             }
-                                                            isUnread={unread}
+                                                            isUnread={dotUnread}
                                                             hideBorderBottom={
                                                                 hideBorderBottom
                                                             }
@@ -489,7 +500,7 @@ export default function AnnouncementsPage() {
                                                                 hideBorderTop
                                                             }
                                                             onRead={
-                                                                unread
+                                                                needsAck
                                                                     ? () => {
                                                                           const ts =
                                                                               new Date(
@@ -505,6 +516,15 @@ export default function AnnouncementsPage() {
                                                                                       prev
                                                                                       ? ts
                                                                                       : prev
+                                                                          );
+                                                                          setSeenNewestMs(
+                                                                              (
+                                                                                  prev
+                                                                              ) =>
+                                                                                  Math.max(
+                                                                                      prev,
+                                                                                      +ts
+                                                                                  )
                                                                           );
                                                                       }
                                                                     : undefined
