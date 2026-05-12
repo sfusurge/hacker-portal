@@ -62,7 +62,10 @@ export function defaultEventPagePayload(
         websiteHref: DEFAULT_BANNER_CONFIG.websiteHref,
         recapHref: null,
         hackerPackageHref: null,
+<<<<<<< development
         acceptedDiscordInviteHref: null,
+=======
+>>>>>>> production
         eventPageLabel: `${hackathonName} event page`,
     };
 }
