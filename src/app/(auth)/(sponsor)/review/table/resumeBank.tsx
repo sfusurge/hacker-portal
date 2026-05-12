@@ -35,9 +35,16 @@ export default function ResumeTable({ hackathonId }: ResumeTableProps) {
     const [globalFilter, setGlobalFilter] = useState<string>('');
     const [sorting, setSorting] = useState<SortingState>([]);
     const [pagination, setPagination] = useState<PaginationState>({
-        pageSize: parseInt(localStorage.getItem('pagesize') ?? '24'),
-        pageIndex: parseInt(localStorage.getItem('pageindex') ?? '0'),
+        pageSize: 24,
+        pageIndex: 0,
     });
+
+    useEffect(() => {
+        setPagination({
+            pageSize: parseInt(localStorage.getItem('pagesize') ?? '24', 10),
+            pageIndex: parseInt(localStorage.getItem('pageindex') ?? '0', 10),
+        });
+    }, []);
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
 
     const {

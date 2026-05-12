@@ -34,6 +34,7 @@ import {
     mergeBodyIntoStyling,
     prepareEmailContent,
 } from '@/app/(auth)/admin/email/templates/emailPreview';
+import { publishReviewTableEvent } from '@/lib/realtime/publishReviewTableEvent';
 
 export interface SubmitApplicationResponse {
     hackathonId: number;
@@ -355,6 +356,16 @@ export const applicationsRouter = router({
                 )
                 .returning();
 
+            if (
+                application &&
+                (input.status !== undefined ||
+                    input.pendingStatus !== undefined)
+            ) {
+                void publishReviewTableEvent({
+                    hackathonId: input.hackathonId,
+                });
+            }
+
             return application;
         }),
 
@@ -374,6 +385,16 @@ export const applicationsRouter = router({
                     )
                 )
                 .returning();
+
+            if (
+                updatedApplications.length > 0 &&
+                (input.status !== undefined ||
+                    input.pendingStatus !== undefined)
+            ) {
+                void publishReviewTableEvent({
+                    hackathonId: input.hackathonId,
+                });
+            }
 
             return updatedApplications;
         }),

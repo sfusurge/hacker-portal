@@ -80,12 +80,7 @@ export function AnnouncementsButton({ className }: { className?: string }) {
                         className
                     )}
                 >
-                    <MegaphoneIcon
-                        className={cn(
-                            'h-6 w-6 transition-colors duration-150',
-                            unreadCount > 0 && 'text-brand-300'
-                        )}
-                    />
+                    <MegaphoneIcon className="h-6 w-6 transition-colors duration-150" />
                     {unreadCount > 0 && (
                         <span className="bg-danger-500 absolute -top-2 -right-2 flex h-6 min-w-6 items-center justify-center rounded-full px-0.5 text-xs leading-none font-bold text-white">
                             {unreadLabel}

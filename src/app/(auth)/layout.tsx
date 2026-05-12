@@ -21,7 +21,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
 
     const { items: initialAnnouncements } =
         hackathon != null
-            ? await getInitialAnnouncements(hackathon.id)
+            ? await getInitialAnnouncements(hackathon.id, userData.id)
             : { items: [] };
 
     return (

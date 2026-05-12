@@ -106,6 +106,7 @@ export const announcementChannelMappings = pgTable(
             .notNull()
             .references(() => hackathons.id, { onDelete: 'restrict' }),
         label: varchar('label', { length: 256 }),
+        eventLocationKey: varchar('event_location_key', { length: 32 }),
         isActive: boolean('is_active').notNull().default(true),
         createdAt: timestamp('created_at').notNull().defaultNow(),
         updatedAt: timestamp('updated_at').notNull().defaultNow(),

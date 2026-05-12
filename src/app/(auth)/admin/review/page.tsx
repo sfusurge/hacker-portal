@@ -11,6 +11,7 @@ import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { trpc } from '@/trpc/client';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
 import { formatEventLocationLabel } from '@/lib/applicationAcceptStatus';
+import { ReviewTableAblySubscriber } from '@/components/admin/review/ReviewTableAblySubscriber';
 
 export type { Applicant };
 
@@ -105,6 +106,9 @@ export default function ReviewApplicationsPage() {
 
     return (
         <div>
+            {hackathon?.id ? (
+                <ReviewTableAblySubscriber hackathonId={hackathon.id} />
+            ) : null}
             <ReviewApplicationsTable
                 data={data}
                 applicationCount={applicationCountData?.applicationCount ?? -1}

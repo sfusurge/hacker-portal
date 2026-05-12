@@ -159,7 +159,7 @@ export default function RsvpPrompt({
             });
 
             if (rsvpTemplate?.id && userEmail) {
-                await sendEmail.mutateAsync({
+                const { emailSent } = await sendEmail.mutateAsync({
                     templateId: rsvpTemplate.id,
                     user: {
                         id: userId,
@@ -168,11 +168,13 @@ export default function RsvpPrompt({
                         email: userEmail.trim(),
                     },
                 });
-                await updateLastEmailSent.mutateAsync({
-                    hackathonId: hackathon.id,
-                    userId: userId,
-                    emailType: 'RSVP Received',
-                });
+                if (emailSent) {
+                    await updateLastEmailSent.mutateAsync({
+                        hackathonId: hackathon.id,
+                        userId: userId,
+                        emailType: 'RSVP Received',
+                    });
+                }
             }
         } catch (error) {
             console.error('Failed to update application:', error);

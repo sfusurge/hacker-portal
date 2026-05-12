@@ -13,7 +13,7 @@ import {
 } from '@/lib/discord/remarkDiscordMarkdown';
 import { renderDiscordContentMentions } from '@/lib/discord/mentions';
 import { eventDiscordUrlForStatus } from '@/lib/eventDiscord';
-import type { ReactNode } from 'react';
+import type { ComponentPropsWithoutRef } from 'react';
 import dayjs from 'dayjs';
 import { cn } from '@/lib/utils';
 import { useWindowSize } from '@/lib/useWindowSize';
@@ -56,10 +56,10 @@ function formatPopupTimestamp(date: Date): string {
 function MentionAnchor({
     href,
     children,
-}: {
-    href?: string;
-    children?: ReactNode;
-}) {
+    className,
+    onClick,
+    ...rest
+}: ComponentPropsWithoutRef<'a'>) {
     if (href?.startsWith('mention:')) {
         return (
             <span className="bg-brand-500/20 text-brand-300 inline rounded px-1 py-0.5 text-[0.9em] font-medium">
@@ -72,10 +72,18 @@ function MentionAnchor({
     }
     return (
         <a
+            {...rest}
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-brand-400 underline underline-offset-2"
+            className={cn(
+                'text-brand-400 underline underline-offset-2',
+                className
+            )}
+            onClick={(e) => {
+                e.stopPropagation();
+                onClick?.(e);
+            }}
         >
             {children}
         </a>

@@ -13,6 +13,7 @@ import {
     CardHeaderColumn,
 } from '@/components/ui/card';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { defaultEventPagePayload } from '@/components/home/eventPageConfig';
 import { eventDiscordUrlForStatus } from '@/lib/eventDiscord';
 import { cn } from '@/lib/utils';
 import { useAtomValue } from 'jotai';
@@ -31,12 +32,17 @@ export default function DiscordCard({
         applicationStatus,
         hackathon?.eventPagePayload
     );
-    const hackathonName = hackathon?.hackathonName;
-    const hackathonIconSrc = hackathon?.eventPagePayload?.iconSrc;
+    const payload =
+        hackathon?.eventPagePayload ??
+        (hackathon?.hackathonName
+            ? defaultEventPagePayload(hackathon.hackathonName)
+            : null);
+    const eventDisplayName = payload?.name ?? hackathon?.hackathonName;
+    const hackathonIconSrc = payload?.iconSrc;
     const isAccepted = applicationStatus === 'Accepted';
     const headerTitle =
-        isAccepted && hackathonName
-            ? `Join the ${hackathonName} Discord!`
+        isAccepted && eventDisplayName
+            ? `Join the ${eventDisplayName} Discord!`
             : 'Join the Surge Discord!';
 
     return (
@@ -61,7 +67,7 @@ export default function DiscordCard({
                 {isAccepted && hackathonIconSrc ? (
                     <Image
                         src={hackathonIconSrc}
-                        alt={`${hackathonName ?? 'Hackathon'} logo`}
+                        alt={`${eventDisplayName ?? 'Hackathon'} logo`}
                         width={320}
                         height={320}
                         className="pointer-events-none h-32 w-32 rounded-xl object-contain"

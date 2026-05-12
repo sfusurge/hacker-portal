@@ -82,25 +82,28 @@ export default async function ResultPage(
                                         typeof response?.['6'] === 'string'
                                             ? response['6']
                                             : '';
-                                    await trpcClient.emails.sendEmail({
-                                        templateId: rsvpTemplate.id,
-                                        user: {
-                                            id: application.userId,
-                                            firstName,
-                                            lastName,
-                                            email: payerEmail,
-                                        },
-                                    });
-                                    await trpcClient.applications.updateLastEmailSent(
-                                        {
-                                            hackathonId:
-                                                application.hackathonId,
-                                            userId: application.userId,
-                                            emailType:
-                                                rsvpTemplate.emailType ??
-                                                rsvpTemplate.purpose,
-                                        }
-                                    );
+                                    const sendResult =
+                                        await trpcClient.emails.sendEmail({
+                                            templateId: rsvpTemplate.id,
+                                            user: {
+                                                id: application.userId,
+                                                firstName,
+                                                lastName,
+                                                email: payerEmail,
+                                            },
+                                        });
+                                    if (sendResult.emailSent) {
+                                        await trpcClient.applications.updateLastEmailSent(
+                                            {
+                                                hackathonId:
+                                                    application.hackathonId,
+                                                userId: application.userId,
+                                                emailType:
+                                                    rsvpTemplate.emailType ??
+                                                    rsvpTemplate.purpose,
+                                            }
+                                        );
+                                    }
                                 }
                             } catch (e) {
                                 console.error(
