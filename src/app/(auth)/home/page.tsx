@@ -1,15 +1,13 @@
-import ApplicationCard from '@/components/home/Application/ApplicationCard';
 import EventsCard from '@/components/home/EventsCard';
-import TeamCard from '@/components/home/TeamCard';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
 import { createCaller } from '@/server/appRouter';
 import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 import { getUserData } from '@/server/routers/usersRouter';
 import { redirect } from 'next/navigation';
-import SponsorDashboard from './sponsor/index';
 import DiscordCard from '@/components/home/DiscordCard';
 import HackathonCard from '@/components/home/HackathonCard';
 import { PageHeader } from '@/components/PageHeader';
+import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
 
 export default async function Home() {
     const data = await getUserData();
