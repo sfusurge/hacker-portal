@@ -5,12 +5,15 @@ import {
     insertCheckInSchema,
     isCheckInSchema,
 } from '@/db/schema/checkIn';
-import { UserRoleEnum } from '@/db/schema/users/users';
-import { UnauthorizedError } from '../exceptions';
+import { UserRoleEnum, user as usersTable } from '@/db/schema/users/users';
+import { ResourceNotFoundError, UnauthorizedError } from '../exceptions';
+import { TRPCError } from '@trpc/server';
 import { publicProcedure, router } from '../trpc';
 import { and, desc, eq, count } from 'drizzle-orm';
 import { getUserData } from '@/server/routers/usersRouter';
 import { events } from '@/db/schema/events';
+import { applications } from '@/db/schema/applications';
+import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
 
 export const checkInRouter = router({
     checkIn: publicProcedure
@@ -23,6 +26,51 @@ export const checkInRouter = router({
                 throw new UnauthorizedError({
                     email: user?.email,
                     role: user?.userRole,
+                });
+            }
+
+            const [eventRow] = await databaseClient
+                .select({ hackathonId: events.hackathonId })
+                .from(events)
+                .where(eq(events.id, input.eventId))
+                .limit(1);
+
+            if (!eventRow) {
+                throw new TRPCError({
+                    code: 'NOT_FOUND',
+                    message: `Cannot find event with id ${input.eventId}`,
+                });
+            }
+
+            const [[targetUser], [application]] = await Promise.all([
+                databaseClient
+                    .select({ id: usersTable.id })
+                    .from(usersTable)
+                    .where(eq(usersTable.id, input.userId))
+                    .limit(1),
+                databaseClient
+                    .select({ currentStatus: applications.currentStatus })
+                    .from(applications)
+                    .where(
+                        and(
+                            eq(applications.hackathonId, eventRow.hackathonId),
+                            eq(applications.userId, input.userId)
+                        )
+                    )
+                    .limit(1),
+            ]);
+
+            if (!targetUser) {
+                throw new ResourceNotFoundError({
+                    id: input.userId,
+                    resourceType: 'user',
+                });
+            }
+
+            if (!isEligibleForHackathonTicketQr(application?.currentStatus)) {
+                throw new TRPCError({
+                    code: 'FORBIDDEN',
+                    message: 'USER NOT ACCEPTED',
                 });
             }
 

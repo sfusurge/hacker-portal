@@ -6,7 +6,18 @@ import React, { useState } from 'react';
 import { trpc } from './client';
 
 function Provider({ children }: { children: React.ReactNode }) {
-    const [queryClient] = useState(() => new QueryClient({}));
+    const [queryClient] = useState(
+        () =>
+            new QueryClient({
+                defaultOptions: {
+                    queries: {
+                        // stale time for queries and refetch on window focus
+                        staleTime: 60_000,
+                        refetchOnWindowFocus: false,
+                    },
+                },
+            })
+    );
     const [trpcClient] = useState(() =>
         trpc.createClient({
             links: [
