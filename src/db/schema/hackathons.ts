@@ -18,6 +18,7 @@ import { z } from 'zod';
 
 /** `event_page_payload`: marketing / event-page copy and assets. */
 export type HackathonEventPagePayload = {
+    eventPageLabel: string;
     name: string;
     tagline: string;
     iconSrc: string;
@@ -30,6 +31,8 @@ export type HackathonEventPagePayload = {
     websiteHref: string;
     recapHref: string | null;
     hackerPackageHref?: string | null;
+    targetAudience?: string;
+    acceptedDiscordInviteHref?: string | null;
 };
 
 // Journey hack submission deadline, February 13th, 2025 at 23:59:59
@@ -67,6 +70,10 @@ const hackathons = pgTable('hackathons', {
         .default([])
         .$type<SubmissionJudgeRubric[]>(),
     isPaid: boolean('is_paid').notNull().default(false),
+    paymentDeadline: timestamp('payment_deadline', {
+        mode: 'date',
+        withTimezone: true,
+    }),
     applicationOpen: timestamp('application_open', {
         mode: 'date',
         withTimezone: true,

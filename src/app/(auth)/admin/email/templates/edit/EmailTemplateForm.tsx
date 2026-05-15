@@ -265,9 +265,18 @@ export function EmailTemplateForm({
                                     const id = value
                                         ? parseInt(value, 10)
                                         : null;
+                                    const selected = hackathons.find(
+                                        (h) => h.id === id
+                                    );
                                     setFormData((prev) => ({
                                         ...prev,
                                         hackathonId: id,
+                                        emailType:
+                                            prev.emailType === 'rsvp_paid' &&
+                                            selected &&
+                                            !selected.isPaid
+                                                ? 'custom'
+                                                : prev.emailType,
                                     }));
                                     if (errors.hackathon) {
                                         setErrors((prev) => {
@@ -316,16 +325,40 @@ export function EmailTemplateForm({
                                 <SelectContent>
                                     {(
                                         hackathonEmailTypeEnum.enumValues as HackathonEmailType[]
-                                    ).map((key) => (
-                                        <SelectItem key={key} value={key}>
-                                            {HACKATHON_EMAIL_TYPE_LABELS[key]}
-                                        </SelectItem>
-                                    ))}
+                                    )
+                                        .filter((key) => {
+                                            if (key !== 'rsvp_paid') {
+                                                return true;
+                                            }
+                                            const h = hackathons.find(
+                                                (x) =>
+                                                    x.id ===
+                                                    formData.hackathonId
+                                            );
+                                            return (
+                                                h?.isPaid === true ||
+                                                formData.emailType ===
+                                                    'rsvp_paid'
+                                            );
+                                        })
+                                        .map((key) => (
+                                            <SelectItem key={key} value={key}>
+                                                {
+                                                    HACKATHON_EMAIL_TYPE_LABELS[
+                                                        key
+                                                    ]
+                                                }
+                                            </SelectItem>
+                                        ))}
                                 </SelectContent>
                             </Select>
                             <p className="mt-1 text-xs text-neutral-500">
                                 Category for this hackathon email (e.g. Hacker
-                                applied, RSVP received).
+                                applied, RSVP received).{' '}
+                                <span className="text-neutral-400">
+                                    &quot;RSVP payment confirmed&quot; is only
+                                    for paid hackathons.
+                                </span>
                             </p>
                         </div>
 

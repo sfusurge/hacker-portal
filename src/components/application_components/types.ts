@@ -6,10 +6,24 @@ interface Entry {
     description?: string;
 }
 
+/** Optional per-choice UI for multiple-choice*/
+export type ChoiceOptionAlert = {
+    title?: string;
+    description: string;
+    placement?: 'above-title' | 'below-fieldset';
+    variant?: 'info' | 'default';
+    /**
+     * `alert` (default): bordered alert box (supports `title`).
+     * `caption`: muted text under the selected radio only.
+     */
+    presentation?: 'alert' | 'caption';
+};
+
 type ChoiceOption = {
     name: string;
     data: string;
     other?: boolean;
+    alert?: ChoiceOptionAlert;
 };
 
 /**
@@ -25,6 +39,7 @@ export interface HackathonData {
     hackathonName: string; // should this be hackathon id in table instead?
     submissionTime?: string;
     isPaid?: boolean;
+    paymentDeadline: dayjs.Dayjs | null;
 
     applicationQuestionPages: InputFormPageData[];
     submissionQuestionPages: InputFormPageData[];

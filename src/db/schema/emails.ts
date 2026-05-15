@@ -55,6 +55,7 @@ export const emailTemplateStyling = pgTable('email_template_styling', {
 export const hackathonEmailTypeEnum = pgEnum('hackathon_email_type', [
     'hacker_applied',
     'rsvp_received',
+    'rsvp_paid',
     'hacker_declined',
     'hacker_accepted',
     'hacker_waitlisted',
@@ -68,6 +69,7 @@ export type HackathonEmailType =
 export const HACKATHON_EMAIL_TYPE_LABELS: Record<HackathonEmailType, string> = {
     hacker_applied: 'Hacker applied',
     rsvp_received: 'RSVP received',
+    rsvp_paid: 'RSVP payment received',
     hacker_declined: 'Hacker declined',
     hacker_accepted: 'Hacker accepted',
     hacker_waitlisted: 'Hacker waitlisted',
@@ -103,7 +105,6 @@ export const emails = pgTable('sh_25_emails', {
         .defaultNow(),
 });
 
-/** Placeholder in styling HTML where body content is injected. */
 export const EMAIL_STYLING_BODY_PLACEHOLDER = '{{bodyContent}}';
 
 export const emailTemplateStylingSchema = z.object({

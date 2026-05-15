@@ -21,7 +21,7 @@ import { signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
 import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import {
     Popover,
     PopoverContent,
@@ -79,13 +79,6 @@ const navLinks = [
         iconAlt: 'Announcement logo',
     },
     // {
-    //     href: '/notifications',
-    //     label: 'Notifications',
-    //     icon: <BellAlertIcon className="h-6 w-6" />,
-    //     iconAlt: 'Notifications logo',
-    //     disabled: true,
-    // },
-    // {
     //     href: '/projects',
     //     label: 'Project Gallery',
     //     icon: <InboxStackIcon className="h-6 w-6" />,
@@ -96,7 +89,7 @@ const navLinks = [
 const adminLinks = [
     {
         href: '/admin/qr',
-        label: 'Hacker Checkin (Admin)',
+        label: 'Hacker Checkin',
         icon: <QrCodeIcon className="h-6 w-6" />,
         iconAlt: 'QR logo',
     },
@@ -229,7 +222,7 @@ export default function SideBar({ className, initialData }: NavProps) {
     return (
         <div
             className={clsx(
-                'no-scrollbar flex max-h-screen flex-col overflow-y-auto pr-5',
+                'no-scrollbar flex h-full max-h-full min-h-0 w-full min-w-0 touch-pan-y flex-col overflow-x-hidden overflow-y-auto pr-5',
                 className
             )}
         >
@@ -310,58 +303,99 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                     'cursor-pointer'
                                                 )}
                                             >
-                                                <div
-                                                    className={cn(
-                                                        'flex h-6 w-6 items-center justify-center transition-colors',
-                                                        url.startsWith(
-                                                            '/profile'
-                                                        )
-                                                            ? 'text-brand-400 group-hover:text-brand-200'
-                                                            : 'group-text-white/70 text-white/30'
-                                                    )}
-                                                >
-                                                    <div className="h-6 w-6 overflow-hidden rounded-full">
-                                                        <img
-                                                            alt="User avatar"
-                                                            src={avatarUrl}
-                                                            className="h-full w-full object-cover"
-                                                        />
-                                                    </div>
-                                                </div>
-                                                {!collapsed && (
-                                                    <motion.div
-                                                        className="flex w-full items-center justify-between"
-                                                        initial={{ opacity: 0 }}
-                                                        animate={{ opacity: 1 }}
-                                                        exit={{ opacity: 0 }}
-                                                        transition={{
-                                                            duration: 0.2,
-                                                        }}
+                                                {collapsed ? (
+                                                    <PopoverPrimitive.Anchor
+                                                        asChild
                                                     >
-                                                        <span className="leading-none whitespace-nowrap">
-                                                            Profile
-                                                        </span>
-                                                        <ChevronRightIcon className="ml-2 h-4 w-4" />
-                                                    </motion.div>
+                                                        <div
+                                                            className={cn(
+                                                                'flex h-6 w-6 items-center justify-center transition-colors',
+                                                                url.startsWith(
+                                                                    '/profile'
+                                                                )
+                                                                    ? 'text-brand-400 group-hover:text-brand-200'
+                                                                    : 'group-text-white/70 text-white/30'
+                                                            )}
+                                                        >
+                                                            <div className="h-6 w-6 overflow-hidden rounded-full">
+                                                                <img
+                                                                    alt="User avatar"
+                                                                    src={
+                                                                        avatarUrl
+                                                                    }
+                                                                    className="h-full w-full object-cover"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </PopoverPrimitive.Anchor>
+                                                ) : (
+                                                    <>
+                                                        <div
+                                                            className={cn(
+                                                                'flex h-6 w-6 items-center justify-center transition-colors',
+                                                                url.startsWith(
+                                                                    '/profile'
+                                                                )
+                                                                    ? 'text-brand-400 group-hover:text-brand-200'
+                                                                    : 'group-text-white/70 text-white/30'
+                                                            )}
+                                                        >
+                                                            <div className="h-6 w-6 overflow-hidden rounded-full">
+                                                                <img
+                                                                    alt="User avatar"
+                                                                    src={
+                                                                        avatarUrl
+                                                                    }
+                                                                    className="h-full w-full object-cover"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <motion.div
+                                                            className="flex w-full items-center justify-between"
+                                                            initial={{
+                                                                opacity: 0,
+                                                            }}
+                                                            animate={{
+                                                                opacity: 1,
+                                                            }}
+                                                            exit={{
+                                                                opacity: 0,
+                                                            }}
+                                                            transition={{
+                                                                duration: 0.2,
+                                                            }}
+                                                        >
+                                                            <span className="leading-none whitespace-nowrap">
+                                                                Profile
+                                                            </span>
+                                                            <PopoverPrimitive.Anchor
+                                                                asChild
+                                                            >
+                                                                <span className="inline-flex size-6 shrink-0 items-center justify-center">
+                                                                    <ChevronRightIcon className="h-4 w-4" />
+                                                                </span>
+                                                            </PopoverPrimitive.Anchor>
+                                                        </motion.div>
+                                                    </>
                                                 )}
                                             </div>
                                         </PopoverTrigger>
                                         <PopoverContent
                                             key={profilePopoverSide}
                                             side={profilePopoverSide}
-                                            align={
+                                            align="center"
+                                            sideOffset={
                                                 profilePopoverSide === 'bottom'
-                                                    ? 'end'
-                                                    : 'center'
+                                                    ? 16
+                                                    : 24
                                             }
-                                            sideOffset={8}
                                             collisionPadding={
                                                 profilePopoverSide === 'bottom'
                                                     ? 16
                                                     : undefined
                                             }
                                             className={cn(
-                                                'z-200 w-48',
+                                                'z-200 w-48 border border-neutral-600/30',
                                                 profilePopoverSide ===
                                                     'bottom' &&
                                                     '!mr-0 max-w-[min(12rem,calc(100vw-2rem))]'
@@ -386,7 +420,7 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                 href="#"
                                                 label="Sign out"
                                                 icon={
-                                                    <ArrowLeftEndOnRectangleIcon className="h-6 w-6 text-white/60" />
+                                                    <ArrowLeftEndOnRectangleIcon className="text-danger-400 h-6 w-6" />
                                                 }
                                                 iconAlt="Sign out logo"
                                                 platform="desktop"
@@ -406,9 +440,6 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                     }
                                                 }}
                                             />
-                                            {profilePopoverSide === 'right' ? (
-                                                <PopoverPrimitive.Arrow className="fill-neutral-850 mr-4 shadow-lg" />
-                                            ) : null}
                                         </PopoverContent>
                                     </Popover>
                                 )}

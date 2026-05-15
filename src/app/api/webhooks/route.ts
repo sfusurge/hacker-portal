@@ -124,11 +124,8 @@ export async function POST(req: Request) {
                             break;
                         }
                         const rsvpTemplate =
-                            await trpcClient.emailTemplates.getEmailTemplateByHackathonAndType(
-                                {
-                                    hackathonId: application.hackathonId,
-                                    emailType: 'rsvp_received',
-                                }
+                            await trpcClient.emailTemplates.getRsvpPaymentConfirmationTemplate(
+                                { hackathonId: application.hackathonId }
                             );
 
                         if (rsvpTemplate) {
@@ -138,24 +135,40 @@ export async function POST(req: Request) {
                                     string,
                                     any
                                 > | null) ?? null;
-                            const firstName = response?.['2'] ?? 'Friend';
-                            const lastName = response?.['3'] ?? '';
+                            const firstName = response?.['5'] ?? 'Friend';
+                            const lastName = response?.['6'] ?? '';
 
-                            await trpcClient.emails.sendEmail({
-                                templateId: rsvpTemplate.id,
-                                user: {
-                                    id: application.userId,
-                                    firstName: firstName,
-                                    lastName: lastName,
-                                    email: payerEmail,
-                                },
-                            });
-                            console.log(
-                                'RSVP confirmation email sent successfully'
-                            );
+                            const sendResult =
+                                await trpcClient.emails.sendEmail({
+                                    templateId: rsvpTemplate.id,
+                                    user: {
+                                        id: application.userId,
+                                        firstName: firstName,
+                                        lastName: lastName,
+                                        email: payerEmail,
+                                    },
+                                });
+                            if (sendResult.emailSent) {
+                                await trpcClient.applications.updateLastEmailSent(
+                                    {
+                                        hackathonId: application.hackathonId,
+                                        userId: application.userId,
+                                        emailType:
+                                            rsvpTemplate.emailType ??
+                                            rsvpTemplate.purpose,
+                                    }
+                                );
+                                console.log(
+                                    'RSVP confirmation email sent successfully'
+                                );
+                            } else {
+                                console.error(
+                                    'RSVP confirmation email was not delivered (SMTP or processing failure)'
+                                );
+                            }
                         } else {
                             console.error(
-                                `No RSVP template found for hackathon ${application.hackathonId} (emailType: rsvp_received)`
+                                `No RSVP confirmation template found for hackathon ${application.hackathonId} (rsvp_paid for paid events, else rsvp_received)`
                             );
                         }
                     } catch (emailError) {

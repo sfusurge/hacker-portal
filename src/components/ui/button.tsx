@@ -12,8 +12,8 @@ interface ButtonProps {
     trailingIconAlt?: string;
     trailingIconChild?: React.ReactElement;
     type?: 'button' | 'submit' | 'reset';
-    size?: 'compact' | 'cozy';
-    desktopSize?: 'compact' | 'cozy';
+    size?: 'compact' | 'cozy' | 'iconButton';
+    desktopSize?: 'compact' | 'cozy' | 'iconButton';
 }
 
 const buttonVariants = cva(
@@ -38,6 +38,7 @@ const buttonVariants = cva(
             size: {
                 cozy: 'h-11 rounded-lg text-md',
                 compact: 'h-9 rounded-md text-sm',
+                iconButton: 'h-11 w-11 rounded-lg',
             },
             disabled: {
                 true: '',
@@ -146,14 +147,20 @@ const Button = forwardRef<
         const sizeClasses = cn(
             size === 'compact'
                 ? 'h-9 rounded-md text-sm'
-                : 'h-11 rounded-lg text-md',
+                : size === 'iconButton'
+                  ? 'h-11 w-11 rounded-lg'
+                  : 'h-11 rounded-lg text-md',
             desktopSize
                 ? desktopSize === 'compact'
                     ? 'md:h-9 md:rounded-md md:text-sm'
-                    : 'md:h-11 md:rounded-lg md:text-md'
+                    : desktopSize === 'iconButton'
+                      ? 'md:h-11 md:w-11 md:rounded-lg'
+                      : 'md:h-11 md:rounded-lg md:text-md'
                 : size === 'compact'
                   ? 'md:h-9 md:rounded-md md:text-sm'
-                  : 'md:h-11 md:rounded-lg md:text-md'
+                  : size === 'iconButton'
+                    ? 'md:h-11 md:w-11 md:rounded-lg'
+                    : 'md:h-11 md:rounded-lg md:text-md'
         );
 
         const leadingIconStyles = cn({
@@ -179,8 +186,10 @@ const Button = forwardRef<
         const contentStyles = cn({
             'p-2': size === 'compact',
             'p-3': size === 'cozy',
+            'p-0': size === 'iconButton',
             'md:p-2': desktopSize === 'compact',
             'md:p-3': desktopSize === 'cozy',
+            'md:p-0': desktopSize === 'iconButton',
         });
 
         return (

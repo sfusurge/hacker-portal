@@ -15,12 +15,11 @@ import {
     eq,
     getTableColumns,
     desc,
-    or,
     inArray,
     sql,
     count,
 } from 'drizzle-orm';
-import { object, z } from 'zod';
+import { z } from 'zod';
 import { InternalServerError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
 import { transporter } from '@/server/nodemailerTransporter';
@@ -35,6 +34,7 @@ import {
     mergeBodyIntoStyling,
     prepareEmailContent,
 } from '@/app/(auth)/admin/email/templates/emailPreview';
+import { publishReviewTableEvent } from '@/lib/realtime/publishReviewTableEvent';
 
 export interface SubmitApplicationResponse {
     hackathonId: number;
@@ -81,7 +81,6 @@ export const applicationsRouter = router({
                         'User email is missing. Cannot send email.'
                     );
                 }
-
                 try {
                     const [template] = await databaseClient
                         .select()
@@ -109,6 +108,7 @@ export const applicationsRouter = router({
 
                         const templateData = {
                             firstName: user.firstName ?? 'Friend',
+                            lastName: user.lastName ?? '',
                             email: user.email,
                             userId: user.id,
                         };
@@ -137,21 +137,12 @@ export const applicationsRouter = router({
                             }
                         }
 
-                        const commonMail = {
+                        await transporter.sendMail({
                             from: process.env.SENDINGEMAIL,
                             subject: template.title,
                             html: finalHtmlContent,
-                        };
-
-                        const targetList = [user.email];
-                        await Promise.all(
-                            targetList.map(async (to) => {
-                                await transporter.sendMail({
-                                    ...commonMail,
-                                    to,
-                                });
-                            })
-                        );
+                            to: user.email,
+                        });
 
                         await databaseClient
                             .update(applications)
@@ -201,8 +192,8 @@ export const applicationsRouter = router({
                     teamId: teams.id,
                     teamName: teams.name,
                     userId: members.userId,
-                    firstName: sql<string>`${applications.response}->>'1'`,
-                    lastName: sql<string>`${applications.response}->>'2'`,
+                    firstName: sql<string>`${applications.response}->>'5'`,
+                    lastName: sql<string>`${applications.response}->>'6'`,
                 })
                 .from(teams)
                 .innerJoin(members, eq(members.teamId, teams.id))
@@ -232,7 +223,7 @@ export const applicationsRouter = router({
                     checkInTime: checkIns.checkInTime,
                 })
                 .from(events)
-                .innerJoin(checkIns, eq(events.id, checkIns.eventId)) // Change leftJoin to innerJoin
+                .innerJoin(checkIns, eq(events.id, checkIns.eventId))
                 .where(
                     and(
                         eq(events.hackathonId, input.hackathonId),
@@ -365,6 +356,16 @@ export const applicationsRouter = router({
                 )
                 .returning();
 
+            if (
+                application &&
+                (input.status !== undefined ||
+                    input.pendingStatus !== undefined)
+            ) {
+                void publishReviewTableEvent({
+                    hackathonId: input.hackathonId,
+                });
+            }
+
             return application;
         }),
 
@@ -384,6 +385,16 @@ export const applicationsRouter = router({
                     )
                 )
                 .returning();
+
+            if (
+                updatedApplications.length > 0 &&
+                (input.status !== undefined ||
+                    input.pendingStatus !== undefined)
+            ) {
+                void publishReviewTableEvent({
+                    hackathonId: input.hackathonId,
+                });
+            }
 
             return updatedApplications;
         }),

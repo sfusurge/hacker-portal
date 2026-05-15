@@ -29,6 +29,7 @@ import { Input } from '@/components/ui/input';
 import { mkConfig, generateCsv, download } from 'export-to-csv';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
 import { DocumentArrowDownIcon } from '@heroicons/react/24/solid';
@@ -40,6 +41,7 @@ import {
     ApplicationStatus,
     APPLICATION_STATUS_ENUM,
 } from '@/db/schema/applications';
+import { getAcceptPendingStatusForEventLocation } from '@/lib/applicationAcceptStatus';
 import { FilterColumn } from './FilterColumn';
 import {
     HACKATHON_EMAIL_TYPE_LABELS,
@@ -56,6 +58,23 @@ function emailTypeDisplayLabel(emailType: string | null | undefined): string {
     return 'No type set';
 }
 
+/** Email types bulk-sent from the review table (decisions or custom only). */
+const REVIEW_BULK_ALLOWED_EMAIL_TYPES = new Set<HackathonEmailType>([
+    'hacker_accepted',
+    'hacker_waitlisted',
+    'hacker_declined',
+    'custom',
+]);
+
+function isTemplateEligibleForReviewBulkSend(
+    emailType: string | null | undefined
+): boolean {
+    if (emailType == null || emailType === '') {
+        return true;
+    }
+    return REVIEW_BULK_ALLOWED_EMAIL_TYPES.has(emailType as HackathonEmailType);
+}
+
 export type Applicant = {
     members: string[] | null;
     id: number;
@@ -67,6 +86,8 @@ export type Applicant = {
     pronouns: string;
     age: string;
     email: string;
+    eventLocation?: string;
+    eventLocationKey?: string;
     haveHackathonExperience: string;
     howHeardAbout: string[];
     dietaryRestrictions?: string[];
@@ -81,6 +102,7 @@ export type Applicant = {
 
     // School Information
     school?: string;
+    schoolEmail?: string;
     background?: string;
     yearOfStudy?: string;
     major: string;
@@ -186,6 +208,21 @@ export default function ReviewApplicationsTable({
                 </div>
             ),
             size: 50,
+        },
+        {
+            accessorKey: 'eventLocation',
+            header: 'Loc.',
+            size: 64,
+            minSize: 80,
+            maxSize: 240,
+            cell: (info) => {
+                const v = info.getValue<string>() ?? '';
+                return (
+                    <span className="block max-w-full" title={v}>
+                        {v}
+                    </span>
+                );
+            },
         },
         {
             // id: 'teamName',
@@ -295,6 +332,12 @@ export default function ReviewApplicationsTable({
         {
             accessorKey: 'school',
             header: 'School',
+            size: 225,
+            minSize: 150,
+        },
+        {
+            accessorKey: 'schoolEmail',
+            header: 'School Email',
             size: 225,
             minSize: 150,
         },
@@ -448,20 +491,35 @@ function MyTable({
     const [selectedHackathonForEmail, setSelectedHackathonForEmail] = useState<
         number | null
     >(hackathonId);
+    const [showAllEmailTemplates, setShowAllEmailTemplates] = useState(false);
     const { toast } = useToast();
 
     const effectiveHackathonForEmail = selectedHackathonForEmail ?? hackathonId;
-    const currentHackathon = hackathons.find((h) => h.id === hackathonId);
-    const isPaidHackathon = currentHackathon?.isPaid ?? false;
     const { data: emailTemplates, isLoading: templatesLoading } =
         trpc.emailTemplates.getEmailTemplates.useQuery({
             hackathonId: effectiveHackathonForEmail,
         });
 
+    const bulkSendEmailTemplates = useMemo(
+        () =>
+            (emailTemplates ?? []).filter((t) =>
+                isTemplateEligibleForReviewBulkSend(t.emailType)
+            ),
+        [emailTemplates]
+    );
+
+    const templatesForPicker = showAllEmailTemplates
+        ? (emailTemplates ?? [])
+        : bulkSendEmailTemplates;
+
     const selectedEmailTemplate = useMemo(() => {
         if (selectedTemplateId == null) return null;
         return emailTemplates?.find((t) => t.id === selectedTemplateId) ?? null;
     }, [emailTemplates, selectedTemplateId]);
+
+    const canQueueSelectedTemplate =
+        selectedEmailTemplate != null &&
+        isTemplateEligibleForReviewBulkSend(selectedEmailTemplate.emailType);
 
     const statusCounts = useMemo(() => getStatusCounts(data), [data]);
 
@@ -470,9 +528,16 @@ function MyTable({
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
     const [pagination, setPagination] = useState<PaginationState>({
-        pageSize: parseInt(localStorage.getItem('pagesize') ?? '200'),
-        pageIndex: parseInt(localStorage.getItem('pageindex') ?? '0'),
+        pageSize: 200,
+        pageIndex: 0,
     });
+
+    useEffect(() => {
+        setPagination({
+            pageSize: parseInt(localStorage.getItem('pagesize') ?? '200', 10),
+            pageIndex: parseInt(localStorage.getItem('pageindex') ?? '0', 10),
+        });
+    }, []);
 
     const table = useReactTable({
         data,
@@ -492,6 +557,11 @@ function MyTable({
         autoResetPageIndex: false,
     });
 
+    const selectColWidth = table.getColumn('select')?.getSize() ?? 50;
+    const eventLocationColWidth =
+        table.getColumn('eventLocation')?.getSize() ?? 64;
+    const teamNameStickyLeftPx = selectColWidth + eventLocationColWidth;
+
     useEffect(() => {
         setSelectedHackathonForEmail(hackathonId);
     }, [hackathonId]);
@@ -499,6 +569,15 @@ function MyTable({
     useEffect(() => {
         setSelectedTemplateId(null);
     }, [effectiveHackathonForEmail]);
+
+    useEffect(() => {
+        if (!showAllEmailTemplates && selectedTemplateId != null) {
+            const t = emailTemplates?.find((x) => x.id === selectedTemplateId);
+            if (t && !isTemplateEligibleForReviewBulkSend(t.emailType)) {
+                setSelectedTemplateId(null);
+            }
+        }
+    }, [showAllEmailTemplates, selectedTemplateId, emailTemplates]);
 
     const toggleEmailPopup = () => {
         setIsEmailPopupOpen(!isEmailPopupOpen);
@@ -605,6 +684,24 @@ function MyTable({
         });
     };
 
+    const batchAcceptSelectedByLocation = async (rows: Row<Applicant>[]) => {
+        const groups = new Map<StatusEnum, Row<Applicant>[]>();
+        for (const row of rows) {
+            const pending = getAcceptPendingStatusForEventLocation(
+                row.original.eventLocationKey
+            );
+            const list = groups.get(pending) ?? [];
+            list.push(row);
+            groups.set(pending, list);
+        }
+        for (const [status, groupRows] of groups) {
+            await batchUpdateApplicants(groupRows, {
+                status,
+                pendingStatus: status,
+            });
+        }
+    };
+
     //sends emails to selected users
     const handleSendingEmails = async (rows: Row<Applicant>[]) => {
         try {
@@ -623,7 +720,13 @@ function MyTable({
                 (t) => t.id === selectedTemplateId
             );
             if (!selectedTemplate) {
-                throw new Error('Selected template not found');
+                toast({
+                    title: 'Error',
+                    description: 'Selected template not found.',
+                    variant: 'default',
+                });
+                setIsSending(false);
+                return;
             }
 
             const rowData = rows.map((row) => ({
@@ -637,7 +740,6 @@ function MyTable({
 
             const effectiveHackathonId = effectiveHackathonForEmail;
 
-            // Queue emails for sending
             const queueResult = await queueBatchEmails.mutateAsync({
                 templateId: selectedTemplateId,
                 users: rowData.map((r) => ({
@@ -851,13 +953,25 @@ function MyTable({
                                                             header.column
                                                                 .columnDef
                                                                 .minSize,
+                                                        ...(index === 1
+                                                            ? {
+                                                                  left: selectColWidth,
+                                                              }
+                                                            : {}),
+                                                        ...(index === 2
+                                                            ? {
+                                                                  left: teamNameStickyLeftPx,
+                                                              }
+                                                            : {}),
                                                     }}
                                                     className={`relative overflow-hidden px-4 py-4 text-sm overflow-ellipsis ${
                                                         index === 0
-                                                            ? 'sticky left-0 z-20 bg-neutral-900' // First column
+                                                            ? 'sticky left-0 z-20 bg-neutral-900' // Checkbox
                                                             : index === 1
-                                                              ? 'sticky left-[50px] z-20 bg-neutral-900' // Second column
-                                                              : ''
+                                                              ? 'sticky z-20 bg-neutral-900' // Event Location — left from selectColWidth
+                                                              : index === 2
+                                                                ? 'sticky z-20 bg-neutral-900' // Team Name — left from column widths
+                                                                : ''
                                                     }`}
                                                     onClick={
                                                         header.column.getCanMultiSort()
@@ -912,13 +1026,25 @@ function MyTable({
                                                             header.column
                                                                 .columnDef
                                                                 .minSize,
+                                                        ...(index === 1
+                                                            ? {
+                                                                  left: selectColWidth,
+                                                              }
+                                                            : {}),
+                                                        ...(index === 2
+                                                            ? {
+                                                                  left: teamNameStickyLeftPx,
+                                                              }
+                                                            : {}),
                                                     }}
                                                     className={`relative px-4 py-2 text-sm ${
                                                         index === 0
                                                             ? 'sticky left-0 z-20 bg-neutral-900'
                                                             : index === 1
-                                                              ? 'sticky left-[50px] z-20 bg-neutral-900'
-                                                              : ''
+                                                              ? 'sticky z-20 bg-neutral-900'
+                                                              : index === 2
+                                                                ? 'sticky z-20 bg-neutral-900'
+                                                                : ''
                                                     }`}
                                                 >
                                                     {header.column.getCanFilter() ? (
@@ -967,13 +1093,25 @@ function MyTable({
                                                             cell.column
                                                                 .columnDef
                                                                 .minSize,
+                                                        ...(index === 1
+                                                            ? {
+                                                                  left: selectColWidth,
+                                                              }
+                                                            : {}),
+                                                        ...(index === 2
+                                                            ? {
+                                                                  left: teamNameStickyLeftPx,
+                                                              }
+                                                            : {}),
                                                     }}
                                                     className={`border-b border-neutral-600/30 bg-neutral-800 px-4 py-4 text-sm ${
                                                         index === 0
-                                                            ? 'sticky left-0 z-10 bg-neutral-800' // First column
+                                                            ? 'sticky left-0 z-10 bg-neutral-800' // Checkbox
                                                             : index === 1
-                                                              ? 'sticky left-[50px] z-10 bg-neutral-800' // Second column
-                                                              : ''
+                                                              ? 'sticky z-10 bg-neutral-800' // Event Location
+                                                              : index === 2
+                                                                ? 'sticky z-10 bg-neutral-800' // Team Name
+                                                                : ''
                                                     }`}
                                                 >
                                                     <div
@@ -1110,16 +1248,8 @@ function MyTable({
                     }`}
                     type="button"
                     onClick={() =>
-                        batchUpdateApplicants(
-                            table.getSelectedRowModel().rows,
-                            {
-                                status: isPaidHackathon
-                                    ? 'Accepted - Pending Payment'
-                                    : 'Accepted - RSVP to Confirm',
-                                pendingStatus: isPaidHackathon
-                                    ? 'Accepted - Pending Payment'
-                                    : 'Accepted - RSVP to Confirm',
-                            }
+                        batchAcceptSelectedByLocation(
+                            table.getSelectedRowModel().rows
                         )
                     }
                     disabled={Object.keys(rowSelection).length === 0}
@@ -1199,14 +1329,14 @@ function MyTable({
                     onClick={() => setIsEmailPopupOpen(false)}
                 >
                     <div
-                        className="flex w-full max-w-md flex-col gap-4 rounded-xl bg-neutral-900 p-10 text-white shadow-lg"
+                        className="flex w-full max-w-lg flex-col gap-4 rounded-xl bg-neutral-900 p-10 text-white shadow-lg"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h2 className="mb-2 text-xl font-semibold">
                             Send Emails
                         </h2>
 
-                        <div className="mb-4">
+                        <div className="">
                             <Label className="mb-2 text-white/60">
                                 Hackathon
                             </Label>
@@ -1236,102 +1366,157 @@ function MyTable({
                         </div>
 
                         <div className="mb-4">
-                            <Label className="mb-2 text-white/60">
-                                Select Email Template
-                            </Label>
+                            <div className="mb-2 flex items-center justify-between gap-3">
+                                <Label className="text-white/60">
+                                    Email template
+                                </Label>
+                                <label className="flex cursor-pointer items-center gap-2 text-xs text-white/50">
+                                    <input
+                                        type="checkbox"
+                                        role="switch"
+                                        checked={showAllEmailTemplates}
+                                        onChange={(e) =>
+                                            setShowAllEmailTemplates(
+                                                e.target.checked
+                                            )
+                                        }
+                                        className="accent-brand-500 rounded border-neutral-500 bg-neutral-700"
+                                    />
+                                    All
+                                </label>
+                            </div>
                             {templatesLoading ? (
                                 <div className="text-sm text-white/60">
                                     Loading templates...
                                 </div>
-                            ) : emailTemplates && emailTemplates.length > 0 ? (
-                                <div className="mt-2 max-h-60 overflow-y-auto">
-                                    <RadioGroup
-                                        value={
-                                            selectedTemplateId?.toString() || ''
-                                        }
-                                        onValueChange={(value) =>
-                                            setSelectedTemplateId(Number(value))
-                                        }
-                                    >
-                                        <div className="flex w-full flex-col gap-2">
-                                            {emailTemplates.map((template) => (
-                                                <div
-                                                    className={`flex cursor-pointer items-center space-x-2 rounded-lg border px-4 py-3 ${
-                                                        selectedTemplateId ===
-                                                        template.id
-                                                            ? 'bg-brand-950/60 border-brand-900'
-                                                            : 'border-neutral-600/60 bg-neutral-800/60'
-                                                    }`}
-                                                    key={template.id}
-                                                    onClick={() =>
-                                                        setSelectedTemplateId(
-                                                            template.id
-                                                        )
-                                                    }
-                                                >
-                                                    <RadioGroupItem
-                                                        value={template.id.toString()}
-                                                        id={`template-${template.id}`}
-                                                        className={`h-5 w-5 appearance-none rounded-full border ${
-                                                            selectedTemplateId ===
-                                                            template.id
-                                                                ? 'bg-brand-500 border-blue-800'
-                                                                : 'border-neutral-500 bg-neutral-700'
-                                                        }`}
-                                                    />
-                                                    <div className="flex flex-col gap-0.5">
-                                                        <span className="text-brand-300 text-[11px] font-semibold tracking-wide uppercase">
-                                                            Email type:{' '}
-                                                            {emailTypeDisplayLabel(
+                            ) : (emailTemplates?.length ?? 0) > 0 ? (
+                                templatesForPicker.length > 0 ? (
+                                    <div className="mt-2 max-h-60 overflow-y-auto">
+                                        <RadioGroup
+                                            value={
+                                                selectedTemplateId?.toString() ||
+                                                ''
+                                            }
+                                            onValueChange={(value) =>
+                                                setSelectedTemplateId(
+                                                    Number(value)
+                                                )
+                                            }
+                                        >
+                                            <div className="flex w-full flex-col gap-2">
+                                                {templatesForPicker.map(
+                                                    (template) => {
+                                                        const eligible =
+                                                            isTemplateEligibleForReviewBulkSend(
                                                                 template.emailType
-                                                            )}
-                                                        </span>
-                                                        <Label
-                                                            htmlFor={`template-${template.id}`}
-                                                            className="cursor-pointer font-medium text-white"
-                                                        >
-                                                            {template.title}
-                                                        </Label>
-                                                        <span className="text-xs text-white/60">
-                                                            {template.purpose}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </RadioGroup>
-                                </div>
+                                                            );
+                                                        const selected =
+                                                            selectedTemplateId ===
+                                                            template.id;
+                                                        return (
+                                                            <div
+                                                                className={`flex cursor-pointer items-center space-x-2 rounded-lg border px-4 py-3 transition-opacity ${
+                                                                    eligible
+                                                                        ? selected
+                                                                            ? 'border-brand-900 bg-brand-950/60'
+                                                                            : 'border-neutral-600/60 bg-neutral-800/60'
+                                                                        : selected
+                                                                          ? 'border-neutral-500/70 bg-neutral-800/40 opacity-60'
+                                                                          : 'border-neutral-700/40 bg-neutral-900/40 opacity-45 hover:opacity-55'
+                                                                }`}
+                                                                key={
+                                                                    template.id
+                                                                }
+                                                                onClick={() =>
+                                                                    setSelectedTemplateId(
+                                                                        template.id
+                                                                    )
+                                                                }
+                                                            >
+                                                                <RadioGroupItem
+                                                                    value={template.id.toString()}
+                                                                    id={`template-${template.id}`}
+                                                                    className={`h-5 w-5 shrink-0 appearance-none rounded-full border ${
+                                                                        selected
+                                                                            ? 'bg-brand-500 border-blue-800'
+                                                                            : 'border-neutral-500 bg-neutral-700'
+                                                                    }`}
+                                                                />
+                                                                <div className="flex flex-col gap-0.5">
+                                                                    <span className="text-brand-300 text-[11px] font-semibold tracking-wide uppercase">
+                                                                        Email
+                                                                        type:{' '}
+                                                                        {emailTypeDisplayLabel(
+                                                                            template.emailType
+                                                                        )}
+                                                                    </span>
+                                                                    <Label
+                                                                        htmlFor={`template-${template.id}`}
+                                                                        className="cursor-pointer font-medium text-white"
+                                                                    >
+                                                                        {
+                                                                            template.title
+                                                                        }
+                                                                    </Label>
+                                                                    <span className="text-xs text-white/60">
+                                                                        {
+                                                                            template.purpose
+                                                                        }
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    }
+                                                )}
+                                            </div>
+                                        </RadioGroup>
+                                    </div>
+                                ) : (
+                                    <div className="text-sm text-white/60">
+                                        No templates in this view.
+                                    </div>
+                                )
                             ) : (
                                 <div className="text-sm text-white/60">
-                                    No email templates found. Please create
-                                    templates in the Email Templates section.
+                                    No email templates for this hackathon.
                                 </div>
                             )}
                         </div>
 
                         {selectedEmailTemplate && (
-                            <div className="border-brand-800/50 bg-brand-950/40 rounded-xl border px-4 py-3">
-                                <p className="text-sm font-medium tracking-wide text-white/60 uppercase">
-                                    About to send
-                                </p>
-                                <p className="mt-1 text-base font-semibold text-white">
-                                    {emailTypeDisplayLabel(
-                                        selectedEmailTemplate.emailType
+                            <Alert
+                                variant={
+                                    canQueueSelectedTemplate
+                                        ? 'info'
+                                        : 'warning'
+                                }
+                                className="rounded-xl px-4 py-3"
+                            >
+                                <AlertTitle className="text-base font-semibold text-white">
+                                    {selectedEmailTemplate.title}
+                                </AlertTitle>
+                                <AlertDescription className="mt-1 flex flex-col gap-1 text-sm">
+                                    <span>
+                                        email type:{' '}
+                                        {emailTypeDisplayLabel(
+                                            selectedEmailTemplate.emailType
+                                        )}
+                                    </span>
+                                    {!selectedEmailTemplate.emailType && (
+                                        <span className="text-xs text-white/70">
+                                            Queue tag uses purpose: &quot;
+                                            {selectedEmailTemplate.purpose}
+                                            &quot;
+                                        </span>
                                     )}
-                                </p>
-                                <p className="mt-0.5 text-xs text-white/60">
-                                    Template: {selectedEmailTemplate.title}
-                                </p>
-                                {!selectedEmailTemplate.emailType && (
-                                    <p className="mt-2 text-xs text-white/80">
-                                        No email type on this template; the
-                                        queue will use the purpose field as the
-                                        tag: &quot;
-                                        {selectedEmailTemplate.purpose}
-                                        &quot;
-                                    </p>
-                                )}
-                            </div>
+                                    {!canQueueSelectedTemplate && (
+                                        <span className="text-xs font-medium">
+                                            Sent automatically by the system.
+                                            Queue to resend or override.
+                                        </span>
+                                    )}
+                                </AlertDescription>
+                            </Alert>
                         )}
 
                         <div className="mt-2 flex justify-between">
@@ -1357,9 +1542,9 @@ function MyTable({
                                 }
                             >
                                 {isSending
-                                    ? 'Sending...'
+                                    ? 'Queueing...'
                                     : selectedEmailTemplate
-                                      ? `Send ${emailTypeDisplayLabel(selectedEmailTemplate.emailType)} — ${table.getSelectedRowModel().rows.length} recipient${table.getSelectedRowModel().rows.length === 1 ? '' : 's'}`
+                                      ? `Queue ${emailTypeDisplayLabel(selectedEmailTemplate.emailType)} — ${table.getSelectedRowModel().rows.length} recipient${table.getSelectedRowModel().rows.length === 1 ? '' : 's'}`
                                       : `Send Email to ${table.getSelectedRowModel().rows.length} Rows`}
                             </button>
                         </div>

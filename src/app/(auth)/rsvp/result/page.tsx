@@ -3,7 +3,6 @@ import { FullPageInfo } from '@/components/ui/FullPageInfo';
 import { stripe } from '@/lib/stripe';
 import { JSX } from 'react';
 import { createCaller } from '@/server/appRouter';
-import { redirect } from 'next/navigation';
 
 interface PageProps {
     searchParams: Promise<{ payment_intent?: string }>;
@@ -12,7 +11,6 @@ interface PageProps {
 export default async function ResultPage(
     props: PageProps
 ): Promise<JSX.Element> {
-    console.log('payment results:');
     const searchParams = await props.searchParams;
     const paymentIntentId = searchParams.payment_intent;
 
@@ -64,31 +62,48 @@ export default async function ResultPage(
                         if (payerEmail) {
                             try {
                                 const rsvpTemplate =
-                                    await trpcClient.emailTemplates.getEmailTemplateByHackathonAndType(
+                                    await trpcClient.emailTemplates.getRsvpPaymentConfirmationTemplate(
                                         {
                                             hackathonId:
                                                 application.hackathonId,
-                                            emailType: 'rsvp_received',
                                         }
                                     );
                                 if (rsvpTemplate) {
                                     const response =
                                         (application.response as Record<
                                             string,
-                                            any
+                                            unknown
                                         > | null) ?? null;
                                     const firstName =
-                                        response?.['2'] ?? 'Friend';
-                                    const lastName = response?.['3'] ?? '';
-                                    await trpcClient.emails.sendEmail({
-                                        templateId: rsvpTemplate.id,
-                                        user: {
-                                            id: application.userId,
-                                            firstName,
-                                            lastName,
-                                            email: payerEmail,
-                                        },
-                                    });
+                                        typeof response?.['5'] === 'string'
+                                            ? response['5']
+                                            : 'Friend';
+                                    const lastName =
+                                        typeof response?.['6'] === 'string'
+                                            ? response['6']
+                                            : '';
+                                    const sendResult =
+                                        await trpcClient.emails.sendEmail({
+                                            templateId: rsvpTemplate.id,
+                                            user: {
+                                                id: application.userId,
+                                                firstName,
+                                                lastName,
+                                                email: payerEmail,
+                                            },
+                                        });
+                                    if (sendResult.emailSent) {
+                                        await trpcClient.applications.updateLastEmailSent(
+                                            {
+                                                hackathonId:
+                                                    application.hackathonId,
+                                                userId: application.userId,
+                                                emailType:
+                                                    rsvpTemplate.emailType ??
+                                                    rsvpTemplate.purpose,
+                                            }
+                                        );
+                                    }
                                 }
                             } catch (e) {
                                 console.error(

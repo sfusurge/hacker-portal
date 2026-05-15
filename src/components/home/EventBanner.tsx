@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 import {
     CalendarDaysIcon,
-    CurrencyDollarIcon,
     MapPinIcon,
+    UserIcon,
 } from '@heroicons/react/24/solid';
+import { AnnouncementsButton } from '@/components/announcements/AnnouncementsButton';
 
-const PAID_ADMISSION_LABEL = 'Paid (CA$15)';
+const DEFAULT_TARGET_AUDIENCE = 'Hackers of all levels';
 
 type EventHeroBannerProps = {
     eventName: string;
@@ -19,9 +20,9 @@ type EventHeroBannerProps = {
     overview: string;
     location: string;
     dates: string;
-    isPaid: boolean;
     websiteLabel: string;
     websiteHref: string;
+    targetAudience?: string;
 };
 
 function WebsiteLinkLine({
@@ -53,11 +54,11 @@ export default function EventHeroBanner({
     overview,
     location,
     dates,
-    isPaid,
     websiteLabel,
     websiteHref,
+    targetAudience,
 }: EventHeroBannerProps) {
-    const admissionLabel = isPaid ? PAID_ADMISSION_LABEL : 'Free';
+    const audienceLabel = targetAudience?.trim() || DEFAULT_TARGET_AUDIENCE;
     const hasDesktopBanner = Boolean(desktopBannerSrc);
     const hasMobileBanner = Boolean(mobileBannerSrc);
 
@@ -158,6 +159,8 @@ export default function EventHeroBanner({
                             </h1>
                             <p className="text-white/60">{tagline}</p>
                         </div>
+
+                        <AnnouncementsButton className="ml-auto" />
                     </div>
                 </CardContent>
             </div>
@@ -178,11 +181,8 @@ export default function EventHeroBanner({
                         {dates}
                     </div>
                     <div className="inline-flex items-center gap-2">
-                        <CurrencyDollarIcon
-                            className="h-4 w-4 shrink-0"
-                            aria-hidden
-                        />
-                        {admissionLabel}
+                        <UserIcon className="h-4 w-4 shrink-0" aria-hidden />
+                        {audienceLabel}
                     </div>
                 </div>
                 <div className="border-t border-neutral-700/40" />
@@ -204,7 +204,9 @@ export default function EventHeroBanner({
                         <h2 className="font-semibold text-white">
                             Event Overview
                         </h2>
-                        <p className="text-pretty text-white/60">{overview}</p>
+                        <p className="max-w-120 text-pretty text-white/60">
+                            {overview}
+                        </p>
                     </div>
 
                     <WebsiteLinkLine
@@ -232,11 +234,11 @@ export default function EventHeroBanner({
                     </div>
                     <div className="flex items-center justify-between gap-4">
                         <span className="inline-flex items-center gap-2 text-white/60">
-                            <CurrencyDollarIcon className="h-4 w-4" />
-                            Admission
+                            <UserIcon className="h-4 w-4" />
+                            Target audience
                         </span>
                         <span className="text-right text-white">
-                            {admissionLabel}
+                            {audienceLabel}
                         </span>
                     </div>
                 </div>

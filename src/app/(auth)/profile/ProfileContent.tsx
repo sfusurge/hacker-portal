@@ -240,7 +240,7 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
                         disabled={isSubmitting}
                     />
                     {errors.firstName && (
-                        <p className="text-sm text-red-500">
+                        <p className="text-danger-500 text-sm">
                             {errors.firstName}
                         </p>
                     )}
@@ -261,7 +261,7 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
                         disabled={isSubmitting}
                     />
                     {errors.lastName && (
-                        <p className="text-sm text-red-500">
+                        <p className="text-danger-500 text-sm">
                             {errors.lastName}
                         </p>
                     )}
@@ -304,7 +304,9 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
                     disabled={isSubmitting}
                 />
                 {errors.phoneNumber && (
-                    <p className="text-sm text-red-500">{errors.phoneNumber}</p>
+                    <p className="text-danger-500 text-sm">
+                        {errors.phoneNumber}
+                    </p>
                 )}
             </div>
 

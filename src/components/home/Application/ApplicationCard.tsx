@@ -122,9 +122,29 @@ export default function ApplicationCard({
     );
 
     return (
-        <Card className={clsx(`h-full grid-cols-7`, className)}>
-            <CardHeader>
-                <CardHeaderColumn>
+        <Card
+            className={clsx(
+                '@container/header-actions h-full grid-cols-7',
+                className
+            )}
+        >
+            <CardHeader
+                className={cn(
+                    'flex flex-row items-center justify-between gap-3'
+                )}
+                multiAction={
+                    (status === 'Accepted' ||
+                        status === "Accepted and RSVP'd") &&
+                    !!image &&
+                    !!hackerPackageHref
+                }
+            >
+                <CardHeaderColumn
+                    className={cn(
+                        'min-w-[min(100%,12rem)] justify-start',
+                        '@max-[565px]/header-actions:flex-none'
+                    )}
+                >
                     <CardHeaderDescription>
                         {status === 'Countdown To Open'
                             ? 'Upcoming'
@@ -305,12 +325,19 @@ function getHeaderAction(
         onOpenTicket
     ) {
         return (
-            <div className="hidden items-center gap-2 md:flex">
+            <div
+                className={cn(
+                    'hidden w-full min-w-0 flex-row items-center justify-end gap-2',
+                    '@max-[565px]/header-actions:flex-col @max-[565px]/header-actions:items-start',
+                    'md:flex'
+                )}
+            >
                 {hackerPackageHref ? (
                     <Button
                         size="cozy"
                         variant="default"
                         hierarchy="secondary"
+                        className="w-auto min-w-0 @max-[565px]/header-actions:w-full"
                         onClick={() =>
                             window.open(
                                 hackerPackageHref,
@@ -327,6 +354,7 @@ function getHeaderAction(
                     size="cozy"
                     variant="brand"
                     hierarchy="primary"
+                    className="w-auto min-w-0 @max-[565px]/header-actions:w-full"
                     onClick={onOpenTicket}
                     leadingIconChild={<QrCodeIcon className="h-4 w-4" />}
                 >

@@ -9,6 +9,7 @@ import { redirect } from 'next/navigation';
 import SponsorDashboard from './sponsor/index';
 import DiscordCard from '@/components/home/DiscordCard';
 import HackathonCard from '@/components/home/HackathonCard';
+import { PageHeader } from '@/components/PageHeader';
 
 export default async function Home() {
     const data = await getUserData();
@@ -52,9 +53,7 @@ export default async function Home() {
 
     return (
         <div className="flex flex-col gap-6 md:gap-8">
-            <h1 className="text-3xl font-semibold text-white">
-                Hi, {data?.firstName} {data?.lastName}!
-            </h1>
+            <PageHeader title={`Hi, ${data?.firstName} ${data?.lastName}!`} />
 
             <div className="flex flex-col gap-6 md:gap-8">
                 {/* MOBILE */}

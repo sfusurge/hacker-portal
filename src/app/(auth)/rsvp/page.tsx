@@ -6,7 +6,7 @@ import { FullPageInfo } from '@/components/ui/FullPageInfo';
 
 import { trpc } from '@/trpc/client';
 import { useAtomValue } from 'jotai';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -18,14 +18,15 @@ export default function PaymentElementPage() {
         {
             hackathonId: hackathon?.id!,
         },
-        { enabled: false }
-    );
-
-    useEffect(() => {
-        if (hackathon?.id) {
-            getApplication.refetch();
+        {
+            enabled: !!hackathon?.id,
+            refetchOnWindowFocus: true,
+            refetchInterval: (query) =>
+                query.state.data?.currentStatus === 'Accepted - Pending Payment'
+                    ? 5000
+                    : false,
         }
-    }, [hackathon]);
+    );
 
     const ready = useMemo(() => {
         const appdata = getApplication.data;
@@ -114,7 +115,11 @@ function Declined() {
 function NeedPayment({ email }: { email: string }) {
     const hackathon = useAtomValue(hackathonAtom);
     const eventName = hackathon?.hackathonName ?? 'the event';
-    const deadline = 'May 10';
+    const paymentDeadlineLabel =
+        hackathon?.paymentDeadline != null &&
+        hackathon.paymentDeadline.isValid()
+            ? hackathon.paymentDeadline.format('MMMM D, YYYY')
+            : null;
 
     return (
         <div className="mx-auto flex w-full flex-col gap-8">
@@ -124,10 +129,16 @@ function NeedPayment({ email }: { email: string }) {
                 </h1>
 
                 <p className="text-base leading-relaxed text-white/60">
-                    Purchase your {eventName} ticket by the deadline{' '}
-                    <strong className="font-semibold text-white">
-                        {deadline}
-                    </strong>{' '}
+                    Purchase your {eventName} ticket by{' '}
+                    {paymentDeadlineLabel ? (
+                        <strong className="font-semibold text-white">
+                            {paymentDeadlineLabel}
+                        </strong>
+                    ) : (
+                        <strong className="font-semibold text-white">
+                            the deadline in your acceptance email
+                        </strong>
+                    )}{' '}
                     or you&apos;ll be moved to the waitlist. Please{' '}
                     <Link
                         href="/home"

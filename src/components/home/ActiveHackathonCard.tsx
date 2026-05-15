@@ -108,7 +108,7 @@ export default function ActiveHackathonCard({
     return (
         <div className="grid grid-cols-12 gap-6">
             <div className="col-span-12 xl:col-span-6">
-                <Card className="flex flex-col overflow-hidden">
+                <Card className="@container flex flex-col overflow-hidden">
                     <HomeHackathonCardHero
                         name={payload.name}
                         tagline={payload.tagline}
@@ -126,8 +126,10 @@ export default function ActiveHackathonCard({
                         applicationSubmitted={applicationSubmitted}
                         status={status}
                         payloadName={payload.name}
-                        bannerConfig={bannerConfig}
-                        eventPageSlug={hackathon.eventPageSlug}
+                        bannerConfig={{
+                            eventPageLabel: payload.eventPageLabel,
+                            eventPageSlug: hackathon.eventPageSlug,
+                        }}
                         isAcceptedStatus={isAcceptedStatus}
                         ticketQr={ticketQr}
                         applicationAction={applicationAction}

@@ -109,11 +109,10 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
                     !
                 </CardTitle>
                 <CardDescription className="text-base">
-                    SFU Surge is excited to offer you acceptance to{' '}
+                    Complete your payment to secure your spot at{' '}
                     {hackathon?.hackathonName ||
                         process.env.NEXT_PUBLIC_CURRENT_EVENT}
-                    . Please RSVP to reserve your spot and confirm your
-                    attendance.
+                    .
                 </CardDescription>
                 <CardDescription className="inline text-white/30">
                     {'No longer able to make it?'}
@@ -211,7 +210,7 @@ export function AcceptedContent({
 
     return (
         <>
-            <ApplicationStatusPanel>
+            <ApplicationStatusPanel className="min-w-[180px]">
                 <CardTitle className="text-xl tracking-tight text-pretty">
                     You RSVP&apos;d to{' '}
                     {hackathon?.hackathonName ||

@@ -186,7 +186,7 @@ export default function SubmissionForm({ questions }: { questions: any[] }) {
                 ))}
 
                 {submitError && (
-                    <div className="mb-4 rounded border border-red-400 bg-red-100 p-3 text-red-700">
+                    <div className="border-danger-500 bg-danger-100 text-danger-700 mb-4 rounded border p-3">
                         {submitError}
                     </div>
                 )}

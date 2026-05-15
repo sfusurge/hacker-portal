@@ -11,10 +11,12 @@ export type EventPageConfigShape = {
     overview: string;
     location: string;
     dates: string;
+    eventPageLabel: string;
     websiteLabel: string;
     websiteHref: string;
     recapHref: string | null;
     hackerPackageHref?: string | null;
+    targetAudience?: string;
 };
 
 const DEFAULT_BANNER_CONFIG: Pick<
@@ -60,6 +62,8 @@ export function defaultEventPagePayload(
         websiteHref: DEFAULT_BANNER_CONFIG.websiteHref,
         recapHref: null,
         hackerPackageHref: null,
+        acceptedDiscordInviteHref: null,
+        eventPageLabel: `${hackathonName} event page`,
     };
 }
 

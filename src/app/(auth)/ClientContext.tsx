@@ -7,10 +7,32 @@ import {
     SubmissionJudgeRubric,
 } from '@/components/application_components/types';
 import { UserData } from '@/server/routers/usersRouter';
+import { AnnouncementWithAttachments } from '@/db/schema/announcements';
 import dayjs from 'dayjs';
 import { atom } from 'jotai';
 import { useHydrateAtoms } from 'jotai/utils';
 import { ReactNode } from 'react';
+import { DynamicTitle } from '@/components/DynamicTitle';
+import { AnnouncementsAblySubscriber } from '@/components/announcements/AnnouncementsAblySubscriber';
+
+export type { AnnouncementWithAttachments };
+
+export type AnnouncementsList = AnnouncementWithAttachments[];
+
+export const announcementsAtom = atom<AnnouncementsList>([]);
+export const lastSeenAtAtom = atom<Date | null>(null);
+export const unreadCountAtom = atom((get) => {
+    const lastSeenAt = get(lastSeenAtAtom);
+    const announcements = get(announcementsAtom);
+    if (!lastSeenAt) return announcements.length;
+    return announcements.filter((a) => new Date(a.sourceTimestamp) > lastSeenAt)
+        .length;
+});
+export const unreadLabelAtom = atom((get) => {
+    const count = get(unreadCountAtom);
+    if (count >= 9) return '9+';
+    return count > 0 ? String(count) : '';
+});
 
 export type UserDataType = Exclude<UserData, undefined>;
 /**
@@ -29,6 +51,8 @@ export const hackathonAtom = atom<HackathonData>(
     {} as unknown as HackathonData
 );
 
+export const viewerAnnouncementLocationKeyAtom = atom<string | null>(null);
+
 interface DbHackathonType {
     id: number;
     name: string;
@@ -45,6 +69,7 @@ interface DbHackathonType {
     judgeQuestions: JudgingFormQuestion[];
     judgeRubric: SubmissionJudgeRubric[];
     isPaid?: boolean;
+    paymentDeadline?: Date | null;
 }
 
 function DeserializeHackathonData(hackathon: DbHackathonType): HackathonData {
@@ -70,6 +95,10 @@ function DeserializeHackathonData(hackathon: DbHackathonType): HackathonData {
                 ? dayjs(hackathon.applicationCloses)
                 : null,
         isPaid: hackathon.isPaid ?? false,
+        paymentDeadline:
+            hackathon.paymentDeadline != null
+                ? dayjs(hackathon.paymentDeadline)
+                : null,
     };
 }
 
@@ -78,16 +107,34 @@ export type HackathonType = ReturnType<typeof DeserializeHackathonData>;
 export function ClientContext({
     userData,
     hackathonData,
+    initialAnnouncements,
+    initialLastSeenAt,
+    initialViewerAnnouncementLocationKey,
     children,
 }: {
     userData: UserData;
     hackathonData: DbHackathonType;
+    initialAnnouncements: AnnouncementsList;
+    initialLastSeenAt: Date | null;
+    initialViewerAnnouncementLocationKey: string | null;
     children: ReactNode;
 }) {
     useHydrateAtoms([
         [userInfoAtom, userData!],
         [hackathonAtom, DeserializeHackathonData(hackathonData)],
+        [announcementsAtom, initialAnnouncements],
+        [lastSeenAtAtom, initialLastSeenAt],
+        [
+            viewerAnnouncementLocationKeyAtom,
+            initialViewerAnnouncementLocationKey,
+        ],
     ]);
 
-    return <>{children}</>;
+    return (
+        <>
+            <DynamicTitle />
+            <AnnouncementsAblySubscriber />
+            {children}
+        </>
+    );
 }
