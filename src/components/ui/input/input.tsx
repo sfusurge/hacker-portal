@@ -53,6 +53,7 @@ type AdditionFormFields = {
     lazy?: boolean;
     timeOut?: number;
     hideBackground?: boolean;
+    formatAsHeading?: boolean;
     errorMsg?: string;
     className?: string;
     icon?: React.ReactNode;
@@ -79,6 +80,7 @@ export const FormTextInput = forwardRef<
             errorMsg,
             type,
             hideBackground,
+            formatAsHeading,
             onLazyChange,
             style: externalStyle,
             className,
@@ -145,6 +147,9 @@ export const FormTextInput = forwardRef<
                         defaultValue={defaultValue}
                         className={cn(
                             { [style.hideBackground]: hideBackground },
+                            {
+                                [style.formatAsHeading]: formatAsHeading,
+                            },
                             { 'pl-10': icon },
                             style.textinput,
                             'truncate',

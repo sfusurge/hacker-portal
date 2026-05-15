@@ -75,6 +75,7 @@ export type InputFormQuestion =
     | QuestionDateYmd
     | QuestionTextAreaInput
     | QuestionTextLineInput
+    | QuestionTitleLineInput
     | QuestionNumberInput
     | QuestionMultipleChoice
     | QuestionApiDropdown
@@ -99,10 +100,23 @@ interface Question extends Entry {
     type: string | 'N/A';
     required?: boolean;
     autoComplete?: HTMLInputAutoCompleteAttribute;
+    hideTitle?: boolean;
 }
 
 export interface QuestionTextLineInput extends Question {
     type: 'text-line';
+    placeHolder?: string;
+    value?: string;
+    maxCount?: number;
+
+    validator?: {
+        pattern: string; //regex pattern
+        errorMsg: string; // message to display if the pattern fails
+    };
+}
+
+export interface QuestionTitleLineInput extends Question {
+    type: 'title-line';
     placeHolder?: string;
     value?: string;
     maxCount?: number;

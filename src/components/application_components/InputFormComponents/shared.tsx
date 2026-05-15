@@ -3,11 +3,14 @@
 import { atom } from 'jotai';
 import type { InputFormQuestion } from '../types';
 export const submittedAtom = atom(false);
-export function isApplicationQuestionFilled(question: InputFormQuestion) {
+export function isApplicationQuestionFilled(
+    question: InputFormQuestion
+): boolean {
     try {
         switch (question.type) {
             case 'text-area':
             case 'text-line':
+            case 'title-line':
             case 'date':
             case 'date-ymd':
                 return (

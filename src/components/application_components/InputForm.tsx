@@ -28,10 +28,12 @@ import type {
     QuestionInline,
     QuestionDateYmd,
     QuestionMajorInput,
+    QuestionTitleLineInput,
 } from './types';
 import { splitAtom } from 'jotai/utils';
 import style from './InputForm.module.css';
 import { TextLineInput } from './InputFormComponents/TextLineInput';
+import { TitleLineInput } from './InputFormComponents/TitleLineInput';
 import {
     type ComponentProps,
     useEffect,
@@ -200,21 +202,29 @@ export function InputForm({
     }
 
     return (
-        <div className={style.appFormRoot}>
-            <div className="flex flex-col gap-1">
-                <button
-                    className={cn(style.homeButton)}
-                    onClick={() => {
-                        router.push('/home');
-                    }}
-                >
-                    <ArrowLeftIcon className="h-6 w-6" />
-                    <span>Dashboard</span>
-                </button>
-                <h1 className="text-xl font-semibold">
-                    SparkJam 2026 Application
-                </h1>
-            </div>
+        <div
+            className={cn(
+                style.appFormRoot,
+                applicationType === 'application' && 'max-md:-mt-20',
+                applicationType === 'submission' && style.submissionForm
+            )}
+        >
+            {applicationType === 'application' && (
+                <div className="flex flex-col gap-1">
+                    <button
+                        className={cn(style.homeButton)}
+                        onClick={() => {
+                            router.push('/home');
+                        }}
+                    >
+                        <ArrowLeftIcon className="h-6 w-6" />
+                        <span>Dashboard</span>
+                    </button>
+                    <h1 className="text-xl font-semibold">
+                        SparkJam 2026 Application
+                    </h1>
+                </div>
+            )}
             <div className={style.appFormWrapper}>
                 <div className={style.appFormContent} ref={pageContainerRef}>
                     {!disablePageTab &&
@@ -377,6 +387,7 @@ function Page({
             className={cn(style.page, 'md:pb-0')}
             style={hidden ? { display: 'none' } : {}}
             noValidate
+            data-validated={finalErrCheck || undefined}
         >
             <div className="flex flex-col gap-4">
                 {page.title && (
@@ -426,6 +437,14 @@ function Question({
                     <TextLineInput
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionTextLineInput>
+                        }
+                    />
+                );
+            case 'title-line':
+                return (
+                    <TitleLineInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionTitleLineInput>
                         }
                     />
                 );
@@ -585,14 +604,16 @@ function Question({
                     placement="above-title"
                 />
             )}
-            {question.title && question.type !== 'checkbox' && (
-                <Label required={question.required}>
-                    <div
-                        className={style.htmlHolder}
-                        dangerouslySetInnerHTML={{ __html: question.title }}
-                    ></div>
-                </Label>
-            )}
+            {question.title &&
+                !question.hideTitle &&
+                question.type !== 'title-line' && (
+                    <Label required={question.required}>
+                        <div
+                            className={style.htmlHolder}
+                            dangerouslySetInnerHTML={{ __html: question.title }}
+                        ></div>
+                    </Label>
+                )}
             {question.description && (
                 <span className={cn(style.description, 'max-w-96')}>
                     <div
@@ -720,7 +741,7 @@ function PageButtons({
                         onClick={tryReview}
                         className={style.nextButton}
                     >
-                        Review
+                        Preview Submission
                     </SkewmorphicButton>
                 )}
                 {index === pageCount && (
@@ -735,6 +756,7 @@ function PageButtons({
                     </SkewmorphicButton>
                 )}
             </div>
+
             <ReviewApplicationDialog
                 isOpen={dialogOpen}
                 closeDialog={() => setDialogOpen(false)}

@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { type PrimitiveAtom, useAtom, WritableAtom, atom } from 'jotai';
 import type { QuestionInline, InputFormQuestion } from '../types';
 import { TextLineInput } from './TextLineInput';
+import { TitleLineInput } from './TitleLineInput';
 import { TextLinkInput } from './TextLinkInput';
 import { NumberInput } from './NumberInput';
 import { RadioInput } from './RadioInput';
@@ -16,6 +17,7 @@ import { ApiDropdownInput } from './ApiDropdownInput';
 import { DateInput } from './DateInput';
 import type {
     QuestionTextLineInput,
+    QuestionTitleLineInput,
     QuestionTextLinkInput,
     QuestionNumberInput,
     QuestionMultipleChoice,
@@ -60,7 +62,7 @@ export function InlineInput({
 
     const renderContentQuestion = (
         contentQuestion: InputFormQuestion,
-        contentAtom: PrimitiveAtom<InputFormQuestion>,
+        contentAtom: WritableAtom<InputFormQuestion, [InputFormQuestion], void>,
         index: number
     ) => {
         switch (contentQuestion.type) {
@@ -69,6 +71,14 @@ export function InlineInput({
                     <TextLineInput
                         dataAtom={
                             contentAtom as PrimitiveAtom<QuestionTextLineInput>
+                        }
+                    />
+                );
+            case 'title-line':
+                return (
+                    <TitleLineInput
+                        dataAtom={
+                            contentAtom as PrimitiveAtom<QuestionTitleLineInput>
                         }
                     />
                 );

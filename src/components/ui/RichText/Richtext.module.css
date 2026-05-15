@@ -3,6 +3,11 @@ input:invalid ~ .inputContainer {
     position: relative;
 }
 
+.inputRoot:has(input:invalid) :global(.ql-toolbar.ql-snow),
+.inputRoot:has(input:invalid) :global(.ql-container.ql-snow) {
+    border-color: var(--color-danger-400) !important;
+}
+
 .inputRoot:has(input:invalid):after {
     content: var(--errorMsg);
     font-size: small;

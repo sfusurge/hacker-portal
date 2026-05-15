@@ -235,7 +235,7 @@ export function ReviewPage({
 
     return (
         <div className="mb-28 flex flex-col gap-6 p-6 pb-10">
-            <h1 className="text-3xl font-semibold">Review Application</h1>
+            <h1 className="text-3xl font-semibold">View Submission</h1>
             <Alert variant={'info'} className="-mt-2 max-w-[480px]">
                 <AlertTitle>
                     Take the time to review your responses carefully!
