@@ -1,5 +1,37 @@
 import type { ApplicationStatus } from '@/db/schema/applications';
 
+// statuses where the hacker may use the event check-in QR ticket
+const TICKET_QR_ELIGIBLE_STATUSES = new Set<string>(['Accepted']);
+
+export function isEligibleForHackathonTicketQr(
+    currentStatus: string | undefined | null
+): boolean {
+    if (currentStatus == null || currentStatus === '') {
+        return false;
+    }
+    return TICKET_QR_ELIGIBLE_STATUSES.has(currentStatus.trim());
+}
+
+// short region label for ticket UI (application question `2`: sfu | waterloo | remote).
+export function formatTicketRegionShortLabel(
+    eventLocationKey: string | undefined | null
+): string {
+    if (eventLocationKey == null || eventLocationKey === '') {
+        return '';
+    }
+    const key = eventLocationKey.trim().toLowerCase();
+    if (key === 'sfu') {
+        return 'Vancouver';
+    }
+    if (key === 'waterloo') {
+        return 'Waterloo';
+    }
+    if (key === 'remote') {
+        return 'Virtual';
+    }
+    return '';
+}
+
 /** label for application question `2` (event location choice keys). */
 export function formatEventLocationLabel(
     eventLocationKey: string | undefined | null

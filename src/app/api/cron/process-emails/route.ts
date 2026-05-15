@@ -6,7 +6,7 @@ import {
     emailTemplateStyling,
 } from '@/db/schema/emails';
 import { user } from '@/db/schema/users/users';
-import { eq } from 'drizzle-orm';
+import { and, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 import { transporter } from '@/server/nodemailerTransporter';
 import generateQRCode from '@/server/generateQRCode';
 import {
@@ -14,7 +14,6 @@ import {
     mergeBodyIntoStyling,
     markdownToHtml,
 } from '@/app/(auth)/admin/email/templates/emailPreview';
-import { and, gte, lt, sql } from 'drizzle-orm';
 
 const env = process.env;
 
@@ -28,6 +27,21 @@ export async function GET(request: NextRequest) {
     }
 
     try {
+        // pending emails
+        const pendingPredicate = and(
+            eq(emailQueue.status, 'pending'),
+            lt(emailQueue.failedCount, MAX_RETRIES)
+        );
+
+        const [hasPending] = await databaseClient
+            .select({ id: emailQueue.id })
+            .from(emailQueue)
+            .where(pendingPredicate)
+            .limit(1);
+
+        if (!hasPending) {
+            return NextResponse.json({ message: 'No pending emails' });
+        }
         // emails sent in last hour
         const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
         const [sentCountResult] = await databaseClient
@@ -53,17 +67,48 @@ export async function GET(request: NextRequest) {
         const pendingEmails = await databaseClient
             .select()
             .from(emailQueue)
-            .where(
-                and(
-                    eq(emailQueue.status, 'pending'),
-                    lt(emailQueue.failedCount, MAX_RETRIES)
-                )
-            )
+            .where(pendingPredicate)
             .limit(remainingQuota);
 
         if (pendingEmails.length === 0) {
             return NextResponse.json({ message: 'No pending emails' });
         }
+
+        const templateIds = [
+            ...new Set(pendingEmails.map((e) => e.templateId)),
+        ];
+        const userIds = [...new Set(pendingEmails.map((e) => e.userId))];
+
+        const templateRows = await databaseClient
+            .select()
+            .from(emailTemplates)
+            .where(inArray(emailTemplates.id, templateIds));
+
+        const userRows = await databaseClient
+            .select()
+            .from(user)
+            .where(inArray(user.id, userIds));
+
+        const templateById = new Map(templateRows.map((t) => [t.id, t]));
+        const userById = new Map(userRows.map((u) => [u.id, u]));
+
+        const stylingIds = [
+            ...new Set(
+                templateRows
+                    .map((t) => t.stylingId)
+                    .filter((id): id is number => id != null)
+            ),
+        ];
+
+        const stylingRows =
+            stylingIds.length > 0
+                ? await databaseClient
+                      .select()
+                      .from(emailTemplateStyling)
+                      .where(inArray(emailTemplateStyling.id, stylingIds))
+                : [];
+
+        const stylingById = new Map(stylingRows.map((s) => [s.id, s]));
 
         let sentCount = 0;
         let failedCount = 0;
@@ -71,12 +116,7 @@ export async function GET(request: NextRequest) {
 
         for (const pendingEmail of pendingEmails) {
             try {
-                // Get template
-                const [template] = await databaseClient
-                    .select()
-                    .from(emailTemplates)
-                    .where(eq(emailTemplates.id, pendingEmail.templateId))
-                    .limit(1);
+                const template = templateById.get(pendingEmail.templateId);
 
                 if (!template) {
                     // Mark as failed if template not found
@@ -145,19 +185,15 @@ export async function GET(request: NextRequest) {
                     }
                 }
 
-                const [userData] = await databaseClient
-                    .select()
-                    .from(user)
-                    .where(eq(user.id, pendingEmail.userId))
-                    .limit(1);
+                const userData = userById.get(pendingEmail.userId);
 
                 const templateData = {
                     firstName:
-                        userData.firstName ??
+                        userData?.firstName ??
                         pendingEmail.firstName ??
                         'Friend',
-                    lastName: userData.lastName ?? pendingEmail.lastName ?? '',
-                    email: userData.email ?? pendingEmail.email,
+                    lastName: userData?.lastName ?? pendingEmail.lastName ?? '',
+                    email: userData?.email ?? pendingEmail.email,
                     userId: pendingEmail.userId,
                 };
 
@@ -167,11 +203,7 @@ export async function GET(request: NextRequest) {
                 );
 
                 if (template.stylingId != null) {
-                    const [styling] = await databaseClient
-                        .select()
-                        .from(emailTemplateStyling)
-                        .where(eq(emailTemplateStyling.id, template.stylingId))
-                        .limit(1);
+                    const styling = stylingById.get(template.stylingId);
                     if (styling?.html) {
                         finalHtmlContent = mergeBodyIntoStyling(
                             styling.html,

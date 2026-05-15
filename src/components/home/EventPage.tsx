@@ -3,6 +3,7 @@ import { createCaller } from '@/server/appRouter';
 import { getUserData } from '@/server/routers/usersRouter';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
 import EventPageLayout from '@/components/home/EventPageLayout';
+import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
 
 function normalizeEventName(value: string) {
     return value.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -59,7 +60,7 @@ export default async function EventPage({ slug }: { slug: string }) {
         },
     } satisfies QROptions;
 
-    const [application, team, events, ticketQr] = targetHackathon
+    const [application, team, events] = targetHackathon
         ? await Promise.all([
               isActiveRoute
                   ? trpcClient.applications.getCurrentApplication({
@@ -74,11 +75,17 @@ export default async function EventPage({ slug }: { slug: string }) {
               trpcClient.events.getEvents({
                   hackathonId: targetHackathon.id,
               }),
-              userData?.id != null
-                  ? generateQRCode(userData.id.toString(), qrOpts)
-                  : Promise.resolve(null),
           ])
-        : [null, null, [], null];
+        : [null, null, []];
+
+    const eligibleForTicketQr =
+        Boolean(userData?.id) &&
+        isEligibleForHackathonTicketQr(application?.currentStatus);
+
+    const ticketQr =
+        eligibleForTicketQr && userData?.id != null
+            ? await generateQRCode(userData.id.toString(), qrOpts)
+            : null;
 
     return (
         <EventPageLayout

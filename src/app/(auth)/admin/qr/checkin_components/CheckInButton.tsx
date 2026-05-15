@@ -1,4 +1,5 @@
 'use client';
+import { Button } from '@/components/ui/button';
 import { EventType } from '@/db/schema/events';
 import {
     TicketIcon,
@@ -19,6 +20,8 @@ type CheckInButtonProps = {
     eventType: EventType;
     toggleCheckInStatus: () => void;
     checkInStatus: boolean;
+    acceptanceCheckPending?: boolean;
+    acceptedForCheckIn?: boolean;
     userName: string;
 };
 
@@ -26,34 +29,46 @@ export default function CheckinButton({
     eventType,
     toggleCheckInStatus,
     checkInStatus,
+    acceptanceCheckPending = false,
+    acceptedForCheckIn = true,
     userName,
 }: CheckInButtonProps) {
     const { icon: Icon, label } = buttonConfig[eventType];
 
     if (!checkInStatus) {
+        const blocked = acceptanceCheckPending || !acceptedForCheckIn;
+        const buttonLabel = acceptanceCheckPending
+            ? 'Checking application…'
+            : !acceptedForCheckIn
+              ? 'USER NOT ACCEPTED'
+              : label;
+
         return (
-            <div className="inline-flex w-full items-center justify-center self-stretch overflow-hidden rounded-lg bg-indigo-700 px-1 py-2">
-                <button
-                    className="flex min-h-9 w-full items-center justify-center px-3"
-                    onClick={toggleCheckInStatus}
-                >
-                    <div className="flex flex-row gap-2 text-base font-medium text-white">
-                        <Icon className="size-6" />
-                        {label}
-                    </div>
-                </button>
-            </div>
+            <Button
+                type="button"
+                variant={'brand'}
+                hierarchy="primary"
+                size="cozy"
+                className="w-full gap-2"
+                disabled={blocked}
+                leadingIconChild={<Icon className="size-6 shrink-0" />}
+                onClick={toggleCheckInStatus}
+            >
+                {buttonLabel}
+            </Button>
         );
     } else {
         return (
-            <div className="inline-flex w-full items-center justify-center self-stretch overflow-hidden rounded-lg bg-indigo-700 px-1 py-2">
-                <div className="flex min-h-9 w-full items-center justify-center">
-                    <div className="flex flex-row gap-2 text-sm font-medium text-white/60">
-                        <Icon className="size-6" />
-                        {userName} is already checked in
-                    </div>
-                </div>
-            </div>
+            <Button
+                type="button"
+                variant="brand"
+                hierarchy="primary"
+                size="cozy"
+                className="w-full gap-2"
+                disabled={true}
+            >
+                {userName} is already checked in
+            </Button>
         );
     }
 }

@@ -2,11 +2,16 @@
 
 import Image from 'next/image';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import CheckinButton from '@/app/(auth)/admin/qr/checkin_components/CheckInButton';
 import { GetUsersOutput, trpc } from '@/trpc/client';
 import { EventType } from '@/db/schema/events';
 import { useToast } from '@/hooks/use-toast';
+import {
+    formatTicketRegionShortLabel,
+    isEligibleForHackathonTicketQr,
+} from '@/lib/applicationAcceptStatus';
+import { getApplicationEventLocationKey } from '@/lib/applicationEventLocation';
 import {
     Drawer,
     DrawerContent,
@@ -19,6 +24,7 @@ type CheckInTicketProps = {
     currentHacker: GetUsersOutput[0];
     eventType: EventType;
     eventId: number;
+    hackathonId: number;
     onClose: () => void;
     open: boolean;
 };
@@ -27,6 +33,7 @@ export default function CheckinTicket({
     currentHacker,
     eventType,
     eventId,
+    hackathonId,
     onClose,
     open,
 }: CheckInTicketProps) {
@@ -51,6 +58,48 @@ export default function CheckinTicket({
         eventId: eventId,
     });
 
+    const applicationQuery =
+        trpc.applications.getApplicationByHackathonAndUserId.useQuery(
+            { hackathonId, userId: currentHacker.id },
+            {
+                enabled: open && Boolean(currentHacker.id) && hackathonId > 0,
+            }
+        );
+
+    const acceptanceCheckPending =
+        open &&
+        hackathonId > 0 &&
+        Boolean(currentHacker.id) &&
+        applicationQuery.isPending;
+
+    const acceptedForCheckIn = isEligibleForHackathonTicketQr(
+        applicationQuery.data?.currentStatus
+    );
+
+    const scannerAttendanceLabel = useMemo(() => {
+        return formatTicketRegionShortLabel(
+            getApplicationEventLocationKey(
+                applicationQuery.data?.response as Record<
+                    string,
+                    unknown
+                > | null
+            )
+        );
+    }, [applicationQuery.data?.response]);
+
+    const hackerRoleLine = useMemo(() => {
+        if (acceptanceCheckPending) {
+            return 'Hacker';
+        }
+        if (!acceptedForCheckIn) {
+            return 'Hacker · NOT ACCEPTED';
+        }
+        if (scannerAttendanceLabel) {
+            return `Hacker · ${scannerAttendanceLabel}`;
+        }
+        return 'Hacker';
+    }, [acceptanceCheckPending, acceptedForCheckIn, scannerAttendanceLabel]);
+
     useEffect(() => {
         if (checked.data) {
             setCheckInStatus(checked.data.isCheckedIn);
@@ -64,6 +113,8 @@ export default function CheckinTicket({
 
     const toggleCheckInStatus = async () => {
         if (!currentHacker?.id) return;
+        if (acceptanceCheckPending) return;
+        if (!acceptedForCheckIn) return;
 
         await submitCheckIn.mutateAsync({
             userId: currentHacker.id,
@@ -105,7 +156,10 @@ export default function CheckinTicket({
 
     return (
         <Drawer open={open} onOpenChange={handleOpenChange}>
-            <DrawerContent className="max-h-[80vh]" overlayZIndex={50}>
+            <DrawerContent
+                className="max-h-[min(90vh,calc(100dvh-6rem))]"
+                overlayZIndex={50}
+            >
                 {currentHacker?.id && (
                     <div className="relative flex w-full flex-col items-center justify-start gap-2 pb-6">
                         <DrawerHeader className="pb-4">
@@ -122,7 +176,9 @@ export default function CheckinTicket({
                                         ' ' +
                                         currentHacker.lastName}
                                 </DrawerTitle>
-                                <DrawerDescription>Hacker</DrawerDescription>
+                                <DrawerDescription className="text-center">
+                                    {hackerRoleLine}
+                                </DrawerDescription>
                             </div>
                         </DrawerHeader>
 
@@ -179,6 +235,10 @@ export default function CheckinTicket({
                                     eventType={eventType}
                                     checkInStatus={checkInStatus}
                                     toggleCheckInStatus={toggleCheckInStatus}
+                                    acceptanceCheckPending={
+                                        acceptanceCheckPending
+                                    }
+                                    acceptedForCheckIn={acceptedForCheckIn}
                                     userName={
                                         currentHacker.firstName +
                                         ' ' +
