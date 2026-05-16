@@ -54,6 +54,14 @@ export async function GET(request: NextRequest) {
             lt(emailQueue.failedCount, MAX_RETRIES)
         );
 
+        if (HOURLY_QUOTA === 0) {
+            return NextResponse.json({
+                message: 'EMAIL_HOURLY_QUOTA is zero (sending disabled)',
+                hourlyQuota: 0,
+            });
+        }
+
+        // emails sent in last hour
         const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
         const [sentCountResult] = await databaseClient
             .select({ count: sql<number>`count(*)` })
@@ -70,10 +78,7 @@ export async function GET(request: NextRequest) {
 
         if (remainingHourlyQuota === 0) {
             return NextResponse.json({
-                message:
-                    HOURLY_QUOTA === 0
-                        ? 'EMAIL_HOURLY_QUOTA is zero (sending disabled)'
-                        : 'Hourly quota reached',
+                message: 'Hourly quota reached',
                 hourlyQuota: HOURLY_QUOTA,
                 sentInLastHour: sentInHour,
             });
