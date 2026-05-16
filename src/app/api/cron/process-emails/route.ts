@@ -61,6 +61,16 @@ export async function GET(request: NextRequest) {
             });
         }
 
+        const [anyPending] = await databaseClient
+            .select({ id: emailQueue.id })
+            .from(emailQueue)
+            .where(pendingPredicate)
+            .limit(1);
+
+        if (!anyPending) {
+            return NextResponse.json({ message: 'No pending emails' });
+        }
+
         // emails sent in last hour
         const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
         const [sentCountResult] = await databaseClient
