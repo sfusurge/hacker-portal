@@ -1,6 +1,10 @@
 'use client';
 
-import { hackathonAtom, userInfoAtom } from '@/app/(auth)/ClientContext';
+import {
+    currentTeamAtom,
+    hackathonAtom,
+    userInfoAtom,
+} from '@/app/(auth)/ClientContext';
 import { InputForm } from '@/components/application_components/InputForm';
 import { InputFormData } from '@/components/application_components/types';
 import {
@@ -14,10 +18,10 @@ import { getFileSize } from '@/components/ui/FileUpload/FileUpload';
 import { submitProject } from '@/lib/blobs';
 import { trpc } from '@/trpc/client';
 import { ArrowRightIcon } from '@heroicons/react/20/solid';
-import { atom, useAtomValue } from 'jotai';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { redirect } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 const localAppResponseAtom = atomWithStorage('submit_response', {
     hackathonId: -1,
     email: '',
@@ -77,10 +81,28 @@ const submitWithLocalAtom = atom(
     }
 );
 
-export function SubmitFormCard({ teamId }: { teamId: number }) {
+export function SubmitFormCard({
+    teamId,
+    teamName,
+    teamPictureUrl,
+}: {
+    teamId: number;
+    teamName: string;
+    teamPictureUrl?: string | null;
+}) {
     const submitData = useAtomValue(submitWithLocalAtom);
+    const setCurrentTeam = useSetAtom(currentTeamAtom);
     const [progressMsg, setProgress] = useState('');
     const [projectSubmitted, setProjectSubmitted] = useState(false);
+
+    useEffect(() => {
+        setCurrentTeam({
+            id: teamId,
+            name: teamName,
+            teamPictureUrl: teamPictureUrl ?? null,
+        });
+        return () => setCurrentTeam(null);
+    }, [teamId, teamName, teamPictureUrl, setCurrentTeam]);
 
     const submitSubmission = trpc.submissions.submitSubmission.useMutation();
 

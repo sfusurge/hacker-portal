@@ -55,6 +55,7 @@ import { TextLinkInput } from './InputFormComponents/TextLinkInput';
 import { ApiDropdownInput } from './InputFormComponents/ApiDropdownInput';
 import { MajorInput } from './InputFormComponents/MajorInput';
 import { ReviewPage } from './ReviewPage';
+import { ReviewProject } from './ReviewProject';
 import {
     type PageFormState,
     DesktopPageIndicator,
@@ -95,6 +96,7 @@ function ClientOnly({ children, ...delegated }: ComponentProps<'div'>) {
 // Atoms
 export const pageIndexAtom = atom(0); // defining the state
 export const finalErrCheckAtom = atom(false); // when the user clicks the review & submit for the first time,
+export const isReviewPageAtom = atom(false);
 
 interface InputFormProps {
     appDataAtom: WritableAtom<InputFormData, [val: InputFormData], void>;
@@ -175,6 +177,11 @@ export function InputForm({
     // mobile conditional render
     const isMobile = useMediaQuery('(max-width: 767.5px)');
 
+    const [isReviewPage, setIsReviewPage] = useAtom(isReviewPageAtom);
+    useEffect(() => {
+        setIsReviewPage(currentPageIndex === pagesAtoms.length);
+    }, [currentPageIndex, pagesAtoms.length, setIsReviewPage]);
+
     const pageContainerRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         // if (pageContainerRef.current) {
@@ -206,7 +213,8 @@ export function InputForm({
             className={cn(
                 style.appFormRoot,
                 applicationType === 'application' && 'max-md:-mt-20',
-                applicationType === 'submission' && style.submissionForm
+                applicationType === 'submission' && style.submissionForm,
+                isReviewPage && style.reviewPageWrapper
             )}
         >
             {applicationType === 'application' && (
@@ -242,14 +250,27 @@ export function InputForm({
 
                     <div className={style.formContainer}>
                         {currentPageIndex === pagesAtoms.length && (
-                            <ReviewPage
-                                response={pages}
-                                submit={async () => {
-                                    await onSubmit();
-                                }}
-                                mobileMode={isMobile}
-                                disableSubmitBtn={disablePageTab}
-                            />
+                            <>
+                                {applicationType === 'application' ? (
+                                    <ReviewPage
+                                        response={pages}
+                                        submit={async () => {
+                                            await onSubmit();
+                                        }}
+                                        mobileMode={isMobile}
+                                        disableSubmitBtn={disablePageTab}
+                                    />
+                                ) : (
+                                    <ReviewProject
+                                        response={pages}
+                                        submit={async () => {
+                                            await onSubmit();
+                                        }}
+                                        mobileMode={isMobile}
+                                        disableSubmitBtn={disablePageTab}
+                                    />
+                                )}
+                            </>
                         )}
 
                         {pagesAtoms.map((pageAtom, index) => (
