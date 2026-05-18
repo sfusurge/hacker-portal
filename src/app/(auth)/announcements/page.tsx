@@ -7,10 +7,28 @@ import {
     MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import {
+    adminAnnouncementsPreviewLocationKeyAtom,
+    adminAnnouncementsViewAllAtom,
     announcementsAtom,
     hackathonAtom,
     lastSeenAtAtom,
+    userInfoAtom,
+    viewerAnnouncementLocationKeyAtom,
 } from '@/app/(auth)/ClientContext';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import {
+    audienceFromSelectValue,
+    audienceSelectValue,
+} from '@/lib/announcements/announcementAudience';
+import { announcementAdminDisplayName } from '@/lib/announcements/announcementAdminDisplay';
+import { useAdminAnnouncementPreviewQueryInput } from '@/lib/announcements/useAdminAnnouncementPreview';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input/input';
@@ -24,7 +42,7 @@ import {
 import { eventDiscordUrlForStatus } from '@/lib/eventDiscord';
 import { useWindowSize } from '@/lib/useWindowSize';
 import { trpc } from '@/trpc/client';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
     Fragment,
     useCallback,
@@ -61,7 +79,11 @@ function announcementSearchText(a: AnnouncementWithAttachments): string {
         .filter(Boolean)
         .join(' ');
 
-    return [normalizedBody, mentionText, attachmentNames]
+    const channelMeta = [a.channelLabel, a.channelLocationKey]
+        .filter(Boolean)
+        .join(' ');
+
+    return [normalizedBody, mentionText, attachmentNames, channelMeta]
         .join(' ')
         .toLowerCase();
 }
@@ -73,6 +95,81 @@ export default function AnnouncementsPage() {
     const [inputValue, setInputValue] = useState('');
     const [query, setQuery] = useState('');
     const hackathon = useAtomValue(hackathonAtom);
+    const userInfo = useAtomValue(userInfoAtom);
+    const isAdmin = userInfo?.userRole === 'admin';
+    const [viewAllChannels, setViewAllChannels] = useAtom(
+        adminAnnouncementsViewAllAtom
+    );
+    const [previewLocationKey, setPreviewLocationKey] = useAtom(
+        adminAnnouncementsPreviewLocationKeyAtom
+    );
+    const viewerLocationKey = useAtomValue(viewerAnnouncementLocationKeyAtom);
+    const adminPreviewInput = useAdminAnnouncementPreviewQueryInput();
+    const { data: audienceOptions = [] } =
+        trpc.announcements.getAnnouncementAudiences.useQuery(
+            { hackathonId: hackathon?.id ?? 0 },
+            { enabled: isAdmin && !!hackathon?.id }
+        );
+
+    useEffect(() => {
+        if (!isAdmin || viewAllChannels || audienceOptions.length === 0) {
+            return;
+        }
+        if (previewLocationKey !== undefined) {
+            const stillValid = audienceOptions.some(
+                (o) => o.locationKey === previewLocationKey
+            );
+            if (stillValid) return;
+        }
+        const ownKey = viewerLocationKey?.trim().toLowerCase() ?? null;
+        const match = audienceOptions.find((o) => o.locationKey === ownKey);
+        setPreviewLocationKey(
+            match?.locationKey ?? audienceOptions[0]!.locationKey
+        );
+    }, [
+        isAdmin,
+        viewAllChannels,
+        audienceOptions,
+        previewLocationKey,
+        viewerLocationKey,
+        setPreviewLocationKey,
+    ]);
+
+    const previewAudienceLabel = useMemo(() => {
+        if (viewAllChannels) return null;
+        const key =
+            previewLocationKey !== undefined
+                ? previewLocationKey
+                : viewerLocationKey;
+        return (
+            audienceOptions.find((o) => o.locationKey === key)?.label ??
+            (key ? key : 'Virtual')
+        );
+    }, [
+        viewAllChannels,
+        previewLocationKey,
+        viewerLocationKey,
+        audienceOptions,
+    ]);
+
+    const announcementQueryInput = useMemo(
+        () => ({
+            hackathonId: hackathon?.id ?? 0,
+            limit: 10,
+            ...(isAdmin && adminPreviewInput
+                ? {
+                      viewAll: adminPreviewInput.viewAll,
+                      ...(adminPreviewInput.viewAll === false
+                          ? {
+                                previewLocationKey:
+                                    adminPreviewInput.previewLocationKey,
+                            }
+                          : {}),
+                  }
+                : {}),
+        }),
+        [hackathon?.id, isAdmin, adminPreviewInput]
+    );
     const initialAnnouncements = useAtomValue(announcementsAtom);
     const setLastSeenAt = useSetAtom(lastSeenAtAtom);
     const lastSeenAt = useAtomValue(lastSeenAtAtom);
@@ -94,7 +191,7 @@ export default function AnnouncementsPage() {
 
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
         trpc.announcements.getAnnouncements.useInfiniteQuery(
-            { hackathonId: hackathon?.id ?? 0, limit: 10 },
+            announcementQueryInput,
             {
                 getNextPageParam: (lastPage) =>
                     lastPage.nextCursor ?? undefined,
@@ -339,6 +436,77 @@ export default function AnnouncementsPage() {
             <div className="@container flex h-full min-h-0 flex-col">
                 <PageHeader title="Announcements" className="hidden md:flex" />
 
+                {isAdmin ? (
+                    <div className="@announcements:mt-2 mt-4 mb-2 flex flex-col gap-3">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <p className="text-sm text-white/60">
+                                {viewAllChannels
+                                    ? 'Showing announcements from all audience channels. (ADMIN)'
+                                    : previewAudienceLabel
+                                      ? `Previewing what hackers see for: ${previewAudienceLabel}.`
+                                      : 'Choose an audience to preview.'}
+                            </p>
+                            <ToggleGroup
+                                type="single"
+                                value={viewAllChannels ? 'all' : 'preview'}
+                                onValueChange={(value) => {
+                                    if (value) {
+                                        setViewAllChannels(value === 'all');
+                                    }
+                                }}
+                                className="shrink-0 self-start sm:self-auto"
+                            >
+                                <ToggleGroupItem value="all" className="px-3">
+                                    All channels
+                                </ToggleGroupItem>
+                                <ToggleGroupItem
+                                    value="preview"
+                                    className="px-3"
+                                >
+                                    Preview audience
+                                </ToggleGroupItem>
+                            </ToggleGroup>
+                        </div>
+                        {!viewAllChannels && audienceOptions.length > 0 ? (
+                            <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
+                                <Select
+                                    value={audienceSelectValue(
+                                        previewLocationKey !== undefined
+                                            ? previewLocationKey
+                                            : (viewerLocationKey ?? null)
+                                    )}
+                                    onValueChange={(value) =>
+                                        setPreviewLocationKey(
+                                            audienceFromSelectValue(value)
+                                        )
+                                    }
+                                >
+                                    <SelectTrigger
+                                        id="announcement-audience-preview"
+                                        className="w-full sm:w-72"
+                                    >
+                                        <SelectValue placeholder="Select audience" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {audienceOptions.map((option) => (
+                                            <SelectItem
+                                                key={audienceSelectValue(
+                                                    option.locationKey
+                                                )}
+                                                value={audienceSelectValue(
+                                                    option.locationKey
+                                                )}
+                                            >
+                                                {option.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        ) : null}
+                    </div>
+                ) : null}
+
                 <div className={`${FEED_BP.layout}`}>
                     <div
                         className={`@announcements:mb-0 relative mb-4 h-full ${FEED_BP.feedCol}`}
@@ -475,8 +643,14 @@ export default function AnnouncementsPage() {
                                                         <AnnouncementRow
                                                             announcement={a}
                                                             displayName={
-                                                                a.channelLabel ??
-                                                                displayName
+                                                                isAdmin &&
+                                                                viewAllChannels
+                                                                    ? announcementAdminDisplayName(
+                                                                          a,
+                                                                          displayName
+                                                                      )
+                                                                    : (a.channelLabel ??
+                                                                      displayName)
                                                             }
                                                             iconSrc={
                                                                 hackathonIconSrc

@@ -53,6 +53,11 @@ export const hackathonAtom = atom<HackathonData>(
 
 export const viewerAnnouncementLocationKeyAtom = atom<string | null>(null);
 
+export const adminAnnouncementsViewAllAtom = atom(true);
+export const adminAnnouncementsPreviewLocationKeyAtom = atom<
+    string | null | undefined
+>(undefined);
+
 interface DbHackathonType {
     id: number;
     name: string;

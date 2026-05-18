@@ -23,9 +23,15 @@ import { useWindowSize } from '@/lib/useWindowSize';
 import { Button } from '@/components/ui/button';
 import type { AnnouncementWithAttachments } from '@/app/(auth)/ClientContext';
 import { renderDiscordContentMentions } from '@/lib/discord/mentions';
-
-// max # of image attachments rendered
-export const MAX_IMAGES_PER_ANNOUNCEMENT = 2;
+import {
+    isVisualMedia,
+    splitVisualMediaPreview,
+    visualMediaCountLabel,
+} from '@/lib/announcements/attachmentMedia';
+import {
+    AnnouncementMediaList,
+    announcementMediaListWidthClass,
+} from '@/components/announcements/AnnouncementMediaList';
 
 /** tRPC may deserialize timestamps as ISO strings; SSR/hydration may use `Date`. */
 export function toSourceDate(sourceTimestamp: Date | string | number): Date {
@@ -44,16 +50,6 @@ function formatAnnouncementTimestamp(date: Date): string {
         return d.format('h:mm A');
     }
     return d.format('MMMM D, h:mm A');
-}
-
-function isProbablyImage(att: {
-    contentType: string | null;
-    filename: string | null;
-}): boolean {
-    if (att.contentType?.startsWith('image/')) {
-        return true;
-    }
-    return /\.(png|jpe?g|gif|webp|avif)$/i.test(att.filename ?? '');
 }
 
 const HIGHLIGHT_CLASSES = 'rounded bg-yellow-500/30 px-0.5 text-white';
@@ -183,7 +179,7 @@ export type AnnouncementRowProps = {
  * behaviour:
  * body markdown clamped to 4 lines while collapsed, "Show more..."
  * text overflow/images click to expnad
- * images are capped at {@link MAX_IMAGES_PER_ANNOUNCEMENT}.
+ * previews up to {@link MAX_VISUAL_MEDIA_PREVIEW} images/videos; extras use "view all".
  * collapsed: text + images side by side.
  * expanded: text + images stacked.
  */
@@ -206,6 +202,7 @@ export default function AnnouncementRow({
     );
     const trimmed = preprocessDiscordMarkdown(renderedContent.trim());
     const [expanded, setExpanded] = useState(false);
+    const [allMediaExpanded, setAllMediaExpanded] = useState(false);
     const [hasOverflow, setHasOverflow] = useState(false);
     const [jumpRevealed, setJumpRevealed] = useState(false);
     const [windowWidth] = useWindowSize();
@@ -230,14 +227,44 @@ export default function AnnouncementRow({
         return () => document.removeEventListener('click', dismiss);
     }, [jumpRevealed]);
 
-    const imageAttachments = a.attachments
-        .filter(isProbablyImage)
-        .slice(0, MAX_IMAGES_PER_ANNOUNCEMENT);
-    const otherAttachments = a.attachments.filter(
-        (att) => !isProbablyImage(att)
-    );
+    const {
+        all: allVisualMedia,
+        preview: previewMedia,
+        hiddenCount,
+    } = splitVisualMediaPreview(a.attachments);
+    const otherAttachments = a.attachments.filter((att) => !isVisualMedia(att));
 
-    const showToggle = expanded || hasOverflow;
+    const hasTextContent = trimmed.length > 0;
+    const hasVisualMedia = allVisualMedia.length > 0;
+    const hasMoreMedia = hiddenCount > 0;
+    const showAllMedia = allMediaExpanded || (hasTextContent && expanded);
+    const mediaOnly = !hasTextContent && hasVisualMedia;
+
+    const showSideBySide =
+        hasTextContent && hasVisualMedia && !expanded && !allMediaExpanded;
+    const showInlineMedia =
+        hasVisualMedia && (mediaOnly || (!expanded && !allMediaExpanded));
+    const showStackedMediaBelow = hasTextContent && hasVisualMedia && expanded;
+    const inlineMediaList =
+        showAllMedia && mediaOnly ? allVisualMedia : previewMedia;
+
+    const showViewAllMedia = hasMoreMedia && !showAllMedia && mediaOnly;
+    const showCollapseMedia = hasMoreMedia && allMediaExpanded && mediaOnly;
+
+    const revealAllMedia = () => {
+        if (mediaOnly) {
+            setAllMediaExpanded(true);
+        } else {
+            setExpanded(true);
+        }
+        onRead?.();
+    };
+
+    const showToggle =
+        hasTextContent &&
+        (expanded ||
+            hasOverflow ||
+            (hasMoreMedia && !showAllMedia && !mediaOnly));
 
     return (
         <li
@@ -269,7 +296,7 @@ export default function AnnouncementRow({
                           ? (e) => {
                                 if (
                                     (e.target as HTMLElement).closest(
-                                        'a, button'
+                                        'a, button, video'
                                     )
                                 ) {
                                     return;
@@ -330,130 +357,107 @@ export default function AnnouncementRow({
                 </div>
                 <div className="min-w-0 flex-1 pl-11">
                     <>
-                        {/* desktop (collapsed): text + images side by side. On mobile or expanded: stacked. */}
+                        {/* desktop (collapsed): text + media side by side.*/}
                         <div
                             className={cn(
                                 'mt-0.5',
-                                imageAttachments.length > 0 &&
-                                    !expanded &&
+                                showSideBySide &&
                                     'md:flex md:items-start md:gap-3'
                             )}
                         >
-                            <div
-                                className={cn(
-                                    imageAttachments.length > 0 &&
-                                        !expanded &&
-                                        'md:min-w-0 md:flex-1'
-                                )}
-                            >
+                            {hasTextContent ? (
                                 <div
-                                    ref={bodyRef}
                                     className={cn(
-                                        ...ANNOUNCEMENT_BODY_CLASSES,
-                                        !expanded && 'line-clamp-4'
+                                        showSideBySide && 'md:min-w-0 md:flex-1'
                                     )}
                                 >
-                                    {renderedBody}
+                                    <div
+                                        ref={bodyRef}
+                                        className={cn(
+                                            ...ANNOUNCEMENT_BODY_CLASSES,
+                                            !expanded && 'line-clamp-4'
+                                        )}
+                                    >
+                                        {renderedBody}
+                                    </div>
                                 </div>
-                            </div>
-                            {imageAttachments.length > 0 && !expanded ? (
-                                <ul
+                            ) : null}
+                            {showInlineMedia ? (
+                                <AnnouncementMediaList
+                                    attachments={inlineMediaList}
+                                    size={mediaOnly ? 'full' : 'compact'}
+                                    mediaOnly={mediaOnly}
+                                    overflowCount={
+                                        showAllMedia ? 0 : hiddenCount
+                                    }
+                                    onOverflowClick={revealAllMedia}
+                                    onImageExpand={revealAllMedia}
                                     className={cn(
-                                        'grid gap-2 md:shrink-0',
-                                        'mt-2 md:mt-0',
-                                        imageAttachments.length === 1
-                                            ? 'grid-cols-1 md:w-36'
-                                            : 'grid-cols-2 md:w-48'
+                                        mediaOnly
+                                            ? 'mt-2'
+                                            : cn(
+                                                  'mt-2 md:mt-0 md:shrink-0',
+                                                  inlineMediaList.length === 1
+                                                      ? announcementMediaListWidthClass(
+                                                            inlineMediaList,
+                                                            false
+                                                        )
+                                                      : 'md:w-48'
+                                              )
                                     )}
-                                >
-                                    {imageAttachments.map((att) => (
-                                        <li key={att.id}>
-                                            <a
-                                                href={
-                                                    att.storedUrl ??
-                                                    att.sourceUrl
-                                                }
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="block overflow-hidden rounded-lg border border-neutral-700/50 bg-neutral-900/40 md:cursor-zoom-in"
-                                                onClick={(e) => {
-                                                    if (
-                                                        window.innerWidth >= 768
-                                                    ) {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        setExpanded(true);
-                                                        onRead?.();
-                                                    }
-                                                }}
-                                            >
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img
-                                                    src={
-                                                        att.storedUrl ??
-                                                        att.sourceUrl
-                                                    }
-                                                    alt={
-                                                        att.filename ??
-                                                        'Announcement image'
-                                                    }
-                                                    className="h-24 w-full object-cover md:h-20"
-                                                    loading="lazy"
-                                                />
-                                            </a>
-                                        </li>
-                                    ))}
-                                </ul>
+                                />
                             ) : null}
                         </div>
-                        {imageAttachments.length > 0 && expanded ? (
-                            <ul
-                                className={cn(
-                                    'mt-2 grid gap-2',
-                                    imageAttachments.length === 1
-                                        ? 'grid-cols-1'
-                                        : 'grid-cols-2'
-                                )}
-                            >
-                                {imageAttachments.map((att) => (
-                                    <li key={att.id}>
-                                        <a
-                                            href={
-                                                att.storedUrl ?? att.sourceUrl
-                                            }
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="block overflow-hidden rounded-lg border border-neutral-700/50 bg-neutral-900/40"
-                                        >
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img
-                                                src={
-                                                    att.storedUrl ??
-                                                    att.sourceUrl
-                                                }
-                                                alt={
-                                                    att.filename ??
-                                                    'Announcement image'
-                                                }
-                                                className="max-h-96 w-full object-cover"
-                                                loading="lazy"
-                                            />
-                                        </a>
-                                    </li>
-                                ))}
-                            </ul>
+                        {showStackedMediaBelow ? (
+                            <AnnouncementMediaList
+                                attachments={allVisualMedia}
+                                size="full"
+                                mediaOnly
+                                className="mt-2"
+                            />
                         ) : null}
-                        {showToggle ? (
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setExpanded((v) => !v);
-                                    if (!expanded) onRead?.();
-                                }}
-                                className="text-brand-400 hover:text-brand-300 mt-2 text-sm underline-offset-2 hover:underline"
-                            >
-                                {expanded ? 'Show less' : 'Show more…'}
-                            </button>
+                        {showViewAllMedia || showCollapseMedia || showToggle ? (
+                            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+                                {showViewAllMedia ? (
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            revealAllMedia();
+                                        }}
+                                        className="text-brand-400 hover:text-brand-300 text-sm underline-offset-2 hover:underline"
+                                    >
+                                        View all{' '}
+                                        {visualMediaCountLabel(
+                                            allVisualMedia.length
+                                        )}
+                                    </button>
+                                ) : null}
+                                {showCollapseMedia ? (
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setAllMediaExpanded(false);
+                                        }}
+                                        className="text-brand-400 hover:text-brand-300 text-sm underline-offset-2 hover:underline"
+                                    >
+                                        Show less
+                                    </button>
+                                ) : null}
+                                {showToggle ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setExpanded((v) => !v);
+                                            if (!expanded) onRead?.();
+                                        }}
+                                        className="text-brand-400 hover:text-brand-300 text-sm underline-offset-2 hover:underline"
+                                    >
+                                        {expanded ? 'Show less' : 'Show more…'}
+                                    </button>
+                                ) : null}
+                            </div>
                         ) : null}
                     </>
                     {otherAttachments.length > 0 ? (

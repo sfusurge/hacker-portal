@@ -6,12 +6,17 @@ import { Realtime, type InboundMessage } from 'ably';
 import {
     announcementsAtom,
     hackathonAtom,
-    viewerAnnouncementLocationKeyAtom,
+    userInfoAtom,
     type AnnouncementsList,
 } from '@/app/(auth)/ClientContext';
 import {
+    useAdminAnnouncementPreviewQueryInput,
+    useEffectiveAnnouncementLocationKey,
+} from '@/lib/announcements/useAdminAnnouncementPreview';
+import {
     acquireRealtimeClient,
     releaseRealtimeClient,
+    subscribeChannelEvent,
 } from '@/lib/realtime/realtimeClient';
 import {
     ANNOUNCEMENTS_ABLY_EVENT,
@@ -28,11 +33,23 @@ const ANNOUNCEMENTS_REALTIME_LIMIT = 10;
 export function AnnouncementsAblySubscriber() {
     const hackathon = useAtomValue(hackathonAtom);
     const hackathonId = hackathon?.id;
-    const viewerLocationKey = useAtomValue(viewerAnnouncementLocationKeyAtom);
+    const viewerLocationKey = useEffectiveAnnouncementLocationKey();
+    const isAdmin = useAtomValue(userInfoAtom)?.userRole === 'admin';
+    const adminPreviewInput = useAdminAnnouncementPreviewQueryInput();
+    const adminViewAll = adminPreviewInput?.viewAll ?? true;
     const setAnnouncements = useSetAtom(announcementsAtom);
     const utils = trpc.useUtils();
     const utilsRef = useRef(utils);
     utilsRef.current = utils;
+
+    const viewerLocationKeyRef = useRef(viewerLocationKey);
+    viewerLocationKeyRef.current = viewerLocationKey;
+    const isAdminRef = useRef(isAdmin);
+    isAdminRef.current = isAdmin;
+    const adminViewAllRef = useRef(adminViewAll);
+    adminViewAllRef.current = adminViewAll;
+    const adminPreviewInputRef = useRef(adminPreviewInput);
+    adminPreviewInputRef.current = adminPreviewInput;
 
     useEffect(() => {
         if (!hackathonId) {
@@ -48,11 +65,22 @@ export function AnnouncementsAblySubscriber() {
 
         const refetchAnnouncements = async () => {
             const u = utilsRef.current;
+            const preview = adminPreviewInputRef.current;
+            const admin = isAdminRef.current;
             await u.announcements.getAnnouncements.invalidate();
             try {
                 const next = await u.announcements.getAnnouncements.fetch({
                     hackathonId,
                     limit: ANNOUNCEMENTS_REALTIME_LIMIT,
+                    ...(admin && preview
+                        ? {
+                              viewAll: preview.viewAll,
+                              previewLocationKey:
+                                  'previewLocationKey' in preview
+                                      ? preview.previewLocationKey
+                                      : undefined,
+                          }
+                        : {}),
                 });
                 setAnnouncements(next.items as unknown as AnnouncementsList);
             } catch {
@@ -95,11 +123,13 @@ export function AnnouncementsAblySubscriber() {
                 return;
             }
 
+            const locationKey = viewerLocationKeyRef.current;
+            const skipVisibility =
+                isAdminRef.current && adminViewAllRef.current;
+
             if (
-                !announcementVisibleToViewer(
-                    viewerLocationKey,
-                    envelope.visibility
-                )
+                !skipVisibility &&
+                !announcementVisibleToViewer(locationKey, envelope.visibility)
             ) {
                 setAnnouncements((prev) =>
                     prev.filter((a) => a.id !== envelope.announcementId)
@@ -116,17 +146,18 @@ export function AnnouncementsAblySubscriber() {
             );
         };
 
-        void channel
-            .subscribe(ANNOUNCEMENTS_ABLY_EVENT, onMessage)
-            .catch((err) =>
-                console.error('[announcements][ably] subscribe failed', err)
-            );
+        const unsubscribe = subscribeChannelEvent(
+            client,
+            channel,
+            ANNOUNCEMENTS_ABLY_EVENT,
+            onMessage
+        );
 
         return () => {
-            channel.unsubscribe(ANNOUNCEMENTS_ABLY_EVENT, onMessage);
+            unsubscribe();
             releaseRealtimeClient(hackathonId);
         };
-    }, [hackathonId, viewerLocationKey, setAnnouncements]);
+    }, [hackathonId, setAnnouncements]);
 
     return null;
 }

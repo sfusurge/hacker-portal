@@ -2,9 +2,11 @@ import { z } from 'zod';
 import { publicProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
 import { user } from '@/db/schema/users/users';
+import { UserRoleEnum } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
 import { InternalServerError } from '../exceptions';
-import { getBasicUserInfo, getUserData } from './usersRouter';
+import { getUserData } from './usersRouter';
+import { fetchAnnouncementAudiences } from '@/server/announcements/fetchAnnouncementAudiences';
 import { fetchAnnouncementsForViewer } from '@/server/announcements/fetchAnnouncementsForViewer';
 
 export const announcementsRouter = router({
@@ -14,20 +16,49 @@ export const announcementsRouter = router({
                 hackathonId: z.number(),
                 limit: z.number().int().min(1).max(100).default(10),
                 cursor: z.number().int().optional(),
+                viewAll: z.boolean().optional(),
+                previewLocationKey: z.string().nullable().optional(),
             })
         )
         .query(async ({ input }) => {
             try {
-                const viewer = await getBasicUserInfo();
+                const viewer = await getUserData();
+                const isAdmin = viewer?.userRole === UserRoleEnum.admin;
+                const viewAll = isAdmin ? (input.viewAll ?? true) : false;
+                const previewLocationKey =
+                    isAdmin &&
+                    !viewAll &&
+                    input.previewLocationKey !== undefined
+                        ? input.previewLocationKey
+                        : undefined;
                 return await fetchAnnouncementsForViewer({
                     hackathonId: input.hackathonId,
                     userId: viewer?.id ?? null,
                     limit: input.limit,
                     cursor: input.cursor,
+                    viewAll,
+                    previewLocationKey,
                 });
             } catch (err) {
                 console.error('Error fetching announcements:', err);
                 throw new InternalServerError('Failed to fetch announcements');
+            }
+        }),
+
+    getAnnouncementAudiences: publicProcedure
+        .input(z.object({ hackathonId: z.number() }))
+        .query(async ({ input }) => {
+            try {
+                const viewer = await getUserData();
+                if (viewer?.userRole !== UserRoleEnum.admin) {
+                    return [];
+                }
+                return await fetchAnnouncementAudiences(input.hackathonId);
+            } catch (err) {
+                console.error('Error fetching announcement audiences:', err);
+                throw new InternalServerError(
+                    'Failed to fetch announcement audiences'
+                );
             }
         }),
 
