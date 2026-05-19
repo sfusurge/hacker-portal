@@ -190,25 +190,25 @@ export function ReviewProject({
     const allQuestions = response.flatMap((page) => page.questions ?? []);
 
     const titleValue = getTextValue(
-        findById(allQuestions, 1) as QuestionTitleLineInput | undefined
+        findById(allQuestions, 5) as QuestionTitleLineInput | undefined
     );
     const taglineValue = getTextValue(
-        findById(allQuestions, 5) as QuestionTextLineInput | undefined
+        findById(allQuestions, 30) as QuestionTextLineInput | undefined
     );
-    const description = findById(allQuestions, 6) as
+    const description = findById(allQuestions, 35) as
         | QuestionRichTextInput
         | undefined;
     const imageSrcs = getImageSrcs(
-        findById(allQuestions, 10) as QuestionFileUploads | undefined
+        findById(allQuestions, 55) as QuestionFileUploads | undefined
     );
     const prototypeUrl = getLinkUrl(
-        findById(allQuestions, 7) as QuestionTextLinkInput | undefined
+        findById(allQuestions, 40) as QuestionTextLinkInput | undefined
     );
     const pitchDeckUrl = getLinkUrl(
-        findById(allQuestions, 8) as QuestionTextLinkInput | undefined
+        findById(allQuestions, 45) as QuestionTextLinkInput | undefined
     );
     const videoPitchUrl = getLinkUrl(
-        findById(allQuestions, 9) as QuestionTextLinkInput | undefined
+        findById(allQuestions, 50) as QuestionTextLinkInput | undefined
     );
 
     const links = [

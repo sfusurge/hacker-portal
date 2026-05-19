@@ -431,7 +431,14 @@ function Page({
                 </Alert>
             )}
             {questionAtoms.map((item, index) => (
-                <Question questionAtom={item} key={index} />
+                // pass siblings to the question only if  visibleWhen exists
+                <Question
+                    questionAtom={item}
+                    key={index}
+                    {...(page.questions[index]?.visibleWhen
+                        ? { siblings: page.questions }
+                        : {})}
+                />
             ))}
         </form>
     );
@@ -439,12 +446,30 @@ function Page({
 
 function Question({
     questionAtom,
+    siblings = [],
 }: {
     questionAtom: PrimitiveAtom<InputFormQuestion>;
+    siblings?: InputFormQuestion[];
 }) {
     const question = useAtomValue(questionAtom);
     const error = useMemo(() => atom<string | undefined>(undefined), []);
     const hackathon = useAtomValue(hackathonAtom);
+
+    // hide question unless a sibling has the expected value.
+    // when the question is hidden, clear its value so the the answers are not submitted.
+    const setQuestion = useSetAtom(questionAtom);
+    const { visibleWhen } = question;
+
+    const isVisible = visibleWhen
+        ? (siblings.find((q) => q.questionId === visibleWhen.questionId) as any)
+              ?.value === visibleWhen.value
+        : true;
+
+    useEffect(() => {
+        if (!isVisible && 'value' in question && question.value != null) {
+            setQuestion({ ...question, value: undefined } as any);
+        }
+    }, [isVisible]);
     function getInnerInput(
         type: InputFormQuestion['type'],
         _questionAtom: PrimitiveAtom<InputFormQuestion>,
@@ -595,6 +620,8 @@ function Question({
         const selectedCountry = apiDropdownQuestion.selection.trim();
         return selectedCountry.toLowerCase() !== 'canada';
     }, [question]);
+
+    if (!isVisible) return null;
 
     return (
         <div className={cn(style.ver)} style={{ width: '100%' }}>

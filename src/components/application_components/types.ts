@@ -101,6 +101,8 @@ interface Question extends Entry {
     required?: boolean;
     autoComplete?: HTMLInputAutoCompleteAttribute;
     hideTitle?: boolean;
+    // for questions which visibility depends on other question
+    visibleWhen?: { questionId: number; value: string };
 }
 
 export interface QuestionTextLineInput extends Question {
