@@ -30,11 +30,15 @@ import {
     filterSubmissionsByLocation,
     getSubmissionExportField,
     getSubmissionLocationFilterOptions,
-    resolveSubmissionExportQuestionIds,
     submissionToCsvRecord,
     type SubmissionExportRow,
     type SubmissionLocationFilterKey,
 } from '@/lib/admin/submissionExport';
+import {
+    buildSubmissionCsvColumnHeaders,
+    buildSubmissionReviewTableColumns,
+    resolveSubmissionReviewTableLocationQuestionId,
+} from '@/lib/projects/buildSubmissionReviewTableColumns';
 
 export type SubmissionTableRow = SubmissionExportRow;
 
@@ -88,8 +92,21 @@ export default function SubmissionsExportTable({
     const [locationFilter, setLocationFilter] =
         useState<SubmissionLocationFilterKey>('all');
 
-    const questionIds = useMemo(
-        () => resolveSubmissionExportQuestionIds(submissionQuestionPages),
+    const reviewTableColumns = useMemo(
+        () => buildSubmissionReviewTableColumns(submissionQuestionPages),
+        [submissionQuestionPages]
+    );
+
+    const csvColumnHeaders = useMemo(
+        () => buildSubmissionCsvColumnHeaders(submissionQuestionPages),
+        [submissionQuestionPages]
+    );
+
+    const locationQuestionId = useMemo(
+        () =>
+            resolveSubmissionReviewTableLocationQuestionId(
+                submissionQuestionPages
+            ),
         [submissionQuestionPages]
     );
 
@@ -102,10 +119,10 @@ export default function SubmissionsExportTable({
         () =>
             filterSubmissionsByLocation(
                 rows,
-                questionIds.location,
+                locationQuestionId,
                 locationFilter
             ),
-        [rows, questionIds.location, locationFilter]
+        [rows, locationQuestionId, locationFilter]
     );
 
     useEffect(() => {
@@ -140,32 +157,14 @@ export default function SubmissionsExportTable({
                 accessorKey: 'teamName',
                 header: 'Team Name',
             },
-            {
-                id: 'project_name',
-                header: 'Project Name',
-                accessorFn: (row) =>
-                    getSubmissionExportField(
-                        row.response,
-                        questionIds.projectName
-                    ),
-            },
-            {
-                id: 'track',
-                header: 'Track',
-                accessorFn: (row) =>
-                    getSubmissionExportField(row.response, questionIds.track),
-            },
-            {
-                id: 'location',
-                header: 'Location',
-                accessorFn: (row) =>
-                    getSubmissionExportField(
-                        row.response,
-                        questionIds.location
-                    ),
-            },
+            ...reviewTableColumns.map((col) => ({
+                id: col.id,
+                header: col.header,
+                accessorFn: (row: SubmissionTableRow) =>
+                    getSubmissionExportField(row.response, col.questionId),
+            })),
         ],
-        [questionIds.projectName, questionIds.track, questionIds.location]
+        [reviewTableColumns]
     );
 
     const table = useReactTable({
@@ -192,7 +191,7 @@ export default function SubmissionsExportTable({
         }
 
         const csvData = rowsToExport.map((row) =>
-            submissionToCsvRecord(row, questionIds, submissionQuestionPages)
+            submissionToCsvRecord(row, submissionQuestionPages)
         );
 
         const locationSlug =
@@ -200,6 +199,8 @@ export default function SubmissionsExportTable({
 
         const config = mkConfig({
             ...csvConfig,
+            useKeysAsHeaders: false,
+            columnHeaders: csvColumnHeaders,
             filename: hackathonName
                 ? `${hackathonName.replace(/\s+/g, '-').toLowerCase()}-submissions${locationSlug}-${filenameSuffix}`
                 : `project-submissions${locationSlug}-${filenameSuffix}`,
@@ -242,7 +243,7 @@ export default function SubmissionsExportTable({
                         className={cn(inputStyle.textinput, 'max-w-xs')}
                     />
                 </div>
-                {questionIds.location && (
+                {locationQuestionId && (
                     <div className="flex flex-wrap gap-2">
                         <button
                             type="button"

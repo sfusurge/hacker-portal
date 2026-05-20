@@ -7,15 +7,10 @@ import {
     AUDIENCE_VOTING_UI_IN_SIDEBAR_COLUMN,
     isAudienceVotingEnabled,
 } from '@/lib/audienceVoting';
-import {
-    PROJECT_SUBMISSION_QUESTION_IDS,
-    getProjectSubmissionText,
-} from '@/lib/projects/projectSubmissionDisplay';
+import { getProjectTitle } from '@/lib/projects/projectSubmissionDisplay';
 import { ProjectSectionsList } from './ProjectSectionsList';
 import TeamCard from './TeamCard';
 import type { ProjectPageReadyState } from './types';
-
-const Q = PROJECT_SUBMISSION_QUESTION_IDS;
 
 export function UserProjectPageView({
     teamId,
@@ -29,8 +24,11 @@ export function UserProjectPageView({
     applicationStatus,
 }: ProjectPageReadyState) {
     const hackathon = useAtomValue(hackathonAtom);
-    const projectTitle =
-        getProjectSubmissionText(response, Q.TITLE) || `Team #${teamId}`;
+    const projectTitle = getProjectTitle(
+        response,
+        hackathon?.submissionQuestionPages,
+        `Team #${teamId}`
+    );
 
     const audienceVoteButton = isAudienceVotingEnabled(hackathon) ? (
         <VoteButton

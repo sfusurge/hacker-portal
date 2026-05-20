@@ -130,11 +130,17 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
             >;
             const assignedProject = assignedProjectMap.get(submission.teamId);
             return {
-                ...mapSubmissionToProjectListItem({
-                    teamId: submission.teamId,
-                    teamName: submission.teamName,
-                    response,
-                }),
+                ...mapSubmissionToProjectListItem(
+                    {
+                        teamId: submission.teamId,
+                        teamName: submission.teamName,
+                        response,
+                    },
+                    {
+                        submissionQuestionPages:
+                            hackathon.submissionQuestionPages,
+                    }
+                ),
                 displayId:
                     assignedProject?.displayId || submission.teamId.toString(),
                 fullSubmissionResponse: response,
@@ -164,6 +170,8 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
                         {
                             displayId: project.displayId ?? undefined,
                             status: project.status,
+                            submissionQuestionPages:
+                                hackathon.submissionQuestionPages,
                         }
                     ),
                     fullSubmissionResponse: response,
@@ -185,11 +193,19 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
 
     // Public gallery
     const publicProjects = submissions.map((submission) =>
-        mapSubmissionToProjectListItem({
-            teamId: submission.teamId,
-            teamName: submission.teamName,
-            response: (submission.response ?? {}) as Record<string, unknown>,
-        })
+        mapSubmissionToProjectListItem(
+            {
+                teamId: submission.teamId,
+                teamName: submission.teamName,
+                response: (submission.response ?? {}) as Record<
+                    string,
+                    unknown
+                >,
+            },
+            {
+                submissionQuestionPages: hackathon.submissionQuestionPages,
+            }
+        )
     );
 
     return (

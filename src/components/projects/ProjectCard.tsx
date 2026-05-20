@@ -5,12 +5,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import slugify from '@/utils/slugify';
-import {
-    PROJECT_SUBMISSION_QUESTION_IDS,
-    type ProjectListItem,
-} from '@/lib/projects/projectSubmissionDisplay';
-
-const Q = PROJECT_SUBMISSION_QUESTION_IDS;
+import type { ProjectListItem } from '@/lib/projects/projectSubmissionDisplay';
 
 interface StatusInfo {
     label: string;
@@ -30,10 +25,9 @@ export default function ProjectCard({
 }: ProjectCardProps) {
     const titleRef = useRef<HTMLHeadingElement>(null);
     const [titleLines, setTitleLines] = useState(1);
-    const title = project[Q.TITLE];
-    const tagline = project[Q.TAGLINE];
-    const headerImage =
-        project[Q.HEADER_IMAGE] || '/hacker-portal-preview.webp';
+    const title = project.title;
+    const tagline = project.tagline;
+    const headerImage = project.headerImage || '/hacker-portal-preview.webp';
 
     useEffect(() => {
         const checkTitleHeight = () => {

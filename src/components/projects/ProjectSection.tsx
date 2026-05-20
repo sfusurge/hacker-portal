@@ -8,30 +8,28 @@ import { useState } from 'react';
 import { IframeEmbed } from '@/components/application_components/IframeEmbed';
 import { RichText } from '@/components/ui/RichText/RichText';
 import { MarkdownDisplay } from '@/components/ui/Markdown/MarkdownDisplay';
+import type { ProjectPageSection } from '@/lib/projects/buildProjectPageSections';
 import React from 'react';
+
+function coerceSubmissionText(value: unknown): string {
+    if (value == null) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') {
+        return String(value);
+    }
+    return '';
+}
+
+function coerceSubmissionUrl(value: unknown): string {
+    if (typeof value === 'string') return value.trim();
+    if (Array.isArray(value) && typeof value[0] === 'string') {
+        return value[0].trim();
+    }
+    return '';
+}
 
 interface BaseSectionProps {
     title: string;
-    required?: boolean;
-}
-
-interface Section {
-    type:
-        | 'title'
-        | 'badge'
-        | 'text'
-        | 'rich-text'
-        | 'markdown'
-        | 'image'
-        | 'video'
-        | 'pdf'
-        | 'embed'
-        | 'checkbox'
-        | 'text-input';
-    title: string;
-    field: number;
-    options?: string[];
-    questionId?: string;
     required?: boolean;
 }
 
@@ -39,7 +37,7 @@ export function TextSection({
     title,
     content,
 }: BaseSectionProps & { content: string }) {
-    const lines = content.split('\n');
+    const lines = coerceSubmissionText(content).split('\n');
 
     return (
         <div className="flex flex-col gap-3">
@@ -162,6 +160,32 @@ export function PdfSection({ title, url }: BaseSectionProps & { url: string }) {
     );
 }
 
+export function EligibleTracksSection({
+    title,
+    trackNames,
+}: {
+    title: string;
+    trackNames: string[];
+}) {
+    if (trackNames.length === 0) return null;
+
+    return (
+        <div className="flex flex-col gap-3">
+            <Label className="mb-0">{title}</Label>
+            <div className="flex flex-wrap gap-2">
+                {trackNames.map((name) => (
+                    <span
+                        key={name}
+                        className="bg-neutral-750/60 rounded-xl px-4 py-2 text-white/90"
+                    >
+                        {name}
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export function EmbedSection({
     title,
     url,
@@ -254,23 +278,46 @@ export function SectionRenderer({
     section,
     data,
 }: {
-    section: Section;
-    data: Record<string, any>;
-    onChange?: (id: string, value: any) => void;
+    section: ProjectPageSection;
+    data: Record<string, unknown>;
 }) {
     const content = data[section.field];
-    if (!content || (Array.isArray(content) && content.length === 0))
+
+    if (section.type === 'eligible-tracks') {
+        return (
+            <EligibleTracksSection
+                title={section.title}
+                trackNames={section.eligibleTrackNames ?? []}
+            />
+        );
+    }
+
+    if (!content || (Array.isArray(content) && content.length === 0)) {
         return null;
+    }
 
     switch (section.type) {
         case 'title':
-            return <TitleSection title={section.title} content={content} />;
+            return (
+                <TitleSection
+                    title={section.title}
+                    content={coerceSubmissionText(content)}
+                />
+            );
         case 'badge':
-            return <BadgeSection title={section.title} content={content} />;
+            return (
+                <BadgeSection
+                    title={section.title}
+                    content={coerceSubmissionText(content)}
+                />
+            );
         case 'text':
-            return <TextSection title={section.title} content={content} />;
-        case 'rich-text':
-            return <RichTextSection title={section.title} content={content} />;
+            return (
+                <TextSection
+                    title={section.title}
+                    content={coerceSubmissionText(content)}
+                />
+            );
         case 'markdown':
             return (
                 <MarkdownSection
@@ -278,35 +325,18 @@ export function SectionRenderer({
                     content={typeof content === 'string' ? content : ''}
                 />
             );
-        case 'image':
-            return (
-                <ImageSection
-                    title={section.title}
-                    src={content[0] || '/hacker-portal-preview.webp'}
-                    alt={section.title}
-                />
-            );
         case 'video':
-            return <VideoSection title={section.title} url={content} />;
-        case 'pdf':
-            return <PdfSection title={section.title} url={content[0]} />;
-        case 'embed':
-            return <EmbedSection title={section.title} url={content} />;
-        case 'checkbox':
             return (
-                <CheckboxSection
+                <VideoSection
                     title={section.title}
-                    options={section.options || []}
-                    questionId={section.questionId || ''}
-                    required={section.required}
+                    url={coerceSubmissionUrl(content)}
                 />
             );
-        case 'text-input':
+        case 'embed':
             return (
-                <TextInputSection
+                <EmbedSection
                     title={section.title}
-                    questionId={section.questionId || ''}
-                    required={section.required}
+                    url={coerceSubmissionUrl(content)}
                 />
             );
         default:

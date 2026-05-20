@@ -2,14 +2,11 @@
 
 import JudgingDrawer from '@/components/projects/judge/JudgingDrawer';
 import JudgingForm from '@/components/projects/judge/JudgingForm';
-import {
-    PROJECT_SUBMISSION_QUESTION_IDS,
-    getProjectSubmissionText,
-} from '@/lib/projects/projectSubmissionDisplay';
+import { useAtomValue } from 'jotai';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { getProjectTitle } from '@/lib/projects/projectSubmissionDisplay';
 import { ProjectSectionsList } from './ProjectSectionsList';
 import type { ProjectPageReadyState } from './types';
-
-const Q = PROJECT_SUBMISSION_QUESTION_IDS;
 
 export function JudgeProjectPageView({
     teamId,
@@ -20,8 +17,12 @@ export function JudgeProjectPageView({
     didJudge,
     isAssignedToJudge,
 }: ProjectPageReadyState) {
-    const projectTitle =
-        getProjectSubmissionText(response, Q.TITLE) || `Team #${teamId}`;
+    const hackathon = useAtomValue(hackathonAtom);
+    const projectTitle = getProjectTitle(
+        response,
+        hackathon?.submissionQuestionPages,
+        `Team #${teamId}`
+    );
 
     return (
         <div className="grid h-full grid-cols-1 xl:grid-cols-3">

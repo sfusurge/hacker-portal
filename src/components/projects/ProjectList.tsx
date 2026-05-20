@@ -22,13 +22,14 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { DropdownBadge } from '@/components/ui/dropdown-badge';
+import { ProjectGalleryLocationToggle } from './ProjectGalleryLocationToggle';
 import {
     createSkeletonProjectListItem,
-    PROJECT_SUBMISSION_QUESTION_IDS,
+    projectListItemMatchesLocationFilter,
+    projectListItemMatchesSearchQuery,
+    type ProjectGalleryLocationFilter,
     type ProjectListItem,
 } from '@/lib/projects/projectSubmissionDisplay';
-
-const Q = PROJECT_SUBMISSION_QUESTION_IDS;
 const STATUS_KEY = 'judging_status_data';
 const FILTERS_KEY = 'judging_filters_data';
 
@@ -50,6 +51,8 @@ export default function ProjectList({
         Record<string, string>
     >({});
     const [searchQuery, setSearchQuery] = useState('');
+    const [locationFilter, setLocationFilter] =
+        useState<ProjectGalleryLocationFilter>('all');
     const [filteredProjects, setFilteredProjects] = useState(projects);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [showAllProjects, setShowAllProjects] = useState(false);
@@ -308,7 +311,16 @@ export default function ProjectList({
             statusFilters.size === 0 &&
             Object.keys(projectStatuses).length === 0
         ) {
-            setFilteredProjects(projectsToFilter);
+            setFilteredProjects(
+                locationFilter === 'all'
+                    ? projectsToFilter
+                    : projectsToFilter.filter((project) =>
+                          projectListItemMatchesLocationFilter(
+                              project,
+                              locationFilter
+                          )
+                      )
+            );
             return;
         }
 
@@ -339,21 +351,22 @@ export default function ProjectList({
                       statusFilters.has(projectStatus)
                     : true;
 
-            const matchesSearch =
-                !query.trim() ||
-                (project[Q.TITLE] &&
-                    String(project[Q.TITLE]).toLowerCase().includes(query)) ||
-                (project[Q.TAGLINE] &&
-                    String(project[Q.TAGLINE]).toLowerCase().includes(query)) ||
-                (project.teamName &&
-                    project.teamName.toLowerCase().includes(query));
+            const matchesSearch = projectListItemMatchesSearchQuery(
+                project,
+                query
+            );
+            const matchesLocation = projectListItemMatchesLocationFilter(
+                project,
+                locationFilter
+            );
 
-            return matchesSearch && matchesStatus;
+            return matchesSearch && matchesStatus && matchesLocation;
         });
 
         setFilteredProjects(filtered);
     }, [
         searchQuery,
+        locationFilter,
         projects,
         statusFilters,
         projectStatuses,
@@ -378,11 +391,12 @@ export default function ProjectList({
 
                 <div className="flex flex-col gap-2">
                     <Label>Search for a project</Label>
-                    <div className="flex gap-3">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-end md:gap-4">
                         <FormTextInput
                             name="search"
                             id="search"
                             type="search"
+                            className="w-full md:max-w-[320px]"
                             icon={
                                 <MagnifyingGlassIcon className="h-4 w-4 text-white/60" />
                             }
@@ -392,6 +406,13 @@ export default function ProjectList({
                                 setSearchQuery(text);
                             }}
                         />
+                        <ProjectGalleryLocationToggle
+                            value={locationFilter}
+                            onChange={setLocationFilter}
+                            className="shrink-0 md:pb-0.5"
+                        />
+                    </div>
+                    <div className="flex gap-3">
                         <div className="block md:hidden">
                             <Drawer>
                                 <DrawerTrigger asChild>

@@ -141,7 +141,13 @@ export function SubmitFormCard({
     }
 
     if (projectSubmitted) {
-        return <ProjectSubmissionSuccess />;
+        return (
+            <Card className="h-full">
+                <CardContent>
+                    <ProjectSubmissionSuccess />
+                </CardContent>
+            </Card>
+        );
     }
 
     return (

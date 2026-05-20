@@ -80,6 +80,7 @@ export function useProjectPageData(id: string): ProjectPageState {
     }
 
     const resolvedTeamId = teamResolve.data.id;
+    const submissionResponse = submission.response as Record<string, unknown>;
 
     return {
         status: 'ready',
@@ -88,11 +89,12 @@ export function useProjectPageData(id: string): ProjectPageState {
         user: user!,
         submission,
         teamData,
-        response: buildProjectPageResponse(
-            submission.response as Record<string, unknown>,
-            teamData
+        response: buildProjectPageResponse(submissionResponse, teamData),
+        projectSections: getProjectSectionsForRole(
+            user?.userRole,
+            hackathon?.submissionQuestionPages,
+            submissionResponse
         ),
-        projectSections: getProjectSectionsForRole(user?.userRole),
         isOwnProject:
             teamData.members?.some((m) => m.userId === user?.id) ?? false,
         alreadyVoted: votedQuery.data?.hasVoted ?? false,

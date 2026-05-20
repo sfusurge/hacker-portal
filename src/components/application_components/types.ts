@@ -95,6 +95,36 @@ export type InputFormQuestion =
 
 export type ApplicationQuestionType = InputFormQuestion['type'];
 
+/**
+ * Question `displayRole` flags (string or array).
+ *
+ * Visibility (where the question appears):
+ * - `all` — public project page
+ * - `judge` — project page for judges/admins only
+ * - `table` — admin submissions review/export table column
+ * - `hidden` — submit form only
+ *
+ * Field identity (what the question represents; combine with visibility flags):
+ * - `title`, `location`, `track`, `tagline`, `description`, `banner`
+ * - `eligibleTrack` — sponsor/track eligibility checkbox (grouped on project page)
+ *
+ * Example: `"displayRole": ["all", "table", "title"]`
+ */
+export type DisplayRole =
+    | 'all'
+    | 'judge'
+    | 'table'
+    | 'hidden'
+    | 'title'
+    | 'location'
+    | 'track'
+    | 'tagline'
+    | 'description'
+    | 'banner'
+    | 'eligibleTrack';
+
+export type DisplayRoles = DisplayRole | DisplayRole[];
+
 export interface AlertData {
     title: string;
     description: string;
@@ -108,6 +138,7 @@ interface Question extends Entry {
     hideTitle?: boolean;
     // for questions which visibility depends on other question
     visibleWhen?: { questionId: number; value: string };
+    displayRole?: DisplayRoles;
 }
 
 export interface QuestionTextLineInput extends Question {
@@ -173,6 +204,7 @@ export interface QuestionCheckBoxInput extends Question {
     type: 'checkbox';
     value?: boolean;
     label?: string;
+    trackName?: string;
     required?: boolean;
 }
 

@@ -1,9 +1,10 @@
 'use client';
 
 import type {
-    InputFormQuestion,
     InputFormPageData,
     QuestionFileUploads,
+    QuestionMarkdownInput,
+    QuestionMultipleChoice,
     QuestionRichTextInput,
     QuestionTextLineInput,
     QuestionTextLinkInput,
@@ -20,6 +21,9 @@ import { SkewmorphicButton } from '../ui/SkewmorphicButton/SkewmorphicButton';
 import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
+import { MarkdownDisplay } from '@/components/ui/Markdown/MarkdownDisplay';
+import { RichText } from '@/components/ui/RichText/RichText';
+import { getSubmissionPreviewQuestions } from '@/lib/projects/submissionFormQuestions';
 
 export interface ReviewProjectProps {
     submit: () => void | Promise<void>;
@@ -33,9 +37,9 @@ export const submitMessageAtom = atom({
     content: 'This form cannot be edited after submission.',
 });
 
-function findById(questions: InputFormQuestion[], id: number) {
-    return questions.find((q) => q.questionId === id);
-}
+const TAGLINE_TITLE_PATTERN = /tagline|short description/i;
+const LOCATION_TITLE_PATTERN = /participating from|where is your team/i;
+const TRACK_TITLE_PATTERN = /project track|which project track/i;
 
 function getTextValue(
     q: QuestionTextLineInput | QuestionTitleLineInput | undefined
@@ -48,21 +52,41 @@ function getLinkUrl(q: QuestionTextLinkInput | undefined): string {
     return typeof q.value === 'string' ? q.value.trim() : '';
 }
 
-function deltaToText(delta?: Record<any, any>): string {
-    return (
-        delta?.ops
-            ?.map((op: any) => op.insert ?? '')
-            .join('')
-            .trim() || 'N/A'
-    );
+function getChoiceLabel(q: QuestionMultipleChoice | undefined): string {
+    if (!q?.value) return '';
+    const selected = q.choices?.find((choice) => choice.data === q.value);
+    return selected?.name?.trim() || String(q.value).trim();
+}
+
+function resolveUploadedImageSrc(candidate: unknown): string | null {
+    if (typeof candidate !== 'string') return null;
+    const trimmed = candidate.trim();
+    if (!trimmed) return null;
+    if (
+        trimmed.startsWith('/') ||
+        trimmed.startsWith('blob:') ||
+        trimmed.startsWith('data:')
+    ) {
+        return trimmed;
+    }
+    return trimmed;
 }
 
 function getImageSrcs(q: QuestionFileUploads | undefined): string[] {
     if (!q?.fileList?.length) return [];
     return q.fileList
         .map((file) => {
-            if (file instanceof File) return URL.createObjectURL(file);
-            return (file as any).url || (file as any).preview || null;
+            if (file instanceof File) {
+                try {
+                    return URL.createObjectURL(file);
+                } catch {
+                    return null;
+                }
+            }
+            const candidate =
+                (file as { url?: string; preview?: string }).url ??
+                (file as { url?: string; preview?: string }).preview;
+            return resolveUploadedImageSrc(candidate);
         })
         .filter((src): src is string => src !== null);
 }
@@ -117,6 +141,7 @@ function ImageCarousel({
                     {images.map((_, i) => (
                         <button
                             key={i}
+                            type="button"
                             onClick={() => onIndexChange(i)}
                             className={cn(
                                 styles.dot,
@@ -152,7 +177,16 @@ function TeamBadge() {
 }
 
 function ProjectLinks({ links }: { links: { label: string; url: string }[] }) {
-    const visible = links.filter((l) => l.url);
+    const visible = links
+        .map((link) => {
+            const href = link.url.trim();
+            return href ? { ...link, href } : null;
+        })
+        .filter(
+            (link): link is { label: string; url: string; href: string } =>
+                link !== null
+        );
+
     if (visible.length === 0) return null;
 
     return (
@@ -165,7 +199,7 @@ function ProjectLinks({ links }: { links: { label: string; url: string }[] }) {
             {visible.map((link) => (
                 <li key={link.label}>
                     <a
-                        href={link.url}
+                        href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
                     >
@@ -174,6 +208,49 @@ function ProjectLinks({ links }: { links: { label: string; url: string }[] }) {
                 </li>
             ))}
         </ul>
+    );
+}
+
+function TrackBadges({
+    location,
+    track,
+}: {
+    location?: string;
+    track?: string;
+}) {
+    if (!location && !track) return null;
+
+    return (
+        <div className="flex flex-wrap gap-2">
+            {location && (
+                <span className="bg-neutral-750/60 rounded-xl px-4 py-2 text-sm">
+                    {location}
+                </span>
+            )}
+            {track && (
+                <span className="bg-neutral-750/60 rounded-xl px-4 py-2 text-sm">
+                    {track}
+                </span>
+            )}
+        </div>
+    );
+}
+
+function DescriptionPreview({
+    question,
+}: {
+    question: QuestionMarkdownInput | QuestionRichTextInput;
+}) {
+    if (question.type === 'markdown') {
+        const content = question.value?.trim() ?? '';
+        if (!content) {
+            return <p className="text-white/50">N/A</p>;
+        }
+        return <MarkdownDisplay content={content} />;
+    }
+
+    return (
+        <RichText onChange={() => {}} readOnly initialData={question.value} />
     );
 }
 
@@ -187,35 +264,45 @@ export function ReviewProject({
     const [dialogOpen, setDialogOpen] = useState(false);
     const [imageIndex, setImageIndex] = useState(0);
 
-    const allQuestions = response.flatMap((page) => page.questions ?? []);
+    const previewQuestions = getSubmissionPreviewQuestions(response);
+
+    const titleQuestion = previewQuestions.find((q) => q.type === 'title-line');
+    const taglineQuestion = previewQuestions.find(
+        (q) =>
+            q.type === 'text-line' && TAGLINE_TITLE_PATTERN.test(q.title ?? '')
+    );
+    const descriptionQuestion = previewQuestions.find(
+        (q) => q.type === 'markdown' || q.type === 'rich-text'
+    );
+    const imageQuestion = previewQuestions.find(
+        (q) => q.type === 'file-upload'
+    );
+    const locationQuestion = previewQuestions.find(
+        (q) =>
+            q.type === 'multiple-choice' &&
+            LOCATION_TITLE_PATTERN.test(q.title ?? '')
+    ) as QuestionMultipleChoice | undefined;
+    const trackQuestion = previewQuestions.find(
+        (q) =>
+            q.type === 'multiple-choice' &&
+            TRACK_TITLE_PATTERN.test(q.title ?? '')
+    ) as QuestionMultipleChoice | undefined;
 
     const titleValue = getTextValue(
-        findById(allQuestions, 5) as QuestionTitleLineInput | undefined
+        titleQuestion as QuestionTitleLineInput | undefined
     );
     const taglineValue = getTextValue(
-        findById(allQuestions, 30) as QuestionTextLineInput | undefined
+        taglineQuestion as QuestionTextLineInput | undefined
     );
-    const description = findById(allQuestions, 35) as
-        | QuestionRichTextInput
-        | undefined;
     const imageSrcs = getImageSrcs(
-        findById(allQuestions, 55) as QuestionFileUploads | undefined
+        imageQuestion as QuestionFileUploads | undefined
     );
-    const prototypeUrl = getLinkUrl(
-        findById(allQuestions, 40) as QuestionTextLinkInput | undefined
-    );
-    const pitchDeckUrl = getLinkUrl(
-        findById(allQuestions, 45) as QuestionTextLinkInput | undefined
-    );
-    const videoPitchUrl = getLinkUrl(
-        findById(allQuestions, 50) as QuestionTextLinkInput | undefined
-    );
-
-    const links = [
-        { label: 'Link to Presentation', url: pitchDeckUrl },
-        { label: 'Link to Prototype', url: prototypeUrl },
-        { label: 'Link to Video Pitch', url: videoPitchUrl },
-    ];
+    const links = previewQuestions
+        .filter((q): q is QuestionTextLinkInput => q.type === 'link')
+        .map((q) => ({
+            label: q.title?.trim() || 'Link',
+            url: getLinkUrl(q),
+        }));
 
     return (
         <div className="mb-28 flex flex-col gap-6 p-6 pb-10">
@@ -228,7 +315,7 @@ export function ReviewProject({
                 </p>
             </div>
 
-            {allQuestions.length === 0 ? (
+            {previewQuestions.length === 0 ? (
                 <div className="py-4 text-center">No questions to review</div>
             ) : (
                 <Card>
@@ -247,11 +334,27 @@ export function ReviewProject({
                                     <div className="text-3xl font-semibold">
                                         {titleValue}
                                     </div>
-                                    <div className="text-sm text-white/60">
-                                        {taglineValue}
-                                    </div>
+                                    <TrackBadges
+                                        location={getChoiceLabel(
+                                            locationQuestion
+                                        )}
+                                        track={getChoiceLabel(trackQuestion)}
+                                    />
+                                    {taglineQuestion && (
+                                        <div className="text-sm text-white/60">
+                                            {taglineValue}
+                                        </div>
+                                    )}
                                 </div>
-                                <div>{deltaToText(description?.value)}</div>
+                                {descriptionQuestion && (
+                                    <DescriptionPreview
+                                        question={
+                                            descriptionQuestion as
+                                                | QuestionMarkdownInput
+                                                | QuestionRichTextInput
+                                        }
+                                    />
+                                )}
                             </div>
 
                             <div className="col-span-6 flex flex-col gap-8">

@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export default function ProjectSubmissionSuccess() {
     return (
-        <div className="flex h-full w-full flex-col items-center justify-center gap-8">
+        <div className="flex h-full w-full flex-col items-center justify-center gap-6">
             <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="leading-tighter text-4xl font-semibold">
                     Your project has been submitted!

@@ -4,12 +4,13 @@ import { FormTextInput } from '@/components/ui/input/input';
 import { Label } from '@/components/ui/label/label';
 import { MagnifyingGlassIcon } from '@heroicons/react/16/solid';
 import { useState } from 'react';
+import { ProjectGalleryLocationToggle } from './ProjectGalleryLocationToggle';
 import {
-    PROJECT_SUBMISSION_QUESTION_IDS,
+    projectListItemMatchesLocationFilter,
+    projectListItemMatchesSearchQuery,
+    type ProjectGalleryLocationFilter,
     type ProjectListItem,
 } from '@/lib/projects/projectSubmissionDisplay';
-
-const Q = PROJECT_SUBMISSION_QUESTION_IDS;
 
 interface PublicProjectListProps {
     projects: ProjectListItem[];
@@ -21,18 +22,14 @@ export default function PublicProjectList({
     hackathonName = 'Current event',
 }: PublicProjectListProps) {
     const [searchQuery, setSearchQuery] = useState('');
+    const [locationFilter, setLocationFilter] =
+        useState<ProjectGalleryLocationFilter>('all');
 
-    const filteredProjects = projects.filter((project) => {
-        const query = searchQuery.toLowerCase();
-        return (
-            !query ||
-            (project[Q.TITLE] &&
-                String(project[Q.TITLE]).toLowerCase().includes(query)) ||
-            (project[Q.TAGLINE] &&
-                String(project[Q.TAGLINE]).toLowerCase().includes(query)) ||
-            (project.teamName && project.teamName.toLowerCase().includes(query))
-        );
-    });
+    const filteredProjects = projects.filter(
+        (project) =>
+            projectListItemMatchesSearchQuery(project, searchQuery) &&
+            projectListItemMatchesLocationFilter(project, locationFilter)
+    );
 
     if (projects.length === 0) {
         return (
@@ -50,21 +47,28 @@ export default function PublicProjectList({
                         {hackathonName} project gallery
                     </h1>
                 </div>
-                <div className="flex flex-col gap-2">
-                    <Label>Search for a project</Label>
-                    <FormTextInput
-                        name="search"
-                        id="search"
-                        type="search"
-                        className="w-full max-w-full md:max-w-[320px]"
-                        icon={
-                            <MagnifyingGlassIcon className="h-4 w-4 text-white/60" />
-                        }
-                        defaultValue={searchQuery}
-                        lazy
-                        onLazyChange={(text) => {
-                            setSearchQuery(text);
-                        }}
+                <div className="flex flex-col gap-3 md:flex-row md:items-end md:gap-4">
+                    <div className="flex min-w-0 flex-1 flex-col gap-2">
+                        <Label>Search for a project</Label>
+                        <FormTextInput
+                            name="search"
+                            id="search"
+                            type="search"
+                            className="w-full max-w-full md:max-w-[320px]"
+                            icon={
+                                <MagnifyingGlassIcon className="h-4 w-4 text-white/60" />
+                            }
+                            defaultValue={searchQuery}
+                            lazy
+                            onLazyChange={(text) => {
+                                setSearchQuery(text);
+                            }}
+                        />
+                    </div>
+                    <ProjectGalleryLocationToggle
+                        value={locationFilter}
+                        onChange={setLocationFilter}
+                        className="md:pb-0.5"
                     />
                 </div>
             </div>
@@ -77,9 +81,11 @@ export default function PublicProjectList({
                                 <p className="text-lg text-white">
                                     No projects match your search.
                                 </p>
-                                {searchQuery.trim() !== '' && (
+                                {(searchQuery.trim() !== '' ||
+                                    locationFilter !== 'all') && (
                                     <p className="mt-2 text-sm text-white/60">
-                                        Try adjusting your search query.
+                                        Try adjusting your search or location
+                                        filter.
                                     </p>
                                 )}
                             </div>

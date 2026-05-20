@@ -73,7 +73,11 @@ export default async function SubmitPage() {
         userId: user.id,
     });
     if (submitted.hasSubmission) {
-        return <ProjectSubmissionSuccess />;
+        return (
+            <div className="flex h-full items-center justify-center">
+                <ProjectSubmissionSuccess />
+            </div>
+        );
     }
 
     // const presignurl = await trpcClient.files.getFile({

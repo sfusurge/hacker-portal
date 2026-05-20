@@ -1,3 +1,16 @@
+.shell {
+    width: 100%;
+    max-width: 56rem;
+    min-height: 150px;
+    padding: 12px 15px;
+    border: 1px solid rgb(82 82 82 / 0.6);
+    border-radius: 0.5rem;
+    background-color: rgb(38 38 38 / 0.6);
+    color: #fff;
+    cursor: default;
+    overflow: hidden;
+}
+
 .md > h1 {
     font-size: 36px;
     color: var(--brand-500);
