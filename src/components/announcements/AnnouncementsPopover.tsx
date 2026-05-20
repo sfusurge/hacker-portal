@@ -23,15 +23,10 @@ import {
     lastSeenAtAtom,
     type AnnouncementWithAttachments,
 } from '@/app/(auth)/ClientContext';
+import { useAdminAnnouncementPreviewQueryInput } from '@/lib/announcements/useAdminAnnouncementPreview';
 import { Button } from '@/components/ui/button';
-
-function isProbablyImage(att: {
-    contentType: string | null;
-    filename: string | null;
-}): boolean {
-    if (att.contentType?.startsWith('image/')) return true;
-    return /\.(png|jpe?g|gif|webp|avif)$/i.test(att.filename ?? '');
-}
+import { splitVisualMediaPreview } from '@/lib/announcements/attachmentMedia';
+import { AnnouncementMediaList } from '@/components/announcements/AnnouncementMediaList';
 
 const MINI_BODY_CLASSES = [
     'text-white/60 tracking-tight',
@@ -137,7 +132,20 @@ function MiniRow({
     const [windowWidth] = useWindowSize();
     const isMobileOrTablet = windowWidth < 1024;
 
-    const imageAttachment = a.attachments.find(isProbablyImage) ?? null;
+    const {
+        all: allVisualMedia,
+        preview: previewMedia,
+        hiddenCount,
+    } = splitVisualMediaPreview(a.attachments);
+    const renderedContent = renderDiscordContentMentions(
+        a.content,
+        a.mentionMetadata
+    );
+    const hasTextContent =
+        preprocessDiscordMarkdown(renderedContent.trim()).length > 0;
+    const hasVisualMedia = allVisualMedia.length > 0;
+    const mediaOnly = !hasTextContent && hasVisualMedia;
+    const hasMoreMedia = hiddenCount > 0;
 
     useLayoutEffect(() => {
         if (expanded) return;
@@ -146,7 +154,9 @@ function MiniRow({
         setHasOverflow(el.scrollHeight - el.clientHeight > 1);
     }, [a.content, expanded]);
 
-    const showToggle = expanded || hasOverflow;
+    const showToggle =
+        hasTextContent &&
+        (expanded || hasOverflow || (hasMoreMedia && !expanded));
 
     return (
         <>
@@ -230,12 +240,7 @@ function MiniRow({
 
                 {/* Body */}
                 <div className="pl-[42px]">
-                    <div
-                        className={cn(
-                            'flex items-start gap-3',
-                            imageAttachment && !expanded && 'md:flex'
-                        )}
-                    >
+                    {hasTextContent ? (
                         <div className={cn('min-w-0 flex-1')}>
                             <div
                                 ref={bodyRef}
@@ -262,61 +267,23 @@ function MiniRow({
                                 </button>
                             )}
                         </div>
-                        {imageAttachment && !expanded && (
-                            <a
-                                href={
-                                    imageAttachment.storedUrl ??
-                                    imageAttachment.sourceUrl
-                                }
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-0.5 block shrink-0 overflow-hidden rounded-lg border border-neutral-700/50 bg-neutral-900/40"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    setExpanded(true);
-                                }}
-                            >
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                    src={
-                                        imageAttachment.storedUrl ??
-                                        imageAttachment.sourceUrl
-                                    }
-                                    alt={
-                                        imageAttachment.filename ??
-                                        'Announcement image'
-                                    }
-                                    className="h-16 w-16 object-cover"
-                                    loading="lazy"
-                                />
-                            </a>
-                        )}
-                    </div>
-                    {imageAttachment && expanded && (
-                        <a
-                            href={
-                                imageAttachment.storedUrl ??
-                                imageAttachment.sourceUrl
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-2 block overflow-hidden rounded-lg border border-neutral-700/50 bg-neutral-900/40"
+                    ) : null}
+                    {hasVisualMedia ? (
+                        <div
+                            className={hasTextContent ? 'mt-2' : 'mt-0.5'}
+                            onClick={(e) => e.stopPropagation()}
                         >
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                                src={
-                                    imageAttachment.storedUrl ??
-                                    imageAttachment.sourceUrl
+                            <AnnouncementMediaList
+                                attachments={
+                                    expanded ? allVisualMedia : previewMedia
                                 }
-                                alt={
-                                    imageAttachment.filename ??
-                                    'Announcement image'
-                                }
-                                className="max-h-48 w-full object-cover"
-                                loading="lazy"
+                                size={expanded ? 'full' : 'popover'}
+                                mediaOnly={mediaOnly}
+                                overflowCount={expanded ? 0 : hiddenCount}
+                                onOverflowClick={() => setExpanded(true)}
                             />
-                        </a>
-                    )}
+                        </div>
+                    ) : null}
                 </div>
             </li>
         </>
@@ -335,6 +302,7 @@ export function AnnouncementsPopoverContent({
     const initialAnnouncements = useAtomValue(announcementsAtom);
     const hackathon = useAtomValue(hackathonAtom);
     const lastSeenAt = useAtomValue(lastSeenAtAtom);
+    const adminPreviewInput = useAdminAnnouncementPreviewQueryInput();
 
     const displayName = hackathon?.hackathonName || 'Announcements';
     const iconSrc: string | undefined =
@@ -344,9 +312,28 @@ export function AnnouncementsPopoverContent({
         hackathon?.eventPagePayload
     );
 
+    const announcementQueryInput = useMemo(
+        () => ({
+            hackathonId: hackathon?.id ?? 0,
+            limit: 10,
+            ...(adminPreviewInput
+                ? {
+                      viewAll: adminPreviewInput.viewAll,
+                      ...(adminPreviewInput.viewAll === false
+                          ? {
+                                previewLocationKey:
+                                    adminPreviewInput.previewLocationKey,
+                            }
+                          : {}),
+                  }
+                : {}),
+        }),
+        [hackathon?.id, adminPreviewInput]
+    );
+
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
         trpc.announcements.getAnnouncements.useInfiniteQuery(
-            { hackathonId: hackathon?.id ?? 0, limit: 10 },
+            announcementQueryInput,
             {
                 getNextPageParam: (lastPage) =>
                     lastPage.nextCursor ?? undefined,

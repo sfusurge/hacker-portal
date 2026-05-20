@@ -25,6 +25,8 @@ type FetchParams = {
     userId: number | null;
     limit: number;
     cursor?: number;
+    viewAll?: boolean;
+    previewLocationKey?: string | null;
 };
 
 async function getViewerAnnouncementLocationKeyUncached(
@@ -74,15 +76,23 @@ function announcementVisibilityCondition(viewerLocationKey: string | null) {
 }
 
 export async function fetchAnnouncementsForViewer(input: FetchParams) {
-    const viewerLocationKey = await getViewerAnnouncementLocationKey(
-        input.hackathonId,
-        input.userId
-    );
+    let viewerLocationKey: string | null = null;
+    if (!input.viewAll) {
+        if (input.previewLocationKey !== undefined) {
+            viewerLocationKey = input.previewLocationKey;
+        } else {
+            viewerLocationKey = await getViewerAnnouncementLocationKey(
+                input.hackathonId,
+                input.userId
+            );
+        }
+    }
 
     const rows = await databaseClient
         .select({
             ...getTableColumns(announcements),
             channelLabel: announcementChannelMappings.label,
+            channelLocationKey: announcementChannelMappings.eventLocationKey,
         })
         .from(announcements)
         .leftJoin(
@@ -96,7 +106,9 @@ export async function fetchAnnouncementsForViewer(input: FetchParams) {
             and(
                 eq(announcements.hackathonId, input.hackathonId),
                 eq(announcements.isArchived, false),
-                announcementVisibilityCondition(viewerLocationKey),
+                input.viewAll
+                    ? undefined
+                    : announcementVisibilityCondition(viewerLocationKey),
                 input.cursor !== undefined
                     ? lt(announcements.id, input.cursor)
                     : undefined
