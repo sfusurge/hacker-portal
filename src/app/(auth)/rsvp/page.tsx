@@ -23,7 +23,7 @@ export default function PaymentElementPage() {
             refetchOnWindowFocus: true,
             refetchInterval: (query) =>
                 query.state.data?.currentStatus === 'Accepted - Pending Payment'
-                    ? 5000
+                    ? 10_000
                     : false,
         }
     );

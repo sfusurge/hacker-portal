@@ -34,6 +34,7 @@ import React from 'react';
 interface ScanProps {
     events: {
         id: number;
+        hackathonId: number;
         title: string;
         eventType: EventType;
         startDate: string;
@@ -294,6 +295,9 @@ export default function Scan({ events, initialEventType }: ScanProps) {
             <CheckinTicket
                 onClose={closeCheckInPrompt}
                 eventId={eventId ?? 0}
+                hackathonId={
+                    events.find((e) => e.id === eventId)?.hackathonId ?? 0
+                }
                 currentHacker={
                     hacker ?? {
                         id: 0,
@@ -348,7 +352,4 @@ function groupEventsByDate(events: ScanProps['events']) {
         date,
         events: groupedEvents ?? [],
     }));
-}
-function useEffect(arg0: () => () => void, arg1: never[]) {
-    throw new Error('Function not implemented.');
 }
