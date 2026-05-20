@@ -329,11 +329,6 @@ export function ReviewProject({
                                         )}
                                         track={getChoiceLabel(trackQuestion)}
                                     />
-                                    {taglineQuestion && (
-                                        <div className="text-sm text-white/60">
-                                            {taglineValue}
-                                        </div>
-                                    )}
                                 </div>
                                 {descriptionQuestion && (
                                     <DescriptionPreview
