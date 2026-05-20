@@ -47,12 +47,5 @@ export function MarkdownDisplay({ content }: { content: string }) {
         return null;
     }
 
-    return (
-        <div
-            className={cn(style.shell, 'w-full max-w-4xl')}
-            data-readonly-field
-        >
-            <div className={style.md}>{rendered}</div>
-        </div>
-    );
+    return <div className={cn(style.md, 'w-full')}>{rendered}</div>;
 }
