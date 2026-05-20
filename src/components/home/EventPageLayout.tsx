@@ -1,5 +1,5 @@
 import DiscordCard from '@/components/home/DiscordCard';
-import ApplicationCard from '@/components/home/Application/ApplicationCard';
+import ApplicationOrSubmissionCard from '@/components/home/Application/ApplicationOrSubmissionCard';
 import EventHeroBanner from '@/components/home/EventBanner';
 import EventIsOverCard from '@/components/home/EventIsOverCard';
 import EventsCard from '@/components/home/EventsCard';
@@ -18,6 +18,8 @@ type EventPageHackathon = {
     endDate: string;
     applicationOpen?: Date | null;
     applicationCloses?: Date | null;
+    submissionOpen?: Date | null;
+    submissionDeadline?: Date;
 };
 
 type TeamType = inferProcedureOutput<AppRouter['teams']['getCurrentTeam']>;
@@ -48,7 +50,7 @@ export default function EventPageLayout({
         : false;
 
     const applicationCard = activeHackathon ? (
-        <ApplicationCard
+        <ApplicationOrSubmissionCard
             userData={userData}
             image={ticketQr ?? undefined}
             applicationStatus={applicationStatus}

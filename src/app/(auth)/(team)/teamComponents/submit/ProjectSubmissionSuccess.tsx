@@ -11,7 +11,7 @@ export default function ProjectSubmissionSuccess() {
                     Your project has been submitted!
                 </h1>
                 <p className="leading-relaxed text-white/60">
-                    Finalists will be announced soon.
+                    Finalists will be announced at the closing ceremony.
                 </p>
             </div>
             <div className="flex flex-col gap-4">

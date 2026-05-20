@@ -6,8 +6,39 @@ import { upload } from '@vercel/blob/client';
 
 export type IconType = 'user_icon' | 'team_icon';
 
+export const DEFAULT_USER_AVATAR = '/sidebar/default-avatar.webp';
+export const DEFAULT_TEAM_AVATAR = '/teams/default.webp';
+
 export function getIcon(iconType: IconType, imageName: string) {
     return `${process.env.NEXT_PUBLIC_BLOB_URL}/${iconType}/${imageName}`;
+}
+
+export function resolveTeamIconUrl(image: string | null | undefined): string {
+    if (!image) {
+        return DEFAULT_TEAM_AVATAR;
+    }
+    if (
+        image.startsWith('http://') ||
+        image.startsWith('https://') ||
+        image.startsWith('/')
+    ) {
+        return image;
+    }
+    return getIcon('team_icon', image);
+}
+
+export function resolveUserIconUrl(image: string | null | undefined): string {
+    if (!image) {
+        return DEFAULT_USER_AVATAR;
+    }
+    if (
+        image.startsWith('http://') ||
+        image.startsWith('https://') ||
+        image.startsWith('/')
+    ) {
+        return image;
+    }
+    return getIcon('user_icon', image);
 }
 
 /**
