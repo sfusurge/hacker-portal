@@ -1,9 +1,15 @@
 'use client';
 
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardHeaderColumn,
+} from '@/components/ui/card';
 import { useAtomValue } from 'jotai';
 import { useEffect, useState } from 'react';
+import { ExclamationCircleIcon } from '@heroicons/react/16/solid';
 
 export default function SubmissionInfoCard() {
     const hackathon = useAtomValue(hackathonAtom);
@@ -12,7 +18,7 @@ export default function SubmissionInfoCard() {
     const [formattedTime, setFormattedTime] = useState<string>('');
 
     useEffect(() => {
-        const deadline = new Date(2026, 4, 28, 23, 59, 59);
+        const deadline = hackathon.submissionDeadline.toDate();
 
         const calculateHoursLeft = (targetDate: Date): number => {
             const now = new Date();
@@ -21,7 +27,9 @@ export default function SubmissionInfoCard() {
             return Math.max(0, Math.floor(hoursLeft));
         };
 
-        setHoursUntil(calculateHoursLeft(deadline));
+        const hoursLeft = calculateHoursLeft(deadline);
+        setHoursUntil(hoursLeft <= 12 ? hoursLeft : null);
+
         setFormattedDate(
             deadline.toLocaleDateString(undefined, {
                 year: 'numeric',
@@ -30,10 +38,14 @@ export default function SubmissionInfoCard() {
             })
         );
         setFormattedTime(
-            deadline.toLocaleTimeString(undefined, {
-                hour: '2-digit',
-                minute: '2-digit',
-            })
+            deadline
+                .toLocaleTimeString(undefined, {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true,
+                })
+                .replace(' ', '')
+                .toLowerCase()
         );
     }, [hackathon]);
 
@@ -43,30 +55,44 @@ export default function SubmissionInfoCard() {
 
     return (
         <Card className="overflow-hidden">
-            <CardContent className="p-6">
-                <div>
-                    <div className="flex flex-row gap-2">
-                        <div className="text-md font-bold">Due Date</div>
+            <CardHeader>
+                <CardHeaderColumn>
+                    <div className="grid gap-3">
+                        <div className="bg-danger-900/30 flex h-12 w-12 items-center justify-center rounded-full">
+                            <ExclamationCircleIcon className="text-caution-500 h-6 w-6" />
+                        </div>
+                        <div>
+                            <div className="font-sans text-base text-lg leading-tight font-semibold tracking-tighter text-white">
+                                Due Date: {formattedDate} at {formattedTime}
+                            </div>
+                        </div>
+
                         {hoursUntil !== null && (
-                            <div className="rounded-md bg-yellow-950 px-2 pt-0.5 text-sm text-yellow-300">
+                            <div className="bg-caution-950 rounded-lg px-2 py-0.5 text-center text-sm text-yellow-300">
                                 Due in {hoursUntil} {hourOrHours(hoursUntil)}
                             </div>
                         )}
                     </div>
-
-                    <div className="text-md text-white/60">
-                        {formattedDate} at {formattedTime}
+                </CardHeaderColumn>
+            </CardHeader>
+            <CardContent className="p-6">
+                <div className="grid gap-1">
+                    <div className="font-sans text-base text-lg leading-tight font-semibold tracking-tighter text-white">
+                        Only One Submission Per Team
+                    </div>
+                    <div className="text-md font-sans text-white/60">
+                        This submission counts for all team members.
                     </div>
                 </div>
 
-                <div className="text-md font-bold">Rules</div>
-                <ol className="text-md ml-4 list-decimal text-white/60">
-                    <li>
-                        Only one submission is allowed per team. This submission
-                        counts for all team members.
-                    </li>
-                    <li>{"You can't edit this form once it's submitted."}</li>
-                </ol>
+                <div className="grid gap-1">
+                    <div className="font-sans text-base text-lg leading-tight font-semibold tracking-tighter text-white">
+                        Submission is Final
+                    </div>
+                    <div className="text-md font-sans text-white/60">
+                        You can't edit this form once it's submitted.
+                    </div>
+                </div>
             </CardContent>
         </Card>
     );

@@ -22,21 +22,22 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { DropdownBadge } from '@/components/ui/dropdown-badge';
+import { ProjectGalleryLocationToggle } from './ProjectGalleryLocationToggle';
+import {
+    createSkeletonProjectListItem,
+    projectListItemMatchesLocationFilter,
+    projectListItemMatchesSearchQuery,
+    type ProjectGalleryLocationFilter,
+    type ProjectListItem,
+} from '@/lib/projects/projectSubmissionDisplay';
 const STATUS_KEY = 'judging_status_data';
 const FILTERS_KEY = 'judging_filters_data';
 
-interface Project {
-    [key: number]: string;
-    id: number;
-    displayId: string;
-    teamName?: string;
-}
-
 interface ProjectListProps {
-    projects: Project[];
+    projects: ProjectListItem[];
     userData: any;
     judgedProjects: any[];
-    allProjects?: Project[];
+    allProjects?: ProjectListItem[];
 }
 
 export default function ProjectList({
@@ -50,6 +51,8 @@ export default function ProjectList({
         Record<string, string>
     >({});
     const [searchQuery, setSearchQuery] = useState('');
+    const [locationFilter, setLocationFilter] =
+        useState<ProjectGalleryLocationFilter>('all');
     const [filteredProjects, setFilteredProjects] = useState(projects);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [showAllProjects, setShowAllProjects] = useState(false);
@@ -308,7 +311,16 @@ export default function ProjectList({
             statusFilters.size === 0 &&
             Object.keys(projectStatuses).length === 0
         ) {
-            setFilteredProjects(projectsToFilter);
+            setFilteredProjects(
+                locationFilter === 'all'
+                    ? projectsToFilter
+                    : projectsToFilter.filter((project) =>
+                          projectListItemMatchesLocationFilter(
+                              project,
+                              locationFilter
+                          )
+                      )
+            );
             return;
         }
 
@@ -339,21 +351,22 @@ export default function ProjectList({
                       statusFilters.has(projectStatus)
                     : true;
 
-            const matchesSearch =
-                !query.trim() ||
-                (project[1] &&
-                    String(project[1]).toLowerCase().includes(query)) ||
-                (project[4] &&
-                    String(project[4]).toLowerCase().includes(query)) ||
-                (project.teamName &&
-                    project.teamName.toLowerCase().includes(query));
+            const matchesSearch = projectListItemMatchesSearchQuery(
+                project,
+                query
+            );
+            const matchesLocation = projectListItemMatchesLocationFilter(
+                project,
+                locationFilter
+            );
 
-            return matchesSearch && matchesStatus;
+            return matchesSearch && matchesStatus && matchesLocation;
         });
 
         setFilteredProjects(filtered);
     }, [
         searchQuery,
+        locationFilter,
         projects,
         statusFilters,
         projectStatuses,
@@ -378,11 +391,12 @@ export default function ProjectList({
 
                 <div className="flex flex-col gap-2">
                     <Label>Search for a project</Label>
-                    <div className="flex gap-3">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-end md:gap-4">
                         <FormTextInput
                             name="search"
                             id="search"
                             type="search"
+                            className="w-full md:max-w-[320px]"
                             icon={
                                 <MagnifyingGlassIcon className="h-4 w-4 text-white/60" />
                             }
@@ -392,6 +406,13 @@ export default function ProjectList({
                                 setSearchQuery(text);
                             }}
                         />
+                        <ProjectGalleryLocationToggle
+                            value={locationFilter}
+                            onChange={setLocationFilter}
+                            className="shrink-0 md:pb-0.5"
+                        />
+                    </div>
+                    <div className="flex gap-3">
                         <div className="block md:hidden">
                             <Drawer>
                                 <DrawerTrigger asChild>
@@ -552,11 +573,7 @@ export default function ProjectList({
                                 .map((_, index) => (
                                     <ProjectCard
                                         key={`skeleton-${index}`}
-                                        project={{
-                                            id: 0,
-                                            teamName: '',
-                                            displayId: '123456',
-                                        }}
+                                        project={createSkeletonProjectListItem()}
                                         statusInfo={{
                                             label: '',
                                             className: '',
@@ -580,8 +597,8 @@ export default function ProjectList({
                         ) : (
                             filteredProjects
                                 .sort((a, b) => {
-                                    const projectIdA = a[0] || '';
-                                    const projectIdB = b[0] || '';
+                                    const projectIdA = String(a.id);
+                                    const projectIdB = String(b.id);
                                     const statusA =
                                         projectStatuses[projectIdA] ||
                                         'not_started';
@@ -606,14 +623,8 @@ export default function ProjectList({
                                     const statusInfo = getStatusInfo(projectId);
                                     return (
                                         <ProjectCard
-                                            key={index}
-                                            project={{
-                                                ...project,
-                                                id: projectId,
-                                                displayId: project.displayId,
-                                                teamName:
-                                                    project.teamName || '',
-                                            }}
+                                            key={projectId}
+                                            project={project}
                                             statusInfo={statusInfo}
                                         />
                                     );

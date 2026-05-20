@@ -15,6 +15,7 @@ import type {
     QuestionNameInput,
     QuestionFileUploads,
     QuestionRichTextInput,
+    QuestionMarkdownInput,
     QuestionTextLinkInput,
     QuestionDropdown,
     QuestionInline,
@@ -25,6 +26,7 @@ import { useState } from 'react';
 import { DocumentIcon } from '@heroicons/react/20/solid';
 import { getFileSize } from '@/components/ui/FileUpload/FileUpload';
 import { RichText } from '@/components/ui/RichText/RichText';
+import { MarkdownDisplay } from '@/components/ui/Markdown/MarkdownDisplay';
 import { atom } from 'jotai';
 import { IframeEmbed } from './IframeEmbed';
 import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
@@ -182,9 +184,8 @@ export function ReviewPage({
                 }
                 return 'N/A';
 
-            case 'rich-text':
+            case 'rich-text': {
                 const richQuestion = question as QuestionRichTextInput;
-
                 return (
                     <RichText
                         onChange={() => {}}
@@ -192,6 +193,14 @@ export function ReviewPage({
                         initialData={richQuestion.value}
                     />
                 );
+            }
+
+            case 'markdown': {
+                const markdownQuestion = question as QuestionMarkdownInput;
+                return (
+                    <MarkdownDisplay content={markdownQuestion.value ?? ''} />
+                );
+            }
 
             case 'major':
                 const majorQuestion = question as QuestionMajorInput;
@@ -235,7 +244,7 @@ export function ReviewPage({
 
     return (
         <div className="mb-28 flex flex-col gap-6 p-6 pb-10">
-            <h1 className="text-3xl font-semibold">Review Application</h1>
+            <h1 className="text-3xl font-semibold">View Submission</h1>
             <Alert variant={'info'} className="-mt-2 max-w-[480px]">
                 <AlertTitle>
                     Take the time to review your responses carefully!

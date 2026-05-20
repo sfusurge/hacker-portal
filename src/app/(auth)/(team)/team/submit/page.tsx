@@ -9,6 +9,8 @@ import { isSubmissionWindowOpen } from '@/lib/submissionWindow';
 import SubmissionInfoCard from '@/app/(auth)/(team)/teamComponents/submit/SubmissionInfoCard';
 import { SubmitFormCard } from '@/app/(auth)/(team)/teamComponents/InTeam/SubmitFormCard';
 import TeamListSubmit from '@/app/(auth)/(team)/teamComponents/submit/TeamListSubmit';
+import { SubmissionSideBar } from '@/components/application_components/SubmissionSideBar';
+import ProjectSubmissionSuccess from '../../teamComponents/submit/ProjectSubmissionSuccess';
 
 export default async function SubmitPage() {
     const user = await getUserData();
@@ -71,7 +73,11 @@ export default async function SubmitPage() {
         userId: user.id,
     });
     if (submitted.hasSubmission) {
-        return <GoHome title="Your team submitted a project already!" />;
+        return (
+            <div className="flex h-full items-center justify-center">
+                <ProjectSubmissionSuccess />
+            </div>
+        );
     }
 
     // const presignurl = await trpcClient.files.getFile({
@@ -90,17 +96,21 @@ export default async function SubmitPage() {
     return (
         <div className="flex w-full flex-col gap-6 md:flex-row md:items-start">
             <div className="flex w-full flex-col gap-6 lg:flex-row">
-                <div className="flex flex-col gap-8 lg:max-w-1/4 lg:self-start">
+                <SubmissionSideBar>
                     <SubmissionInfoCard />
                     <TeamListSubmit
                         currentUserEmail={user!.email}
                         team={currentTeam}
                     />
-                </div>
+                </SubmissionSideBar>
 
                 <div className="flex flex-1 flex-col">
                     <div className="flex-1 md:max-h-[calc(100vh)] md:overflow-y-auto">
-                        <SubmitFormCard teamId={currentTeam.id} />
+                        <SubmitFormCard
+                            teamId={currentTeam.id}
+                            teamName={currentTeam.name}
+                            teamPictureUrl={currentTeam.teamPictureUrl}
+                        />
                     </div>
                 </div>
             </div>

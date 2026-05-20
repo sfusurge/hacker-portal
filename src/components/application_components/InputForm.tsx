@@ -22,16 +22,19 @@ import type {
     QuestionFileUploads,
     InputFormData,
     QuestionRichTextInput,
+    QuestionMarkdownInput,
     QuestionTextLinkInput,
     QuestionApiDropdown,
     QuestionDropdown,
     QuestionInline,
     QuestionDateYmd,
     QuestionMajorInput,
+    QuestionTitleLineInput,
 } from './types';
 import { splitAtom } from 'jotai/utils';
 import style from './InputForm.module.css';
 import { TextLineInput } from './InputFormComponents/TextLineInput';
+import { TitleLineInput } from './InputFormComponents/TitleLineInput';
 import {
     type ComponentProps,
     useEffect,
@@ -53,6 +56,7 @@ import { TextLinkInput } from './InputFormComponents/TextLinkInput';
 import { ApiDropdownInput } from './InputFormComponents/ApiDropdownInput';
 import { MajorInput } from './InputFormComponents/MajorInput';
 import { ReviewPage } from './ReviewPage';
+import { ReviewProject } from './ReviewProject';
 import {
     type PageFormState,
     DesktopPageIndicator,
@@ -66,6 +70,7 @@ import { cn } from '@/lib/utils';
 import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
 import { FileUploadInput } from '@/components/application_components/InputFormComponents/FileUploadInput';
 import { RichTextInput } from '@/components/application_components/InputFormComponents/RichTextInput';
+import { MarkdownInput } from '@/components/application_components/InputFormComponents/MarkdownInput';
 import { DropdownInput } from '@/components/application_components/InputFormComponents/DropdownInput';
 import { ChoiceConditionalAlert } from '@/components/application_components/InputFormComponents/ChoiceConditionalAlert';
 import { InlineInput } from '@/components/application_components/InputFormComponents/InlineInput';
@@ -93,6 +98,7 @@ function ClientOnly({ children, ...delegated }: ComponentProps<'div'>) {
 // Atoms
 export const pageIndexAtom = atom(0); // defining the state
 export const finalErrCheckAtom = atom(false); // when the user clicks the review & submit for the first time,
+export const isReviewPageAtom = atom(false);
 
 interface InputFormProps {
     appDataAtom: WritableAtom<InputFormData, [val: InputFormData], void>;
@@ -173,6 +179,11 @@ export function InputForm({
     // mobile conditional render
     const isMobile = useMediaQuery('(max-width: 767.5px)');
 
+    const [isReviewPage, setIsReviewPage] = useAtom(isReviewPageAtom);
+    useEffect(() => {
+        setIsReviewPage(currentPageIndex === pagesAtoms.length);
+    }, [currentPageIndex, pagesAtoms.length, setIsReviewPage]);
+
     const pageContainerRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         // if (pageContainerRef.current) {
@@ -200,21 +211,30 @@ export function InputForm({
     }
 
     return (
-        <div className={style.appFormRoot}>
-            <div className="flex flex-col gap-1">
-                <button
-                    className={cn(style.homeButton)}
-                    onClick={() => {
-                        router.push('/home');
-                    }}
-                >
-                    <ArrowLeftIcon className="h-6 w-6" />
-                    <span>Dashboard</span>
-                </button>
-                <h1 className="text-xl font-semibold">
-                    SparkJam 2026 Application
-                </h1>
-            </div>
+        <div
+            className={cn(
+                style.appFormRoot,
+                applicationType === 'application' && 'max-md:-mt-20',
+                applicationType === 'submission' && style.submissionForm,
+                isReviewPage && style.reviewPageWrapper
+            )}
+        >
+            {applicationType === 'application' && (
+                <div className="flex flex-col gap-1">
+                    <button
+                        className={cn(style.homeButton)}
+                        onClick={() => {
+                            router.push('/home');
+                        }}
+                    >
+                        <ArrowLeftIcon className="h-6 w-6" />
+                        <span>Dashboard</span>
+                    </button>
+                    <h1 className="text-xl font-semibold">
+                        SparkJam 2026 Application
+                    </h1>
+                </div>
+            )}
             <div className={style.appFormWrapper}>
                 <div className={style.appFormContent} ref={pageContainerRef}>
                     {!disablePageTab &&
@@ -232,14 +252,27 @@ export function InputForm({
 
                     <div className={style.formContainer}>
                         {currentPageIndex === pagesAtoms.length && (
-                            <ReviewPage
-                                response={pages}
-                                submit={async () => {
-                                    await onSubmit();
-                                }}
-                                mobileMode={isMobile}
-                                disableSubmitBtn={disablePageTab}
-                            />
+                            <>
+                                {applicationType === 'application' ? (
+                                    <ReviewPage
+                                        response={pages}
+                                        submit={async () => {
+                                            await onSubmit();
+                                        }}
+                                        mobileMode={isMobile}
+                                        disableSubmitBtn={disablePageTab}
+                                    />
+                                ) : (
+                                    <ReviewProject
+                                        response={pages}
+                                        submit={async () => {
+                                            await onSubmit();
+                                        }}
+                                        mobileMode={isMobile}
+                                        disableSubmitBtn={disablePageTab}
+                                    />
+                                )}
+                            </>
                         )}
 
                         {pagesAtoms.map((pageAtom, index) => (
@@ -377,6 +410,7 @@ function Page({
             className={cn(style.page, 'md:pb-0')}
             style={hidden ? { display: 'none' } : {}}
             noValidate
+            data-validated={finalErrCheck || undefined}
         >
             <div className="flex flex-col gap-4">
                 {page.title && (
@@ -399,7 +433,14 @@ function Page({
                 </Alert>
             )}
             {questionAtoms.map((item, index) => (
-                <Question questionAtom={item} key={index} />
+                // pass siblings to the question only if  visibleWhen exists
+                <Question
+                    questionAtom={item}
+                    key={index}
+                    {...(page.questions[index]?.visibleWhen
+                        ? { siblings: page.questions }
+                        : {})}
+                />
             ))}
         </form>
     );
@@ -407,12 +448,30 @@ function Page({
 
 function Question({
     questionAtom,
+    siblings = [],
 }: {
     questionAtom: PrimitiveAtom<InputFormQuestion>;
+    siblings?: InputFormQuestion[];
 }) {
     const question = useAtomValue(questionAtom);
     const error = useMemo(() => atom<string | undefined>(undefined), []);
     const hackathon = useAtomValue(hackathonAtom);
+
+    // hide question unless a sibling has the expected value.
+    // when the question is hidden, clear its value so the the answers are not submitted.
+    const setQuestion = useSetAtom(questionAtom);
+    const { visibleWhen } = question;
+
+    const isVisible = visibleWhen
+        ? (siblings.find((q) => q.questionId === visibleWhen.questionId) as any)
+              ?.value === visibleWhen.value
+        : true;
+
+    useEffect(() => {
+        if (!isVisible && 'value' in question && question.value != null) {
+            setQuestion({ ...question, value: undefined } as any);
+        }
+    }, [isVisible]);
     function getInnerInput(
         type: InputFormQuestion['type'],
         _questionAtom: PrimitiveAtom<InputFormQuestion>,
@@ -426,6 +485,14 @@ function Question({
                     <TextLineInput
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionTextLineInput>
+                        }
+                    />
+                );
+            case 'title-line':
+                return (
+                    <TitleLineInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionTitleLineInput>
                         }
                     />
                 );
@@ -499,6 +566,14 @@ function Question({
                         }
                     />
                 );
+            case 'markdown':
+                return (
+                    <MarkdownInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionMarkdownInput>
+                        }
+                    />
+                );
             case 'api-dropdown':
                 return (
                     <ApiDropdownInput
@@ -556,6 +631,8 @@ function Question({
         return selectedCountry.toLowerCase() !== 'canada';
     }, [question]);
 
+    if (!isVisible) return null;
+
     return (
         <div className={cn(style.ver)} style={{ width: '100%' }}>
             {showNonCanadaWarning && (
@@ -585,14 +662,16 @@ function Question({
                     placement="above-title"
                 />
             )}
-            {question.title && question.type !== 'checkbox' && (
-                <Label required={question.required}>
-                    <div
-                        className={style.htmlHolder}
-                        dangerouslySetInnerHTML={{ __html: question.title }}
-                    ></div>
-                </Label>
-            )}
+            {question.title &&
+                !question.hideTitle &&
+                question.type !== 'title-line' && (
+                    <Label required={question.required}>
+                        <div
+                            className={style.htmlHolder}
+                            dangerouslySetInnerHTML={{ __html: question.title }}
+                        ></div>
+                    </Label>
+                )}
             {question.description && (
                 <span className={cn(style.description, 'max-w-96')}>
                     <div
@@ -720,7 +799,7 @@ function PageButtons({
                         onClick={tryReview}
                         className={style.nextButton}
                     >
-                        Review
+                        Preview Submission
                     </SkewmorphicButton>
                 )}
                 {index === pageCount && (
@@ -735,6 +814,7 @@ function PageButtons({
                     </SkewmorphicButton>
                 )}
             </div>
+
             <ReviewApplicationDialog
                 isOpen={dialogOpen}
                 closeDialog={() => setDialogOpen(false)}

@@ -82,6 +82,17 @@ const hackathons = pgTable('hackathons', {
         mode: 'date',
         withTimezone: true,
     }),
+    audienceVotingEnabled: boolean('audience_voting_enabled')
+        .notNull()
+        .default(false),
+    audienceVotingOpen: timestamp('audience_voting_open', {
+        mode: 'date',
+        withTimezone: true,
+    }),
+    audienceVotingCloses: timestamp('audience_voting_closes', {
+        mode: 'date',
+        withTimezone: true,
+    }),
     eventPageSlug: varchar('event_page_slug', { length: 255 })
         .notNull()
         .default('stormhacks'),

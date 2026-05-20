@@ -7,6 +7,8 @@ import { trpc } from '@/trpc/client';
 import type { UserData } from '@/server/routers/usersRouter';
 import { useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { mapSubmissionToProjectListItem } from '@/lib/projects/projectSubmissionDisplay';
+import { isProjectsGalleryOpen } from '@/lib/submissionWindow';
 
 interface ProjectsClientProps {
     user: UserData | null;
@@ -86,6 +88,24 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
         );
     }
 
+    const galleryOpen =
+        isJudge ||
+        isProjectsGalleryOpen(
+            Date.now(),
+            hackathon.submissionDeadline.toDate()
+        );
+
+    if (!galleryOpen) {
+        return (
+            <div className="flex h-full items-center justify-center px-6 text-center">
+                <p className="max-w-md text-pretty text-white/60">
+                    The project gallery opens after submissions close on{' '}
+                    {hackathon.submissionDeadline.format('MMM D, YYYY h:mm A')}.
+                </p>
+            </div>
+        );
+    }
+
     if (!submissionsQuery.data) {
         return (
             <div className="flex h-full items-center justify-center">
@@ -104,30 +124,25 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
         );
 
         const allProjectsData = submissions.map((submission) => {
-            const response = submission.response as Record<string, any>;
+            const response = (submission.response ?? {}) as Record<
+                string,
+                unknown
+            >;
             const assignedProject = assignedProjectMap.get(submission.teamId);
-            const getPlainTextFromRichText = (richText: any): string => {
-                if (!richText?.ops) return '';
-                return richText.ops
-                    .map((op: any) => op.insert)
-                    .join('')
-                    .trim();
-            };
-
             return {
-                id: submission.teamId,
-                teamName: submission.teamName || `Team #${submission.teamId}`,
+                ...mapSubmissionToProjectListItem(
+                    {
+                        teamId: submission.teamId,
+                        teamName: submission.teamName,
+                        response,
+                    },
+                    {
+                        submissionQuestionPages:
+                            hackathon.submissionQuestionPages,
+                    }
+                ),
                 displayId:
-                    assignedProject?.displayId ||
-                    response[0] ||
-                    submission.teamId.toString(),
-                0: submission.teamId.toString(),
-                1: response[1] || `Team #${submission.teamId}`,
-                2: response[2] || 'No track selected',
-                3: response[3]?.[0] || '/hacker-portal-preview.webp',
-                4:
-                    getPlainTextFromRichText(response[4]) ||
-                    'No description available',
+                    assignedProject?.displayId || submission.teamId.toString(),
                 fullSubmissionResponse: response,
                 status: assignedProject ? assignedProject.status : 'unassigned',
             };
@@ -140,25 +155,26 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
                 );
                 if (!submission) return null;
 
-                const response =
-                    (submission.response as Record<string, any>) || {};
+                const response = (submission.response ?? {}) as Record<
+                    string,
+                    unknown
+                >;
 
                 return {
-                    id: project.teamId,
-                    teamName: project.teamName || `Team #${project.teamId}`,
-                    displayId: project.displayId || project.teamId.toString(),
-                    0: project.teamId.toString(),
-                    1: response[1] || `Team #${project.teamId}`,
-                    2: response[2] || 'No track selected',
-                    3: response[3]?.[0] || '/hacker-portal-preview.webp',
-                    4: response[4]
-                        ? (response[4]?.ops
-                              ?.map((op: any) => op.insert)
-                              .join('')
-                              .trim() as string)
-                        : 'No description available',
+                    ...mapSubmissionToProjectListItem(
+                        {
+                            teamId: project.teamId,
+                            teamName: project.teamName,
+                            response,
+                        },
+                        {
+                            displayId: project.displayId ?? undefined,
+                            status: project.status,
+                            submissionQuestionPages:
+                                hackathon.submissionQuestionPages,
+                        }
+                    ),
                     fullSubmissionResponse: response,
-                    status: project.status,
                 };
             })
             .filter((p) => p !== null) as any[];
@@ -176,29 +192,21 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
     }
 
     // Public gallery
-    const publicProjects = submissions.map((submission) => {
-        const response = submission.response as Record<string, any>;
-        const getPlainTextFromRichText = (richText: any): string => {
-            if (!richText?.ops) return '';
-            return richText.ops
-                .map((op: any) => op.insert)
-                .join('')
-                .trim();
-        };
-
-        return {
-            id: submission.teamId,
-            teamName: submission.teamName || `Team #${submission.teamId}`,
-            displayId: response[0] || submission.teamId.toString(),
-            0: submission.teamId.toString(),
-            1: response[1] || `Team #${submission.teamId}`,
-            2: response[2] || 'No track selected',
-            3: response[3]?.[0] || '/hacker-portal-preview.webp',
-            4:
-                getPlainTextFromRichText(response[4]) ||
-                'No description available',
-        };
-    });
+    const publicProjects = submissions.map((submission) =>
+        mapSubmissionToProjectListItem(
+            {
+                teamId: submission.teamId,
+                teamName: submission.teamName,
+                response: (submission.response ?? {}) as Record<
+                    string,
+                    unknown
+                >,
+            },
+            {
+                submissionQuestionPages: hackathon.submissionQuestionPages,
+            }
+        )
+    );
 
     return (
         <div className="flex h-full flex-col">

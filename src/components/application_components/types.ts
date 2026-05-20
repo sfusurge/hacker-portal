@@ -33,6 +33,7 @@ type ChoiceOption = {
  * The server api can reject the request for any reason, so client modifying the question set is not a concern.
  */
 export interface HackathonData {
+    name: string;
     eventPagePayload: any;
     id: number;
     version: number;
@@ -48,6 +49,9 @@ export interface HackathonData {
     submissionOpen: dayjs.Dayjs | null;
     applicationOpen: dayjs.Dayjs | null;
     applicationCloses: dayjs.Dayjs | null;
+    audienceVotingEnabled: boolean;
+    audienceVotingOpen: dayjs.Dayjs | null;
+    audienceVotingCloses: dayjs.Dayjs | null;
     startDate: dayjs.Dayjs;
     endDate: dayjs.Dayjs;
 
@@ -75,6 +79,7 @@ export type InputFormQuestion =
     | QuestionDateYmd
     | QuestionTextAreaInput
     | QuestionTextLineInput
+    | QuestionTitleLineInput
     | QuestionNumberInput
     | QuestionMultipleChoice
     | QuestionApiDropdown
@@ -82,12 +87,43 @@ export type InputFormQuestion =
     | QuestionNameInput
     | QuestionFileUploads
     | QuestionRichTextInput
+    | QuestionMarkdownInput
     | QuestionTextLinkInput
     | QuestionDropdown
     | QuestionMajorInput
     | QuestionInline;
 
 export type ApplicationQuestionType = InputFormQuestion['type'];
+
+/**
+ * Question `displayRole` flags (string or array).
+ *
+ * Visibility (where the question appears):
+ * - `all` — public project page
+ * - `judge` — project page for judges/admins only
+ * - `table` — admin submissions review/export table column
+ * - `hidden` — submit form only
+ *
+ * Field identity (what the question represents; combine with visibility flags):
+ * - `title`, `location`, `track`, `tagline`, `description`, `banner`
+ * - `eligibleTrack` — sponsor/track eligibility checkbox (grouped on project page)
+ *
+ * Example: `"displayRole": ["all", "table", "title"]`
+ */
+export type DisplayRole =
+    | 'all'
+    | 'judge'
+    | 'table'
+    | 'hidden'
+    | 'title'
+    | 'location'
+    | 'track'
+    | 'tagline'
+    | 'description'
+    | 'banner'
+    | 'eligibleTrack';
+
+export type DisplayRoles = DisplayRole | DisplayRole[];
 
 export interface AlertData {
     title: string;
@@ -99,10 +135,26 @@ interface Question extends Entry {
     type: string | 'N/A';
     required?: boolean;
     autoComplete?: HTMLInputAutoCompleteAttribute;
+    hideTitle?: boolean;
+    // for questions which visibility depends on other question
+    visibleWhen?: { questionId: number; value: string };
+    displayRole?: DisplayRoles;
 }
 
 export interface QuestionTextLineInput extends Question {
     type: 'text-line';
+    placeHolder?: string;
+    value?: string;
+    maxCount?: number;
+
+    validator?: {
+        pattern: string; //regex pattern
+        errorMsg: string; // message to display if the pattern fails
+    };
+}
+
+export interface QuestionTitleLineInput extends Question {
+    type: 'title-line';
     placeHolder?: string;
     value?: string;
     maxCount?: number;
@@ -152,6 +204,7 @@ export interface QuestionCheckBoxInput extends Question {
     type: 'checkbox';
     value?: boolean;
     label?: string;
+    trackName?: string;
     required?: boolean;
 }
 
@@ -170,6 +223,13 @@ export interface QuestionMultipleChoice extends Question {
 export interface QuestionRichTextInput extends Question {
     type: 'rich-text';
     value?: Record<any, any>;
+    maxLength?: number;
+}
+
+export interface QuestionMarkdownInput extends Question {
+    type: 'markdown';
+    placeHolder?: string;
+    value?: string;
     maxLength?: number;
 }
 

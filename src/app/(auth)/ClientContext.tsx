@@ -57,6 +57,17 @@ export const adminAnnouncementsViewAllAtom = atom(true);
 export const adminAnnouncementsPreviewLocationKeyAtom = atom<
     string | null | undefined
 >(undefined);
+/**
+ * User's current team for the active hackathon.
+ * Set by team/submission surfaces (e.g. submit flow); null when unset or after unmount.
+ */
+export type CurrentTeamSnapshot = {
+    id: number;
+    name: string;
+    teamPictureUrl: string | null;
+};
+
+export const currentTeamAtom = atom<CurrentTeamSnapshot | null>(null);
 
 interface DbHackathonType {
     id: number;
@@ -67,6 +78,9 @@ interface DbHackathonType {
     submissionOpen: Date | null;
     applicationOpen?: Date | null;
     applicationCloses?: Date | null;
+    audienceVotingEnabled?: boolean;
+    audienceVotingOpen?: Date | null;
+    audienceVotingCloses?: Date | null;
     eventPagePayload?: HackathonData['eventPagePayload'];
     applicationQuestions: InputFormPageData[];
     version: number;
@@ -98,6 +112,15 @@ function DeserializeHackathonData(hackathon: DbHackathonType): HackathonData {
         applicationCloses:
             hackathon.applicationCloses != null
                 ? dayjs(hackathon.applicationCloses)
+                : null,
+        audienceVotingEnabled: hackathon.audienceVotingEnabled ?? false,
+        audienceVotingOpen:
+            hackathon.audienceVotingOpen != null
+                ? dayjs(hackathon.audienceVotingOpen)
+                : null,
+        audienceVotingCloses:
+            hackathon.audienceVotingCloses != null
+                ? dayjs(hackathon.audienceVotingCloses)
                 : null,
         isPaid: hackathon.isPaid ?? false,
         paymentDeadline:

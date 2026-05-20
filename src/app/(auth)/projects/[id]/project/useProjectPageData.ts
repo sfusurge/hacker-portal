@@ -1,0 +1,108 @@
+'use client';
+
+import { useAtomValue } from 'jotai';
+import { hackathonAtom, userInfoAtom } from '@/app/(auth)/ClientContext';
+import { isAudienceVotingEnabled } from '@/lib/audienceVoting';
+import { trpc } from '@/trpc/client';
+import {
+    buildProjectPageResponse,
+    getProjectSectionsForRole,
+} from './sections';
+import type { ProjectPageState } from './types';
+
+export type { ProjectPageReadyState, ProjectPageState } from './types';
+
+export function useProjectPageData(id: string): ProjectPageState {
+    const user = useAtomValue(userInfoAtom);
+    const hackathon = useAtomValue(hackathonAtom);
+    const hackathonId = hackathon?.id;
+
+    const isJudge = user?.userRole === 'judge';
+    const votingEnabled = isAudienceVotingEnabled(hackathon);
+
+    const teamResolve = trpc.teams.resolveTeamIdentifier.useQuery(
+        { identifier: id, hackathonId: hackathonId ?? 0 },
+        { enabled: !!hackathonId, retry: false }
+    );
+
+    const teamId = teamResolve.data?.id;
+    const hasTeam = !!hackathonId && !!teamId;
+
+    const submissionQuery = trpc.submissions.getSubmissionForTeam.useQuery(
+        { teamId: teamId ?? 0, hackathonId },
+        { enabled: hasTeam }
+    );
+    const teamQuery = trpc.teams.getTeamById.useQuery(
+        { teamId: teamId ?? 0 },
+        { enabled: hasTeam, retry: false }
+    );
+    const votedQuery = trpc.userVote.getHasUserVoted.useQuery(
+        { userId: user?.id ?? 0, hackathonId: hackathonId ?? 0 },
+        { enabled: hasTeam && votingEnabled && !!user?.id }
+    );
+    const applicationQuery = trpc.applications.getCurrentApplication.useQuery(
+        { hackathonId: hackathonId ?? 0 },
+        { enabled: hasTeam && votingEnabled }
+    );
+    const judgedProjectQuery = trpc.judging.getJudgedProject.useQuery(
+        { hackathonId: hackathonId ?? 0, teamId: teamId ?? 0 },
+        { enabled: hasTeam && isJudge }
+    );
+    const judgingProjectsQuery = trpc.judging.getJudgingProjects.useQuery(
+        { hackathonId: hackathonId ?? 0 },
+        { enabled: !!hackathonId && isJudge }
+    );
+
+    if (!hackathonId || teamResolve.isLoading) {
+        return { status: 'loading' };
+    }
+    if (teamResolve.isError || !teamResolve.data) {
+        return { status: 'not-found' };
+    }
+
+    const isLoading =
+        submissionQuery.isLoading ||
+        teamQuery.isLoading ||
+        (isJudge &&
+            (judgedProjectQuery.isLoading || judgingProjectsQuery.isLoading));
+
+    if (isLoading) {
+        return { status: 'loading' };
+    }
+
+    const submission = submissionQuery.data;
+    const teamData = teamQuery.data;
+    if (!submission) {
+        return { status: 'no-submission' };
+    }
+    if (!teamData) {
+        return { status: 'loading' };
+    }
+
+    const resolvedTeamId = teamResolve.data.id;
+    const submissionResponse = submission.response as Record<string, unknown>;
+
+    return {
+        status: 'ready',
+        teamId: resolvedTeamId,
+        hackathonId,
+        user: user!,
+        submission,
+        teamData,
+        response: buildProjectPageResponse(submissionResponse, teamData),
+        projectSections: getProjectSectionsForRole(
+            user?.userRole,
+            hackathon?.submissionQuestionPages,
+            submissionResponse
+        ),
+        isOwnProject:
+            teamData.members?.some((m) => m.userId === user?.id) ?? false,
+        alreadyVoted: votedQuery.data?.hasVoted ?? false,
+        applicationStatus: applicationQuery.data?.currentStatus ?? undefined,
+        didJudge: judgedProjectQuery.data?.status === 'judged',
+        isAssignedToJudge:
+            judgingProjectsQuery.data?.some(
+                (p) => p.teamId === resolvedTeamId
+            ) ?? false,
+    };
+}

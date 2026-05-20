@@ -8,7 +8,7 @@ export default defineConfig({
     dbCredentials: {
         url:
             process.env.DBURL ??
-            'postgres://root:12345@localhost:5434/portaldb',
+            'postgres://root:12345@localhost:5432/portaldb',
     },
     strict: true,
     verbose: true,
