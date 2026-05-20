@@ -38,13 +38,18 @@ import { TitleLineInput } from './InputFormComponents/TitleLineInput';
 import {
     type ComponentProps,
     useEffect,
+    useLayoutEffect,
     useMemo,
     useRef,
     useState,
 } from 'react';
 import { Label } from '@/components/ui/label/label';
 import {
+    collectPageQuestions,
+    findFirstInvalidPageIndex,
+    hasMissingRequiredVisibleQuestions,
     isApplicationQuestionFilled,
+    isQuestionVisibleInForm,
     submittedAtom,
 } from './InputFormComponents/shared';
 import { NumberInput } from './InputFormComponents/NumberInput';
@@ -241,11 +246,13 @@ export function InputForm({
                         (isMobile ? (
                             <MobilePageIndicator
                                 pageStateAtoms={pageStatesAtom}
+                                pagesAtom={pagesAtom}
                                 indexAtom={pageIndexAtom}
                             />
                         ) : (
                             <DesktopPageIndicator
                                 pageStateAtoms={pageStatesAtom}
+                                pagesAtom={pagesAtom}
                                 indexAtom={pageIndexAtom}
                             />
                         ))}
@@ -294,6 +301,7 @@ export function InputForm({
                         indexAtom={pageIndexAtom}
                         pageCount={pagesAtoms.length}
                         pageStatesAtom={pageStatesAtom}
+                        pagesAtom={pagesAtom}
                         applicationType={applicationType}
                         submit={async () => {
                             setSubmitted(true);
@@ -318,7 +326,7 @@ function Page({
     hidden: boolean;
     pageStateAtom: PrimitiveAtom<PageFormState>;
 }) {
-    const [page, setPage] = useAtom(pageAtom);
+    const [page] = useAtom(pageAtom);
 
     const setPageState = useSetAtom(pageStateAtom);
     const formRef = useRef<HTMLFormElement>(null);
@@ -335,22 +343,30 @@ function Page({
     );
 
     const finalErrCheck = useAtomValue(finalErrCheckAtom);
+    const questions = useAtomValue(questionsAtom);
 
     function updateFormStatus(extraCheck = false) {
         if (formRef.current) {
+            const siblings = questions ?? [];
+            const pageQuestions = collectPageQuestions(siblings);
+
             // Check form validity
-            let error = finalErrCheck
-                ? !formRef.current.checkValidity() // was report
-                : !formRef.current.checkValidity();
+            let error = !formRef.current.checkValidity();
+
+            if (finalErrCheck && hasMissingRequiredVisibleQuestions(siblings)) {
+                error = true;
+            }
 
             // Count required questions and filled required questions
             let requiredQuestions = 0;
             let filledRequiredQuestions = 0;
             let atLeastOneFilled = false;
 
-            for (const question of page.questions || []) {
-                // Only consider required questions for completion status
-                if (question.required) {
+            for (const question of pageQuestions) {
+                const visible = isQuestionVisibleInForm(question, siblings);
+
+                // Only consider visible required questions for completion status
+                if (question.required && visible) {
                     requiredQuestions++;
                     const filled = isApplicationQuestionFilled(question);
                     if (filled) {
@@ -358,8 +374,8 @@ function Page({
                     }
                 }
 
-                // Track if any question (required or not) is filled
-                if (isApplicationQuestionFilled(question)) {
+                // Track if any visible question (required or not) is filled
+                if (visible && isApplicationQuestionFilled(question)) {
                     atLeastOneFilled = true;
                 }
             }
@@ -395,7 +411,7 @@ function Page({
     }
     useEffect(() => {
         updateFormStatus();
-    }, [page, finalErrCheck]);
+    }, [questions, finalErrCheck, page.title]);
 
     useEffect(() => {
         updateFormStatus(true);
@@ -437,8 +453,8 @@ function Page({
                 <Question
                     questionAtom={item}
                     key={index}
-                    {...(page.questions[index]?.visibleWhen
-                        ? { siblings: page.questions }
+                    {...(questions[index]?.visibleWhen
+                        ? { siblings: questions }
                         : {})}
                 />
             ))}
@@ -468,8 +484,14 @@ function Question({
         : true;
 
     useEffect(() => {
-        if (!isVisible && 'value' in question && question.value != null) {
-            setQuestion({ ...question, value: undefined } as any);
+        if (!isVisible) {
+            if (question.type === 'file-upload') {
+                if ((question.fileList?.length ?? 0) > 0) {
+                    setQuestion({ ...question, fileList: undefined });
+                }
+            } else if ('value' in question && question.value != null) {
+                setQuestion({ ...question, value: undefined } as any);
+            }
         }
     }, [isVisible]);
     function getInnerInput(
@@ -702,6 +724,7 @@ function PageButtons({
     indexAtom,
     pageCount,
     pageStatesAtom,
+    pagesAtom,
     submit,
     submitted,
     setSubmitted,
@@ -710,52 +733,58 @@ function PageButtons({
     indexAtom: PrimitiveAtom<number>;
     pageCount: number;
     pageStatesAtom: Atom<PageFormState[]>;
+    pagesAtom: WritableAtom<InputFormPageData[], [InputFormPageData[]], void>;
     submit?: () => void | Promise<void>;
     submitted: boolean;
     setSubmitted: (val: boolean) => void;
     applicationType: 'application' | 'submission';
 }) {
     const [index, setIndex] = useAtom(indexAtom);
+    const pages = useAtomValue(pagesAtom);
     const pageStates = useAtomValue(pageStatesAtom);
     const setErrCheck = useSetAtom(finalErrCheckAtom);
     const [dialogOpen, setDialogOpen] = useState(false);
 
-    const [validationPerformed, setValidationPerformed] = useState(false);
+    const finalErrCheck = useAtomValue(finalErrCheckAtom);
+    const [pendingReview, setPendingReview] = useState(false);
+
     function tryReview() {
         setErrCheck(true);
-
-        requestAnimationFrame(() => {
-            setTimeout(() => {
-                setValidationPerformed(true);
-            }, 0);
-        });
+        setPendingReview(true);
     }
 
-    useEffect(() => {
-        if (validationPerformed) {
-            let valid = true;
-            let idx = 0;
-            for (; idx < pageStates.length; idx++) {
-                valid &&= !pageStates[idx].error;
-                if (!valid) {
-                    break;
-                }
-            }
+    useLayoutEffect(() => {
+        if (!pendingReview || !finalErrCheck) return;
 
-            if (!valid) {
-                toast({
-                    title: 'Invalid form',
-                    description:
-                        'Some of the questions are not filled correctly.',
-                    variant: 'error',
-                });
-                setIndex(idx);
-            } else {
-                setIndex(pageCount); // the lastpage + 1 is the review page.
-            }
-            setValidationPerformed(false);
+        const missingPageIdx = findFirstInvalidPageIndex(pages);
+
+        if (missingPageIdx >= 0) {
+            toast({
+                title: 'Invalid form',
+                description:
+                    'Please complete all required fields, including file uploads.',
+                variant: 'error',
+            });
+            setIndex(missingPageIdx);
+            setPendingReview(false);
+            return;
         }
-    }, [validationPerformed]);
+
+        const htmlErrorIdx = pageStates.findIndex((state) => state.error);
+        if (htmlErrorIdx >= 0) {
+            toast({
+                title: 'Invalid form',
+                description: 'Some of the questions are not filled correctly.',
+                variant: 'error',
+            });
+            setIndex(htmlErrorIdx);
+            setPendingReview(false);
+            return;
+        }
+
+        setIndex(pageCount);
+        setPendingReview(false);
+    }, [pendingReview, finalErrCheck, pages, pageStates, pageCount, setIndex]);
 
     return (
         <>

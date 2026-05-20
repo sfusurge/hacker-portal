@@ -70,6 +70,9 @@ const hackathons = pgTable('hackathons', {
         .default([])
         .$type<SubmissionJudgeRubric[]>(),
     isPaid: boolean('is_paid').notNull().default(false),
+    isProjectSubmission: boolean('is_project_submission')
+        .notNull()
+        .default(false),
     paymentDeadline: timestamp('payment_deadline', {
         mode: 'date',
         withTimezone: true,

@@ -45,6 +45,7 @@ export function DropdownInput({
     const staticChoices = question.choices.map((choice) => ({
         value: choice.data,
         name: choice.name,
+        disabled: choice.disabled,
     }));
 
     return (

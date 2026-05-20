@@ -12,7 +12,6 @@ import { DocumentIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import {
     CloudArrowUpIcon,
     ExclamationTriangleIcon,
-    CheckCircleIcon,
 } from '@heroicons/react/24/solid';
 import { useAtomValue } from 'jotai';
 
@@ -57,13 +56,13 @@ export function FileUpload({
     const [showUpload, setShowUpload] = useState(true);
     const [showSuccessMessage, setShowSuccessMessage] = useState(true);
 
-    useEffect(() => {
+    const emitFileChange = (items: Record<string, FileUploadItem>) => {
         onFileChange(
-            Object.values(uploadedFiles)
+            Object.values(items)
                 .map((item) => item.file)
-                .filter((item) => item !== undefined)
+                .filter((item): item is File => item !== undefined)
         );
-    }, [uploadedFiles]);
+    };
 
     const validateFileType = (file: File): boolean => {
         if (!accept || accept.trim() === '*' || accept.trim() === '')
@@ -112,7 +111,9 @@ export function FileUpload({
                 };
 
                 if (!allowMultiple) {
-                    setUploadedFiles({ [f.name]: newItem });
+                    const next = { [f.name]: newItem };
+                    setUploadedFiles(next);
+                    emitFileChange(next);
                     setError('');
                     validityRef.current?.setCustomValidity('');
                     setShowSuccessMessage(true);
@@ -136,6 +137,7 @@ export function FileUpload({
 
         if (allowMultiple) {
             setUploadedFiles(newUploadedFiles);
+            emitFileChange(newUploadedFiles);
         }
 
         if (ref.current) {
@@ -170,34 +172,43 @@ export function FileUpload({
     };
 
     const finalCheck = useAtomValue(finalErrCheckAtom);
-    const [interactivedWith, setInteracted] = useState(false);
 
     useEffect(() => {
         const count = Object.values(uploadedFiles).length;
 
-        if (!finalCheck) {
-            if (count > 0) setInteracted(true);
-            if (errorMsg && errorMsg !== 'File required') return;
-            if (!interactivedWith) {
-                validityRef.current?.setCustomValidity('');
-                setInteracted(true);
-                return;
-            }
-        }
-
-        if (required && count === 0) {
-            validityRef.current?.setCustomValidity('no file');
+        if (required && count === 0 && finalCheck) {
+            validityRef.current?.setCustomValidity('File required');
             setError('File required');
             return;
         }
 
-        if (!errorMsg.includes('File type not allowed')) {
-            validityRef.current?.setCustomValidity('');
-            setError('');
+        if (
+            !errorMsg ||
+            errorMsg === 'File required' ||
+            !errorMsg.includes('File type not allowed')
+        ) {
+            if (count > 0 || !required || !finalCheck) {
+                validityRef.current?.setCustomValidity('');
+                if (errorMsg === 'File required') {
+                    setError('');
+                }
+            }
         }
-    }, [uploadedFiles, finalCheck]);
+    }, [uploadedFiles, finalCheck, required, errorMsg]);
 
     const hasFiles = Object.keys(uploadedFiles).length > 0;
+
+    const removeFile = (key: string) => {
+        const newUploadedFiles = { ...uploadedFiles };
+        delete newUploadedFiles[key];
+        setUploadedFiles(newUploadedFiles);
+        emitFileChange(newUploadedFiles);
+        setShowUpload(true);
+        setShowSuccessMessage(true);
+        if (ref.current) {
+            ref.current.value = '';
+        }
+    };
 
     return (
         <div
@@ -289,62 +300,32 @@ export function FileUpload({
                                 className="relative flex w-full flex-col gap-2"
                             >
                                 {showSuccessMessage ? (
-                                    <>
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-neutral-600/30">
-                                                <DocumentIcon className="h-5 w-5 text-neutral-400" />
-                                            </div>
-
-                                            <div className="flex flex-1 flex-col gap-1 overflow-hidden text-left">
-                                                <span className="truncate">
-                                                    {value.filename}
-                                                </span>
-                                                <span className="shrink-0 text-xs text-white/60">
-                                                    {value.file
-                                                        ? getFileSize(
-                                                              value.file.size
-                                                          )
-                                                        : '0 MB'}
-                                                </span>
-                                            </div>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    const newUploadedFiles = {
-                                                        ...uploadedFiles,
-                                                    };
-                                                    delete newUploadedFiles[
-                                                        key
-                                                    ];
-                                                    setUploadedFiles(
-                                                        newUploadedFiles
-                                                    );
-                                                    setShowUpload(true);
-                                                    setShowSuccessMessage(true);
-                                                    if (ref.current)
-                                                        ref.current.value = '';
-                                                }}
-                                                className="ml-2 shrink-0 text-neutral-600 transition-colors hover:text-neutral-400"
-                                            >
-                                                <XMarkIcon className="h-4 w-4" />
-                                            </button>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-neutral-600/30">
+                                            <DocumentIcon className="h-5 w-5 text-neutral-400" />
                                         </div>
 
-                                        {/* <div className="h-0.5 w-full overflow-hidden rounded-full bg-neutral-700/40">
-                                            <div
-                                                className="bg-brand-500 h-full transition-all duration-500 ease-out"
-                                                style={{ width: `${value.progress}%` }}
-                                            />
+                                        <div className="flex flex-1 flex-col gap-1 overflow-hidden text-left">
+                                            <span className="truncate">
+                                                {value.filename}
+                                            </span>
+                                            <span className="shrink-0 text-xs text-white/60">
+                                                {value.file
+                                                    ? getFileSize(
+                                                          value.file.size
+                                                      )
+                                                    : '0 MB'}
+                                            </span>
                                         </div>
 
-                                        <div className='flex items-center justify-center'>
-                                            <div className='flex gap-1 items-center font-light text-xs'>
-                                                <CheckCircleIcon className='text-success-400 w-4 h-4' />
-                                                Your document was successfully uploaded.
-                                            </div>
-                                        </div> */}
-                                    </>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeFile(key)}
+                                            className="ml-2 shrink-0 text-neutral-600 transition-colors hover:text-neutral-400"
+                                        >
+                                            <XMarkIcon className="h-4 w-4" />
+                                        </button>
+                                    </div>
                                 ) : (
                                     <div className="flex items-center gap-3">
                                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-neutral-600/30">
@@ -366,19 +347,7 @@ export function FileUpload({
 
                                         <button
                                             type="button"
-                                            onClick={() => {
-                                                const newUploadedFiles = {
-                                                    ...uploadedFiles,
-                                                };
-                                                delete newUploadedFiles[key];
-                                                setUploadedFiles(
-                                                    newUploadedFiles
-                                                );
-                                                setShowUpload(true);
-                                                setShowSuccessMessage(true);
-                                                if (ref.current)
-                                                    ref.current.value = '';
-                                            }}
+                                            onClick={() => removeFile(key)}
                                             className="ml-2 shrink-0 text-neutral-600 transition-colors hover:text-neutral-400"
                                         >
                                             <XMarkIcon className="h-4 w-4" />

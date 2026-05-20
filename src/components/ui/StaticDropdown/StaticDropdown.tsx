@@ -13,6 +13,7 @@ import { FormTextInput } from '@/components/ui/input/input';
 export type StaticDropdownOption = {
     value: string;
     name: string;
+    disabled?: boolean;
 };
 
 type StaticDropdownProps = {
@@ -101,6 +102,8 @@ export function StaticDropdown({
     }, [allowCustom, selectedValue, staticChoices]);
 
     const handleToggle = (option: StaticDropdownOption) => {
+        if (option.disabled) return;
+
         setIsOtherSelected(false);
         setSelectedValue(option.value);
         setSelectedObject(option);
@@ -153,12 +156,12 @@ export function StaticDropdown({
                 : 'border border-neutral-600 bg-transparent'
         );
 
-    const containerClass = (checked: boolean) =>
+    const containerClass = (checked: boolean, optionDisabled?: boolean) =>
         cn(
             'flex items-center gap-3 px-3 py-3',
-            'cursor-pointer',
             'transition-colors duration-[400ms] ease-out',
-            'min-h-[48px]'
+            'min-h-[48px]',
+            optionDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
         );
 
     return (
@@ -248,14 +251,24 @@ export function StaticDropdown({
 
                         {searchResults.map((option, idx) => {
                             const selected = isSelected(option.value);
+                            const optionDisabled = option.disabled === true;
                             return (
                                 <label
                                     key={`option-${option.value}-${idx}-${option.name}`}
-                                    className={containerClass(selected)}
+                                    className={containerClass(
+                                        selected,
+                                        optionDisabled
+                                    )}
+                                    onClick={(e) => {
+                                        if (optionDisabled) {
+                                            e.preventDefault();
+                                        }
+                                    }}
                                 >
                                     <input
                                         type="radio"
                                         checked={selected}
+                                        disabled={optionDisabled}
                                         onChange={() => handleToggle(option)}
                                         className="sr-only"
                                     />

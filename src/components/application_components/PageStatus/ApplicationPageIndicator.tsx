@@ -1,6 +1,15 @@
-import { PrimitiveAtom, useAtomValue, useSetAtom, useAtom, Atom } from 'jotai';
+import {
+    PrimitiveAtom,
+    useAtomValue,
+    useSetAtom,
+    useAtom,
+    Atom,
+    WritableAtom,
+} from 'jotai';
 import style from './ApplicationPageIndicator.module.css';
 import { finalErrCheckAtom } from '../InputForm';
+import type { InputFormPageData } from '../types';
+import { findFirstInvalidPageIndex } from '../InputFormComponents/shared';
 import {
     ArrowLeftIcon,
     ArrowRightIcon,
@@ -13,7 +22,7 @@ import {
     ArrowUpCircleIcon,
 } from '@heroicons/react/24/outline';
 
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
@@ -69,48 +78,56 @@ function getPageStatus(pageState: PageFormState, errCheck: boolean) {
  */
 export function DesktopPageIndicator({
     pageStateAtoms,
+    pagesAtom,
     indexAtom,
 }: {
     pageStateAtoms: Atom<PageFormState[]>;
+    pagesAtom: WritableAtom<InputFormPageData[], [InputFormPageData[]], void>;
     indexAtom: PrimitiveAtom<number>;
 }) {
     const pageStates = useAtomValue(pageStateAtoms);
+    const pages = useAtomValue(pagesAtom);
     const setIndex = useSetAtom(indexAtom);
     const [errCheck, setErrCheck] = useAtom(finalErrCheckAtom);
 
-    const [validationPerformed, setValidationPerformed] = useState(false);
+    const [pendingReview, setPendingReview] = useState(false);
+
     function tryReview() {
         setErrCheck(true);
-
-        setTimeout(() => {
-            setValidationPerformed(true);
-        }, 0);
+        setPendingReview(true);
     }
 
-    useEffect(() => {
-        if (validationPerformed) {
-            let valid = true;
-            let idx = 0;
-            for (; idx < pageStates.length; idx++) {
-                valid &&= !pageStates[idx].error;
-                if (!valid) {
-                    break;
-                }
-            }
-            if (!valid) {
-                toast({
-                    title: 'Invalid form',
-                    description:
-                        'Some of the questions are not filled correctly.',
-                    variant: 'error',
-                });
-                setIndex(idx);
-            } else {
-                setIndex(pageStates.length); // the lastpage + 1 is the review page.
-            }
-            setValidationPerformed(false);
+    useLayoutEffect(() => {
+        if (!pendingReview || !errCheck) return;
+
+        const missingPageIdx = findFirstInvalidPageIndex(pages);
+        if (missingPageIdx >= 0) {
+            toast({
+                title: 'Invalid form',
+                description:
+                    'Please complete all required fields, including file uploads.',
+                variant: 'error',
+            });
+            setIndex(missingPageIdx);
+            setPendingReview(false);
+            return;
         }
-    }, [validationPerformed]);
+
+        const htmlErrorIdx = pageStates.findIndex((state) => state.error);
+        if (htmlErrorIdx >= 0) {
+            toast({
+                title: 'Invalid form',
+                description: 'Some of the questions are not filled correctly.',
+                variant: 'error',
+            });
+            setIndex(htmlErrorIdx);
+            setPendingReview(false);
+            return;
+        }
+
+        setIndex(pageStates.length);
+        setPendingReview(false);
+    }, [pendingReview, errCheck, pages, pageStates, setIndex]);
 
     return (
         <div className={style.pageStatusContainer}>
@@ -160,12 +177,15 @@ export function DesktopPageIndicator({
 
 export function MobilePageIndicator({
     pageStateAtoms,
+    pagesAtom,
     indexAtom,
 }: {
     pageStateAtoms: Atom<PageFormState[]>;
+    pagesAtom: WritableAtom<InputFormPageData[], [InputFormPageData[]], void>;
     indexAtom: PrimitiveAtom<number>;
 }) {
     const pageStates = useAtomValue(pageStateAtoms);
+    const pages = useAtomValue(pagesAtom);
     const [index, setIndex] = useAtom(indexAtom);
     const [errCheck, setErrCheck] = useAtom(finalErrCheckAtom);
 
@@ -183,24 +203,44 @@ export function MobilePageIndicator({
         );
     }
 
-    function tryReview() {
-        let valid = true;
+    const [pendingReview, setPendingReview] = useState(false);
 
-        for (const pageState of pageStates) {
-            valid &&= !pageState.error;
+    function tryReview() {
+        setErrCheck(true);
+        setPendingReview(true);
+    }
+
+    useLayoutEffect(() => {
+        if (!pendingReview || !errCheck) return;
+
+        const missingPageIdx = findFirstInvalidPageIndex(pages);
+        if (missingPageIdx >= 0) {
+            toast({
+                title: 'Invalid form',
+                description:
+                    'Please complete all required fields, including file uploads.',
+                variant: 'error',
+            });
+            setIndex(missingPageIdx);
+            setPendingReview(false);
+            return;
         }
 
-        if (!valid) {
+        const htmlErrorIdx = pageStates.findIndex((state) => state.error);
+        if (htmlErrorIdx >= 0) {
             toast({
                 title: 'Invalid form',
                 description: 'Some of the questions are not filled correctly.',
                 variant: 'error',
             });
-            setErrCheck(true);
-        } else {
-            setIndex(pageStates.length); // the lastpage + 1 is the review page.
+            setIndex(htmlErrorIdx);
+            setPendingReview(false);
+            return;
         }
-    }
+
+        setIndex(pageStates.length);
+        setPendingReview(false);
+    }, [pendingReview, errCheck, pages, pageStates, setIndex]);
 
     function incrementIndex(incre: number) {
         if (index + incre === pageStates.length) {
