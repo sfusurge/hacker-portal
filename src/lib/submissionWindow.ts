@@ -16,3 +16,10 @@ export function isSubmissionUiHiddenBeforeOpen(
     if (submissionOpen == null) return true;
     return nowMs < submissionOpen.getTime();
 }
+
+export function isProjectsGalleryOpen(
+    nowMs: number,
+    submissionDeadline: Date
+): boolean {
+    return nowMs >= submissionDeadline.getTime();
+}

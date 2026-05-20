@@ -116,7 +116,7 @@ export function RichText({
 
     return (
         <div
-            className={`mx-auto w-full ${style.inputRoot} `}
+            className={`w-full ${style.inputRoot}`}
             style={
                 {
                     '--errorMsg': `"${errorMsg}"`,
@@ -141,21 +141,29 @@ export function RichText({
             />
 
             <style jsx global>{`
-                .ql-toolbar {
-                    border-top-left-radius: 16px;
-                    border-top-right-radius: 16px;
-                    border-bottom: none;
+                .ql-toolbar.ql-snow {
+                    border: 1px solid #525252bc !important;
+                    border-bottom: 0 !important;
+                    border-radius: 16px 16px 0 0;
                     background-color: rgba(38, 38, 38, 0.6);
                 }
 
-                .ql-container {
-                    border-bottom-left-radius: 16px;
-                    border-bottom-right-radius: 16px;
-                    border-top: none;
+                .ql-container.ql-snow {
+                    border: 1px solid #525252bc !important;
+                    border-top: 0 !important;
+                    border-radius: 0 0 16px 16px;
                 }
 
-                .ql-snow {
-                    border: 1px solid #525252bc !important;
+                .ql-snow button:not(.ql-active) .ql-stroke {
+                    stroke: var(--text-regular);
+                }
+
+                .ql-snow button:not(.ql-active) .ql-fill {
+                    fill: var(--text-regular);
+                }
+
+                .ql-snow .ql-picker-label:not(.ql-active) {
+                    color: var(--text-regular);
                 }
 
                 .ql-editor {

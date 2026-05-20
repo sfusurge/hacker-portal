@@ -51,13 +51,13 @@ export default function TeamListSubmit({
                         Your Team ({mappedTeammates.length}/
                         {team.maxMembersCount} members)
                     </span>
-                    <span className="text-left text-xl font-semibold">
+                    <span className="text-left font-sans text-xl font-semibold">
                         {team.name}
                     </span>
                 </CardHeaderColumn>
             </CardHeader>
             <CardContent>
-                <ul className="flex flex-col gap-3">
+                <ul className="flex flex-col gap-2">
                     {mappedTeammates.map((teammate, i) => (
                         <TeammateItemSubmit
                             key={teammate.id}

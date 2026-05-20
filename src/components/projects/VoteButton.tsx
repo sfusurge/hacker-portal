@@ -1,6 +1,12 @@
 'use client';
 
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { Button } from '@/components/ui/button';
+import {
+    isAudienceVotingEnabled,
+    isAudienceVotingWindowOpen,
+} from '@/lib/audienceVoting';
+import { useAtomValue } from 'jotai';
 import { useState } from 'react';
 import AudienceChoiceDialog from './judge/AudienceChoiceDialog';
 import { trpc } from '@/trpc/client';
@@ -22,25 +28,27 @@ export default function VoteButton({
     alreadyVoted,
     applicationStatus,
 }: VoteButtonProps) {
+    const hackathon = useAtomValue(hackathonAtom);
+    const votingEnabled = isAudienceVotingEnabled(hackathon);
+
     const [isVoteDialogOpen, setIsVoteDialogOpen] = useState(false);
     const [hasVoted, setHasVoted] = useState(alreadyVoted);
-    const userTeam = trpc.teams.getCurrentTeam.useQuery({
-        hackathonId: hackathonId,
-    });
-
-    const now = new Date();
-    const pstNow = new Date(
-        now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
+    const userTeam = trpc.teams.getCurrentTeam.useQuery(
+        { hackathonId: hackathonId },
+        { enabled: votingEnabled }
     );
-    const startTime = new Date('2026-01-01T00:00:00-08:00');
-    const endTime = new Date('2026-05-24T23:59:59-07:00');
+
+    if (!votingEnabled) {
+        return null;
+    }
 
     const isOnSameTeam = userTeam.data?.id === teamId;
-
-    const isVotingTimeActive = pstNow >= startTime && pstNow <= endTime;
-
+    const isVotingTimeActive = isAudienceVotingWindowOpen(
+        Date.now(),
+        hackathon.audienceVotingOpen,
+        hackathon.audienceVotingCloses
+    );
     const isUserRoleAccepted = applicationStatus === 'Accepted';
-
     const isDisabled =
         hasVoted || isOnSameTeam || !isVotingTimeActive || !isUserRoleAccepted;
 

@@ -1,0 +1,53 @@
+.md > h1 {
+    font-size: 36px;
+    color: var(--brand-500);
+    font-weight: bold;
+}
+
+.md > h2 {
+    font-size: 26px;
+    color: var(--brand-500);
+}
+
+.md > h3 {
+    font-size: 20px;
+    color: var(--color-brand-600);
+}
+
+.md > ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.md > * > li {
+    display: flex;
+    align-items: center;
+}
+
+.md > * > li::before {
+    content: '';
+    display: inline-block;
+    width: 0.5rem;
+    min-width: 0.5rem;
+    height: 0.5rem;
+    margin-right: 0.75rem;
+    border-radius: 50%;
+    background-color: var(--brand-500);
+}
+
+.md > hr {
+    margin: 1rem;
+    border-color: var(--border-neutral-secondary);
+}
+
+.md > a,
+.md > * > a {
+    color: var(--brand-400);
+    text-decoration: underline;
+    font-style: italic;
+}
+
+.md > p {
+    margin-bottom: 0.75rem;
+}

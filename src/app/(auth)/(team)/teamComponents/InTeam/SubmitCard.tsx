@@ -12,29 +12,69 @@ import {
     CardHeaderTitle,
 } from '@/components/ui/card';
 import { trpc } from '@/trpc/client';
-import { isSubmissionUiHiddenBeforeOpen } from '@/lib/submissionWindow';
+import {
+    isProjectsGalleryOpen,
+    isSubmissionUiHiddenBeforeOpen,
+} from '@/lib/submissionWindow';
 import { ArrowRightIcon } from '@heroicons/react/24/solid';
 import dayjs from 'dayjs';
 import { useAtomValue } from 'jotai';
 import Link from 'next/link';
+import {
+    isAudienceVotingEnabled,
+    isAudienceVotingPastDeadline,
+    isAudienceVotingPeriodForTeamDashboard,
+    isAudienceVotingWindowOpen,
+} from '@/lib/audienceVoting';
 import { useEffect, useState } from 'react';
 
+function formatVotingWindow(hackathon: HackathonData): string {
+    const open = hackathon.audienceVotingOpen;
+    const closes = hackathon.audienceVotingCloses;
+    if (open == null || closes == null) {
+        return 'Check back when voting opens.';
+    }
+    return `${open.format('MMM D, YYYY h:mm A')} – ${closes.format('MMM D, YYYY h:mm A')}`;
+}
+
+function ViewProjectsButton() {
+    return (
+        <Link href="/projects" className="mt-4">
+            <Button variant={'brand'} size="cozy" hierarchy={'primary'}>
+                View all projects
+            </Button>
+        </Link>
+    );
+}
+
 export function VotingCard() {
+    const hackathon = useAtomValue(hackathonAtom);
     const [isVotingOpen, setIsVotingOpen] = useState(false);
     const [isPastDeadline, setIsPastDeadline] = useState(false);
+    const [galleryOpen, setGalleryOpen] = useState(false);
 
     useEffect(() => {
-        const now = new Date();
-
-        const pstNow = new Date(
-            now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
+        const nowMs = Date.now();
+        setIsVotingOpen(
+            isAudienceVotingWindowOpen(
+                nowMs,
+                hackathon.audienceVotingOpen,
+                hackathon.audienceVotingCloses
+            )
         );
-        const startTime = new Date('2026-05-31T10:00:00-07:00');
-        const votingEnd = new Date('2026-05-31T16:00:00-07:00');
+        setIsPastDeadline(
+            isAudienceVotingPastDeadline(nowMs, hackathon.audienceVotingCloses)
+        );
+        setGalleryOpen(
+            isProjectsGalleryOpen(nowMs, hackathon.submissionDeadline.toDate())
+        );
+    }, [
+        hackathon.audienceVotingOpen,
+        hackathon.audienceVotingCloses,
+        hackathon.submissionDeadline,
+    ]);
 
-        setIsVotingOpen(pstNow >= startTime && pstNow <= votingEnd);
-        setIsPastDeadline(pstNow > votingEnd);
-    }, []);
+    const votingWindowLabel = formatVotingWindow(hackathon);
 
     return (
         <Card className="h-full">
@@ -54,10 +94,8 @@ export function VotingCard() {
                                 Voting period has ended!
                             </h3>
                             <span className="text-pretty text-white/60 lg:max-w-[550px]">
-                                The Audience Choice Award winner will be
-                                announced during the closing ceremony on May 31,
-                                2026. Please come back tomorrow to see your
-                                feedback from the judges.
+                                Voting closed ({votingWindowLabel}). Check back
+                                later for judge feedback on your submission.
                             </span>
                         </div>
                     </>
@@ -68,8 +106,8 @@ export function VotingCard() {
                                 Voting will open soon!
                             </h3>
                             <span className="text-sm text-pretty text-white/60 lg:max-w-[550px]">
-                                Audience Choice voting will be available on May
-                                31st from 10:00 AM to 4:00 PM PST.
+                                Audience Choice voting opens {votingWindowLabel}
+                                .
                             </span>
                         </div>
                     </>
@@ -80,22 +118,13 @@ export function VotingCard() {
                                 Cast your vote for the Audience Choice Award!
                             </h3>
                             <span className="text-sm text-pretty text-white/60 lg:max-w-[550px]">
-                                Winners will be announced during the closing
-                                ceremony on May 31, 2026. Teams are not allowed
-                                to vote for their own projects.
+                                Voting is open now ({votingWindowLabel}). Teams
+                                cannot vote for their own projects.
                             </span>
                         </div>
-                        <Link href="/projects">
-                            <Button
-                                variant={'brand'}
-                                size="cozy"
-                                hierarchy={'primary'}
-                            >
-                                View all projects
-                            </Button>
-                        </Link>
                     </>
                 )}
+                {galleryOpen ? <ViewProjectsButton /> : null}
             </CardContent>
         </Card>
     );
@@ -103,29 +132,19 @@ export function VotingCard() {
 
 export function SubmitCard({ onShowSubmit }: { onShowSubmit: () => void }) {
     const hackathon = useAtomValue(hackathonAtom);
-    const [isVotingPeriod, setIsVotingPeriod] = useState(false);
+    const [showVotingCard, setShowVotingCard] = useState(false);
 
     useEffect(() => {
-        const now = new Date();
-        const pstNow = new Date(
-            now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
+        setShowVotingCard(
+            isAudienceVotingPeriodForTeamDashboard(Date.now(), hackathon)
         );
-        const submissionDeadline = new Date('2026-05-29T00:00:00-07:00');
-        const votingStart = new Date('2026-05-31T10:00:00-07:00');
-        const votingEnd = new Date('2026-05-31T16:00:00-07:00');
-
-        setIsVotingPeriod(
-            pstNow >= submissionDeadline &&
-                pstNow >= votingStart &&
-                pstNow <= votingEnd
-        );
-    }, []);
+    }, [hackathon]);
 
     if (!hackathon || hackathon.startDate.isAfter(dayjs())) {
         return null;
     }
 
-    if (isVotingPeriod) {
+    if (showVotingCard && isAudienceVotingEnabled(hackathon)) {
         return <VotingCard />;
     }
 
@@ -161,6 +180,7 @@ function SubmitCardContent({
     const [hasLocal, setHasLocal] = useState(false);
 
     const [isPastDeadline, setIsPastDeadline] = useState(false);
+    const [galleryOpen, setGalleryOpen] = useState(false);
 
     const userinfo = useAtomValue(userInfoAtom);
     const userapplication = trpc.applications.getCurrentApplication.useQuery({
@@ -176,12 +196,13 @@ function SubmitCardContent({
         }
         setLoadingLocal(false);
 
-        const now = new Date();
-        const pstNow = new Date(
-            now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
+        const nowMs = Date.now();
+        setIsPastDeadline(
+            isProjectsGalleryOpen(nowMs, hackathon.submissionDeadline.toDate())
         );
-        const deadline = new Date('2026-09-26T23:59:00-07:00');
-        setIsPastDeadline(pstNow > deadline);
+        setGalleryOpen(
+            isProjectsGalleryOpen(nowMs, hackathon.submissionDeadline.toDate())
+        );
     }, [hackathon]);
 
     function getBtn() {
@@ -263,14 +284,12 @@ function SubmitCardContent({
         }
 
         if (hasSubmit) {
-            // FIXME replace with dynamic text in the future
             return (
                 <>
                     <h3 className="text-xl font-semibold text-pretty">{`${teamdata.data?.name}'s project has been successfully submitted!`}</h3>
                     <span className="text-sm text-pretty text-white/60 lg:max-w-[550px]">
-                        Judges will evaluate the projects from May 29th to 30th,
-                        2026. Winners will be announced during the closing
-                        ceremony on May 31st, 2026.
+                        Judges will evaluate projects soon. Winners will be
+                        announced during the closing ceremony on May 23, 2026.
                     </span>
                 </>
             );
@@ -285,8 +304,8 @@ function SubmitCardContent({
                         {hackathon.submissionDeadline.format(
                             'MMM D, YYYY h:mm A'
                         )}
-                        . Judges will evaluate projects before results are
-                        announced at the closing ceremony.
+                        . Judges will evaluate projects soon. Winners will be
+                        announced during the closing ceremony on May 23, 2026.
                     </span>
                 </>
             );
@@ -322,6 +341,7 @@ function SubmitCardContent({
 
             <CardContent className="items-center justify-center gap-3 text-center">
                 {getContent()}
+                {galleryOpen ? <ViewProjectsButton /> : null}
             </CardContent>
         </Card>
     );
