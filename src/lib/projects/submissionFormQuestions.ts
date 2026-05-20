@@ -79,9 +79,10 @@ export function isVisibleInReviewTable(
 export function isVisibleInPreview(
     question: Pick<InputFormQuestion, 'displayRole' | 'type'>
 ): boolean {
-    if (question.type === 'file-upload') return true;
-
     const roles = normalizeDisplayRoles(question.displayRole);
+    if (question.type === 'file-upload' && roles.includes('banner'))
+        return true;
+
     if (roles.includes('hidden')) return false;
     return roles.includes('all');
 }
