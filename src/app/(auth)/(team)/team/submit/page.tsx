@@ -104,7 +104,7 @@ export default async function SubmitPage() {
                     />
                 </SubmissionSideBar>
 
-                <div className="flex flex-1 flex-col">
+                <div className="flex h-full flex-1 flex-col">
                     <div className="flex-1 md:max-h-[calc(100vh)] md:overflow-y-auto">
                         <SubmitFormCard
                             teamId={currentTeam.id}

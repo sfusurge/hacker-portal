@@ -23,3 +23,12 @@ export function isProjectsGalleryOpen(
 ): boolean {
     return nowMs >= submissionDeadline.getTime();
 }
+
+export function canViewProjectsGallery(
+    nowMs: number,
+    submissionDeadline: Date,
+    userRole?: string | null
+): boolean {
+    if (userRole === 'judge' || userRole === 'admin') return true;
+    return isProjectsGalleryOpen(nowMs, submissionDeadline);
+}

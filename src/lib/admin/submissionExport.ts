@@ -3,7 +3,10 @@ import type {
     InputFormQuestion,
     QuestionMultipleChoice,
 } from '@/components/application_components/types';
-import { buildSubmissionCsvExportColumns } from '@/lib/projects/buildSubmissionReviewTableColumns';
+import {
+    buildSubmissionCsvExportColumns,
+    type SubmissionCsvExportOptions,
+} from '@/lib/projects/buildSubmissionReviewTableColumns';
 import {
     flattenSubmissionQuestions,
     hasDisplayRole,
@@ -179,12 +182,13 @@ export function formatSubmissionFieldValue(value: unknown): string {
     return String(value);
 }
 
-/** Build one CSV row from `displayRole: "table"` columns (matches the admin review table). */
+/** Build one CSV row (table columns, or all questions when `includeAllQuestions`). */
 export function submissionToCsvRecord(
     submission: SubmissionExportRow,
-    pages?: InputFormPageData[]
+    pages?: InputFormPageData[],
+    options: SubmissionCsvExportOptions = {}
 ): Record<string, string> {
-    const columns = buildSubmissionCsvExportColumns(pages);
+    const columns = buildSubmissionCsvExportColumns(pages, options);
     const record: Record<string, string> = {};
 
     for (const col of columns) {

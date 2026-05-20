@@ -19,10 +19,11 @@ export type ChoiceOptionAlert = {
     presentation?: 'alert' | 'caption';
 };
 
-type ChoiceOption = {
+export type ChoiceOption = {
     name: string;
     data: string;
     other?: boolean;
+    disabled?: boolean;
     alert?: ChoiceOptionAlert;
 };
 
@@ -40,6 +41,7 @@ export interface HackathonData {
     hackathonName: string; // should this be hackathon id in table instead?
     submissionTime?: string;
     isPaid?: boolean;
+    isProjectSubmission?: boolean;
     paymentDeadline: dayjs.Dayjs | null;
 
     applicationQuestionPages: InputFormPageData[];
@@ -106,6 +108,7 @@ export type ApplicationQuestionType = InputFormQuestion['type'];
  *
  * Field identity (what the question represents; combine with visibility flags):
  * - `title`, `location`, `track`, `tagline`, `description`, `banner`
+ * - `pdfPoster` — poster PDF file upload
  * - `eligibleTrack` — sponsor/track eligibility checkbox (grouped on project page)
  *
  * Example: `"displayRole": ["all", "table", "title"]`
@@ -121,6 +124,7 @@ export type DisplayRole =
     | 'tagline'
     | 'description'
     | 'banner'
+    | 'pdfPoster'
     | 'eligibleTrack';
 
 export type DisplayRoles = DisplayRole | DisplayRole[];

@@ -142,11 +142,9 @@ export function SubmitFormCard({
 
     if (projectSubmitted) {
         return (
-            <Card className="h-full">
-                <CardContent>
-                    <ProjectSubmissionSuccess />
-                </CardContent>
-            </Card>
+            <div className="flex h-full items-center justify-center">
+                <ProjectSubmissionSuccess />
+            </div>
         );
     }
 

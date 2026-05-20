@@ -130,6 +130,22 @@ export function getSubmissionReviewTableQuestions(
         }));
 }
 
+// Every submission question with an id (admin table "show all fields" mode)
+export function getAllSubmissionTableQuestions(
+    pages: InputFormPageData[] | undefined
+): SubmissionReviewTableQuestion[] {
+    return flattenSubmissionQuestions(pages)
+        .filter(
+            (q): q is InputFormQuestion & { questionId: number } =>
+                q.questionId != null
+        )
+        .map((q) => ({
+            questionId: q.questionId,
+            title: q.title ?? `Question ${q.questionId}`,
+            type: q.type,
+        }));
+}
+
 export function satisfiesSubmissionVisibleWhen(
     question: InputFormQuestion,
     response: Record<string, unknown> | undefined

@@ -1,6 +1,7 @@
 import type { InputFormPageData } from '@/components/application_components/types';
 import {
     flattenSubmissionQuestions,
+    getAllSubmissionTableQuestions,
     getSubmissionReviewTableQuestions,
     hasDisplayRole,
     isVisibleInReviewTable,
@@ -17,34 +18,57 @@ const CSV_TEAM_COLUMNS: SubmissionReviewTableColumn[] = [
     { id: 'team_name', header: 'Team Name', questionId: '' },
 ];
 
-export function buildSubmissionReviewTableColumns(
-    pages: InputFormPageData[] | undefined
+function mapQuestionsToTableColumns(
+    questions: ReturnType<typeof getSubmissionReviewTableQuestions>
 ): SubmissionReviewTableColumn[] {
-    return getSubmissionReviewTableQuestions(pages).map((q) => ({
+    return questions.map((q) => ({
         id: String(q.questionId),
         header: q.title,
         questionId: String(q.questionId),
     }));
 }
 
-/** CSV export columns: team metadata + questions with `displayRole` including `table`. */
-export function buildSubmissionCsvExportColumns(
+export function buildSubmissionReviewTableColumns(
     pages: InputFormPageData[] | undefined
 ): SubmissionReviewTableColumn[] {
-    return [...CSV_TEAM_COLUMNS, ...buildSubmissionReviewTableColumns(pages)];
+    return mapQuestionsToTableColumns(getSubmissionReviewTableQuestions(pages));
 }
 
-/** CSV column keys in export order (derived from `displayRole: "table"`). */
-export function getSubmissionCsvColumnKeys(
+export function buildAllSubmissionTableColumns(
     pages: InputFormPageData[] | undefined
+): SubmissionReviewTableColumn[] {
+    return mapQuestionsToTableColumns(getAllSubmissionTableQuestions(pages));
+}
+
+export type SubmissionCsvExportOptions = {
+    includeAllQuestions?: boolean;
+};
+
+// CSV export columns: team metadata + table columns (or all questions).
+export function buildSubmissionCsvExportColumns(
+    pages: InputFormPageData[] | undefined,
+    options: SubmissionCsvExportOptions = {}
+): SubmissionReviewTableColumn[] {
+    const questionColumns = options.includeAllQuestions
+        ? buildAllSubmissionTableColumns(pages)
+        : buildSubmissionReviewTableColumns(pages);
+
+    return [...CSV_TEAM_COLUMNS, ...questionColumns];
+}
+
+// CSV column keys in export order.
+export function getSubmissionCsvColumnKeys(
+    pages: InputFormPageData[] | undefined,
+    options: SubmissionCsvExportOptions = {}
 ): string[] {
-    return buildSubmissionCsvExportColumns(pages).map((col) => col.id);
+    return buildSubmissionCsvExportColumns(pages, options).map((col) => col.id);
 }
 
 export function buildSubmissionCsvColumnHeaders(
-    pages: InputFormPageData[] | undefined
+    pages: InputFormPageData[] | undefined,
+    options: SubmissionCsvExportOptions = {}
 ) {
-    return buildSubmissionCsvExportColumns(pages).map((col) => ({
+    return buildSubmissionCsvExportColumns(pages, options).map((col) => ({
         key: col.id,
         displayLabel: col.header,
     }));

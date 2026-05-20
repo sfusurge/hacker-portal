@@ -8,7 +8,7 @@ import type { UserData } from '@/server/routers/usersRouter';
 import { useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { mapSubmissionToProjectListItem } from '@/lib/projects/projectSubmissionDisplay';
-import { isProjectsGalleryOpen } from '@/lib/submissionWindow';
+import { canViewProjectsGallery } from '@/lib/submissionWindow';
 
 interface ProjectsClientProps {
     user: UserData | null;
@@ -88,12 +88,11 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
         );
     }
 
-    const galleryOpen =
-        isJudge ||
-        isProjectsGalleryOpen(
-            Date.now(),
-            hackathon.submissionDeadline.toDate()
-        );
+    const galleryOpen = canViewProjectsGallery(
+        Date.now(),
+        hackathon.submissionDeadline.toDate(),
+        user?.userRole
+    );
 
     if (!galleryOpen) {
         return (

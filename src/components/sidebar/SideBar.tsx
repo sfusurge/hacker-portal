@@ -35,7 +35,7 @@ import { UserData } from '@/server/routers/usersRouter';
 import { getIcon } from '@/utils/blobHelper';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { useAtomValue } from 'jotai';
-import { isProjectsGalleryOpen } from '@/lib/submissionWindow';
+import { canViewProjectsGallery } from '@/lib/submissionWindow';
 
 /** mobile (under 768px) user can expand/collapse. */
 const SIDEBAR_MOBILE_MAX_PX = 768;
@@ -188,7 +188,11 @@ export default function SideBar({ className, initialData }: NavProps) {
 
     const showProjectGallery =
         hackathon != null &&
-        isProjectsGalleryOpen(now, hackathon.submissionDeadline.toDate());
+        canViewProjectsGallery(
+            now,
+            hackathon.submissionDeadline.toDate(),
+            initialData?.userRole
+        );
 
     const mainNavLinks = useMemo(
         () =>
