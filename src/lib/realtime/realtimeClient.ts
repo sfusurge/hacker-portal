@@ -1,4 +1,4 @@
-import { Realtime } from 'ably';
+import { Realtime, type InboundMessage, type RealtimeChannel } from 'ably';
 
 type PoolEntry = { client: Realtime; count: number };
 
@@ -27,6 +27,52 @@ export function acquireRealtimeClient(hackathonId: number): Realtime {
 
     entry.count += 1;
     return entry.client;
+}
+
+// subscribe to a channel event once the connection is up, and re-subscribe after
+export function subscribeChannelEvent(
+    client: Realtime,
+    channel: RealtimeChannel,
+    eventName: string,
+    listener: (message: InboundMessage) => void
+): () => void {
+    let disposed = false;
+    let attached = false;
+
+    const subscribe = () => {
+        if (disposed) return;
+        const state = client.connection.state;
+        if (state === 'closed' || state === 'failed') return;
+
+        void channel.subscribe(eventName, listener).catch((err: unknown) => {
+            if (disposed) return;
+            const message = err instanceof Error ? err.message : String(err);
+            if (message.includes('Connection closed')) return;
+            console.error('[ably] subscribe failed', err);
+        });
+    };
+
+    const onConnected = () => {
+        if (disposed) return;
+        if (attached) {
+            channel.unsubscribe(eventName, listener);
+        }
+        attached = true;
+        subscribe();
+    };
+
+    client.connection.on('connected', onConnected);
+    if (client.connection.state === 'connected') {
+        onConnected();
+    }
+
+    return () => {
+        disposed = true;
+        client.connection.off('connected', onConnected);
+        if (attached) {
+            channel.unsubscribe(eventName, listener);
+        }
+    };
 }
 
 // release when component unmounts

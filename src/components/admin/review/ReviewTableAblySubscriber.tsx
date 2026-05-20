@@ -5,6 +5,7 @@ import { Realtime, type InboundMessage } from 'ably';
 import {
     acquireRealtimeClient,
     releaseRealtimeClient,
+    subscribeChannelEvent,
 } from '@/lib/realtime/realtimeClient';
 import {
     REVIEW_TABLE_ABLY_EVENT,
@@ -61,14 +62,15 @@ export function ReviewTableAblySubscriber({
             })();
         };
 
-        void channel
-            .subscribe(REVIEW_TABLE_ABLY_EVENT, onMessage)
-            .catch((err) =>
-                console.error('[review-table][ably] subscribe failed', err)
-            );
+        const unsubscribe = subscribeChannelEvent(
+            client,
+            channel,
+            REVIEW_TABLE_ABLY_EVENT,
+            onMessage
+        );
 
         return () => {
-            channel.unsubscribe(REVIEW_TABLE_ABLY_EVENT, onMessage);
+            unsubscribe();
             releaseRealtimeClient(hackathonId);
         };
     }, [hackathonId]);

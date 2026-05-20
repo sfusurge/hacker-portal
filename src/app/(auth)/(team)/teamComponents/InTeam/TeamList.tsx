@@ -14,6 +14,7 @@ type TeamMember = {
     firstName: string | null;
     lastName: string | null;
     email: string;
+    image?: string | null;
     currentStatus?: ApplicationStatus;
 };
 
@@ -42,6 +43,7 @@ export default function TeamList({ currentUserEmail, team }: TeamListProps) {
                     firstName: member.firstName,
                     lastName: member.lastName,
                     email: member.email,
+                    image: member.image,
                     currentStatus: member.currentStatus,
                 }) as UserType & { currentStatus?: string | null }
         );

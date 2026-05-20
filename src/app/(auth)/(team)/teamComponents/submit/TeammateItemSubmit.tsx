@@ -11,7 +11,7 @@ import {
     getTextVariant,
 } from '@/lib/application-status';
 import { trpc } from '@/trpc/client';
-import { getIcon } from '@/utils/blobHelper';
+import { resolveUserIconUrl } from '@/utils/blobHelper';
 
 type UserType = InferSelectModel<typeof user>;
 
@@ -38,12 +38,7 @@ export default function TeammateItemSubmit({
 }: TeammateItemProps) {
     const isMobile = useMediaQuery('(max-width: 767px)');
 
-    const avatarUrl = useMemo(() => {
-        if (!image) {
-            return '/teams/single-otter.webp';
-        }
-        return getIcon('user_icon', image);
-    }, [image]);
+    const avatarUrl = useMemo(() => resolveUserIconUrl(image), [image]);
 
     // Calculate display name
     const displayName =

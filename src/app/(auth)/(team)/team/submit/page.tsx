@@ -94,8 +94,8 @@ export default async function SubmitPage() {
     }
 
     return (
-        <div className="flex w-full flex-col gap-6 md:flex-row md:items-start">
-            <div className="flex w-full flex-col gap-6 lg:flex-row">
+        <div className="flex h-full w-full flex-col gap-6 md:flex-row md:items-start">
+            <div className="flex h-full w-full flex-col gap-6 lg:flex-row">
                 <SubmissionSideBar>
                     <SubmissionInfoCard />
                     <TeamListSubmit
@@ -104,7 +104,7 @@ export default async function SubmitPage() {
                     />
                 </SubmissionSideBar>
 
-                <div className="flex flex-1 flex-col">
+                <div className="flex h-full flex-1 flex-col">
                     <div className="flex-1 md:max-h-[calc(100vh)] md:overflow-y-auto">
                         <SubmitFormCard
                             teamId={currentTeam.id}

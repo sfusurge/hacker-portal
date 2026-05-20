@@ -193,7 +193,8 @@ export default function ApplicationCard({
                 status,
                 handleOpenRSVPPrompt,
                 handleOpenTicket,
-                image
+                image,
+                hackerPackageHref
             )}
             {userData?.id && (
                 <RsvpPrompt

@@ -22,6 +22,7 @@ import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import { MarkdownDisplay } from '@/components/ui/Markdown/MarkdownDisplay';
 import { getSubmissionPreviewQuestions } from '@/lib/projects/submissionFormQuestions';
+import { resolveTeamIconUrl } from '@/utils/blobHelper';
 
 export interface ReviewProjectProps {
     submit: () => void | Promise<void>;
@@ -160,7 +161,7 @@ function TeamBadge() {
     return (
         <div className="flex items-center gap-3">
             <img
-                src={currentTeam.teamPictureUrl || '/teams/default.webp'}
+                src={resolveTeamIconUrl(currentTeam.teamPictureUrl)}
                 alt={currentTeam.name}
                 className="h-14 w-14 shrink-0 rounded-xl border border-neutral-700/50 object-cover"
             />

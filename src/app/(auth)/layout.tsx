@@ -25,7 +25,11 @@ export default async function Layout({ children }: { children: ReactNode }) {
         initialViewerAnnouncementLocationKey,
     ] = await Promise.all([
         hackathon != null
-            ? getInitialAnnouncements(hackathon.id, userData.id)
+            ? getInitialAnnouncements(
+                  hackathon.id,
+                  userData.id,
+                  userData.userRole === 'admin'
+              )
             : Promise.resolve({ items: [], hasMore: false }),
         hackathon != null
             ? getViewerAnnouncementLocationKey(hackathon.id, userData.id)
