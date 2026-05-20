@@ -5,7 +5,6 @@ import type {
     QuestionFileUploads,
     QuestionMarkdownInput,
     QuestionMultipleChoice,
-    QuestionRichTextInput,
     QuestionTextLineInput,
     QuestionTextLinkInput,
     QuestionTitleLineInput,
@@ -22,7 +21,6 @@ import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import { MarkdownDisplay } from '@/components/ui/Markdown/MarkdownDisplay';
-import { RichText } from '@/components/ui/RichText/RichText';
 import { getSubmissionPreviewQuestions } from '@/lib/projects/submissionFormQuestions';
 
 export interface ReviewProjectProps {
@@ -236,22 +234,12 @@ function TrackBadges({
     );
 }
 
-function DescriptionPreview({
-    question,
-}: {
-    question: QuestionMarkdownInput | QuestionRichTextInput;
-}) {
-    if (question.type === 'markdown') {
-        const content = question.value?.trim() ?? '';
-        if (!content) {
-            return <p className="text-white/50">N/A</p>;
-        }
-        return <MarkdownDisplay content={content} />;
+function DescriptionPreview({ question }: { question: QuestionMarkdownInput }) {
+    const content = question.value?.trim() ?? '';
+    if (!content) {
+        return <p className="text-white/50">N/A</p>;
     }
-
-    return (
-        <RichText onChange={() => {}} readOnly initialData={question.value} />
-    );
+    return <MarkdownDisplay content={content} />;
 }
 
 export function ReviewProject({
@@ -272,7 +260,7 @@ export function ReviewProject({
             q.type === 'text-line' && TAGLINE_TITLE_PATTERN.test(q.title ?? '')
     );
     const descriptionQuestion = previewQuestions.find(
-        (q) => q.type === 'markdown' || q.type === 'rich-text'
+        (q) => q.type === 'markdown'
     );
     const imageQuestion = previewQuestions.find(
         (q) => q.type === 'file-upload'
@@ -329,7 +317,7 @@ export function ReviewProject({
 
                     <CardContent>
                         <div className="grid grid-cols-14 gap-8 px-6 py-6">
-                            <div className="col-span-8 flex flex-col gap-10 px-6">
+                            <div className="col-span-8 flex flex-col gap-8 px-6">
                                 <div className="flex flex-col gap-2">
                                     <div className="text-3xl font-semibold">
                                         {titleValue}
@@ -349,9 +337,7 @@ export function ReviewProject({
                                 {descriptionQuestion && (
                                     <DescriptionPreview
                                         question={
-                                            descriptionQuestion as
-                                                | QuestionMarkdownInput
-                                                | QuestionRichTextInput
+                                            descriptionQuestion as QuestionMarkdownInput
                                         }
                                     />
                                 )}
