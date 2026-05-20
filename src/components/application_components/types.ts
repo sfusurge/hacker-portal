@@ -33,6 +33,7 @@ type ChoiceOption = {
  * The server api can reject the request for any reason, so client modifying the question set is not a concern.
  */
 export interface HackathonData {
+    name: string;
     eventPagePayload: any;
     id: number;
     version: number;
@@ -48,6 +49,9 @@ export interface HackathonData {
     submissionOpen: dayjs.Dayjs | null;
     applicationOpen: dayjs.Dayjs | null;
     applicationCloses: dayjs.Dayjs | null;
+    audienceVotingEnabled: boolean;
+    audienceVotingOpen: dayjs.Dayjs | null;
+    audienceVotingCloses: dayjs.Dayjs | null;
     startDate: dayjs.Dayjs;
     endDate: dayjs.Dayjs;
 
@@ -83,6 +87,7 @@ export type InputFormQuestion =
     | QuestionNameInput
     | QuestionFileUploads
     | QuestionRichTextInput
+    | QuestionMarkdownInput
     | QuestionTextLinkInput
     | QuestionDropdown
     | QuestionMajorInput
@@ -186,6 +191,13 @@ export interface QuestionMultipleChoice extends Question {
 export interface QuestionRichTextInput extends Question {
     type: 'rich-text';
     value?: Record<any, any>;
+    maxLength?: number;
+}
+
+export interface QuestionMarkdownInput extends Question {
+    type: 'markdown';
+    placeHolder?: string;
+    value?: string;
     maxLength?: number;
 }
 

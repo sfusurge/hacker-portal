@@ -4,16 +4,15 @@ import { FormTextInput } from '@/components/ui/input/input';
 import { Label } from '@/components/ui/label/label';
 import { MagnifyingGlassIcon } from '@heroicons/react/16/solid';
 import { useState } from 'react';
+import {
+    PROJECT_SUBMISSION_QUESTION_IDS,
+    type ProjectListItem,
+} from '@/lib/projects/projectSubmissionDisplay';
 
-interface Project {
-    [key: number]: string;
-    id: number;
-    teamName: string;
-    displayId: string;
-}
+const Q = PROJECT_SUBMISSION_QUESTION_IDS;
 
 interface PublicProjectListProps {
-    projects: Project[];
+    projects: ProjectListItem[];
     hackathonName?: string;
 }
 
@@ -27,8 +26,10 @@ export default function PublicProjectList({
         const query = searchQuery.toLowerCase();
         return (
             !query ||
-            (project[1] && String(project[1]).toLowerCase().includes(query)) ||
-            (project[4] && String(project[4]).toLowerCase().includes(query)) ||
+            (project[Q.TITLE] &&
+                String(project[Q.TITLE]).toLowerCase().includes(query)) ||
+            (project[Q.TAGLINE] &&
+                String(project[Q.TAGLINE]).toLowerCase().includes(query)) ||
             (project.teamName && project.teamName.toLowerCase().includes(query))
         );
     });

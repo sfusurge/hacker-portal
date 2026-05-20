@@ -22,21 +22,21 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { DropdownBadge } from '@/components/ui/dropdown-badge';
+import {
+    createSkeletonProjectListItem,
+    PROJECT_SUBMISSION_QUESTION_IDS,
+    type ProjectListItem,
+} from '@/lib/projects/projectSubmissionDisplay';
+
+const Q = PROJECT_SUBMISSION_QUESTION_IDS;
 const STATUS_KEY = 'judging_status_data';
 const FILTERS_KEY = 'judging_filters_data';
 
-interface Project {
-    [key: number]: string;
-    id: number;
-    displayId: string;
-    teamName?: string;
-}
-
 interface ProjectListProps {
-    projects: Project[];
+    projects: ProjectListItem[];
     userData: any;
     judgedProjects: any[];
-    allProjects?: Project[];
+    allProjects?: ProjectListItem[];
 }
 
 export default function ProjectList({
@@ -341,10 +341,10 @@ export default function ProjectList({
 
             const matchesSearch =
                 !query.trim() ||
-                (project[1] &&
-                    String(project[1]).toLowerCase().includes(query)) ||
-                (project[4] &&
-                    String(project[4]).toLowerCase().includes(query)) ||
+                (project[Q.TITLE] &&
+                    String(project[Q.TITLE]).toLowerCase().includes(query)) ||
+                (project[Q.TAGLINE] &&
+                    String(project[Q.TAGLINE]).toLowerCase().includes(query)) ||
                 (project.teamName &&
                     project.teamName.toLowerCase().includes(query));
 
@@ -552,11 +552,7 @@ export default function ProjectList({
                                 .map((_, index) => (
                                     <ProjectCard
                                         key={`skeleton-${index}`}
-                                        project={{
-                                            id: 0,
-                                            teamName: '',
-                                            displayId: '123456',
-                                        }}
+                                        project={createSkeletonProjectListItem()}
                                         statusInfo={{
                                             label: '',
                                             className: '',
@@ -580,8 +576,8 @@ export default function ProjectList({
                         ) : (
                             filteredProjects
                                 .sort((a, b) => {
-                                    const projectIdA = a[0] || '';
-                                    const projectIdB = b[0] || '';
+                                    const projectIdA = String(a.id);
+                                    const projectIdB = String(b.id);
                                     const statusA =
                                         projectStatuses[projectIdA] ||
                                         'not_started';
@@ -606,14 +602,8 @@ export default function ProjectList({
                                     const statusInfo = getStatusInfo(projectId);
                                     return (
                                         <ProjectCard
-                                            key={index}
-                                            project={{
-                                                ...project,
-                                                id: projectId,
-                                                displayId: project.displayId,
-                                                teamName:
-                                                    project.teamName || '',
-                                            }}
+                                            key={projectId}
+                                            project={project}
                                             statusInfo={statusInfo}
                                         />
                                     );

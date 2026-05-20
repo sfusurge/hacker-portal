@@ -7,6 +7,7 @@ import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 import { useState } from 'react';
 import { IframeEmbed } from '@/components/application_components/IframeEmbed';
 import { RichText } from '@/components/ui/RichText/RichText';
+import { MarkdownDisplay } from '@/components/ui/Markdown/MarkdownDisplay';
 import React from 'react';
 
 interface BaseSectionProps {
@@ -20,6 +21,7 @@ interface Section {
         | 'badge'
         | 'text'
         | 'rich-text'
+        | 'markdown'
         | 'image'
         | 'video'
         | 'pdf'
@@ -74,6 +76,18 @@ export function RichTextSection({
         <div className="flex flex-col gap-3">
             <Label className="mb-0">{title}</Label>
             <RichText onChange={() => {}} readOnly initialData={content} />
+        </div>
+    );
+}
+
+export function MarkdownSection({
+    title,
+    content,
+}: BaseSectionProps & { content: string }): JSX.Element {
+    return (
+        <div className="flex flex-col gap-3">
+            <Label className="mb-0">{title}</Label>
+            <MarkdownDisplay content={content} />
         </div>
     );
 }
@@ -257,6 +271,13 @@ export function SectionRenderer({
             return <TextSection title={section.title} content={content} />;
         case 'rich-text':
             return <RichTextSection title={section.title} content={content} />;
+        case 'markdown':
+            return (
+                <MarkdownSection
+                    title={section.title}
+                    content={typeof content === 'string' ? content : ''}
+                />
+            );
         case 'image':
             return (
                 <ImageSection

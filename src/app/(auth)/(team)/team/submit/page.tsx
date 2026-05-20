@@ -10,6 +10,7 @@ import SubmissionInfoCard from '@/app/(auth)/(team)/teamComponents/submit/Submis
 import { SubmitFormCard } from '@/app/(auth)/(team)/teamComponents/InTeam/SubmitFormCard';
 import TeamListSubmit from '@/app/(auth)/(team)/teamComponents/submit/TeamListSubmit';
 import { SubmissionSideBar } from '@/components/application_components/SubmissionSideBar';
+import ProjectSubmissionSuccess from '../../teamComponents/submit/ProjectSubmissionSuccess';
 
 export default async function SubmitPage() {
     const user = await getUserData();
@@ -72,7 +73,7 @@ export default async function SubmitPage() {
         userId: user.id,
     });
     if (submitted.hasSubmission) {
-        return <GoHome title="Your team submitted a project already!" />;
+        return <ProjectSubmissionSuccess />;
     }
 
     // const presignurl = await trpcClient.files.getFile({

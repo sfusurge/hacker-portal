@@ -12,15 +12,13 @@ import {
     getResponseMap,
     processResponseForServer,
 } from '@/components/application_components/utils';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { getFileSize } from '@/components/ui/FileUpload/FileUpload';
 import { submitProject } from '@/lib/blobs';
 import { trpc } from '@/trpc/client';
-import { ArrowRightIcon } from '@heroicons/react/20/solid';
+import ProjectSubmissionSuccess from '@/app/(auth)/(team)/teamComponents/submit/ProjectSubmissionSuccess';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 const localAppResponseAtom = atomWithStorage('submit_response', {
     hackathonId: -1,
@@ -143,35 +141,7 @@ export function SubmitFormCard({
     }
 
     if (projectSubmitted) {
-        return (
-            <Card>
-                <CardContent>
-                    <div
-                        style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '0.5rem',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                        }}
-                    >
-                        <span>Your team&apos;s project was submitted!</span>
-                        <Button
-                            variant={'brand'}
-                            hierarchy={'primary'}
-                            onClick={() => {
-                                redirect('/home');
-                            }}
-                            trailingIconChild={
-                                <ArrowRightIcon style={{ width: '1.5rem' }} />
-                            }
-                        >
-                            Return to Home
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
-        );
+        return <ProjectSubmissionSuccess />;
     }
 
     return (

@@ -1,9 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { trpcClient } from '@/trpc/client';
+import { useMemo } from 'react';
 import { getIcon } from '@/utils/blobHelper';
-import { user } from '@/db/schema/users/users';
 
 interface TeamMember {
     userId: number;

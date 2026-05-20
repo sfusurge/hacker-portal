@@ -74,6 +74,9 @@ interface DbHackathonType {
     submissionOpen: Date | null;
     applicationOpen?: Date | null;
     applicationCloses?: Date | null;
+    audienceVotingEnabled?: boolean;
+    audienceVotingOpen?: Date | null;
+    audienceVotingCloses?: Date | null;
     eventPagePayload?: HackathonData['eventPagePayload'];
     applicationQuestions: InputFormPageData[];
     version: number;
@@ -105,6 +108,15 @@ function DeserializeHackathonData(hackathon: DbHackathonType): HackathonData {
         applicationCloses:
             hackathon.applicationCloses != null
                 ? dayjs(hackathon.applicationCloses)
+                : null,
+        audienceVotingEnabled: hackathon.audienceVotingEnabled ?? false,
+        audienceVotingOpen:
+            hackathon.audienceVotingOpen != null
+                ? dayjs(hackathon.audienceVotingOpen)
+                : null,
+        audienceVotingCloses:
+            hackathon.audienceVotingCloses != null
+                ? dayjs(hackathon.audienceVotingCloses)
                 : null,
         isPaid: hackathon.isPaid ?? false,
         paymentDeadline:
