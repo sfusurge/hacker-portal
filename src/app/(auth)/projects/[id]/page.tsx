@@ -1,4 +1,4 @@
-import ProjectPageClient from './ProjectPageClient';
+import ProjectPageClient from './project/ProjectPageClient';
 
 interface PageProps {
     params: Promise<{ id: string }>;

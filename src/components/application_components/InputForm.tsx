@@ -22,6 +22,7 @@ import type {
     QuestionFileUploads,
     InputFormData,
     QuestionRichTextInput,
+    QuestionMarkdownInput,
     QuestionTextLinkInput,
     QuestionApiDropdown,
     QuestionDropdown,
@@ -69,6 +70,7 @@ import { cn } from '@/lib/utils';
 import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
 import { FileUploadInput } from '@/components/application_components/InputFormComponents/FileUploadInput';
 import { RichTextInput } from '@/components/application_components/InputFormComponents/RichTextInput';
+import { MarkdownInput } from '@/components/application_components/InputFormComponents/MarkdownInput';
 import { DropdownInput } from '@/components/application_components/InputFormComponents/DropdownInput';
 import { ChoiceConditionalAlert } from '@/components/application_components/InputFormComponents/ChoiceConditionalAlert';
 import { InlineInput } from '@/components/application_components/InputFormComponents/InlineInput';
@@ -561,6 +563,14 @@ function Question({
                     <RichTextInput
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionRichTextInput>
+                        }
+                    />
+                );
+            case 'markdown':
+                return (
+                    <MarkdownInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionMarkdownInput>
                         }
                     />
                 );

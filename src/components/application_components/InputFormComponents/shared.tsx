@@ -1,6 +1,7 @@
 'use client';
 
 import { atom } from 'jotai';
+import { quillDeltaToPlainText } from '@/lib/markdown/content';
 import type { InputFormQuestion } from '../types';
 export const submittedAtom = atom(false);
 export function isApplicationQuestionFilled(
@@ -34,9 +35,13 @@ export function isApplicationQuestionFilled(
                         question.otherValue.trim() !== '')
                 );
             case 'file-upload':
-                return question.fileList && question.fileList.length > 0;
+                return (question.fileList?.length ?? 0) > 0;
             case 'rich-text':
-                return question.value;
+                return quillDeltaToPlainText(question.value).length > 0;
+            case 'markdown':
+                return (
+                    question.value !== undefined && question.value.trim() !== ''
+                );
 
             case 'multiple-choice':
                 return question.value !== undefined;
@@ -79,6 +84,8 @@ export function isApplicationQuestionFilled(
                         isApplicationQuestionFilled(contentQuestion)
                     );
                 }
+            default:
+                return false;
         }
     } catch (error) {
         console.error(

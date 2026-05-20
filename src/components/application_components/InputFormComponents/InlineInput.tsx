@@ -13,6 +13,7 @@ import { CheckBoxGroupInput } from './CheckboxGroupInput';
 import { TextAreaInput } from './TextAreaInput';
 import { FileUploadInput } from './FileUploadInput';
 import { RichTextInput } from './RichTextInput';
+import { MarkdownInput } from './MarkdownInput';
 import { ApiDropdownInput } from './ApiDropdownInput';
 import { DateInput } from './DateInput';
 import type {
@@ -26,6 +27,7 @@ import type {
     QuestionTextAreaInput,
     QuestionFileUploads,
     QuestionRichTextInput,
+    QuestionMarkdownInput,
     QuestionApiDropdown,
     QuestionDateYmd,
 } from '../types';
@@ -143,6 +145,14 @@ export function InlineInput({
                     <RichTextInput
                         dataAtom={
                             contentAtom as PrimitiveAtom<QuestionRichTextInput>
+                        }
+                    />
+                );
+            case 'markdown':
+                return (
+                    <MarkdownInput
+                        dataAtom={
+                            contentAtom as PrimitiveAtom<QuestionMarkdownInput>
                         }
                     />
                 );

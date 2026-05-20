@@ -294,6 +294,12 @@ export function loadResponseIntoSchema(
                         case 'rich-text':
                             contentQuestion.value = dataSource[contentId];
                             break;
+                        case 'markdown':
+                            contentQuestion.value =
+                                typeof dataSource[contentId] === 'string'
+                                    ? dataSource[contentId]
+                                    : '';
+                            break;
                         default:
                             (contentQuestion as { value?: unknown }).value =
                                 dataSource[contentId];
@@ -333,6 +339,12 @@ export function loadResponseIntoSchema(
                     break;
                 case 'rich-text':
                     question.value = dataSource[id];
+                    break;
+                case 'markdown':
+                    question.value =
+                        typeof dataSource[id] === 'string'
+                            ? dataSource[id]
+                            : '';
                     break;
                 case 'api-dropdown':
                     question.selection = dataSource[id];
