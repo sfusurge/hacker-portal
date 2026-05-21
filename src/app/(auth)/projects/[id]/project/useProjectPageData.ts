@@ -12,6 +12,12 @@ import type { ProjectPageState } from './types';
 
 export type { ProjectPageReadyState, ProjectPageState } from './types';
 
+function parseNumericTeamId(id: string): number | null {
+    if (!/^\d+$/.test(id)) return null;
+    const parsed = Number.parseInt(id, 10);
+    return Number.isFinite(parsed) ? parsed : null;
+}
+
 export function useProjectPageData(id: string): ProjectPageState {
     const user = useAtomValue(userInfoAtom);
     const hackathon = useAtomValue(hackathonAtom);
@@ -19,13 +25,17 @@ export function useProjectPageData(id: string): ProjectPageState {
 
     const isJudge = user?.userRole === 'judge';
     const votingEnabled = isAudienceVotingEnabled(hackathon);
+    const numericTeamId = parseNumericTeamId(id);
 
     const teamResolve = trpc.teams.resolveTeamIdentifier.useQuery(
         { identifier: id, hackathonId: hackathonId ?? 0 },
-        { enabled: !!hackathonId, retry: false }
+        {
+            enabled: !!hackathonId && numericTeamId == null,
+            retry: false,
+        }
     );
 
-    const teamId = teamResolve.data?.id;
+    const teamId = numericTeamId ?? teamResolve.data?.id;
     const hasTeam = !!hackathonId && !!teamId;
 
     const submissionQuery = trpc.submissions.getSubmissionForTeam.useQuery(
@@ -53,11 +63,17 @@ export function useProjectPageData(id: string): ProjectPageState {
         { enabled: !!hackathonId && isJudge }
     );
 
-    if (!hackathonId || teamResolve.isLoading) {
+    if (!hackathonId) {
         return { status: 'loading' };
     }
-    if (teamResolve.isError || !teamResolve.data) {
-        return { status: 'not-found' };
+
+    if (numericTeamId == null) {
+        if (teamResolve.isLoading) {
+            return { status: 'loading' };
+        }
+        if (teamResolve.isError || !teamResolve.data) {
+            return { status: 'not-found' };
+        }
     }
 
     const isLoading =
@@ -79,7 +95,7 @@ export function useProjectPageData(id: string): ProjectPageState {
         return { status: 'loading' };
     }
 
-    const resolvedTeamId = teamResolve.data.id;
+    const resolvedTeamId = teamId!;
     const submissionResponse = submission.response as Record<string, unknown>;
 
     return {
