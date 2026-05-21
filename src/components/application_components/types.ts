@@ -23,6 +23,7 @@ type ChoiceOption = {
     name: string;
     data: string;
     other?: boolean;
+    disabled?: boolean;
     alert?: ChoiceOptionAlert;
 };
 
@@ -110,6 +111,11 @@ export type ApplicationQuestionType = InputFormQuestion['type'];
  * - `eligibleTrack` — sponsor/track eligibility checkbox (grouped on project page)
  *
  * Example: `"displayRole": ["all", "table", "title"]`
+ *
+ * Disable inputs on the submit form:
+ * - `"disabled": true` on a question — always read-only
+ * - `"disabledWhen": { "questionId": 2, "value": "Waterloo" }` — read-only when another answer matches
+ * - `"disabled": true` on a multiple-choice option — that choice cannot be selected
  */
 export type DisplayRole =
     | 'all'
@@ -138,8 +144,9 @@ interface Question extends Entry {
     required?: boolean;
     autoComplete?: HTMLInputAutoCompleteAttribute;
     hideTitle?: boolean;
-    // for questions which visibility depends on other question
     visibleWhen?: { questionId: number; value: string };
+    disabled?: boolean;
+    disabledWhen?: { questionId: number; value: string };
     displayRole?: DisplayRoles;
 }
 

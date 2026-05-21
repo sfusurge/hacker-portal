@@ -9,10 +9,12 @@ import { finalErrCheckAtom } from '../InputForm';
 
 export function ApiDropdownInput({
     dataAtom,
+    disabled = false,
 }: {
     dataAtom:
         | PrimitiveAtom<QuestionApiDropdown>
         | WritableAtom<QuestionApiDropdown, [QuestionApiDropdown], void>;
+    disabled?: boolean;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
     const [errorMsg, setErrorMsg] = useState('');
@@ -117,8 +119,8 @@ export function ApiDropdownInput({
                     }
                     setQuestion({ ...question, selection: val });
                 }}
-                required={question.required}
-                readOnly={false}
+                required={(question.required ?? false) && !disabled}
+                readOnly={disabled}
                 placeholder={question.placeHolder || question.title}
                 isInvalid={isInvalid}
             />

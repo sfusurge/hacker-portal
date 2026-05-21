@@ -9,10 +9,12 @@ import { StaticDropdown } from '@/components/ui/StaticDropdown/StaticDropdown';
 
 export function DropdownInput({
     dataAtom,
+    disabled = false,
 }: {
     dataAtom:
         | PrimitiveAtom<QuestionDropdown>
         | WritableAtom<QuestionDropdown, [QuestionDropdown], void>;
+    disabled?: boolean;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
     const [errorMsg, setErrorMsg] = useState('');
@@ -78,8 +80,8 @@ export function DropdownInput({
                 onChange={(val) => {
                     setQuestion({ ...question, value: val });
                 }}
-                required={question.required}
-                readOnly={false}
+                required={(question.required ?? false) && !disabled}
+                readOnly={disabled}
                 placeholder={
                     question.placeHoldder ||
                     question.description ||

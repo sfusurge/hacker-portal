@@ -144,6 +144,53 @@ export function satisfiesSubmissionVisibleWhen(
     return parentValue === visibleWhen.value;
 }
 
+function getSiblingQuestionValue(
+    siblings: InputFormQuestion[],
+    questionId: number
+): unknown {
+    const sibling = siblings.find((q) => q.questionId === questionId);
+    if (!sibling || !('value' in sibling)) return undefined;
+    return (sibling as { value?: unknown }).value;
+}
+
+export function isSubmissionQuestionDisabled(
+    question: InputFormQuestion,
+    siblings: InputFormQuestion[] = []
+): boolean {
+    if (question.disabled === true) return true;
+
+    const disabledWhen = question.disabledWhen;
+    if (!disabledWhen) return false;
+
+    return (
+        getSiblingQuestionValue(siblings, disabledWhen.questionId) ===
+        disabledWhen.value
+    );
+}
+
+export function isQuestionVisibleOnForm(
+    question: InputFormQuestion,
+    siblings: InputFormQuestion[] = []
+): boolean {
+    const visibleWhen = question.visibleWhen;
+    if (!visibleWhen) return true;
+
+    return (
+        getSiblingQuestionValue(siblings, visibleWhen.questionId) ===
+        visibleWhen.value
+    );
+}
+
+export function isQuestionApplicableOnForm(
+    question: InputFormQuestion,
+    siblings: InputFormQuestion[] = []
+): boolean {
+    return (
+        isQuestionVisibleOnForm(question, siblings) &&
+        !isSubmissionQuestionDisabled(question, siblings)
+    );
+}
+
 // question IDs needed outside the project page (gallery cards, page title)
 export type ResolvedGallerySubmissionIds = {
     title?: number;

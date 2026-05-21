@@ -18,10 +18,12 @@ function defaultMarkdownPlaceholder() {
 
 export function MarkdownInput({
     dataAtom,
+    disabled = false,
 }: {
     dataAtom:
         | PrimitiveAtom<QuestionMarkdownInput>
         | WritableAtom<QuestionMarkdownInput, [QuestionMarkdownInput], void>;
+    disabled?: boolean;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
     return (
@@ -33,7 +35,9 @@ export function MarkdownInput({
             onLazyChange={(val) => {
                 setQuestion({ ...question, value: val });
             }}
-            required={question.required ?? false}
+            required={(question.required ?? false) && !disabled}
+            disabled={disabled}
+            readOnly={disabled}
             placeholder={
                 question.placeHolder?.trim() || defaultMarkdownPlaceholder()
             }

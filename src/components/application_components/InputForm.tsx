@@ -44,7 +44,8 @@ import {
 } from 'react';
 import { Label } from '@/components/ui/label/label';
 import {
-    isApplicationQuestionFilled,
+    canAdvanceFromPageState,
+    computePageFormProgress,
     submittedAtom,
 } from './InputFormComponents/shared';
 import { NumberInput } from './InputFormComponents/NumberInput';
@@ -78,6 +79,7 @@ import { DateInput } from '@/components/application_components/InputFormComponen
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import ReviewApplicationDialog from './ReviewApplicationDialog';
+import { isSubmissionQuestionDisabled } from '@/lib/projects/submissionFormQuestions';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 
 /**
@@ -343,41 +345,10 @@ function Page({
                 ? !formRef.current.checkValidity() // was report
                 : !formRef.current.checkValidity();
 
-            // Count required questions and filled required questions
-            let requiredQuestions = 0;
-            let filledRequiredQuestions = 0;
-            let atLeastOneFilled = false;
+            const { state } = computePageFormProgress(page.questions || []);
 
-            for (const question of page.questions || []) {
-                // Only consider required questions for completion status
-                if (question.required) {
-                    requiredQuestions++;
-                    const filled = isApplicationQuestionFilled(question);
-                    if (filled) {
-                        filledRequiredQuestions++;
-                    }
-                }
-
-                // Track if any question (required or not) is filled
-                if (isApplicationQuestionFilled(question)) {
-                    atLeastOneFilled = true;
-                }
-            }
-
-            // Determine page state based on filled questions
-            let state: PageFormState['state'] = 'not started';
-
-            // Mark as completed if either:
-            // 1. All required questions are filled (when there are required questions)
-            // 2. At least one optional question is filled (when there are no required questions)
-            if (
-                (requiredQuestions > 0 &&
-                    filledRequiredQuestions === requiredQuestions) ||
-                (requiredQuestions === 0 && atLeastOneFilled)
-            ) {
-                state = 'completed';
-            } else if (atLeastOneFilled) {
-                state = 'started';
+            if (finalErrCheck && state !== 'completed') {
+                error = true;
             }
 
             // Extra validation check
@@ -433,11 +404,12 @@ function Page({
                 </Alert>
             )}
             {questionAtoms.map((item, index) => (
-                // pass siblings to the question only if  visibleWhen exists
                 <Question
                     questionAtom={item}
                     key={index}
-                    {...(page.questions[index]?.visibleWhen
+                    {...(page.questions.some(
+                        (q) => q.visibleWhen || q.disabledWhen
+                    )
                         ? { siblings: page.questions }
                         : {})}
                 />
@@ -467,25 +439,52 @@ function Question({
               ?.value === visibleWhen.value
         : true;
 
+    const isDisabled = isSubmissionQuestionDisabled(question, siblings);
+    const isRequired = (question.required ?? false) && !isDisabled;
+
     useEffect(() => {
         if (!isVisible && 'value' in question && question.value != null) {
             setQuestion({ ...question, value: undefined } as any);
         }
     }, [isVisible]);
+
+    useEffect(() => {
+        if (!isDisabled) return;
+
+        if (question.type === 'file-upload') {
+            const fileQuestion = question as QuestionFileUploads;
+            if (
+                (fileQuestion.fileList?.length ?? 0) > 0 ||
+                (fileQuestion.fileLinks?.length ?? 0) > 0
+            ) {
+                setQuestion({
+                    ...fileQuestion,
+                    fileList: [],
+                    fileLinks: [],
+                } as any);
+            }
+            return;
+        }
+
+        if ('value' in question && question.value != null) {
+            setQuestion({ ...question, value: undefined } as any);
+        }
+    }, [isDisabled]);
+
     function getInnerInput(
         type: InputFormQuestion['type'],
         _questionAtom: PrimitiveAtom<InputFormQuestion>,
-        _errorAtom: PrimitiveAtom<string | undefined>
+        _errorAtom: PrimitiveAtom<string | undefined>,
+        inputDisabled: boolean
     ) {
         switch (type) {
             case 'text-line':
-                // save to cast since "type" is checked.
-                // no strict checking is needed. If submitted data is badly formatted/illegal, it's the server's responsibility to reject it.
                 return (
                     <TextLineInput
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionTextLineInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'title-line':
@@ -494,6 +493,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionTitleLineInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
 
@@ -503,6 +503,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionTextLinkInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
 
@@ -512,6 +513,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionNumberInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
 
@@ -521,6 +523,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionMultipleChoice>
                         }
+                        disabled={inputDisabled}
                     />
                 );
 
@@ -530,6 +533,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionCheckBoxInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'multiple-checkbox':
@@ -538,6 +542,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionMultipleCheckBox>
                         }
+                        disabled={inputDisabled}
                     />
                 );
 
@@ -547,6 +552,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionTextAreaInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
 
@@ -556,6 +562,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionFileUploads>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'rich-text':
@@ -564,6 +571,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionRichTextInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'markdown':
@@ -572,6 +580,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionMarkdownInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'api-dropdown':
@@ -580,6 +589,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionApiDropdown>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'dropdown':
@@ -588,6 +598,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionDropdown>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'inline':
@@ -596,6 +607,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionInline>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'date-ymd':
@@ -604,6 +616,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionDateYmd>
                         }
+                        disabled={inputDisabled}
                     />
                 );
 
@@ -613,6 +626,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionMajorInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             default:
@@ -634,7 +648,10 @@ function Question({
     if (!isVisible) return null;
 
     return (
-        <div className={cn(style.ver)} style={{ width: '100%' }}>
+        <div
+            className={cn(style.ver, isDisabled && 'opacity-50')}
+            style={{ width: '100%' }}
+        >
             {showNonCanadaWarning && (
                 <Alert variant="warning" className="mb-4 max-w-[480px]">
                     <AlertTitle>
@@ -665,7 +682,7 @@ function Question({
             {question.title &&
                 !question.hideTitle &&
                 question.type !== 'title-line' && (
-                    <Label required={question.required}>
+                    <Label required={isRequired}>
                         <div
                             className={style.htmlHolder}
                             dangerouslySetInnerHTML={{ __html: question.title }}
@@ -682,7 +699,7 @@ function Question({
                     ></div>
                 </span>
             )}
-            {getInnerInput(question.type, questionAtom, error)}
+            {getInnerInput(question.type, questionAtom, error, isDisabled)}
             {question.type === 'multiple-choice' && (
                 <ChoiceConditionalAlert
                     questionAtom={questionAtom}
@@ -720,23 +737,45 @@ function PageButtons({
     const setErrCheck = useSetAtom(finalErrCheckAtom);
     const [dialogOpen, setDialogOpen] = useState(false);
 
-    const [validationPerformed, setValidationPerformed] = useState(false);
-    function tryReview() {
-        setErrCheck(true);
+    const [pendingNav, setPendingNav] = useState<'next' | 'review' | null>(
+        null
+    );
 
+    function queueValidation(action: 'next' | 'review') {
+        setErrCheck(true);
         requestAnimationFrame(() => {
-            setTimeout(() => {
-                setValidationPerformed(true);
-            }, 0);
+            setTimeout(() => setPendingNav(action), 0);
         });
     }
 
+    function tryReview() {
+        queueValidation('review');
+    }
+
+    function tryNext() {
+        queueValidation('next');
+    }
+
     useEffect(() => {
-        if (validationPerformed) {
+        if (!pendingNav) return;
+
+        if (pendingNav === 'next') {
+            const current = pageStates[index];
+            if (!current || !canAdvanceFromPageState(current)) {
+                toast({
+                    title: 'Incomplete section',
+                    description:
+                        'Answer all required questions on this page before continuing.',
+                    variant: 'error',
+                });
+            } else {
+                setIndex(index + 1);
+            }
+        } else {
             let valid = true;
             let idx = 0;
             for (; idx < pageStates.length; idx++) {
-                valid &&= !pageStates[idx].error;
+                valid &&= canAdvanceFromPageState(pageStates[idx]);
                 if (!valid) {
                     break;
                 }
@@ -751,11 +790,12 @@ function PageButtons({
                 });
                 setIndex(idx);
             } else {
-                setIndex(pageCount); // the lastpage + 1 is the review page.
+                setIndex(pageCount);
             }
-            setValidationPerformed(false);
         }
-    }, [validationPerformed]);
+
+        setPendingNav(null);
+    }, [pendingNav, pageStates, index, pageCount, setIndex]);
 
     return (
         <>
@@ -784,11 +824,7 @@ function PageButtons({
 
                 {index < pageCount - 1 && (
                     <SkewmorphicButton
-                        onClick={() => {
-                            if (index < pageCount) {
-                                setIndex(index + 1);
-                            }
-                        }}
+                        onClick={tryNext}
                         className={style.nextButton}
                     >
                         Next Section

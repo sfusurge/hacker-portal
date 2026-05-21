@@ -15,10 +15,12 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 export function TextLineInput({
     dataAtom,
+    disabled = false,
 }: {
     dataAtom:
         | PrimitiveAtom<QuestionTextLineInput>
         | WritableAtom<QuestionTextLineInput, [QuestionTextLineInput], void>;
+    disabled?: boolean;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
 
@@ -35,7 +37,9 @@ export function TextLineInput({
             }}
             defaultValue={normalizedValue}
             placeholder={question.placeHolder ?? ''}
-            required={question.required}
+            required={(question.required ?? false) && !disabled}
+            disabled={disabled}
+            readOnly={disabled}
             pattern={
                 question.validator ? question.validator.pattern : '[\\s\\S]*'
             }
