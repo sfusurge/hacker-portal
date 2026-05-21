@@ -4,7 +4,6 @@ import type {
     InputFormPageData,
     QuestionFileUploads,
     QuestionMarkdownInput,
-    QuestionMultipleChoice,
     QuestionTextLineInput,
     QuestionTextLinkInput,
     QuestionTitleLineInput,
@@ -21,7 +20,17 @@ import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import { MarkdownDisplay } from '@/components/ui/Markdown/MarkdownDisplay';
-import { getSubmissionPreviewQuestions } from '@/lib/projects/submissionFormQuestions';
+import {
+    buildResponseFromFormQuestions,
+    flattenSubmissionQuestions,
+    getSubmissionPreviewQuestions,
+    hasDisplayRole,
+} from '@/lib/projects/submissionFormQuestions';
+import { buildProjectPageSections } from '@/lib/projects/buildProjectPageSections';
+import {
+    collectProjectTagLabels,
+    ProjectTags,
+} from '@/components/projects/ProjectSection';
 import { resolveTeamIconUrl } from '@/utils/blobHelper';
 
 export interface ReviewProjectProps {
@@ -37,8 +46,6 @@ export const submitMessageAtom = atom({
 });
 
 const TAGLINE_TITLE_PATTERN = /tagline|short description/i;
-const LOCATION_TITLE_PATTERN = /participating from|where is your team/i;
-const TRACK_TITLE_PATTERN = /project track|which project track/i;
 
 function getTextValue(
     q: QuestionTextLineInput | QuestionTitleLineInput | undefined
@@ -49,12 +56,6 @@ function getTextValue(
 function getLinkUrl(q: QuestionTextLinkInput | undefined): string {
     if (!q) return '';
     return typeof q.value === 'string' ? q.value.trim() : '';
-}
-
-function getChoiceLabel(q: QuestionMultipleChoice | undefined): string {
-    if (!q?.value) return '';
-    const selected = q.choices?.find((choice) => choice.data === q.value);
-    return selected?.name?.trim() || String(q.value).trim();
 }
 
 function resolveUploadedImageSrc(candidate: unknown): string | null {
@@ -210,31 +211,6 @@ function ProjectLinks({ links }: { links: { label: string; url: string }[] }) {
     );
 }
 
-function TrackBadges({
-    location,
-    track,
-}: {
-    location?: string;
-    track?: string;
-}) {
-    if (!location && !track) return null;
-
-    return (
-        <div className="flex flex-wrap gap-2">
-            {location && (
-                <span className="bg-neutral-750/60 rounded-xl px-4 py-2 text-sm">
-                    {location}
-                </span>
-            )}
-            {track && (
-                <span className="bg-neutral-750/60 rounded-xl px-4 py-2 text-sm">
-                    {track}
-                </span>
-            )}
-        </div>
-    );
-}
-
 function DescriptionPreview({ question }: { question: QuestionMarkdownInput }) {
     const content = question.value?.trim() ?? '';
     if (!content) {
@@ -258,7 +234,9 @@ export function ReviewProject({
     const titleQuestion = previewQuestions.find((q) => q.type === 'title-line');
     const taglineQuestion = previewQuestions.find(
         (q) =>
-            q.type === 'text-line' && TAGLINE_TITLE_PATTERN.test(q.title ?? '')
+            hasDisplayRole(q, 'tagline') ||
+            (q.type === 'text-line' &&
+                TAGLINE_TITLE_PATTERN.test(q.title ?? ''))
     );
     const descriptionQuestion = previewQuestions.find(
         (q) => q.type === 'markdown'
@@ -266,16 +244,14 @@ export function ReviewProject({
     const imageQuestion = previewQuestions.find(
         (q) => q.type === 'file-upload'
     );
-    const locationQuestion = previewQuestions.find(
-        (q) =>
-            q.type === 'multiple-choice' &&
-            LOCATION_TITLE_PATTERN.test(q.title ?? '')
-    ) as QuestionMultipleChoice | undefined;
-    const trackQuestion = previewQuestions.find(
-        (q) =>
-            q.type === 'multiple-choice' &&
-            TRACK_TITLE_PATTERN.test(q.title ?? '')
-    ) as QuestionMultipleChoice | undefined;
+
+    const formResponse = buildResponseFromFormQuestions(
+        flattenSubmissionQuestions(response)
+    );
+    const projectSections = buildProjectPageSections(response, {
+        response: formResponse,
+    });
+    const tagLabels = collectProjectTagLabels(projectSections, formResponse);
 
     const titleValue = getTextValue(
         titleQuestion as QuestionTitleLineInput | undefined
@@ -283,6 +259,8 @@ export function ReviewProject({
     const taglineValue = getTextValue(
         taglineQuestion as QuestionTextLineInput | undefined
     );
+    const taglineDisplay =
+        taglineValue && taglineValue !== 'N/A' ? taglineValue : '';
     const imageSrcs = getImageSrcs(
         imageQuestion as QuestionFileUploads | undefined
     );
@@ -294,7 +272,7 @@ export function ReviewProject({
         }));
 
     return (
-        <div className="mb-28 flex flex-col gap-6 p-6 pb-10">
+        <div className="mb-28 flex flex-col gap-6 pb-10 md:p-6">
             <div className="flex flex-col gap-2">
                 <h1 className="text-3xl font-semibold">Preview Submission</h1>
                 <p className="text-md font-sans text-white/60">
@@ -307,45 +285,48 @@ export function ReviewProject({
             {previewQuestions.length === 0 ? (
                 <div className="py-4 text-center">No questions to review</div>
             ) : (
-                <Card>
-                    {imageSrcs.length > 0 && (
-                        <ImageCarousel
-                            images={imageSrcs}
-                            index={imageIndex}
-                            onIndexChange={setImageIndex}
-                        />
-                    )}
-
-                    <CardContent>
-                        <div className="grid grid-cols-14 gap-8 px-6 py-6">
-                            <div className="col-span-8 flex flex-col gap-8 px-6">
-                                <div className="flex flex-col gap-2">
-                                    <div className="text-3xl font-semibold">
-                                        {titleValue}
+                <>
+                    <Card>
+                        {imageSrcs.length > 0 && (
+                            <ImageCarousel
+                                images={imageSrcs}
+                                index={imageIndex}
+                                onIndexChange={setImageIndex}
+                            />
+                        )}
+                        <CardContent className="px-4 py-6 md:px-6">
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-14 md:gap-8">
+                                <div className="order-1 flex flex-col gap-8 md:col-span-8">
+                                    <div className="flex flex-col gap-2">
+                                        <h2 className="text-3xl font-semibold">
+                                            {titleValue}
+                                        </h2>
+                                        {taglineDisplay ? (
+                                            <p className="text-base font-semibold">
+                                                {taglineDisplay}
+                                            </p>
+                                        ) : null}
+                                        <ProjectTags tags={tagLabels} />
                                     </div>
-                                    <TrackBadges
-                                        location={getChoiceLabel(
-                                            locationQuestion
-                                        )}
-                                        track={getChoiceLabel(trackQuestion)}
-                                    />
+                                    {descriptionQuestion && (
+                                        <div className="order-3 md:col-span-8">
+                                            <DescriptionPreview
+                                                question={
+                                                    descriptionQuestion as QuestionMarkdownInput
+                                                }
+                                            />
+                                        </div>
+                                    )}
                                 </div>
-                                {descriptionQuestion && (
-                                    <DescriptionPreview
-                                        question={
-                                            descriptionQuestion as QuestionMarkdownInput
-                                        }
-                                    />
-                                )}
-                            </div>
 
-                            <div className="col-span-6 flex flex-col gap-8">
-                                <TeamBadge />
-                                <ProjectLinks links={links} />
+                                <div className="order-2 flex flex-col gap-6 md:col-span-6">
+                                    <TeamBadge />
+                                    <ProjectLinks links={links} />
+                                </div>
                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
+                </>
             )}
 
             {mobileMode && !disableSubmitBtn && (

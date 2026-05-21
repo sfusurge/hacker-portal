@@ -9,9 +9,10 @@ import { IframeEmbed } from '@/components/application_components/IframeEmbed';
 import { RichText } from '@/components/ui/RichText/RichText';
 import { MarkdownDisplay } from '@/components/ui/Markdown/MarkdownDisplay';
 import type { ProjectPageSection } from '@/lib/projects/buildProjectPageSections';
+import { getProjectSubmissionImageUrl } from '@/lib/projects/projectSubmissionDisplay';
 import React from 'react';
 
-function coerceSubmissionText(value: unknown): string {
+export function coerceSubmissionText(value: unknown): string {
     if (value == null) return '';
     if (typeof value === 'string') return value;
     if (typeof value === 'number' || typeof value === 'boolean') {
@@ -66,6 +67,98 @@ export function TitleSection({
     );
 }
 
+export function ProjectTags({ tags }: { tags: string[] }) {
+    if (tags.length === 0) return null;
+
+    return (
+        <div className="flex flex-wrap gap-2">
+            {tags.map((tag) => (
+                <span
+                    key={tag}
+                    className="bg-neutral-750/60 rounded-xl px-4 py-2 text-sm text-white/90"
+                >
+                    {tag}
+                </span>
+            ))}
+        </div>
+    );
+}
+
+export function ProjectTitleWithTags({
+    title,
+    tags,
+    tagline,
+}: {
+    title: string;
+    tags: string[];
+    tagline?: string;
+}) {
+    const hasTitle = title.length > 0;
+    const hasTagline = Boolean(tagline?.trim());
+
+    if (!hasTitle && !hasTagline && tags.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="flex flex-col gap-2">
+            {hasTitle ? <h1 className="text-4xl font-bold">{title}</h1> : null}
+            {hasTagline ? (
+                <p className="text-base font-semibold">{tagline}</p>
+            ) : null}
+            <ProjectTags tags={tags} />
+        </div>
+    );
+}
+
+export function collectProjectTagLabels(
+    sections: ProjectPageSection[],
+    data: Record<string, unknown>
+): string[] {
+    const tags: string[] = [];
+
+    for (const section of sections) {
+        if (section.type === 'badge') {
+            const label = coerceSubmissionText(data[section.field]).trim();
+            if (label) tags.push(label);
+        }
+        if (section.type === 'eligible-tracks' && section.eligibleTrackNames) {
+            for (const name of section.eligibleTrackNames) {
+                if (name.trim()) tags.push(name.trim());
+            }
+        }
+    }
+
+    return tags;
+}
+
+const TAGLINE_TITLE_PATTERN = /tagline|short description/i;
+
+export function isProjectTaglineSection(section: ProjectPageSection): boolean {
+    return section.type === 'text' && TAGLINE_TITLE_PATTERN.test(section.title);
+}
+
+export function partitionProjectPageSections(sections: ProjectPageSection[]): {
+    titleSection: ProjectPageSection | undefined;
+    bodySections: ProjectPageSection[];
+} {
+    let titleSection: ProjectPageSection | undefined;
+    const bodySections: ProjectPageSection[] = [];
+
+    for (const section of sections) {
+        if (section.type === 'title' && titleSection == null) {
+            titleSection = section;
+            continue;
+        }
+        if (section.type === 'badge' || section.type === 'eligible-tracks') {
+            continue;
+        }
+        bodySections.push(section);
+    }
+
+    return { titleSection, bodySections };
+}
+
 export function RichTextSection({
     title,
     content,
@@ -104,20 +197,22 @@ export function BadgeSection({
     );
 }
 
-export function ImageSection({
+/** Header/banner image — left-aligned, capped like {@link VideoSection}. */
+export function ImageEmbedSection({
     title,
     src,
     alt,
 }: BaseSectionProps & { src: string; alt: string }) {
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex w-full flex-col items-start gap-3">
             <Label className="mb-0">{title}</Label>
             <Image
                 src={src}
                 alt={alt}
-                width={2800}
-                height={1200}
-                className="aspect-video w-full rounded-lg object-cover"
+                width={896}
+                height={504}
+                className="h-auto max-h-[500px] w-auto max-w-4xl rounded-xl object-left"
+                sizes="(max-width: 896px) 100vw, 896px"
             />
         </div>
     );
@@ -135,7 +230,7 @@ export function VideoSection({
     }
 
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col items-start gap-3">
             <Label className="mb-0">{title}</Label>
             <iframe
                 width="100%"
@@ -145,7 +240,7 @@ export function VideoSection({
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                className="aspect-video max-w-4xl rounded-xl"
+                className="aspect-video w-full max-w-4xl rounded-xl"
             ></iframe>
         </div>
     );
@@ -288,6 +383,18 @@ export function SectionRenderer({
             <EligibleTracksSection
                 title={section.title}
                 trackNames={section.eligibleTrackNames ?? []}
+            />
+        );
+    }
+
+    if (section.type === 'image') {
+        const src = getProjectSubmissionImageUrl(data, section.field);
+        if (!src) return null;
+        return (
+            <ImageEmbedSection
+                title={section.title}
+                src={src}
+                alt={section.title}
             />
         );
     }

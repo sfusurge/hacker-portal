@@ -1,11 +1,13 @@
 'use client';
 
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import { useAtomValue } from 'jotai';
 import { Skeleton } from '@/components/ui/skeleton';
-import slugify from '@/utils/slugify';
 import type { ProjectListItem } from '@/lib/projects/projectSubmissionDisplay';
+import { trpc } from '@/trpc/client';
 
 interface StatusInfo {
     label: string;
@@ -23,8 +25,21 @@ export default function ProjectCard({
     statusInfo,
     isLoading = false,
 }: ProjectCardProps) {
+    const hackathon = useAtomValue(hackathonAtom);
+    const utils = trpc.useUtils();
     const titleRef = useRef<HTMLHeadingElement>(null);
     const [titleLines, setTitleLines] = useState(1);
+
+    const prefetchProject = () => {
+        const hackathonId = hackathon?.id;
+        if (!hackathonId || !project.id) return;
+
+        void utils.submissions.getSubmissionForTeam.prefetch({
+            teamId: project.id,
+            hackathonId,
+        });
+        void utils.teams.getTeamById.prefetch({ teamId: project.id });
+    };
     const title = project.title;
     const tagline = project.tagline;
     const headerImage = project.headerImage || '/hacker-portal-preview.webp';
@@ -64,7 +79,9 @@ export default function ProjectCard({
 
     return (
         <Link
-            href={`/projects/${slugify(project.teamName)}`}
+            href={`/projects/${project.id}`}
+            onMouseEnter={prefetchProject}
+            onFocus={prefetchProject}
             className={`group flex flex-col overflow-hidden rounded-xl transition-shadow hover:shadow-lg ${
                 statusInfo?.label === 'Not Judging' ? 'opacity-90' : ''
             }`}
