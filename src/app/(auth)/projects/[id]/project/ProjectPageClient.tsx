@@ -5,6 +5,7 @@ import { ProjectPageEmptyState } from './ProjectPageEmptyState';
 import { ProjectPageSkeleton } from './ProjectPageSkeleton';
 import { UserProjectPageView } from './UserProjectPageView';
 import { useProjectPageData } from './useProjectPageData';
+import { useProjectPageTitle } from './useProjectPageTitle';
 
 interface ProjectPageClientProps {
     id: string;
@@ -12,6 +13,7 @@ interface ProjectPageClientProps {
 
 export default function ProjectPageClient({ id }: ProjectPageClientProps) {
     const state = useProjectPageData(id);
+    useProjectPageTitle(state);
 
     if (state.status === 'loading') {
         return <ProjectPageSkeleton />;

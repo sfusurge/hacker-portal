@@ -8,6 +8,7 @@ import { useAtomValue } from 'jotai';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { ProjectListItem } from '@/lib/projects/projectSubmissionDisplay';
 import { trpc } from '@/trpc/client';
+import slugify from '@/utils/slugify';
 
 interface StatusInfo {
     label: string;
@@ -79,7 +80,7 @@ export default function ProjectCard({
 
     return (
         <Link
-            href={`/projects/${project.id}`}
+            href={`/projects/${slugify(project.teamName)}`}
             onMouseEnter={prefetchProject}
             onFocus={prefetchProject}
             className={`group flex flex-col overflow-hidden rounded-xl transition-shadow hover:shadow-lg ${

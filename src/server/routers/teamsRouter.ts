@@ -405,65 +405,57 @@ export const teamsRouter = router({
         )
         .query(async ({ input }) => {
             const { identifier, hackathonId } = input;
+            const normalizedIdentifier = slugify(identifier);
 
-            // try a slugified name
-            const allTeams = await databaseClient
-                .select({
-                    ...getTableColumns(teams),
-                })
-                .from(teams)
-                .where(eq(teams.hackathonId, hackathonId));
-
-            const matchingTeam = allTeams.find(
-                (team) => slugify(team.name) === slugify(identifier)
-            );
-
-            if (matchingTeam) {
-                return matchingTeam;
-            }
-
-            // try display ID
-            if (identifier.length === 6) {
-                try {
-                    const team = await databaseClient
-                        .select({
-                            ...getTableColumns(teams),
-                        })
-                        .from(teams)
-                        .where(
-                            and(
-                                eq(teams.displayId, identifier),
-                                eq(teams.hackathonId, hackathonId)
-                            )
-                        )
-                        .limit(1);
-
-                    if (team.length > 0) {
-                        return team[0];
-                    }
-                } catch (error) {
-                    // continue to next method if display ID fails
+            const numericId = Number.parseInt(identifier, 10);
+            if (!Number.isNaN(numericId)) {
+                const team = await getTeamRowByHackathonId(
+                    numericId,
+                    hackathonId
+                );
+                if (team) {
+                    return team;
                 }
             }
 
-            // try as numeric ID
-            const numericId = parseInt(identifier);
-            if (!isNaN(numericId)) {
-                const team = await databaseClient
+            if (identifier.length === 6) {
+                const [team] = await databaseClient
                     .select({
                         ...getTableColumns(teams),
                     })
                     .from(teams)
                     .where(
                         and(
-                            eq(teams.id, numericId),
+                            eq(teams.displayId, identifier),
                             eq(teams.hackathonId, hackathonId)
                         )
                     )
                     .limit(1);
 
-                if (team.length > 0) {
-                    return team[0];
+                if (team) {
+                    return team;
+                }
+            }
+
+            const teamNames = await databaseClient
+                .select({
+                    id: teams.id,
+                    name: teams.name,
+                })
+                .from(teams)
+                .where(eq(teams.hackathonId, hackathonId));
+
+            const slugMatch = teamNames.find(
+                (team) => slugify(team.name) === normalizedIdentifier
+            );
+
+            if (slugMatch) {
+                const team = await getTeamRowByHackathonId(
+                    slugMatch.id,
+                    hackathonId
+                );
+                if (team) {
+                    return team;
                 }
             }
 
@@ -473,6 +465,18 @@ export const teamsRouter = router({
             });
         }),
 });
+
+async function getTeamRowByHackathonId(teamId: number, hackathonId: number) {
+    const [team] = await databaseClient
+        .select({
+            ...getTableColumns(teams),
+        })
+        .from(teams)
+        .where(and(eq(teams.id, teamId), eq(teams.hackathonId, hackathonId)))
+        .limit(1);
+
+    return team ?? null;
+}
 
 async function checkIfUserInExistingTeam<
     T extends PgQueryResultHKT,

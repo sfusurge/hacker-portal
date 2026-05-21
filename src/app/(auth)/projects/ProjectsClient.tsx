@@ -5,9 +5,9 @@ import ProjectList from '@/components/projects/ProjectList';
 import { Skeleton } from '@/components/ui/skeleton';
 import { trpc } from '@/trpc/client';
 import type { UserData } from '@/server/routers/usersRouter';
+import type { ProjectListItem } from '@/lib/projects/projectSubmissionDisplay';
 import { useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
-import { mapSubmissionToProjectListItem } from '@/lib/projects/projectSubmissionDisplay';
 import { canAccessProjectGallery } from '@/lib/submissionWindow';
 
 interface ProjectsClientProps {
@@ -60,20 +60,17 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
     const hackathonId = hackathon?.id;
     const isJudge = user?.userRole === 'judge';
 
-    const submissionsQuery = trpc.submissions.getAllSubmissions.useQuery(
-        { hackathonId },
+    const galleryQuery = trpc.submissions.getProjectGalleryItems.useQuery(
+        { hackathonId: hackathonId ?? 0 },
         { enabled: !!hackathonId }
     );
 
     const judgingProjectsQuery = trpc.judging.getJudgingProjects.useQuery(
-        { hackathonId },
+        { hackathonId: hackathonId ?? 0 },
         { enabled: isJudge && !!hackathonId }
     );
 
-    if (
-        submissionsQuery.isLoading ||
-        (isJudge && judgingProjectsQuery.isLoading)
-    ) {
+    if (galleryQuery.isLoading || (isJudge && judgingProjectsQuery.isLoading)) {
         return <ProjectGridSkeleton />;
     }
 
@@ -105,7 +102,7 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
         );
     }
 
-    if (!submissionsQuery.data) {
+    if (!galleryQuery.data) {
         return (
             <div className="flex h-full items-center justify-center">
                 <p className="text-white/60">Failed to load projects.</p>
@@ -113,7 +110,7 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
         );
     }
 
-    const submissions = submissionsQuery.data;
+    const galleryItems = galleryQuery.data;
 
     if (isJudge && judgingProjectsQuery.data && user) {
         const assignedProjects = judgingProjectsQuery.data;
@@ -122,61 +119,31 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
             assignedProjects.map((project) => [project.teamId, project])
         );
 
-        const allProjectsData = submissions.map((submission) => {
-            const response = (submission.response ?? {}) as Record<
-                string,
-                unknown
-            >;
-            const assignedProject = assignedProjectMap.get(submission.teamId);
+        const galleryByTeamId = new Map(
+            galleryItems.map((item) => [item.id, item])
+        );
+
+        const allProjectsData: ProjectListItem[] = galleryItems.map((item) => {
+            const assignedProject = assignedProjectMap.get(item.id);
             return {
-                ...mapSubmissionToProjectListItem(
-                    {
-                        teamId: submission.teamId,
-                        teamName: submission.teamName,
-                        response,
-                    },
-                    {
-                        submissionQuestionPages:
-                            hackathon.submissionQuestionPages,
-                    }
-                ),
-                displayId:
-                    assignedProject?.displayId || submission.teamId.toString(),
-                fullSubmissionResponse: response,
+                ...item,
+                displayId: assignedProject?.displayId ?? item.displayId,
                 status: assignedProject ? assignedProject.status : 'unassigned',
             };
         });
 
         const projects = assignedProjects
             .map((project) => {
-                const submission = submissions.find(
-                    (s) => s.teamId === project.teamId
-                );
-                if (!submission) return null;
-
-                const response = (submission.response ?? {}) as Record<
-                    string,
-                    unknown
-                >;
+                const item = galleryByTeamId.get(project.teamId);
+                if (!item) return null;
 
                 return {
-                    ...mapSubmissionToProjectListItem(
-                        {
-                            teamId: project.teamId,
-                            teamName: project.teamName,
-                            response,
-                        },
-                        {
-                            displayId: project.displayId ?? undefined,
-                            status: project.status,
-                            submissionQuestionPages:
-                                hackathon.submissionQuestionPages,
-                        }
-                    ),
-                    fullSubmissionResponse: response,
+                    ...item,
+                    displayId: project.displayId ?? item.displayId,
+                    status: project.status,
                 };
             })
-            .filter((p) => p !== null) as any[];
+            .filter((p) => p !== null) as ProjectListItem[];
 
         return (
             <div className="flex h-full flex-col">
@@ -190,27 +157,10 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
         );
     }
 
-    // Public gallery
-    const publicProjects = submissions.map((submission) =>
-        mapSubmissionToProjectListItem(
-            {
-                teamId: submission.teamId,
-                teamName: submission.teamName,
-                response: (submission.response ?? {}) as Record<
-                    string,
-                    unknown
-                >,
-            },
-            {
-                submissionQuestionPages: hackathon.submissionQuestionPages,
-            }
-        )
-    );
-
     return (
         <div className="flex h-full flex-col">
             <PublicProjectList
-                projects={publicProjects}
+                projects={galleryItems}
                 hackathonName={hackathon?.name ?? 'Current event'}
             />
         </div>

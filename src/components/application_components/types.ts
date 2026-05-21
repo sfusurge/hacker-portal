@@ -106,6 +106,7 @@ export type ApplicationQuestionType = InputFormQuestion['type'];
  *
  * Field identity (what the question represents; combine with visibility flags):
  * - `title`, `location`, `track`, `tagline`, `description`, `banner`
+ * - `pdfPoster` — poster PDF file upload (admin bulk export)
  * - `eligibleTrack` — sponsor/track eligibility checkbox (grouped on project page)
  *
  * Example: `"displayRole": ["all", "table", "title"]`
@@ -121,6 +122,7 @@ export type DisplayRole =
     | 'tagline'
     | 'description'
     | 'banner'
+    | 'pdfPoster'
     | 'eligibleTrack';
 
 export type DisplayRoles = DisplayRole | DisplayRole[];
