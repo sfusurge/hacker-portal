@@ -9,7 +9,10 @@ import { IframeEmbed } from '@/components/application_components/IframeEmbed';
 import { RichText } from '@/components/ui/RichText/RichText';
 import { MarkdownDisplay } from '@/components/ui/Markdown/MarkdownDisplay';
 import type { ProjectPageSection } from '@/lib/projects/buildProjectPageSections';
-import { getProjectSubmissionImageUrl } from '@/lib/projects/projectSubmissionDisplay';
+import {
+    getProjectSubmissionFileUrl,
+    getProjectSubmissionImageUrl,
+} from '@/lib/projects/projectSubmissionDisplay';
 import React from 'react';
 
 export function coerceSubmissionText(value: unknown): string {
@@ -397,6 +400,12 @@ export function SectionRenderer({
                 alt={section.title}
             />
         );
+    }
+
+    if (section.type === 'pdf') {
+        const url = getProjectSubmissionFileUrl(data, section.field);
+        if (!url) return null;
+        return <PdfSection title={section.title} url={url} />;
     }
 
     if (!content || (Array.isArray(content) && content.length === 0)) {

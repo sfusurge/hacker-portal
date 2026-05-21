@@ -60,11 +60,11 @@ export function isVisibleForUserRole(
     userRole: string | undefined
 ): boolean {
     const roles = normalizeDisplayRoles(question.displayRole);
-    if (roles.includes('hidden')) return false;
+    const isJudgeViewer = userRole === 'judge' || userRole === 'admin';
+
     if (roles.includes('all')) return true;
-    if (roles.includes('judge')) {
-        return userRole === 'judge' || userRole === 'admin';
-    }
+    if (roles.includes('judge') && isJudgeViewer) return true;
+    if (roles.includes('hidden')) return false;
     return false;
 }
 

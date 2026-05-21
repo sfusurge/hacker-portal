@@ -17,6 +17,7 @@ export type ProjectPageSection = {
         | 'text'
         | 'markdown'
         | 'image'
+        | 'pdf'
         | 'embed'
         | 'video'
         | 'eligible-tracks';
@@ -124,6 +125,24 @@ export function buildProjectPageSections(
             sections.push({
                 type: 'image',
                 title: question.title ?? 'Header Image',
+                field: question.questionId,
+            });
+            continue;
+        }
+
+        if (
+            question.type === 'file-upload' &&
+            hasDisplayRole(question, 'pdfPoster')
+        ) {
+            if (!isVisibleForUserRole(question, options.userRole)) {
+                continue;
+            }
+            if (!satisfiesSubmissionVisibleWhen(question, options.response)) {
+                continue;
+            }
+            sections.push({
+                type: 'pdf',
+                title: question.title ?? 'Poster',
                 field: question.questionId,
             });
             continue;

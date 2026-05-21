@@ -269,7 +269,7 @@ function SubmitCardContent({
                     <ArrowRightIcon style={{ color: 'white', width: '1rem' }} />
                 }
             >
-                Start Submit
+                Start project
             </Button>
         );
     }
