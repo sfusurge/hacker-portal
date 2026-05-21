@@ -22,6 +22,7 @@ interface CheckBoxGroupProps {
     allowOther?: boolean;
     otherValue?: string | undefined;
     required?: boolean;
+    disabled?: boolean;
 }
 
 export function CheckboxGroup({
@@ -34,6 +35,7 @@ export function CheckboxGroup({
     otherValue,
     onSelection,
     required,
+    disabled = false,
 }: CheckBoxGroupProps) {
     const selectedItems = new Set(initialSelected);
     const [usingOther, setUsingOther] = useState<boolean>(false);
@@ -127,8 +129,9 @@ export function CheckboxGroup({
                         )
                     }
                     disabled={
-                        selectedItems.size >= max &&
-                        !selectedItems.has(item.data)
+                        disabled ||
+                        (selectedItems.size >= max &&
+                            !selectedItems.has(item.data))
                     }
                     required={false}
                 />

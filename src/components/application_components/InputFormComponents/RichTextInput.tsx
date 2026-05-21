@@ -7,10 +7,12 @@ import { RichText } from '@/components/ui/RichText/RichText';
 
 export function RichTextInput({
     dataAtom,
+    disabled = false,
 }: {
     dataAtom:
         | PrimitiveAtom<QuestionRichTextInput>
         | WritableAtom<QuestionRichTextInput, [QuestionRichTextInput], void>;
+    disabled?: boolean;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
     return (
@@ -18,10 +20,10 @@ export function RichTextInput({
             onChange={(d) => {
                 setQuestion({ ...question, value: d });
             }}
-            readOnly={false}
+            readOnly={disabled}
             initialData={question.value}
             maxLength={question.maxLength ?? 99999}
-            required={question.required ?? false}
+            required={(question.required ?? false) && !disabled}
         />
     );
 }

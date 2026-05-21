@@ -6,6 +6,7 @@ import { CheckboxGroup } from '@/components/ui/checkboxGroup/CheckBoxGroup';
 
 export function CheckBoxGroupInput({
     dataAtom,
+    disabled = false,
 }: {
     dataAtom:
         | PrimitiveAtom<QuestionMultipleCheckBox>
@@ -14,6 +15,7 @@ export function CheckBoxGroupInput({
               [QuestionMultipleCheckBox],
               void
           >;
+    disabled?: boolean;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
 
@@ -40,7 +42,8 @@ export function CheckBoxGroupInput({
             choices={question.choices}
             min={question.min ?? 1}
             max={question.max ?? 99}
-            required={question.required ?? false}
+            required={(question.required ?? false) && !disabled}
+            disabled={disabled}
             selected={selectedValues}
             onSelection={handleSelection}
             allowOther={question.allowOther}

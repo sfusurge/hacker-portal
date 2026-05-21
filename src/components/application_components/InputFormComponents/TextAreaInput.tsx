@@ -4,10 +4,12 @@ import { FormTextArea } from '@/components/ui/formTextArea/FormTextArea';
 
 export function TextAreaInput({
     dataAtom,
+    disabled = false,
 }: {
     dataAtom:
         | PrimitiveAtom<QuestionTextAreaInput>
         | WritableAtom<QuestionTextAreaInput, [QuestionTextAreaInput], void>;
+    disabled?: boolean;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
     return (
@@ -18,7 +20,9 @@ export function TextAreaInput({
             onLazyChange={(val) => {
                 setQuestion({ ...question, value: val });
             }}
-            required={question.required ?? false}
+            required={(question.required ?? false) && !disabled}
+            disabled={disabled}
+            readOnly={disabled}
             placeholder={question.placeHolder ?? ''}
         ></FormTextArea>
     );

@@ -9,7 +9,12 @@ import type { ChoiceOptionAlert } from '@/components/application_components/type
 import clsx from 'clsx';
 
 export interface RadioButtonGroupProps {
-    options: { data: string; name: string; alert?: ChoiceOptionAlert }[];
+    options: {
+        data: string;
+        name: string;
+        disabled?: boolean;
+        alert?: ChoiceOptionAlert;
+    }[];
     allowDeselect?: boolean;
     allowCustomInput?: boolean;
     required?: boolean;
@@ -87,6 +92,7 @@ export function RadioButtonGroup({
                 // Create a unique ID for each radio input
                 const inputId = `${name}-${item.data.replace(/\s+/g, '-')}-${index}`;
                 const isSelected = item.data === selection;
+                const optionDisabled = disabled || !!item.disabled;
                 const caption =
                     item.alert?.presentation === 'caption'
                         ? item.alert
@@ -98,14 +104,15 @@ export function RadioButtonGroup({
                             htmlFor={inputId}
                             className={clsx(
                                 style.optionLabel,
-                                disabled && 'cursor-not-allowed opacity-50'
+                                optionDisabled &&
+                                    'cursor-not-allowed opacity-50'
                             )}
                         >
                             <input
                                 type="radio"
                                 id={inputId}
                                 name={name}
-                                required={required}
+                                required={required && !optionDisabled}
                                 checked={isSelected}
                                 aria-describedby={
                                     isSelected && caption
@@ -113,13 +120,13 @@ export function RadioButtonGroup({
                                         : undefined
                                 }
                                 onChange={() => {
-                                    if (!disabled) {
+                                    if (!optionDisabled) {
                                         setSelection(item.data);
                                     }
                                 }}
                                 className={style.radio}
                                 onClick={(e) => {
-                                    if (disabled) {
+                                    if (optionDisabled) {
                                         e.preventDefault();
                                         return;
                                     }
@@ -131,8 +138,8 @@ export function RadioButtonGroup({
                                         clearSelection(item.data);
                                     }
                                 }}
-                                disabled={disabled}
-                                readOnly={disabled}
+                                disabled={optionDisabled}
+                                readOnly={optionDisabled}
                             />
                             {item.name}
                         </label>

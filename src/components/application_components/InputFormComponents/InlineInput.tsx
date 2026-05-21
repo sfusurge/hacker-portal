@@ -37,10 +37,12 @@ import style from '../InputForm.module.css';
 
 export function InlineInput({
     dataAtom,
+    disabled = false,
 }: {
     dataAtom:
         | PrimitiveAtom<QuestionInline>
         | WritableAtom<QuestionInline, [QuestionInline], void>;
+    disabled?: boolean;
 }) {
     const [question] = useAtom(dataAtom);
 
@@ -65,7 +67,8 @@ export function InlineInput({
     const renderContentQuestion = (
         contentQuestion: InputFormQuestion,
         contentAtom: WritableAtom<InputFormQuestion, [InputFormQuestion], void>,
-        index: number
+        index: number,
+        inputDisabled: boolean
     ) => {
         switch (contentQuestion.type) {
             case 'text-line':
@@ -74,6 +77,7 @@ export function InlineInput({
                         dataAtom={
                             contentAtom as PrimitiveAtom<QuestionTextLineInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'title-line':
@@ -82,6 +86,7 @@ export function InlineInput({
                         dataAtom={
                             contentAtom as PrimitiveAtom<QuestionTitleLineInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'link':
@@ -90,6 +95,7 @@ export function InlineInput({
                         dataAtom={
                             contentAtom as PrimitiveAtom<QuestionTextLinkInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'number':
@@ -98,6 +104,7 @@ export function InlineInput({
                         dataAtom={
                             contentAtom as PrimitiveAtom<QuestionNumberInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'multiple-choice':
@@ -106,6 +113,7 @@ export function InlineInput({
                         dataAtom={
                             contentAtom as PrimitiveAtom<QuestionMultipleChoice>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'checkbox':
@@ -114,6 +122,7 @@ export function InlineInput({
                         dataAtom={
                             contentAtom as PrimitiveAtom<QuestionCheckBoxInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'multiple-checkbox':
@@ -122,6 +131,7 @@ export function InlineInput({
                         dataAtom={
                             contentAtom as PrimitiveAtom<QuestionMultipleCheckBox>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'text-area':
@@ -130,6 +140,7 @@ export function InlineInput({
                         dataAtom={
                             contentAtom as PrimitiveAtom<QuestionTextAreaInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'file-upload':
@@ -138,6 +149,7 @@ export function InlineInput({
                         dataAtom={
                             contentAtom as PrimitiveAtom<QuestionFileUploads>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'rich-text':
@@ -146,6 +158,7 @@ export function InlineInput({
                         dataAtom={
                             contentAtom as PrimitiveAtom<QuestionRichTextInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'markdown':
@@ -154,6 +167,7 @@ export function InlineInput({
                         dataAtom={
                             contentAtom as PrimitiveAtom<QuestionMarkdownInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'api-dropdown':
@@ -162,12 +176,14 @@ export function InlineInput({
                         dataAtom={
                             contentAtom as PrimitiveAtom<QuestionApiDropdown>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'date-ymd':
                 return (
                     <DateInput
                         dataAtom={contentAtom as PrimitiveAtom<QuestionDateYmd>}
+                        disabled={inputDisabled}
                     />
                 );
             default:
@@ -220,7 +236,8 @@ export function InlineInput({
                             {renderContentQuestion(
                                 contentQuestion,
                                 contentAtom,
-                                index
+                                index,
+                                disabled
                             )}
                         </div>
                     </div>

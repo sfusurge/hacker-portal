@@ -29,6 +29,7 @@ export interface FileUploadProps {
     allowMultiple: boolean;
     onFileChange: (files: File[]) => void;
     required?: boolean;
+    disabled?: boolean;
 }
 
 interface FileUploadItem {
@@ -44,6 +45,7 @@ export function FileUpload({
     allowMultiple,
     onFileChange,
     required = false,
+    disabled = false,
 }: FileUploadProps) {
     const maxSizeBytes = maxSize * 1024 * 1024;
     const ref = useRef<HTMLInputElement>(null);
@@ -201,7 +203,10 @@ export function FileUpload({
 
     return (
         <div
-            className={style.inputRoot}
+            className={cn(
+                style.inputRoot,
+                disabled && 'pointer-events-none opacity-50'
+            )}
             style={{ '--errorMsg': `"${errorMsg}"` } as CSSProperties}
         >
             <input type="text" ref={validityRef} className="hidden" readOnly />
@@ -212,13 +217,14 @@ export function FileUpload({
                 accept={accept}
                 onChange={HandleInputInfoChange}
                 multiple={allowMultiple}
+                disabled={disabled}
                 className="hidden"
             />
 
             <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
+                onDragOver={disabled ? undefined : handleDragOver}
+                onDragLeave={disabled ? undefined : handleDragLeave}
+                onDrop={disabled ? undefined : handleDrop}
                 className={cn(
                     'flex max-w-[480px] flex-col items-center justify-center gap-4 rounded-[8px] border border-neutral-600/60 bg-neutral-800/60 px-3 py-5 text-center transition-all duration-200 ease-in-out',
                     isDragging ? 'border-brand-500' : '',

@@ -4,10 +4,12 @@ import { FileUpload } from '@/components/ui/FileUpload/FileUpload';
 
 export function FileUploadInput({
     dataAtom,
+    disabled = false,
 }: {
     dataAtom:
         | PrimitiveAtom<QuestionFileUploads>
         | WritableAtom<QuestionFileUploads, [val: QuestionFileUploads], void>;
+    disabled?: boolean;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
     return (
@@ -19,7 +21,8 @@ export function FileUploadInput({
             onFileChange={(files) => {
                 setQuestion({ ...question, fileList: files });
             }}
-            required={question.required ?? false}
+            required={(question.required ?? false) && !disabled}
+            disabled={disabled}
         />
     );
 }

@@ -15,10 +15,12 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 export function TitleLineInput({
     dataAtom,
+    disabled = false,
 }: {
     dataAtom:
         | PrimitiveAtom<QuestionTitleLineInput>
         | WritableAtom<QuestionTitleLineInput, [QuestionTitleLineInput], void>;
+    disabled?: boolean;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
 
@@ -35,7 +37,9 @@ export function TitleLineInput({
             }}
             defaultValue={normalizedValue}
             placeholder={"Project's Name"}
-            required={question.required}
+            required={(question.required ?? false) && !disabled}
+            disabled={disabled}
+            readOnly={disabled}
             errorMsg={question.validator?.errorMsg}
             formatAsHeading
             style={{ maxWidth: '480px' }}

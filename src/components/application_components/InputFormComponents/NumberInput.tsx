@@ -4,10 +4,12 @@ import { FormTextInput } from '@/components/ui/input/input';
 
 export function NumberInput({
     dataAtom,
+    disabled = false,
 }: {
     dataAtom:
         | PrimitiveAtom<QuestionNumberInput>
         | WritableAtom<QuestionNumberInput, [val: QuestionNumberInput], void>;
+    disabled?: boolean;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
     return (
@@ -15,7 +17,9 @@ export function NumberInput({
             type="number"
             lazy
             timeOut={500}
-            required={question.required ?? false}
+            required={(question.required ?? false) && !disabled}
+            disabled={disabled}
+            readOnly={disabled}
             min={question.min ?? -999}
             max={question.max ?? 999}
             placeholder={`${question.placeHolder ?? ''}`}

@@ -15,10 +15,12 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 export function TextLinkInput({
     dataAtom,
+    disabled = false,
 }: {
     dataAtom:
         | PrimitiveAtom<QuestionTextLinkInput>
         | WritableAtom<QuestionTextLinkInput, [QuestionTextLinkInput], void>;
+    disabled?: boolean;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
 
@@ -38,7 +40,9 @@ export function TextLinkInput({
             }}
             defaultValue={normalizedValue}
             placeholder={question.placeHolder ?? ''}
-            required={question.required}
+            required={(question.required ?? false) && !disabled}
+            disabled={disabled}
+            readOnly={disabled}
             pattern={question.validator?.pattern ?? urlPattern}
             maxLength={question.maxCount}
             errorMsg={
