@@ -114,6 +114,37 @@ export function getProjectSubmissionImageUrl(
     );
 }
 
+function extractFileUrlFromField(raw: unknown): string | null {
+    if (typeof raw === 'string' && raw.trim()) {
+        return raw.trim();
+    }
+
+    if (raw && typeof raw === 'object') {
+        const url = (raw as { url?: string }).url;
+        if (typeof url === 'string' && url.trim()) {
+            return url.trim();
+        }
+    }
+
+    if (Array.isArray(raw)) {
+        for (const item of raw) {
+            const found = extractFileUrlFromField(item);
+            if (found) return found;
+        }
+    }
+
+    return null;
+}
+
+export function getProjectSubmissionFileUrl(
+    response: Record<string, unknown>,
+    questionId: number
+): string | null {
+    return extractFileUrlFromField(
+        getProjectSubmissionField(response, questionId)
+    );
+}
+
 export function resolveProjectHeaderImageUrl(
     response: Record<string, unknown>,
     pages?: InputFormPageData[]

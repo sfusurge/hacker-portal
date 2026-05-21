@@ -103,7 +103,7 @@ export type ApplicationQuestionType = InputFormQuestion['type'];
  * - `all` — public project page
  * - `judge` — project page for judges/admins only
  * - `table` — admin submissions review/export table column
- * - `hidden` — submit form only
+ * - `hidden` — submit form only (not visible to the user)
  *
  * Field identity (what the question represents; combine with visibility flags):
  * - `title`, `location`, `track`, `tagline`, `description`, `banner`
