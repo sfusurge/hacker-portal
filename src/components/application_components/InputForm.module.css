@@ -108,7 +108,6 @@
 .formContainer {
     position: relative;
     flex: 1;
-    height: fit-content;
 }
 
 /* ==== page buttons */

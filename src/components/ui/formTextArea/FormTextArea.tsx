@@ -68,6 +68,7 @@ const FormTextArea = forwardRef<
             () => countTextLength(value, lengthMode),
             [lengthMode, value]
         );
+        const lengthUnit = lengthMode === 'words' ? ' words' : ' characters';
         const timer = useRef<ReturnType<typeof setTimeout> | undefined>();
 
         useEffect(() => {
@@ -92,7 +93,7 @@ const FormTextArea = forwardRef<
                 className={maxLength !== undefined ? style.hasLength : ''}
                 style={
                     {
-                        '--length': `"${lengthCount}${maxLength ? ` / ${maxLength}` : ''}"`,
+                        '--length': `"${lengthCount}${maxLength ? ` / ${maxLength}` : ''}${lengthUnit}"`,
                     } as CSSProperties
                 }
             >

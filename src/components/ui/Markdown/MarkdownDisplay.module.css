@@ -1,18 +1,65 @@
+/* ── Headings (Display → LabelSm) ───────────────── */
+
 .md > h1 {
-    font-size: 36px;
-    color: var(--brand-500);
-    font-weight: bold;
+    font-family: var(--font-sans-0);
+    font-size: var(--text-3xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tightest);
 }
 
 .md > h2 {
-    font-size: 26px;
-    color: var(--brand-500);
+    font-family: var(--font-sans-0);
+    font-size: var(--text-3xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tightest);
 }
 
 .md > h3 {
-    font-size: 20px;
-    color: var(--color-brand-600);
+    font-family: var(--font-sans-0);
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tightest);
 }
+
+.md > h4 {
+    font-family: var(--font-sans-0);
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tighter);
+}
+
+.md > h5 {
+    font-family: var(--font-sans-0);
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tighter);
+}
+
+.md > h6 {
+    font-family: var(--font-sans-0);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tighter);
+}
+
+/* ── Paragraph ───────────────────────────────────── */
+
+.md > p {
+    font-family: var(--font-sans-0);
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--leading-normal);
+    letter-spacing: var(--tracking-tight);
+    margin-bottom: 0.75rem;
+}
+
+/* ── Body text (lists) ───────────────────────────── */
 
 .md > ul {
     display: flex;
@@ -23,6 +70,11 @@
 .md > * > li {
     display: flex;
     align-items: center;
+    font-family: var(--font-sans-0);
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--leading-none);
+    letter-spacing: var(--tracking-tight);
 }
 
 .md > * > li::before {
@@ -36,6 +88,17 @@
     background-color: var(--brand-500);
 }
 
+/* ── Emphasized ──────────────────────────────────── */
+
+.md > p strong,
+.md > p b,
+.md > * > li strong,
+.md > * > li b {
+    font-weight: var(--font-weight-semibold);
+}
+
+/* ── Misc ────────────────────────────────────────── */
+
 .md > hr {
     margin: 1rem;
     border-color: var(--border-neutral-secondary);
@@ -45,9 +108,4 @@
 .md > * > a {
     color: var(--brand-400);
     text-decoration: underline;
-    font-style: italic;
-}
-
-.md > p {
-    margin-bottom: 0.75rem;
 }

@@ -16,6 +16,7 @@ export type ProjectPageSection = {
         | 'badge'
         | 'text'
         | 'markdown'
+        | 'image'
         | 'embed'
         | 'video'
         | 'eligible-tracks';
@@ -112,6 +113,21 @@ export function buildProjectPageSections(
 
     for (const question of questions) {
         if (question.questionId == null) continue;
+
+        if (
+            question.type === 'file-upload' &&
+            hasDisplayRole(question, 'banner')
+        ) {
+            if (!satisfiesSubmissionVisibleWhen(question, options.response)) {
+                continue;
+            }
+            sections.push({
+                type: 'image',
+                title: question.title ?? 'Header Image',
+                field: question.questionId,
+            });
+            continue;
+        }
 
         if (!isVisibleForUserRole(question, options.userRole)) {
             continue;

@@ -38,21 +38,35 @@ function isLikelyImageSrc(value: string): boolean {
     return /\.(png|jpe?g|gif|webp|avif)(\?.*)?$/i.test(trimmed);
 }
 
+function extractImageSrcFromUnknown(value: unknown): string | null {
+    if (typeof value === 'string' && isLikelyImageSrc(value)) {
+        return value.trim();
+    }
+
+    if (value && typeof value === 'object') {
+        const url = (value as { url?: string; preview?: string }).url;
+        if (typeof url === 'string' && isLikelyImageSrc(url)) {
+            return url.trim();
+        }
+        const preview = (value as { preview?: string }).preview;
+        if (typeof preview === 'string' && isLikelyImageSrc(preview)) {
+            return preview.trim();
+        }
+    }
+
+    return null;
+}
+
 function extractImageSrcFromField(raw: unknown): string | null {
     if (Array.isArray(raw)) {
         for (const item of raw) {
-            if (typeof item === 'string' && isLikelyImageSrc(item)) {
-                return item;
-            }
+            const src = extractImageSrcFromUnknown(item);
+            if (src) return src;
         }
         return null;
     }
 
-    if (typeof raw === 'string' && isLikelyImageSrc(raw)) {
-        return raw;
-    }
-
-    return null;
+    return extractImageSrcFromUnknown(raw);
 }
 
 export function getProjectSubmissionField(
@@ -89,6 +103,27 @@ export function getProjectHeaderImageUrl(
     }
 
     return DEFAULT_HEADER_IMAGE;
+}
+
+export function getProjectSubmissionImageUrl(
+    response: Record<string, unknown>,
+    questionId: number
+): string | null {
+    return extractImageSrcFromField(
+        getProjectSubmissionField(response, questionId)
+    );
+}
+
+export function resolveProjectHeaderImageUrl(
+    response: Record<string, unknown>,
+    pages?: InputFormPageData[]
+): string | null {
+    const { headerImage } = resolveGallerySubmissionQuestionIds(pages);
+    if (headerImage == null) return null;
+
+    return extractImageSrcFromField(
+        getProjectSubmissionField(response, headerImage)
+    );
 }
 
 export function getProjectTaglinePlainText(
