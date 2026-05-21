@@ -63,7 +63,7 @@ export default function DiscordCard({
                     </Button>
                 </Link>
             </CardHeader>
-            <CardContent className="flex h-full items-center justify-center pb-0 text-center">
+            <CardContent className="flex h-full items-center justify-center pb-4 text-center">
                 {isAccepted && hackathonIconSrc ? (
                     <Image
                         src={hackathonIconSrc}

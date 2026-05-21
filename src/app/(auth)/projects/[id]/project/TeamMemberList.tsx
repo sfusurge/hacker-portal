@@ -1,9 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { trpcClient } from '@/trpc/client';
-import { getIcon } from '@/utils/blobHelper';
-import { user } from '@/db/schema/users/users';
+import { useMemo } from 'react';
+import { DEFAULT_USER_AVATAR, resolveUserIconUrl } from '@/utils/blobHelper';
 
 interface TeamMember {
     userId: number;
@@ -20,16 +18,10 @@ interface TeamMemberListProps {
 
 export default function TeamMemberList({ members }: TeamMemberListProps) {
     const membersWithImages = useMemo(() => {
-        return members.map((member) => {
-            let avatarUrl = '/sidebar/default-avatar.webp';
-            if (member.image) {
-                getIcon('user_icon', member.image);
-            }
-            return {
-                ...member,
-                avatarUrl,
-            };
-        });
+        return members.map((member) => ({
+            ...member,
+            avatarUrl: resolveUserIconUrl(member.image),
+        }));
     }, [members]);
 
     return (
@@ -40,6 +32,9 @@ export default function TeamMemberList({ members }: TeamMemberListProps) {
                         src={member.avatarUrl}
                         alt={`${member.firstName || 'Team member'}`}
                         className="h-8 w-8 rounded-full object-cover"
+                        onError={(e) => {
+                            e.currentTarget.src = DEFAULT_USER_AVATAR;
+                        }}
                     />
                     <div>
                         <p className="truncate text-sm font-medium md:text-base">

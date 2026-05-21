@@ -23,6 +23,11 @@
     color: #fff;
 }
 
+.textarea::placeholder {
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+}
+
 .textarea:focus {
     border-color: var(--border-brand-primary);
     background-color: var(--background-brand-focus);

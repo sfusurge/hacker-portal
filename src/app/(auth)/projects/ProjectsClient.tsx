@@ -5,8 +5,10 @@ import ProjectList from '@/components/projects/ProjectList';
 import { Skeleton } from '@/components/ui/skeleton';
 import { trpc } from '@/trpc/client';
 import type { UserData } from '@/server/routers/usersRouter';
+import type { ProjectListItem } from '@/lib/projects/projectSubmissionDisplay';
 import { useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { canAccessProjectGallery } from '@/lib/submissionWindow';
 
 interface ProjectsClientProps {
     user: UserData | null;
@@ -58,20 +60,17 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
     const hackathonId = hackathon?.id;
     const isJudge = user?.userRole === 'judge';
 
-    const submissionsQuery = trpc.submissions.getAllSubmissions.useQuery(
-        { hackathonId },
+    const galleryQuery = trpc.submissions.getProjectGalleryItems.useQuery(
+        { hackathonId: hackathonId ?? 0 },
         { enabled: !!hackathonId }
     );
 
     const judgingProjectsQuery = trpc.judging.getJudgingProjects.useQuery(
-        { hackathonId },
+        { hackathonId: hackathonId ?? 0 },
         { enabled: isJudge && !!hackathonId }
     );
 
-    if (
-        submissionsQuery.isLoading ||
-        (isJudge && judgingProjectsQuery.isLoading)
-    ) {
+    if (galleryQuery.isLoading || (isJudge && judgingProjectsQuery.isLoading)) {
         return <ProjectGridSkeleton />;
     }
 
@@ -86,7 +85,24 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
         );
     }
 
-    if (!submissionsQuery.data) {
+    const galleryOpen = canAccessProjectGallery(
+        Date.now(),
+        hackathon.submissionDeadline.toDate(),
+        user?.userRole
+    );
+
+    if (!galleryOpen) {
+        return (
+            <div className="flex h-full items-center justify-center px-6 text-center">
+                <p className="max-w-md text-pretty text-white/60">
+                    The project gallery opens after submissions close on{' '}
+                    {hackathon.submissionDeadline.format('MMM D, YYYY h:mm A')}.
+                </p>
+            </div>
+        );
+    }
+
+    if (!galleryQuery.data) {
         return (
             <div className="flex h-full items-center justify-center">
                 <p className="text-white/60">Failed to load projects.</p>
@@ -94,7 +110,7 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
         );
     }
 
-    const submissions = submissionsQuery.data;
+    const galleryItems = galleryQuery.data;
 
     if (isJudge && judgingProjectsQuery.data && user) {
         const assignedProjects = judgingProjectsQuery.data;
@@ -103,65 +119,31 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
             assignedProjects.map((project) => [project.teamId, project])
         );
 
-        const allProjectsData = submissions.map((submission) => {
-            const response = submission.response as Record<string, any>;
-            const assignedProject = assignedProjectMap.get(submission.teamId);
-            const getPlainTextFromRichText = (richText: any): string => {
-                if (!richText?.ops) return '';
-                return richText.ops
-                    .map((op: any) => op.insert)
-                    .join('')
-                    .trim();
-            };
+        const galleryByTeamId = new Map(
+            galleryItems.map((item) => [item.id, item])
+        );
 
+        const allProjectsData: ProjectListItem[] = galleryItems.map((item) => {
+            const assignedProject = assignedProjectMap.get(item.id);
             return {
-                id: submission.teamId,
-                teamName: submission.teamName || `Team #${submission.teamId}`,
-                displayId:
-                    assignedProject?.displayId ||
-                    response[0] ||
-                    submission.teamId.toString(),
-                0: submission.teamId.toString(),
-                1: response[1] || `Team #${submission.teamId}`,
-                2: response[2] || 'No track selected',
-                3: response[3]?.[0] || '/hacker-portal-preview.webp',
-                4:
-                    getPlainTextFromRichText(response[4]) ||
-                    'No description available',
-                fullSubmissionResponse: response,
+                ...item,
+                displayId: assignedProject?.displayId ?? item.displayId,
                 status: assignedProject ? assignedProject.status : 'unassigned',
             };
         });
 
         const projects = assignedProjects
             .map((project) => {
-                const submission = submissions.find(
-                    (s) => s.teamId === project.teamId
-                );
-                if (!submission) return null;
-
-                const response =
-                    (submission.response as Record<string, any>) || {};
+                const item = galleryByTeamId.get(project.teamId);
+                if (!item) return null;
 
                 return {
-                    id: project.teamId,
-                    teamName: project.teamName || `Team #${project.teamId}`,
-                    displayId: project.displayId || project.teamId.toString(),
-                    0: project.teamId.toString(),
-                    1: response[1] || `Team #${project.teamId}`,
-                    2: response[2] || 'No track selected',
-                    3: response[3]?.[0] || '/hacker-portal-preview.webp',
-                    4: response[4]
-                        ? (response[4]?.ops
-                              ?.map((op: any) => op.insert)
-                              .join('')
-                              .trim() as string)
-                        : 'No description available',
-                    fullSubmissionResponse: response,
+                    ...item,
+                    displayId: project.displayId ?? item.displayId,
                     status: project.status,
                 };
             })
-            .filter((p) => p !== null) as any[];
+            .filter((p) => p !== null) as ProjectListItem[];
 
         return (
             <div className="flex h-full flex-col">
@@ -175,35 +157,10 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
         );
     }
 
-    // Public gallery
-    const publicProjects = submissions.map((submission) => {
-        const response = submission.response as Record<string, any>;
-        const getPlainTextFromRichText = (richText: any): string => {
-            if (!richText?.ops) return '';
-            return richText.ops
-                .map((op: any) => op.insert)
-                .join('')
-                .trim();
-        };
-
-        return {
-            id: submission.teamId,
-            teamName: submission.teamName || `Team #${submission.teamId}`,
-            displayId: response[0] || submission.teamId.toString(),
-            0: submission.teamId.toString(),
-            1: response[1] || `Team #${submission.teamId}`,
-            2: response[2] || 'No track selected',
-            3: response[3]?.[0] || '/hacker-portal-preview.webp',
-            4:
-                getPlainTextFromRichText(response[4]) ||
-                'No description available',
-        };
-    });
-
     return (
         <div className="flex h-full flex-col">
             <PublicProjectList
-                projects={publicProjects}
+                projects={galleryItems}
                 hackathonName={hackathon?.name ?? 'Current event'}
             />
         </div>

@@ -1,10 +1,17 @@
-import ProjectPageClient from './ProjectPageClient';
+'use client';
 
-interface PageProps {
-    params: Promise<{ id: string }>;
-}
+import { useParams } from 'next/navigation';
+import ProjectPageClient from './project/ProjectPageClient';
+import { ProjectPageSkeleton } from './project/ProjectPageSkeleton';
 
-export default async function ProjectPage({ params }: PageProps) {
-    const { id } = await params;
+export default function ProjectPage() {
+    const params = useParams();
+    const rawId = params.id;
+    const id = Array.isArray(rawId) ? rawId[0] : rawId;
+
+    if (!id) {
+        return <ProjectPageSkeleton />;
+    }
+
     return <ProjectPageClient id={id} />;
 }

@@ -22,7 +22,7 @@ import { SubmitCard } from '@/app/(auth)/(team)/teamComponents/InTeam/SubmitCard
 
 export default function SubmissionCardHomepage() {
     return (
-        <div className="flex h-full flex-col gap-4">
+        <div className="h-full">
             <SubmitCard
                 onShowSubmit={() => {
                     redirect('/team/submit');

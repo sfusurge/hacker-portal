@@ -101,6 +101,69 @@ function isValidUrl(string: string): boolean {
     }
 }
 
+const FIGMA_EMBED_FILE_TYPES = new Set([
+    'design',
+    'board',
+    'proto',
+    'slides',
+    'deck',
+]);
+
+// https://developers.figma.com/docs/embeds/resources/
+function toFigmaEmbedUrl(url: string): string | null {
+    try {
+        const parsed = new URL(url);
+        if (!parsed.hostname.endsWith('figma.com')) {
+            return null;
+        }
+
+        const pathMatch = parsed.pathname.match(
+            /^\/([\w-]+)\/([0-9a-zA-Z]{22,128})/
+        );
+        if (!pathMatch) {
+            return null;
+        }
+
+        let fileType = pathMatch[1];
+        if (fileType === 'file') {
+            parsed.pathname = parsed.pathname.replace(/^\/file\//, '/design/');
+            fileType = 'design';
+        }
+
+        if (!FIGMA_EMBED_FILE_TYPES.has(fileType)) {
+            return null;
+        }
+
+        parsed.hostname = 'embed.figma.com';
+
+        const params = parsed.searchParams;
+        if (!params.has('embed-host')) {
+            params.set('embed-host', 'share');
+        }
+        if (params.has('node_id') && !params.has('node-id')) {
+            params.set('node-id', params.get('node_id')!);
+            params.delete('node_id');
+        }
+
+        return parsed.toString();
+    } catch {
+        return null;
+    }
+}
+
+function figmaEmbedTitle(url: string): string {
+    if (/\/deck\//.test(url) || /\/slides\//.test(url)) {
+        return 'Figma Slides';
+    }
+    if (/\/board\//.test(url)) {
+        return 'FigJam board';
+    }
+    if (/\/proto\//.test(url)) {
+        return 'Figma prototype';
+    }
+    return 'Figma design';
+}
+
 export function IframeEmbed({ url }: { url: string }) {
     if (!isValidUrl(url)) {
         const errorIcon = (
@@ -141,17 +204,14 @@ export function IframeEmbed({ url }: { url: string }) {
         );
     }
 
-    const figmaMatch = url.match(
-        /^(?:https?:\/\/)?(?:www\.)?figma\.com\/(file|proto|design)\/([a-zA-Z0-9]+)/
-    );
+    const figmaEmbedUrl = toFigmaEmbedUrl(url);
 
-    if (figmaMatch) {
-        const embedUrl = `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(url)}`;
+    if (figmaEmbedUrl) {
         return (
             <EmbedContainer
-                src={embedUrl}
+                src={figmaEmbedUrl}
                 originalUrl={url}
-                title="Figma Design"
+                title={figmaEmbedTitle(url)}
                 linkText="Open in Figma →"
             />
         );

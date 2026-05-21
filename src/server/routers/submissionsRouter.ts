@@ -16,6 +16,8 @@ import { BadRequestError } from '@/server/exceptions';
 import { isSubmissionWindowOpen } from '@/lib/submissionWindow';
 import { publicProcedure, router } from '../trpc';
 import { getUserData } from './usersRouter';
+import type { InputFormPageData } from '@/components/application_components/types';
+import { mapSubmissionToProjectListItem } from '@/lib/projects/projectSubmissionDisplay';
 
 export interface SubmitSubmissionResponse {
     userId: number;
@@ -162,6 +164,52 @@ export const submissionsRouter = router({
                 );
 
             return allSubmissions;
+        }),
+
+    // fetch all submissions for the gallery grid (mapped list fields only)
+    getProjectGalleryItems: publicProcedure
+        .input(z.object({ hackathonId: z.number() }))
+        .query(async ({ input }) => {
+            const [hackathonRow] = await databaseClient
+                .select({
+                    submissionQuestions: hackathons.submissionQuestions,
+                })
+                .from(hackathons)
+                .where(eq(hackathons.id, input.hackathonId))
+                .limit(1);
+
+            const submissionQuestionPages =
+                (hackathonRow?.submissionQuestions ??
+                    []) as InputFormPageData[];
+
+            const rows = await databaseClient
+                .select({
+                    teamId: submissions.teamId,
+                    teamName: teams.name,
+                    response: submissions.response,
+                })
+                .from(submissions)
+                .innerJoin(teams, eq(submissions.teamId, teams.id))
+                .where(
+                    and(
+                        eq(submissions.hackathonId, input.hackathonId),
+                        eq(teams.hackathonId, input.hackathonId)
+                    )
+                );
+
+            return rows.map((row) =>
+                mapSubmissionToProjectListItem(
+                    {
+                        teamId: row.teamId,
+                        teamName: row.teamName,
+                        response: (row.response ?? {}) as Record<
+                            string,
+                            unknown
+                        >,
+                    },
+                    { submissionQuestionPages }
+                )
+            );
         }),
 
     getSubmissionForTeam: publicProcedure

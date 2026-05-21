@@ -1,17 +1,14 @@
 'use client';
 
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import { useAtomValue } from 'jotai';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { ProjectListItem } from '@/lib/projects/projectSubmissionDisplay';
+import { trpc } from '@/trpc/client';
 import slugify from '@/utils/slugify';
-
-interface Project {
-    [key: number]: string;
-    id: number;
-    displayId: string;
-    teamName: string;
-}
 
 interface StatusInfo {
     label: string;
@@ -19,7 +16,7 @@ interface StatusInfo {
 }
 
 interface ProjectCardProps {
-    project: Project;
+    project: ProjectListItem;
     statusInfo?: StatusInfo;
     isLoading?: boolean;
 }
@@ -29,8 +26,24 @@ export default function ProjectCard({
     statusInfo,
     isLoading = false,
 }: ProjectCardProps) {
+    const hackathon = useAtomValue(hackathonAtom);
+    const utils = trpc.useUtils();
     const titleRef = useRef<HTMLHeadingElement>(null);
     const [titleLines, setTitleLines] = useState(1);
+
+    const prefetchProject = () => {
+        const hackathonId = hackathon?.id;
+        if (!hackathonId || !project.id) return;
+
+        void utils.submissions.getSubmissionForTeam.prefetch({
+            teamId: project.id,
+            hackathonId,
+        });
+        void utils.teams.getTeamById.prefetch({ teamId: project.id });
+    };
+    const title = project.title;
+    const tagline = project.tagline;
+    const headerImage = project.headerImage || '/hacker-portal-preview.webp';
 
     useEffect(() => {
         const checkTitleHeight = () => {
@@ -47,7 +60,7 @@ export default function ProjectCard({
         checkTitleHeight();
         window.addEventListener('resize', checkTitleHeight);
         return () => window.removeEventListener('resize', checkTitleHeight);
-    }, [project]);
+    }, [project, title]);
 
     if (isLoading) {
         return (
@@ -68,11 +81,13 @@ export default function ProjectCard({
     return (
         <Link
             href={`/projects/${slugify(project.teamName)}`}
+            onMouseEnter={prefetchProject}
+            onFocus={prefetchProject}
             className={`group flex flex-col overflow-hidden rounded-xl transition-shadow hover:shadow-lg ${
                 statusInfo?.label === 'Not Judging' ? 'opacity-90' : ''
             }`}
         >
-            <div className="relative" title={project[1]}>
+            <div className="relative" title={title}>
                 {statusInfo && statusInfo.label && (
                     <p
                         className={`${statusInfo.className} absolute top-3 left-3 z-10 rounded-xl px-3 py-1`}
@@ -84,8 +99,8 @@ export default function ProjectCard({
                     className={`${statusInfo?.label === 'Not Judging' ? 'opacity-90' : ''}`}
                 >
                     <Image
-                        src={project[3] || '/hacker-portal-preview.webp'}
-                        alt={`Project: ${project[1]}`}
+                        src={headerImage}
+                        alt={`Project: ${title}`}
                         width={500}
                         height={281}
                         className="aspect-video w-full object-cover"
@@ -95,12 +110,12 @@ export default function ProjectCard({
                             ref={titleRef}
                             className="mb-0 line-clamp-2 leading-tight font-semibold text-pretty text-white"
                         >
-                            {project[1]}
+                            {title}
                         </h3>
                         <p
                             className={`${titleLines === 1 ? 'line-clamp-3' : 'line-clamp-2'} text-sm text-white/60`}
                         >
-                            {project[4]}
+                            {tagline}
                         </p>
                     </div>
                 </div>

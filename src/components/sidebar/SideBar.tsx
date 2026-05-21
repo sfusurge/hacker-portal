@@ -32,7 +32,10 @@ import { cn } from '@/lib/utils';
 import { navLinkVariants, NavLink } from './NavLink';
 import { EVENT_PAGE_NAV_LINKS } from '@/components/home/eventPageConfig';
 import { UserData } from '@/server/routers/usersRouter';
-import { getIcon } from '@/utils/blobHelper';
+import { DEFAULT_USER_AVATAR, resolveUserIconUrl } from '@/utils/blobHelper';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { useAtomValue } from 'jotai';
+import { canAccessProjectGallery } from '@/lib/submissionWindow';
 
 /** mobile (under 768px) user can expand/collapse. */
 const SIDEBAR_MOBILE_MAX_PX = 768;
@@ -78,13 +81,14 @@ const navLinks = [
         icon: <MegaphoneIcon className="h-6 w-6" />,
         iconAlt: 'Announcement logo',
     },
-    // {
-    //     href: '/projects',
-    //     label: 'Project Gallery',
-    //     icon: <InboxStackIcon className="h-6 w-6" />,
-    //     iconAlt: 'Project gallery logo',
-    // },
 ];
+
+const projectGalleryLink = {
+    href: '/projects',
+    label: 'Project Gallery',
+    icon: <InboxStackIcon className="h-6 w-6" />,
+    iconAlt: 'Project gallery logo',
+};
 
 const adminLinks = [
     {
@@ -152,6 +156,8 @@ const sponsorNavLinks = [
 ];
 
 export default function SideBar({ className, initialData }: NavProps) {
+    const hackathon = useAtomValue(hackathonAtom);
+    const [now] = useState(() => Date.now());
     const [collapsed, setCollapsed] = useState(false);
     const [showCollapseToggle, setShowCollapseToggle] = useState(false);
     const [profilePopoverOpen, setProfilePopoverOpen] = useState(false);
@@ -179,6 +185,31 @@ export default function SideBar({ className, initialData }: NavProps) {
         const saved = localStorage.getItem(LS_SIDEBAR_DESKTOP);
         setCollapsed(saved !== null ? (JSON.parse(saved) as boolean) : false);
     };
+
+    const galleryAccessible =
+        hackathon != null &&
+        canAccessProjectGallery(
+            now,
+            hackathon.submissionDeadline.toDate(),
+            initialData?.userRole
+        );
+
+    const mainNavLinks = useMemo(() => {
+        if (!galleryAccessible) return navLinks;
+
+        const announcementsIndex = navLinks.findIndex(
+            (link) => link.href === '/announcements'
+        );
+        if (announcementsIndex === -1) {
+            return [...navLinks, projectGalleryLink];
+        }
+
+        return [
+            ...navLinks.slice(0, announcementsIndex + 1),
+            projectGalleryLink,
+            ...navLinks.slice(announcementsIndex + 1),
+        ];
+    }, [galleryAccessible]);
 
     useEffect(() => {
         const checkScreenSize = () => {
@@ -210,12 +241,10 @@ export default function SideBar({ className, initialData }: NavProps) {
         });
     };
 
-    const avatarUrl = useMemo(() => {
-        if (initialData && initialData.image) {
-            return getIcon('user_icon', initialData.image);
-        }
-        return '/sidebar/default-avatar.webp';
-    }, [initialData]);
+    const avatarUrl = useMemo(
+        () => resolveUserIconUrl(initialData?.image),
+        [initialData?.image]
+    );
 
     const url = usePathname();
 
@@ -267,7 +296,7 @@ export default function SideBar({ className, initialData }: NavProps) {
                                 ))
                             ) : (
                                 <>
-                                    {navLinks.map((link) => (
+                                    {mainNavLinks.map((link) => (
                                         <NavLink
                                             key={link.href}
                                             href={link.href}
@@ -324,6 +353,12 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                                         avatarUrl
                                                                     }
                                                                     className="h-full w-full object-cover"
+                                                                    onError={(
+                                                                        e
+                                                                    ) => {
+                                                                        e.currentTarget.src =
+                                                                            DEFAULT_USER_AVATAR;
+                                                                    }}
                                                                 />
                                                             </div>
                                                         </div>
@@ -347,6 +382,12 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                                         avatarUrl
                                                                     }
                                                                     className="h-full w-full object-cover"
+                                                                    onError={(
+                                                                        e
+                                                                    ) => {
+                                                                        e.currentTarget.src =
+                                                                            DEFAULT_USER_AVATAR;
+                                                                    }}
                                                                 />
                                                             </div>
                                                         </div>

@@ -12,11 +12,36 @@ import { Textarea } from '../textarea';
 import { cn } from '@/lib/utils';
 import style from './FormTextArea.module.css';
 
+function normalizeTextValue(
+    value: string | number | readonly string[] | undefined
+): string {
+    if (value == null) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number') return String(value);
+    return value.join('');
+}
+
+function countTextLength(
+    text: string,
+    lengthMode: 'words' | 'characters'
+): number {
+    if (lengthMode === 'characters') {
+        return text.length;
+    }
+    return text.trim()
+        ? text
+              .trim()
+              .split(/\s+/)
+              .filter((word: string) => word.length > 0).length
+        : 0;
+}
+
 const FormTextArea = forwardRef<
     HTMLTextAreaElement,
     ComponentProps<'textarea'> & {
         maxLength?: number;
-        lazy: boolean;
+        lengthMode?: 'words' | 'characters';
+        lazy?: boolean;
         onLazyChange?: (val: string) => void;
         timeout?: number;
     }
@@ -27,6 +52,7 @@ const FormTextArea = forwardRef<
             onLazyChange,
             timeout = 500,
             maxLength,
+            lengthMode = 'words',
             defaultValue = '',
             className,
             style: externalStyle,
@@ -36,19 +62,17 @@ const FormTextArea = forwardRef<
     ) => {
         const textRef = useRef<HTMLTextAreaElement>(null);
         useImperativeHandle(ref, () => textRef.current as HTMLTextAreaElement);
-        const [value, setValue] = useState(defaultValue);
-        const wordCount = useMemo(() => {
-            return value
-                ? value
-                      .trim()
-                      .split(/\s+/)
-                      .filter((word) => word.length > 0).length
-                : 0;
-        }, [value]);
+        const normalizedDefault = normalizeTextValue(defaultValue);
+        const [value, setValue] = useState(normalizedDefault);
+        const lengthCount = useMemo(
+            () => countTextLength(value, lengthMode),
+            [lengthMode, value]
+        );
+        const lengthUnit = lengthMode === 'words' ? ' words' : ' characters';
         const timer = useRef<ReturnType<typeof setTimeout> | undefined>();
 
         useEffect(() => {
-            setValue(defaultValue);
+            setValue(normalizeTextValue(defaultValue));
         }, [defaultValue]);
 
         function change() {
@@ -56,14 +80,12 @@ const FormTextArea = forwardRef<
                 return;
             }
 
-            if (timer) {
+            if (timer.current !== undefined) {
                 clearTimeout(timer.current);
                 timer.current = undefined;
             }
 
-            if (onLazyChange) {
-                onLazyChange && onLazyChange(textRef.current.value);
-            }
+            onLazyChange?.(textRef.current.value);
         }
 
         return (
@@ -71,7 +93,7 @@ const FormTextArea = forwardRef<
                 className={maxLength !== undefined ? style.hasLength : ''}
                 style={
                     {
-                        '--length': `"${wordCount}${maxLength ? ` / ${maxLength}` : ''}"`,
+                        '--length': `"${lengthCount}${maxLength ? ` / ${maxLength}` : ''}${lengthUnit}"`,
                     } as CSSProperties
                 }
             >
@@ -87,13 +109,10 @@ const FormTextArea = forwardRef<
                     {...props}
                     onChange={(e) => {
                         const newValue = e.target.value;
-                        const newWordCount = newValue
-                            .trim()
-                            .split(/\s+/)
-                            .filter((word) => word.length > 0).length;
+                        const newLength = countTextLength(newValue, lengthMode);
 
-                        if (maxLength && newWordCount > maxLength) {
-                            return; //prevent adding more words if max is reached
+                        if (maxLength && newLength > maxLength) {
+                            return;
                         }
 
                         setValue(newValue);
@@ -105,7 +124,7 @@ const FormTextArea = forwardRef<
                     }}
                     onBlur={change}
                     value={value}
-                ></Textarea>
+                />
             </div>
         );
     }
