@@ -48,15 +48,15 @@ export function UserProjectPageView({
     );
 
     return (
-        <div className="flex h-full flex-col">
-            <div className="m-0 flex flex-grow flex-col overflow-hidden md:-m-10 lg:m-0 lg:flex-row lg:gap-10">
-                <div className="hidden h-max flex-shrink-0 flex-col gap-6 lg:flex lg:w-1/4">
+        <div className="flex h-full w-full min-w-0 flex-col">
+            <div className="m-0 flex w-full min-w-0 flex-grow flex-col overflow-hidden md:-m-10 lg:m-0 lg:flex-row lg:gap-10">
+                <div className="hidden h-max shrink-0 flex-col gap-6 lg:flex lg:w-1/4">
                     <TeamCard teamData={teamData} isOwnProject={isOwnProject} />
                     {AUDIENCE_VOTING_UI_IN_SIDEBAR_COLUMN && audienceVoteButton}
                 </div>
 
-                <div className="lg:border-neutral-750 flex-grow overflow-y-auto p-0 md:mb-0 md:p-10 lg:rounded-xl lg:border lg:bg-neutral-900 lg:pb-0">
-                    <div className="space-y-8 pb-8">
+                <div className="lg:border-neutral-750 w-full max-w-full min-w-0 flex-grow overflow-x-hidden overflow-y-auto p-0 md:mb-0 md:p-10 lg:rounded-xl lg:border lg:bg-neutral-900 lg:pb-0">
+                    <div className="w-full min-w-0 space-y-8 pb-8">
                         <ProjectSectionsList
                             sections={projectSections}
                             response={response}
