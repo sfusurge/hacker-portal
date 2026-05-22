@@ -2,6 +2,8 @@
 import { hackathonAtom, userInfoAtom } from '@/app/(auth)/ClientContext';
 import { HackathonData } from '@/components/application_components/types';
 import CountdownTimer from '@/components/home/Application/Countdown';
+import { CheckInQrCard } from '@/components/home/CheckInQrCard';
+import { ProjectGalleryCard } from '@/components/home/ProjectGalleryCard';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -13,8 +15,10 @@ import {
 } from '@/components/ui/card';
 import { trpc } from '@/trpc/client';
 import {
+    isPreGalleryCheckInPeriod,
     isProjectsGalleryOpen,
     isSubmissionUiHiddenBeforeOpen,
+    isSubmissionWindowOpen,
 } from '@/lib/submissionWindow';
 import { ArrowRightIcon } from '@heroicons/react/24/solid';
 import dayjs from 'dayjs';
@@ -27,6 +31,50 @@ import {
     isAudienceVotingWindowOpen,
 } from '@/lib/audienceVoting';
 import { useEffect, useState } from 'react';
+
+const CARD_PHASE_TICK_MS = 10_000;
+
+type TeamDashboardCardPhase =
+    | 'hidden'
+    | 'submit'
+    | 'check_in_qr'
+    | 'gallery'
+    | 'voting';
+
+function getTeamDashboardCardPhase(
+    nowMs: number,
+    hackathon: HackathonData
+): TeamDashboardCardPhase {
+    const submissionOpen = hackathon.submissionOpen?.toDate() ?? null;
+    const submissionDeadline = hackathon.submissionDeadline.toDate();
+    const projectGalleryOpen = hackathon.projectGalleryOpen?.toDate() ?? null;
+
+    if (isSubmissionUiHiddenBeforeOpen(nowMs, submissionOpen)) {
+        return 'hidden';
+    }
+
+    if (
+        isPreGalleryCheckInPeriod(nowMs, projectGalleryOpen, submissionDeadline)
+    ) {
+        return 'check_in_qr';
+    }
+
+    if (isProjectsGalleryOpen(nowMs, projectGalleryOpen, submissionDeadline)) {
+        if (
+            isAudienceVotingEnabled(hackathon) &&
+            isAudienceVotingPeriodForTeamDashboard(nowMs, hackathon)
+        ) {
+            return 'voting';
+        }
+        return 'gallery';
+    }
+
+    if (isSubmissionWindowOpen(nowMs, submissionOpen, submissionDeadline)) {
+        return 'submit';
+    }
+
+    return 'hidden';
+}
 
 function formatVotingWindow(hackathon: HackathonData): string {
     const open = hackathon.audienceVotingOpen;
@@ -51,7 +99,6 @@ export function VotingCard() {
     const hackathon = useAtomValue(hackathonAtom);
     const [isVotingOpen, setIsVotingOpen] = useState(false);
     const [isPastDeadline, setIsPastDeadline] = useState(false);
-    const [galleryOpen, setGalleryOpen] = useState(false);
 
     useEffect(() => {
         const nowMs = Date.now();
@@ -65,14 +112,7 @@ export function VotingCard() {
         setIsPastDeadline(
             isAudienceVotingPastDeadline(nowMs, hackathon.audienceVotingCloses)
         );
-        setGalleryOpen(
-            isProjectsGalleryOpen(nowMs, hackathon.submissionDeadline.toDate())
-        );
-    }, [
-        hackathon.audienceVotingOpen,
-        hackathon.audienceVotingCloses,
-        hackathon.submissionDeadline,
-    ]);
+    }, [hackathon.audienceVotingOpen, hackathon.audienceVotingCloses]);
 
     const votingWindowLabel = formatVotingWindow(hackathon);
 
@@ -88,43 +128,36 @@ export function VotingCard() {
             </CardHeader>
             <CardContent className="min-h-[250px] items-center justify-center gap-6 px-10 py-8 text-center">
                 {isPastDeadline ? (
-                    <>
-                        <div className="flex flex-col gap-3">
-                            <h3 className="text-xl font-semibold text-pretty">
-                                Voting period has ended!
-                            </h3>
-                            <span className="text-pretty text-white/60 lg:max-w-[550px]">
-                                Voting closed ({votingWindowLabel}). Check back
-                                later for judge feedback on your submission.
-                            </span>
-                        </div>
-                    </>
+                    <div className="flex flex-col gap-3">
+                        <h3 className="text-xl font-semibold text-pretty">
+                            Voting period has ended!
+                        </h3>
+                        <span className="text-pretty text-white/60 lg:max-w-[550px]">
+                            Voting closed ({votingWindowLabel}). Check back
+                            later for judge feedback on your submission.
+                        </span>
+                    </div>
                 ) : !isVotingOpen ? (
-                    <>
-                        <div className="flex flex-col gap-3">
-                            <h3 className="text-xl font-semibold text-pretty">
-                                Voting will open soon!
-                            </h3>
-                            <span className="text-sm text-pretty text-white/60 lg:max-w-[550px]">
-                                Audience Choice voting opens {votingWindowLabel}
-                                .
-                            </span>
-                        </div>
-                    </>
+                    <div className="flex flex-col gap-3">
+                        <h3 className="text-xl font-semibold text-pretty">
+                            Voting will open soon!
+                        </h3>
+                        <span className="text-sm text-pretty text-white/60 lg:max-w-[550px]">
+                            Audience Choice voting opens {votingWindowLabel}.
+                        </span>
+                    </div>
                 ) : (
-                    <>
-                        <div className="flex flex-col gap-3">
-                            <h3 className="text-xl font-semibold text-pretty">
-                                Cast your vote for the Audience Choice Award!
-                            </h3>
-                            <span className="text-sm text-pretty text-white/60 lg:max-w-[550px]">
-                                Voting is open now ({votingWindowLabel}). Teams
-                                cannot vote for their own projects.
-                            </span>
-                        </div>
-                    </>
+                    <div className="flex flex-col gap-3">
+                        <h3 className="text-xl font-semibold text-pretty">
+                            Cast your vote for the Audience Choice Award!
+                        </h3>
+                        <span className="text-sm text-pretty text-white/60 lg:max-w-[550px]">
+                            Voting is open now ({votingWindowLabel}). Teams
+                            cannot vote for their own projects.
+                        </span>
+                    </div>
                 )}
-                {galleryOpen ? <ViewProjectsButton /> : null}
+                <ViewProjectsButton />
             </CardContent>
         </Card>
     );
@@ -132,34 +165,39 @@ export function VotingCard() {
 
 export function SubmitCard({ onShowSubmit }: { onShowSubmit: () => void }) {
     const hackathon = useAtomValue(hackathonAtom);
-    const [showVotingCard, setShowVotingCard] = useState(false);
+    const [phase, setPhase] = useState<TeamDashboardCardPhase>('hidden');
 
     useEffect(() => {
-        setShowVotingCard(
-            isAudienceVotingPeriodForTeamDashboard(Date.now(), hackathon)
-        );
+        const updatePhase = () => {
+            setPhase(getTeamDashboardCardPhase(Date.now(), hackathon));
+        };
+
+        updatePhase();
+        const interval = setInterval(updatePhase, CARD_PHASE_TICK_MS);
+        return () => clearInterval(interval);
     }, [hackathon]);
 
     if (!hackathon || hackathon.startDate.isAfter(dayjs())) {
         return null;
     }
 
-    if (showVotingCard && isAudienceVotingEnabled(hackathon)) {
-        return <VotingCard />;
+    switch (phase) {
+        case 'check_in_qr':
+            return <CheckInQrCard />;
+        case 'gallery':
+            return <ProjectGalleryCard />;
+        case 'voting':
+            return <VotingCard />;
+        case 'submit':
+            return (
+                <SubmitCardContent
+                    hackathon={hackathon}
+                    onShowSubmit={onShowSubmit}
+                />
+            );
+        default:
+            return null;
     }
-
-    if (
-        isSubmissionUiHiddenBeforeOpen(
-            Date.now(),
-            hackathon.submissionOpen?.toDate() ?? null
-        )
-    ) {
-        return null;
-    }
-
-    return (
-        <SubmitCardContent hackathon={hackathon} onShowSubmit={onShowSubmit} />
-    );
 }
 
 function SubmitCardContent({
@@ -181,31 +219,18 @@ function SubmitCardContent({
     const [loadingLocal, setLoadingLocal] = useState(true);
     const [hasLocal, setHasLocal] = useState(false);
 
-    const [isPastDeadline, setIsPastDeadline] = useState(false);
-    const [galleryOpen, setGalleryOpen] = useState(false);
-
-    const userinfo = useAtomValue(userInfoAtom);
     const userapplication = trpc.applications.getCurrentApplication.useQuery({
         hackathonId: hackathon.id,
     });
 
     useEffect(() => {
         if (localStorage.getItem(`submit_response`)) {
-            // local storage found
             setHasLocal(true);
         } else {
             setHasLocal(false);
         }
         setLoadingLocal(false);
-
-        const nowMs = Date.now();
-        setIsPastDeadline(
-            isProjectsGalleryOpen(nowMs, hackathon.submissionDeadline.toDate())
-        );
-        setGalleryOpen(
-            isProjectsGalleryOpen(nowMs, hackathon.submissionDeadline.toDate())
-        );
-    }, [hackathon]);
+    }, []);
 
     function getBtn() {
         if (
@@ -235,10 +260,6 @@ function SubmitCardContent({
 
         if (hasSubmit) {
             return false;
-        }
-
-        if (isPastDeadline) {
-            return <></>;
         }
 
         if (hasLocal) {
@@ -295,35 +316,17 @@ function SubmitCardContent({
                     </span>
                 </>
             );
-        } else if (isPastDeadline) {
-            return (
-                <>
-                    <h3 className="text-xl font-semibold text-pretty">
-                        Submission deadline has passed!
-                    </h3>
-                    <span className="text-sm text-pretty text-white/60 lg:max-w-[550px]">
-                        The submission period ended on{' '}
-                        {hackathon.submissionDeadline.format(
-                            'MMM D, YYYY h:mm A'
-                        )}
-                        . Judges will evaluate projects soon. Winners will be
-                        announced during the closing ceremony on May 23, 2026.
-                    </span>
-                </>
-            );
-        } else {
-            return (
-                <>
-                    {!teamdata.data && <p>You are not in a team yet!</p>}
-                    <span
-                        className={'text-sm text-white/60'}
-                    >{`Projects are due on ${hackathon.submissionDeadline.format('MMM D, h:mm A')}!`}</span>
-                    <CountdownTimer
-                        targetDate={hackathon.submissionDeadline.toDate()}
-                    />
-                </>
-            );
         }
+
+        return (
+            <>
+                {!teamdata.data && <p>You are not in a team yet!</p>}
+                <span className="text-sm text-white/60">{`Projects are due on ${hackathon.submissionDeadline.format('MMM D, h:mm A')}!`}</span>
+                <CountdownTimer
+                    targetDate={hackathon.submissionDeadline.toDate()}
+                />
+            </>
+        );
     }
 
     return (
@@ -343,7 +346,6 @@ function SubmitCardContent({
 
             <CardContent className="items-center justify-center gap-3 text-center">
                 {getContent()}
-                {galleryOpen ? <ViewProjectsButton /> : null}
             </CardContent>
         </Card>
     );
