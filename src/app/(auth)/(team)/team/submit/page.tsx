@@ -71,6 +71,7 @@ export default async function SubmitPage() {
 
     const submitted = await trpcClient.submissions.getHasSubmissions({
         userId: user.id,
+        hackathonId: hackathon.id,
     });
     if (submitted.hasSubmission) {
         return (

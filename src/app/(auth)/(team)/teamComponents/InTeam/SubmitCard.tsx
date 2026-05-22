@@ -172,7 +172,9 @@ function SubmitCardContent({
     const teamdata = trpc.teams.getCurrentTeam.useQuery({
         hackathonId: hackathon.id,
     });
-    const submitData = trpc.submissions.getUserTeamSubmission.useQuery({});
+    const submitData = trpc.submissions.getUserTeamSubmission.useQuery({
+        hackathonId: hackathon.id,
+    });
 
     const hasSubmit = submitData.data != undefined;
 

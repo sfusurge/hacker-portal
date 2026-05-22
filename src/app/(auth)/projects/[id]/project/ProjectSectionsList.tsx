@@ -44,7 +44,7 @@ export function ProjectSectionsList({
     return (
         <>
             <MobileBackToProjects />
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-8">
                 <ProjectTitleWithTags
                     title={titleContent}
                     tags={tagLabels}
