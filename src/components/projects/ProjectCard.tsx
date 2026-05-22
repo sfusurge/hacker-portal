@@ -84,7 +84,7 @@ export default function ProjectCard({
             onMouseEnter={prefetchProject}
             onFocus={prefetchProject}
             className={`group flex flex-col overflow-hidden rounded-xl transition-shadow hover:shadow-lg ${
-                statusInfo?.label === 'Not Judging' ? 'opacity-90' : ''
+                statusInfo?.label === 'May view' ? 'opacity-90' : ''
             }`}
         >
             <div className="relative" title={title}>
@@ -96,7 +96,7 @@ export default function ProjectCard({
                     </p>
                 )}
                 <div
-                    className={`${statusInfo?.label === 'Not Judging' ? 'opacity-90' : ''}`}
+                    className={`${statusInfo?.label === 'May view' ? 'opacity-90' : ''}`}
                 >
                     <Image
                         src={headerImage}

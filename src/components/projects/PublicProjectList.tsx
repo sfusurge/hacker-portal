@@ -4,6 +4,8 @@ import { FormTextInput } from '@/components/ui/input/input';
 import { Label } from '@/components/ui/label/label';
 import { MagnifyingGlassIcon } from '@heroicons/react/16/solid';
 import { useState } from 'react';
+import { useAtomValue } from 'jotai';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import {
     projectListItemMatchesSearchQuery,
     type ProjectListItem,
@@ -11,13 +13,12 @@ import {
 
 interface PublicProjectListProps {
     projects: ProjectListItem[];
-    hackathonName?: string;
 }
 
 export default function PublicProjectList({
     projects,
-    hackathonName = 'Current event',
 }: PublicProjectListProps) {
+    const hackathon = useAtomValue(hackathonAtom);
     const [searchQuery, setSearchQuery] = useState('');
 
     const filteredProjects = projects.filter((project) =>
@@ -37,7 +38,7 @@ export default function PublicProjectList({
             <div className="sticky z-10 -m-6 mb-0 flex flex-col gap-5 bg-neutral-900 p-6 sm:-m-6 md:-m-10 md:border-b md:border-b-neutral-600/30 md:p-10">
                 <div className="flex flex-col gap-4">
                     <h1 className="text-xl font-semibold text-white md:text-3xl">
-                        {hackathonName} project gallery
+                        {hackathon.hackathonName} project gallery
                     </h1>
                 </div>
                 <div className="flex flex-col gap-2">

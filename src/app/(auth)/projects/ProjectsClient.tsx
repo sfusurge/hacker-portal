@@ -159,10 +159,7 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
 
     return (
         <div className="flex h-full flex-col">
-            <PublicProjectList
-                projects={galleryItems}
-                hackathonName={hackathon?.name ?? 'Current event'}
-            />
+            <PublicProjectList projects={galleryItems} />
         </div>
     );
 }
