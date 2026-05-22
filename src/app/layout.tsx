@@ -6,6 +6,7 @@ import { SessionProvider } from 'next-auth/react';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Toaster } from '@/components/ui/toaster';
 import { Provider as JotaiProivder } from 'jotai';
+import { PostHogProvider } from '@/components/analytics/PostHogProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -40,12 +41,14 @@ export default function RootLayout({
             <link rel="icon" href="/favicon.png" sizes="any" />
             <body className={inter.className}>
                 <SessionProvider>
-                    <TRPCProvider>
-                        <JotaiProivder>
-                            {children}
-                            <Toaster />
-                        </JotaiProivder>
-                    </TRPCProvider>
+                    <PostHogProvider>
+                        <TRPCProvider>
+                            <JotaiProivder>
+                                {children}
+                                <Toaster />
+                            </JotaiProivder>
+                        </TRPCProvider>
+                    </PostHogProvider>
                 </SessionProvider>
             </body>
             <GoogleAnalytics gaId="G-99DQSJDLRK" />

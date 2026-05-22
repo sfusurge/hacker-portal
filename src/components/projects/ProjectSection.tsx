@@ -44,9 +44,9 @@ export function TextSection({
     const lines = coerceSubmissionText(content).split('\n');
 
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex w-full max-w-full min-w-0 flex-col gap-3">
             <Label className="mb-0 leading-normal">{title}</Label>
-            <p className="max-w-120 text-pretty">
+            <p className="w-full max-w-full text-pretty break-words">
                 {lines.map((line, index) => (
                     <React.Fragment key={index}>
                         {line}
@@ -104,8 +104,10 @@ export function ProjectTitleWithTags({
     }
 
     return (
-        <div className="flex flex-col gap-2">
-            {hasTitle ? <h1 className="text-4xl font-bold">{title}</h1> : null}
+        <div className="flex w-full max-w-full min-w-0 flex-col gap-2">
+            {hasTitle ? (
+                <h1 className="text-4xl font-bold break-words">{title}</h1>
+            ) : null}
             {hasTagline ? (
                 <p className="text-base font-semibold">{tagline}</p>
             ) : null}
@@ -167,7 +169,7 @@ export function RichTextSection({
     content,
 }: BaseSectionProps & { content: any }): JSX.Element {
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex w-full max-w-full min-w-0 flex-col gap-3">
             <Label className="mb-0">{title}</Label>
             <RichText onChange={() => {}} readOnly initialData={content} />
         </div>
@@ -179,7 +181,7 @@ export function MarkdownSection({
     content,
 }: BaseSectionProps & { content: string }): JSX.Element {
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex w-full max-w-full min-w-0 flex-col gap-4">
             <Label className="mb-0">{title}</Label>
             <MarkdownDisplay content={content} />
         </div>
@@ -207,14 +209,14 @@ export function ImageEmbedSection({
     alt,
 }: BaseSectionProps & { src: string; alt: string }) {
     return (
-        <div className="flex w-full flex-col items-start gap-3">
+        <div className="flex w-full max-w-full min-w-0 flex-col items-start gap-3">
             <Label className="mb-0">{title}</Label>
             <Image
                 src={src}
                 alt={alt}
                 width={896}
                 height={504}
-                className="h-auto max-h-[500px] w-auto max-w-4xl rounded-xl object-left"
+                className="h-auto max-h-[500px] w-full max-w-full rounded-xl object-contain object-left"
                 sizes="(max-width: 896px) 100vw, 896px"
             />
         </div>
@@ -233,7 +235,7 @@ export function VideoSection({
     }
 
     return (
-        <div className="flex flex-col items-start gap-3">
+        <div className="flex w-full max-w-full min-w-0 flex-col items-start gap-3">
             <Label className="mb-0">{title}</Label>
             <iframe
                 width="100%"
@@ -243,7 +245,7 @@ export function VideoSection({
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                className="aspect-video w-full max-w-4xl rounded-xl"
+                className="aspect-video w-full max-w-full rounded-xl"
             ></iframe>
         </div>
     );
@@ -251,7 +253,7 @@ export function VideoSection({
 
 export function PdfSection({ title, url }: BaseSectionProps & { url: string }) {
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex w-full max-w-full min-w-0 flex-col gap-3">
             <Label className="mb-0">{title}</Label>
             <PdfViewer url={url} />
         </div>
@@ -289,7 +291,7 @@ export function EmbedSection({
     url,
 }: BaseSectionProps & { url: string }) {
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex w-full max-w-full min-w-0 flex-col gap-3">
             <Label className="mb-0">{title}</Label>
             <IframeEmbed url={url} />
         </div>
