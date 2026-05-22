@@ -2,7 +2,6 @@
 import { hackathonAtom, userInfoAtom } from '@/app/(auth)/ClientContext';
 import { HackathonData } from '@/components/application_components/types';
 import CountdownTimer from '@/components/home/Application/Countdown';
-import { CheckInQrCard } from '@/components/home/CheckInQrCard';
 import { ProjectGalleryCard } from '@/components/home/ProjectGalleryCard';
 import { Button } from '@/components/ui/button';
 import {
@@ -34,12 +33,7 @@ import { useEffect, useState } from 'react';
 
 const CARD_PHASE_TICK_MS = 10_000;
 
-type TeamDashboardCardPhase =
-    | 'hidden'
-    | 'submit'
-    | 'check_in_qr'
-    | 'gallery'
-    | 'voting';
+type TeamDashboardCardPhase = 'hidden' | 'submit' | 'gallery' | 'voting';
 
 function getTeamDashboardCardPhase(
     nowMs: number,
@@ -56,7 +50,7 @@ function getTeamDashboardCardPhase(
     if (
         isPreGalleryCheckInPeriod(nowMs, projectGalleryOpen, submissionDeadline)
     ) {
-        return 'check_in_qr';
+        return 'gallery';
     }
 
     if (isProjectsGalleryOpen(nowMs, projectGalleryOpen, submissionDeadline)) {
@@ -182,8 +176,6 @@ export function SubmitCard({ onShowSubmit }: { onShowSubmit: () => void }) {
     }
 
     switch (phase) {
-        case 'check_in_qr':
-            return <CheckInQrCard />;
         case 'gallery':
             return <ProjectGalleryCard />;
         case 'voting':
