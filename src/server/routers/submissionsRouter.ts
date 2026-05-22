@@ -39,14 +39,21 @@ export interface SubmissionWithTeamInfo {
 
 export const submissionsRouter = router({
     getUserTeamSubmission: publicProcedure
-        .input(z.object({}))
+        .input(z.object({ hackathonId: z.number().int() }))
         .query(async ({ input }) => {
             const userInfo = await getUserData();
             const [submission] = await databaseClient
                 .select(getTableColumns(submissions))
                 .from(submissions)
                 .innerJoin(members, eq(members.teamId, submissions.teamId))
-                .where(eq(members.userId, userInfo?.id ?? -1))
+                .innerJoin(teams, eq(teams.id, submissions.teamId))
+                .where(
+                    and(
+                        eq(members.userId, userInfo?.id ?? -1),
+                        eq(submissions.hackathonId, input.hackathonId),
+                        eq(teams.hackathonId, input.hackathonId)
+                    )
+                )
                 .limit(1);
 
             return submission ?? null;
@@ -119,13 +126,19 @@ export const submissionsRouter = router({
     getHasSubmissions: publicProcedure
         .input(getHasSubmissionSchema)
         .query(async ({ input }) => {
-            const { userId } = input;
+            const { userId, hackathonId } = input;
 
-            // Step 1: Find the user's team
+            // Step 1: Find the user's team for this hackathon
             const membership = await databaseClient
                 .select({ teamId: members.teamId })
                 .from(members)
-                .where(eq(members.userId, userId))
+                .innerJoin(teams, eq(teams.id, members.teamId))
+                .where(
+                    and(
+                        eq(members.userId, userId),
+                        eq(teams.hackathonId, hackathonId)
+                    )
+                )
                 .limit(1);
 
             if (membership.length === 0) {
@@ -134,11 +147,16 @@ export const submissionsRouter = router({
 
             const teamId = membership[0].teamId;
 
-            // Step 2: Check for submission by that team to the given hackathon
+            // Step 2: Check for submission by that team for this hackathon
             const submission = await databaseClient
                 .select()
                 .from(submissions)
-                .where(and(eq(submissions.teamId, teamId)))
+                .where(
+                    and(
+                        eq(submissions.teamId, teamId),
+                        eq(submissions.hackathonId, hackathonId)
+                    )
+                )
                 .limit(1);
 
             return {

@@ -1,5 +1,24 @@
 /* ── Headings (Display → LabelSm) ───────────────── */
 
+.md > h1,
+.md > h2,
+.md > h3,
+.md > h4,
+.md > h5,
+.md > h6 {
+    margin-top: 2.5rem;
+    margin-bottom: 0.625rem;
+}
+
+.md > h1:first-child,
+.md > h2:first-child,
+.md > h3:first-child,
+.md > h4:first-child,
+.md > h5:first-child,
+.md > h6:first-child {
+    margin-top: 0;
+}
+
 .md > h1 {
     font-family: var(--font-sans-0);
     font-size: var(--text-3xl);
@@ -54,36 +73,70 @@
     font-family: var(--font-sans-0);
     font-size: var(--text-base);
     font-weight: var(--font-weight-normal);
-    line-height: var(--leading-normal);
+    line-height: var(--leading-relaxed);
     letter-spacing: var(--tracking-tight);
-    margin-bottom: 0.75rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.md > p:last-child {
+    margin-bottom: 0;
 }
 
 /* ── Body text (lists) ───────────────────────────── */
 
-.md > ul {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+.md > ul,
+.md > ol,
+.md li ul,
+.md li ol {
+    list-style: none;
+    margin-top: 0.5rem;
+    margin-bottom: 1.25rem;
+    padding-left: 0;
 }
 
-.md > * > li {
-    display: flex;
-    align-items: center;
+.md > ul:last-child,
+.md > ol:last-child {
+    margin-bottom: 0;
+}
+
+.md ul > li,
+.md ol > li {
+    position: relative;
+    padding-left: 1.125rem;
+    margin-bottom: 0.625rem;
     font-family: var(--font-sans-0);
     font-size: var(--text-base);
     font-weight: var(--font-weight-normal);
-    line-height: var(--leading-none);
+    line-height: var(--leading-relaxed);
     letter-spacing: var(--tracking-tight);
 }
 
-.md > * > li::before {
+.md ul > li:last-child,
+.md ol > li:last-child {
+    margin-bottom: 0;
+}
+
+.md li ul,
+.md li ol {
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+    padding-left: 0.75rem;
+}
+
+/* remark wraps list item text in <p> — keep it inline with normal wrapping */
+.md li > p {
+    margin: 0;
+}
+
+.md ul > li::before,
+.md ol > li::before {
     content: '';
-    display: inline-block;
+    position: absolute;
+    left: 0;
+    top: 0.55em;
     width: 0.5rem;
-    min-width: 0.5rem;
     height: 0.5rem;
-    margin-right: 0.75rem;
     border-radius: 50%;
     background-color: var(--brand-500);
 }
@@ -92,15 +145,15 @@
 
 .md > p strong,
 .md > p b,
-.md > * > li strong,
-.md > * > li b {
+.md li strong,
+.md li b {
     font-weight: var(--font-weight-semibold);
 }
 
 /* ── Misc ────────────────────────────────────────── */
 
 .md > hr {
-    margin: 1rem;
+    margin: 2rem 0;
     border-color: var(--border-neutral-secondary);
 }
 

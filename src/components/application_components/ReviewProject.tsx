@@ -309,7 +309,12 @@ export function ReviewProject({
                                         <ProjectTags tags={tagLabels} />
                                     </div>
                                     {descriptionQuestion && (
-                                        <div className="order-3 md:col-span-8">
+                                        <div className="order-3 flex flex-col gap-4 md:col-span-8">
+                                            {descriptionQuestion.title ? (
+                                                <span className="text-sm font-medium text-white/60">
+                                                    {descriptionQuestion.title}
+                                                </span>
+                                            ) : null}
                                             <DescriptionPreview
                                                 question={
                                                     descriptionQuestion as QuestionMarkdownInput
