@@ -3,15 +3,19 @@
 import { useEffect } from 'react';
 import { useAtomValue } from 'jotai';
 import { hackathonAtom, userInfoAtom } from '@/app/(auth)/ClientContext';
-import { identifyPostHogUser, POSTHOG_APP } from '@/lib/analytics/posthog';
+import {
+    identifyPostHogUser,
+    isPostHogConfigured,
+    POSTHOG_APP,
+} from '@/lib/analytics/posthog';
 
-/** Links PostHog persons to logged-in portal users (auth layout only). */
+// links PostHog persons to logged-in portal users (auth layout only).
 export function PostHogIdentify() {
     const user = useAtomValue(userInfoAtom);
     const hackathon = useAtomValue(hackathonAtom);
 
     useEffect(() => {
-        if (!user?.id) return;
+        if (!isPostHogConfigured() || !user?.id) return;
 
         identifyPostHogUser(user.id, {
             app: POSTHOG_APP,

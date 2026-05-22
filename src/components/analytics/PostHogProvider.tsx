@@ -6,10 +6,11 @@ import { PostHogProvider as PHProvider } from 'posthog-js/react';
 import {
     capturePostHogPageview,
     initPostHog,
+    isPostHogConfigured,
     posthog,
 } from '@/lib/analytics/posthog';
 
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && isPostHogConfigured()) {
     initPostHog();
 }
 
@@ -29,7 +30,7 @@ function PostHogPageView() {
 }
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
-    if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+    if (!isPostHogConfigured()) {
         return <>{children}</>;
     }
 

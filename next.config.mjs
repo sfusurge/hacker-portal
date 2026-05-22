@@ -19,6 +19,9 @@ const nextConfig = {
     },
     skipTrailingSlashRedirect: true,
     async rewrites() {
+        if (!process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim()) {
+            return [];
+        }
         return posthogRewrites();
     },
     images: {

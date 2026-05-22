@@ -1,6 +1,12 @@
 import posthog from 'posthog-js';
 
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim();
+
+// false when the key is unset — no init, capture, or network requests.
+export function isPostHogConfigured(): boolean {
+    return Boolean(POSTHOG_KEY);
+}
+
 export const POSTHOG_API_HOST = '/ingest';
 const POSTHOG_UI_HOST = 'https://us.posthog.com';
 
@@ -33,8 +39,9 @@ function registerPostHogSuperProperties(): void {
     });
 }
 
+// true when configured and running in the browser (safe to call posthog APIs).
 export function isPostHogEnabled(): boolean {
-    return typeof window !== 'undefined' && Boolean(POSTHOG_KEY);
+    return typeof window !== 'undefined' && isPostHogConfigured();
 }
 
 let initialized = false;
