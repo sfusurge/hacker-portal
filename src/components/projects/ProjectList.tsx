@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAtomValue } from 'jotai';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { FormTextInput } from '@/components/ui/input/input';
 import { Label } from '@/components/ui/label/label';
 import ProjectCard from './ProjectCard';
@@ -43,6 +45,7 @@ export default function ProjectList({
     judgedProjects,
     allProjects,
 }: ProjectListProps) {
+    const hackathon = useAtomValue(hackathonAtom);
     const { toast } = useToast();
     const [projectStatuses, setProjectStatuses] = useState<
         Record<string, string>
@@ -129,7 +132,7 @@ export default function ProjectList({
 
         if (!isAssigned) {
             return {
-                label: 'Not Judging',
+                label: 'May view',
                 className: 'bg-neutral-800 text-white/60',
             };
         }
@@ -365,7 +368,7 @@ export default function ProjectList({
                     </h1>
                     <p className="text-white/60">
                         {showAllProjects
-                            ? 'Thank you for being a judge for StormHacks 2025! You can now view every project 💖.'
+                            ? `Thank you for being a judge for ${hackathon.hackathonName}! You may view every project 💖.`
                             : "Here are the projects you've been assigned to judge."}
                     </p>
                 </div>
