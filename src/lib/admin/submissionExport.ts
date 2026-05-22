@@ -250,9 +250,7 @@ export function getSubmissionCsvExportField(
     }
 
     if (question.type === 'link') {
-        return toBinaryString(
-            formatSubmissionFieldValue(raw).trim().length > 0
-        );
+        return formatSubmissionFieldValue(raw).trim();
     }
 
     return formatSubmissionFieldValue(raw);
