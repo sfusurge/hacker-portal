@@ -25,9 +25,9 @@ export function JudgeProjectPageView({
     );
 
     return (
-        <div className="grid h-full grid-cols-1 xl:grid-cols-3">
-            <div className="h-full overflow-y-auto pb-48 md:pb-10 xl:col-span-2 xl:pb-10">
-                <div className="flex flex-col gap-10 md:pr-6 xl:pr-10">
+        <div className="grid h-full w-full min-w-0 grid-cols-1 xl:grid-cols-3">
+            <div className="h-full w-full max-w-full min-w-0 overflow-x-hidden overflow-y-auto pb-48 md:pb-10 xl:col-span-2 xl:pb-10">
+                <div className="flex w-full max-w-full min-w-0 flex-col gap-10 md:pr-6 xl:pr-10">
                     <ProjectSectionsList
                         sections={projectSections}
                         response={response}

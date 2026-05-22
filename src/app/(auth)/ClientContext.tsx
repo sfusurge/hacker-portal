@@ -14,6 +14,7 @@ import { useHydrateAtoms } from 'jotai/utils';
 import { ReactNode } from 'react';
 import { DynamicTitle } from '@/components/DynamicTitle';
 import { AnnouncementsAblySubscriber } from '@/components/announcements/AnnouncementsAblySubscriber';
+import { PostHogIdentify } from '@/components/analytics/PostHogIdentify';
 
 export type { AnnouncementWithAttachments };
 
@@ -161,6 +162,7 @@ export function ClientContext({
     return (
         <>
             <DynamicTitle />
+            <PostHogIdentify />
             <AnnouncementsAblySubscriber />
             {children}
         </>

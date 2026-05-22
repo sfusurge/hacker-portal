@@ -47,5 +47,9 @@ export function MarkdownDisplay({ content }: { content: string }) {
         return null;
     }
 
-    return <div className={cn(style.md, 'w-full')}>{rendered}</div>;
+    return (
+        <div className={cn(style.md, 'w-full max-w-full min-w-0')}>
+            {rendered}
+        </div>
+    );
 }
