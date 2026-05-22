@@ -3,6 +3,7 @@ import {
     getResponseValue,
     getSubmissionLocationKey,
 } from '@/lib/admin/submissionExport';
+import { buildProjectPageSections } from '@/lib/projects/buildProjectPageSections';
 import { resolveSubmissionReviewTableLocationQuestionId } from '@/lib/projects/buildSubmissionReviewTableColumns';
 import type { InputFormPageData } from '@/components/application_components/types';
 import { formFieldContentToPlainText } from '@/lib/markdown/content';
@@ -178,9 +179,7 @@ export function getProjectTitle(
     return getProjectSubmissionText(response, ids.title) || fallback;
 }
 
-export type ProjectGalleryLocationFilter = 'all' | 'sfu' | 'waterloo';
-
-/** Normalized location on a submission (`sfu` = Vancouver). */
+// normalized location on a submission (`sfu` = Vancouver).
 export type ProjectGalleryLocationKey = 'sfu' | 'waterloo';
 
 export type ProjectListItem = {
@@ -193,23 +192,40 @@ export type ProjectListItem = {
     locationKey: ProjectGalleryLocationKey | null;
     headerImage: string;
     tagline: string;
+    tags: string[];
     fullSubmissionResponse?: Record<string, unknown>;
     status?: string;
 };
 
-export function projectListItemMatchesLocationFilter(
-    project: Pick<ProjectListItem, 'locationKey'>,
-    filter: ProjectGalleryLocationFilter
-): boolean {
-    if (filter === 'all') return true;
-    if (!project.locationKey) return true;
-    return project.locationKey === filter;
+export function collectProjectListItemTags(
+    pages: InputFormPageData[] | undefined,
+    response: Record<string, unknown>
+): string[] {
+    const tags: string[] = [];
+    const sections = buildProjectPageSections(pages, { response });
+
+    for (const section of sections) {
+        if (section.type === 'badge') {
+            const label = getProjectSubmissionText(
+                response,
+                section.field
+            ).trim();
+            if (label) tags.push(label);
+        }
+        if (section.type === 'eligible-tracks' && section.eligibleTrackNames) {
+            for (const name of section.eligibleTrackNames) {
+                if (name.trim()) tags.push(name.trim());
+            }
+        }
+    }
+
+    return [...new Set(tags)];
 }
 
 export function projectListItemMatchesSearchQuery(
     project: Pick<
         ProjectListItem,
-        'title' | 'tagline' | 'teamName' | 'track' | 'eligibleTracks'
+        'title' | 'tagline' | 'teamName' | 'track' | 'eligibleTracks' | 'tags'
     >,
     query: string
 ): boolean {
@@ -221,9 +237,11 @@ export function projectListItemMatchesSearchQuery(
     if (project.teamName.toLowerCase().includes(q)) return true;
     if (project.track.toLowerCase().includes(q)) return true;
 
-    return project.eligibleTracks.some((name) =>
-        name.toLowerCase().includes(q)
-    );
+    if (project.eligibleTracks.some((name) => name.toLowerCase().includes(q))) {
+        return true;
+    }
+
+    return project.tags.some((tag) => tag.toLowerCase().includes(q));
 }
 
 export function mapSubmissionToProjectListItem(
@@ -270,6 +288,10 @@ export function mapSubmissionToProjectListItem(
         tagline:
             getProjectTaglinePlainText(response, ids.tagline) ||
             'No description available',
+        tags: collectProjectListItemTags(
+            options?.submissionQuestionPages,
+            response
+        ),
     };
 
     if (options?.status) {
@@ -293,6 +315,7 @@ export function createSkeletonProjectListItem(): ProjectListItem {
         locationKey: null,
         headerImage: DEFAULT_HEADER_IMAGE,
         tagline: '',
+        tags: [],
     };
 }
 
