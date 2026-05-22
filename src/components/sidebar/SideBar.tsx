@@ -190,6 +190,7 @@ export default function SideBar({ className, initialData }: NavProps) {
         hackathon != null &&
         canAccessProjectGallery(
             now,
+            hackathon.projectGalleryOpen?.toDate() ?? null,
             hackathon.submissionDeadline.toDate(),
             initialData?.userRole
         );

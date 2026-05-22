@@ -76,6 +76,7 @@ interface DbHackathonType {
     startDate: string;
     endDate: string;
     submissionDeadline: Date;
+    projectGalleryOpen?: Date | null;
     submissionOpen: Date | null;
     applicationOpen?: Date | null;
     applicationCloses?: Date | null;
@@ -102,6 +103,10 @@ function DeserializeHackathonData(hackathon: DbHackathonType): HackathonData {
         startDate: dayjs(hackathon.startDate),
         endDate: dayjs(hackathon.endDate),
         submissionDeadline: dayjs(hackathon.submissionDeadline),
+        projectGalleryOpen:
+            hackathon.projectGalleryOpen != null
+                ? dayjs(hackathon.projectGalleryOpen)
+                : null,
         submissionOpen:
             hackathon.submissionOpen != null
                 ? dayjs(hackathon.submissionOpen)

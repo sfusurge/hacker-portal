@@ -46,6 +46,10 @@ const hackathons = pgTable('hackathons', {
     submissionDeadline: timestamp('submission_deadline')
         .notNull()
         .default(JOURNEY_HACK_2025_DEADLINE),
+    projectGalleryOpen: timestamp('project_gallery_open', {
+        mode: 'date',
+        withTimezone: true,
+    }),
     submissionOpen: timestamp('submission_open', {
         mode: 'date',
         withTimezone: true,

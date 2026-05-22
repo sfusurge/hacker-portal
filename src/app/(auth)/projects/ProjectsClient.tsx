@@ -85,8 +85,14 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
         );
     }
 
+    const galleryOpensAt =
+        hackathon.projectGalleryOpen?.isValid() === true
+            ? hackathon.projectGalleryOpen
+            : hackathon.submissionDeadline;
+
     const galleryOpen = canAccessProjectGallery(
         Date.now(),
+        hackathon.projectGalleryOpen?.toDate() ?? null,
         hackathon.submissionDeadline.toDate(),
         user?.userRole
     );
@@ -95,8 +101,8 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
         return (
             <div className="flex h-full items-center justify-center px-6 text-center">
                 <p className="max-w-md text-pretty text-white/60">
-                    The project gallery opens after submissions close on{' '}
-                    {hackathon.submissionDeadline.format('MMM D, YYYY h:mm A')}.
+                    The project gallery opens on{' '}
+                    {galleryOpensAt.format('MMM D, YYYY h:mm A')}.
                 </p>
             </div>
         );
