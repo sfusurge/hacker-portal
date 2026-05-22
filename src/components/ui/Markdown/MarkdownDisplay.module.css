@@ -169,3 +169,29 @@
     color: var(--brand-400);
     text-decoration: underline;
 }
+
+.md table {
+    width: 100%;
+    max-width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.75rem;
+    margin-bottom: 1.25rem;
+    font-size: var(--text-sm);
+}
+
+.md thead th {
+    font-weight: var(--font-weight-semibold);
+    text-align: left;
+    background-color: rgb(38 38 38);
+}
+
+.md th,
+.md td {
+    border: 1px solid var(--border-neutral-secondary);
+    padding: 0.5rem 0.75rem;
+    vertical-align: top;
+}
+
+.md tbody tr:nth-child(even) {
+    background-color: rgb(23 23 23 / 0.6);
+}

@@ -4,11 +4,8 @@ import { FormTextInput } from '@/components/ui/input/input';
 import { Label } from '@/components/ui/label/label';
 import { MagnifyingGlassIcon } from '@heroicons/react/16/solid';
 import { useState } from 'react';
-import { ProjectGalleryLocationToggle } from './ProjectGalleryLocationToggle';
 import {
-    projectListItemMatchesLocationFilter,
     projectListItemMatchesSearchQuery,
-    type ProjectGalleryLocationFilter,
     type ProjectListItem,
 } from '@/lib/projects/projectSubmissionDisplay';
 
@@ -22,13 +19,9 @@ export default function PublicProjectList({
     hackathonName = 'Current event',
 }: PublicProjectListProps) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [locationFilter, setLocationFilter] =
-        useState<ProjectGalleryLocationFilter>('all');
 
-    const filteredProjects = projects.filter(
-        (project) =>
-            projectListItemMatchesSearchQuery(project, searchQuery) &&
-            projectListItemMatchesLocationFilter(project, locationFilter)
+    const filteredProjects = projects.filter((project) =>
+        projectListItemMatchesSearchQuery(project, searchQuery)
     );
 
     if (projects.length === 0) {
@@ -47,28 +40,21 @@ export default function PublicProjectList({
                         {hackathonName} project gallery
                     </h1>
                 </div>
-                <div className="flex flex-col gap-3 md:flex-row md:items-end md:gap-4">
-                    <div className="flex min-w-0 flex-1 flex-col gap-2">
-                        <Label>Search for a project</Label>
-                        <FormTextInput
-                            name="search"
-                            id="search"
-                            type="search"
-                            className="w-full max-w-full md:max-w-[320px]"
-                            icon={
-                                <MagnifyingGlassIcon className="h-4 w-4 text-white/60" />
-                            }
-                            defaultValue={searchQuery}
-                            lazy
-                            onLazyChange={(text) => {
-                                setSearchQuery(text);
-                            }}
-                        />
-                    </div>
-                    <ProjectGalleryLocationToggle
-                        value={locationFilter}
-                        onChange={setLocationFilter}
-                        className="md:pb-0.5"
+                <div className="flex flex-col gap-2">
+                    <Label>Search projects or tags</Label>
+                    <FormTextInput
+                        name="search"
+                        id="search"
+                        type="search"
+                        className="w-full max-w-full md:max-w-[320px]"
+                        icon={
+                            <MagnifyingGlassIcon className="h-4 w-4 text-white/60" />
+                        }
+                        defaultValue={searchQuery}
+                        lazy
+                        onLazyChange={(text) => {
+                            setSearchQuery(text);
+                        }}
                     />
                 </div>
             </div>
@@ -81,11 +67,10 @@ export default function PublicProjectList({
                                 <p className="text-lg text-white">
                                     No projects match your search.
                                 </p>
-                                {(searchQuery.trim() !== '' ||
-                                    locationFilter !== 'all') && (
+                                {searchQuery.trim() !== '' && (
                                     <p className="mt-2 text-sm text-white/60">
-                                        Try adjusting your search or location
-                                        filter.
+                                        Try a different name or tag (track,
+                                        location, sponsor track).
                                     </p>
                                 )}
                             </div>

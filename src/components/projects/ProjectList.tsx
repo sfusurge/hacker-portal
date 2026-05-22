@@ -22,12 +22,9 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { DropdownBadge } from '@/components/ui/dropdown-badge';
-import { ProjectGalleryLocationToggle } from './ProjectGalleryLocationToggle';
 import {
     createSkeletonProjectListItem,
-    projectListItemMatchesLocationFilter,
     projectListItemMatchesSearchQuery,
-    type ProjectGalleryLocationFilter,
     type ProjectListItem,
 } from '@/lib/projects/projectSubmissionDisplay';
 const STATUS_KEY = 'judging_status_data';
@@ -51,8 +48,6 @@ export default function ProjectList({
         Record<string, string>
     >({});
     const [searchQuery, setSearchQuery] = useState('');
-    const [locationFilter, setLocationFilter] =
-        useState<ProjectGalleryLocationFilter>('all');
     const [filteredProjects, setFilteredProjects] = useState(projects);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [showAllProjects, setShowAllProjects] = useState(false);
@@ -311,16 +306,7 @@ export default function ProjectList({
             statusFilters.size === 0 &&
             Object.keys(projectStatuses).length === 0
         ) {
-            setFilteredProjects(
-                locationFilter === 'all'
-                    ? projectsToFilter
-                    : projectsToFilter.filter((project) =>
-                          projectListItemMatchesLocationFilter(
-                              project,
-                              locationFilter
-                          )
-                      )
-            );
+            setFilteredProjects(projectsToFilter);
             return;
         }
 
@@ -355,18 +341,13 @@ export default function ProjectList({
                 project,
                 query
             );
-            const matchesLocation = projectListItemMatchesLocationFilter(
-                project,
-                locationFilter
-            );
 
-            return matchesSearch && matchesStatus && matchesLocation;
+            return matchesSearch && matchesStatus;
         });
 
         setFilteredProjects(filtered);
     }, [
         searchQuery,
-        locationFilter,
         projects,
         statusFilters,
         projectStatuses,
@@ -390,28 +371,21 @@ export default function ProjectList({
                 </div>
 
                 <div className="flex flex-col gap-2">
-                    <Label>Search for a project</Label>
-                    <div className="flex flex-col gap-3 md:flex-row md:items-end md:gap-4">
-                        <FormTextInput
-                            name="search"
-                            id="search"
-                            type="search"
-                            className="w-full md:max-w-[320px]"
-                            icon={
-                                <MagnifyingGlassIcon className="h-4 w-4 text-white/60" />
-                            }
-                            defaultValue={searchQuery}
-                            lazy
-                            onLazyChange={(text) => {
-                                setSearchQuery(text);
-                            }}
-                        />
-                        <ProjectGalleryLocationToggle
-                            value={locationFilter}
-                            onChange={setLocationFilter}
-                            className="shrink-0 md:pb-0.5"
-                        />
-                    </div>
+                    <Label>Search projects or tags</Label>
+                    <FormTextInput
+                        name="search"
+                        id="search"
+                        type="search"
+                        className="w-full md:max-w-[320px]"
+                        icon={
+                            <MagnifyingGlassIcon className="h-4 w-4 text-white/60" />
+                        }
+                        defaultValue={searchQuery}
+                        lazy
+                        onLazyChange={(text) => {
+                            setSearchQuery(text);
+                        }}
+                    />
                     <div className="flex gap-3">
                         <div className="block md:hidden">
                             <Drawer>
@@ -589,8 +563,8 @@ export default function ProjectList({
                                 {(searchQuery.trim() !== '' ||
                                     statusFilters.size > 0) && (
                                     <p className="mt-2 text-sm text-white/60">
-                                        Try clearing your filters or adjusting
-                                        your search query.
+                                        Try clearing your filters or a different
+                                        name or tag.
                                     </p>
                                 )}
                             </div>
