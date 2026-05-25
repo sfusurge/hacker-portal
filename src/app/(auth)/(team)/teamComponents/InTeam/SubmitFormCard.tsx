@@ -14,7 +14,9 @@ import {
 } from '@/components/application_components/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { getFileSize } from '@/components/ui/FileUpload/FileUpload';
+import { toast } from '@/hooks/use-toast';
 import { submitProject } from '@/lib/blobs';
+import { isSubmissionWindowOpen } from '@/lib/submissionWindow';
 import { trpc } from '@/trpc/client';
 import ProjectSubmissionSuccess from '@/app/(auth)/(team)/teamComponents/submit/ProjectSubmissionSuccess';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
@@ -89,6 +91,7 @@ export function SubmitFormCard({
     teamPictureUrl?: string | null;
 }) {
     const submitData = useAtomValue(submitWithLocalAtom);
+    const hackathon = useAtomValue(hackathonAtom);
     const setCurrentTeam = useSetAtom(currentTeamAtom);
     const [progressMsg, setProgress] = useState('');
     const [projectSubmitted, setProjectSubmitted] = useState(false);
@@ -105,6 +108,25 @@ export function SubmitFormCard({
     const submitSubmission = trpc.submissions.submitSubmission.useMutation();
 
     async function submit() {
+        if (
+            !hackathon ||
+            !isSubmissionWindowOpen(
+                Date.now(),
+                hackathon.submissionOpen?.toDate() ?? null,
+                hackathon.submissionDeadline.toDate()
+            )
+        ) {
+            const message =
+                'Submissions are only accepted during the open submission window.';
+            setProgress(message);
+            toast({
+                title: 'Submission failed',
+                description: message,
+                variant: 'error',
+            });
+            throw new Error(message);
+        }
+
         setProgress('Starting uploads...');
         const processedPage = await processResponseForServer(
             submitData.pages,
@@ -136,7 +158,14 @@ export function SubmitFormCard({
             setProjectSubmitted(true);
         } catch (error) {
             console.error('Failed to submit project:', error);
-            setProgress('Failed to submit project. Please try again.');
+            const message = 'Failed to submit project. Please try again.';
+            setProgress(message);
+            toast({
+                title: 'Submission failed',
+                description: message,
+                variant: 'error',
+            });
+            throw error instanceof Error ? error : new Error(message);
         }
     }
 
