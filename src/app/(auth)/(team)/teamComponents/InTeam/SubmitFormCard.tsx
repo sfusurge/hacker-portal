@@ -14,14 +14,23 @@ import {
 } from '@/components/application_components/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { getFileSize } from '@/components/ui/FileUpload/FileUpload';
-import { toast } from '@/hooks/use-toast';
 import { submitProject } from '@/lib/blobs';
 import { isSubmissionWindowOpen } from '@/lib/submissionWindow';
 import { trpc } from '@/trpc/client';
 import ProjectSubmissionSuccess from '@/app/(auth)/(team)/teamComponents/submit/ProjectSubmissionSuccess';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+
+/** detect window-closed errors from `/api/blob/project` and `submitSubmission`. */
+function isSubmissionWindowClosedError(message: string) {
+    return (
+        // error messages
+        message.includes('open submission window') ||
+        message.includes('submission window')
+    );
+}
 const localAppResponseAtom = atomWithStorage('submit_response', {
     hackathonId: -1,
     email: '',
@@ -91,8 +100,9 @@ export function SubmitFormCard({
     teamPictureUrl?: string | null;
 }) {
     const submitData = useAtomValue(submitWithLocalAtom);
-    const hackathon = useAtomValue(hackathonAtom);
     const setCurrentTeam = useSetAtom(currentTeamAtom);
+    const router = useRouter();
+    const utils = trpc.useUtils();
     const [progressMsg, setProgress] = useState('');
     const [projectSubmitted, setProjectSubmitted] = useState(false);
 
@@ -107,48 +117,52 @@ export function SubmitFormCard({
 
     const submitSubmission = trpc.submissions.submitSubmission.useMutation();
 
+    function rejectClosedWindow() {
+        router.refresh();
+        throw new Error(
+            'Submissions are only accepted during the open submission window.'
+        );
+    }
+
     async function submit() {
+        const activeHackathon =
+            await utils.hackathons.getActiveHackathon.fetch();
+
         if (
-            !hackathon ||
+            !activeHackathon ||
             !isSubmissionWindowOpen(
                 Date.now(),
-                hackathon.submissionOpen?.toDate() ?? null,
-                hackathon.submissionDeadline.toDate()
+                activeHackathon.submissionOpen != null
+                    ? new Date(activeHackathon.submissionOpen)
+                    : null,
+                new Date(activeHackathon.submissionDeadline)
             )
         ) {
-            const message =
-                'Submissions are only accepted during the open submission window.';
-            setProgress(message);
-            toast({
-                title: 'Submission failed',
-                description: message,
-                variant: 'error',
-            });
-            throw new Error(message);
+            rejectClosedWindow();
         }
 
-        setProgress('Starting uploads...');
-        const processedPage = await processResponseForServer(
-            submitData.pages,
-            async (filename, file) => {
-                const blob = await submitProject({
-                    fileName: filename,
-                    fileContent: file,
-                    onUploadProgress: (e) => {
-                        setProgress(
-                            `Uploading file: ${file.name}(${getFileSize(file.size)}) ${e.percentage}%`
-                        );
-                    },
-                    contentType: file.type,
-                    teamId,
-                });
-                return blob.url;
-            }
-        );
-
-        setProgress('submitting other responses...');
-        const response = getResponseMap(processedPage);
         try {
+            setProgress('Starting uploads...');
+            const processedPage = await processResponseForServer(
+                submitData.pages,
+                async (filename, file) => {
+                    const blob = await submitProject({
+                        fileName: filename,
+                        fileContent: file,
+                        onUploadProgress: (e) => {
+                            setProgress(
+                                `Uploading file: ${file.name}(${getFileSize(file.size)}) ${e.percentage}%`
+                            );
+                        },
+                        contentType: file.type,
+                        teamId,
+                    });
+                    return blob.url;
+                }
+            );
+
+            setProgress('submitting other responses...');
+            const response = getResponseMap(processedPage);
             await submitSubmission.mutateAsync({
                 teamId,
                 hackathonId: submitData.id,
@@ -158,13 +172,16 @@ export function SubmitFormCard({
             setProjectSubmitted(true);
         } catch (error) {
             console.error('Failed to submit project:', error);
-            const message = 'Failed to submit project. Please try again.';
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to submit project. Please try again.';
+
+            if (isSubmissionWindowClosedError(message)) {
+                rejectClosedWindow();
+            }
+
             setProgress(message);
-            toast({
-                title: 'Submission failed',
-                description: message,
-                variant: 'error',
-            });
             throw error instanceof Error ? error : new Error(message);
         }
     }
