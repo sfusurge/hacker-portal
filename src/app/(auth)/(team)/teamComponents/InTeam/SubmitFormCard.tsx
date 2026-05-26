@@ -23,14 +23,6 @@ import { atomWithStorage } from 'jotai/utils';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-/** detect window-closed errors from `/api/blob/project` and `submitSubmission`. */
-function isSubmissionWindowClosedError(message: string) {
-    return (
-        // error messages
-        message.includes('open submission window') ||
-        message.includes('submission window')
-    );
-}
 const localAppResponseAtom = atomWithStorage('submit_response', {
     hackathonId: -1,
     email: '',
@@ -124,20 +116,23 @@ export function SubmitFormCard({
         );
     }
 
-    async function submit() {
+    async function isActiveSubmissionWindowOpen() {
         const activeHackathon =
             await utils.hackathons.getActiveHackathon.fetch();
 
-        if (
-            !activeHackathon ||
-            !isSubmissionWindowOpen(
-                Date.now(),
-                activeHackathon.submissionOpen != null
-                    ? new Date(activeHackathon.submissionOpen)
-                    : null,
-                new Date(activeHackathon.submissionDeadline)
-            )
-        ) {
+        if (!activeHackathon) return false;
+
+        return isSubmissionWindowOpen(
+            Date.now(),
+            activeHackathon.submissionOpen != null
+                ? new Date(activeHackathon.submissionOpen)
+                : null,
+            new Date(activeHackathon.submissionDeadline)
+        );
+    }
+
+    async function submit() {
+        if (!(await isActiveSubmissionWindowOpen())) {
             rejectClosedWindow();
         }
 
@@ -172,15 +167,15 @@ export function SubmitFormCard({
             setProjectSubmitted(true);
         } catch (error) {
             console.error('Failed to submit project:', error);
+
+            if (!(await isActiveSubmissionWindowOpen())) {
+                rejectClosedWindow();
+            }
+
             const message =
                 error instanceof Error
                     ? error.message
                     : 'Failed to submit project. Please try again.';
-
-            if (isSubmissionWindowClosedError(message)) {
-                rejectClosedWindow();
-            }
-
             setProgress(message);
             throw error instanceof Error ? error : new Error(message);
         }
