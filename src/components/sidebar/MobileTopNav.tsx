@@ -10,7 +10,7 @@ import { usePathname } from 'next/navigation';
 import { UserData } from '@/server/routers/usersRouter';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAtomValue } from 'jotai';
-import { unreadLabelAtom } from '@/app/(auth)/ClientContext';
+import { hackathonAtom, unreadLabelAtom } from '@/app/(auth)/ClientContext';
 
 interface MobileTopNavProps {
     className?: string;
@@ -33,14 +33,18 @@ const PAGE_TITLE_MAP: { prefix: string; label: string }[] = [
     { prefix: '/sparkjam/projects', label: 'Projects' },
     { prefix: '/projects', label: 'Project Gallery' },
     { prefix: '/home', label: 'Home' },
-    { prefix: '/team/submit', label: 'Submission to SparkJam 2026' },
+    { prefix: '/team/submit', label: 'Submission' },
     { prefix: '/team', label: 'Team' },
     { prefix: '/profile', label: 'Profile' },
 ];
 
-function getPageTitle(pathname: string): string {
+function getPageTitle(pathname: string, hackathonName?: string): string {
     for (const { prefix, label } of PAGE_TITLE_MAP) {
-        if (pathname.startsWith(prefix)) return label;
+        if (!pathname.startsWith(prefix)) continue;
+        if (prefix === '/team/submit' && hackathonName) {
+            return `Submission to ${hackathonName}`;
+        }
+        return label;
     }
     return '';
 }
@@ -61,6 +65,7 @@ export default function MobileTopNav({
         y: number;
     } | null>(null);
     const unreadCount = useAtomValue(unreadLabelAtom);
+    const hackathon = useAtomValue(hackathonAtom);
 
     /** tap outside drawer closes, drag/scroll does not */
     useEffect(() => {
@@ -161,7 +166,7 @@ export default function MobileTopNav({
                                     setShowMobileSidebar((prev) => !prev);
                                 }}
                             >
-                                {getPageTitle(url)}
+                                {getPageTitle(url, hackathon?.hackathonName)}
                             </span>
                         </div>
 

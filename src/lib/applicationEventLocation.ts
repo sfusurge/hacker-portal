@@ -1,16 +1,29 @@
+import type { InputFormPageData } from '@/components/application_components/types';
+import { getApplicationResponseField } from '@/lib/applications/applicationReviewExport';
+
 /**
- * Application question id `2` stores which in-person / remote site the applicant
- * selected (`sfu`, `waterloo`, `remote`, …). must match comparison in `fetchAnnouncementsForViewer`.
+ * Reads the applicant's event-location choice from their application response.
+ * Resolves the answer via `displayRole: "location"`
+ * Returns a normalized key (e.g. `sfu`, `waterloo`, `remote`) for announcement filtering and check-in labels.
  */
 export function getApplicationEventLocationKey(
-    response: Record<string, unknown> | null | undefined
+    response: Record<string, unknown> | null | undefined,
+    applicationQuestionPages?: InputFormPageData[] | undefined
 ): string | null {
     if (response == null) {
         return null;
     }
-    const v = response['2'];
-    if (typeof v !== 'string' || v.trim() === '') {
+
+    const raw = getApplicationResponseField(
+        response,
+        applicationQuestionPages,
+        'location'
+    );
+
+    if (typeof raw !== 'string') {
         return null;
     }
-    return v.trim().toLowerCase();
+
+    const trimmed = raw.trim();
+    return trimmed ? trimmed.toLowerCase() : null;
 }

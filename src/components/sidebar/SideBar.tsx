@@ -30,7 +30,8 @@ import {
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { cn } from '@/lib/utils';
 import { navLinkVariants, NavLink } from './NavLink';
-import { EVENT_PAGE_NAV_LINKS } from '@/components/home/eventPageConfig';
+import { buildEventPageNavLinksFromHackathons } from '@/components/home/eventPageConfig';
+import { trpc } from '@/trpc/client';
 import { UserData } from '@/server/routers/usersRouter';
 import { DEFAULT_USER_AVATAR, resolveUserIconUrl } from '@/utils/blobHelper';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
@@ -161,6 +162,12 @@ const sponsorNavLinks = [
 
 export default function SideBar({ className, initialData }: NavProps) {
     const hackathon = useAtomValue(hackathonAtom);
+    const { data: visibleHackathons = [] } =
+        trpc.hackathons.getVisibleHackathonsForNav.useQuery();
+    const eventPageNavLinks = useMemo(
+        () => buildEventPageNavLinksFromHackathons(visibleHackathons),
+        [visibleHackathons]
+    );
     const [now] = useState(() => Date.now());
     const [collapsed, setCollapsed] = useState(false);
     const [showCollapseToggle, setShowCollapseToggle] = useState(false);
@@ -553,13 +560,27 @@ export default function SideBar({ className, initialData }: NavProps) {
                             )}
 
                             {(initialData?.userRole === 'user' ||
-                                initialData?.userRole === 'admin') && (
-                                <>
-                                    <div className="my-4 border-t border-white/10" />
+                                initialData?.userRole === 'admin') &&
+                                eventPageNavLinks.length > 0 && (
+                                    <>
+                                        <div className="my-4 border-t border-white/10" />
 
-                                    {!collapsed ? (
-                                        <motion.span
-                                            className="mb-2 px-3 text-sm leading-[125%] font-semibold tracking-[-0.0075em] text-white/30"
+                                        {!collapsed ? (
+                                            <motion.span
+                                                className="mb-2 px-3 text-sm leading-[125%] font-semibold tracking-[-0.0075em] text-white/30"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                transition={{
+                                                    duration: 0.5,
+                                                    ease: 'easeInOut',
+                                                }}
+                                            >
+                                                Our Events
+                                            </motion.span>
+                                        ) : null}
+
+                                        <motion.div
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             exit={{ opacity: 0 }}
@@ -567,38 +588,25 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                 duration: 0.5,
                                                 ease: 'easeInOut',
                                             }}
+                                            className="flex flex-col gap-1"
                                         >
-                                            Our Events
-                                        </motion.span>
-                                    ) : null}
-
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{
-                                            duration: 0.5,
-                                            ease: 'easeInOut',
-                                        }}
-                                        className="flex flex-col gap-1"
-                                    >
-                                        {EVENT_PAGE_NAV_LINKS.map((link) => (
-                                            <NavLink
-                                                key={link.href}
-                                                href={link.href}
-                                                label={link.label}
-                                                icon={link.icon}
-                                                iconAlt={link.iconAlt}
-                                                platform="desktop"
-                                                active={url.startsWith(
-                                                    link.href
-                                                )}
-                                                collapsed={collapsed}
-                                            />
-                                        ))}
-                                    </motion.div>
-                                </>
-                            )}
+                                            {eventPageNavLinks.map((link) => (
+                                                <NavLink
+                                                    key={link.href}
+                                                    href={link.href}
+                                                    label={link.label}
+                                                    icon={link.icon}
+                                                    iconAlt={link.iconAlt}
+                                                    platform="desktop"
+                                                    active={url.startsWith(
+                                                        link.href
+                                                    )}
+                                                    collapsed={collapsed}
+                                                />
+                                            ))}
+                                        </motion.div>
+                                    </>
+                                )}
                         </div>
                     </div>
 

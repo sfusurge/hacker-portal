@@ -60,6 +60,10 @@ const hackathons = pgTable('hackathons', {
         .default([]),
     version: integer('version').notNull().default(1),
     isActive: boolean('is_active').notNull().default(false),
+    isVisible: boolean('is_visible').notNull().default(false),
+    isMultipleLocations: boolean('is_multiple_locations')
+        .notNull()
+        .default(false),
     submissionQuestions: jsonb('submissionQuestions')
         .$type<InputFormPageData[]>()
         .notNull()

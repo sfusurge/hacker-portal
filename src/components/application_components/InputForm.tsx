@@ -138,6 +138,7 @@ export function InputForm({
     );
 
     const pages = useAtomValue(pagesAtom);
+    const hackathon = useAtomValue(hackathonAtom);
 
     // which page is currently displayed
     const currentPageIndex = useAtomValue(pageIndexAtom);
@@ -233,7 +234,9 @@ export function InputForm({
                         <span>Dashboard</span>
                     </button>
                     <h1 className="text-xl font-semibold">
-                        SparkJam 2026 Application
+                        {hackathon?.hackathonName
+                            ? `${hackathon.hackathonName} Application`
+                            : 'Application'}
                     </h1>
                 </div>
             )}

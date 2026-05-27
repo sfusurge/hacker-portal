@@ -41,6 +41,7 @@ export interface HackathonData {
     hackathonName: string; // should this be hackathon id in table instead?
     submissionTime?: string;
     isPaid?: boolean;
+    isMultipleLocations?: boolean;
     paymentDeadline: dayjs.Dayjs | null;
 
     applicationQuestionPages: InputFormPageData[];
@@ -103,11 +104,14 @@ export type ApplicationQuestionType = InputFormQuestion['type'];
  * Visibility (where the question appears):
  * - `all` — public project page
  * - `judge` — project page for judges/admins only
- * - `table` — admin submissions review/export table column
+ * - `table` — admin review/export table column (applications + submissions)
  * - `hidden` — submit form only (not visible to the user)
  *
  * Field identity (what the question represents; combine with visibility flags):
  * - `title`, `location`, `track`, `tagline`, `description`, `banner`
+ * - `firstName`, `lastName`, `email`, `phone` — profile autofill + application identity (`table` where needed)
+ * - `pronouns`, `age`, `country`, `school`, `education`, `yearOfStudy`, `major`
+ * - `priorHackathons`, `howHeardAbout`, `dietaryRestrictions`
  * - `pdfPoster` — poster PDF file upload (admin bulk export)
  * - `eligibleTrack` — sponsor/track eligibility checkbox (grouped on project page)
  *
@@ -130,7 +134,21 @@ export type DisplayRole =
     | 'description'
     | 'banner'
     | 'pdfPoster'
-    | 'eligibleTrack';
+    | 'eligibleTrack'
+    | 'firstName'
+    | 'lastName'
+    | 'email'
+    | 'phone'
+    | 'pronouns'
+    | 'age'
+    | 'country'
+    | 'school'
+    | 'education'
+    | 'yearOfStudy'
+    | 'major'
+    | 'priorHackathons'
+    | 'howHeardAbout'
+    | 'dietaryRestrictions';
 
 export type DisplayRoles = DisplayRole | DisplayRole[];
 
