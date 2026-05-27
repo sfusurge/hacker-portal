@@ -28,6 +28,14 @@ export const hackathonsRouter = router({
         return hackathon ?? null;
     }),
 
+    getVisibleHackathonsForNav: publicProcedure.query(async () => {
+        return await databaseClient
+            .select()
+            .from(hackathons)
+            .where(eq(hackathons.isVisible, true))
+            .orderBy(asc(hackathons.startDate));
+    }),
+
     addHackathon: publicProcedure
         .input(insertHackathonSchema)
         .mutation(async ({ input }) => {

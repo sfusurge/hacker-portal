@@ -47,6 +47,19 @@ import {
     HACKATHON_EMAIL_TYPE_LABELS,
     type HackathonEmailType,
 } from '@/db/schema/emails';
+import type { InputFormPageData } from '@/components/application_components/types';
+import {
+    applicationToCsvRecord,
+    buildApplicationCsvColumnHeaders,
+    getApplicationExportField,
+    resolveApplicationLinkUrl,
+    shouldRenderApplicationReviewCellAsLink,
+} from '@/lib/applications/applicationReviewExport';
+import { getResponseValue } from '@/lib/admin/submissionExport';
+import {
+    buildApplicationReviewTableColumns,
+    resolveApplicationReviewTableLocationQuestionId,
+} from '@/lib/applications/buildApplicationReviewTableColumns';
 
 function emailTypeDisplayLabel(emailType: string | null | undefined): string {
     if (emailType && emailType in HACKATHON_EMAIL_TYPE_LABELS) {
@@ -79,51 +92,16 @@ export type Applicant = {
     members: string[] | null;
     id: number;
     teamName: string | null;
-
-    // Basic Information
     firstName: string;
     lastName: string;
-    pronouns: string;
-    age: string;
     email: string;
     eventLocation?: string;
     eventLocationKey?: string;
-    haveHackathonExperience: string;
-    howHeardAbout: string[];
-    dietaryRestrictions?: string[];
-    tShirtSize: string;
-    resume?: string[];
-    discord: string;
-    instagram?: string;
-    github?: string;
-    linkedin?: string;
-    portfolio?: string;
-    otherLinks?: string;
-
-    // School Information
-    school?: string;
-    schoolEmail?: string;
-    background?: string;
-    yearOfStudy?: string;
-    major: string;
-
-    // Short Answer Questions
-    excitement: string;
-    problemOrSkill: string;
-    dreamProject: string;
-
-    // Sponsors / Agreements
-    shareResume: boolean;
-    acceptMLH: boolean;
-    acceptSFSS: boolean;
-    acceptEmails: boolean;
-    authorizeMLH: boolean;
-    photoRelease: boolean;
     currentStatus: string;
     pendingStatus: string;
     applicationDate: Date;
     lastEmailSent: string;
-
+    response: Record<string, unknown>;
     checkIns: {
         eventId: number;
         eventTitle: string;
@@ -134,6 +112,7 @@ export type Applicant = {
 
 type ReviewApplicationsTableProps = {
     data: Applicant[];
+    applicationQuestionPages: InputFormPageData[];
     applicationCount: number;
     applicationDataMap: Map<number, ApplicationWithTeamInfo>;
     fetchNextPage: () => Promise<void>;
@@ -150,14 +129,95 @@ const csvConfig = mkConfig({
     useKeysAsHeaders: true,
 });
 
+function formatApplicationCellValue(value: unknown): string {
+    if (value == null || value === '') return '—';
+    if (Array.isArray(value)) return value.join(', ');
+    return String(value);
+}
+
+function ApplicationReviewAnswerCell({
+    response,
+    questionId,
+    questionType,
+}: {
+    response: Record<string, unknown>;
+    questionId: string;
+    questionType: string;
+}) {
+    const raw = getResponseValue(response, questionId);
+
+    if (shouldRenderApplicationReviewCellAsLink(questionType)) {
+        const url = resolveApplicationLinkUrl(raw);
+        if (url) {
+            return (
+                <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 underline"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    View
+                </a>
+            );
+        }
+        return <span>—</span>;
+    }
+
+    const display = formatApplicationCellValue(raw);
+    return (
+        <span className="block max-w-full" title={display}>
+            {display}
+        </span>
+    );
+}
+
 export default function ReviewApplicationsTable({
     data,
+    applicationQuestionPages,
     applicationCount,
     applicationDataMap,
     fetchNextPage,
     onRowClick,
     hackathonId,
 }: ReviewApplicationsTableProps) {
+    const locationQuestionId = useMemo(
+        () =>
+            resolveApplicationReviewTableLocationQuestionId(
+                applicationQuestionPages
+            ),
+        [applicationQuestionPages]
+    );
+
+    const questionColumns = useMemo(() => {
+        const cols = buildApplicationReviewTableColumns(
+            applicationQuestionPages
+        );
+        if (!locationQuestionId) return cols;
+        return cols.filter((col) => col.questionId !== locationQuestionId);
+    }, [applicationQuestionPages, locationQuestionId]);
+
+    const dynamicQuestionColumns: ColumnDef<Applicant>[] = useMemo(
+        () =>
+            questionColumns.map((col) => ({
+                id: `q-${col.id}`,
+                header: col.header,
+                size: 200,
+                minSize: 120,
+                enableColumnFilter: true,
+                accessorFn: (row: Applicant) =>
+                    getApplicationExportField(row.response, col.questionId),
+                cell: ({ row }) => (
+                    <ApplicationReviewAnswerCell
+                        response={row.original.response}
+                        questionId={col.questionId}
+                        questionType={col.type}
+                    />
+                ),
+            })),
+        [questionColumns]
+    );
+
     const checkedInInfoColumns: ColumnDef<Applicant>[] =
         data[0]?.checkIns?.map(({ eventTitle, eventId }) => {
             return {
@@ -311,109 +371,7 @@ export default function ReviewApplicationsTable({
             cell: (info) =>
                 dayjs(info.getValue() as Date).format('MM-DD HH:mm'),
         },
-        {
-            accessorKey: 'email',
-            header: 'Email',
-            size: 225,
-            minSize: 150,
-        },
-        {
-            accessorKey: 'age',
-            header: 'Age',
-            size: 100,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'discord',
-            header: 'Discord',
-            size: 150,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'school',
-            header: 'School',
-            size: 225,
-            minSize: 150,
-        },
-        {
-            accessorKey: 'schoolEmail',
-            header: 'School Email',
-            size: 225,
-            minSize: 150,
-        },
-        {
-            accessorKey: 'major',
-            header: 'Major',
-            size: 200,
-            minSize: 150,
-        },
-        {
-            accessorKey: 'yearOfStudy',
-            header: 'Year',
-            size: 120,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'background',
-            header: 'background',
-            size: 120,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'haveHackathonExperience',
-            header: 'Hackathon Experience',
-            size: 200,
-            minSize: 150,
-            cell: (info) => {
-                const value = info.getValue();
-                return Array.isArray(value) ? value.join(', ') : value || 'N/A';
-            },
-        },
-        {
-            accessorKey: 'howHeardAbout',
-            header: 'How Heard About',
-            size: 200,
-            minSize: 150,
-            cell: (info) => {
-                const value = info.getValue();
-                return Array.isArray(value) ? value.join(', ') : value || 'N/A';
-            },
-        },
-        {
-            accessorKey: 'dietaryRestrictions',
-            header: 'Dietary Restrictions',
-            size: 200,
-            minSize: 150,
-            filterFn: 'arrIncludes',
-            cell: (info) => {
-                const value = info.getValue();
-                return Array.isArray(value) ? value.join(', ') : value || 'N/A';
-            },
-        },
-        {
-            accessorKey: 'resume',
-            header: 'Resume',
-            size: 200,
-            minSize: 150,
-            enableGlobalFilter: false,
-            enableColumnFilter: false,
-            cell: (info) => {
-                const url: string = ((info.getValue() as string[]) ?? [''])[0];
-
-                return url ? (
-                    <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 underline"
-                    >
-                        View
-                    </a>
-                ) : (
-                    'N/A'
-                );
-            },
-        },
+        ...dynamicQuestionColumns,
         ...checkedInInfoColumns,
     ];
 
@@ -421,6 +379,7 @@ export default function ReviewApplicationsTable({
         <MyTable
             applicationCount={applicationCount}
             applicationDataMap={applicationDataMap}
+            applicationQuestionPages={applicationQuestionPages}
             data={data}
             defaultColumns={defaultColumns}
             fetchNextPage={fetchNextPage}
@@ -459,7 +418,7 @@ function MyTable({
     applicationCount,
     data,
     defaultColumns,
-    //toggleSideCard,
+    applicationQuestionPages,
     applicationDataMap,
     fetchNextPage,
     onRowClick,
@@ -468,7 +427,7 @@ function MyTable({
     applicationCount: number;
     data: Applicant[];
     defaultColumns: ColumnDef<Applicant>[];
-    //toggleSideCard: () => void;
+    applicationQuestionPages: InputFormPageData[];
     applicationDataMap: Map<number, ApplicationWithTeamInfo>;
     fetchNextPage: () => Promise<void>;
     onRowClick?: (app: Applicant, idx: number) => void;
@@ -855,55 +814,46 @@ function MyTable({
 
     const exportExcel = () => {
         const selectedRows = table.getSelectedRowModel().rows;
-        const allCheckInTitles = Array.from(
-            new Set(
-                (data ?? []).flatMap(
-                    (r) => r.checkIns?.map((ci) => ci.eventTitle) ?? []
-                )
-            )
-        );
 
-        const tempData = selectedRows.map(({ original }) => {
-            const { applicationDate, checkIns, ...rest } = original;
-            const checkInColumns = (checkIns ?? []).reduce<
-                Record<string, string>
-            >((acc, ci) => {
-                if (ci?.eventTitle) {
-                    acc[ci.eventTitle] = ci?.checkInTime
-                        ? dayjs(ci.checkInTime).format('MM-DD HH:mm')
-                        : '';
-                }
-                return acc;
-            }, {});
-            for (const title of allCheckInTitles) {
-                if (!(title in checkInColumns)) {
-                    checkInColumns[title] = '';
-                }
-            }
-
-            return {
-                ...rest,
-                applicationDate: dayjs(applicationDate).format('MM-DD HH:mm'),
-                howHeardAbout: original.howHeardAbout?.join(', ') || '',
-                dietaryRestrictions:
-                    original.dietaryRestrictions?.join(', ') || '',
-                resume: original.resume?.join(', ') || '',
-                members: Array.isArray(original.members)
-                    ? original.members.join(', ')
-                    : '',
-                ...checkInColumns,
-            };
-        });
-
-        if (tempData.length === 0) {
+        if (selectedRows.length === 0) {
             alert(
                 'No rows selected. Please select at least one row to export.'
             );
             return;
         }
 
-        const csv = generateCsv(csvConfig)(tempData);
-        download(csvConfig)(csv);
+        const checkInColumns = Array.from(
+            new Map(
+                (data ?? [])
+                    .flatMap((row) => row.checkIns ?? [])
+                    .map((ci) => [
+                        ci.eventId,
+                        { eventId: ci.eventId, eventTitle: ci.eventTitle },
+                    ])
+            ).values()
+        );
+
+        const columnHeaders = buildApplicationCsvColumnHeaders(
+            applicationQuestionPages,
+            checkInColumns
+        );
+
+        const csvData = selectedRows.map(({ original }) =>
+            applicationToCsvRecord(
+                original,
+                applicationQuestionPages,
+                checkInColumns
+            )
+        );
+
+        const config = mkConfig({
+            ...csvConfig,
+            useKeysAsHeaders: false,
+            columnHeaders,
+        });
+
+        const csv = generateCsv(config)(csvData);
+        download(config)(csv);
     };
 
     return (
