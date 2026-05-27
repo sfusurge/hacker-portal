@@ -3,6 +3,7 @@
 </a>
 <br />
 <br />
+
 The source code repository for hacker portal, SFU Surge's all-in-one hackathon application management system
 
 ## Installation and Setup
@@ -13,19 +14,20 @@ The source code repository for hacker portal, SFU Surge's all-in-one hackathon a
 
 3. Have `pnpm` installed:
 
-```
+```sh
 npm install -g pnpm@latest
+pnpm install
 ```
 
-and then run `pnpm install` within the project directory to install the packages
+4. Copy [`.env.example`](.env.example) to `.env` and fill in credentials (shared values may be on the team Notion).
 
 ## Environment Settings
 
-Copy and paste the following settings into your local `.env` file, and fill out all the fields with the correct credentials
+See [`.env.example`](.env.example) for all variables. At minimum you need `DBURL`, `NEXTAUTH_SECRET`, and OAuth provider credentials for the sign-in methods you use.
 
 ### Discord announcements ingestion
 
-If you are running the Discord announcements pipeline, also set:
+If you are running the Discord announcements pipeline (via [`portal-discord-bot`](../portal-discord-bot/)), also set:
 
 ```env
 # Bearer secret for POST/DELETE /api/webhooks/discord. Must match PORTAL_API_SECRET
@@ -43,7 +45,6 @@ DISCORD_INGEST_SECRET=<long random string>
 # DISCORD_ATTACHMENT_REHOST_ENABLED=true
 
 # Required when DISCORD_ATTACHMENT_REHOST_ENABLED=true.
-# R2 endpoint + credentials + bucket name.
 # R2_ENDPOINT=
 # R2_ACCESS_KEY_ID=
 # R2_SECRET_ACCESS_KEY=
@@ -61,6 +62,12 @@ DISCORD_INGEST_SECRET=<long random string>
 # just run to run the docker-compose.yaml db configs.
 # then remember to toggle .env file to the local url
 docker-compose up
+```
+
+Local `DBURL` (matches `docker-compose.yaml`):
+
+```text
+postgres://root:12345@localhost:5432/portaldb
 ```
 
 1. If you have made additions/modifications to the drizzle schema, please first run `pnpm drizzle-kit generate`
