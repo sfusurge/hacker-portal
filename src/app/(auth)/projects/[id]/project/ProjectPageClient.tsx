@@ -4,14 +4,20 @@ import { JudgeProjectPageView } from './JudgeProjectPageView';
 import { ProjectPageEmptyState } from './ProjectPageEmptyState';
 import { ProjectPageSkeleton } from './ProjectPageSkeleton';
 import { UserProjectPageView } from './UserProjectPageView';
+import { useProjectsRoute } from '@/components/projects/ProjectsRouteContext';
 import { useProjectPageData } from './useProjectPageData';
 import { useProjectPageTitle } from './useProjectPageTitle';
 
 interface ProjectPageClientProps {
     id: string;
+    forceJudgeView?: boolean;
 }
 
-export default function ProjectPageClient({ id }: ProjectPageClientProps) {
+export default function ProjectPageClient({
+    id,
+    forceJudgeView = false,
+}: ProjectPageClientProps) {
+    const { isPublicView } = useProjectsRoute();
     const state = useProjectPageData(id);
     useProjectPageTitle(state);
 
@@ -25,7 +31,13 @@ export default function ProjectPageClient({ id }: ProjectPageClientProps) {
         return <ProjectPageEmptyState variant="no-submission" />;
     }
 
-    return state.user.userRole === 'judge' ? (
+    const showJudgeView =
+        isPublicView ||
+        (forceJudgeView
+            ? state.user.userRole === 'judge' || state.user.userRole === 'admin'
+            : state.user.userRole === 'judge');
+
+    return showJudgeView ? (
         <JudgeProjectPageView {...state} />
     ) : (
         <UserProjectPageView {...state} />

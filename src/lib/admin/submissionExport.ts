@@ -203,6 +203,10 @@ export function submissionToCsvRecord(
             record[col.id] = submission.teamName;
             continue;
         }
+        if (col.id === 'submitted_at') {
+            record[col.id] = submission.submittedAt;
+            continue;
+        }
         record[col.id] = getSubmissionCsvExportField(
             submission.response,
             col.questionId,
@@ -213,8 +217,31 @@ export function submissionToCsvRecord(
     return record;
 }
 
-export function formatSubmissionDate(createdDate: Date | string): string {
-    return new Date(createdDate).toISOString();
+const PACIFIC_TIME_ZONE = 'America/Los_Angeles';
+
+/** Submission timestamp for admin export (Pacific: PST/PDT per date). */
+export function formatSubmissionDate(
+    createdDate: Date | string | number
+): string {
+    const date = new Date(createdDate);
+    if (Number.isNaN(date.getTime())) return '';
+
+    const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: PACIFIC_TIME_ZONE,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        timeZoneName: 'short',
+    }).formatToParts(date);
+
+    const get = (type: Intl.DateTimeFormatPartTypes) =>
+        parts.find((part) => part.type === type)?.value ?? '';
+
+    return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')} ${get('timeZoneName')}`;
 }
 
 /** Human-readable value for the admin review table UI. */
@@ -250,9 +277,7 @@ export function getSubmissionCsvExportField(
     }
 
     if (question.type === 'link') {
-        return toBinaryString(
-            formatSubmissionFieldValue(raw).trim().length > 0
-        );
+        return formatSubmissionFieldValue(raw).trim();
     }
 
     return formatSubmissionFieldValue(raw);

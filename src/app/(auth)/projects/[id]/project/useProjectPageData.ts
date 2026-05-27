@@ -2,6 +2,8 @@
 
 import { useAtomValue } from 'jotai';
 import { hackathonAtom, userInfoAtom } from '@/app/(auth)/ClientContext';
+import { useProjectsRoute } from '@/components/projects/ProjectsRouteContext';
+import { PUBLIC_JUDGE_VIEWER } from '@/lib/projects/publicJudgeViewer';
 import { isAudienceVotingEnabled } from '@/lib/audienceVoting';
 import { trpc } from '@/trpc/client';
 import {
@@ -22,8 +24,21 @@ export function useProjectPageData(id: string): ProjectPageState {
     const user = useAtomValue(userInfoAtom);
     const hackathon = useAtomValue(hackathonAtom);
     const hackathonId = hackathon?.id;
+    const { forceJudgeView, isPublicView } = useProjectsRoute();
 
-    const isJudge = user?.userRole === 'judge';
+    const viewer = isPublicView ? PUBLIC_JUDGE_VIEWER : user;
+
+    const isAuthenticatedJudge =
+        !isPublicView &&
+        (forceJudgeView
+            ? user?.userRole === 'judge' || user?.userRole === 'admin'
+            : user?.userRole === 'judge');
+
+    const useJudgeSections =
+        isPublicView ||
+        isAuthenticatedJudge ||
+        (forceJudgeView &&
+            (user?.userRole === 'judge' || user?.userRole === 'admin'));
     const votingEnabled = isAudienceVotingEnabled(hackathon);
     const numericTeamId = parseNumericTeamId(id);
 
@@ -48,19 +63,19 @@ export function useProjectPageData(id: string): ProjectPageState {
     );
     const votedQuery = trpc.userVote.getHasUserVoted.useQuery(
         { userId: user?.id ?? 0, hackathonId: hackathonId ?? 0 },
-        { enabled: hasTeam && votingEnabled && !!user?.id }
+        { enabled: hasTeam && votingEnabled && !!user?.id && !isPublicView }
     );
     const applicationQuery = trpc.applications.getCurrentApplication.useQuery(
         { hackathonId: hackathonId ?? 0 },
-        { enabled: hasTeam && votingEnabled }
+        { enabled: hasTeam && votingEnabled && !isPublicView }
     );
     const judgedProjectQuery = trpc.judging.getJudgedProject.useQuery(
         { hackathonId: hackathonId ?? 0, teamId: teamId ?? 0 },
-        { enabled: hasTeam && isJudge }
+        { enabled: hasTeam && isAuthenticatedJudge }
     );
     const judgingProjectsQuery = trpc.judging.getJudgingProjects.useQuery(
         { hackathonId: hackathonId ?? 0 },
-        { enabled: !!hackathonId && isJudge }
+        { enabled: !!hackathonId && isAuthenticatedJudge }
     );
 
     if (!hackathonId) {
@@ -79,7 +94,7 @@ export function useProjectPageData(id: string): ProjectPageState {
     const isLoading =
         submissionQuery.isLoading ||
         teamQuery.isLoading ||
-        (isJudge &&
+        (isAuthenticatedJudge &&
             (judgedProjectQuery.isLoading || judgingProjectsQuery.isLoading));
 
     if (isLoading) {
@@ -102,17 +117,18 @@ export function useProjectPageData(id: string): ProjectPageState {
         status: 'ready',
         teamId: resolvedTeamId,
         hackathonId,
-        user: user!,
+        user: viewer!,
         submission,
         teamData,
         response: buildProjectPageResponse(submissionResponse, teamData),
         projectSections: getProjectSectionsForRole(
-            user?.userRole,
+            useJudgeSections ? 'judge' : user?.userRole,
             hackathon?.submissionQuestionPages,
             submissionResponse
         ),
         isOwnProject:
-            teamData.members?.some((m) => m.userId === user?.id) ?? false,
+            !isPublicView &&
+            (teamData.members?.some((m) => m.userId === user?.id) ?? false),
         alreadyVoted: votedQuery.data?.hasVoted ?? false,
         applicationStatus: applicationQuery.data?.currentStatus ?? undefined,
         didJudge: judgedProjectQuery.data?.status === 'judged',

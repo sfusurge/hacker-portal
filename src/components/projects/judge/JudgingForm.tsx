@@ -20,6 +20,7 @@ import {
 import { ExclamationCircleIcon } from '@heroicons/react/20/solid';
 import RubricDialog from './RubricDialog';
 import { trpc } from '@/trpc/client';
+import { useProjectsRoute } from '@/components/projects/ProjectsRouteContext';
 import { Loader2 } from 'lucide-react';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage, createJSONStorage } from 'jotai/utils';
@@ -88,6 +89,7 @@ export default function JudgingForm({
     const validationTimeoutRef = useRef<NodeJS.Timeout>();
     const { toast } = useToast();
     const router = useRouter();
+    const { basePath } = useProjectsRoute();
 
     const validateForm = useCallback((): boolean => {
         if (!formRef.current || questions.length === 0) return false;
@@ -184,7 +186,7 @@ export default function JudgingForm({
                 description: `Your evaluation for the project ${projectTitle} has been submitted.`,
                 variant: 'success',
             });
-            router.push('/projects');
+            router.push(basePath);
         },
         onError: (error) => {
             toast({
@@ -435,7 +437,7 @@ export default function JudgingForm({
         return (
             <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center">
                 <h2 className="text-2xl font-semibold">View Only</h2>
-                <Link href="/projects" className="mt-2">
+                <Link href={basePath} className="mt-2">
                     <Button hierarchy={'primary'} size="cozy" variant={'brand'}>
                         Go back to projects
                     </Button>

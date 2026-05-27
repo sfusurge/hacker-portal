@@ -1,7 +1,12 @@
+'use client';
+
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useProjectsRoute } from '@/components/projects/ProjectsRouteContext';
 
 export function ProjectPageSkeleton() {
+    const { basePath } = useProjectsRoute();
+
     return (
         <div className="flex h-full flex-col">
             <div className="m-0 flex w-full min-w-0 flex-grow flex-col overflow-hidden md:-m-10 lg:m-0 lg:flex-row lg:gap-10">
@@ -10,7 +15,7 @@ export function ProjectPageSkeleton() {
                 </div>
                 <div className="lg:border-neutral-750 w-full max-w-full min-w-0 flex-grow overflow-x-hidden overflow-y-auto p-0 md:mb-0 md:p-10 lg:rounded-xl lg:border lg:bg-neutral-900 lg:pb-0">
                     <div className="space-y-8 pb-8">
-                        <Link href="/projects" className="mb-8 block md:hidden">
+                        <Link href={basePath} className="mb-8 block md:hidden">
                             <Skeleton className="h-10 w-32 rounded-lg" />
                         </Link>
                         <Skeleton className="h-10 w-3/4 max-w-md" />

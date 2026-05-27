@@ -36,6 +36,10 @@ import { DEFAULT_USER_AVATAR, resolveUserIconUrl } from '@/utils/blobHelper';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { useAtomValue } from 'jotai';
 import { canAccessProjectGallery } from '@/lib/submissionWindow';
+import {
+    isSparkjamProjectsArea,
+    SPARKJAM_PROJECTS_PATH,
+} from '@/lib/projects/projectsPaths';
 
 /** mobile (under 768px) user can expand/collapse. */
 const SIDEBAR_MOBILE_MAX_PX = 768;
@@ -114,7 +118,7 @@ const adminLinks = [
 // JUDGES CAN ONLY SEE THESE LINKS
 const judgeNavLinks = [
     {
-        href: '/projects',
+        href: SPARKJAM_PROJECTS_PATH,
         label: 'Projects',
         icon: <InboxStackIcon className="h-6 w-6" />,
         iconAlt: 'Projects logo',
@@ -190,6 +194,7 @@ export default function SideBar({ className, initialData }: NavProps) {
         hackathon != null &&
         canAccessProjectGallery(
             now,
+            hackathon.projectGalleryOpen?.toDate() ?? null,
             hackathon.submissionDeadline.toDate(),
             initialData?.userRole
         );
@@ -247,6 +252,9 @@ export default function SideBar({ className, initialData }: NavProps) {
     );
 
     const url = usePathname();
+    const isPublicSparkjamRoute = isSparkjamProjectsArea(url) && !initialData;
+    const showJudgeNav =
+        initialData?.userRole === 'judge' || isPublicSparkjamRoute;
 
     return (
         <div
@@ -268,7 +276,7 @@ export default function SideBar({ className, initialData }: NavProps) {
                                 'links flex w-full flex-1 flex-col items-stretch gap-1 px-4 md:px-0'
                             )}
                         >
-                            {initialData?.userRole === 'judge' ? (
+                            {showJudgeNav ? (
                                 judgeNavLinks.map((link) => (
                                     <NavLink
                                         key={link.href}
@@ -310,7 +318,21 @@ export default function SideBar({ className, initialData }: NavProps) {
                                     ))}
                                 </>
                             )}
-                            {initialData?.userRole !== 'judge' &&
+                            {isPublicSparkjamRoute && (
+                                <NavLink
+                                    href="/login"
+                                    label="Login"
+                                    icon={
+                                        <ArrowLeftEndOnRectangleIcon className="h-6 w-6" />
+                                    }
+                                    iconAlt="Login"
+                                    platform="desktop"
+                                    active={false}
+                                    collapsed={collapsed}
+                                />
+                            )}
+
+                            {!showJudgeNav &&
                                 initialData?.userRole !== 'sponsor' && (
                                     <Popover
                                         open={profilePopoverOpen}

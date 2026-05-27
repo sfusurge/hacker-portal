@@ -12,6 +12,8 @@ import { canAccessProjectGallery } from '@/lib/submissionWindow';
 
 interface ProjectsClientProps {
     user: UserData | null;
+    forceJudgeView?: boolean;
+    isPublicView?: boolean;
 }
 
 function ProjectGridSkeleton() {
@@ -55,10 +57,18 @@ function ProjectGridSkeleton() {
     );
 }
 
-export default function ProjectsClient({ user }: ProjectsClientProps) {
+export default function ProjectsClient({
+    user,
+    forceJudgeView = false,
+    isPublicView = false,
+}: ProjectsClientProps) {
     const hackathon = useAtomValue(hackathonAtom);
     const hackathonId = hackathon?.id;
-    const isJudge = user?.userRole === 'judge';
+    const isAuthenticatedJudge =
+        !isPublicView &&
+        (forceJudgeView
+            ? user?.userRole === 'judge' || user?.userRole === 'admin'
+            : user?.userRole === 'judge');
 
     const galleryQuery = trpc.submissions.getProjectGalleryItems.useQuery(
         { hackathonId: hackathonId ?? 0 },
@@ -67,10 +77,13 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
 
     const judgingProjectsQuery = trpc.judging.getJudgingProjects.useQuery(
         { hackathonId: hackathonId ?? 0 },
-        { enabled: isJudge && !!hackathonId }
+        { enabled: isAuthenticatedJudge && !!hackathonId }
     );
 
-    if (galleryQuery.isLoading || (isJudge && judgingProjectsQuery.isLoading)) {
+    if (
+        galleryQuery.isLoading ||
+        (isAuthenticatedJudge && judgingProjectsQuery.isLoading)
+    ) {
         return <ProjectGridSkeleton />;
     }
 
@@ -85,18 +98,26 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
         );
     }
 
-    const galleryOpen = canAccessProjectGallery(
-        Date.now(),
-        hackathon.submissionDeadline.toDate(),
-        user?.userRole
-    );
+    const galleryOpensAt =
+        hackathon.projectGalleryOpen?.isValid() === true
+            ? hackathon.projectGalleryOpen
+            : hackathon.submissionDeadline;
+
+    const galleryOpen =
+        isPublicView ||
+        canAccessProjectGallery(
+            Date.now(),
+            hackathon.projectGalleryOpen?.toDate() ?? null,
+            hackathon.submissionDeadline.toDate(),
+            user?.userRole
+        );
 
     if (!galleryOpen) {
         return (
             <div className="flex h-full items-center justify-center px-6 text-center">
                 <p className="max-w-md text-pretty text-white/60">
-                    The project gallery opens after submissions close on{' '}
-                    {hackathon.submissionDeadline.format('MMM D, YYYY h:mm A')}.
+                    The project gallery opens on{' '}
+                    {galleryOpensAt.format('MMM D, YYYY h:mm A')}.
                 </p>
             </div>
         );
@@ -112,7 +133,7 @@ export default function ProjectsClient({ user }: ProjectsClientProps) {
 
     const galleryItems = galleryQuery.data;
 
-    if (isJudge && judgingProjectsQuery.data && user) {
+    if (isAuthenticatedJudge && judgingProjectsQuery.data && user) {
         const assignedProjects = judgingProjectsQuery.data;
 
         const assignedProjectMap = new Map(
