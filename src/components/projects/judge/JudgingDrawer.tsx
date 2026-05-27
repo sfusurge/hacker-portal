@@ -13,6 +13,7 @@ import {
 import { ExclamationCircleIcon } from '@heroicons/react/20/solid';
 import RubricDialog from './RubricDialog';
 import { trpc } from '@/trpc/client';
+import { useProjectsRoute } from '@/components/projects/ProjectsRouteContext';
 import { Loader2, X } from 'lucide-react';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage, createJSONStorage } from 'jotai/utils';
@@ -94,6 +95,7 @@ export default function JudgingDrawer({
     const validationTimeoutRef = useRef<NodeJS.Timeout>();
     const { toast } = useToast();
     const router = useRouter();
+    const { basePath } = useProjectsRoute();
 
     const validateForm = useCallback((): boolean => {
         if (!formRef.current || questions.length === 0) return false;
@@ -203,7 +205,7 @@ export default function JudgingDrawer({
             });
             setIsConfirmationDrawerOpen(false);
             setIsEvaluationDrawerOpen(false);
-            router.push('/projects');
+            router.push(basePath);
         },
         onError: (error) => {
             toast({
@@ -543,7 +545,7 @@ export default function JudgingDrawer({
                                         </Button>
                                     ) : (
                                         <Link
-                                            href="/projects"
+                                            href={basePath}
                                             className="w-full"
                                         >
                                             <Button
@@ -607,7 +609,7 @@ export default function JudgingDrawer({
                                         </Button>
                                     ) : (
                                         <Link
-                                            href="/projects"
+                                            href={basePath}
                                             className="w-full"
                                         >
                                             <Button

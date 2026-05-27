@@ -138,6 +138,18 @@ function DeserializeHackathonData(hackathon: DbHackathonType): HackathonData {
 
 export type HackathonType = ReturnType<typeof DeserializeHackathonData>;
 
+export function HackathonOnlyProvider({
+    hackathonData,
+    children,
+}: {
+    hackathonData: DbHackathonType;
+    children: ReactNode;
+}) {
+    useHydrateAtoms([[hackathonAtom, DeserializeHackathonData(hackathonData)]]);
+
+    return <>{children}</>;
+}
+
 export function ClientContext({
     userData,
     hackathonData,

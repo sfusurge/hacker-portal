@@ -8,7 +8,8 @@ import { useAtomValue } from 'jotai';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { ProjectListItem } from '@/lib/projects/projectSubmissionDisplay';
 import { trpc } from '@/trpc/client';
-import slugify from '@/utils/slugify';
+import { useProjectsRoute } from '@/components/projects/ProjectsRouteContext';
+import { projectDetailPath } from '@/lib/projects/projectsPaths';
 
 interface StatusInfo {
     label: string;
@@ -27,6 +28,7 @@ export default function ProjectCard({
     isLoading = false,
 }: ProjectCardProps) {
     const hackathon = useAtomValue(hackathonAtom);
+    const { basePath } = useProjectsRoute();
     const utils = trpc.useUtils();
     const titleRef = useRef<HTMLHeadingElement>(null);
     const [titleLines, setTitleLines] = useState(1);
@@ -80,7 +82,7 @@ export default function ProjectCard({
 
     return (
         <Link
-            href={`/projects/${slugify(project.teamName)}`}
+            href={projectDetailPath(project.teamName, basePath)}
             onMouseEnter={prefetchProject}
             onFocus={prefetchProject}
             className={`group flex flex-col overflow-hidden rounded-xl transition-shadow hover:shadow-lg ${

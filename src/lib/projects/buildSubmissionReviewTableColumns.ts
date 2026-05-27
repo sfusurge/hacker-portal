@@ -18,6 +18,7 @@ export type SubmissionReviewTableColumn = {
 const CSV_TEAM_COLUMNS: SubmissionReviewTableColumn[] = [
     { id: 'team_id', header: 'Team ID', questionId: '' },
     { id: 'team_name', header: 'Team Name', questionId: '' },
+    { id: 'submitted_at', header: 'Submitted At', questionId: '' },
 ];
 
 export function buildSubmissionReviewTableColumns(

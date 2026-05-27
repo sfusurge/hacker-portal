@@ -6,6 +6,8 @@ import { MagnifyingGlassIcon } from '@heroicons/react/16/solid';
 import { useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { useProjectsRoute } from '@/components/projects/ProjectsRouteContext';
+import { SPARKJAM_PROJECTS_PATH } from '@/lib/projects/projectsPaths';
 import {
     projectListItemMatchesSearchQuery,
     type ProjectListItem,
@@ -19,6 +21,7 @@ export default function PublicProjectList({
     projects,
 }: PublicProjectListProps) {
     const hackathon = useAtomValue(hackathonAtom);
+    const { basePath } = useProjectsRoute();
     const [searchQuery, setSearchQuery] = useState('');
 
     const filteredProjects = projects.filter((project) =>
