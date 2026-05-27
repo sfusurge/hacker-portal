@@ -12,6 +12,9 @@ import {
     isEligibleForHackathonTicketQr,
 } from '@/lib/applicationAcceptStatus';
 import { getApplicationEventLocationKey } from '@/lib/applicationEventLocation';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { useAtomValue } from 'jotai';
+import type { InputFormPageData } from '@/components/application_components/types';
 import {
     Drawer,
     DrawerContent,
@@ -58,6 +61,10 @@ export default function CheckinTicket({
         eventId: eventId,
     });
 
+    const hackathon = useAtomValue(hackathonAtom);
+    const applicationQuestionPages = (hackathon?.applicationQuestionPages ??
+        []) as InputFormPageData[];
+
     const applicationQuery =
         trpc.applications.getApplicationByHackathonAndUserId.useQuery(
             { hackathonId, userId: currentHacker.id },
@@ -76,16 +83,26 @@ export default function CheckinTicket({
         applicationQuery.data?.currentStatus
     );
 
+    const showLocationOnTicket = hackathon.isMultipleLocations === true;
+
     const scannerAttendanceLabel = useMemo(() => {
+        if (!showLocationOnTicket) {
+            return '';
+        }
         return formatTicketRegionShortLabel(
             getApplicationEventLocationKey(
                 applicationQuery.data?.response as Record<
                     string,
                     unknown
-                > | null
+                > | null,
+                applicationQuestionPages
             )
         );
-    }, [applicationQuery.data?.response]);
+    }, [
+        showLocationOnTicket,
+        applicationQuery.data?.response,
+        applicationQuestionPages,
+    ]);
 
     const hackerRoleLine = useMemo(() => {
         if (acceptanceCheckPending) {
