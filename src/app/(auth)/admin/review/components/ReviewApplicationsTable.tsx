@@ -23,7 +23,7 @@ import {
     PaginationState,
 } from '@tanstack/react-table';
 
-import { atom, useSetAtom } from 'jotai';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 
 import { Input } from '@/components/ui/input';
 import { mkConfig, generateCsv, download } from 'export-to-csv';
@@ -60,6 +60,51 @@ import {
     buildApplicationReviewTableColumns,
     resolveApplicationReviewTableLocationQuestionId,
 } from '@/lib/applications/buildApplicationReviewTableColumns';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
+
+function reviewTableStickyColumnProps(
+    columnIndex: number,
+    options: {
+        showLocationColumn: boolean;
+        selectColWidth: number;
+        teamNameStickyLeftPx: number;
+        variant?: 'header' | 'body';
+    }
+): { styleLeft?: number; stickyClass: string } {
+    const {
+        showLocationColumn,
+        selectColWidth,
+        teamNameStickyLeftPx,
+        variant = 'header',
+    } = options;
+
+    const zIndex = variant === 'body' ? 'z-10' : 'z-20';
+    const bg = variant === 'body' ? 'bg-neutral-800' : 'bg-neutral-900';
+
+    if (columnIndex === 0) {
+        return {
+            stickyClass: `sticky left-0 ${zIndex} ${bg}`,
+        };
+    }
+
+    const teamNameIndex = showLocationColumn ? 2 : 1;
+
+    if (showLocationColumn && columnIndex === 1) {
+        return {
+            styleLeft: selectColWidth,
+            stickyClass: `sticky ${zIndex} ${bg}`,
+        };
+    }
+
+    if (columnIndex === teamNameIndex) {
+        return {
+            styleLeft: teamNameStickyLeftPx,
+            stickyClass: `sticky ${zIndex} ${bg}`,
+        };
+    }
+
+    return { stickyClass: '' };
+}
 
 function emailTypeDisplayLabel(emailType: string | null | undefined): string {
     if (emailType && emailType in HACKATHON_EMAIL_TYPE_LABELS) {
@@ -181,6 +226,9 @@ export default function ReviewApplicationsTable({
     onRowClick,
     hackathonId,
 }: ReviewApplicationsTableProps) {
+    const hackathon = useAtomValue(hackathonAtom);
+    const showLocationColumn = hackathon.isMultipleLocations === true;
+
     const locationQuestionId = useMemo(
         () =>
             resolveApplicationReviewTableLocationQuestionId(
@@ -243,137 +291,144 @@ export default function ReviewApplicationsTable({
             };
         }) ?? [];
 
-    const defaultColumns: ColumnDef<Applicant>[] = [
-        {
-            id: 'select',
-            header: ({ table }) => (
-                <IndeterminateCheckbox
-                    {...{
-                        checked: table.getIsAllRowsSelected(),
-                        indeterminate: table.getIsSomeRowsSelected(),
-                        onChange: table.getToggleAllRowsSelectedHandler(),
-                    }}
-                />
-            ),
-            cell: ({ row }) => (
-                <div className="bg-neutral-800/60">
+    const defaultColumns: ColumnDef<Applicant>[] = useMemo(() => {
+        const columns: ColumnDef<Applicant>[] = [
+            {
+                id: 'select',
+                header: ({ table }) => (
                     <IndeterminateCheckbox
                         {...{
-                            checked: row.getIsSelected(),
-                            disabled: !row.getCanSelect(),
-                            indeterminate: row.getIsSomeSelected(),
-                            onChange: row.getToggleSelectedHandler(),
+                            checked: table.getIsAllRowsSelected(),
+                            indeterminate: table.getIsSomeRowsSelected(),
+                            onChange: table.getToggleAllRowsSelectedHandler(),
                         }}
                     />
-                </div>
-            ),
-            size: 50,
-        },
-        {
-            accessorKey: 'eventLocation',
-            header: 'Loc.',
-            size: 64,
-            minSize: 80,
-            maxSize: 240,
-            cell: (info) => {
-                const v = info.getValue<string>() ?? '';
-                return (
-                    <span className="block max-w-full" title={v}>
-                        {v}
-                    </span>
-                );
+                ),
+                cell: ({ row }) => (
+                    <div className="bg-neutral-800/60">
+                        <IndeterminateCheckbox
+                            {...{
+                                checked: row.getIsSelected(),
+                                disabled: !row.getCanSelect(),
+                                indeterminate: row.getIsSomeSelected(),
+                                onChange: row.getToggleSelectedHandler(),
+                            }}
+                        />
+                    </div>
+                ),
+                size: 50,
             },
-        },
-        {
-            // id: 'teamName',
-            accessorKey: 'teamName',
-            header: 'Team Name',
-            size: 200,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'firstName',
-            header: 'First Name',
-            size: 150,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'lastName',
-            header: 'Last Name',
-            size: 150,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'currentStatus',
-            header: 'Current Status',
-            cell: (info) => {
-                const value = info.getValue<string>();
-                return (
-                    <span
-                        className={`rounded-md px-3 py-0.5 text-xs ${
-                            value === 'Accepted' ||
-                            value === 'Accepted - Pending Payment' ||
-                            value === 'Accepted - RSVP to Confirm'
-                                ? 'bg-success-950 text-success-300'
-                                : value === 'Wait List'
-                                  ? 'bg-yellow-950 text-yellow-300'
-                                  : value === 'Declined'
-                                    ? 'bg-danger-950 text-danger-300'
-                                    : 'bg-neutral-600/30'
-                        }`}
-                    >
-                        {value}
-                    </span>
-                );
+            ...(showLocationColumn
+                ? [
+                      {
+                          accessorKey: 'eventLocation',
+                          header: 'Loc.',
+                          size: 64,
+                          minSize: 80,
+                          maxSize: 240,
+                          cell: (info: { getValue: () => unknown }) => {
+                              const v = (info.getValue() as string) ?? '';
+                              return (
+                                  <span className="block max-w-full" title={v}>
+                                      {v}
+                                  </span>
+                              );
+                          },
+                      } as ColumnDef<Applicant>,
+                  ]
+                : []),
+            {
+                // id: 'teamName',
+                accessorKey: 'teamName',
+                header: 'Team Name',
+                size: 200,
+                minSize: 100,
             },
-            size: 200,
-            minSize: 200,
-            enableColumnFilter: true,
-        },
-        {
-            accessorKey: 'pendingStatus',
-            header: 'Pending Status',
-            cell: (info) => {
-                const value = info.getValue<string>();
-                return (
-                    <span
-                        className={`rounded-md px-3 py-0.5 text-xs ${
-                            value === 'Accepted' ||
-                            value === 'Accepted - Pending Payment' ||
-                            value === 'Accepted - RSVP to Confirm'
-                                ? 'bg-success-950 text-success-300'
-                                : value === 'Wait List'
-                                  ? 'bg-yellow-950 text-yellow-300'
-                                  : value === 'Declined'
-                                    ? 'bg-danger-950 text-danger-300'
-                                    : 'bg-neutral-600/30'
-                        }`}
-                    >
-                        {value}
-                    </span>
-                );
+            {
+                accessorKey: 'firstName',
+                header: 'First Name',
+                size: 150,
+                minSize: 100,
             },
-            size: 150,
-            minSize: 150,
-            enableColumnFilter: true,
-        },
-        {
-            accessorKey: 'lastEmailSent',
-            header: 'Last Email Sent',
-            size: 200,
-            minSize: 150,
-        },
-        {
-            accessorKey: 'applicationDate',
-            header: 'Date',
-            size: 100,
-            minSize: 100,
-            cell: (info) =>
-                dayjs(info.getValue() as Date).format('MM-DD HH:mm'),
-        },
-        ...dynamicQuestionColumns,
-        ...checkedInInfoColumns,
-    ];
+            {
+                accessorKey: 'lastName',
+                header: 'Last Name',
+                size: 150,
+                minSize: 100,
+            },
+            {
+                accessorKey: 'currentStatus',
+                header: 'Current Status',
+                cell: (info) => {
+                    const value = info.getValue<string>();
+                    return (
+                        <span
+                            className={`rounded-md px-3 py-0.5 text-xs ${
+                                value === 'Accepted' ||
+                                value === 'Accepted - Pending Payment' ||
+                                value === 'Accepted - RSVP to Confirm'
+                                    ? 'bg-success-950 text-success-300'
+                                    : value === 'Wait List'
+                                      ? 'bg-yellow-950 text-yellow-300'
+                                      : value === 'Declined'
+                                        ? 'bg-danger-950 text-danger-300'
+                                        : 'bg-neutral-600/30'
+                            }`}
+                        >
+                            {value}
+                        </span>
+                    );
+                },
+                size: 200,
+                minSize: 200,
+                enableColumnFilter: true,
+            },
+            {
+                accessorKey: 'pendingStatus',
+                header: 'Pending Status',
+                cell: (info) => {
+                    const value = info.getValue<string>();
+                    return (
+                        <span
+                            className={`rounded-md px-3 py-0.5 text-xs ${
+                                value === 'Accepted' ||
+                                value === 'Accepted - Pending Payment' ||
+                                value === 'Accepted - RSVP to Confirm'
+                                    ? 'bg-success-950 text-success-300'
+                                    : value === 'Wait List'
+                                      ? 'bg-yellow-950 text-yellow-300'
+                                      : value === 'Declined'
+                                        ? 'bg-danger-950 text-danger-300'
+                                        : 'bg-neutral-600/30'
+                            }`}
+                        >
+                            {value}
+                        </span>
+                    );
+                },
+                size: 150,
+                minSize: 150,
+                enableColumnFilter: true,
+            },
+            {
+                accessorKey: 'lastEmailSent',
+                header: 'Last Email Sent',
+                size: 200,
+                minSize: 150,
+            },
+            {
+                accessorKey: 'applicationDate',
+                header: 'Date',
+                size: 100,
+                minSize: 100,
+                cell: (info) =>
+                    dayjs(info.getValue() as Date).format('MM-DD HH:mm'),
+            },
+            ...dynamicQuestionColumns,
+            ...checkedInInfoColumns,
+        ];
+        return columns;
+    }, [showLocationColumn, dynamicQuestionColumns, checkedInInfoColumns]);
 
     return (
         <MyTable
@@ -385,6 +440,7 @@ export default function ReviewApplicationsTable({
             fetchNextPage={fetchNextPage}
             onRowClick={onRowClick}
             hackathonId={hackathonId}
+            showLocationColumn={showLocationColumn}
         />
     );
 }
@@ -423,6 +479,7 @@ function MyTable({
     fetchNextPage,
     onRowClick,
     hackathonId,
+    showLocationColumn,
 }: {
     applicationCount: number;
     data: Applicant[];
@@ -432,6 +489,7 @@ function MyTable({
     fetchNextPage: () => Promise<void>;
     onRowClick?: (app: Applicant, idx: number) => void;
     hackathonId: number;
+    showLocationColumn: boolean;
 }) {
     //const hackathon = useAtomValue(hackathonAtom);
     const utils = trpc.useUtils();
@@ -517,9 +575,15 @@ function MyTable({
     });
 
     const selectColWidth = table.getColumn('select')?.getSize() ?? 50;
-    const eventLocationColWidth =
-        table.getColumn('eventLocation')?.getSize() ?? 64;
+    const eventLocationColWidth = showLocationColumn
+        ? (table.getColumn('eventLocation')?.getSize() ?? 64)
+        : 0;
     const teamNameStickyLeftPx = selectColWidth + eventLocationColWidth;
+    const stickyColumnOptions = {
+        showLocationColumn,
+        selectColWidth,
+        teamNameStickyLeftPx,
+    };
 
     useEffect(() => {
         setSelectedHackathonForEmail(hackathonId);
@@ -644,6 +708,14 @@ function MyTable({
     };
 
     const batchAcceptSelectedByLocation = async (rows: Row<Applicant>[]) => {
+        if (!showLocationColumn) {
+            await batchUpdateApplicants(rows, {
+                status: 'Accepted',
+                pendingStatus: 'Accepted',
+            });
+            return;
+        }
+
         const groups = new Map<StatusEnum, Row<Applicant>[]>();
         for (const row of rows) {
             const pending = getAcceptPendingStatusForEventLocation(
@@ -835,14 +907,16 @@ function MyTable({
 
         const columnHeaders = buildApplicationCsvColumnHeaders(
             applicationQuestionPages,
-            checkInColumns
+            checkInColumns,
+            { includeEventLocation: showLocationColumn }
         );
 
         const csvData = selectedRows.map(({ original }) =>
             applicationToCsvRecord(
                 original,
                 applicationQuestionPages,
-                checkInColumns
+                checkInColumns,
+                { includeEventLocation: showLocationColumn }
             )
         );
 
@@ -893,119 +967,112 @@ function MyTable({
                                 <Fragment key={headerGroup.id}>
                                     <tr>
                                         {headerGroup.headers.map(
-                                            (header, index) => (
-                                                <th
-                                                    key={header.id}
-                                                    colSpan={header.colSpan}
-                                                    style={{
-                                                        width: header.getSize(),
-                                                        minWidth:
-                                                            header.column
-                                                                .columnDef
-                                                                .minSize,
-                                                        ...(index === 1
-                                                            ? {
-                                                                  left: selectColWidth,
-                                                              }
-                                                            : {}),
-                                                        ...(index === 2
-                                                            ? {
-                                                                  left: teamNameStickyLeftPx,
-                                                              }
-                                                            : {}),
-                                                    }}
-                                                    className={`relative overflow-hidden px-4 py-4 text-sm overflow-ellipsis ${
-                                                        index === 0
-                                                            ? 'sticky left-0 z-20 bg-neutral-900' // Checkbox
-                                                            : index === 1
-                                                              ? 'sticky z-20 bg-neutral-900' // Event Location — left from selectColWidth
-                                                              : index === 2
-                                                                ? 'sticky z-20 bg-neutral-900' // Team Name — left from column widths
-                                                                : ''
-                                                    }`}
-                                                    onClick={
-                                                        header.column.getCanMultiSort()
-                                                            ? header.column.getToggleSortingHandler()
-                                                            : undefined
-                                                    }
-                                                >
-                                                    {header.isPlaceholder
-                                                        ? null
-                                                        : flexRender(
-                                                              header.column
-                                                                  .columnDef
-                                                                  .header,
-                                                              header.getContext()
-                                                          )}
-                                                    {header.column.getCanSort() && (
-                                                        <span>
-                                                            {header.column.getIsSorted() ===
-                                                                'asc' && ' ▲'}
-                                                            {header.column.getIsSorted() ===
-                                                                'desc' && ' ▼'}
-                                                            {header.column.getIsSorted() ===
-                                                                false && ' -'}
-                                                        </span>
-                                                    )}
-                                                    {header.column.getCanResize() && (
-                                                        <div
-                                                            onMouseDown={header.getResizeHandler()}
-                                                            onTouchStart={header.getResizeHandler()}
-                                                            className={`absolute top-0 right-0 bottom-0 w-2 cursor-col-resize ${
-                                                                header.column.getIsResizing()
-                                                                    ? 'bg-gray-500'
-                                                                    : ''
-                                                            }`}
-                                                            style={{
-                                                                zIndex: 50,
-                                                            }}
-                                                        ></div>
-                                                    )}
-                                                </th>
-                                            )
+                                            (header, index) => {
+                                                const sticky =
+                                                    reviewTableStickyColumnProps(
+                                                        index,
+                                                        stickyColumnOptions
+                                                    );
+                                                return (
+                                                    <th
+                                                        key={header.id}
+                                                        colSpan={header.colSpan}
+                                                        style={{
+                                                            width: header.getSize(),
+                                                            minWidth:
+                                                                header.column
+                                                                    .columnDef
+                                                                    .minSize,
+                                                            ...(sticky.styleLeft !=
+                                                            null
+                                                                ? {
+                                                                      left: sticky.styleLeft,
+                                                                  }
+                                                                : {}),
+                                                        }}
+                                                        className={`relative overflow-hidden px-4 py-4 text-sm overflow-ellipsis ${sticky.stickyClass}`}
+                                                        onClick={
+                                                            header.column.getCanMultiSort()
+                                                                ? header.column.getToggleSortingHandler()
+                                                                : undefined
+                                                        }
+                                                    >
+                                                        {header.isPlaceholder
+                                                            ? null
+                                                            : flexRender(
+                                                                  header.column
+                                                                      .columnDef
+                                                                      .header,
+                                                                  header.getContext()
+                                                              )}
+                                                        {header.column.getCanSort() && (
+                                                            <span>
+                                                                {header.column.getIsSorted() ===
+                                                                    'asc' &&
+                                                                    ' ▲'}
+                                                                {header.column.getIsSorted() ===
+                                                                    'desc' &&
+                                                                    ' ▼'}
+                                                                {header.column.getIsSorted() ===
+                                                                    false &&
+                                                                    ' -'}
+                                                            </span>
+                                                        )}
+                                                        {header.column.getCanResize() && (
+                                                            <div
+                                                                onMouseDown={header.getResizeHandler()}
+                                                                onTouchStart={header.getResizeHandler()}
+                                                                className={`absolute top-0 right-0 bottom-0 w-2 cursor-col-resize ${
+                                                                    header.column.getIsResizing()
+                                                                        ? 'bg-gray-500'
+                                                                        : ''
+                                                                }`}
+                                                                style={{
+                                                                    zIndex: 50,
+                                                                }}
+                                                            ></div>
+                                                        )}
+                                                    </th>
+                                                );
+                                            }
                                         )}
                                     </tr>
                                     <tr>
                                         {headerGroup.headers.map(
-                                            (header, index) => (
-                                                <th
-                                                    key={header.id}
-                                                    style={{
-                                                        width: header.getSize(),
-                                                        minWidth:
-                                                            header.column
-                                                                .columnDef
-                                                                .minSize,
-                                                        ...(index === 1
-                                                            ? {
-                                                                  left: selectColWidth,
-                                                              }
-                                                            : {}),
-                                                        ...(index === 2
-                                                            ? {
-                                                                  left: teamNameStickyLeftPx,
-                                                              }
-                                                            : {}),
-                                                    }}
-                                                    className={`relative px-4 py-2 text-sm ${
-                                                        index === 0
-                                                            ? 'sticky left-0 z-20 bg-neutral-900'
-                                                            : index === 1
-                                                              ? 'sticky z-20 bg-neutral-900'
-                                                              : index === 2
-                                                                ? 'sticky z-20 bg-neutral-900'
-                                                                : ''
-                                                    }`}
-                                                >
-                                                    {header.column.getCanFilter() ? (
-                                                        <FilterColumn
-                                                            column={
+                                            (header, index) => {
+                                                const sticky =
+                                                    reviewTableStickyColumnProps(
+                                                        index,
+                                                        stickyColumnOptions
+                                                    );
+                                                return (
+                                                    <th
+                                                        key={header.id}
+                                                        style={{
+                                                            width: header.getSize(),
+                                                            minWidth:
                                                                 header.column
-                                                            }
-                                                        />
-                                                    ) : null}
-                                                </th>
-                                            )
+                                                                    .columnDef
+                                                                    .minSize,
+                                                            ...(sticky.styleLeft !=
+                                                            null
+                                                                ? {
+                                                                      left: sticky.styleLeft,
+                                                                  }
+                                                                : {}),
+                                                        }}
+                                                        className={`relative px-4 py-2 text-sm ${sticky.stickyClass}`}
+                                                    >
+                                                        {header.column.getCanFilter() ? (
+                                                            <FilterColumn
+                                                                column={
+                                                                    header.column
+                                                                }
+                                                            />
+                                                        ) : null}
+                                                    </th>
+                                                );
+                                            }
                                         )}
                                     </tr>
                                 </Fragment>
@@ -1034,54 +1101,54 @@ function MyTable({
                                     >
                                         {row
                                             .getVisibleCells()
-                                            .map((cell, index) => (
-                                                <td
-                                                    key={cell.id}
-                                                    style={{
-                                                        width: cell.column.getSize(),
-                                                        minWidth:
-                                                            cell.column
-                                                                .columnDef
-                                                                .minSize,
-                                                        ...(index === 1
-                                                            ? {
-                                                                  left: selectColWidth,
-                                                              }
-                                                            : {}),
-                                                        ...(index === 2
-                                                            ? {
-                                                                  left: teamNameStickyLeftPx,
-                                                              }
-                                                            : {}),
-                                                    }}
-                                                    className={`border-b border-neutral-600/30 bg-neutral-800 px-4 py-4 text-sm ${
-                                                        index === 0
-                                                            ? 'sticky left-0 z-10 bg-neutral-800' // Checkbox
-                                                            : index === 1
-                                                              ? 'sticky z-10 bg-neutral-800' // Event Location
-                                                              : index === 2
-                                                                ? 'sticky z-10 bg-neutral-800' // Team Name
-                                                                : ''
-                                                    }`}
-                                                >
-                                                    <div
-                                                        className="truncate"
+                                            .map((cell, index) => {
+                                                const sticky =
+                                                    reviewTableStickyColumnProps(
+                                                        index,
+                                                        {
+                                                            ...stickyColumnOptions,
+                                                            variant: 'body',
+                                                        }
+                                                    );
+                                                return (
+                                                    <td
+                                                        key={cell.id}
                                                         style={{
-                                                            whiteSpace:
-                                                                'nowrap',
-                                                            overflow: 'hidden',
-                                                            textOverflow:
-                                                                'ellipsis',
+                                                            width: cell.column.getSize(),
+                                                            minWidth:
+                                                                cell.column
+                                                                    .columnDef
+                                                                    .minSize,
+                                                            ...(sticky.styleLeft !=
+                                                            null
+                                                                ? {
+                                                                      left: sticky.styleLeft,
+                                                                  }
+                                                                : {}),
                                                         }}
+                                                        className={`border-b border-neutral-600/30 bg-neutral-800 px-4 py-4 text-sm ${sticky.stickyClass}`}
                                                     >
-                                                        {flexRender(
-                                                            cell.column
-                                                                .columnDef.cell,
-                                                            cell.getContext()
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            ))}
+                                                        <div
+                                                            className="truncate"
+                                                            style={{
+                                                                whiteSpace:
+                                                                    'nowrap',
+                                                                overflow:
+                                                                    'hidden',
+                                                                textOverflow:
+                                                                    'ellipsis',
+                                                            }}
+                                                        >
+                                                            {flexRender(
+                                                                cell.column
+                                                                    .columnDef
+                                                                    .cell,
+                                                                cell.getContext()
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                );
+                                            })}
                                     </tr>
                                 </Fragment>
                             ))}

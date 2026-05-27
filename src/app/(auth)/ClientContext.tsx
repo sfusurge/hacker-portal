@@ -90,6 +90,7 @@ interface DbHackathonType {
     judgeQuestions: JudgingFormQuestion[];
     judgeRubric: SubmissionJudgeRubric[];
     isPaid?: boolean;
+    isMultipleLocations?: boolean;
     paymentDeadline?: Date | null;
 }
 

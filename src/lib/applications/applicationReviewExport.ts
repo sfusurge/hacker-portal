@@ -167,12 +167,16 @@ function getApplicationQuestionCsvValue(
 
 export function buildApplicationCsvColumnHeaders(
     pages: InputFormPageData[] | undefined,
-    checkIns: { eventId: number; eventTitle: string }[]
+    checkIns: { eventId: number; eventTitle: string }[],
+    options?: { includeEventLocation?: boolean }
 ): ApplicationCsvColumnHeader[] {
     const questionColumns = getAllApplicationExportColumns(pages);
+    const includeEventLocation = options?.includeEventLocation ?? true;
 
     return [
-        { key: 'event_location', displayLabel: 'Loc.' },
+        ...(includeEventLocation
+            ? [{ key: 'event_location', displayLabel: 'Loc.' }]
+            : []),
         { key: 'team_name', displayLabel: 'Team Name' },
         { key: 'first_name', displayLabel: 'First Name' },
         { key: 'last_name', displayLabel: 'Last Name' },
@@ -213,10 +217,14 @@ export function applicationToCsvRecord(
         }[];
     },
     pages: InputFormPageData[] | undefined,
-    checkIns: { eventId: number; eventTitle: string }[]
+    checkIns: { eventId: number; eventTitle: string }[],
+    options?: { includeEventLocation?: boolean }
 ): Record<string, string> {
+    const includeEventLocation = options?.includeEventLocation ?? true;
     const record: Record<string, string> = {
-        event_location: applicant.eventLocation ?? '',
+        ...(includeEventLocation
+            ? { event_location: applicant.eventLocation ?? '' }
+            : {}),
         team_name: applicant.teamName ?? '',
         first_name: applicant.firstName,
         last_name: applicant.lastName,

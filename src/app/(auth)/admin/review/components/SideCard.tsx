@@ -4,6 +4,7 @@ import { focusAtom } from 'jotai-optics';
 import style from './SideCard.module.css';
 import { useMemo, useState } from 'react';
 import {
+    InputFormPageData,
     InputFormQuestion,
     QuestionMultipleCheckBox,
     QuestionApiDropdown,
@@ -45,6 +46,7 @@ import { MajorInput } from '@/components/application_components/InputFormCompone
 import { FileUploadInput } from '@/components/application_components/InputFormComponents/FileUploadInput';
 import { questionIdsInOrderFromPages } from '@/app/(auth)/admin/review/applicationQuestionOrder';
 import { getAcceptPendingStatusForEventLocation } from '@/lib/applicationAcceptStatus';
+import { getApplicationResponseString } from '@/lib/applications/applicationReviewExport';
 
 export interface SideCardProps {
     visible: boolean;
@@ -152,24 +154,26 @@ export default function SideCard({
         [visible, hackathon]
     );
 
-    const acceptPendingStatus = useMemo(
+    const applicationQuestionPages = useMemo(
         () =>
-            getAcceptPendingStatusForEventLocation(
-                typeof responseData?.['2'] === 'string'
-                    ? responseData['2']
-                    : responseData?.['2'] != null
-                      ? String(responseData['2'])
-                      : undefined
-            ),
-        [responseData]
+            (hackathon?.applicationQuestionPages ?? []) as InputFormPageData[],
+        [hackathon?.applicationQuestionPages]
     );
 
-    /** pending status for dropdown. `N/A` is shown as "Awaiting review" (same option). */
+    const acceptPendingStatus = useMemo(() => {
+        const eventLocationKey = getApplicationResponseString(
+            responseData,
+            applicationQuestionPages,
+            'location'
+        );
+        return getAcceptPendingStatusForEventLocation(
+            eventLocationKey || undefined
+        );
+    }, [responseData, applicationQuestionPages]);
+
     const reviewerSelectValue = useMemo((): StatusEnum | undefined => {
-        if (status === 'N/A') {
-            return 'Awaiting Review';
-        }
         const selectable = new Set<StatusEnum>([
+            'N/A',
             'Awaiting Review',
             acceptPendingStatus,
             'Wait List',
@@ -181,19 +185,20 @@ export default function SideCard({
         return undefined;
     }, [status, acceptPendingStatus]);
 
-    /** name from application response (question ids 5 & 6) */
     const applicantTitle = useMemo(() => {
-        const first =
-            typeof responseData?.['5'] === 'string'
-                ? responseData['5'].trim()
-                : '';
-        const last =
-            typeof responseData?.['6'] === 'string'
-                ? responseData['6'].trim()
-                : '';
+        const first = getApplicationResponseString(
+            responseData,
+            applicationQuestionPages,
+            'firstName'
+        ).trim();
+        const last = getApplicationResponseString(
+            responseData,
+            applicationQuestionPages,
+            'lastName'
+        ).trim();
         const name = [first, last].filter(Boolean).join(' ');
         return name ? `${name}'s Application` : 'Application';
-    }, [responseData]);
+    }, [responseData, applicationQuestionPages]);
 
     function setStatus(s: StatusEnum) {
         _setStatus(s);
@@ -518,6 +523,7 @@ export default function SideCard({
                                         <SelectValue placeholder="Select status" />
                                     </SelectTrigger>
                                     <SelectContent className="z-[21000] border-neutral-800 bg-neutral-900 text-white">
+                                        <SelectItem value="N/A">N/A</SelectItem>
                                         <SelectItem value="Awaiting Review">
                                             Awaiting review
                                         </SelectItem>
