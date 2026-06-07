@@ -3,8 +3,17 @@ import UserInfoForm from './UserInfoForm';
 
 import { redirect } from 'next/navigation';
 import { getCachedUserData } from '@/server/getCachedUserData';
+import AuthLayoutFallback from '@/app/(auth)/AuthLayoutFallback';
 
-export default async function UserInfoPage() {
+export default function UserInfoPage() {
+    return (
+        <Suspense fallback={<AuthLayoutFallback />}>
+            <UserInfoPageContent />
+        </Suspense>
+    );
+}
+
+async function UserInfoPageContent() {
     const data = await getCachedUserData();
 
     if (!data) {
@@ -15,9 +24,5 @@ export default async function UserInfoPage() {
         redirect('/home');
     }
 
-    return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <UserInfoForm />
-        </Suspense>
-    );
+    return <UserInfoForm />;
 }

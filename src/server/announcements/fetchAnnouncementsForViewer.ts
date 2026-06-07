@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import { cache } from 'react';
 import { databaseClient } from '@/db/client';
 import {
@@ -56,15 +57,21 @@ async function getViewerAnnouncementLocationKeyUncached(
     );
 }
 
+async function getViewerAnnouncementLocationKeyWithPrivateCache(
+    hackathonId: number,
+    userId: number | null
+): Promise<string | null> {
+    'use cache: private';
+    cacheTag(`announcement-location-${hackathonId}-${userId ?? 'guest'}`);
+    cacheLife({ stale: 30 });
+
+    if (userId == null) return null;
+    return getViewerAnnouncementLocationKeyUncached(hackathonId, userId);
+}
+
 // deduped within a single RSC request
 export const getViewerAnnouncementLocationKey = cache(
-    async (
-        hackathonId: number,
-        userId: number | null
-    ): Promise<string | null> => {
-        if (userId == null) return null;
-        return getViewerAnnouncementLocationKeyUncached(hackathonId, userId);
-    }
+    getViewerAnnouncementLocationKeyWithPrivateCache
 );
 
 function announcementVisibilityCondition(viewerLocationKey: string | null) {
