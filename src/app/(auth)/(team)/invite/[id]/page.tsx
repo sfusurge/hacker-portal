@@ -3,7 +3,7 @@ import { createCaller } from '@/server/appRouter';
 import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 import InviteDialog from '../../teamComponents/InviteDialog';
 import TeamDisplay from '../../teamComponents/TeamDisplay';
-import { getBasicUserInfo } from '@/server/routers/usersRouter';
+import { getCachedBasicUserInfo } from '@/server/getCachedUserData';
 import { getIcon } from '@/utils/blobHelper';
 
 export default async function InvitePage({
@@ -15,7 +15,7 @@ export default async function InvitePage({
 
     const [{ id }, user, hackathon] = await Promise.all([
         params,
-        getBasicUserInfo(),
+        getCachedBasicUserInfo(),
         getCachedActiveHackathon(),
     ]);
 

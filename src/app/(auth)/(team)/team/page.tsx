@@ -1,12 +1,12 @@
 import TeamDisplay from '@/app/(auth)/(team)/teamComponents/TeamDisplay';
 import { createCaller } from '@/server/appRouter';
 import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
-import { getBasicUserInfo } from '@/server/routers/usersRouter';
+import { getCachedBasicUserInfo } from '@/server/getCachedUserData';
 import { getIcon } from '@/utils/blobHelper';
 import { redirect } from 'next/navigation';
 
 export default async function Team() {
-    const user = await getBasicUserInfo();
+    const user = await getCachedBasicUserInfo();
 
     if (!user) {
         redirect('/login');

@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { CacheClearer } from '@/app/(auth)/CacheClear';
 import { redirect } from 'next/navigation';
 import { ClientContext } from './ClientContext';
-import { getUserData } from '@/server/routers/usersRouter';
+import { getCachedUserData } from '@/server/getCachedUserData';
 import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 import { getInitialAnnouncements } from '@/server/getInitialAnnouncements';
 import { getViewerAnnouncementLocationKey } from '@/server/announcements/fetchAnnouncementsForViewer';
@@ -13,7 +13,7 @@ import SideBar from '@/components/sidebar/SideBar';
 export default async function Layout({ children }: { children: ReactNode }) {
     const [hackathon, userData] = await Promise.all([
         getCachedActiveHackathon(),
-        getUserData(),
+        getCachedUserData(),
     ]);
 
     if (!userData) {

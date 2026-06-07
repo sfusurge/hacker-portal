@@ -1,9 +1,9 @@
-import { getUserData } from '@/server/routers/usersRouter';
+import { getCachedUserData } from '@/server/getCachedUserData';
 import ProfileContent from './ProfileContent';
 import { PageHeader } from '@/components/PageHeader';
 
 export default async function ProfilePage() {
-    const userData = await getUserData();
+    const userData = await getCachedUserData();
 
     if (!userData) {
         return (

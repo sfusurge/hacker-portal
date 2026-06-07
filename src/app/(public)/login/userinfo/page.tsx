@@ -2,10 +2,10 @@ import { Suspense } from 'react';
 import UserInfoForm from './UserInfoForm';
 
 import { redirect } from 'next/navigation';
-import { getUserData } from '@/server/routers/usersRouter';
+import { getCachedUserData } from '@/server/getCachedUserData';
 
 export default async function UserInfoPage() {
-    const data = await getUserData();
+    const data = await getCachedUserData();
 
     if (!data) {
         redirect('/signout');

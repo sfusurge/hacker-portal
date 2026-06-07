@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { HackathonOnlyProvider } from '@/app/(auth)/ClientContext';
 import ClientLayoutWrapper from '@/app/(auth)/ClientLayoutWrapper';
 import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
-import { getUserData } from '@/server/routers/usersRouter';
+import { getCachedUserData } from '@/server/getCachedUserData';
 import { ProjectsRouteProvider } from '@/components/projects/ProjectsRouteContext';
 import { SPARKJAM_PROJECTS_PATH } from '@/lib/projects/projectsPaths';
 import MobileTopNav from '@/components/sidebar/MobileTopNav';
@@ -15,7 +15,7 @@ export default async function SparkjamProjectsLayout({
 }) {
     const [hackathon, userData] = await Promise.all([
         getCachedActiveHackathon(),
-        getUserData(),
+        getCachedUserData(),
     ]);
 
     return (

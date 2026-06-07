@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { edgeAuth } from '@/auth/edgeAuth';
 
-// Since nextjs don't support middleware route groups yet.
+// Since nextjs don't support proxy route groups yet.
 
 const authRoutes = new Set([
     'application',
@@ -16,7 +16,7 @@ function getFirstSegment(str: string) {
     return str.substring(1, idx === -1 ? str.length : idx);
 }
 
-export const middleware = edgeAuth(async (req) => {
+export const proxy = edgeAuth(async (req) => {
     // do stuff with the req here
     const path = req.nextUrl.pathname;
 
@@ -38,10 +38,6 @@ export const middleware = edgeAuth(async (req) => {
         }
     }
 });
-
-// export const config = {
-//     matcher: ['/:path*'],
-// };
 
 export const config = {
     matcher: ['/((?!_next/|.*\\..*).*)'],
