@@ -1,19 +1,28 @@
-import { ReactNode } from 'react';
+import { ReactNode, Suspense } from 'react';
 import { CacheClearer } from '@/app/(auth)/CacheClear';
 import { redirect } from 'next/navigation';
 import { ClientContext } from './ClientContext';
-import { getUserData } from '@/server/routers/usersRouter';
+import { getCachedUserData } from '@/server/getCachedUserData';
 import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 import { getInitialAnnouncements } from '@/server/getInitialAnnouncements';
 import { getViewerAnnouncementLocationKey } from '@/server/announcements/fetchAnnouncementsForViewer';
 import ClientLayoutWrapper from './ClientLayoutWrapper';
 import MobileTopNav from '@/components/sidebar/MobileTopNav';
 import SideBar from '@/components/sidebar/SideBar';
+import AuthLayoutFallback from './AuthLayoutFallback';
 
-export default async function Layout({ children }: { children: ReactNode }) {
+export default function Layout({ children }: { children: ReactNode }) {
+    return (
+        <Suspense fallback={<AuthLayoutFallback />}>
+            <AuthLayoutContent>{children}</AuthLayoutContent>
+        </Suspense>
+    );
+}
+
+async function AuthLayoutContent({ children }: { children: ReactNode }) {
     const [hackathon, userData] = await Promise.all([
         getCachedActiveHackathon(),
-        getUserData(),
+        getCachedUserData(),
     ]);
 
     if (!userData) {

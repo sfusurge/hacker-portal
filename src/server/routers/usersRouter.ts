@@ -13,6 +13,24 @@ import { UnauthorizedError } from '../exceptions';
 import { auth, SessionType } from '@/auth/auth';
 import { getSixDigitId, userRNGParams } from '@/lib/PRNG/LCG';
 
+export async function fetchUserRecordById(userId: number) {
+    const dbUser = (
+        await databaseClient
+            .select()
+            .from(user)
+            .where(eq(user.id, userId))
+            .limit(1)
+    )[0];
+
+    if (!dbUser) {
+        return undefined;
+    }
+
+    return {
+        ...dbUser,
+    };
+}
+
 export const usersRouter = router({
     /**
      * get users along with their display id.
@@ -128,21 +146,7 @@ export async function getUserData() {
         return undefined;
     }
 
-    const dbUser = (
-        await databaseClient
-            .select()
-            .from(user)
-            .where(eq(user.id, userId))
-            .limit(1)
-    )[0];
-
-    if (!dbUser) {
-        return undefined;
-    }
-
-    return {
-        ...dbUser,
-    };
+    return fetchUserRecordById(userId);
 }
 
 /**

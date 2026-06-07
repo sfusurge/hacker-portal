@@ -13,10 +13,8 @@ function posthogRewrites() {
 }
 
 const nextConfig = {
+    cacheComponents: true,
     typescript: { ignoreBuildErrors: true },
-    eslint: {
-        ignoreDuringBuilds: true,
-    },
     skipTrailingSlashRedirect: true,
     async rewrites() {
         if (!process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim()) {

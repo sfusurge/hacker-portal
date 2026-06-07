@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { createCaller } from '@/server/appRouter';
 import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 
-import { getUserData } from '@/server/routers/usersRouter';
+import { getCachedUserData } from '@/server/getCachedUserData';
 
 import { GoHome } from '@/components/home/GoHome';
 import { isSubmissionWindowOpen } from '@/lib/submissionWindow';
@@ -13,7 +13,7 @@ import { SubmissionSideBar } from '@/components/application_components/Submissio
 import ProjectSubmissionSuccess from '../../teamComponents/submit/ProjectSubmissionSuccess';
 
 export default async function SubmitPage() {
-    const user = await getUserData();
+    const user = await getCachedUserData();
 
     if (!user) {
         redirect('/login');

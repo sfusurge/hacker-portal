@@ -1,4 +1,4 @@
-import { getUserData } from '@/server/routers/usersRouter';
+import { getCachedUserData } from '@/server/getCachedUserData';
 import { createCaller } from '@/server/appRouter';
 import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 import DiscordCard from '@/components/home/DiscordCard';
@@ -7,7 +7,7 @@ import DashboardCard from '@/components/home/DashboardCard';
 import { DashboardCardProps } from '@/components/home/DashboardCard';
 
 export default async function SponsorDashboard() {
-    const data = await getUserData();
+    const data = await getCachedUserData();
     const trpcClient = createCaller({});
 
     const activeHackathon = await getCachedActiveHackathon();

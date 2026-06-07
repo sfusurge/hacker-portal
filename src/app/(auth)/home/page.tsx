@@ -2,7 +2,7 @@ import EventsCard from '@/components/home/EventsCard';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
 import { createCaller } from '@/server/appRouter';
 import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
-import { getUserData } from '@/server/routers/usersRouter';
+import { getCachedUserData } from '@/server/getCachedUserData';
 import { redirect } from 'next/navigation';
 import DiscordCard from '@/components/home/DiscordCard';
 import HackathonCard from '@/components/home/HackathonCard';
@@ -10,7 +10,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
 
 export default async function Home() {
-    const data = await getUserData();
+    const data = await getCachedUserData();
 
     // todo/temp: improve redirect for judge
     if (data?.userRole === 'judge') {

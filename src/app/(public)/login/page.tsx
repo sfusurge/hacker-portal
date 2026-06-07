@@ -1,14 +1,26 @@
-'use server';
 import { auth, signIn } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
 import { user } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
 import LoginContainer from '@/components/login/LoginContainer';
 import type { OAuthProvider } from '@/components/login/constants';
 
-export default async function Login({
+export default function Login({
+    searchParams,
+}: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+    return (
+        <Suspense fallback={null}>
+            <LoginContent searchParams={searchParams} />
+        </Suspense>
+    );
+}
+
+async function LoginContent({
     searchParams,
 }: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -17,9 +29,6 @@ export default async function Login({
     const session = await auth();
 
     if (session) {
-        // user already logged in
-
-        // check if user needs to input personal info still
         const res = (
             await databaseClient
                 .select()
@@ -28,13 +37,10 @@ export default async function Login({
         )[0];
 
         if (!res) {
-            // somehow this user isnt created, signout/invalidate the sesson
-            // await notFound();
             return redirect('/signout');
         }
 
         if (!res.firstName || !res.lastName || !res.phoneNumber) {
-            // user info isn't filled out, redirect to userinfo
             let target = '/login/userinfo';
             if (redirectTarget) {
                 target = `${target}?from=${encodeURIComponent(redirectTarget)}`;
@@ -42,14 +48,13 @@ export default async function Login({
             return redirect(target);
         }
 
-        // user info is all filled
         if (redirectTarget) {
             return redirect(redirectTarget);
         }
 
-        // no target specified = default home
         return redirect('/home');
     }
+
     async function loginWithProvider(provider: OAuthProvider) {
         'use server';
         const redirectPath = `/login${redirectTarget ? '?from=' + encodeURIComponent(redirectTarget) : ''}`;
