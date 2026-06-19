@@ -1,13 +1,78 @@
 'use client';
 
 import { atom } from 'jotai';
+import { quillDeltaToPlainText } from '@/lib/markdown/content';
+import { isQuestionApplicableOnForm } from '@/lib/projects/submissionFormQuestions';
+import type { PageFormState } from '../PageStatus/ApplicationPageIndicator';
 import type { InputFormQuestion } from '../types';
+
 export const submittedAtom = atom(false);
-export function isApplicationQuestionFilled(question: InputFormQuestion) {
+
+export function computePageFormProgress(
+    questions: InputFormQuestion[]
+): Pick<PageFormState, 'state'> {
+    const siblings = questions;
+    let requiredQuestions = 0;
+    let filledRequiredQuestions = 0;
+    let atLeastOneFilled = false;
+
+    function considerQuestion(
+        question: InputFormQuestion,
+        questionSiblings: InputFormQuestion[]
+    ) {
+        if (!isQuestionApplicableOnForm(question, questionSiblings)) {
+            return;
+        }
+
+        if (question.type === 'inline') {
+            for (const content of question.content ?? []) {
+                considerQuestion(content, question.content ?? []);
+            }
+            return;
+        }
+
+        const filled = isApplicationQuestionFilled(question);
+        if (filled) {
+            atLeastOneFilled = true;
+        }
+        if (question.required) {
+            requiredQuestions += 1;
+            if (filled) {
+                filledRequiredQuestions += 1;
+            }
+        }
+    }
+
+    for (const question of questions) {
+        considerQuestion(question, siblings);
+    }
+
+    if (
+        (requiredQuestions > 0 &&
+            filledRequiredQuestions === requiredQuestions) ||
+        (requiredQuestions === 0 && atLeastOneFilled)
+    ) {
+        return { state: 'completed' };
+    }
+
+    if (atLeastOneFilled) {
+        return { state: 'started' };
+    }
+
+    return { state: 'not started' };
+}
+
+export function canAdvanceFromPageState(pageState: PageFormState): boolean {
+    return pageState.state === 'completed' && !pageState.error;
+}
+export function isApplicationQuestionFilled(
+    question: InputFormQuestion
+): boolean {
     try {
         switch (question.type) {
             case 'text-area':
             case 'text-line':
+            case 'title-line':
             case 'date':
             case 'date-ymd':
                 return (
@@ -31,12 +96,22 @@ export function isApplicationQuestionFilled(question: InputFormQuestion) {
                         question.otherValue.trim() !== '')
                 );
             case 'file-upload':
-                return question.fileList && question.fileList.length > 0;
+                return (question.fileList?.length ?? 0) > 0;
             case 'rich-text':
-                return question.value;
+                return quillDeltaToPlainText(question.value).length > 0;
+            case 'markdown':
+                return (
+                    question.value !== undefined && question.value.trim() !== ''
+                );
 
             case 'multiple-choice':
                 return question.value !== undefined;
+
+            case 'link':
+                return (
+                    question.value !== undefined &&
+                    String(question.value).trim().length > 0
+                );
 
             case 'api-dropdown':
                 return (
@@ -76,6 +151,8 @@ export function isApplicationQuestionFilled(question: InputFormQuestion) {
                         isApplicationQuestionFilled(contentQuestion)
                     );
                 }
+            default:
+                return false;
         }
     } catch (error) {
         console.error(

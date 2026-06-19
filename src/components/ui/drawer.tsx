@@ -57,24 +57,26 @@ const DrawerContent = React.forwardRef<
             <DrawerPrimitive.Content
                 onOpenAutoFocus={(e) => e.preventDefault()}
                 ref={ref}
-                className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom fixed inset-x-0 bottom-0 z-[450] mt-24 flex h-auto flex-col gap-6 rounded-t-[10px] border border-neutral-700/30 bg-neutral-900 text-white"
+                className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom fixed inset-x-0 bottom-0 z-[450] mt-24 flex h-auto min-h-0 flex-col gap-6 rounded-t-[10px] border border-neutral-700/30 bg-neutral-900 text-white"
                 style={{ zIndex: overlayZIndex + 1 }}
                 {...props}
             >
-                <div className="bg-neutral-750 mx-auto mt-4 h-2 w-9 rounded-full" />
+                <div className="bg-neutral-750 mx-auto mt-4 h-2 w-9 shrink-0 rounded-full" />
                 <div
                     className={cn(
-                        'relative z-[450] flex flex-col gap-6 p-6 pt-0',
+                        'relative z-[450] flex min-h-0 flex-col overflow-hidden p-6 pt-0',
                         className
                     )}
                 >
                     {!hideCloseButton && (
-                        <DrawerClose className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute -top-8 right-4 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-white/30 opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none">
+                        <DrawerClose className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute -top-8 right-4 z-10 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-white/30 opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none">
                             <XCircleIcon className="h-6 w-6" />
                             <span className="sr-only">Close</span>
                         </DrawerClose>
                     )}
-                    {children}
+                    <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]">
+                        {children}
+                    </div>
                 </div>
             </DrawerPrimitive.Content>
         </DrawerPortal>

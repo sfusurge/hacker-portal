@@ -117,20 +117,23 @@ export interface UserType {
 }
 
 export async function getUserData() {
-    const session = await auth();
+    const session = (await auth()) as SessionType;
 
-    if (!session || !session.user || !session.user.email) {
+    if (!session || !session.userId) {
         return undefined;
     }
 
-    const normalizedEmail = session.user.email.toLowerCase();
+    const userId = parseInt(session.userId, 10);
+    if (Number.isNaN(userId)) {
+        return undefined;
+    }
 
     const dbUser = (
         await databaseClient
             .select()
             .from(user)
+            .where(eq(user.id, userId))
             .limit(1)
-            .where(eq(user.email, normalizedEmail))
     )[0];
 
     if (!dbUser) {

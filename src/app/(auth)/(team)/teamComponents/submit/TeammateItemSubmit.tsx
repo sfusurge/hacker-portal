@@ -11,7 +11,7 @@ import {
     getTextVariant,
 } from '@/lib/application-status';
 import { trpc } from '@/trpc/client';
-import { getIcon } from '@/utils/blobHelper';
+import { resolveUserIconUrl } from '@/utils/blobHelper';
 
 type UserType = InferSelectModel<typeof user>;
 
@@ -38,12 +38,7 @@ export default function TeammateItemSubmit({
 }: TeammateItemProps) {
     const isMobile = useMediaQuery('(max-width: 767px)');
 
-    const avatarUrl = useMemo(() => {
-        if (!image) {
-            return '/teams/single-otter.webp';
-        }
-        return getIcon('user_icon', image);
-    }, [image]);
+    const avatarUrl = useMemo(() => resolveUserIconUrl(image), [image]);
 
     // Calculate display name
     const displayName =
@@ -81,7 +76,7 @@ export default function TeammateItemSubmit({
                         className="h-7 w-7 rounded-full object-cover"
                     />
                     <div className="flex flex-1 flex-col justify-around gap-1 overflow-hidden">
-                        <p className="truncate text-sm font-medium md:text-base">
+                        <p className="truncate text-sm md:text-base">
                             {isMobile
                                 ? firstName || displayName.split(' ')[0]
                                 : displayName}{' '}
@@ -91,6 +86,9 @@ export default function TeammateItemSubmit({
                                 </span>
                             )}
                         </p>
+                    </div>
+                    <div className="flex gap-1 rounded-lg bg-neutral-800 px-3 py-1 text-center text-sm text-white/60">
+                        In Team
                     </div>
                 </div>
             </li>

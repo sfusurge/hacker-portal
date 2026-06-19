@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAtomValue } from 'jotai';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { FormTextInput } from '@/components/ui/input/input';
 import { Label } from '@/components/ui/label/label';
 import ProjectCard from './ProjectCard';
@@ -22,21 +24,19 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { DropdownBadge } from '@/components/ui/dropdown-badge';
+import {
+    createSkeletonProjectListItem,
+    projectListItemMatchesSearchQuery,
+    type ProjectListItem,
+} from '@/lib/projects/projectSubmissionDisplay';
 const STATUS_KEY = 'judging_status_data';
 const FILTERS_KEY = 'judging_filters_data';
 
-interface Project {
-    [key: number]: string;
-    id: number;
-    displayId: string;
-    teamName?: string;
-}
-
 interface ProjectListProps {
-    projects: Project[];
+    projects: ProjectListItem[];
     userData: any;
     judgedProjects: any[];
-    allProjects?: Project[];
+    allProjects?: ProjectListItem[];
 }
 
 export default function ProjectList({
@@ -45,6 +45,7 @@ export default function ProjectList({
     judgedProjects,
     allProjects,
 }: ProjectListProps) {
+    const hackathon = useAtomValue(hackathonAtom);
     const { toast } = useToast();
     const [projectStatuses, setProjectStatuses] = useState<
         Record<string, string>
@@ -131,7 +132,7 @@ export default function ProjectList({
 
         if (!isAssigned) {
             return {
-                label: 'Not Judging',
+                label: 'May view',
                 className: 'bg-neutral-800 text-white/60',
             };
         }
@@ -339,14 +340,10 @@ export default function ProjectList({
                       statusFilters.has(projectStatus)
                     : true;
 
-            const matchesSearch =
-                !query.trim() ||
-                (project[1] &&
-                    String(project[1]).toLowerCase().includes(query)) ||
-                (project[4] &&
-                    String(project[4]).toLowerCase().includes(query)) ||
-                (project.teamName &&
-                    project.teamName.toLowerCase().includes(query));
+            const matchesSearch = projectListItemMatchesSearchQuery(
+                project,
+                query
+            );
 
             return matchesSearch && matchesStatus;
         });
@@ -371,27 +368,28 @@ export default function ProjectList({
                     </h1>
                     <p className="text-white/60">
                         {showAllProjects
-                            ? 'Thank you for being a judge for StormHacks 2025! You can now view every project 💖.'
+                            ? `Thank you for being a judge for ${hackathon.hackathonName}! You may view every project 💖.`
                             : "Here are the projects you've been assigned to judge."}
                     </p>
                 </div>
 
                 <div className="flex flex-col gap-2">
-                    <Label>Search for a project</Label>
+                    <Label>Search projects or tags</Label>
+                    <FormTextInput
+                        name="search"
+                        id="search"
+                        type="search"
+                        className="w-full md:max-w-[320px]"
+                        icon={
+                            <MagnifyingGlassIcon className="h-4 w-4 text-white/60" />
+                        }
+                        defaultValue={searchQuery}
+                        lazy
+                        onLazyChange={(text) => {
+                            setSearchQuery(text);
+                        }}
+                    />
                     <div className="flex gap-3">
-                        <FormTextInput
-                            name="search"
-                            id="search"
-                            type="search"
-                            icon={
-                                <MagnifyingGlassIcon className="h-4 w-4 text-white/60" />
-                            }
-                            defaultValue={searchQuery}
-                            lazy
-                            onLazyChange={(text) => {
-                                setSearchQuery(text);
-                            }}
-                        />
                         <div className="block md:hidden">
                             <Drawer>
                                 <DrawerTrigger asChild>
@@ -552,11 +550,7 @@ export default function ProjectList({
                                 .map((_, index) => (
                                     <ProjectCard
                                         key={`skeleton-${index}`}
-                                        project={{
-                                            id: 0,
-                                            teamName: '',
-                                            displayId: '123456',
-                                        }}
+                                        project={createSkeletonProjectListItem()}
                                         statusInfo={{
                                             label: '',
                                             className: '',
@@ -572,16 +566,16 @@ export default function ProjectList({
                                 {(searchQuery.trim() !== '' ||
                                     statusFilters.size > 0) && (
                                     <p className="mt-2 text-sm text-white/60">
-                                        Try clearing your filters or adjusting
-                                        your search query.
+                                        Try clearing your filters or a different
+                                        name or tag.
                                     </p>
                                 )}
                             </div>
                         ) : (
                             filteredProjects
                                 .sort((a, b) => {
-                                    const projectIdA = a[0] || '';
-                                    const projectIdB = b[0] || '';
+                                    const projectIdA = String(a.id);
+                                    const projectIdB = String(b.id);
                                     const statusA =
                                         projectStatuses[projectIdA] ||
                                         'not_started';
@@ -606,14 +600,8 @@ export default function ProjectList({
                                     const statusInfo = getStatusInfo(projectId);
                                     return (
                                         <ProjectCard
-                                            key={index}
-                                            project={{
-                                                ...project,
-                                                id: projectId,
-                                                displayId: project.displayId,
-                                                teamName:
-                                                    project.teamName || '',
-                                            }}
+                                            key={projectId}
+                                            project={project}
                                             statusInfo={statusInfo}
                                         />
                                     );

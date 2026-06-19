@@ -1,14 +1,13 @@
 import { sideCardAtomSJ } from '@/app/(auth)/admin/review/components/ReviewApplicationsTable';
-import { atom, useAtom, useAtomValue, useSetAtom, WritableAtom } from 'jotai';
+import { atom, useAtom, useAtomValue, WritableAtom } from 'jotai';
 import { focusAtom } from 'jotai-optics';
 import style from './SideCard.module.css';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
     InputFormQuestion,
     QuestionMultipleCheckBox,
     QuestionApiDropdown,
     QuestionInline,
-    QuestionDateYmd,
     QuestionDropdown,
     QuestionMajorInput,
     QuestionFileUploads,
@@ -19,15 +18,24 @@ import { TextLineInput } from '@/components/application_components/InputFormComp
 import { TextAreaInput } from '@/components/application_components/InputFormComponents/TextAreaInput';
 import { RadioInput } from '@/components/application_components/InputFormComponents/RadioInput';
 import { CheckBoxGroupInput } from '@/components/application_components/InputFormComponents/CheckboxGroupInput';
-import { Label } from '@/components/ui/label/label';
-import { XMarkIcon } from '@heroicons/react/20/solid';
+import {
+    ArrowLeftIcon,
+    ArrowRightIcon,
+    XMarkIcon,
+} from '@heroicons/react/20/solid';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
 import { Button } from '@/components/ui/button';
 import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { StatusEnum } from '@/db/schema/applications';
 import { trpc } from '@/trpc/client';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
-import { Applicant } from '../page';
 import { TextLinkInput } from '@/components/application_components/InputFormComponents/TextLinkInput';
 import { ApiDropdownInput } from '@/components/application_components/InputFormComponents/ApiDropdownInput';
 import { InlineInput } from '@/components/application_components/InputFormComponents/InlineInput';
@@ -35,6 +43,8 @@ import { DateInput } from '@/components/application_components/InputFormComponen
 import { DropdownInput } from '@/components/application_components/InputFormComponents/DropdownInput';
 import { MajorInput } from '@/components/application_components/InputFormComponents/MajorInput';
 import { FileUploadInput } from '@/components/application_components/InputFormComponents/FileUploadInput';
+import { questionIdsInOrderFromPages } from '@/app/(auth)/admin/review/applicationQuestionOrder';
+import { getAcceptPendingStatusForEventLocation } from '@/lib/applicationAcceptStatus';
 
 export interface SideCardProps {
     visible: boolean;
@@ -74,15 +84,60 @@ export default function SideCard({
     selected,
     onRefresh,
 }: SideCardProps) {
+    const utils = trpc.useUtils();
+
     const responseData = useAtomValue(responseAtom);
     const applicationData = useAtomValue(sideCardAtomSJ);
     const [status, _setStatus] = useAtom(statusAtom);
     const [editing, setEditing] = useState(false);
     const [updateCurrentStatus, setUpdateCurrentStatus] = useState(false);
     const hackathon = useAtomValue(hackathonAtom);
-    const updateApplication = trpc.applications.updateApplication.useMutation(
-        {}
-    );
+    const updateApplication = trpc.applications.updateApplication.useMutation({
+        onSuccess: async (updatedEntry) => {
+            await utils.applications.getApplications.cancel();
+
+            utils.applications.getApplications.setInfiniteData(
+                {
+                    hackathonId: hackathon.id,
+                },
+                (old) => {
+                    if (!old) {
+                        return {
+                            pageParams: [],
+                            pages: [],
+                        };
+                    }
+
+                    return {
+                        ...old,
+                        pages: old.pages.map((page) => {
+                            return {
+                                ...page,
+                                applications: page.applications.map(
+                                    (application) => {
+                                        if (
+                                            application.userId !==
+                                            updatedEntry.userId
+                                        ) {
+                                            return application;
+                                        }
+
+                                        return {
+                                            ...application,
+                                            currentStatus:
+                                                updatedEntry.currentStatus,
+                                            pendingStatus:
+                                                updatedEntry.pendingStatus,
+                                        };
+                                    }
+                                ),
+                            };
+                        }),
+                    };
+                }
+            );
+        },
+    });
     const cardId = applicationData?.userId;
     /*
     useEffect(() => {
@@ -91,12 +146,54 @@ export default function SideCard({
         }
     }, [selected, setSideCardAtom]);
 */
-    const utils = trpc.useUtils();
 
     const ready = useMemo(
         () => visible && hackathon !== undefined,
         [visible, hackathon]
     );
+
+    const acceptPendingStatus = useMemo(
+        () =>
+            getAcceptPendingStatusForEventLocation(
+                typeof responseData?.['2'] === 'string'
+                    ? responseData['2']
+                    : responseData?.['2'] != null
+                      ? String(responseData['2'])
+                      : undefined
+            ),
+        [responseData]
+    );
+
+    /** pending status for dropdown. `N/A` is shown as "Awaiting review" (same option). */
+    const reviewerSelectValue = useMemo((): StatusEnum | undefined => {
+        if (status === 'N/A') {
+            return 'Awaiting Review';
+        }
+        const selectable = new Set<StatusEnum>([
+            'Awaiting Review',
+            acceptPendingStatus,
+            'Wait List',
+            'Declined',
+        ]);
+        if (status && selectable.has(status)) {
+            return status;
+        }
+        return undefined;
+    }, [status, acceptPendingStatus]);
+
+    /** name from application response (question ids 5 & 6) */
+    const applicantTitle = useMemo(() => {
+        const first =
+            typeof responseData?.['5'] === 'string'
+                ? responseData['5'].trim()
+                : '';
+        const last =
+            typeof responseData?.['6'] === 'string'
+                ? responseData['6'].trim()
+                : '';
+        const name = [first, last].filter(Boolean).join(' ');
+        return name ? `${name}'s Application` : 'Application';
+    }, [responseData]);
 
     function setStatus(s: StatusEnum) {
         _setStatus(s);
@@ -120,6 +217,23 @@ export default function SideCard({
         }
         _onclose();
     }
+
+    const orderedQuestionIds = useMemo(
+        () => questionIdsInOrderFromPages(hackathon?.applicationQuestionPages),
+        [hackathon?.applicationQuestionPages]
+    );
+
+    const sortedResponseKeys = useMemo(() => {
+        const keys = Object.keys(responseData);
+        return [...keys].sort((a, b) => {
+            const ia = orderedQuestionIds.indexOf(a);
+            const ib = orderedQuestionIds.indexOf(b);
+            if (ia === -1 && ib === -1) return a.localeCompare(b);
+            if (ia === -1) return 1;
+            if (ib === -1) return -1;
+            return ia - ib;
+        });
+    }, [responseData, orderedQuestionIds]);
 
     const questionTypeMap = useMemo(() => {
         const map = new Map<string, InputFormQuestion>();
@@ -215,8 +329,12 @@ export default function SideCard({
             case 'multiple-checkbox':
                 const multiCheckboxAtom = atom(
                     (get) => {
+                        const value = get(dataAtom) as unknown;
+                        const arr: unknown[] = Array.isArray(value)
+                            ? value
+                            : [];
                         const choices = new Set<string>(
-                            get(dataAtom).map((v: string) => v.toLowerCase())
+                            arr.map((v) => String(v).toLowerCase())
                         );
                         for (const c of question.choices) {
                             if (choices.has(c.data.toLowerCase())) {
@@ -241,7 +359,7 @@ export default function SideCard({
                         const res: string[] = [];
                         for (const c of val.choices) {
                             if (c.value) {
-                                res.push(c.name);
+                                res.push(c.data);
                             }
                         }
                         if (val.allowOther && val.otherValue) {
@@ -346,85 +464,99 @@ export default function SideCard({
             {ready && <div className={style.background} onClick={onclose} />}
             {ready && (
                 <div className={style.cardContainer} key={cardId}>
-                    {/* title and close button */}
-                    <div className={style.titleRow}>
-                        <h1 style={{ fontSize: '24px' }}>
-                            Review/Edit Application
-                        </h1>
-                        <button onClick={onclose}>
-                            <XMarkIcon style={{ width: '2rem' }} />
-                        </button>
-                    </div>
+                    <div className={style.headerBlock}>
+                        <div className={style.titleRow}>
+                            <h1 className={style.titleHeading}>
+                                {applicantTitle}
+                            </h1>
+                            <div className={`${style.titleRowNav} h-full`}>
+                                <Button
+                                    onClick={onPrev}
+                                    aria-label="Previous application"
+                                    type="button"
+                                >
+                                    <ArrowLeftIcon className="h-5 w-5" />
+                                </Button>
+                                <Button
+                                    onClick={onNext}
+                                    aria-label="Next application"
+                                    type="button"
+                                >
+                                    <ArrowRightIcon className="h-5 w-5" />
+                                </Button>
+                            </div>
+                            <button
+                                type="button"
+                                className={style.titleClose}
+                                onClick={onclose}
+                                aria-label="Close"
+                            >
+                                <XMarkIcon style={{ width: '2rem' }} />
+                            </button>
+                        </div>
 
-                    <div className={style.hor}>
-                        <Button onClick={onPrev}>Prev</Button>
-                        <Button
-                            className={
-                                status === 'Accepted - RSVP to Confirm'
-                                    ? style.selectedButton
-                                    : ''
-                            }
-                            onClick={() => {
-                                // TODO This shouldn't be hard coded
-                                // should which ever status in appropreiate for the hackathon. Sparkjam needs payment, but most others won't
-                                setStatus('Accepted - RSVP to Confirm');
-                            }}
-                            variant={'brand'}
-                            hierarchy={'primary'}
-                        >
-                            Accept
-                        </Button>
-                        <Button
-                            className={
-                                status === 'Wait List'
-                                    ? style.selectedButton
-                                    : ''
-                            }
-                            onClick={() => {
-                                setStatus('Wait List');
-                            }}
-                            variant={'caution'}
-                            hierarchy={'primary'}
-                        >
-                            Waitlist
-                        </Button>
-                        <Button
-                            className={
-                                status === 'Declined'
-                                    ? style.selectedButton
-                                    : ''
-                            }
-                            onClick={() => {
-                                setStatus('Declined');
-                            }}
-                            variant={'danger'}
-                            hierarchy={'primary'}
-                        >
-                            Decline
-                        </Button>
-                        <Button onClick={onNext}>Next</Button>
-                        <div className="flex flex-col gap-2">
-                            <CheckBoxWithLabel
-                                name="Editing"
-                                checked={editing}
-                                onChange={(e) => {
-                                    setEditing(e.target.checked);
-                                }}
-                            />
-
-                            <CheckBoxWithLabel
-                                name="Override Current Status"
-                                checked={updateCurrentStatus}
-                                onChange={(e) => {
-                                    setUpdateCurrentStatus(e.target.checked);
-                                }}
-                            />
+                        <div className={style.headerToolbar}>
+                            <div className={style.statusActions}>
+                                <label
+                                    className={style.statusSelectLabel}
+                                    htmlFor="sidecard-review-status"
+                                >
+                                    Select status
+                                </label>
+                                <Select
+                                    key={acceptPendingStatus}
+                                    value={reviewerSelectValue}
+                                    onValueChange={(v) =>
+                                        setStatus(v as StatusEnum)
+                                    }
+                                >
+                                    <SelectTrigger
+                                        id="sidecard-review-status"
+                                        className="h-11 w-full min-w-[12rem] border-neutral-700 bg-neutral-800"
+                                        aria-label="Select status"
+                                    >
+                                        <SelectValue placeholder="Select status" />
+                                    </SelectTrigger>
+                                    <SelectContent className="z-[21000] border-neutral-800 bg-neutral-900 text-white">
+                                        <SelectItem value="Awaiting Review">
+                                            Awaiting review
+                                        </SelectItem>
+                                        <SelectItem value={acceptPendingStatus}>
+                                            Accept
+                                        </SelectItem>
+                                        <SelectItem value="Wait List">
+                                            Waitlist
+                                        </SelectItem>
+                                        <SelectItem value="Declined">
+                                            Decline
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <div className={style.headerCheckboxes}>
+                                    <CheckBoxWithLabel
+                                        name="Editing"
+                                        checked={editing}
+                                        onChange={(e) => {
+                                            setEditing(e.target.checked);
+                                        }}
+                                    />
+                                    <CheckBoxWithLabel
+                                        name="Override Current Status"
+                                        checked={updateCurrentStatus}
+                                        onChange={(e) => {
+                                            setUpdateCurrentStatus(
+                                                e.target.checked
+                                            );
+                                        }}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     {/* application data */}
 
-                    {Object.entries(responseData).map(([id, val]) => {
+                    {sortedResponseKeys.map((id) => {
                         const q = questionTypeMap.get(id);
 
                         if (!q) {
@@ -447,56 +579,6 @@ export default function SideCard({
                             </div>
                         );
                     })}
-
-                    {/* Status change (repeating at both top and bottom of page)*/}
-                    <div className={style.hor}>
-                        <Button onClick={onPrev}>Prev</Button>
-                        <Button
-                            className={
-                                status === 'Accepted - Pending Payment'
-                                    ? style.selectedButton
-                                    : ''
-                            }
-                            onClick={() => {
-                                // TODO This shouldn't be hard coded
-                                // should which ever status in appropreiate for the hackathon. Sparkjam needs payment, but most others won't
-                                setStatus('Accepted - RSVP to Confirm');
-                            }}
-                            variant={'brand'}
-                            hierarchy={'primary'}
-                        >
-                            Accept
-                        </Button>
-                        <Button
-                            className={
-                                status === 'Wait List'
-                                    ? style.selectedButton
-                                    : ''
-                            }
-                            onClick={() => {
-                                setStatus('Wait List');
-                            }}
-                            variant={'caution'}
-                            hierarchy={'primary'}
-                        >
-                            Waitlist
-                        </Button>
-                        <Button
-                            className={
-                                status === 'Declined'
-                                    ? style.selectedButton
-                                    : ''
-                            }
-                            onClick={() => {
-                                setStatus('Declined');
-                            }}
-                            variant={'danger'}
-                            hierarchy={'primary'}
-                        >
-                            Decline
-                        </Button>
-                        <Button onClick={onNext}>Next</Button>
-                    </div>
                 </div>
             )}
         </>

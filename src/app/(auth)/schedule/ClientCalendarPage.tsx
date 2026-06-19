@@ -24,7 +24,7 @@ import {
     PencilIcon,
     PlusIcon,
 } from '@heroicons/react/24/solid';
-import { useWindowSize } from '@/lib/utils';
+import { useWindowSize } from '@/lib/useWindowSize';
 import { trpc } from '@/trpc/client';
 import { MobileCalendar } from '@/components/calendar/MobileMonthCalendar/MobileCalendar';
 
@@ -88,14 +88,20 @@ export function ClientCalendarPage({
     function getStartDate(period: number) {
         const dayOffset = weekOffset * period;
         const today = dayjs().startOf('day');
+
         const firstDay = dayjs(hackathon.startDate);
         const lastDay = dayjs(hackathon.endDate).endOf('day');
 
         let minDate = dayjs(new Date(2099, 1, 1));
+        let updated = false;
         for (const e of events) {
             if (e.startTime.isAfter(today) && e.startTime.isBefore(minDate)) {
                 minDate = e.startTime;
+                updated = true;
             }
+        }
+        if (!updated) {
+            minDate = today;
         }
 
         if (today.isBefore(firstDay)) {

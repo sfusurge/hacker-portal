@@ -22,16 +22,19 @@ import type {
     QuestionFileUploads,
     InputFormData,
     QuestionRichTextInput,
+    QuestionMarkdownInput,
     QuestionTextLinkInput,
     QuestionApiDropdown,
     QuestionDropdown,
     QuestionInline,
     QuestionDateYmd,
     QuestionMajorInput,
+    QuestionTitleLineInput,
 } from './types';
 import { splitAtom } from 'jotai/utils';
 import style from './InputForm.module.css';
 import { TextLineInput } from './InputFormComponents/TextLineInput';
+import { TitleLineInput } from './InputFormComponents/TitleLineInput';
 import {
     type ComponentProps,
     useEffect,
@@ -41,7 +44,8 @@ import {
 } from 'react';
 import { Label } from '@/components/ui/label/label';
 import {
-    isApplicationQuestionFilled,
+    canAdvanceFromPageState,
+    computePageFormProgress,
     submittedAtom,
 } from './InputFormComponents/shared';
 import { NumberInput } from './InputFormComponents/NumberInput';
@@ -53,6 +57,7 @@ import { TextLinkInput } from './InputFormComponents/TextLinkInput';
 import { ApiDropdownInput } from './InputFormComponents/ApiDropdownInput';
 import { MajorInput } from './InputFormComponents/MajorInput';
 import { ReviewPage } from './ReviewPage';
+import { ReviewProject } from './ReviewProject';
 import {
     type PageFormState,
     DesktopPageIndicator,
@@ -66,12 +71,16 @@ import { cn } from '@/lib/utils';
 import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
 import { FileUploadInput } from '@/components/application_components/InputFormComponents/FileUploadInput';
 import { RichTextInput } from '@/components/application_components/InputFormComponents/RichTextInput';
+import { MarkdownInput } from '@/components/application_components/InputFormComponents/MarkdownInput';
 import { DropdownInput } from '@/components/application_components/InputFormComponents/DropdownInput';
+import { ChoiceConditionalAlert } from '@/components/application_components/InputFormComponents/ChoiceConditionalAlert';
 import { InlineInput } from '@/components/application_components/InputFormComponents/InlineInput';
 import { DateInput } from '@/components/application_components/InputFormComponents/DateInput';
 import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import ReviewApplicationDialog from './ReviewApplicationDialog';
+import { isSubmissionQuestionDisabled } from '@/lib/projects/submissionFormQuestions';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -91,11 +100,13 @@ function ClientOnly({ children, ...delegated }: ComponentProps<'div'>) {
 // Atoms
 export const pageIndexAtom = atom(0); // defining the state
 export const finalErrCheckAtom = atom(false); // when the user clicks the review & submit for the first time,
+export const isReviewPageAtom = atom(false);
 
 interface InputFormProps {
     appDataAtom: WritableAtom<InputFormData, [val: InputFormData], void>;
     onSubmit: () => Promise<void>;
     disablePageTab?: boolean;
+    applicationType?: 'application' | 'submission';
 }
 
 /**
@@ -106,6 +117,7 @@ export function InputForm({
     appDataAtom,
     onSubmit,
     disablePageTab = false,
+    applicationType = 'application',
 }: InputFormProps) {
     const [submitted, setSubmitted] = useAtom(submittedAtom);
     const router = useRouter();
@@ -169,6 +181,11 @@ export function InputForm({
     // mobile conditional render
     const isMobile = useMediaQuery('(max-width: 767.5px)');
 
+    const [isReviewPage, setIsReviewPage] = useAtom(isReviewPageAtom);
+    useEffect(() => {
+        setIsReviewPage(currentPageIndex === pagesAtoms.length);
+    }, [currentPageIndex, pagesAtoms.length, setIsReviewPage]);
+
     const pageContainerRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         // if (pageContainerRef.current) {
@@ -196,21 +213,30 @@ export function InputForm({
     }
 
     return (
-        <div className={style.appFormRoot}>
-            <div className="flex flex-col gap-1">
-                <button
-                    className={cn(style.homeButton)}
-                    onClick={() => {
-                        router.push('/home');
-                    }}
-                >
-                    <ArrowLeftIcon className="h-6 w-6" />
-                    <span>Dashboard</span>
-                </button>
-                <h1 className="text-xl font-semibold">
-                    JourneyHacks 2026 Application
-                </h1>
-            </div>
+        <div
+            className={cn(
+                style.appFormRoot,
+                applicationType === 'application' && 'max-md:-mt-20',
+                applicationType === 'submission' && style.submissionForm,
+                isReviewPage && style.reviewPageWrapper
+            )}
+        >
+            {applicationType === 'application' && (
+                <div className="flex flex-col gap-1">
+                    <button
+                        className={cn(style.homeButton)}
+                        onClick={() => {
+                            router.push('/home');
+                        }}
+                    >
+                        <ArrowLeftIcon className="h-6 w-6" />
+                        <span>Dashboard</span>
+                    </button>
+                    <h1 className="text-xl font-semibold">
+                        SparkJam 2026 Application
+                    </h1>
+                </div>
+            )}
             <div className={style.appFormWrapper}>
                 <div className={style.appFormContent} ref={pageContainerRef}>
                     {!disablePageTab &&
@@ -228,14 +254,27 @@ export function InputForm({
 
                     <div className={style.formContainer}>
                         {currentPageIndex === pagesAtoms.length && (
-                            <ReviewPage
-                                response={pages}
-                                submit={async () => {
-                                    await onSubmit();
-                                }}
-                                mobileMode={isMobile}
-                                disableSubmitBtn={disablePageTab}
-                            />
+                            <>
+                                {applicationType === 'application' ? (
+                                    <ReviewPage
+                                        response={pages}
+                                        submit={async () => {
+                                            await onSubmit();
+                                        }}
+                                        mobileMode={isMobile}
+                                        disableSubmitBtn={disablePageTab}
+                                    />
+                                ) : (
+                                    <ReviewProject
+                                        response={pages}
+                                        submit={async () => {
+                                            await onSubmit();
+                                        }}
+                                        mobileMode={isMobile}
+                                        disableSubmitBtn={disablePageTab}
+                                    />
+                                )}
+                            </>
                         )}
 
                         {pagesAtoms.map((pageAtom, index) => (
@@ -257,6 +296,7 @@ export function InputForm({
                         indexAtom={pageIndexAtom}
                         pageCount={pagesAtoms.length}
                         pageStatesAtom={pageStatesAtom}
+                        applicationType={applicationType}
                         submit={async () => {
                             setSubmitted(true);
                             await onSubmit();
@@ -305,41 +345,10 @@ function Page({
                 ? !formRef.current.checkValidity() // was report
                 : !formRef.current.checkValidity();
 
-            // Count required questions and filled required questions
-            let requiredQuestions = 0;
-            let filledRequiredQuestions = 0;
-            let atLeastOneFilled = false;
+            const { state } = computePageFormProgress(page.questions || []);
 
-            for (const question of page.questions || []) {
-                // Only consider required questions for completion status
-                if (question.required) {
-                    requiredQuestions++;
-                    const filled = isApplicationQuestionFilled(question);
-                    if (filled) {
-                        filledRequiredQuestions++;
-                    }
-                }
-
-                // Track if any question (required or not) is filled
-                if (isApplicationQuestionFilled(question)) {
-                    atLeastOneFilled = true;
-                }
-            }
-
-            // Determine page state based on filled questions
-            let state: PageFormState['state'] = 'not started';
-
-            // Mark as completed if either:
-            // 1. All required questions are filled (when there are required questions)
-            // 2. At least one optional question is filled (when there are no required questions)
-            if (
-                (requiredQuestions > 0 &&
-                    filledRequiredQuestions === requiredQuestions) ||
-                (requiredQuestions === 0 && atLeastOneFilled)
-            ) {
-                state = 'completed';
-            } else if (atLeastOneFilled) {
-                state = 'started';
+            if (finalErrCheck && state !== 'completed') {
+                error = true;
             }
 
             // Extra validation check
@@ -372,6 +381,7 @@ function Page({
             className={cn(style.page, 'md:pb-0')}
             style={hidden ? { display: 'none' } : {}}
             noValidate
+            data-validated={finalErrCheck || undefined}
         >
             <div className="flex flex-col gap-4">
                 {page.title && (
@@ -394,7 +404,15 @@ function Page({
                 </Alert>
             )}
             {questionAtoms.map((item, index) => (
-                <Question questionAtom={item} key={index} />
+                <Question
+                    questionAtom={item}
+                    key={index}
+                    {...(page.questions.some(
+                        (q) => q.visibleWhen || q.disabledWhen
+                    )
+                        ? { siblings: page.questions }
+                        : {})}
+                />
             ))}
         </form>
     );
@@ -402,26 +420,80 @@ function Page({
 
 function Question({
     questionAtom,
+    siblings = [],
 }: {
     questionAtom: PrimitiveAtom<InputFormQuestion>;
+    siblings?: InputFormQuestion[];
 }) {
     const question = useAtomValue(questionAtom);
     const error = useMemo(() => atom<string | undefined>(undefined), []);
+    const hackathon = useAtomValue(hackathonAtom);
+
+    // hide question unless a sibling has the expected value.
+    // when the question is hidden, clear its value so the the answers are not submitted.
+    const setQuestion = useSetAtom(questionAtom);
+    const { visibleWhen } = question;
+
+    const isVisible = visibleWhen
+        ? (siblings.find((q) => q.questionId === visibleWhen.questionId) as any)
+              ?.value === visibleWhen.value
+        : true;
+
+    const isDisabled = isSubmissionQuestionDisabled(question, siblings);
+    const isRequired = (question.required ?? false) && !isDisabled;
+
+    useEffect(() => {
+        if (!isVisible && 'value' in question && question.value != null) {
+            setQuestion({ ...question, value: undefined } as any);
+        }
+    }, [isVisible]);
+
+    useEffect(() => {
+        if (!isDisabled) return;
+
+        if (question.type === 'file-upload') {
+            const fileQuestion = question as QuestionFileUploads;
+            if (
+                (fileQuestion.fileList?.length ?? 0) > 0 ||
+                (fileQuestion.fileLinks?.length ?? 0) > 0
+            ) {
+                setQuestion({
+                    ...fileQuestion,
+                    fileList: [],
+                    fileLinks: [],
+                } as any);
+            }
+            return;
+        }
+
+        if ('value' in question && question.value != null) {
+            setQuestion({ ...question, value: undefined } as any);
+        }
+    }, [isDisabled]);
 
     function getInnerInput(
         type: InputFormQuestion['type'],
         _questionAtom: PrimitiveAtom<InputFormQuestion>,
-        _errorAtom: PrimitiveAtom<string | undefined>
+        _errorAtom: PrimitiveAtom<string | undefined>,
+        inputDisabled: boolean
     ) {
         switch (type) {
             case 'text-line':
-                // save to cast since "type" is checked.
-                // no strict checking is needed. If submitted data is badly formatted/illegal, it's the server's responsibility to reject it.
                 return (
                     <TextLineInput
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionTextLineInput>
                         }
+                        disabled={inputDisabled}
+                    />
+                );
+            case 'title-line':
+                return (
+                    <TitleLineInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionTitleLineInput>
+                        }
+                        disabled={inputDisabled}
                     />
                 );
 
@@ -431,6 +503,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionTextLinkInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
 
@@ -440,6 +513,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionNumberInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
 
@@ -449,6 +523,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionMultipleChoice>
                         }
+                        disabled={inputDisabled}
                     />
                 );
 
@@ -458,6 +533,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionCheckBoxInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'multiple-checkbox':
@@ -466,6 +542,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionMultipleCheckBox>
                         }
+                        disabled={inputDisabled}
                     />
                 );
 
@@ -475,6 +552,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionTextAreaInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
 
@@ -484,6 +562,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionFileUploads>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'rich-text':
@@ -492,6 +571,16 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionRichTextInput>
                         }
+                        disabled={inputDisabled}
+                    />
+                );
+            case 'markdown':
+                return (
+                    <MarkdownInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionMarkdownInput>
+                        }
+                        disabled={inputDisabled}
                     />
                 );
             case 'api-dropdown':
@@ -500,6 +589,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionApiDropdown>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'dropdown':
@@ -508,6 +598,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionDropdown>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'inline':
@@ -516,6 +607,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionInline>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             case 'date-ymd':
@@ -524,6 +616,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionDateYmd>
                         }
+                        disabled={inputDisabled}
                     />
                 );
 
@@ -533,6 +626,7 @@ function Question({
                         dataAtom={
                             _questionAtom as PrimitiveAtom<QuestionMajorInput>
                         }
+                        disabled={inputDisabled}
                     />
                 );
             default:
@@ -551,20 +645,25 @@ function Question({
         return selectedCountry.toLowerCase() !== 'canada';
     }, [question]);
 
+    if (!isVisible) return null;
+
     return (
-        <div className={cn(style.ver)} style={{ width: '100%' }}>
+        <div
+            className={cn(style.ver, isDisabled && 'opacity-50')}
+            style={{ width: '100%' }}
+        >
             {showNonCanadaWarning && (
                 <Alert variant="warning" className="mb-4 max-w-[480px]">
                     <AlertTitle>
                         This event requires in-person attendance
                     </AlertTitle>
                     <AlertDescription>
-                        Journeyhacks is an in-person event and requires
-                        attendance at SFU Burnaby. For questions about travel
-                        reimbursements, please{' '}
+                        {hackathon?.hackathonName} is an in-person event and
+                        requires attendance at SFU Burnaby. For questions about
+                        travel reimbursements, please{' '}
                         <a
                             className="underline"
-                            href="https://journeyhacks.sfusurge.com/#faq"
+                            href={`${hackathon?.eventPagePayload?.websiteHref}#faq`}
                             target="_blank"
                             rel="noopener noreferrer"
                         >
@@ -574,14 +673,22 @@ function Question({
                     </AlertDescription>
                 </Alert>
             )}
-            {question.title && question.type !== 'checkbox' && (
-                <Label required={question.required}>
-                    <div
-                        className={style.htmlHolder}
-                        dangerouslySetInnerHTML={{ __html: question.title }}
-                    ></div>
-                </Label>
+            {question.type === 'multiple-choice' && (
+                <ChoiceConditionalAlert
+                    questionAtom={questionAtom}
+                    placement="above-title"
+                />
             )}
+            {question.title &&
+                !question.hideTitle &&
+                question.type !== 'title-line' && (
+                    <Label required={isRequired}>
+                        <div
+                            className={style.htmlHolder}
+                            dangerouslySetInnerHTML={{ __html: question.title }}
+                        ></div>
+                    </Label>
+                )}
             {question.description && (
                 <span className={cn(style.description, 'max-w-96')}>
                     <div
@@ -592,7 +699,13 @@ function Question({
                     ></div>
                 </span>
             )}
-            {getInnerInput(question.type, questionAtom, error)}
+            {getInnerInput(question.type, questionAtom, error, isDisabled)}
+            {question.type === 'multiple-choice' && (
+                <ChoiceConditionalAlert
+                    questionAtom={questionAtom}
+                    placement="below-fieldset"
+                />
+            )}
         </div>
     );
 }
@@ -609,6 +722,7 @@ function PageButtons({
     submit,
     submitted,
     setSubmitted,
+    applicationType,
 }: {
     indexAtom: PrimitiveAtom<number>;
     pageCount: number;
@@ -616,29 +730,52 @@ function PageButtons({
     submit?: () => void | Promise<void>;
     submitted: boolean;
     setSubmitted: (val: boolean) => void;
+    applicationType: 'application' | 'submission';
 }) {
     const [index, setIndex] = useAtom(indexAtom);
     const pageStates = useAtomValue(pageStatesAtom);
     const setErrCheck = useSetAtom(finalErrCheckAtom);
     const [dialogOpen, setDialogOpen] = useState(false);
 
-    const [validationPerformed, setValidationPerformed] = useState(false);
-    function tryReview() {
-        setErrCheck(true);
+    const [pendingNav, setPendingNav] = useState<'next' | 'review' | null>(
+        null
+    );
 
+    function queueValidation(action: 'next' | 'review') {
+        setErrCheck(true);
         requestAnimationFrame(() => {
-            setTimeout(() => {
-                setValidationPerformed(true);
-            }, 0);
+            setTimeout(() => setPendingNav(action), 0);
         });
     }
 
+    function tryReview() {
+        queueValidation('review');
+    }
+
+    function tryNext() {
+        queueValidation('next');
+    }
+
     useEffect(() => {
-        if (validationPerformed) {
+        if (!pendingNav) return;
+
+        if (pendingNav === 'next') {
+            const current = pageStates[index];
+            if (!current || !canAdvanceFromPageState(current)) {
+                toast({
+                    title: 'Incomplete section',
+                    description:
+                        'Answer all required questions on this page before continuing.',
+                    variant: 'error',
+                });
+            } else {
+                setIndex(index + 1);
+            }
+        } else {
             let valid = true;
             let idx = 0;
             for (; idx < pageStates.length; idx++) {
-                valid &&= !pageStates[idx].error;
+                valid &&= canAdvanceFromPageState(pageStates[idx]);
                 if (!valid) {
                     break;
                 }
@@ -653,11 +790,12 @@ function PageButtons({
                 });
                 setIndex(idx);
             } else {
-                setIndex(pageCount); // the lastpage + 1 is the review page.
+                setIndex(pageCount);
             }
-            setValidationPerformed(false);
         }
-    }, [validationPerformed]);
+
+        setPendingNav(null);
+    }, [pendingNav, pageStates, index, pageCount, setIndex]);
 
     return (
         <>
@@ -686,11 +824,7 @@ function PageButtons({
 
                 {index < pageCount - 1 && (
                     <SkewmorphicButton
-                        onClick={() => {
-                            if (index < pageCount) {
-                                setIndex(index + 1);
-                            }
-                        }}
+                        onClick={tryNext}
                         className={style.nextButton}
                     >
                         Next Section
@@ -701,7 +835,7 @@ function PageButtons({
                         onClick={tryReview}
                         className={style.nextButton}
                     >
-                        Review
+                        Preview Submission
                     </SkewmorphicButton>
                 )}
                 {index === pageCount && (
@@ -716,6 +850,7 @@ function PageButtons({
                     </SkewmorphicButton>
                 )}
             </div>
+
             <ReviewApplicationDialog
                 isOpen={dialogOpen}
                 closeDialog={() => setDialogOpen(false)}
@@ -730,6 +865,7 @@ function PageButtons({
                     }
                 }}
                 isSubmitting={submitted}
+                applicationType={applicationType}
             />
         </>
     );

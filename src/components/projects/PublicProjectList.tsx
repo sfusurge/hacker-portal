@@ -4,32 +4,29 @@ import { FormTextInput } from '@/components/ui/input/input';
 import { Label } from '@/components/ui/label/label';
 import { MagnifyingGlassIcon } from '@heroicons/react/16/solid';
 import { useState } from 'react';
-
-interface Project {
-    [key: number]: string;
-    id: number;
-    teamName: string;
-    displayId: string;
-}
+import { useAtomValue } from 'jotai';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { useProjectsRoute } from '@/components/projects/ProjectsRouteContext';
+import { SPARKJAM_PROJECTS_PATH } from '@/lib/projects/projectsPaths';
+import {
+    projectListItemMatchesSearchQuery,
+    type ProjectListItem,
+} from '@/lib/projects/projectSubmissionDisplay';
 
 interface PublicProjectListProps {
-    projects: Project[];
+    projects: ProjectListItem[];
 }
 
 export default function PublicProjectList({
     projects,
 }: PublicProjectListProps) {
+    const hackathon = useAtomValue(hackathonAtom);
+    const { basePath } = useProjectsRoute();
     const [searchQuery, setSearchQuery] = useState('');
 
-    const filteredProjects = projects.filter((project) => {
-        const query = searchQuery.toLowerCase();
-        return (
-            !query ||
-            (project[1] && String(project[1]).toLowerCase().includes(query)) ||
-            (project[4] && String(project[4]).toLowerCase().includes(query)) ||
-            (project.teamName && project.teamName.toLowerCase().includes(query))
-        );
-    });
+    const filteredProjects = projects.filter((project) =>
+        projectListItemMatchesSearchQuery(project, searchQuery)
+    );
 
     if (projects.length === 0) {
         return (
@@ -41,14 +38,14 @@ export default function PublicProjectList({
 
     return (
         <div className="flex h-full flex-col">
-            <div className="sticky z-10 -m-6 mb-0 flex flex-col gap-10 bg-neutral-900 p-6 sm:-m-6 md:-m-10 md:border-b md:border-b-neutral-600/30 md:p-10">
+            <div className="sticky z-10 -m-6 mb-0 flex flex-col gap-5 bg-neutral-900 p-6 sm:-m-6 md:-m-10 md:border-b md:border-b-neutral-600/30 md:p-10">
                 <div className="flex flex-col gap-4">
-                    <h1 className="text-3xl font-semibold text-pretty text-white">
-                        SparkJam 2025 project gallery
+                    <h1 className="text-xl font-semibold text-white md:text-3xl">
+                        {hackathon.hackathonName} project gallery
                     </h1>
                 </div>
                 <div className="flex flex-col gap-2">
-                    <Label>Search for a project</Label>
+                    <Label>Search projects or tags</Label>
                     <FormTextInput
                         name="search"
                         id="search"
@@ -76,7 +73,8 @@ export default function PublicProjectList({
                                 </p>
                                 {searchQuery.trim() !== '' && (
                                     <p className="mt-2 text-sm text-white/60">
-                                        Try adjusting your search query.
+                                        Try a different name or tag (track,
+                                        location, sponsor track).
                                     </p>
                                 )}
                             </div>

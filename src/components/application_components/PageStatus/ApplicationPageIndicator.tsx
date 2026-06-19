@@ -1,6 +1,7 @@
 import { PrimitiveAtom, useAtomValue, useSetAtom, useAtom, Atom } from 'jotai';
 import style from './ApplicationPageIndicator.module.css';
 import { finalErrCheckAtom } from '../InputForm';
+import { canAdvanceFromPageState } from '../InputFormComponents/shared';
 import {
     ArrowLeftIcon,
     ArrowRightIcon,
@@ -92,7 +93,7 @@ export function DesktopPageIndicator({
             let valid = true;
             let idx = 0;
             for (; idx < pageStates.length; idx++) {
-                valid &&= !pageStates[idx].error;
+                valid &&= canAdvanceFromPageState(pageStates[idx]);
                 if (!valid) {
                     break;
                 }
@@ -106,7 +107,7 @@ export function DesktopPageIndicator({
                 });
                 setIndex(idx);
             } else {
-                setIndex(pageStates.length); // the lastpage + 1 is the review page.
+                setIndex(pageStates.length);
             }
             setValidationPerformed(false);
         }
@@ -183,31 +184,68 @@ export function MobilePageIndicator({
         );
     }
 
+    const [pendingNav, setPendingNav] = useState<'next' | 'review' | null>(
+        null
+    );
+
+    function queueValidation(action: 'next' | 'review') {
+        setErrCheck(true);
+        requestAnimationFrame(() => {
+            setTimeout(() => setPendingNav(action), 0);
+        });
+    }
+
     function tryReview() {
-        let valid = true;
-
-        for (const pageState of pageStates) {
-            valid &&= !pageState.error;
-        }
-
-        if (!valid) {
-            toast({
-                title: 'Invalid form',
-                description: 'Some of the questions are not filled correctly.',
-                variant: 'error',
-            });
-            setErrCheck(true);
-        } else {
-            setIndex(pageStates.length); // the lastpage + 1 is the review page.
-        }
+        queueValidation('review');
     }
 
     function incrementIndex(incre: number) {
-        if (index + incre === pageStates.length) {
-            return tryReview();
+        if (incre > 0) {
+            if (index + incre === pageStates.length) {
+                return tryReview();
+            }
+            return queueValidation('next');
         }
-        setIndex(index + incre);
+        if (index + incre >= 0) {
+            setIndex(index + incre);
+        }
     }
+
+    useEffect(() => {
+        if (!pendingNav) return;
+
+        if (pendingNav === 'next') {
+            const current = pageStates[index];
+            if (!current || !canAdvanceFromPageState(current)) {
+                toast({
+                    title: 'Incomplete section',
+                    description:
+                        'Answer all required questions on this page before continuing.',
+                    variant: 'error',
+                });
+            } else {
+                setIndex(index + 1);
+            }
+        } else {
+            let valid = true;
+            for (const pageState of pageStates) {
+                valid &&= canAdvanceFromPageState(pageState);
+            }
+
+            if (!valid) {
+                toast({
+                    title: 'Invalid form',
+                    description:
+                        'Some of the questions are not filled correctly.',
+                    variant: 'error',
+                });
+            } else {
+                setIndex(pageStates.length);
+            }
+        }
+
+        setPendingNav(null);
+    }, [pendingNav, pageStates, index, setIndex]);
 
     // click outside detection
     const pageContainerRef = useRef<HTMLDivElement>(null);

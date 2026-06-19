@@ -1,14 +1,14 @@
 'use client';
-import style from './Payment.module.css';
-import { userInfoAtom } from '@/app/(auth)/ClientContext';
+
+import { userInfoAtom, hackathonAtom } from '@/app/(auth)/ClientContext';
 import ElementsForm from '@/app/(auth)/rsvp/components/ElementsForm';
 import { FullPageInfo } from '@/components/ui/FullPageInfo';
 
 import { trpc } from '@/trpc/client';
 import { useAtomValue } from 'jotai';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import Link from 'next/link';
 
 export default function PaymentElementPage() {
     const userInfo = useAtomValue(userInfoAtom);
@@ -18,14 +18,15 @@ export default function PaymentElementPage() {
         {
             hackathonId: hackathon?.id!,
         },
-        { enabled: false }
-    );
-
-    useEffect(() => {
-        if (hackathon?.id) {
-            getApplication.refetch();
+        {
+            enabled: !!hackathon?.id,
+            refetchOnWindowFocus: true,
+            refetchInterval: (query) =>
+                query.state.data?.currentStatus === 'Accepted - Pending Payment'
+                    ? 10_000
+                    : false,
         }
-    }, [hackathon]);
+    );
 
     const ready = useMemo(() => {
         const appdata = getApplication.data;
@@ -66,7 +67,11 @@ export default function PaymentElementPage() {
         return <Declined />;
     }
 
-    return <div className={style.paymentpage}>{getInner()}</div>;
+    return (
+        <div className="flex h-[stretch] min-h-full w-full flex-col items-stretch">
+            {getInner()}
+        </div>
+    );
 }
 
 function AlreadyPaid() {
@@ -108,21 +113,46 @@ function Declined() {
 }
 
 function NeedPayment({ email }: { email: string }) {
+    const hackathon = useAtomValue(hackathonAtom);
+    const eventName = hackathon?.hackathonName ?? 'the event';
+    const paymentDeadlineLabel =
+        hackathon?.paymentDeadline != null &&
+        hackathon.paymentDeadline.isValid()
+            ? hackathon.paymentDeadline.format('MMMM D, YYYY')
+            : null;
+
     return (
-        <>
-            <h1 className={style.title}>Purchase your ticket to RSVP 💸</h1>
+        <div className="mx-auto flex w-full flex-col gap-8">
+            <div className="flex max-w-[48rem] flex-col gap-5">
+                <h1 className="text-3xl font-bold text-white">
+                    Purchase your ticket to RSVP 💸
+                </h1>
 
-            <p className={style.description}>
-                Purchase your SparkJam ticket by the deadline{' '}
-                <span style={{ color: 'white', fontWeight: '500' }}>
-                    May 10th, 2025
-                </span>{' '}
-                or you&apos;ll be moved to the waitlist.
-            </p>
+                <p className="text-base leading-relaxed text-white/60">
+                    Purchase your {eventName} ticket by{' '}
+                    {paymentDeadlineLabel ? (
+                        <strong className="font-semibold text-white">
+                            {paymentDeadlineLabel}
+                        </strong>
+                    ) : (
+                        <strong className="font-semibold text-white">
+                            the deadline in your acceptance email
+                        </strong>
+                    )}{' '}
+                    or you&apos;ll be moved to the waitlist. Please{' '}
+                    <Link
+                        href="/home"
+                        className="text-white underline underline-offset-2 hover:text-white/70"
+                    >
+                        withdraw your application
+                    </Link>{' '}
+                    if you&apos;re no longer able to make it to the event.
+                </p>
+            </div>
 
-            <div className={style.paymentform}>
+            <div className="w-full">
                 <ElementsForm userEmail={email} />
             </div>
-        </>
+        </div>
     );
 }

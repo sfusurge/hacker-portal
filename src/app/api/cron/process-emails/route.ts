@@ -1,17 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { databaseClient } from '@/db/client';
-import { emailQueue, emailTemplates } from '@/db/schema/emails';
+import {
+    emailQueue,
+    emailTemplates,
+    emailTemplateStyling,
+} from '@/db/schema/emails';
 import { user } from '@/db/schema/users/users';
-import { eq } from 'drizzle-orm';
+import { and, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 import { transporter } from '@/server/nodemailerTransporter';
 import generateQRCode from '@/server/generateQRCode';
-import { prepareEmailContent } from '@/app/(auth)/admin/email/templates/emailPreview';
-import { getFileFromR2 } from '@/lib/cloudflare/r2';
-import { and, gte, lt, sql } from 'drizzle-orm';
+import {
+    prepareEmailContent,
+    mergeBodyIntoStyling,
+    markdownToHtml,
+} from '@/app/(auth)/admin/email/templates/emailPreview';
 
 const env = process.env;
 
-const HOURLY_QUOTA = parseInt(process.env.EMAIL_HOURLY_QUOTA ?? '100', 10);
+// if email doesn't send, check if the error is because of SMTP login throttling
+function isSmtpAuthThrottleError(err: unknown): boolean {
+    if (err == null || typeof err !== 'object') {
+        return false;
+    }
+    const e = err as {
+        responseCode?: number;
+        code?: string;
+        response?: string;
+        message?: string;
+    };
+    if (e.responseCode === 454) {
+        return true;
+    }
+    const blob = `${e.response ?? ''} ${e.message ?? ''}`;
+    return e.code === 'EAUTH' && /too many login|454/i.test(blob);
+}
+
+// max emails sent in the last 60 minutes
+const rawHourly = parseInt(process.env.EMAIL_HOURLY_QUOTA ?? '100', 10);
+const HOURLY_QUOTA = Number.isFinite(rawHourly) ? Math.max(0, rawHourly) : 100;
+
 const MAX_RETRIES = parseInt(process.env.EMAIL_MAX_RETRIES ?? '3', 10);
 
 export async function GET(request: NextRequest) {
@@ -21,6 +48,29 @@ export async function GET(request: NextRequest) {
     }
 
     try {
+        // pending emails
+        const pendingPredicate = and(
+            eq(emailQueue.status, 'pending'),
+            lt(emailQueue.failedCount, MAX_RETRIES)
+        );
+
+        if (HOURLY_QUOTA === 0) {
+            return NextResponse.json({
+                message: 'EMAIL_HOURLY_QUOTA is zero (sending disabled)',
+                hourlyQuota: 0,
+            });
+        }
+
+        const [anyPending] = await databaseClient
+            .select({ id: emailQueue.id })
+            .from(emailQueue)
+            .where(pendingPredicate)
+            .limit(1);
+
+        if (!anyPending) {
+            return NextResponse.json({ message: 'No pending emails' });
+        }
+
         // emails sent in last hour
         const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
         const [sentCountResult] = await databaseClient
@@ -34,11 +84,12 @@ export async function GET(request: NextRequest) {
             );
 
         const sentInHour = Number(sentCountResult?.count ?? 0);
-        const remainingQuota = Math.max(0, HOURLY_QUOTA - sentInHour);
+        const remainingHourlyQuota = Math.max(0, HOURLY_QUOTA - sentInHour);
 
-        if (remainingQuota === 0) {
+        if (remainingHourlyQuota === 0) {
             return NextResponse.json({
                 message: 'Hourly quota reached',
+                hourlyQuota: HOURLY_QUOTA,
                 sentInLastHour: sentInHour,
             });
         }
@@ -46,17 +97,48 @@ export async function GET(request: NextRequest) {
         const pendingEmails = await databaseClient
             .select()
             .from(emailQueue)
-            .where(
-                and(
-                    eq(emailQueue.status, 'pending'),
-                    lt(emailQueue.failedCount, MAX_RETRIES)
-                )
-            )
-            .limit(remainingQuota);
+            .where(pendingPredicate)
+            .limit(remainingHourlyQuota);
 
         if (pendingEmails.length === 0) {
             return NextResponse.json({ message: 'No pending emails' });
         }
+
+        const templateIds = [
+            ...new Set(pendingEmails.map((e) => e.templateId)),
+        ];
+        const userIds = [...new Set(pendingEmails.map((e) => e.userId))];
+
+        const templateRows = await databaseClient
+            .select()
+            .from(emailTemplates)
+            .where(inArray(emailTemplates.id, templateIds));
+
+        const userRows = await databaseClient
+            .select()
+            .from(user)
+            .where(inArray(user.id, userIds));
+
+        const templateById = new Map(templateRows.map((t) => [t.id, t]));
+        const userById = new Map(userRows.map((u) => [u.id, u]));
+
+        const stylingIds = [
+            ...new Set(
+                templateRows
+                    .map((t) => t.stylingId)
+                    .filter((id): id is number => id != null)
+            ),
+        ];
+
+        const stylingRows =
+            stylingIds.length > 0
+                ? await databaseClient
+                      .select()
+                      .from(emailTemplateStyling)
+                      .where(inArray(emailTemplateStyling.id, stylingIds))
+                : [];
+
+        const stylingById = new Map(stylingRows.map((s) => [s.id, s]));
 
         let sentCount = 0;
         let failedCount = 0;
@@ -64,12 +146,7 @@ export async function GET(request: NextRequest) {
 
         for (const pendingEmail of pendingEmails) {
             try {
-                // Get template
-                const [template] = await databaseClient
-                    .select()
-                    .from(emailTemplates)
-                    .where(eq(emailTemplates.id, pendingEmail.templateId))
-                    .limit(1);
+                const template = templateById.get(pendingEmail.templateId);
 
                 if (!template) {
                     // Mark as failed if template not found
@@ -87,7 +164,11 @@ export async function GET(request: NextRequest) {
                     );
                 }
 
-                let processedTemplateContent = template.content;
+                // Body content with styling = Markdown → HTML; no styling = HTML as-is
+                let processedTemplateContent =
+                    template.stylingId != null
+                        ? markdownToHtml(template.content)
+                        : template.content;
                 let qrcodeBase64: string | undefined;
                 let attachments = [];
 
@@ -134,51 +215,32 @@ export async function GET(request: NextRequest) {
                     }
                 }
 
-                if (
-                    template.attachments &&
-                    Array.isArray(template.attachments)
-                ) {
-                    for (const attachment of template.attachments) {
-                        try {
-                            const fileData = await getFileFromR2(
-                                attachment.key,
-                                process.env.NEXT_PUBLIC_R2_BUCKET_EMAILS ?? ''
-                            );
-
-                            attachments.push({
-                                filename: attachment.fileName,
-                                content: Buffer.from(fileData.buffer),
-                                contentType: fileData.contentType,
-                            });
-                        } catch (error) {
-                            console.error(
-                                `Error retrieving attachment ${attachment.key}:`,
-                                error
-                            );
-                        }
-                    }
-                }
-
-                const [userData] = await databaseClient
-                    .select()
-                    .from(user)
-                    .where(eq(user.id, pendingEmail.userId))
-                    .limit(1);
+                const userData = userById.get(pendingEmail.userId);
 
                 const templateData = {
                     firstName:
-                        userData.firstName ??
+                        userData?.firstName ??
                         pendingEmail.firstName ??
                         'Friend',
-                    lastName: userData.lastName ?? pendingEmail.lastName ?? '',
-                    email: userData.email ?? pendingEmail.email,
+                    lastName: userData?.lastName ?? pendingEmail.lastName ?? '',
+                    email: userData?.email ?? pendingEmail.email,
                     userId: pendingEmail.userId,
                 };
 
-                const finalHtmlContent = prepareEmailContent(
+                let finalHtmlContent = prepareEmailContent(
                     processedTemplateContent,
                     templateData
                 );
+
+                if (template.stylingId != null) {
+                    const styling = stylingById.get(template.stylingId);
+                    if (styling?.html) {
+                        finalHtmlContent = mergeBodyIntoStyling(
+                            styling.html,
+                            finalHtmlContent
+                        );
+                    }
+                }
 
                 const mailOptions = {
                     from: env.SENDINGEMAIL,
@@ -208,6 +270,12 @@ export async function GET(request: NextRequest) {
 
                 sentCount++;
             } catch (emailErr) {
+                if (isSmtpAuthThrottleError(emailErr)) {
+                    errors.push(
+                        'SMTP login throttled; remaining queue entries left pending.'
+                    );
+                    break;
+                }
                 // Mark individual email as failed if reached max retries
                 failedCount++;
                 const errorMessage =
@@ -237,7 +305,13 @@ export async function GET(request: NextRequest) {
             success: true,
             sent: sentCount,
             failed: failedCount,
-            remainingQuota: remainingQuota - sentCount,
+            hourlyQuota: HOURLY_QUOTA,
+            sentInLastHourBeforeRun: sentInHour,
+            remainingHourlyQuotaAfterRun: Math.max(
+                0,
+                HOURLY_QUOTA - sentInHour - sentCount
+            ),
+            processedBatchSize: pendingEmails.length,
             errors: errors.length > 0 ? errors : undefined,
         });
     } catch (err) {

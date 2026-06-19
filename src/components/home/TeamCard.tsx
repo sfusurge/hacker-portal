@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { getStatusVariant, getTextVariant } from '@/lib/application-status';
 import Link from 'next/link';
 import { LinkIcon } from '@heroicons/react/24/outline';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import {
     Card,
@@ -49,10 +49,7 @@ function TeamMemberItem({
         <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 flex-1 items-center gap-3">
                 <img
-                    src={
-                        // member.image ||
-                        avatarUrl
-                    }
+                    src={avatarUrl}
                     alt={`${member.firstName || 'Team member'}`}
                     className="h-7 w-7 shrink-0 rounded-full bg-neutral-700 object-cover"
                 />
@@ -80,17 +77,19 @@ export default function TeamCard({
     userData,
     hackathonId,
     team,
+    className,
 }: {
     userData: UserData;
     hackathonId: number;
     team: TeamType | null | undefined;
+    className?: string;
 }) {
     const [copied, setCopied] = useState(false);
 
     if (!team) {
         return (
-            <Card className="col-span-4">
-                <CardContent className="gap-6">
+            <Card className={cn('col-span-4', className)}>
+                <CardContent className={cn('justify-center gap-6', className)}>
                     <div className="max-w-auto flex w-full justify-center">
                         <Image
                             src={'/login/application-review.webp'}

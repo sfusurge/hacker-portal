@@ -1,4 +1,5 @@
 import { createCaller } from '@/server/appRouter';
+import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 import Scan from './checkin_components/Scan';
 import { EventType } from '@/db/schema/events';
 
@@ -9,10 +10,10 @@ interface QRScanProps {
 export default async function QRScan({ searchParams }: QRScanProps) {
     const trpcClient = createCaller({});
 
-    const activeHackathon = await trpcClient.hackathons.getActiveHackathon();
+    const activeHackathon = await getCachedActiveHackathon();
 
     const events = await trpcClient.events.getHackathonCheckInEvents({
-        hackathonId: activeHackathon.id,
+        hackathonId: activeHackathon!.id,
     });
 
     const initialEventType = (await searchParams).initialEventType;

@@ -9,10 +9,12 @@ import { finalErrCheckAtom } from '../InputForm';
 
 export function MajorInput({
     dataAtom,
+    disabled = false,
 }: {
     dataAtom:
         | PrimitiveAtom<QuestionMajorInput>
         | WritableAtom<QuestionMajorInput, [QuestionMajorInput], void>;
+    disabled?: boolean;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
     const [errorMsg, setErrorMsg] = useState('');
@@ -107,7 +109,7 @@ export function MajorInput({
                     setQuestion({ ...question, selection: val });
                 }}
                 required={question.required}
-                readOnly={false}
+                readOnly={disabled}
                 placeholder={question.title}
                 isInvalid={isInvalid}
             />

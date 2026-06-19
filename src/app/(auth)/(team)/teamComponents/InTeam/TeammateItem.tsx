@@ -10,7 +10,7 @@ import {
     ApplicationStatus,
     getTextVariant,
 } from '@/lib/application-status';
-import { trpc } from '@/trpc/client';
+import { DEFAULT_USER_AVATAR, resolveUserIconUrl } from '@/utils/blobHelper';
 
 type UserType = InferSelectModel<typeof user>;
 
@@ -32,7 +32,7 @@ export default function TeammateItem({
     lastName = null,
     name,
     email = '',
-    image = '/teams/single-otter.webp',
+    image,
     currentUser = false,
     index = 0,
     isPlaceholder = false,
@@ -41,6 +41,7 @@ export default function TeammateItem({
     currentStatus = null,
 }: TeammateItemProps) {
     const isMobile = useMediaQuery('(max-width: 767px)');
+    const avatarUrl = resolveUserIconUrl(image);
 
     // Calculate display name
     const displayName =
@@ -75,10 +76,13 @@ export default function TeammateItem({
                 <div className="flex flex-1 items-center gap-3 overflow-hidden md:gap-4">
                     <img
                         alt={displayName + ' profile picture'}
-                        src={image}
+                        src={avatarUrl}
                         width={32}
                         height={32}
                         className="h-8 w-8 rounded-full object-cover md:h-11 md:w-11"
+                        onError={(e) => {
+                            e.currentTarget.src = DEFAULT_USER_AVATAR;
+                        }}
                     />
                     <div className="flex flex-1 flex-col justify-around gap-1 overflow-hidden">
                         <p className="truncate text-sm font-medium md:text-base">

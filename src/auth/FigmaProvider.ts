@@ -17,7 +17,7 @@ export const FigmaProvider: (params: {
     authorization: {
         url: 'https://www.figma.com/oauth',
         params: {
-            scope: 'file_read',
+            scope: 'current_user:read',
             response_type: 'code',
         },
     },

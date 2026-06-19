@@ -1,66 +1,19 @@
 'use client';
 
-import ReviewApplicationsTable from '@/app/(auth)/admin/review/components/ReviewApplicationsTable';
+import ReviewApplicationsTable, {
+    type Applicant,
+    sideCardAtomSJ,
+} from '@/app/(auth)/admin/review/components/ReviewApplicationsTable';
 import { useEffect, useMemo, useState } from 'react';
 import SideCard from '@/app/(auth)/admin/review/components/SideCard';
 import { atom, useSetAtom, useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { trpc } from '@/trpc/client';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
-import { sideCardAtomSJ } from '@/app/(auth)/admin/review/components/ReviewApplicationsTable'; // reuse the same atom
+import { formatEventLocationLabel } from '@/lib/applicationAcceptStatus';
+import { ReviewTableAblySubscriber } from '@/components/admin/review/ReviewTableAblySubscriber';
 
-export type Applicant = {
-    members: string[] | null;
-    id: number;
-    teamName: string | null;
-
-    // Basic Information
-    firstName: string;
-    lastName: string;
-    pronouns: string;
-    age: string;
-    email: string;
-    haveHackathonExperience: string;
-    howHeardAbout: string[];
-    dietaryRestrictions?: string[];
-    resume?: string[];
-    discord: string;
-    instagram?: string;
-    github?: string;
-    linkedin?: string;
-    portfolio?: string;
-    otherLinks?: string;
-
-    // School Information
-    school?: string;
-    background?: string;
-    yearOfStudy?: string;
-    major: string;
-
-    // Short Answer Questions
-    // excitement: string;
-    // problemOrSkill: string;
-    // dreamProject: string;
-
-    // Sponsors / Agreements
-    shareResume: boolean;
-    acceptMLH: boolean;
-    acceptSFSS: boolean;
-    acceptEmails: boolean;
-    authorizeMLH: boolean;
-    photoRelease: boolean;
-    currentStatus: string;
-    pendingStatus: string;
-    applicationDate: Date;
-    lastEmailSent: string;
-
-    checkIns: {
-        eventId: number;
-        eventTitle: string;
-        checkedIn: boolean;
-        checkInTime: Date | null;
-    }[];
-};
+export type { Applicant };
 
 export default function ReviewApplicationsPage() {
     const hackathon = useAtomValue(hackathonAtom);
@@ -91,7 +44,7 @@ export default function ReviewApplicationsPage() {
         const map = new Map<number, ApplicationWithTeamInfo>();
 
         for (const appData of applications) {
-            map.set(appData.userId, appData);
+            map.set(appData.userId, appData as ApplicationWithTeamInfo);
         }
 
         return map;
@@ -153,6 +106,9 @@ export default function ReviewApplicationsPage() {
 
     return (
         <div>
+            {hackathon?.id ? (
+                <ReviewTableAblySubscriber hackathonId={hackathon.id} />
+            ) : null}
             <ReviewApplicationsTable
                 data={data}
                 applicationCount={applicationCountData?.applicationCount ?? -1}
@@ -186,34 +142,34 @@ export default function ReviewApplicationsPage() {
 function transformResponse(response: any[]) {
     return response
         .map((item) => {
+            const r = item.response as Record<string, any>;
+
             const {
-                '1': firstName,
-                '2': lastName,
-                '3': pronouns,
-                '4': age,
-                '5': email,
-                '6': phoneNumber,
-                '7': country,
+                '2': eventLocation,
+                '5': firstName,
+                '6': lastName,
+                '7': pronouns,
+                '8': email,
+                '10': age,
                 '16': school,
-                '17': background,
-                '18': yearOfStudy,
-                '19': major,
-                '20': haveHackathonExperience,
-                '21': howHeardAbout,
-                '22': dietaryRestrictions,
-                '23': resume,
-                '24': discord,
-                '25': portfolio,
-                '26': github,
-                '27': linkedin,
-                '28': otherLinks,
-                '29': shareResume,
-                '30': acceptMLH,
-                '31': acceptSFSS,
-                '32': acceptEmails,
-                '33': photoRelease,
-                '34': authorizeMLH,
-            } = item.response as Record<string, any>;
+                '17': schoolEmail,
+                '18': background,
+                '19': yearOfStudy,
+                '20': major,
+                '26': haveHackathonExperience,
+                '36': howHeardAbout,
+                '37': dietaryRestrictions,
+                '38': resume,
+                '39': discord,
+                '40': portfolio,
+                '41': github,
+                '42': linkedin,
+                '43': otherLinks,
+                '51': shareResume,
+                '53': acceptSFSS,
+                '55': photoRelease,
+                '57': acceptSurgeEmails,
+            } = r;
 
             const members = item.members;
             const checkIns = item.checkIns;
@@ -223,6 +179,12 @@ function transformResponse(response: any[]) {
                 ? `${item.teamName} (${item.teamId})`
                 : '';
 
+            const majorStr: string = Array.isArray(major)
+                ? major.join(', ')
+                : typeof major === 'string'
+                  ? major
+                  : '';
+
             return {
                 id: Number(item.userId),
                 teamName,
@@ -230,6 +192,7 @@ function transformResponse(response: any[]) {
                 pendingStatus: item.pendingStatus,
                 lastEmailSent,
                 age: age || '',
+                tShirtSize: '',
                 applicationDate: new Date(item.createdDate),
                 dietaryRestrictions: Array.isArray(dietaryRestrictions)
                     ? dietaryRestrictions
@@ -246,6 +209,11 @@ function transformResponse(response: any[]) {
                 lastName: lastName || '',
                 pronouns: pronouns || '',
                 email: email || '',
+                eventLocation: formatEventLocationLabel(
+                    typeof eventLocation === 'string' ? eventLocation : null
+                ),
+                eventLocationKey:
+                    typeof eventLocation === 'string' ? eventLocation : '',
                 haveHackathonExperience: haveHackathonExperience || '',
                 resume: Array.isArray(resume) ? resume : resume ? [resume] : [],
                 discord: discord || '',
@@ -254,14 +222,18 @@ function transformResponse(response: any[]) {
                 portfolio: portfolio || '',
                 otherLinks: otherLinks || '',
                 school: school || '',
+                schoolEmail: schoolEmail || '',
                 background: background || '',
                 yearOfStudy: yearOfStudy || '',
-                major: Array.isArray(major) ? major.join(', ') : major || '',
+                major: majorStr,
+                excitement: '',
+                problemOrSkill: '',
+                dreamProject: '',
                 shareResume: shareResume || false,
-                acceptMLH: acceptMLH || false,
+                acceptMLH: false,
                 acceptSFSS: acceptSFSS || false,
-                acceptEmails: acceptEmails || false,
-                authorizeMLH: authorizeMLH || false,
+                acceptEmails: acceptSurgeEmails || false,
+                authorizeMLH: false,
                 photoRelease: photoRelease || false,
                 checkIns,
             };

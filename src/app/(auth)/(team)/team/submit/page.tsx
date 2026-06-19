@@ -1,12 +1,16 @@
 import { redirect } from 'next/navigation';
 import { createCaller } from '@/server/appRouter';
+import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 
 import { getUserData } from '@/server/routers/usersRouter';
 
 import { GoHome } from '@/components/home/GoHome';
+import { isSubmissionWindowOpen } from '@/lib/submissionWindow';
 import SubmissionInfoCard from '@/app/(auth)/(team)/teamComponents/submit/SubmissionInfoCard';
 import { SubmitFormCard } from '@/app/(auth)/(team)/teamComponents/InTeam/SubmitFormCard';
 import TeamListSubmit from '@/app/(auth)/(team)/teamComponents/submit/TeamListSubmit';
+import { SubmissionSideBar } from '@/components/application_components/SubmissionSideBar';
+import ProjectSubmissionSuccess from '../../teamComponents/submit/ProjectSubmissionSuccess';
 
 export default async function SubmitPage() {
     const user = await getUserData();
@@ -15,18 +19,33 @@ export default async function SubmitPage() {
         redirect('/login');
     }
 
-    const now = new Date();
-    const pstNow = new Date(
-        now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
-    );
-    const deadline = new Date('2025-05-29T00:30:00');
+    const trpcClient = createCaller({});
+    const hackathon = await getCachedActiveHackathon();
 
-    if (pstNow > deadline) {
-        return <GoHome title="Submission deadline has passed!" />;
+    if (!hackathon) {
+        return <GoHome title="There is no active hackathon." />;
     }
 
-    const trpcClient = createCaller({});
-    const hackathon = await trpcClient.hackathons.getActiveHackathon();
+    const nowMs = Date.now();
+    if (
+        !isSubmissionWindowOpen(
+            nowMs,
+            hackathon.submissionOpen,
+            hackathon.submissionDeadline
+        )
+    ) {
+        if (
+            hackathon.submissionOpen == null ||
+            nowMs < hackathon.submissionOpen.getTime()
+        ) {
+            return (
+                <GoHome title="Project submissions are not open yet. Check back when the submission period starts." />
+            );
+        }
+        return (
+            <GoHome title="The submission deadline has passed — you can no longer submit a project." />
+        );
+    }
 
     const application = await trpcClient.applications.getCurrentApplication({
         hackathonId: hackathon.id,
@@ -41,21 +60,10 @@ export default async function SubmitPage() {
     }
 
     if (!application || application.currentStatus !== 'Accepted') {
-        return <GoHome title="You were not accepted in this event!" />;
+        return (
+            <GoHome title="You can't submit a project because you were not accepted to this event." />
+        );
     }
-
-    const teamPictureUrl = currentTeam?.teamPictureUrl;
-
-    // const image = teamPictureUrl
-    //               .getFile({
-    //               key: teamPictureUrl,
-    //               bucketName: 'team-pictures',
-    //           })
-    //           .catch((error) => {
-    //               console.error('Error fetching image:', error);
-    //               return null;
-    //           })
-    //     : null;
 
     const questions = await trpcClient.submissions.getSubmissionQuestions({
         hackathonId: hackathon.id,
@@ -63,9 +71,14 @@ export default async function SubmitPage() {
 
     const submitted = await trpcClient.submissions.getHasSubmissions({
         userId: user.id,
+        hackathonId: hackathon.id,
     });
     if (submitted.hasSubmission) {
-        return <GoHome title="Your team submitted a project already!" />;
+        return (
+            <div className="flex h-full items-center justify-center">
+                <ProjectSubmissionSuccess />
+            </div>
+        );
     }
 
     // const presignurl = await trpcClient.files.getFile({
@@ -82,19 +95,23 @@ export default async function SubmitPage() {
     }
 
     return (
-        <div className="flex w-full flex-col gap-6 md:flex-row md:items-start">
-            <div className="flex w-full flex-col gap-6 lg:flex-row">
-                <div className="flex flex-col gap-8 lg:max-w-1/4 lg:self-start">
+        <div className="flex h-full w-full flex-col gap-6 md:flex-row md:items-start">
+            <div className="flex h-full w-full flex-col gap-6 lg:flex-row">
+                <SubmissionSideBar>
                     <SubmissionInfoCard />
                     <TeamListSubmit
                         currentUserEmail={user!.email}
                         team={currentTeam}
                     />
-                </div>
+                </SubmissionSideBar>
 
-                <div className="flex flex-1 flex-col">
+                <div className="flex h-full flex-1 flex-col">
                     <div className="flex-1 md:max-h-[calc(100vh)] md:overflow-y-auto">
-                        <SubmitFormCard teamId={currentTeam.id} />
+                        <SubmitFormCard
+                            teamId={currentTeam.id}
+                            teamName={currentTeam.name}
+                            teamPictureUrl={currentTeam.teamPictureUrl}
+                        />
                     </div>
                 </div>
             </div>

@@ -1,5 +1,6 @@
 import TeamDisplay from '@/app/(auth)/(team)/teamComponents/TeamDisplay';
 import { createCaller } from '@/server/appRouter';
+import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 import { getBasicUserInfo } from '@/server/routers/usersRouter';
 import { getIcon } from '@/utils/blobHelper';
 import { redirect } from 'next/navigation';
@@ -12,7 +13,7 @@ export default async function Team() {
     }
 
     const trpcClient = createCaller({});
-    const hackathon = await trpcClient.hackathons.getActiveHackathon();
+    const hackathon = await getCachedActiveHackathon();
 
     const currentTeam = await trpcClient.teams.getCurrentTeam({
         hackathonId: hackathon.id,

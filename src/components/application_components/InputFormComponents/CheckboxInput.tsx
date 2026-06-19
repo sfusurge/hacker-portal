@@ -4,6 +4,7 @@ import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 
 export function CheckBoxInput({
     dataAtom,
+    disabled = false,
 }: {
     dataAtom:
         | PrimitiveAtom<QuestionCheckBoxInput>
@@ -12,6 +13,7 @@ export function CheckBoxInput({
               [val: QuestionCheckBoxInput],
               void
           >;
+    disabled?: boolean;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
     const hasHtml =
@@ -19,8 +21,9 @@ export function CheckBoxInput({
     return (
         <CheckBoxWithLabel
             name={question.label}
-            required={question.required ?? false}
+            required={(question.required ?? false) && !disabled}
             checked={question.value ?? false}
+            disabled={disabled}
             renderHtml={hasHtml}
             onChange={(e) => {
                 setQuestion({

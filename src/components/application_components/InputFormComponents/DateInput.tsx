@@ -5,10 +5,12 @@ import { PrimitiveAtom, useAtom, WritableAtom } from 'jotai';
 
 export function DateInput({
     dataAtom,
+    disabled = false,
 }: {
     dataAtom:
         | PrimitiveAtom<QuestionDateYmd>
         | WritableAtom<QuestionDateYmd, [QuestionDateYmd], void>;
+    disabled?: boolean;
 }) {
     const [question, setQuestion] = useAtom(dataAtom);
 
@@ -25,7 +27,9 @@ export function DateInput({
             }}
             defaultValue={question.value}
             placeholder={question.placeHolder ?? 'YYYY/MM/DD'}
-            required={question.required}
+            required={(question.required ?? false) && !disabled}
+            disabled={disabled}
+            readOnly={disabled}
             pattern={datePattern.source}
             errorMsg="Please enter a valid date in YYYY/MM/DD format"
             style={{ maxWidth: '480px' }}

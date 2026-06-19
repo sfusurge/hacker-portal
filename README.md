@@ -23,6 +23,34 @@ and then run `pnpm install` within the project directory to install the packages
 
 Copy and paste the following settings into your local `.env` file, and fill out all the fields with the correct credentials
 
+### Discord announcements ingestion
+
+If you are running the Discord announcements pipeline, also set:
+
+```env
+# Bearer secret for POST/DELETE /api/webhooks/discord. Must match PORTAL_API_SECRET
+# in the portal-discord-bot repo's .env. Treat as production secret.
+DISCORD_INGEST_SECRET=<long random string>
+
+# Optional. Set exactly to "false" to disable all Discord ingest (403 after auth).
+# DISCORD_INGEST_ENABLED=false
+
+# Optional. In-memory requests per minute per server instance (default 120).
+# DISCORD_INGEST_RATE_LIMIT_PER_MINUTE=120
+
+# Optional. Set to "true" to rehost Discord attachments into Cloudflare R2
+# during webhook ingest. Requires all R2 vars below.
+# DISCORD_ATTACHMENT_REHOST_ENABLED=true
+
+# Required when DISCORD_ATTACHMENT_REHOST_ENABLED=true.
+# R2 endpoint + credentials + bucket name.
+# R2_ENDPOINT=
+# R2_ACCESS_KEY_ID=
+# R2_SECRET_ACCESS_KEY=
+# R2_BUCKET_NAME=
+# R2_PUBLIC_DOMAIN=
+```
+
 ## Running the application
 
 #### Generating and Pushing `Drizzle` Migrations to your database
@@ -68,8 +96,8 @@ npm run start
 
 See notion page for login credentials are env variables
 
--   Neon auto scaling is in effect, currently in development, scaling range is set to 0 to 0.5x. In prod the max range can be up to 2x resource.
+- Neon auto scaling is in effect, currently in development, scaling range is set to 0 to 0.5x. In prod the max range can be up to 2x resource.
 
 ## Design
 
--   See design [figma workspace](https://www.figma.com/design/02aQ4FvurxQn9sPqaCTqZn/Ottertable-High-Fidelity-Wireframes?node-id=482-5020&p=f&m=dev)
+- See design [figma workspace](https://www.figma.com/design/02aQ4FvurxQn9sPqaCTqZn/Ottertable-High-Fidelity-Wireframes?node-id=482-5020&p=f&m=dev)

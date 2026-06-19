@@ -1,0 +1,483 @@
+'use client';
+
+import Image from 'next/image';
+import {
+    Fragment,
+    cloneElement,
+    isValidElement,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+    type ComponentPropsWithoutRef,
+    type ReactNode,
+} from 'react';
+import { useRemarkSync } from 'react-remark';
+import {
+    remarkDiscordMarkdown,
+    preprocessDiscordMarkdown,
+} from '@/lib/discord/remarkDiscordMarkdown';
+import dayjs from 'dayjs';
+import { cn } from '@/lib/utils';
+import { useWindowSize } from '@/lib/useWindowSize';
+import { Button } from '@/components/ui/button';
+import type { AnnouncementWithAttachments } from '@/app/(auth)/ClientContext';
+import { renderDiscordContentMentions } from '@/lib/discord/mentions';
+import {
+    isVisualMedia,
+    splitVisualMediaPreview,
+    visualMediaCountLabel,
+} from '@/lib/announcements/attachmentMedia';
+import {
+    AnnouncementMediaList,
+    announcementMediaListWidthClass,
+} from '@/components/announcements/AnnouncementMediaList';
+
+/** tRPC may deserialize timestamps as ISO strings; SSR/hydration may use `Date`. */
+export function toSourceDate(sourceTimestamp: Date | string | number): Date {
+    return sourceTimestamp instanceof Date
+        ? sourceTimestamp
+        : new Date(sourceTimestamp);
+}
+
+/**
+ * Today  → `h:mm A`           (e.g. `10:57 AM`)
+ * Older  → `MMMM D, h:mm A`   (e.g. `October 4, 11:57 AM`)
+ */
+function formatAnnouncementTimestamp(date: Date): string {
+    const d = dayjs(date);
+    if (d.isSame(dayjs(), 'day')) {
+        return d.format('h:mm A');
+    }
+    return d.format('MMMM D, h:mm A');
+}
+
+const HIGHLIGHT_CLASSES = 'rounded bg-yellow-500/30 px-0.5 text-white';
+
+function escapeRegex(s: string): string {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// wrap every `query` inside plain string within <mark>, returns a ReactNode that can be safely embedded as children.
+function highlightInText(text: string, query: string): ReactNode {
+    if (!query) return text;
+    const re = new RegExp(`(${escapeRegex(query)})`, 'gi');
+    const parts = text.split(re);
+    if (parts.length === 1) return text;
+    return parts.map((part, i) =>
+        i % 2 === 1 ? (
+            <mark key={i} className={HIGHLIGHT_CLASSES}>
+                {part}
+            </mark>
+        ) : (
+            <Fragment key={i}>{part}</Fragment>
+        )
+    );
+}
+
+// recursively walk a React tree (typically produced by `useRemarkSync`) and highlight every text-node occurrence of `query`.
+function highlightTree(node: ReactNode, query: string): ReactNode {
+    if (!query) return node;
+    if (typeof node === 'string') return highlightInText(node, query);
+    if (Array.isArray(node)) {
+        return node.map((child, i) => (
+            <Fragment key={i}>{highlightTree(child, query)}</Fragment>
+        ));
+    }
+    if (isValidElement(node)) {
+        const props = node.props as { children?: ReactNode };
+        if (props.children === undefined) return node;
+        return cloneElement(
+            node,
+            undefined,
+            highlightTree(props.children, query)
+        );
+    }
+    return node;
+}
+
+function MentionAnchor({
+    href,
+    children,
+    className,
+    onClick,
+    ...rest
+}: ComponentPropsWithoutRef<'a'>) {
+    if (href?.startsWith('mention:')) {
+        return (
+            <span className="bg-brand-500/20 text-brand-300 inline rounded px-1 py-0.5 text-[0.9em] font-medium">
+                {children}
+            </span>
+        );
+    }
+    if (href?.startsWith('discord-u:')) {
+        return <u className="underline underline-offset-2">{children}</u>;
+    }
+    return (
+        <a
+            {...rest}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+                'text-brand-400 hover:text-brand-300 underline underline-offset-2',
+                className
+            )}
+            onClick={(e) => {
+                e.stopPropagation();
+                onClick?.(e);
+            }}
+        >
+            {children}
+        </a>
+    );
+}
+
+const REMARK_OPTIONS = {
+    remarkPlugins: [remarkDiscordMarkdown],
+    rehypeReactOptions: {
+        components: { a: MentionAnchor },
+    },
+};
+
+// Tailwind classes shared by the markdown body in collapsed and expanded states.
+const ANNOUNCEMENT_BODY_CLASSES = [
+    'text-sm leading-relaxed text-white/85',
+    '[&_p]:mb-1 [&_p:last-child]:mb-0',
+    '[&_strong]:font-semibold [&_strong]:text-white',
+    '[&_em]:italic',
+    '[&_a]:text-brand-400 [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:text-brand-300',
+    '[&_ul]:my-1 [&_ul]:list-disc [&_ul]:pl-5',
+    '[&_ol]:my-1 [&_ol]:list-decimal [&_ol]:pl-5',
+    '[&_h1]:mb-1 [&_h1]:text-xl [&_h1]:font-semibold [&_h1]:text-white',
+    '[&_h2]:mt-2 [&_h2]:mb-1 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-white',
+    '[&_h3]:mt-2 [&_h3]:mb-1 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-white',
+    '[&_blockquote]:my-1 [&_blockquote]:border-l-4 [&_blockquote]:border-neutral-600 [&_blockquote]:pl-3 [&_blockquote]:text-white/70',
+    '[&_hr]:my-3 [&_hr]:border-neutral-700/60',
+    '[&_code]:rounded [&_code]:bg-neutral-900/80 [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-[12px]',
+    '[&_pre]:my-2 [&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:bg-neutral-900/80 [&_pre]:p-3 [&_pre]:text-[12px]',
+    '[&_del]:line-through [&_del]:opacity-70',
+    '[&_u]:underline [&_u]:underline-offset-2',
+    '[&_small]:mt-1 [&_small]:block [&_small]:text-[0.75em] [&_small]:text-white/50',
+];
+
+export type AnnouncementRowProps = {
+    announcement: AnnouncementWithAttachments;
+    displayName: string;
+    iconSrc?: string;
+    searchQuery?: string;
+    onJump?: (id: number) => void;
+    onRead?: () => void;
+    flash?: boolean;
+    isUnread?: boolean;
+    hideBorderTop?: boolean;
+    hideBorderBottom?: boolean;
+};
+
+/**
+ * Discord-style announcement row:
+ * behaviour:
+ * body markdown clamped to 4 lines while collapsed, "Show more..."
+ * text overflow/images click to expnad
+ * previews up to {@link MAX_VISUAL_MEDIA_PREVIEW} images/videos; extras use "view all".
+ * collapsed: text + images side by side.
+ * expanded: text + images stacked.
+ */
+export default function AnnouncementRow({
+    announcement: a,
+    displayName,
+    iconSrc,
+    searchQuery,
+    onJump,
+    onRead,
+    flash,
+    isUnread,
+    hideBorderTop,
+    hideBorderBottom,
+}: AnnouncementRowProps) {
+    const sourceTime = toSourceDate(a.sourceTimestamp);
+    const renderedContent = renderDiscordContentMentions(
+        a.content,
+        a.mentionMetadata
+    );
+    const trimmed = preprocessDiscordMarkdown(renderedContent.trim());
+    const [expanded, setExpanded] = useState(false);
+    const [allMediaExpanded, setAllMediaExpanded] = useState(false);
+    const [hasOverflow, setHasOverflow] = useState(false);
+    const [jumpRevealed, setJumpRevealed] = useState(false);
+    const [windowWidth] = useWindowSize();
+    const isMobileOrTablet = windowWidth < 1024;
+    const bodyRef = useRef<HTMLDivElement>(null);
+    const rawRenderedBody = useRemarkSync(trimmed || '', REMARK_OPTIONS);
+    const renderedBody = searchQuery
+        ? highlightTree(rawRenderedBody, searchQuery)
+        : rawRenderedBody;
+
+    useLayoutEffect(() => {
+        if (expanded) return;
+        const el = bodyRef.current;
+        if (!el) return;
+        setHasOverflow(el.scrollHeight - el.clientHeight > 1);
+    }, [trimmed, expanded]);
+
+    useEffect(() => {
+        if (!jumpRevealed) return;
+        const dismiss = () => setJumpRevealed(false);
+        document.addEventListener('click', dismiss);
+        return () => document.removeEventListener('click', dismiss);
+    }, [jumpRevealed]);
+
+    const {
+        all: allVisualMedia,
+        preview: previewMedia,
+        hiddenCount,
+    } = splitVisualMediaPreview(a.attachments);
+    const otherAttachments = a.attachments.filter((att) => !isVisualMedia(att));
+
+    const hasTextContent = trimmed.length > 0;
+    const hasVisualMedia = allVisualMedia.length > 0;
+    const hasMoreMedia = hiddenCount > 0;
+    const showAllMedia = allMediaExpanded || (hasTextContent && expanded);
+    const mediaOnly = !hasTextContent && hasVisualMedia;
+
+    const showSideBySide =
+        hasTextContent && hasVisualMedia && !expanded && !allMediaExpanded;
+    const showInlineMedia =
+        hasVisualMedia && (mediaOnly || (!expanded && !allMediaExpanded));
+    const showStackedMediaBelow = hasTextContent && hasVisualMedia && expanded;
+    const inlineMediaList =
+        showAllMedia && mediaOnly ? allVisualMedia : previewMedia;
+
+    const showViewAllMedia = hasMoreMedia && !showAllMedia && mediaOnly;
+    const showCollapseMedia = hasMoreMedia && allMediaExpanded && mediaOnly;
+
+    const revealAllMedia = () => {
+        if (mediaOnly) {
+            setAllMediaExpanded(true);
+        } else {
+            setExpanded(true);
+        }
+        onRead?.();
+    };
+
+    const showToggle =
+        hasTextContent &&
+        (expanded ||
+            hasOverflow ||
+            (hasMoreMedia && !showAllMedia && !mediaOnly));
+
+    return (
+        <li
+            id={String(a.id)}
+            data-announcement-id={a.id}
+            className={cn(
+                'group scroll-mt-24 list-none border-y border-neutral-600/30 p-1 pl-2 @[920px]:scroll-mt-0',
+                hideBorderTop && 'border-t-0',
+                hideBorderBottom && 'border-b-0'
+            )}
+        >
+            <div
+                className={cn(
+                    'hover:bg-brand-950/60 flex flex-col rounded-xl p-3 transition-colors duration-700',
+                    flash &&
+                        'bg-brand-500/15 hover:bg-brand-500/15 duration-100'
+                )}
+                onClick={
+                    onJump
+                        ? (e) => {
+                              e.stopPropagation();
+                              if (isMobileOrTablet) {
+                                  onJump(a.id);
+                              } else {
+                                  setJumpRevealed(true);
+                              }
+                          }
+                        : onRead
+                          ? (e) => {
+                                if (
+                                    (e.target as HTMLElement).closest(
+                                        'a, button, video'
+                                    )
+                                ) {
+                                    return;
+                                }
+                                onRead();
+                            }
+                          : undefined
+                }
+            >
+                <div className="relative flex items-center gap-2.5">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg text-base select-none">
+                        {iconSrc ? (
+                            <Image
+                                src={iconSrc}
+                                alt={`${displayName} icon`}
+                                width={48}
+                                height={48}
+                                className="h-full w-full object-cover"
+                            />
+                        ) : (
+                            <span aria-hidden>⚡</span>
+                        )}
+                    </div>
+                    <span className="font-semibold text-white">
+                        {displayName}
+                    </span>
+                    {isUnread && (
+                        <span
+                            className="bg-danger-500 h-3 w-3 shrink-0 rounded-full"
+                            aria-label="Unread"
+                        />
+                    )}
+                    <time
+                        className="text-sm text-white/60"
+                        dateTime={sourceTime.toISOString()}
+                    >
+                        {formatAnnouncementTimestamp(sourceTime)}
+                    </time>
+                    {onJump ? (
+                        <Button
+                            type="button"
+                            variant="default"
+                            hierarchy="secondary"
+                            size="compact"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onJump(a.id);
+                                setJumpRevealed(false);
+                            }}
+                            className={cn(
+                                'absolute right-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100',
+                                jumpRevealed ? 'opacity-100' : 'opacity-0'
+                            )}
+                        >
+                            Jump
+                        </Button>
+                    ) : null}
+                </div>
+                <div className="min-w-0 flex-1 pl-11">
+                    <>
+                        {/* desktop (collapsed): text + media side by side.*/}
+                        <div
+                            className={cn(
+                                'mt-0.5',
+                                showSideBySide &&
+                                    'md:flex md:items-start md:gap-3'
+                            )}
+                        >
+                            {hasTextContent ? (
+                                <div
+                                    className={cn(
+                                        showSideBySide && 'md:min-w-0 md:flex-1'
+                                    )}
+                                >
+                                    <div
+                                        ref={bodyRef}
+                                        className={cn(
+                                            ...ANNOUNCEMENT_BODY_CLASSES,
+                                            !expanded && 'line-clamp-4'
+                                        )}
+                                    >
+                                        {renderedBody}
+                                    </div>
+                                </div>
+                            ) : null}
+                            {showInlineMedia ? (
+                                <AnnouncementMediaList
+                                    attachments={inlineMediaList}
+                                    size={mediaOnly ? 'full' : 'compact'}
+                                    mediaOnly={mediaOnly}
+                                    overflowCount={
+                                        showAllMedia ? 0 : hiddenCount
+                                    }
+                                    onOverflowClick={revealAllMedia}
+                                    onImageExpand={revealAllMedia}
+                                    className={cn(
+                                        mediaOnly
+                                            ? 'mt-2'
+                                            : cn(
+                                                  'mt-2 md:mt-0 md:shrink-0',
+                                                  inlineMediaList.length === 1
+                                                      ? announcementMediaListWidthClass(
+                                                            inlineMediaList,
+                                                            false
+                                                        )
+                                                      : 'md:w-48'
+                                              )
+                                    )}
+                                />
+                            ) : null}
+                        </div>
+                        {showStackedMediaBelow ? (
+                            <AnnouncementMediaList
+                                attachments={allVisualMedia}
+                                size="full"
+                                mediaOnly
+                                className="mt-2"
+                            />
+                        ) : null}
+                        {showViewAllMedia || showCollapseMedia || showToggle ? (
+                            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+                                {showViewAllMedia ? (
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            revealAllMedia();
+                                        }}
+                                        className="text-brand-400 hover:text-brand-300 text-sm underline-offset-2 hover:underline"
+                                    >
+                                        View all{' '}
+                                        {visualMediaCountLabel(
+                                            allVisualMedia.length
+                                        )}
+                                    </button>
+                                ) : null}
+                                {showCollapseMedia ? (
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setAllMediaExpanded(false);
+                                        }}
+                                        className="text-brand-400 hover:text-brand-300 text-sm underline-offset-2 hover:underline"
+                                    >
+                                        Show less
+                                    </button>
+                                ) : null}
+                                {showToggle ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setExpanded((v) => !v);
+                                            if (!expanded) onRead?.();
+                                        }}
+                                        className="text-brand-400 hover:text-brand-300 text-sm underline-offset-2 hover:underline"
+                                    >
+                                        {expanded ? 'Show less' : 'Show more…'}
+                                    </button>
+                                ) : null}
+                            </div>
+                        ) : null}
+                    </>
+                    {otherAttachments.length > 0 ? (
+                        <ul className="mt-2 flex flex-col gap-1 text-sm">
+                            {otherAttachments.map((att) => (
+                                <li key={att.id}>
+                                    <a
+                                        href={att.storedUrl ?? att.sourceUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-brand-400 hover:text-brand-300 underline-offset-2 hover:underline"
+                                    >
+                                        {att.filename ?? 'Attachment'}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : null}
+                </div>
+            </div>
+        </li>
+    );
+}

@@ -1,47 +1,109 @@
 import Handlebars from 'handlebars';
+import { marked } from 'marked';
+import { EMAIL_STYLING_BODY_PLACEHOLDER } from '@/db/schema/emails';
 
-/**
- * Prepare HTML content for email preview
- * @param content raw HTML content
- * @param options Additional options for preview rendering
- * @returns Formatted HTML string ready for iframe display
- */
-export function prepareEmailPreview(
-    content: string,
-    options?: {
-        showPlaceholders?: boolean;
-        placeholders?: string[];
-        darkMode?: boolean;
-    }
-): string {
-    if (!content)
-        return '<div style="padding: 20px;">No content to preview</div>';
+const PLACEHOLDER_HIGHLIGHT_CSS =
+    '.placeholder-highlight{background-color:#f0f7ff;border:1px solid #cce5ff;border-radius:3px;padding:0 4px;color:#0066cc;font-weight:bold;}';
 
-    // Process the content to highlight placeholders
-    let processedContent = content;
-
-    // Apply placeholder highlighting if needed
-    if (options?.showPlaceholders && (options.placeholders?.length ?? 0) > 0) {
-        options.placeholders!.forEach((placeholder) => {
-            const escapedPlaceholder = placeholder.replace(
-                /[.*+?^${}()|[\]\\]/g,
-                '\\$&'
-            );
-            processedContent = processedContent.replace(
-                new RegExp(escapedPlaceholder, 'g'),
-                `<span class="placeholder-highlight">${placeholder}</span>`
-            );
-        });
-    }
-
-    // Handle escape sequences
-    processedContent = processedContent
+function unescapeTemplateEscapes(html: string): string {
+    return html
         .replace(/\\t/g, '\t')
         .replace(/\\n/g, '\n')
         .replace(/\\r/g, '\r')
         .replace(/\\"/g, '"')
         .replace(/\\'/g, "'")
         .replace(/\\\\/g, '\\');
+}
+
+export function markdownToHtml(content: string): string {
+    if (!content.trim()) return content;
+    try {
+        return marked.parse(content, { async: false }) as string;
+    } catch {
+        return content;
+    }
+}
+
+export function mergeBodyIntoStyling(
+    stylingHtml: string,
+    bodyContent: string
+): string {
+    stylingHtml = stylingHtml.replace(/\\t/g, '');
+    if (!stylingHtml.includes(EMAIL_STYLING_BODY_PLACEHOLDER)) {
+        return stylingHtml;
+    }
+    const trimmed = bodyContent.trim();
+    return stylingHtml.replace(
+        new RegExp(
+            EMAIL_STYLING_BODY_PLACEHOLDER.replace(
+                /[.*+?^${}()|[\]\\]/g,
+                '\\$&'
+            ),
+            'g'
+        ),
+        trimmed
+    );
+}
+
+export function prepareEmailPreview(
+    content: string,
+    options?: {
+        showPlaceholders?: boolean;
+        placeholders?: string[];
+        darkMode?: boolean;
+        stylingHtml?: string;
+        markdownBodyOnly?: boolean;
+    }
+): string {
+    if (!content)
+        return '<div style="padding: 20px;">No content to preview</div>';
+
+    const stylingTrimmed = options?.stylingHtml?.trim() ?? '';
+    const hasStylingWrapper = stylingTrimmed.length > 0;
+    const useMarkdown = hasStylingWrapper || Boolean(options?.markdownBodyOnly);
+
+    let processedContent = useMarkdown ? markdownToHtml(content) : content;
+
+    if (options?.showPlaceholders && (options.placeholders?.length ?? 0) > 0) {
+        for (const placeholder of options.placeholders!) {
+            const escaped = placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            processedContent = processedContent.replace(
+                new RegExp(escaped, 'g'),
+                `<span class="placeholder-highlight">${placeholder}</span>`
+            );
+        }
+    }
+
+    processedContent = unescapeTemplateEscapes(processedContent);
+
+    if (hasStylingWrapper) {
+        let fullHtml = mergeBodyIntoStyling(stylingTrimmed, processedContent);
+        if (!stylingTrimmed.includes(EMAIL_STYLING_BODY_PLACEHOLDER)) {
+            fullHtml = fullHtml.replace(
+                /<\/body\s*>/i,
+                () => processedContent + '</body>'
+            );
+        }
+        fullHtml = fullHtml.replace(/<script\b[\s\S]*?<\/script>/gi, '');
+
+        let headInject = '';
+        if (typeof window !== 'undefined') {
+            headInject += `<base href="${window.location.origin}/">`;
+        }
+        if (
+            options?.showPlaceholders &&
+            (options.placeholders?.length ?? 0) > 0
+        ) {
+            headInject += `<style type="text/css">${PLACEHOLDER_HIGHLIGHT_CSS}</style>`;
+        }
+        if (headInject) {
+            fullHtml = fullHtml.replace(
+                /<head(\s[^>]*)?>/i,
+                (m) => m + headInject
+            );
+        }
+        return fullHtml;
+    }
 
     return `
     <!DOCTYPE html>
@@ -51,14 +113,7 @@ export function prepareEmailPreview(
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <base href="${typeof window !== 'undefined' ? window.location.origin : ''}">
       <style>
-        .placeholder-highlight {
-          background-color: #f0f7ff;
-          border: 1px solid #cce5ff;
-          border-radius: 3px;
-          padding: 0 4px;
-          color: #0066cc;
-          font-weight: bold;
-        }
+        ${PLACEHOLDER_HIGHLIGHT_CSS}
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
           line-height: 1.5;
@@ -78,13 +133,7 @@ export function prepareEmailPreview(
     </html>
   `;
 }
-/**
- * Prepares email content for sending by replacing placeholders with actual values
- * @param content The email template content potentially with placeholders
- * @param data Object containing values to replace Handlebars placeholders
- * @param options Configuration options
- * @returns Processed HTML content ready for sending
- */
+
 export function prepareEmailContent(
     content: string,
     data: Record<string, any>,
@@ -101,12 +150,10 @@ export function prepareEmailContent(
         });
 
         try {
-            // Compile the template
             const template = Handlebars.compile(processedContent, {
                 preventIndent: true,
                 strict: false,
             });
-
             processedContent = template(data);
         } catch (error) {
             console.error('Error processing Handlebars template:', error);
@@ -114,13 +161,5 @@ export function prepareEmailContent(
         }
     }
 
-    processedContent = processedContent
-        .replace(/\\t/g, '\t')
-        .replace(/\\n/g, '\n')
-        .replace(/\\r/g, '\r')
-        .replace(/\\"/g, '"')
-        .replace(/\\'/g, "'")
-        .replace(/\\\\/g, '\\');
-
-    return processedContent;
+    return unescapeTemplateEscapes(processedContent);
 }

@@ -5,10 +5,16 @@ import { FormTextInput } from '../input/input';
 import style from './radioButtonGroup.module.css';
 import { useAtomValue } from 'jotai';
 import { finalErrCheckAtom } from '@/components/application_components/InputForm';
+import type { ChoiceOptionAlert } from '@/components/application_components/types';
 import clsx from 'clsx';
 
 export interface RadioButtonGroupProps {
-    options: { data: string; name: string }[];
+    options: {
+        data: string;
+        name: string;
+        disabled?: boolean;
+        alert?: ChoiceOptionAlert;
+    }[];
     allowDeselect?: boolean;
     allowCustomInput?: boolean;
     required?: boolean;
@@ -86,43 +92,66 @@ export function RadioButtonGroup({
                 // Create a unique ID for each radio input
                 const inputId = `${name}-${item.data.replace(/\s+/g, '-')}-${index}`;
                 const isSelected = item.data === selection;
+                const optionDisabled = disabled || !!item.disabled;
+                const caption =
+                    item.alert?.presentation === 'caption'
+                        ? item.alert
+                        : undefined;
 
                 return (
-                    <label
-                        key={index}
-                        htmlFor={inputId}
-                        className={clsx(
-                            style.optionLabel,
-                            disabled && 'cursor-not-allowed opacity-50'
+                    <div key={index} className="flex w-full flex-col">
+                        <label
+                            htmlFor={inputId}
+                            className={clsx(
+                                style.optionLabel,
+                                optionDisabled &&
+                                    'cursor-not-allowed opacity-50'
+                            )}
+                        >
+                            <input
+                                type="radio"
+                                id={inputId}
+                                name={name}
+                                required={required && !optionDisabled}
+                                checked={isSelected}
+                                aria-describedby={
+                                    isSelected && caption
+                                        ? `${inputId}-caption`
+                                        : undefined
+                                }
+                                onChange={() => {
+                                    if (!optionDisabled) {
+                                        setSelection(item.data);
+                                    }
+                                }}
+                                className={style.radio}
+                                onClick={(e) => {
+                                    if (optionDisabled) {
+                                        e.preventDefault();
+                                        return;
+                                    }
+                                    if (
+                                        allowDeselect &&
+                                        item.data === selection
+                                    ) {
+                                        e.preventDefault();
+                                        clearSelection(item.data);
+                                    }
+                                }}
+                                disabled={optionDisabled}
+                                readOnly={optionDisabled}
+                            />
+                            {item.name}
+                        </label>
+                        {isSelected && caption && (
+                            <p
+                                className="mt-1.5 max-w-[480px] text-left text-xs leading-relaxed text-white/60"
+                                id={`${inputId}-caption`}
+                            >
+                                {caption.description}
+                            </p>
                         )}
-                    >
-                        <input
-                            type="radio"
-                            id={inputId}
-                            name={name}
-                            required={required}
-                            checked={isSelected}
-                            onChange={() => {
-                                if (!disabled) {
-                                    setSelection(item.data);
-                                }
-                            }}
-                            className={style.radio}
-                            onClick={(e) => {
-                                if (disabled) {
-                                    e.preventDefault();
-                                    return;
-                                }
-                                if (allowDeselect && item.data === selection) {
-                                    e.preventDefault();
-                                    clearSelection(item.data);
-                                }
-                            }}
-                            disabled={disabled}
-                            readOnly={disabled}
-                        />
-                        {item.name}
-                    </label>
+                    </div>
                 );
             })}
             {

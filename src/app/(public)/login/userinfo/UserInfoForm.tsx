@@ -83,7 +83,7 @@ export default function UserInfoForm() {
         >
             <div className="block h-full w-full bg-[#C4D086] lg:hidden" />
             <Image
-                src="/dashboard/jh26header.png"
+                src="/dashboard/sparkjamhead26.webp"
                 alt="Sparky studying"
                 fill
                 className="absolute hidden h-full w-full object-cover lg:block"

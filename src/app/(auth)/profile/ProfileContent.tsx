@@ -20,6 +20,7 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
         firstName: userData.firstName || '',
         lastName: userData.lastName || '',
         phoneNumber: userData.phoneNumber || '',
+        email: userData.email || '',
     });
     const [profilePicture, setProfilePicture] = useState('');
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -74,6 +75,7 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 phoneNumber: formData.phoneNumber,
+                email: formData.email,
                 image: imageFileName ?? undefined,
             });
         } catch (error) {
@@ -93,6 +95,7 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
             firstName: userData.firstName || '',
             lastName: userData.lastName || '',
             phoneNumber: userData.phoneNumber || '',
+            email: userData.email || '',
         });
         setProfilePicture('');
         if (fileInputRef.current) {
@@ -134,7 +137,8 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
     const isFormValid =
         formData.firstName.length > 0 &&
         formData.lastName.length > 0 &&
-        formData.phoneNumber.length > 0;
+        formData.phoneNumber.length > 0 &&
+        formData.email.length > 0;
 
     return (
         <div className="w-full max-w-[498px] space-y-10">
@@ -236,7 +240,7 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
                         disabled={isSubmitting}
                     />
                     {errors.firstName && (
-                        <p className="text-sm text-red-500">
+                        <p className="text-danger-500 text-sm">
                             {errors.firstName}
                         </p>
                     )}
@@ -257,7 +261,7 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
                         disabled={isSubmitting}
                     />
                     {errors.lastName && (
-                        <p className="text-sm text-red-500">
+                        <p className="text-danger-500 text-sm">
                             {errors.lastName}
                         </p>
                     )}
@@ -265,16 +269,21 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
             </div>
 
             <div className="space-y-2">
-                <Label>Email Address</Label>
+                <Label required={true}>Email Address</Label>
                 <FormTextInput
-                    readOnly
+                    key={`email-${key}`}
+                    name="email"
                     type="email"
-                    defaultValue={userData.email}
-                    placeholder="Enter your email address"
+                    lazy
+                    defaultValue={formData.email}
+                    onLazyChange={(value) => handleInputChange('email', value)}
+                    placeholder="you@example.com"
+                    required
+                    disabled={isSubmitting}
                 />
-                <p className="text-xs text-[var(--text-secondary)]">
-                    Email cannot be changed
-                </p>
+                {errors.email && (
+                    <p className="text-danger-500 text-sm">{errors.email}</p>
+                )}
             </div>
 
             <div className="space-y-2">
@@ -295,7 +304,9 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
                     disabled={isSubmitting}
                 />
                 {errors.phoneNumber && (
-                    <p className="text-sm text-red-500">{errors.phoneNumber}</p>
+                    <p className="text-danger-500 text-sm">
+                        {errors.phoneNumber}
+                    </p>
                 )}
             </div>
 

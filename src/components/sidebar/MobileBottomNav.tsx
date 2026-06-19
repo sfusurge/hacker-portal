@@ -13,6 +13,10 @@ import { useEffect, useState } from 'react';
 import { QrCodeIcon } from '@heroicons/react/24/solid';
 import SelectOption from '@/app/(auth)/admin/qr/checkin_components/SelectOption';
 import { UserData } from '@/server/routers/usersRouter';
+import {
+    isSparkjamProjectsArea,
+    SPARKJAM_PROJECTS_PATH,
+} from '@/lib/projects/projectsPaths';
 
 interface MobileBottomNavProps {
     className?: string;
@@ -23,7 +27,7 @@ const excludedUrls = ['/application', '/admin/qr'];
 
 const judgeNavLinks = [
     {
-        href: '/projects',
+        href: SPARKJAM_PROJECTS_PATH,
         label: 'Projects',
         icon: <InboxStackIcon />,
         iconAlt: 'Projects logo',
@@ -89,14 +93,14 @@ const navLinks = [
         active: false,
         disabled: false,
     },
-    // {
-    //     href: '/projects',
-    //     label: 'Projects',
-    //     icon: <InboxStackIcon />,
-    //     iconAlt: 'Projects logo',
-    //     active: false,
-    //     disabled: false,
-    // },
+    {
+        href: '/projects',
+        label: 'Project Gallery',
+        icon: <InboxStackIcon />,
+        iconAlt: 'Project gallery logo',
+        active: false,
+        disabled: false,
+    },
     // {
     //     href: '#',
     //     label: 'Alerts',
@@ -155,7 +159,8 @@ export default function MobileBottomNav({
                         className
                     )}
                 >
-                    {initialData?.userRole === 'judge' ? (
+                    {initialData?.userRole === 'judge' ||
+                    (isSparkjamProjectsArea(url) && !initialData) ? (
                         <>
                             {judgeNavLinks.map((link) => (
                                 <NavLink

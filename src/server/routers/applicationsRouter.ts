@@ -15,25 +15,26 @@ import {
     eq,
     getTableColumns,
     desc,
-    or,
     inArray,
     sql,
     count,
 } from 'drizzle-orm';
-import { object, z } from 'zod';
+import { z } from 'zod';
 import { InternalServerError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
-import Handlebars from 'handlebars';
-import {
-    welcomeEmailTemplate,
-    welcomeStormhacksTemplate,
-} from '@/server/routers/templates';
 import { transporter } from '@/server/nodemailerTransporter';
 import { teams } from '@/db/schema/teams';
 import { members } from '@/db/schema/members';
 import { getBasicUserInfo, getUserData } from '@/server/routers/usersRouter';
 import { checkIns } from '@/db/schema/checkIn';
 import { events } from '@/db/schema/events';
+import { emailTemplates, emailTemplateStyling } from '@/db/schema/emails';
+import {
+    markdownToHtml,
+    mergeBodyIntoStyling,
+    prepareEmailContent,
+} from '@/app/(auth)/admin/email/templates/emailPreview';
+import { publishReviewTableEvent } from '@/lib/realtime/publishReviewTableEvent';
 
 export interface SubmitApplicationResponse {
     hackathonId: number;
@@ -75,70 +76,92 @@ export const applicationsRouter = router({
                 .returning();
 
             if (application) {
-                //based on code copied from rewviewappplications table lmao
-
-                const tempDummy = (item: any) => {
-                    const { '1': firstName, '5': email } = item.response || {};
-                    return { firstName, email };
-                };
-
                 if (!user?.email) {
                     throw new InternalServerError(
                         'User email is missing. Cannot send email.'
                     );
                 }
-                const extractedEmail = tempDummy(input).email;
-                if (!extractedEmail) {
-                    throw new InternalServerError(
-                        'User email is missing. Cannot send email.'
+                try {
+                    const [template] = await databaseClient
+                        .select()
+                        .from(emailTemplates)
+                        .where(
+                            and(
+                                eq(
+                                    emailTemplates.hackathonId,
+                                    input.hackathonId
+                                ),
+                                eq(emailTemplates.emailType, 'hacker_applied')
+                            )
+                        )
+                        .limit(1);
+
+                    if (!template) {
+                        console.error(
+                            `No hacker_applied email template found for hackathon ${input.hackathonId}`
+                        );
+                    } else {
+                        let processedTemplateContent =
+                            template.stylingId != null
+                                ? markdownToHtml(template.content)
+                                : template.content;
+
+                        const templateData = {
+                            firstName: user.firstName ?? 'Friend',
+                            lastName: user.lastName ?? '',
+                            email: user.email,
+                            userId: user.id,
+                        };
+
+                        let finalHtmlContent = prepareEmailContent(
+                            processedTemplateContent,
+                            templateData
+                        );
+
+                        if (template.stylingId != null) {
+                            const [styling] = await databaseClient
+                                .select()
+                                .from(emailTemplateStyling)
+                                .where(
+                                    eq(
+                                        emailTemplateStyling.id,
+                                        template.stylingId
+                                    )
+                                )
+                                .limit(1);
+                            if (styling?.html) {
+                                finalHtmlContent = mergeBodyIntoStyling(
+                                    styling.html,
+                                    finalHtmlContent
+                                );
+                            }
+                        }
+
+                        await transporter.sendMail({
+                            from: process.env.SENDINGEMAIL,
+                            subject: template.title,
+                            html: finalHtmlContent,
+                            to: user.email,
+                        });
+
+                        await databaseClient
+                            .update(applications)
+                            .set({ lastEmailSent: 'hacker_applied' })
+                            .where(
+                                and(
+                                    eq(
+                                        applications.hackathonId,
+                                        input.hackathonId
+                                    ),
+                                    eq(applications.userId, user.id)
+                                )
+                            );
+                    }
+                } catch (error) {
+                    console.error(
+                        'Error preparing or sending hacker_applied email:',
+                        error
                     );
-                }
-
-                const template = Handlebars.compile(welcomeEmailTemplate);
-                const htmlContent = template({
-                    firstName: tempDummy(input).firstName,
-                });
-
-                let oAuthMailOptions = {
-                    from: process.env.SENDINGEMAIL,
-                    to: user.email,
-                    subject: 'Your JourneyHacks Application Has Been Received!',
-                    text: 'Your JourneyHacks Application Has Been Received!',
-                    html: htmlContent,
-                };
-
-                let sfuMailOptions = {
-                    from: process.env.SENDINGEMAIL,
-                    to: extractedEmail,
-                    subject: 'Your JourneyHacks Application Has Been Received!',
-                    text: 'Your JourneyHacks Application Has Been Received!',
-                    html: htmlContent,
-                };
-
-                if (user.email != extractedEmail) {
-                    transporter.sendMail(oAuthMailOptions, (error, info) => {
-                        if (error) {
-                            console.error('Error sending email:', error);
-                        } else {
-                            console.log('Email sent:', info.response);
-                        }
-                    });
-
-                    transporter.sendMail(sfuMailOptions, (error, info) => {
-                        if (error) {
-                            console.error('Error sending email:', error);
-                        } else {
-                            console.log('Email sent:', info.response);
-                        }
-                    });
-                } else {
-                    transporter.sendMail(oAuthMailOptions, (error, info) => {
-                        if (error) {
-                            console.error('Error sending email:', error);
-                        } else {
-                            console.log('Email sent:', info.response);
-                        }
-                    });
                 }
             }
 
@@ -169,8 +192,8 @@ export const applicationsRouter = router({
                     teamId: teams.id,
                     teamName: teams.name,
                     userId: members.userId,
-                    firstName: sql<string>`${applications.response}->>'1'`,
-                    lastName: sql<string>`${applications.response}->>'2'`,
+                    firstName: sql<string>`${applications.response}->>'5'`,
+                    lastName: sql<string>`${applications.response}->>'6'`,
                 })
                 .from(teams)
                 .innerJoin(members, eq(members.teamId, teams.id))
@@ -200,7 +223,7 @@ export const applicationsRouter = router({
                     checkInTime: checkIns.checkInTime,
                 })
                 .from(events)
-                .innerJoin(checkIns, eq(events.id, checkIns.eventId)) // Change leftJoin to innerJoin
+                .innerJoin(checkIns, eq(events.id, checkIns.eventId))
                 .where(
                     and(
                         eq(events.hackathonId, input.hackathonId),
@@ -333,6 +356,16 @@ export const applicationsRouter = router({
                 )
                 .returning();
 
+            if (
+                application &&
+                (input.status !== undefined ||
+                    input.pendingStatus !== undefined)
+            ) {
+                void publishReviewTableEvent({
+                    hackathonId: input.hackathonId,
+                });
+            }
+
             return application;
         }),
 
@@ -352,6 +385,16 @@ export const applicationsRouter = router({
                     )
                 )
                 .returning();
+
+            if (
+                updatedApplications.length > 0 &&
+                (input.status !== undefined ||
+                    input.pendingStatus !== undefined)
+            ) {
+                void publishReviewTableEvent({
+                    hackathonId: input.hackathonId,
+                });
+            }
 
             return updatedApplications;
         }),
@@ -397,6 +440,28 @@ export const applicationsRouter = router({
                 .limit(1);
 
             return application as ApplicationInfo;
+        }),
+
+    getApplicationByHackathonAndUserId: publicProcedure
+        .input(
+            z.object({
+                hackathonId: z.number().int(),
+                userId: z.number().int(),
+            })
+        )
+        .query(async ({ input }) => {
+            const [application] = await databaseClient
+                .select(getTableColumns(applications))
+                .from(applications)
+                .where(
+                    and(
+                        eq(applications.hackathonId, input.hackathonId),
+                        eq(applications.userId, input.userId)
+                    )
+                )
+                .limit(1);
+
+            return (application ?? null) as ApplicationInfo | null;
         }),
 
     getApplicationsByEmail: publicProcedure

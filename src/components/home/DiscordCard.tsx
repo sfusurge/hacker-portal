@@ -12,26 +12,41 @@ import {
     CardFooter,
     CardHeaderColumn,
 } from '@/components/ui/card';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { defaultEventPagePayload } from '@/components/home/eventPageConfig';
+import { eventDiscordUrlForStatus } from '@/lib/eventDiscord';
+import { cn } from '@/lib/utils';
+import { useAtomValue } from 'jotai';
 
 type DiscordCardProps = {
     applicationStatus?: string;
+    className?: string;
 };
 
-const DISCORD_LINK_STANDARD = 'https://discord.com/invite/U5q6RkHHtA/login';
-const DISCORD_LINK_ACCEPTED = 'https://discord.gg/mfn8YkPCnp';
-
-export default function DiscordCard({ applicationStatus }: DiscordCardProps) {
-    const discordLink =
-        applicationStatus === 'Accepted'
-            ? DISCORD_LINK_ACCEPTED
-            : DISCORD_LINK_STANDARD;
+export default function DiscordCard({
+    applicationStatus,
+    className,
+}: DiscordCardProps) {
+    const hackathon = useAtomValue(hackathonAtom);
+    const discordLink = eventDiscordUrlForStatus(
+        applicationStatus,
+        hackathon?.eventPagePayload
+    );
+    const payload =
+        hackathon?.eventPagePayload ??
+        (hackathon?.hackathonName
+            ? defaultEventPagePayload(hackathon.hackathonName)
+            : null);
+    const eventDisplayName = payload?.name ?? hackathon?.hackathonName;
+    const hackathonIconSrc = payload?.iconSrc;
+    const isAccepted = applicationStatus === 'Accepted';
     const headerTitle =
-        applicationStatus === 'Accepted'
-            ? 'Join the StormHacks Discord!'
+        isAccepted && eventDisplayName
+            ? `Join the ${eventDisplayName} Discord!`
             : 'Join the Surge Discord!';
 
     return (
-        <Card className="h-full">
+        <Card className={cn('h-full', className)}>
             <CardHeader>
                 <CardHeaderColumn>
                     <CardHeaderDescription>Your Events</CardHeaderDescription>
@@ -48,14 +63,24 @@ export default function DiscordCard({ applicationStatus }: DiscordCardProps) {
                     </Button>
                 </Link>
             </CardHeader>
-            <CardContent className="pb-0 text-center">
-                <Image
-                    src="/dashboard/join-our-discord.webp"
-                    width={1444}
-                    height={1276}
-                    alt="A bunch of otter heads surrounding a phone"
-                    className="pointer-events-none mx-auto h-auto w-full max-w-96"
-                />
+            <CardContent className="flex h-full items-center justify-center pb-4 text-center">
+                {isAccepted && hackathonIconSrc ? (
+                    <Image
+                        src={hackathonIconSrc}
+                        alt={`${eventDisplayName ?? 'Hackathon'} logo`}
+                        width={320}
+                        height={320}
+                        className="pointer-events-none h-32 w-32 rounded-xl object-contain"
+                    />
+                ) : (
+                    <Image
+                        src="/dashboard/join-our-discord.webp"
+                        width={1444}
+                        height={1276}
+                        alt="A bunch of otter heads surrounding a phone"
+                        className="pointer-events-none mx-auto h-auto w-full max-w-96"
+                    />
+                )}
             </CardContent>
             <CardFooter className="md:hidden">
                 <Link href={discordLink} target="_blank">

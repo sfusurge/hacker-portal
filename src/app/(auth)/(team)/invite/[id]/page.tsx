@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createCaller } from '@/server/appRouter';
+import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 import InviteDialog from '../../teamComponents/InviteDialog';
 import TeamDisplay from '../../teamComponents/TeamDisplay';
 import { getBasicUserInfo } from '@/server/routers/usersRouter';
@@ -15,7 +16,7 @@ export default async function InvitePage({
     const [{ id }, user, hackathon] = await Promise.all([
         params,
         getBasicUserInfo(),
-        trpcClient.hackathons.getActiveHackathon(),
+        getCachedActiveHackathon(),
     ]);
 
     if (!user) {

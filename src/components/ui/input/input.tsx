@@ -7,19 +7,43 @@ import {
     useMemo,
     useRef,
 } from 'react';
+import type { ReactNode } from 'react';
 import style from './input.module.css';
-const Input = forwardRef<HTMLInputElement, ComponentProps<'input'>>(
-    ({ className, type, ...props }, ref) => {
-        return (
+
+type InputProps = ComponentProps<'input'> & {
+    /** Renders a leading icon inside the field (adds left padding). */
+    icon?: ReactNode;
+};
+
+const Input = forwardRef<HTMLInputElement, InputProps>(
+    ({ className, type, icon, ...props }, ref) => {
+        const inputEl = (
             <input
                 type={type}
                 className={cn(
                     'flex h-10 w-full rounded-md border bg-white px-3 py-2 text-base read-only:cursor-default read-only:opacity-60 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:border-neutral-800 dark:bg-neutral-950 dark:file:text-neutral-50 dark:placeholder:text-neutral-400',
+                    icon && 'pl-10',
                     className
                 )}
                 ref={ref}
                 {...props}
             />
+        );
+
+        if (!icon) {
+            return inputEl;
+        }
+
+        return (
+            <div className="relative min-w-0 flex-1">
+                <div
+                    className="pointer-events-none absolute top-1/2 left-3 z-10 -translate-y-1/2 text-neutral-400"
+                    aria-hidden
+                >
+                    {icon}
+                </div>
+                {inputEl}
+            </div>
         );
     }
 );
@@ -29,6 +53,7 @@ type AdditionFormFields = {
     lazy?: boolean;
     timeOut?: number;
     hideBackground?: boolean;
+    formatAsHeading?: boolean;
     errorMsg?: string;
     className?: string;
     icon?: React.ReactNode;
@@ -55,6 +80,7 @@ export const FormTextInput = forwardRef<
             errorMsg,
             type,
             hideBackground,
+            formatAsHeading,
             onLazyChange,
             style: externalStyle,
             className,
@@ -121,6 +147,9 @@ export const FormTextInput = forwardRef<
                         defaultValue={defaultValue}
                         className={cn(
                             { [style.hideBackground]: hideBackground },
+                            {
+                                [style.formatAsHeading]: formatAsHeading,
+                            },
                             { 'pl-10': icon },
                             style.textinput,
                             'truncate',

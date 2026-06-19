@@ -25,15 +25,18 @@ describe('files router tests', () => {
             key,
             fileName,
             file: fileBuffer.toString('base64'),
+            bucketName: 'test-files',
         });
 
         expect(uploadResult.success).toBe(true);
         expect(uploadResult.key).toBe(key);
-        expect(uploadResult.etag).toBeDefined();
+        expect(uploadResult.url).toBeDefined();
+        expect(uploadResult.pathname).toContain('test-files/');
 
         // Test delete
         const deleteResult = await caller.deleteFile({
             key,
+            bucketName: 'test-files',
         });
 
         expect(deleteResult.success).toBe(true);
@@ -48,15 +51,17 @@ describe('files router tests', () => {
         const uploadResult = await caller.uploadFile({
             fileName,
             file: fileBuffer.toString('base64'),
+            bucketName: 'test-files',
         });
 
         expect(uploadResult.success).toBe(true);
         expect(uploadResult.key).not.toBeNull();
-        expect(uploadResult.etag).toBeDefined();
+        expect(uploadResult.url).toBeDefined();
 
         // Test delete
         const deleteResult = await caller.deleteFile({
             key: uploadResult.key,
+            bucketName: 'test-files',
         });
 
         expect(deleteResult.success).toBe(true);
@@ -74,6 +79,7 @@ describe('files router tests', () => {
                 key,
                 fileName,
                 file: fileBuffer.toString('base64'),
+                bucketName: 'test-files',
             })
         ).rejects.toThrow(BadRequestError);
     });
@@ -89,6 +95,7 @@ describe('files router tests', () => {
                 key,
                 fileName,
                 file: fileBuffer.toString('base64'),
+                bucketName: 'test-files',
             })
         ).rejects.toThrow(BadRequestError);
     });

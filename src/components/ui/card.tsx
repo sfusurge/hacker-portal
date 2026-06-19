@@ -5,8 +5,11 @@ import { cn } from '@/lib/utils';
 
 const Card = React.forwardRef<
     HTMLDivElement,
-    React.HTMLAttributes<HTMLDivElement> & { className?: string }
->(({ className, children, ...props }, ref) => (
+    React.HTMLAttributes<HTMLDivElement> & {
+        className?: string;
+        backdropClassName?: string;
+    }
+>(({ className, children, backdropClassName, ...props }, ref) => (
     <div
         ref={ref}
         className={cn(
@@ -15,6 +18,14 @@ const Card = React.forwardRef<
         )}
         {...props}
     >
+        {backdropClassName && (
+            <div
+                className={cn(
+                    'pointer-events-none sticky -top-7 z-1 -m-2 w-auto shrink-0 bg-neutral-950 p-2',
+                    backdropClassName
+                )}
+            />
+        )}
         {children}
     </div>
 ));
@@ -22,12 +33,17 @@ Card.displayName = 'Card';
 
 const CardHeader = React.forwardRef<
     HTMLDivElement,
-    React.HTMLAttributes<HTMLDivElement> & { className?: string }
->(({ className, ...props }, ref) => (
+    React.HTMLAttributes<HTMLDivElement> & {
+        className?: string;
+        multiAction?: boolean;
+    }
+>(({ className, multiAction, ...props }, ref) => (
     <div
         ref={ref}
         className={cn(
             'flex w-full flex-row items-center justify-between border-b border-b-neutral-600/30 p-5',
+            multiAction &&
+                '@max-[565px]/header-actions:flex-col @max-[565px]/header-actions:items-stretch',
             className
         )}
         {...props}

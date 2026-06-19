@@ -9,8 +9,10 @@ import { usersRouter } from './routers/usersRouter';
 import { teamsRouter } from './routers/teamsRouter';
 import { filesRouter } from './routers/filesRouter';
 import { emailTemplatesRouter } from './routers/emailTemplateRouter';
+import { emailTemplateStylingRouter } from './routers/emailTemplateStylingRouter';
 import { submissionsRouter } from './routers/submissionsRouter';
 import { companyRouter } from './routers/companyRouter';
+import { announcementsRouter } from './routers/announcementsRouter';
 
 import { judgingRouter } from './routers/judgingRouter';
 import { userVoteRouter } from '@/server/routers/userVoteRouter';
@@ -27,6 +29,7 @@ export const appRouter = router({
     applications: applicationsRouter,
     emails: sendEmailRouter,
     emailTemplates: emailTemplatesRouter,
+    emailTemplateStyling: emailTemplateStylingRouter,
     subscribedEmails: emailsRouter,
     events: eventsRouter,
     checkIn: checkInRouter,
@@ -38,6 +41,7 @@ export const appRouter = router({
     teams: teamsRouter,
     files: filesRouter,
     submissions: submissionsRouter,
+    announcements: announcementsRouter,
 
     emailQueue: emailQueueRouter,
 });

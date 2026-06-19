@@ -123,6 +123,12 @@ export async function GET(request: NextRequest) {
                     '19' in app.response
                         ? (app.response as Record<string, any>)['19']
                         : null,
+                '20':
+                    app.response &&
+                    typeof app.response === 'object' &&
+                    '20' in app.response
+                        ? (app.response as Record<string, any>)['20']
+                        : null,
             },
         }));
 
@@ -130,9 +136,9 @@ export async function GET(request: NextRequest) {
             pronouns: processFieldData(filteredApplications, '3'),
             experience: processFieldData(filteredApplications, '5'),
             school: processFieldData(filteredApplications, '16'),
-            levelStudy: processFieldData(filteredApplications, '17'),
-            year: processFieldData(filteredApplications, '18'),
-            program: processFieldData(filteredApplications, '19'),
+            levelStudy: processFieldData(filteredApplications, '18'),
+            year: processFieldData(filteredApplications, '19'),
+            program: processFieldData(filteredApplications, '20'),
         };
 
         const pieChartBlob = await put(

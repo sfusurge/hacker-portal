@@ -7,6 +7,9 @@
     /* Border width for elements */
     --border-width-1: 1px;
 
+    /* Announcements feed two-column layout breakpoint */
+    --container-announcements: 920px;
+
     /* Small inset shadow for skeuomorphic effect */
     --shadow-skeumorphic-sm:
         0px 1px 0px 0px rgba(255, 255, 255, 0.24) inset,
@@ -147,9 +150,10 @@
     --font-sans-length: 2;
 
     /* Monospace font stack */
+
     --font-mono:
-        DM Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-        'Liberation Mono', 'Courier New', monospace;
+        var(--font-dm-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
+        Consolas, 'Liberation Mono', 'Courier New', monospace;
 
     /* Line height variables */
     --leading-none: 1;
@@ -168,6 +172,9 @@
     --tracking-wide: 0.0075em;
     --tracking-wider: 0.01em;
     --tracking-widest: 0.015em;
+
+    /* Larger than default --shadow-2xl (announcements popover) */
+    --shadow-4xl: 0 35px 60px -15px rgb(0 0 0 / 0.35);
 
     /* Keyframes for caret blinking animation */
     @keyframes caret-blink {

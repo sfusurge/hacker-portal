@@ -73,8 +73,7 @@ export function DaySchedule({
     let zero = dayjs().hour(0);
 
     const timeLabelColumn = useMemo(() => {
-        console.log(dayjs().diff(startDate, 'day'));
-        const diff = dayjs().diff(startDate, 'day');
+        const diff = dayjs().startOf('day').diff(startDate, 'day');
         if (diff >= 0 && diff < days) {
             return diff;
         }

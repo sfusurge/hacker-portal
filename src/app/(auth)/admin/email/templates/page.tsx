@@ -1,11 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { trpc } from '@/trpc/client';
+import { useAtomValue } from 'jotai';
 import Link from 'next/link';
 import { prepareEmailPreview } from './emailPreview';
+import {
+    HACKATHON_EMAIL_TYPE_LABELS,
+    hackathonEmailTypeEnum,
+} from '@/db/schema/emails';
+import type { HackathonEmailType } from '@/db/schema/emails';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+
+const pageShellClass =
+    'w-full max-w-full min-w-0 overflow-x-hidden px-3 py-6 sm:px-4 sm:py-10';
+
+const hackathonSelectTriggerClass = 'w-full min-w-0 sm:w-[min(100%,280px)]';
 
 export default function EmailTemplatesPage() {
     const { toast } = useToast();
@@ -13,15 +32,26 @@ export default function EmailTemplatesPage() {
         null
     );
     const [showHighlights, setShowHighlights] = useState<boolean>(true);
+    const [selectedHackathonId, setSelectedHackathonId] = useState<
+        number | null
+    >(null);
     const [detectedPlaceholders, setDetectedPlaceholders] = useState<
         Record<number, string[]>
     >({});
+
+    const hasSetInitialHackathon = useRef(false);
+
+    const { data: hackathons = [] } = trpc.hackathons.getHackathons.useQuery();
+    const activeHackathon = useAtomValue(hackathonAtom);
 
     const {
         data: templates,
         isLoading,
         refetch,
-    } = trpc.emailTemplates.getEmailTemplates.useQuery();
+    } = trpc.emailTemplates.getEmailTemplates.useQuery(
+        { hackathonId: selectedHackathonId! },
+        { enabled: selectedHackathonId != null }
+    );
 
     const deleteTemplateMutation =
         trpc.emailTemplates.deleteEmailTemplate.useMutation({
@@ -58,6 +88,15 @@ export default function EmailTemplatesPage() {
         }));
     };
 
+    // hackathon filter to the active hackathon only on first load
+    useEffect(() => {
+        if (hasSetInitialHackathon.current) return;
+        if (activeHackathon?.id) {
+            hasSetInitialHackathon.current = true;
+            setSelectedHackathonId(activeHackathon.id);
+        }
+    }, [activeHackathon]);
+
     useEffect(() => {
         if (expandedTemplate !== null && templates) {
             const template = templates.find((t) => t.id === expandedTemplate);
@@ -81,67 +120,308 @@ export default function EmailTemplatesPage() {
         setShowHighlights((prev) => !prev);
     };
 
+    const ALL_EMAIL_TYPES =
+        hackathonEmailTypeEnum.enumValues as HackathonEmailType[];
+
+    const missingEmailTypes =
+        selectedHackathonId != null && templates
+            ? ALL_EMAIL_TYPES.filter(
+                  (type) => !templates.some((t) => t.emailType === type)
+              )
+            : [];
+
     if (isLoading) {
         return (
-            <div className="w-full py-10 text-center">Loading templates...</div>
+            <div className={`${pageShellClass} text-center`}>
+                Loading templates...
+            </div>
         );
     }
 
-    if (!templates || templates.length === 0) {
+    const hasHackathon = selectedHackathonId != null;
+    const templatesList = hasHackathon ? (templates ?? []) : [];
+
+    if (!hasHackathon && hackathons.length > 0) {
         return (
-            <div className="w-full py-10">
-                <div className="mb-6 flex items-center justify-between">
+            <div className={pageShellClass}>
+                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <h1 className="text-2xl font-bold">Email Templates</h1>
-                    <Link href="/admin/email/templates/edit">
-                        <Button variant="brand" hierarchy="primary" size="cozy">
-                            Create Template
-                        </Button>
-                    </Link>
+                    <div className="flex flex-wrap gap-2">
+                        <Link href="/admin/email/templates/styling">
+                            <Button
+                                variant="brand"
+                                hierarchy="secondary"
+                                size="cozy"
+                                className="w-full sm:w-auto"
+                            >
+                                Manage stylings
+                            </Button>
+                        </Link>
+                        <Link href="/admin/email/templates/edit">
+                            <Button
+                                variant="brand"
+                                hierarchy="primary"
+                                size="cozy"
+                                className="w-full sm:w-auto"
+                            >
+                                Create Template
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
                 <div className="py-10 text-center">
-                    <p className="text-lg">No email templates found.</p>
+                    <p className="text-lg text-white/60">
+                        Select a hackathon to view and manage email templates.
+                    </p>
+                    <div className="mx-auto mt-4 flex max-w-md justify-center px-1">
+                        <Select
+                            value=""
+                            onValueChange={(value) =>
+                                setSelectedHackathonId(Number(value))
+                            }
+                        >
+                            <SelectTrigger
+                                className={hackathonSelectTriggerClass}
+                            >
+                                <SelectValue placeholder="Select hackathon" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {hackathons.map((h) => (
+                                    <SelectItem key={h.id} value={String(h.id)}>
+                                        {h.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (!hasHackathon && hackathons.length === 0) {
+        return (
+            <div className={`${pageShellClass} text-center`}>
+                <p className="text-lg text-white/60">
+                    No hackathons found. Create a hackathon first to manage
+                    email templates.
+                </p>
+            </div>
+        );
+    }
+
+    if (templatesList.length === 0) {
+        return (
+            <div className={pageShellClass}>
+                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <h1 className="text-2xl font-bold">Email Templates</h1>
+                    <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+                        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
+                            <span className="shrink-0 text-sm text-white/60">
+                                Hackathon:
+                            </span>
+                            <Select
+                                value={String(selectedHackathonId)}
+                                onValueChange={(value) =>
+                                    setSelectedHackathonId(Number(value))
+                                }
+                            >
+                                <SelectTrigger
+                                    className={hackathonSelectTriggerClass}
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {hackathons.map((h) => (
+                                        <SelectItem
+                                            key={h.id}
+                                            value={String(h.id)}
+                                        >
+                                            {h.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            <Link href="/admin/email/templates/styling">
+                                <Button
+                                    variant="brand"
+                                    hierarchy="secondary"
+                                    size="cozy"
+                                    className="w-full sm:w-auto"
+                                >
+                                    Manage stylings
+                                </Button>
+                            </Link>
+                            <Link
+                                href={`/admin/email/templates/edit?hackathonId=${selectedHackathonId}`}
+                            >
+                                <Button
+                                    variant="brand"
+                                    hierarchy="primary"
+                                    size="cozy"
+                                    className="w-full sm:w-auto"
+                                >
+                                    Create Template
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+                <div className="py-10 text-center">
+                    <p className="text-lg">
+                        No email templates found for this hackathon.
+                    </p>
+                    <div className="border-caution-500/50 bg-caution-500/10 mx-auto mt-6 max-w-xl rounded-lg border p-4 text-left">
+                        <h2 className="text-caution-200 mb-2 font-semibold">
+                            Missing templates for this hackathon
+                        </h2>
+                        <p className="mb-4 text-sm text-white/60">
+                            Create templates for each email type to cover all
+                            hackathon flows.
+                        </p>
+                        <div className="flex flex-wrap justify-center gap-2">
+                            {ALL_EMAIL_TYPES.map((type) => (
+                                <Link
+                                    key={type}
+                                    href={`/admin/email/templates/edit?hackathonId=${selectedHackathonId}&emailType=${type}`}
+                                >
+                                    <Button
+                                        variant="brand"
+                                        hierarchy="secondary"
+                                        size="cozy"
+                                    >
+                                        + {HACKATHON_EMAIL_TYPE_LABELS[type]}
+                                    </Button>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="w-full py-10">
-            <div className="mb-6 flex items-center justify-between">
+        <div className={pageShellClass}>
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <h1 className="text-2xl font-bold">Email Templates</h1>
-                <Link href="/admin/email/templates/edit">
-                    <Button variant="brand" hierarchy="primary" size="cozy">
-                        Create Template
-                    </Button>
-                </Link>
+                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+                    <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
+                        <span className="shrink-0 text-sm text-white/60">
+                            Hackathon:
+                        </span>
+                        <Select
+                            value={String(selectedHackathonId)}
+                            onValueChange={(value) =>
+                                setSelectedHackathonId(Number(value))
+                            }
+                        >
+                            <SelectTrigger
+                                className={hackathonSelectTriggerClass}
+                            >
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {hackathons.map((h) => (
+                                    <SelectItem key={h.id} value={String(h.id)}>
+                                        {h.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <Link href="/admin/email/templates/styling">
+                            <Button
+                                variant="brand"
+                                hierarchy="secondary"
+                                size="cozy"
+                                className="w-full sm:w-auto"
+                            >
+                                Manage stylings
+                            </Button>
+                        </Link>
+                        <Link
+                            href={`/admin/email/templates/edit?hackathonId=${selectedHackathonId}`}
+                        >
+                            <Button
+                                variant="brand"
+                                hierarchy="primary"
+                                size="cozy"
+                                className="w-full sm:w-auto"
+                            >
+                                Create Template
+                            </Button>
+                        </Link>
+                    </div>
+                </div>
             </div>
 
+            {missingEmailTypes.length > 0 && (
+                <div className="border-caution-500/50 bg-caution-500/10 mb-8 rounded-lg border p-4">
+                    <h2 className="text-caution-200 mb-2 text-lg font-semibold">
+                        Missing templates for this hackathon
+                    </h2>
+                    <p className="mb-4 text-sm text-white/60">
+                        You don&apos;t have an email template for these types
+                        yet. Create one to cover all hackathon email flows.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                        {missingEmailTypes.map((type) => (
+                            <Link
+                                key={type}
+                                href={`/admin/email/templates/edit?hackathonId=${selectedHackathonId}&emailType=${type}`}
+                            >
+                                <Button
+                                    variant="brand"
+                                    hierarchy="secondary"
+                                    size="cozy"
+                                >
+                                    + {HACKATHON_EMAIL_TYPE_LABELS[type]}
+                                </Button>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div className="grid gap-6">
-                {templates.map((template) => (
+                {templatesList.map((template) => (
                     <div
                         key={template.id}
                         className="overflow-hidden rounded-lg border border-white/60"
                     >
                         <div
-                            className="flex cursor-pointer items-center justify-between p-4"
+                            className="flex cursor-pointer flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
                             onClick={() => toggleExpand(template.id)}
                         >
-                            <div>
+                            <div className="min-w-0 flex-1">
                                 <h2 className="text-xl font-semibold">
                                     {template.title}
                                 </h2>
                                 <p className="mt-1 text-sm text-white/60">
                                     {template.purpose}
                                 </p>
+                                {template.emailType && (
+                                    <span className="mt-1 inline-block rounded-full bg-white/10 px-2 py-0.5 text-xs">
+                                        {HACKATHON_EMAIL_TYPE_LABELS[
+                                            template.emailType as HackathonEmailType
+                                        ] ?? template.emailType}
+                                    </span>
+                                )}
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex shrink-0 flex-wrap items-center gap-2">
                                 <Link
                                     href={`/admin/email/templates/edit?id=${template.id}`}
+                                    onClick={(e) => e.stopPropagation()}
                                 >
                                     <Button
                                         variant="default"
                                         hierarchy="secondary"
                                         size="cozy"
+                                        className="w-full sm:w-auto"
                                     >
                                         Edit
                                     </Button>
@@ -150,6 +430,7 @@ export default function EmailTemplatesPage() {
                                     variant="danger"
                                     hierarchy="primary"
                                     size="cozy"
+                                    className="w-full sm:w-auto"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         handleDelete(template.id);
@@ -174,7 +455,7 @@ export default function EmailTemplatesPage() {
                                 )}
 
                                 <div>
-                                    <div className="mb-2 flex items-center justify-between">
+                                    <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                         <h3 className="text-sm font-medium text-white/60">
                                             Content
                                         </h3>
@@ -184,6 +465,7 @@ export default function EmailTemplatesPage() {
                                             variant="brand"
                                             hierarchy="tertiary"
                                             size="cozy"
+                                            className="w-full shrink-0 sm:w-auto"
                                         >
                                             {showHighlights
                                                 ? 'Hide Placeholders'
@@ -213,8 +495,8 @@ export default function EmailTemplatesPage() {
                                         </div>
                                     )}
 
-                                    <div className="mt-2 overflow-hidden rounded-md">
-                                        <div className="h-[400px] overflow-auto bg-white">
+                                    <div className="mt-2 min-w-0 overflow-hidden rounded-md">
+                                        <div className="h-[min(50vh,420px)] min-h-[220px] w-full min-w-0 overflow-auto bg-white sm:h-[400px]">
                                             <iframe
                                                 srcDoc={prepareEmailPreview(
                                                     template.content,
@@ -225,10 +507,17 @@ export default function EmailTemplatesPage() {
                                                             detectedPlaceholders[
                                                                 template.id
                                                             ] || [],
+                                                        stylingHtml:
+                                                            template.stylingHtml?.trim() ||
+                                                            undefined,
+                                                        markdownBodyOnly:
+                                                            template.stylingId !=
+                                                                null &&
+                                                            !template.stylingHtml?.trim(),
                                                     }
                                                 )}
                                                 title={`${template.title} Preview`}
-                                                className="h-full w-full border-0"
+                                                className="h-full min-h-[inherit] w-full border-0"
                                                 sandbox="allow-same-origin allow-scripts"
                                             />
                                         </div>
