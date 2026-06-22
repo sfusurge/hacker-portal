@@ -23,7 +23,7 @@ import {
     PaginationState,
 } from '@tanstack/react-table';
 
-import { atom, useSetAtom } from 'jotai';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
 
 import { Input } from '@/components/ui/input';
 import { mkConfig, generateCsv, download } from 'export-to-csv';
@@ -47,6 +47,64 @@ import {
     HACKATHON_EMAIL_TYPE_LABELS,
     type HackathonEmailType,
 } from '@/db/schema/emails';
+import type { InputFormPageData } from '@/components/application_components/types';
+import {
+    applicationToCsvRecord,
+    buildApplicationCsvColumnHeaders,
+    getApplicationExportField,
+    resolveApplicationLinkUrl,
+    shouldRenderApplicationReviewCellAsLink,
+} from '@/lib/applications/applicationReviewExport';
+import { getResponseValue } from '@/lib/admin/submissionExport';
+import {
+    buildApplicationReviewTableColumns,
+    resolveApplicationReviewTableLocationQuestionId,
+} from '@/lib/applications/buildApplicationReviewTableColumns';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
+
+function reviewTableStickyColumnProps(
+    columnIndex: number,
+    options: {
+        showLocationColumn: boolean;
+        selectColWidth: number;
+        teamNameStickyLeftPx: number;
+        variant?: 'header' | 'body';
+    }
+): { styleLeft?: number; stickyClass: string } {
+    const {
+        showLocationColumn,
+        selectColWidth,
+        teamNameStickyLeftPx,
+        variant = 'header',
+    } = options;
+
+    const zIndex = variant === 'body' ? 'z-10' : 'z-20';
+    const bg = variant === 'body' ? 'bg-neutral-800' : 'bg-neutral-900';
+
+    if (columnIndex === 0) {
+        return {
+            stickyClass: `sticky left-0 ${zIndex} ${bg}`,
+        };
+    }
+
+    const teamNameIndex = showLocationColumn ? 2 : 1;
+
+    if (showLocationColumn && columnIndex === 1) {
+        return {
+            styleLeft: selectColWidth,
+            stickyClass: `sticky ${zIndex} ${bg}`,
+        };
+    }
+
+    if (columnIndex === teamNameIndex) {
+        return {
+            styleLeft: teamNameStickyLeftPx,
+            stickyClass: `sticky ${zIndex} ${bg}`,
+        };
+    }
+
+    return { stickyClass: '' };
+}
 
 function emailTypeDisplayLabel(emailType: string | null | undefined): string {
     if (emailType && emailType in HACKATHON_EMAIL_TYPE_LABELS) {
@@ -79,51 +137,16 @@ export type Applicant = {
     members: string[] | null;
     id: number;
     teamName: string | null;
-
-    // Basic Information
     firstName: string;
     lastName: string;
-    pronouns: string;
-    age: string;
     email: string;
     eventLocation?: string;
     eventLocationKey?: string;
-    haveHackathonExperience: string;
-    howHeardAbout: string[];
-    dietaryRestrictions?: string[];
-    tShirtSize: string;
-    resume?: string[];
-    discord: string;
-    instagram?: string;
-    github?: string;
-    linkedin?: string;
-    portfolio?: string;
-    otherLinks?: string;
-
-    // School Information
-    school?: string;
-    schoolEmail?: string;
-    background?: string;
-    yearOfStudy?: string;
-    major: string;
-
-    // Short Answer Questions
-    excitement: string;
-    problemOrSkill: string;
-    dreamProject: string;
-
-    // Sponsors / Agreements
-    shareResume: boolean;
-    acceptMLH: boolean;
-    acceptSFSS: boolean;
-    acceptEmails: boolean;
-    authorizeMLH: boolean;
-    photoRelease: boolean;
     currentStatus: string;
     pendingStatus: string;
     applicationDate: Date;
     lastEmailSent: string;
-
+    response: Record<string, unknown>;
     checkIns: {
         eventId: number;
         eventTitle: string;
@@ -134,6 +157,7 @@ export type Applicant = {
 
 type ReviewApplicationsTableProps = {
     data: Applicant[];
+    applicationQuestionPages: InputFormPageData[];
     applicationCount: number;
     applicationDataMap: Map<number, ApplicationWithTeamInfo>;
     fetchNextPage: () => Promise<void>;
@@ -150,14 +174,98 @@ const csvConfig = mkConfig({
     useKeysAsHeaders: true,
 });
 
+function formatApplicationCellValue(value: unknown): string {
+    if (value == null || value === '') return '—';
+    if (Array.isArray(value)) return value.join(', ');
+    return String(value);
+}
+
+function ApplicationReviewAnswerCell({
+    response,
+    questionId,
+    questionType,
+}: {
+    response: Record<string, unknown>;
+    questionId: string;
+    questionType: string;
+}) {
+    const raw = getResponseValue(response, questionId);
+
+    if (shouldRenderApplicationReviewCellAsLink(questionType)) {
+        const url = resolveApplicationLinkUrl(raw);
+        if (url) {
+            return (
+                <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 underline"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    View
+                </a>
+            );
+        }
+        return <span>—</span>;
+    }
+
+    const display = formatApplicationCellValue(raw);
+    return (
+        <span className="block max-w-full" title={display}>
+            {display}
+        </span>
+    );
+}
+
 export default function ReviewApplicationsTable({
     data,
+    applicationQuestionPages,
     applicationCount,
     applicationDataMap,
     fetchNextPage,
     onRowClick,
     hackathonId,
 }: ReviewApplicationsTableProps) {
+    const hackathon = useAtomValue(hackathonAtom);
+    const showLocationColumn = hackathon.isMultipleLocations === true;
+
+    const locationQuestionId = useMemo(
+        () =>
+            resolveApplicationReviewTableLocationQuestionId(
+                applicationQuestionPages
+            ),
+        [applicationQuestionPages]
+    );
+
+    const questionColumns = useMemo(() => {
+        const cols = buildApplicationReviewTableColumns(
+            applicationQuestionPages
+        );
+        if (!locationQuestionId) return cols;
+        return cols.filter((col) => col.questionId !== locationQuestionId);
+    }, [applicationQuestionPages, locationQuestionId]);
+
+    const dynamicQuestionColumns: ColumnDef<Applicant>[] = useMemo(
+        () =>
+            questionColumns.map((col) => ({
+                id: `q-${col.id}`,
+                header: col.header,
+                size: 200,
+                minSize: 120,
+                enableColumnFilter: true,
+                accessorFn: (row: Applicant) =>
+                    getApplicationExportField(row.response, col.questionId),
+                cell: ({ row }) => (
+                    <ApplicationReviewAnswerCell
+                        response={row.original.response}
+                        questionId={col.questionId}
+                        questionType={col.type}
+                    />
+                ),
+            })),
+        [questionColumns]
+    );
+
     const checkedInInfoColumns: ColumnDef<Applicant>[] =
         data[0]?.checkIns?.map(({ eventTitle, eventId }) => {
             return {
@@ -183,249 +291,156 @@ export default function ReviewApplicationsTable({
             };
         }) ?? [];
 
-    const defaultColumns: ColumnDef<Applicant>[] = [
-        {
-            id: 'select',
-            header: ({ table }) => (
-                <IndeterminateCheckbox
-                    {...{
-                        checked: table.getIsAllRowsSelected(),
-                        indeterminate: table.getIsSomeRowsSelected(),
-                        onChange: table.getToggleAllRowsSelectedHandler(),
-                    }}
-                />
-            ),
-            cell: ({ row }) => (
-                <div className="bg-neutral-800/60">
+    const defaultColumns: ColumnDef<Applicant>[] = useMemo(() => {
+        const columns: ColumnDef<Applicant>[] = [
+            {
+                id: 'select',
+                header: ({ table }) => (
                     <IndeterminateCheckbox
                         {...{
-                            checked: row.getIsSelected(),
-                            disabled: !row.getCanSelect(),
-                            indeterminate: row.getIsSomeSelected(),
-                            onChange: row.getToggleSelectedHandler(),
+                            checked: table.getIsAllRowsSelected(),
+                            indeterminate: table.getIsSomeRowsSelected(),
+                            onChange: table.getToggleAllRowsSelectedHandler(),
                         }}
                     />
-                </div>
-            ),
-            size: 50,
-        },
-        {
-            accessorKey: 'eventLocation',
-            header: 'Loc.',
-            size: 64,
-            minSize: 80,
-            maxSize: 240,
-            cell: (info) => {
-                const v = info.getValue<string>() ?? '';
-                return (
-                    <span className="block max-w-full" title={v}>
-                        {v}
-                    </span>
-                );
+                ),
+                cell: ({ row }) => (
+                    <div className="bg-neutral-800/60">
+                        <IndeterminateCheckbox
+                            {...{
+                                checked: row.getIsSelected(),
+                                disabled: !row.getCanSelect(),
+                                indeterminate: row.getIsSomeSelected(),
+                                onChange: row.getToggleSelectedHandler(),
+                            }}
+                        />
+                    </div>
+                ),
+                size: 50,
             },
-        },
-        {
-            // id: 'teamName',
-            accessorKey: 'teamName',
-            header: 'Team Name',
-            size: 200,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'firstName',
-            header: 'First Name',
-            size: 150,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'lastName',
-            header: 'Last Name',
-            size: 150,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'currentStatus',
-            header: 'Current Status',
-            cell: (info) => {
-                const value = info.getValue<string>();
-                return (
-                    <span
-                        className={`rounded-md px-3 py-0.5 text-xs ${
-                            value === 'Accepted' ||
-                            value === 'Accepted - Pending Payment' ||
-                            value === 'Accepted - RSVP to Confirm'
-                                ? 'bg-success-950 text-success-300'
-                                : value === 'Wait List'
-                                  ? 'bg-yellow-950 text-yellow-300'
-                                  : value === 'Declined'
-                                    ? 'bg-danger-950 text-danger-300'
-                                    : 'bg-neutral-600/30'
-                        }`}
-                    >
-                        {value}
-                    </span>
-                );
+            ...(showLocationColumn
+                ? [
+                      {
+                          accessorKey: 'eventLocation',
+                          header: 'Loc.',
+                          size: 64,
+                          minSize: 80,
+                          maxSize: 240,
+                          cell: (info: { getValue: () => unknown }) => {
+                              const v = (info.getValue() as string) ?? '';
+                              return (
+                                  <span className="block max-w-full" title={v}>
+                                      {v}
+                                  </span>
+                              );
+                          },
+                      } as ColumnDef<Applicant>,
+                  ]
+                : []),
+            {
+                // id: 'teamName',
+                accessorKey: 'teamName',
+                header: 'Team Name',
+                size: 200,
+                minSize: 100,
             },
-            size: 200,
-            minSize: 200,
-            enableColumnFilter: true,
-        },
-        {
-            accessorKey: 'pendingStatus',
-            header: 'Pending Status',
-            cell: (info) => {
-                const value = info.getValue<string>();
-                return (
-                    <span
-                        className={`rounded-md px-3 py-0.5 text-xs ${
-                            value === 'Accepted' ||
-                            value === 'Accepted - Pending Payment' ||
-                            value === 'Accepted - RSVP to Confirm'
-                                ? 'bg-success-950 text-success-300'
-                                : value === 'Wait List'
-                                  ? 'bg-yellow-950 text-yellow-300'
-                                  : value === 'Declined'
-                                    ? 'bg-danger-950 text-danger-300'
-                                    : 'bg-neutral-600/30'
-                        }`}
-                    >
-                        {value}
-                    </span>
-                );
+            {
+                accessorKey: 'firstName',
+                header: 'First Name',
+                size: 150,
+                minSize: 100,
             },
-            size: 150,
-            minSize: 150,
-            enableColumnFilter: true,
-        },
-        {
-            accessorKey: 'lastEmailSent',
-            header: 'Last Email Sent',
-            size: 200,
-            minSize: 150,
-        },
-        {
-            accessorKey: 'applicationDate',
-            header: 'Date',
-            size: 100,
-            minSize: 100,
-            cell: (info) =>
-                dayjs(info.getValue() as Date).format('MM-DD HH:mm'),
-        },
-        {
-            accessorKey: 'email',
-            header: 'Email',
-            size: 225,
-            minSize: 150,
-        },
-        {
-            accessorKey: 'age',
-            header: 'Age',
-            size: 100,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'discord',
-            header: 'Discord',
-            size: 150,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'school',
-            header: 'School',
-            size: 225,
-            minSize: 150,
-        },
-        {
-            accessorKey: 'schoolEmail',
-            header: 'School Email',
-            size: 225,
-            minSize: 150,
-        },
-        {
-            accessorKey: 'major',
-            header: 'Major',
-            size: 200,
-            minSize: 150,
-        },
-        {
-            accessorKey: 'yearOfStudy',
-            header: 'Year',
-            size: 120,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'background',
-            header: 'background',
-            size: 120,
-            minSize: 100,
-        },
-        {
-            accessorKey: 'haveHackathonExperience',
-            header: 'Hackathon Experience',
-            size: 200,
-            minSize: 150,
-            cell: (info) => {
-                const value = info.getValue();
-                return Array.isArray(value) ? value.join(', ') : value || 'N/A';
+            {
+                accessorKey: 'lastName',
+                header: 'Last Name',
+                size: 150,
+                minSize: 100,
             },
-        },
-        {
-            accessorKey: 'howHeardAbout',
-            header: 'How Heard About',
-            size: 200,
-            minSize: 150,
-            cell: (info) => {
-                const value = info.getValue();
-                return Array.isArray(value) ? value.join(', ') : value || 'N/A';
+            {
+                accessorKey: 'currentStatus',
+                header: 'Current Status',
+                cell: (info) => {
+                    const value = info.getValue<string>();
+                    return (
+                        <span
+                            className={`rounded-md px-3 py-0.5 text-xs ${
+                                value === 'Accepted' ||
+                                value === 'Accepted - Pending Payment' ||
+                                value === 'Accepted - RSVP to Confirm'
+                                    ? 'bg-success-950 text-success-300'
+                                    : value === 'Wait List'
+                                      ? 'bg-yellow-950 text-yellow-300'
+                                      : value === 'Declined'
+                                        ? 'bg-danger-950 text-danger-300'
+                                        : 'bg-neutral-600/30'
+                            }`}
+                        >
+                            {value}
+                        </span>
+                    );
+                },
+                size: 200,
+                minSize: 200,
+                enableColumnFilter: true,
             },
-        },
-        {
-            accessorKey: 'dietaryRestrictions',
-            header: 'Dietary Restrictions',
-            size: 200,
-            minSize: 150,
-            filterFn: 'arrIncludes',
-            cell: (info) => {
-                const value = info.getValue();
-                return Array.isArray(value) ? value.join(', ') : value || 'N/A';
+            {
+                accessorKey: 'pendingStatus',
+                header: 'Pending Status',
+                cell: (info) => {
+                    const value = info.getValue<string>();
+                    return (
+                        <span
+                            className={`rounded-md px-3 py-0.5 text-xs ${
+                                value === 'Accepted' ||
+                                value === 'Accepted - Pending Payment' ||
+                                value === 'Accepted - RSVP to Confirm'
+                                    ? 'bg-success-950 text-success-300'
+                                    : value === 'Wait List'
+                                      ? 'bg-yellow-950 text-yellow-300'
+                                      : value === 'Declined'
+                                        ? 'bg-danger-950 text-danger-300'
+                                        : 'bg-neutral-600/30'
+                            }`}
+                        >
+                            {value}
+                        </span>
+                    );
+                },
+                size: 150,
+                minSize: 150,
+                enableColumnFilter: true,
             },
-        },
-        {
-            accessorKey: 'resume',
-            header: 'Resume',
-            size: 200,
-            minSize: 150,
-            enableGlobalFilter: false,
-            enableColumnFilter: false,
-            cell: (info) => {
-                const url: string = ((info.getValue() as string[]) ?? [''])[0];
-
-                return url ? (
-                    <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 underline"
-                    >
-                        View
-                    </a>
-                ) : (
-                    'N/A'
-                );
+            {
+                accessorKey: 'lastEmailSent',
+                header: 'Last Email Sent',
+                size: 200,
+                minSize: 150,
             },
-        },
-        ...checkedInInfoColumns,
-    ];
+            {
+                accessorKey: 'applicationDate',
+                header: 'Date',
+                size: 100,
+                minSize: 100,
+                cell: (info) =>
+                    dayjs(info.getValue() as Date).format('MM-DD HH:mm'),
+            },
+            ...dynamicQuestionColumns,
+            ...checkedInInfoColumns,
+        ];
+        return columns;
+    }, [showLocationColumn, dynamicQuestionColumns, checkedInInfoColumns]);
 
     return (
         <MyTable
             applicationCount={applicationCount}
             applicationDataMap={applicationDataMap}
+            applicationQuestionPages={applicationQuestionPages}
             data={data}
             defaultColumns={defaultColumns}
             fetchNextPage={fetchNextPage}
             onRowClick={onRowClick}
             hackathonId={hackathonId}
+            showLocationColumn={showLocationColumn}
         />
     );
 }
@@ -459,20 +474,22 @@ function MyTable({
     applicationCount,
     data,
     defaultColumns,
-    //toggleSideCard,
+    applicationQuestionPages,
     applicationDataMap,
     fetchNextPage,
     onRowClick,
     hackathonId,
+    showLocationColumn,
 }: {
     applicationCount: number;
     data: Applicant[];
     defaultColumns: ColumnDef<Applicant>[];
-    //toggleSideCard: () => void;
+    applicationQuestionPages: InputFormPageData[];
     applicationDataMap: Map<number, ApplicationWithTeamInfo>;
     fetchNextPage: () => Promise<void>;
     onRowClick?: (app: Applicant, idx: number) => void;
     hackathonId: number;
+    showLocationColumn: boolean;
 }) {
     //const hackathon = useAtomValue(hackathonAtom);
     const utils = trpc.useUtils();
@@ -558,9 +575,15 @@ function MyTable({
     });
 
     const selectColWidth = table.getColumn('select')?.getSize() ?? 50;
-    const eventLocationColWidth =
-        table.getColumn('eventLocation')?.getSize() ?? 64;
+    const eventLocationColWidth = showLocationColumn
+        ? (table.getColumn('eventLocation')?.getSize() ?? 64)
+        : 0;
     const teamNameStickyLeftPx = selectColWidth + eventLocationColWidth;
+    const stickyColumnOptions = {
+        showLocationColumn,
+        selectColWidth,
+        teamNameStickyLeftPx,
+    };
 
     useEffect(() => {
         setSelectedHackathonForEmail(hackathonId);
@@ -685,6 +708,14 @@ function MyTable({
     };
 
     const batchAcceptSelectedByLocation = async (rows: Row<Applicant>[]) => {
+        if (!showLocationColumn) {
+            await batchUpdateApplicants(rows, {
+                status: 'Accepted',
+                pendingStatus: 'Accepted',
+            });
+            return;
+        }
+
         const groups = new Map<StatusEnum, Row<Applicant>[]>();
         for (const row of rows) {
             const pending = getAcceptPendingStatusForEventLocation(
@@ -855,55 +886,48 @@ function MyTable({
 
     const exportExcel = () => {
         const selectedRows = table.getSelectedRowModel().rows;
-        const allCheckInTitles = Array.from(
-            new Set(
-                (data ?? []).flatMap(
-                    (r) => r.checkIns?.map((ci) => ci.eventTitle) ?? []
-                )
-            )
-        );
 
-        const tempData = selectedRows.map(({ original }) => {
-            const { applicationDate, checkIns, ...rest } = original;
-            const checkInColumns = (checkIns ?? []).reduce<
-                Record<string, string>
-            >((acc, ci) => {
-                if (ci?.eventTitle) {
-                    acc[ci.eventTitle] = ci?.checkInTime
-                        ? dayjs(ci.checkInTime).format('MM-DD HH:mm')
-                        : '';
-                }
-                return acc;
-            }, {});
-            for (const title of allCheckInTitles) {
-                if (!(title in checkInColumns)) {
-                    checkInColumns[title] = '';
-                }
-            }
-
-            return {
-                ...rest,
-                applicationDate: dayjs(applicationDate).format('MM-DD HH:mm'),
-                howHeardAbout: original.howHeardAbout?.join(', ') || '',
-                dietaryRestrictions:
-                    original.dietaryRestrictions?.join(', ') || '',
-                resume: original.resume?.join(', ') || '',
-                members: Array.isArray(original.members)
-                    ? original.members.join(', ')
-                    : '',
-                ...checkInColumns,
-            };
-        });
-
-        if (tempData.length === 0) {
+        if (selectedRows.length === 0) {
             alert(
                 'No rows selected. Please select at least one row to export.'
             );
             return;
         }
 
-        const csv = generateCsv(csvConfig)(tempData);
-        download(csvConfig)(csv);
+        const checkInColumns = Array.from(
+            new Map(
+                (data ?? [])
+                    .flatMap((row) => row.checkIns ?? [])
+                    .map((ci) => [
+                        ci.eventId,
+                        { eventId: ci.eventId, eventTitle: ci.eventTitle },
+                    ])
+            ).values()
+        );
+
+        const columnHeaders = buildApplicationCsvColumnHeaders(
+            applicationQuestionPages,
+            checkInColumns,
+            { includeEventLocation: showLocationColumn }
+        );
+
+        const csvData = selectedRows.map(({ original }) =>
+            applicationToCsvRecord(
+                original,
+                applicationQuestionPages,
+                checkInColumns,
+                { includeEventLocation: showLocationColumn }
+            )
+        );
+
+        const config = mkConfig({
+            ...csvConfig,
+            useKeysAsHeaders: false,
+            columnHeaders,
+        });
+
+        const csv = generateCsv(config)(csvData);
+        download(config)(csv);
     };
 
     return (
@@ -943,119 +967,112 @@ function MyTable({
                                 <Fragment key={headerGroup.id}>
                                     <tr>
                                         {headerGroup.headers.map(
-                                            (header, index) => (
-                                                <th
-                                                    key={header.id}
-                                                    colSpan={header.colSpan}
-                                                    style={{
-                                                        width: header.getSize(),
-                                                        minWidth:
-                                                            header.column
-                                                                .columnDef
-                                                                .minSize,
-                                                        ...(index === 1
-                                                            ? {
-                                                                  left: selectColWidth,
-                                                              }
-                                                            : {}),
-                                                        ...(index === 2
-                                                            ? {
-                                                                  left: teamNameStickyLeftPx,
-                                                              }
-                                                            : {}),
-                                                    }}
-                                                    className={`relative overflow-hidden px-4 py-4 text-sm overflow-ellipsis ${
-                                                        index === 0
-                                                            ? 'sticky left-0 z-20 bg-neutral-900' // Checkbox
-                                                            : index === 1
-                                                              ? 'sticky z-20 bg-neutral-900' // Event Location — left from selectColWidth
-                                                              : index === 2
-                                                                ? 'sticky z-20 bg-neutral-900' // Team Name — left from column widths
-                                                                : ''
-                                                    }`}
-                                                    onClick={
-                                                        header.column.getCanMultiSort()
-                                                            ? header.column.getToggleSortingHandler()
-                                                            : undefined
-                                                    }
-                                                >
-                                                    {header.isPlaceholder
-                                                        ? null
-                                                        : flexRender(
-                                                              header.column
-                                                                  .columnDef
-                                                                  .header,
-                                                              header.getContext()
-                                                          )}
-                                                    {header.column.getCanSort() && (
-                                                        <span>
-                                                            {header.column.getIsSorted() ===
-                                                                'asc' && ' ▲'}
-                                                            {header.column.getIsSorted() ===
-                                                                'desc' && ' ▼'}
-                                                            {header.column.getIsSorted() ===
-                                                                false && ' -'}
-                                                        </span>
-                                                    )}
-                                                    {header.column.getCanResize() && (
-                                                        <div
-                                                            onMouseDown={header.getResizeHandler()}
-                                                            onTouchStart={header.getResizeHandler()}
-                                                            className={`absolute top-0 right-0 bottom-0 w-2 cursor-col-resize ${
-                                                                header.column.getIsResizing()
-                                                                    ? 'bg-gray-500'
-                                                                    : ''
-                                                            }`}
-                                                            style={{
-                                                                zIndex: 50,
-                                                            }}
-                                                        ></div>
-                                                    )}
-                                                </th>
-                                            )
+                                            (header, index) => {
+                                                const sticky =
+                                                    reviewTableStickyColumnProps(
+                                                        index,
+                                                        stickyColumnOptions
+                                                    );
+                                                return (
+                                                    <th
+                                                        key={header.id}
+                                                        colSpan={header.colSpan}
+                                                        style={{
+                                                            width: header.getSize(),
+                                                            minWidth:
+                                                                header.column
+                                                                    .columnDef
+                                                                    .minSize,
+                                                            ...(sticky.styleLeft !=
+                                                            null
+                                                                ? {
+                                                                      left: sticky.styleLeft,
+                                                                  }
+                                                                : {}),
+                                                        }}
+                                                        className={`relative overflow-hidden px-4 py-4 text-sm overflow-ellipsis ${sticky.stickyClass}`}
+                                                        onClick={
+                                                            header.column.getCanMultiSort()
+                                                                ? header.column.getToggleSortingHandler()
+                                                                : undefined
+                                                        }
+                                                    >
+                                                        {header.isPlaceholder
+                                                            ? null
+                                                            : flexRender(
+                                                                  header.column
+                                                                      .columnDef
+                                                                      .header,
+                                                                  header.getContext()
+                                                              )}
+                                                        {header.column.getCanSort() && (
+                                                            <span>
+                                                                {header.column.getIsSorted() ===
+                                                                    'asc' &&
+                                                                    ' ▲'}
+                                                                {header.column.getIsSorted() ===
+                                                                    'desc' &&
+                                                                    ' ▼'}
+                                                                {header.column.getIsSorted() ===
+                                                                    false &&
+                                                                    ' -'}
+                                                            </span>
+                                                        )}
+                                                        {header.column.getCanResize() && (
+                                                            <div
+                                                                onMouseDown={header.getResizeHandler()}
+                                                                onTouchStart={header.getResizeHandler()}
+                                                                className={`absolute top-0 right-0 bottom-0 w-2 cursor-col-resize ${
+                                                                    header.column.getIsResizing()
+                                                                        ? 'bg-gray-500'
+                                                                        : ''
+                                                                }`}
+                                                                style={{
+                                                                    zIndex: 50,
+                                                                }}
+                                                            ></div>
+                                                        )}
+                                                    </th>
+                                                );
+                                            }
                                         )}
                                     </tr>
                                     <tr>
                                         {headerGroup.headers.map(
-                                            (header, index) => (
-                                                <th
-                                                    key={header.id}
-                                                    style={{
-                                                        width: header.getSize(),
-                                                        minWidth:
-                                                            header.column
-                                                                .columnDef
-                                                                .minSize,
-                                                        ...(index === 1
-                                                            ? {
-                                                                  left: selectColWidth,
-                                                              }
-                                                            : {}),
-                                                        ...(index === 2
-                                                            ? {
-                                                                  left: teamNameStickyLeftPx,
-                                                              }
-                                                            : {}),
-                                                    }}
-                                                    className={`relative px-4 py-2 text-sm ${
-                                                        index === 0
-                                                            ? 'sticky left-0 z-20 bg-neutral-900'
-                                                            : index === 1
-                                                              ? 'sticky z-20 bg-neutral-900'
-                                                              : index === 2
-                                                                ? 'sticky z-20 bg-neutral-900'
-                                                                : ''
-                                                    }`}
-                                                >
-                                                    {header.column.getCanFilter() ? (
-                                                        <FilterColumn
-                                                            column={
+                                            (header, index) => {
+                                                const sticky =
+                                                    reviewTableStickyColumnProps(
+                                                        index,
+                                                        stickyColumnOptions
+                                                    );
+                                                return (
+                                                    <th
+                                                        key={header.id}
+                                                        style={{
+                                                            width: header.getSize(),
+                                                            minWidth:
                                                                 header.column
-                                                            }
-                                                        />
-                                                    ) : null}
-                                                </th>
-                                            )
+                                                                    .columnDef
+                                                                    .minSize,
+                                                            ...(sticky.styleLeft !=
+                                                            null
+                                                                ? {
+                                                                      left: sticky.styleLeft,
+                                                                  }
+                                                                : {}),
+                                                        }}
+                                                        className={`relative px-4 py-2 text-sm ${sticky.stickyClass}`}
+                                                    >
+                                                        {header.column.getCanFilter() ? (
+                                                            <FilterColumn
+                                                                column={
+                                                                    header.column
+                                                                }
+                                                            />
+                                                        ) : null}
+                                                    </th>
+                                                );
+                                            }
                                         )}
                                     </tr>
                                 </Fragment>
@@ -1084,54 +1101,54 @@ function MyTable({
                                     >
                                         {row
                                             .getVisibleCells()
-                                            .map((cell, index) => (
-                                                <td
-                                                    key={cell.id}
-                                                    style={{
-                                                        width: cell.column.getSize(),
-                                                        minWidth:
-                                                            cell.column
-                                                                .columnDef
-                                                                .minSize,
-                                                        ...(index === 1
-                                                            ? {
-                                                                  left: selectColWidth,
-                                                              }
-                                                            : {}),
-                                                        ...(index === 2
-                                                            ? {
-                                                                  left: teamNameStickyLeftPx,
-                                                              }
-                                                            : {}),
-                                                    }}
-                                                    className={`border-b border-neutral-600/30 bg-neutral-800 px-4 py-4 text-sm ${
-                                                        index === 0
-                                                            ? 'sticky left-0 z-10 bg-neutral-800' // Checkbox
-                                                            : index === 1
-                                                              ? 'sticky z-10 bg-neutral-800' // Event Location
-                                                              : index === 2
-                                                                ? 'sticky z-10 bg-neutral-800' // Team Name
-                                                                : ''
-                                                    }`}
-                                                >
-                                                    <div
-                                                        className="truncate"
+                                            .map((cell, index) => {
+                                                const sticky =
+                                                    reviewTableStickyColumnProps(
+                                                        index,
+                                                        {
+                                                            ...stickyColumnOptions,
+                                                            variant: 'body',
+                                                        }
+                                                    );
+                                                return (
+                                                    <td
+                                                        key={cell.id}
                                                         style={{
-                                                            whiteSpace:
-                                                                'nowrap',
-                                                            overflow: 'hidden',
-                                                            textOverflow:
-                                                                'ellipsis',
+                                                            width: cell.column.getSize(),
+                                                            minWidth:
+                                                                cell.column
+                                                                    .columnDef
+                                                                    .minSize,
+                                                            ...(sticky.styleLeft !=
+                                                            null
+                                                                ? {
+                                                                      left: sticky.styleLeft,
+                                                                  }
+                                                                : {}),
                                                         }}
+                                                        className={`border-b border-neutral-600/30 bg-neutral-800 px-4 py-4 text-sm ${sticky.stickyClass}`}
                                                     >
-                                                        {flexRender(
-                                                            cell.column
-                                                                .columnDef.cell,
-                                                            cell.getContext()
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            ))}
+                                                        <div
+                                                            className="truncate"
+                                                            style={{
+                                                                whiteSpace:
+                                                                    'nowrap',
+                                                                overflow:
+                                                                    'hidden',
+                                                                textOverflow:
+                                                                    'ellipsis',
+                                                            }}
+                                                        >
+                                                            {flexRender(
+                                                                cell.column
+                                                                    .columnDef
+                                                                    .cell,
+                                                                cell.getContext()
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                );
+                                            })}
                                     </tr>
                                 </Fragment>
                             ))}

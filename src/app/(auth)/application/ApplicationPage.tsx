@@ -50,7 +50,7 @@ const applicationWithLocalAtom = atom(
             return unReadyValue;
         }
 
-        const profileDefaults = getApplicationAutofillFromUser(user);
+        const profileDefaults = getApplicationAutofillFromUser(user, pages);
         const hasSavedDraft =
             local.hackathonId !== -1 &&
             local.hackathonId === hackathon.id &&

@@ -3,6 +3,8 @@ import { FullPageInfo } from '@/components/ui/FullPageInfo';
 import { stripe } from '@/lib/stripe';
 import { JSX } from 'react';
 import { createCaller } from '@/server/appRouter';
+import type { InputFormPageData } from '@/components/application_components/types';
+import { getApplicationResponseString } from '@/lib/applications/applicationReviewExport';
 
 interface PageProps {
     searchParams: Promise<{ payment_intent?: string }>;
@@ -73,15 +75,27 @@ export default async function ResultPage(
                                         (application.response as Record<
                                             string,
                                             unknown
-                                        > | null) ?? null;
+                                        > | null) ?? {};
+                                    const hackathons =
+                                        await trpcClient.hackathons.getHackathons();
+                                    const hackathon = hackathons.find(
+                                        (h) => h.id === application.hackathonId
+                                    );
+                                    const applicationQuestionPages =
+                                        (hackathon?.applicationQuestions ??
+                                            []) as InputFormPageData[];
                                     const firstName =
-                                        typeof response?.['5'] === 'string'
-                                            ? response['5']
-                                            : 'Friend';
+                                        getApplicationResponseString(
+                                            response,
+                                            applicationQuestionPages,
+                                            'firstName'
+                                        ) || 'Friend';
                                     const lastName =
-                                        typeof response?.['6'] === 'string'
-                                            ? response['6']
-                                            : '';
+                                        getApplicationResponseString(
+                                            response,
+                                            applicationQuestionPages,
+                                            'lastName'
+                                        );
                                     const sendResult =
                                         await trpcClient.emails.sendEmail({
                                             templateId: rsvpTemplate.id,

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { connection, NextRequest, NextResponse } from 'next/server';
 import { databaseClient } from '@/db/client';
 import { applications } from '@/db/schema/applications';
 import { eq, and, or } from 'drizzle-orm';
@@ -61,10 +61,13 @@ function getColorByIndex(index: number): string {
 }
 
 export async function GET(request: NextRequest) {
-    try {
-        const { searchParams } = new URL(request.url);
-        const hackathonId = parseInt(searchParams.get('hackathonId') || '1');
+    await connection();
 
+    const hackathonId = parseInt(
+        request.nextUrl.searchParams.get('hackathonId') || '1'
+    );
+
+    try {
         const applications_result = await databaseClient
             .select({
                 userId: applications.userId,

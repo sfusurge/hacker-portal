@@ -1,4 +1,4 @@
-import { getUserData } from '@/server/routers/usersRouter';
+import { getCachedUserData } from '@/server/getCachedUserData';
 import { redirect } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ExclamationCircleIcon } from '@heroicons/react/24/solid';
@@ -10,7 +10,7 @@ export default async function SponsorPage({
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
     const params = await searchParams;
-    const userData = await getUserData();
+    const userData = await getCachedUserData();
 
     if (!userData) {
         redirect('/login');

@@ -1,21 +1,26 @@
-import { ReactNode } from 'react';
+import { ReactNode, Suspense } from 'react';
 import { HackathonOnlyProvider } from '@/app/(auth)/ClientContext';
 import ClientLayoutWrapper from '@/app/(auth)/ClientLayoutWrapper';
+import AuthLayoutFallback from '@/app/(auth)/AuthLayoutFallback';
 import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
-import { getUserData } from '@/server/routers/usersRouter';
+import { getCachedUserData } from '@/server/getCachedUserData';
 import { ProjectsRouteProvider } from '@/components/projects/ProjectsRouteContext';
 import { SPARKJAM_PROJECTS_PATH } from '@/lib/projects/projectsPaths';
 import MobileTopNav from '@/components/sidebar/MobileTopNav';
 import SideBar from '@/components/sidebar/SideBar';
 
-export default async function SparkjamProjectsLayout({
-    children,
-}: {
-    children: ReactNode;
-}) {
+export default function ProjectsLayout({ children }: { children: ReactNode }) {
+    return (
+        <Suspense fallback={<AuthLayoutFallback />}>
+            <ProjectsLayoutContent>{children}</ProjectsLayoutContent>
+        </Suspense>
+    );
+}
+
+async function ProjectsLayoutContent({ children }: { children: ReactNode }) {
     const [hackathon, userData] = await Promise.all([
         getCachedActiveHackathon(),
-        getUserData(),
+        getCachedUserData(),
     ]);
 
     return (

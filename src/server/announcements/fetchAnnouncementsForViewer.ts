@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import { cache } from 'react';
 import { databaseClient } from '@/db/client';
 import {
@@ -6,6 +7,8 @@ import {
     announcements,
 } from '@/db/schema/announcements';
 import { applications } from '@/db/schema/applications';
+import { hackathons } from '@/db/schema/hackathons';
+import type { InputFormPageData } from '@/components/application_components/types';
 import { getApplicationEventLocationKey } from '@/lib/applicationEventLocation';
 import {
     and,
@@ -34,8 +37,12 @@ async function getViewerAnnouncementLocationKeyUncached(
     userId: number
 ): Promise<string | null> {
     const [app] = await databaseClient
-        .select({ response: applications.response })
+        .select({
+            response: applications.response,
+            applicationQuestions: hackathons.applicationQuestions,
+        })
         .from(applications)
+        .innerJoin(hackathons, eq(applications.hackathonId, hackathons.id))
         .where(
             and(
                 eq(applications.hackathonId, hackathonId),
@@ -45,19 +52,26 @@ async function getViewerAnnouncementLocationKeyUncached(
         .limit(1);
     if (!app) return null;
     return getApplicationEventLocationKey(
-        app.response as Record<string, unknown>
+        app.response as Record<string, unknown>,
+        app.applicationQuestions as InputFormPageData[]
     );
+}
+
+async function getViewerAnnouncementLocationKeyWithPrivateCache(
+    hackathonId: number,
+    userId: number | null
+): Promise<string | null> {
+    'use cache: private';
+    cacheTag(`announcement-location-${hackathonId}-${userId ?? 'guest'}`);
+    cacheLife({ stale: 30 });
+
+    if (userId == null) return null;
+    return getViewerAnnouncementLocationKeyUncached(hackathonId, userId);
 }
 
 // deduped within a single RSC request
 export const getViewerAnnouncementLocationKey = cache(
-    async (
-        hackathonId: number,
-        userId: number | null
-    ): Promise<string | null> => {
-        if (userId == null) return null;
-        return getViewerAnnouncementLocationKeyUncached(hackathonId, userId);
-    }
+    getViewerAnnouncementLocationKeyWithPrivateCache
 );
 
 function announcementVisibilityCondition(viewerLocationKey: string | null) {

@@ -15,11 +15,14 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { getFileSize } from '@/components/ui/FileUpload/FileUpload';
 import { submitProject } from '@/lib/blobs';
+import { isSubmissionWindowOpen } from '@/lib/submissionWindow';
 import { trpc } from '@/trpc/client';
 import ProjectSubmissionSuccess from '@/app/(auth)/(team)/teamComponents/submit/ProjectSubmissionSuccess';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+
 const localAppResponseAtom = atomWithStorage('submit_response', {
     hackathonId: -1,
     email: '',
@@ -90,6 +93,8 @@ export function SubmitFormCard({
 }) {
     const submitData = useAtomValue(submitWithLocalAtom);
     const setCurrentTeam = useSetAtom(currentTeamAtom);
+    const router = useRouter();
+    const utils = trpc.useUtils();
     const [progressMsg, setProgress] = useState('');
     const [projectSubmitted, setProjectSubmitted] = useState(false);
 
@@ -104,29 +109,55 @@ export function SubmitFormCard({
 
     const submitSubmission = trpc.submissions.submitSubmission.useMutation();
 
-    async function submit() {
-        setProgress('Starting uploads...');
-        const processedPage = await processResponseForServer(
-            submitData.pages,
-            async (filename, file) => {
-                const blob = await submitProject({
-                    fileName: filename,
-                    fileContent: file,
-                    onUploadProgress: (e) => {
-                        setProgress(
-                            `Uploading file: ${file.name}(${getFileSize(file.size)}) ${e.percentage}%`
-                        );
-                    },
-                    contentType: file.type,
-                    teamId,
-                });
-                return blob.url;
-            }
+    function rejectClosedWindow() {
+        router.refresh();
+        throw new Error(
+            'Submissions are only accepted during the open submission window.'
         );
+    }
 
-        setProgress('submitting other responses...');
-        const response = getResponseMap(processedPage);
+    async function isActiveSubmissionWindowOpen() {
+        const activeHackathon =
+            await utils.hackathons.getActiveHackathon.fetch();
+
+        if (!activeHackathon) return false;
+
+        return isSubmissionWindowOpen(
+            Date.now(),
+            activeHackathon.submissionOpen != null
+                ? new Date(activeHackathon.submissionOpen)
+                : null,
+            new Date(activeHackathon.submissionDeadline)
+        );
+    }
+
+    async function submit() {
+        if (!(await isActiveSubmissionWindowOpen())) {
+            rejectClosedWindow();
+        }
+
         try {
+            setProgress('Starting uploads...');
+            const processedPage = await processResponseForServer(
+                submitData.pages,
+                async (filename, file) => {
+                    const blob = await submitProject({
+                        fileName: filename,
+                        fileContent: file,
+                        onUploadProgress: (e) => {
+                            setProgress(
+                                `Uploading file: ${file.name}(${getFileSize(file.size)}) ${e.percentage}%`
+                            );
+                        },
+                        contentType: file.type,
+                        teamId,
+                    });
+                    return blob.url;
+                }
+            );
+
+            setProgress('submitting other responses...');
+            const response = getResponseMap(processedPage);
             await submitSubmission.mutateAsync({
                 teamId,
                 hackathonId: submitData.id,
@@ -136,7 +167,17 @@ export function SubmitFormCard({
             setProjectSubmitted(true);
         } catch (error) {
             console.error('Failed to submit project:', error);
-            setProgress('Failed to submit project. Please try again.');
+
+            if (!(await isActiveSubmissionWindowOpen())) {
+                rejectClosedWindow();
+            }
+
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to submit project. Please try again.';
+            setProgress(message);
+            throw error instanceof Error ? error : new Error(message);
         }
     }
 

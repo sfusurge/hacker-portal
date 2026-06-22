@@ -1,10 +1,18 @@
-import { ReactNode } from 'react';
+import { ReactNode, Suspense } from 'react';
 
 import { notFound } from 'next/navigation';
-import { getUserData } from '@/server/routers/usersRouter';
+import { getCachedUserData } from '@/server/getCachedUserData';
 
-export default async function Layout({ children }: { children: ReactNode }) {
-    const userData = await getUserData();
+export default function Layout({ children }: { children: ReactNode }) {
+    return (
+        <Suspense fallback={null}>
+            <SponsorRoleGate>{children}</SponsorRoleGate>
+        </Suspense>
+    );
+}
+
+async function SponsorRoleGate({ children }: { children: ReactNode }) {
+    const userData = await getCachedUserData();
     if (userData?.userRole !== 'sponsor' && userData?.userRole !== 'admin') {
         return notFound();
     }

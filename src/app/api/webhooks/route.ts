@@ -2,6 +2,8 @@ import type { Stripe } from 'stripe';
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createCaller } from '@/server/appRouter';
+import type { InputFormPageData } from '@/components/application_components/types';
+import { getApplicationResponseString } from '@/lib/applications/applicationReviewExport';
 
 export async function POST(req: Request) {
     let event: Stripe.Event;
@@ -129,14 +131,30 @@ export async function POST(req: Request) {
                             );
 
                         if (rsvpTemplate) {
-                            // Extract name from application response if possible
                             const response =
                                 (application.response as Record<
                                     string,
-                                    any
-                                > | null) ?? null;
-                            const firstName = response?.['5'] ?? 'Friend';
-                            const lastName = response?.['6'] ?? '';
+                                    unknown
+                                > | null) ?? {};
+                            const hackathons =
+                                await trpcClient.hackathons.getHackathons();
+                            const hackathon = hackathons.find(
+                                (h) => h.id === application.hackathonId
+                            );
+                            const applicationQuestionPages =
+                                (hackathon?.applicationQuestions ??
+                                    []) as InputFormPageData[];
+                            const firstName =
+                                getApplicationResponseString(
+                                    response,
+                                    applicationQuestionPages,
+                                    'firstName'
+                                ) || 'Friend';
+                            const lastName = getApplicationResponseString(
+                                response,
+                                applicationQuestionPages,
+                                'lastName'
+                            );
 
                             const sendResult =
                                 await trpcClient.emails.sendEmail({
