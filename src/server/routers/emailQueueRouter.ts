@@ -1,8 +1,24 @@
 import { publicProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
-import { emailQueue } from '@/db/schema/emails';
+import { emailQueue, emailTemplates } from '@/db/schema/emails';
+import { hackathons } from '@/db/schema/hackathons';
+import { UserRoleEnum } from '@/db/schema/users/users';
+import { UnauthorizedError, InternalServerError } from '../exceptions';
+import { getUserData } from '@/server/routers/usersRouter';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
+
+async function assertAdmin() {
+    const user = await getUserData();
+    if (!user) throw new InternalServerError('User not authenticated');
+    if (user.userRole !== UserRoleEnum.admin) {
+        throw new UnauthorizedError({
+            email: user.email,
+            role: user.userRole,
+        });
+    }
+    return user;
+}
 
 export const emailQueueRouter = router({
     queueBatchEmails: publicProcedure
@@ -49,6 +65,8 @@ export const emailQueueRouter = router({
             })
         )
         .query(async ({ input }) => {
+            await assertAdmin();
+
             let query = databaseClient.select().from(emailQueue);
 
             if (input.hackathonId) {
@@ -66,6 +84,51 @@ export const emailQueueRouter = router({
             const failed = allJobs.filter((j) => j.status === 'failed').length;
 
             return { pending, sent, failed, total: allJobs.length };
+        }),
+
+    getQueueItems: publicProcedure
+        .input(
+            z.object({
+                hackathonId: z.number().optional(),
+                status: z.enum(['pending', 'sent', 'failed']).optional(),
+            })
+        )
+        .query(async ({ input }) => {
+            await assertAdmin();
+
+            const filters = [];
+            if (input.hackathonId) {
+                filters.push(eq(emailQueue.hackathonId, input.hackathonId));
+            }
+            if (input.status) {
+                filters.push(eq(emailQueue.status, input.status));
+            }
+
+            const rows = await databaseClient
+                .select({
+                    id: emailQueue.id,
+                    email: emailQueue.email,
+                    firstName: emailQueue.firstName,
+                    lastName: emailQueue.lastName,
+                    emailType: emailQueue.emailType,
+                    status: emailQueue.status,
+                    errorMessage: emailQueue.errorMessage,
+                    failedCount: emailQueue.failedCount,
+                    createdAt: emailQueue.createdAt,
+                    sentAt: emailQueue.sentAt,
+                    templateTitle: emailTemplates.title,
+                    hackathonName: hackathons.name,
+                })
+                .from(emailQueue)
+                .leftJoin(
+                    emailTemplates,
+                    eq(emailQueue.templateId, emailTemplates.id)
+                )
+                .leftJoin(hackathons, eq(emailQueue.hackathonId, hackathons.id))
+                .where(filters.length > 0 ? and(...filters) : undefined)
+                .orderBy(desc(emailQueue.createdAt));
+
+            return rows;
         }),
 });
 

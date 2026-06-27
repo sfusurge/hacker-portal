@@ -147,6 +147,16 @@ export default function EmailTemplatesPage() {
                 <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <h1 className="text-2xl font-bold">Email Templates</h1>
                     <div className="flex flex-wrap gap-2">
+                        <Link href="/admin/email/queue">
+                            <Button
+                                variant="brand"
+                                hierarchy="secondary"
+                                size="cozy"
+                                className="w-full sm:w-auto"
+                            >
+                                View queue
+                            </Button>
+                        </Link>
                         <Link href="/admin/email/templates/styling">
                             <Button
                                 variant="brand"
@@ -244,6 +254,16 @@ export default function EmailTemplatesPage() {
                             </Select>
                         </div>
                         <div className="flex flex-wrap gap-2">
+                            <Link href="/admin/email/queue">
+                                <Button
+                                    variant="brand"
+                                    hierarchy="secondary"
+                                    size="cozy"
+                                    className="w-full sm:w-auto"
+                                >
+                                    View queue
+                                </Button>
+                            </Link>
                             <Link href="/admin/email/templates/styling">
                                 <Button
                                     variant="brand"
@@ -333,6 +353,16 @@ export default function EmailTemplatesPage() {
                         </Select>
                     </div>
                     <div className="flex flex-wrap gap-2">
+                        <Link href="/admin/email/queue">
+                            <Button
+                                variant="brand"
+                                hierarchy="secondary"
+                                size="cozy"
+                                className="w-full sm:w-auto"
+                            >
+                                View queue
+                            </Button>
+                        </Link>
                         <Link href="/admin/email/templates/styling">
                             <Button
                                 variant="brand"
