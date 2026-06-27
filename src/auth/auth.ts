@@ -1,6 +1,7 @@
 import NextAuth from 'next-auth';
+import type { AdapterUser } from 'next-auth/adapters';
 import { user } from '@/db/schema/users/users';
-import { authConfig } from './authConfig';
+import { authAdapter, authConfig } from './authConfig';
 import NodeMailerProvider from 'next-auth/providers/nodemailer';
 
 import { eq } from 'drizzle-orm';
@@ -8,8 +9,33 @@ import { databaseClient } from '@/db/client';
 import { transporter } from '@/server/nodemailerTransporter';
 import { addUser } from '@/server/routers/usersRouter';
 
+const adapter = {
+    ...authAdapter,
+    async createUser(data: AdapterUser) {
+        const created = await addUser({
+            email: data.email,
+            image: data.image ?? undefined,
+            name: data.name ?? undefined,
+            emailVerified: data.emailVerified ?? undefined,
+        });
+
+        if (!created) {
+            throw new Error('Failed to create user');
+        }
+
+        return {
+            id: String(created.id),
+            email: created.email,
+            emailVerified: data.emailVerified ?? null,
+            name: data.name ?? null,
+            image: created.image ?? data.image ?? null,
+        };
+    },
+};
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
     ...authConfig,
+    adapter,
     providers: [
         ...authConfig.providers,
         NodeMailerProvider({

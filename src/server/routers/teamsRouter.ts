@@ -16,6 +16,7 @@ import {
     and,
     getTableColumns,
     asc,
+    max,
     TablesRelationalConfig,
     sql,
     inArray,
@@ -53,18 +54,10 @@ export const teamsRouter = router({
             const team = await databaseClient.transaction(async (tx) => {
                 await checkIfUserInExistingTeam(tx, user.id, input.hackathonId);
 
-                // get next index in id sequence
-                const [_index] = await tx.execute(
-                    sql`select (last_value + 1) as "last_value" from teams_id_seq`
-                );
-                const index = parseInt(`${_index['last_value']}`, 10);
-
-                // fetch id failed
-                if (isNaN(index)) {
-                    throw new InternalServerError(
-                        `create team failed, fetch index failed: ${index}`
-                    );
-                }
+                const [row] = await tx
+                    .select({ nextId: max(teams.id) })
+                    .from(teams);
+                const index = (row?.nextId ?? 0) + 1;
 
                 const displayId = getSixDigitId(index, teamRNGParams);
 

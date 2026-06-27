@@ -1,4 +1,11 @@
 import { databaseClient } from '@/db/client';
+import {
+    accounts,
+    authenticators,
+    sessions,
+    verificationTokens,
+} from '@/db/schema/auth';
+import { user } from '@/db/schema/users/users';
 
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import { NextAuthConfig } from 'next-auth';
@@ -8,8 +15,16 @@ import GithubProvider from 'next-auth/providers/github';
 import DiscordProvider from 'next-auth/providers/discord';
 import { FigmaProvider } from './FigmaProvider';
 
+export const authAdapter = DrizzleAdapter(databaseClient, {
+    usersTable: user,
+    accountsTable: accounts,
+    sessionsTable: sessions,
+    verificationTokensTable: verificationTokens,
+    authenticatorsTable: authenticators,
+} as never);
+
 export const authConfig = {
-    adapter: DrizzleAdapter(databaseClient),
+    adapter: authAdapter,
     trustHost: true,
     secret: process.env.NEXTAUTH_SECRET,
     providers: [

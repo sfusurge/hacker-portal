@@ -7,7 +7,7 @@ import {
     updateUserSchema,
     user,
 } from '@/db/schema/users/users';
-import { eq, or, sql } from 'drizzle-orm';
+import { eq, max, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { UnauthorizedError } from '../exceptions';
 import { auth, SessionType } from '@/auth/auth';
@@ -166,21 +166,9 @@ export type UserData = Awaited<ReturnType<typeof getUserData>>;
 export async function addUser(vals: z.infer<typeof insertUserSchema>) {
     // create the user, and catch their id
     const res = await databaseClient.transaction(async (tx) => {
-        const [_index] = await tx.execute(
-            sql`select (last_value + 1) as "last_value" from user_id_seq`
-        );
-        const index = parseInt(`${_index['last_value']}`, 10);
+        const [row] = await tx.select({ nextId: max(user.id) }).from(user);
+        const index = (row?.nextId ?? 0) + 1;
         console.log('creating user at index: ', index);
-
-        if (isNaN(index)) {
-            // update failed.
-            console.log(`Insert user failed, index fetch failed: ${index}`);
-            console.log(
-                await tx.execute(sql`select (last_value + 1) from user_id_seq`)
-            );
-
-            return undefined;
-        }
 
         const displayId = getSixDigitId(index, userRNGParams);
 
