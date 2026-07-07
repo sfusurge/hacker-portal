@@ -8,7 +8,7 @@ import { FormTextInput } from '@/components/ui/input/input';
 import { Label } from '@/components/ui/label/label';
 import { useEffect, useRef, useState } from 'react';
 import { redirect, useSearchParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useAuthSession } from '@/auth/auth-client';
 import { updateUserInfo } from './userinfo_action';
 import { Input } from '@/components/ui/input/input';
 
@@ -17,19 +17,23 @@ import { uploadFileToBlob } from '@/utils/blobHelper';
 
 export default function UserInfoForm() {
     const searchParams = useSearchParams();
-    const session = useSession();
+    const session = useAuthSession();
     const updateUserWithRedirect = updateUserInfo.bind(
         null,
         searchParams.get('from') ?? undefined
     );
 
     useEffect(() => {
-        if (!session) {
+        if (session.status === 'loading') {
+            return;
+        }
+
+        if (session.status === 'unauthenticated') {
             redirect(
                 `/login${searchParams.get('from') ? '?from=' + encodeURIComponent(searchParams.get('from')!) : ''}`
             );
         }
-    }, [session]);
+    }, [session.status, searchParams]);
 
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');

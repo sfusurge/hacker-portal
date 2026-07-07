@@ -1,6 +1,6 @@
 'use client';
 
-import { signOut, useSession } from 'next-auth/react';
+import { authClient, useAuthSession } from '@/auth/auth-client';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { FullPageInfo } from '@/components/ui/FullPageInfo';
@@ -9,7 +9,7 @@ import { resetPostHogUser } from '@/lib/analytics/posthog';
 // this page is to force out signout client side (and delete cookie)
 // such as when there is a live session that doesn't refer to a valid user in db.
 export default function SignOutPage() {
-    const session = useSession();
+    const session = useAuthSession();
     const router = useRouter();
 
     useEffect(() => {
@@ -18,7 +18,7 @@ export default function SignOutPage() {
         resetPostHogUser();
 
         if (session.status === 'authenticated') {
-            void signOut({ redirect: false }).then(() => {
+            void authClient.signOut().then(() => {
                 router.replace('/login');
             });
         } else {

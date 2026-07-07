@@ -204,7 +204,7 @@ export function ActiveHackathonCardContent({
                                 ? `${payloadName} is currently closed for applications. Visit the event page for the latest updates.`
                                 : applicationSubmitted
                                   ? getMessage(status, payloadName)
-                                  : 'Applications are open! Apply now to get your shot at participating in our creative design jam!'}
+                                  : `Applications are open! Apply now to get your shot at participating in ${payloadName}!`}
                         </p>
 
                         {/* {isAcceptedStatus && ticketQr && (

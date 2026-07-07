@@ -17,7 +17,7 @@ import { HomeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { QrCodeIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
-import { signOut } from 'next-auth/react';
+import { authClient } from '@/auth/auth-client';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
 import React from 'react';
@@ -499,7 +499,7 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                     setProfilePopoverOpen(
                                                         false
                                                     );
-                                                    await signOut();
+                                                    await authClient.signOut();
                                                     if (
                                                         typeof window !==
                                                         'undefined'

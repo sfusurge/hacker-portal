@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { DM_Mono, Inter } from 'next/font/google';
 import './globals.css';
 import TRPCProvider from '@/trpc/Provider';
-import { SessionProvider } from 'next-auth/react';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Toaster } from '@/components/ui/toaster';
 import { Provider as JotaiProivder } from 'jotai';
@@ -40,16 +39,14 @@ export default function RootLayout({
         <html lang="en" className={dmMono.variable}>
             <link rel="icon" href="/favicon.png" sizes="any" />
             <body className={inter.className}>
-                <SessionProvider>
-                    <PostHogProvider>
-                        <TRPCProvider>
-                            <JotaiProivder>
-                                {children}
-                                <Toaster />
-                            </JotaiProivder>
-                        </TRPCProvider>
-                    </PostHogProvider>
-                </SessionProvider>
+                <PostHogProvider>
+                    <TRPCProvider>
+                        <JotaiProivder>
+                            {children}
+                            <Toaster />
+                        </JotaiProivder>
+                    </TRPCProvider>
+                </PostHogProvider>
             </body>
             <GoogleAnalytics gaId="G-99DQSJDLRK" />
         </html>

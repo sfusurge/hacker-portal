@@ -1,4 +1,4 @@
-import { auth, SessionType } from '@/auth/auth';
+import { getSession, SessionType } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
 import { applications } from '@/db/schema/applications';
 import { UserRoleEnum } from '@/db/schema/users/users';
@@ -8,7 +8,7 @@ import { and, eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
-    const session = (await auth()) as SessionType;
+    const session = (await getSession()) as SessionType;
     if (!session?.userId) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
