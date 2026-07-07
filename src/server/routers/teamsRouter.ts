@@ -37,7 +37,7 @@ import { getSixDigitId, teamRNGParams } from '@/lib/PRNG/LCG';
 import { z } from 'zod';
 import { deleteFileFromVercel } from '@/lib/blobs';
 import { getBasicUserInfo, getUserData } from '@/server/routers/usersRouter';
-import { auth } from '@/auth/auth';
+import { getSession } from '@/auth/auth';
 import slugify from '@/utils/slugify';
 import { submissions } from '@/db/schema/submissions';
 
@@ -517,7 +517,7 @@ export async function getTeamData(tid: number) {
 }
 
 export async function getMemberIds(tid: number): Promise<number[]> {
-    const session = await auth();
+    const session = await getSession();
 
     if (!session || !session.user || !session.user.email) {
         return [];

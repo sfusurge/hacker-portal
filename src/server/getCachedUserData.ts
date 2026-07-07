@@ -1,6 +1,6 @@
 import { cacheLife, cacheTag } from 'next/cache';
 import { cache } from 'react';
-import { auth, SessionType } from '@/auth/auth';
+import { getSession, SessionType } from '@/auth/auth';
 import { fetchUserRecordById } from '@/server/routers/usersRouter';
 
 async function getUserDataWithPrivateCache() {
@@ -8,7 +8,7 @@ async function getUserDataWithPrivateCache() {
     cacheTag('user-data');
     cacheLife({ stale: 30 });
 
-    const session = (await auth()) as SessionType;
+    const session = (await getSession()) as SessionType;
 
     if (!session || !session.userId) {
         return undefined;
@@ -27,7 +27,7 @@ async function getBasicUserInfoWithPrivateCache() {
     cacheTag('user-basic-info');
     cacheLife({ stale: 30 });
 
-    const session = (await auth()) as SessionType;
+    const session = (await getSession()) as SessionType;
 
     return {
         email: session.user.email.toLowerCase(),

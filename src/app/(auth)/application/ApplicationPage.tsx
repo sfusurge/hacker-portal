@@ -1,7 +1,7 @@
 'use client';
 
 import { trpc } from '@/trpc/client';
-import { useSession } from 'next-auth/react';
+import { useAuthSession } from '@/auth/auth-client';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { InputForm } from '../../../components/application_components/InputForm';
@@ -99,7 +99,7 @@ export default function ApplicationPageComponent() {
     const application = trpc.applications.getCurrentApplication.useQuery({
         hackathonId: hackathon.id,
     });
-    const session = useSession();
+    const session = useAuthSession();
 
     // store user email for local storage user check
     useEffect(() => {

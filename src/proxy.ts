@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
-import { edgeAuth } from '@/auth/edgeAuth';
+import { NextResponse, type NextRequest } from 'next/server';
+import { headers } from 'next/headers';
+import { auth } from '@/auth/auth';
 
 // Since nextjs don't support proxy route groups yet.
 
@@ -16,8 +17,7 @@ function getFirstSegment(str: string) {
     return str.substring(1, idx === -1 ? str.length : idx);
 }
 
-export const proxy = edgeAuth(async (req) => {
-    // do stuff with the req here
+export async function proxy(req: NextRequest) {
     const path = req.nextUrl.pathname;
 
     const isMaintenance = process.env.MAINTENANCE === 'true';
@@ -25,19 +25,22 @@ export const proxy = edgeAuth(async (req) => {
     if (isMaintenance && req.nextUrl.pathname != '/maintenance') {
         const target = new URL('/maintenance', req.url);
         return NextResponse.redirect(target, { status: 302 });
-    } else {
-        if (authRoutes.has(getFirstSegment(path))) {
-            const sessionUser = (await edgeAuth())?.user;
+    }
 
-            // redirect unauthenticated users.
-            if (!sessionUser) {
-                const target = new URL('/login', req.url);
-                target.searchParams.set('from', path);
-                return NextResponse.redirect(target, { status: 302 });
-            }
+    if (authRoutes.has(getFirstSegment(path))) {
+        const session = await auth.api.getSession({
+            headers: await headers(),
+        });
+
+        if (!session?.user) {
+            const target = new URL('/login', req.url);
+            target.searchParams.set('from', path);
+            return NextResponse.redirect(target, { status: 302 });
         }
     }
-});
+
+    return NextResponse.next();
+}
 
 export const config = {
     matcher: ['/((?!_next/|.*\\..*).*)'],

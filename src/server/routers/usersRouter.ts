@@ -10,7 +10,7 @@ import {
 import { eq, max, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { UnauthorizedError } from '../exceptions';
-import { auth, SessionType } from '@/auth/auth';
+import { getSession, SessionType } from '@/auth/auth';
 import { getSixDigitId, userRNGParams } from '@/lib/PRNG/LCG';
 
 export async function fetchUserRecordById(userId: number) {
@@ -135,7 +135,7 @@ export interface UserType {
 }
 
 export async function getUserData() {
-    const session = (await auth()) as SessionType;
+    const session = (await getSession()) as SessionType;
 
     if (!session || !session.userId) {
         return undefined;
@@ -153,7 +153,7 @@ export async function getUserData() {
  * only returns info contained in user's jwt, without making a db fetch
  */
 export async function getBasicUserInfo() {
-    const session = (await auth()) as SessionType;
+    const session = (await getSession()) as SessionType;
     return {
         email: session.user.email.toLowerCase(),
         image: session.user.image ?? '',

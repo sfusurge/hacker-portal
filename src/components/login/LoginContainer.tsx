@@ -8,7 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AnimatePresence, motion } from 'motion/react';
 import { Conditional } from '@/lib/Conditional';
 import { useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { authClient, useAuthSession } from '@/auth/auth-client';
 
 export default function LoginContainer({
     loginWithNodeMail,
@@ -23,7 +23,7 @@ export default function LoginContainer({
     const [sentEmail, setSentEmail] = useState('');
     const [showAlert, setShowAlert] = useState(false);
     const [loggedIn, setLoggedIn] = useState(false);
-    const { data: session, status } = useSession();
+    const { data: session, status } = useAuthSession();
 
     const handleEmailSuccess = async (formData: FormData) => {
         const result = await loginWithNodeMail(formData);
