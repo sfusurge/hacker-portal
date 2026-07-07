@@ -10,18 +10,15 @@ import { user } from '@/db/schema/users/users';
 import { transporter } from '@/server/nodemailerTransporter';
 import { getSixDigitId, userRNGParams } from '@/lib/PRNG/LCG';
 import { authConfig } from './authConfig';
+import { getAuthBaseUrl } from './authBaseUrl';
 import { magicLinkEmailHtml } from './magicLinkEmail';
 
 const authSecret =
     process.env.BETTER_AUTH_SECRET ?? process.env.NEXTAUTH_SECRET ?? '';
-const authBaseUrl =
-    process.env.BETTER_AUTH_URL ??
-    process.env.NEXTAUTH_URL ??
-    'http://localhost:3000';
 
 export const auth = betterAuth({
     secret: authSecret,
-    baseURL: authBaseUrl,
+    baseURL: getAuthBaseUrl(),
     database: drizzleAdapter(databaseClient, {
         provider: 'pg',
         camelCase: true,
@@ -33,6 +30,7 @@ export const auth = betterAuth({
         },
     }),
     advanced: {
+        trustedProxyHeaders: true,
         database: {
             generateId: (options) => {
                 if (options.model === 'user') {
