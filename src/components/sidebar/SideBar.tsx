@@ -11,6 +11,7 @@ import {
     ChevronRightIcon,
     ChartBarIcon,
     MegaphoneIcon,
+    TrophyIcon,
 } from '@heroicons/react/24/outline';
 
 import { HomeIcon } from '@heroicons/react/24/outline';
@@ -96,6 +97,12 @@ const projectGalleryLink = {
 };
 
 const adminLinks = [
+    {
+        href: '/admin/hackathons',
+        label: 'Hackathons',
+        icon: <TrophyIcon className="h-6 w-6" />,
+        iconAlt: 'Hackathons logo',
+    },
     {
         href: '/admin/qr',
         label: 'Hacker Checkin',
@@ -590,20 +597,25 @@ export default function SideBar({ className, initialData }: NavProps) {
                                             }}
                                             className="flex flex-col gap-1"
                                         >
-                                            {eventPageNavLinks.map((link) => (
-                                                <NavLink
-                                                    key={link.href}
-                                                    href={link.href}
-                                                    label={link.label}
-                                                    icon={link.icon}
-                                                    iconAlt={link.iconAlt}
-                                                    platform="desktop"
-                                                    active={url.startsWith(
-                                                        link.href
-                                                    )}
-                                                    collapsed={collapsed}
-                                                />
-                                            ))}
+                                            {eventPageNavLinks.map(
+                                                (link, index) => (
+                                                    <NavLink
+                                                        key={`${link.href}-${index}`}
+                                                        href={link.href}
+                                                        label={link.label}
+                                                        icon={link.icon}
+                                                        iconAlt={link.iconAlt}
+                                                        platform="desktop"
+                                                        active={
+                                                            url === link.href ||
+                                                            url.startsWith(
+                                                                `${link.href}/`
+                                                            )
+                                                        }
+                                                        collapsed={collapsed}
+                                                    />
+                                                )
+                                            )}
                                         </motion.div>
                                     </>
                                 )}
