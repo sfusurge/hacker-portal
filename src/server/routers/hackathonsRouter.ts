@@ -15,9 +15,13 @@ import { and, asc, eq, getTableColumns, ne } from 'drizzle-orm';
 import { z } from 'zod';
 import { revalidateTag } from 'next/cache';
 import { pacificInputToOffsetString } from '@/lib/datetime/pacific';
-import { validateApplicationQuestions } from '@/lib/applications/applicationQuestionsSchema';
+import {
+    getQuestionIds,
+    validateApplicationQuestions,
+} from '@/lib/applications/applicationQuestionsSchema';
+import { applications } from '@/db/schema/applications';
 import { getUserData } from '@/server/routers/usersRouter';
-import { UserRoleEnum } from '@/db/schema/users/users';
+import { isOwner } from '@/lib/auth/roles';
 import {
     BadRequestError,
     ResourceNotFoundError,
@@ -45,15 +49,73 @@ async function assertSlugAvailable(slug: string, exceptId?: number) {
     }
 }
 
-async function assertAdmin() {
+// Hackathon configuration is owner-only (owner sits above admin).
+async function assertOwner() {
     const user = await getUserData();
-    if (user?.userRole !== UserRoleEnum.admin) {
+    if (!isOwner(user?.userRole)) {
         throw new UnauthorizedError({
             email: user?.email,
             role: user?.userRole,
         });
     }
     return user;
+}
+
+function hasMeaningfulValue(value: unknown): boolean {
+    if (value === null || value === undefined) return false;
+    if (typeof value === 'string') return value.trim() !== '';
+    if (Array.isArray(value)) return value.length > 0;
+    return true;
+}
+
+async function findOrphanedResponses(
+    hackathonId: number,
+    keptQuestionIds: Set<number>
+) {
+    const [current] = await databaseClient
+        .select({ questions: hackathons.applicationQuestions })
+        .from(hackathons)
+        .where(eq(hackathons.id, hackathonId))
+        .limit(1);
+
+    const previousIds = getQuestionIds(
+        (current?.questions ?? []) as InputFormPageData[]
+    );
+    const removedIds = new Set(
+        previousIds.filter((id) => !keptQuestionIds.has(id))
+    );
+
+    if (removedIds.size === 0) {
+        return { orphanIds: [] as number[], affectedApplications: 0 };
+    }
+
+    const rows = await databaseClient
+        .select({ response: applications.response })
+        .from(applications)
+        .where(eq(applications.hackathonId, hackathonId));
+
+    const orphanIds = new Set<number>();
+    let affectedApplications = 0;
+
+    for (const row of rows) {
+        const response = (row.response ?? {}) as Record<string, unknown>;
+        let affected = false;
+        for (const [key, value] of Object.entries(response)) {
+            const questionId = Number(key);
+            if (!Number.isInteger(questionId)) continue;
+            if (!hasMeaningfulValue(value)) continue;
+            if (removedIds.has(questionId)) {
+                orphanIds.add(questionId);
+                affected = true;
+            }
+        }
+        if (affected) affectedApplications++;
+    }
+
+    return {
+        orphanIds: [...orphanIds].sort((a, b) => a - b),
+        affectedApplications,
+    };
 }
 
 function toHackathonColumns(input: HackathonConfigInput) {
@@ -110,7 +172,7 @@ export const hackathonsRouter = router({
 
     /** Admin: list every hackathon (active or not) for the management table. */
     getHackathonsForAdmin: publicProcedure.query(async () => {
-        await assertAdmin();
+        await assertOwner();
         return await databaseClient
             .select()
             .from(hackathons)
@@ -120,7 +182,7 @@ export const hackathonsRouter = router({
     getHackathonById: publicProcedure
         .input(z.object({ id: z.number().int() }))
         .query(async ({ input }) => {
-            await assertAdmin();
+            await assertOwner();
             const [hackathon] = await databaseClient
                 .select()
                 .from(hackathons)
@@ -152,7 +214,7 @@ export const hackathonsRouter = router({
     createHackathon: publicProcedure
         .input(createHackathonSchema)
         .mutation(async ({ input }) => {
-            await assertAdmin();
+            await assertOwner();
             const values = toHackathonColumns(input);
             await assertSlugAvailable(values.eventPageSlug);
 
@@ -194,7 +256,7 @@ export const hackathonsRouter = router({
     updateHackathon: publicProcedure
         .input(updateHackathonSchema)
         .mutation(async ({ input }) => {
-            await assertAdmin();
+            await assertOwner();
             const values = toHackathonColumns(input);
             await assertSlugAvailable(values.eventPageSlug, input.id);
 
@@ -232,7 +294,7 @@ export const hackathonsRouter = router({
     getApplicationQuestions: publicProcedure
         .input(z.object({ id: z.number().int() }))
         .query(async ({ input }) => {
-            await assertAdmin();
+            await assertOwner();
             const [row] = await databaseClient
                 .select({
                     applicationQuestions: hackathons.applicationQuestions,
@@ -249,16 +311,47 @@ export const hackathonsRouter = router({
             return row.applicationQuestions;
         }),
 
-    updateApplicationQuestions: publicProcedure
+    getApplicationResponseImpact: publicProcedure
         .input(z.object({ id: z.number().int(), questions: z.unknown() }))
+        .query(async ({ input }) => {
+            await assertOwner();
+
+            const result = validateApplicationQuestions(input.questions);
+            if (!result.ok) {
+                return { orphanIds: [] as number[], affectedApplications: 0 };
+            }
+
+            const keptQuestionIds = new Set(getQuestionIds(result.data));
+            return await findOrphanedResponses(input.id, keptQuestionIds);
+        }),
+
+    updateApplicationQuestions: publicProcedure
+        .input(
+            z.object({
+                id: z.number().int(),
+                questions: z.unknown(),
+                force: z.boolean().optional(),
+            })
+        )
         .mutation(async ({ input }) => {
-            await assertAdmin();
+            await assertOwner();
 
             const result = validateApplicationQuestions(input.questions);
             if (!result.ok) {
                 throw new BadRequestError(
                     `Invalid application questions:\n- ${result.errors.join('\n- ')}`
                 );
+            }
+
+            if (!input.force) {
+                const keptQuestionIds = new Set(getQuestionIds(result.data));
+                const { orphanIds, affectedApplications } =
+                    await findOrphanedResponses(input.id, keptQuestionIds);
+                if (orphanIds.length > 0) {
+                    throw new BadRequestError(
+                        `This removes question(s) ${orphanIds.join(', ')} that ${affectedApplications} submitted application(s) already answered. Re-add them with the same ID, or confirm to save and leave those answers orphaned.`
+                    );
+                }
             }
 
             const [updated] = await databaseClient
@@ -283,7 +376,7 @@ export const hackathonsRouter = router({
     getEventPagePayload: publicProcedure
         .input(z.object({ id: z.number().int() }))
         .query(async ({ input }) => {
-            await assertAdmin();
+            await assertOwner();
             const [row] = await databaseClient
                 .select({ eventPagePayload: hackathons.eventPagePayload })
                 .from(hackathons)
@@ -303,7 +396,7 @@ export const hackathonsRouter = router({
             z.object({ id: z.number().int(), payload: eventPagePayloadSchema })
         )
         .mutation(async ({ input }) => {
-            await assertAdmin();
+            await assertOwner();
 
             const [updated] = await databaseClient
                 .update(hackathons)
@@ -328,7 +421,19 @@ export const hackathonsRouter = router({
     deleteHackathon: publicProcedure
         .input(deleteHackathonSchema)
         .mutation(async (opts) => {
-            await assertAdmin();
+            await assertOwner();
+
+            const [target] = await databaseClient
+                .select({ isActive: hackathons.isActive })
+                .from(hackathons)
+                .where(eq(hackathons.id, opts.input.id))
+                .limit(1);
+            if (target?.isActive) {
+                throw new BadRequestError(
+                    'Deactivate this hackathon before deleting it.'
+                );
+            }
+
             await databaseClient
                 .delete(hackathons)
                 .where(eq(hackathons.id, opts.input.id));

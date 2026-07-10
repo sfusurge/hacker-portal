@@ -11,6 +11,7 @@ import {
     getProjectSectionsForRole,
 } from './sections';
 import type { ProjectPageState } from './types';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 export type { ProjectPageReadyState, ProjectPageState } from './types';
 
@@ -31,14 +32,14 @@ export function useProjectPageData(id: string): ProjectPageState {
     const isAuthenticatedJudge =
         !isPublicView &&
         (forceJudgeView
-            ? user?.userRole === 'judge' || user?.userRole === 'admin'
+            ? user?.userRole === 'judge' || hasAdminAccess(user?.userRole)
             : user?.userRole === 'judge');
 
     const useJudgeSections =
         isPublicView ||
         isAuthenticatedJudge ||
         (forceJudgeView &&
-            (user?.userRole === 'judge' || user?.userRole === 'admin'));
+            (user?.userRole === 'judge' || hasAdminAccess(user?.userRole)));
     const votingEnabled = isAudienceVotingEnabled(hackathon);
     const numericTeamId = parseNumericTeamId(id);
 

@@ -43,9 +43,20 @@ export default function NewHackathonPage() {
     const [questions, setQuestions] = useState<Page[]>([]);
     const [questionsValid, setQuestionsValid] = useState(true);
     const [copyFrom, setCopyFrom] = useState(BLANK);
+    const [detailsSlug, setDetailsSlug] = useState(
+        EMPTY_HACKATHON_FORM_VALUES.eventPageSlug
+    );
 
     const { data: allHackathons = [] } =
         trpc.hackathons.getHackathonsForAdmin.useQuery();
+
+    // only allow uploads once the slug is set to something not already taken, so
+    // an unsaved hackathon can't overwrite another one's images in the bucket.
+    const trimmedSlug = detailsSlug.trim();
+    const slugTaken = allHackathons.some(
+        (h) => h.eventPageSlug === trimmedSlug
+    );
+    const uploadSlug = trimmedSlug && !slugTaken ? trimmedSlug : undefined;
 
     const createMutation = trpc.hackathons.createHackathon.useMutation({
         onSuccess: (created) => {
@@ -166,10 +177,15 @@ export default function NewHackathonPage() {
                     submitLabel="Create hackathon"
                     submitting={createMutation.isPending}
                     onSubmit={submitConfig}
+                    onSlugChange={setDetailsSlug}
                 />
             </div>
             <div className={cn(tab !== 'event' && 'hidden')}>
-                <EventPageFields values={eventPage} onChange={setEventPage} />
+                <EventPageFields
+                    values={eventPage}
+                    onChange={setEventPage}
+                    slug={uploadSlug}
+                />
             </div>
             <div className={cn(tab !== 'questions' && 'hidden')}>
                 <QuestionsEditor
@@ -186,7 +202,6 @@ export default function NewHackathonPage() {
                     size="cozy"
                     onClick={requestCreate}
                     disabled={createMutation.isPending}
-                    className="bg-brand-600 hover:bg-brand-500 shadow-brand-950/40 px-8 text-base font-semibold shadow-lg"
                 >
                     {createMutation.isPending
                         ? 'Creating...'

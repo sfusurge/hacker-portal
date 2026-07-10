@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { UnauthorizedError } from '../exceptions';
 import { getSession, SessionType } from '@/auth/auth';
 import { getSixDigitId, userRNGParams } from '@/lib/PRNG/LCG';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 export async function fetchUserRecordById(userId: number) {
     const dbUser = (
@@ -73,7 +74,7 @@ export const usersRouter = router({
         .query(async ({ input }) => {
             const userData = await getUserData();
 
-            if (userData?.userRole !== 'admin') {
+            if (!hasAdminAccess(userData?.userRole)) {
                 throw new UnauthorizedError({
                     email: userData?.email,
                     role: userData?.userRole,

@@ -7,6 +7,7 @@ import { UserProjectPageView } from './UserProjectPageView';
 import { useProjectsRoute } from '@/components/projects/ProjectsRouteContext';
 import { useProjectPageData } from './useProjectPageData';
 import { useProjectPageTitle } from './useProjectPageTitle';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 interface ProjectPageClientProps {
     id: string;
@@ -34,7 +35,8 @@ export default function ProjectPageClient({
     const showJudgeView =
         isPublicView ||
         (forceJudgeView
-            ? state.user.userRole === 'judge' || state.user.userRole === 'admin'
+            ? state.user.userRole === 'judge' ||
+              hasAdminAccess(state.user.userRole)
             : state.user.userRole === 'judge');
 
     return showJudgeView ? (

@@ -1,3 +1,4 @@
+import { hasAdminAccess } from '@/lib/auth/roles';
 export function isSubmissionWindowOpen(
     nowMs: number,
     submissionOpen: Date | null | undefined,
@@ -57,7 +58,7 @@ export function canAccessProjectGallery(
     submissionDeadline: Date,
     userRole?: string | null
 ): boolean {
-    if (userRole === 'judge' || userRole === 'admin') {
+    if (userRole === 'judge' || hasAdminAccess(userRole)) {
         return true;
     }
     return isProjectsGalleryOpen(nowMs, projectGalleryOpen, submissionDeadline);

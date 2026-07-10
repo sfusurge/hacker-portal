@@ -9,6 +9,7 @@ import type { ProjectListItem } from '@/lib/projects/projectSubmissionDisplay';
 import { useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { canAccessProjectGallery } from '@/lib/submissionWindow';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 interface ProjectsClientProps {
     user: UserData | null;
@@ -67,7 +68,7 @@ export default function ProjectsClient({
     const isAuthenticatedJudge =
         !isPublicView &&
         (forceJudgeView
-            ? user?.userRole === 'judge' || user?.userRole === 'admin'
+            ? user?.userRole === 'judge' || hasAdminAccess(user?.userRole)
             : user?.userRole === 'judge');
 
     const galleryQuery = trpc.submissions.getProjectGalleryItems.useQuery(

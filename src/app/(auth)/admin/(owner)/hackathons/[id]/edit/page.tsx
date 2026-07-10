@@ -47,7 +47,6 @@ export default function EditHackathonPage() {
             }),
     });
 
-    // Delete flow: type-to-confirm dialog.
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [confirmText, setConfirmText] = useState('');
     const expectedPhrase = hackathon ? `delete ${hackathon.name}` : '';
@@ -89,6 +88,7 @@ export default function EditHackathonPage() {
             ) : (
                 <>
                     <HackathonForm
+                        key={id}
                         initialValues={hackathonToFormValues(hackathon)}
                         submitLabel="Save changes"
                         submitting={updateMutation.isPending}
@@ -104,7 +104,9 @@ export default function EditHackathonPage() {
                                 Delete this hackathon
                             </p>
                             <p className="text-xs text-white/40">
-                                This can&apos;t be undone.
+                                {hackathon.isActive
+                                    ? 'Deactivate this hackathon before you can delete it.'
+                                    : "This can't be undone."}
                             </p>
                         </div>
                         <Button
@@ -112,6 +114,7 @@ export default function EditHackathonPage() {
                             hierarchy="secondary"
                             size="cozy"
                             className="shrink-0"
+                            disabled={hackathon.isActive}
                             onClick={() => {
                                 setConfirmText('');
                                 setDeleteOpen(true);

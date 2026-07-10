@@ -22,6 +22,40 @@ export const TextField = forwardRef<
 ));
 TextField.displayName = 'TextField';
 
+export function LazyTextField({
+    value,
+    onCommit,
+    className,
+    ...props
+}: {
+    value: string;
+    onCommit: (value: string) => void;
+} & Omit<
+    React.ComponentProps<'input'>,
+    'value' | 'onChange' | 'onBlur' | 'onFocus'
+>) {
+    const [local, setLocal] = useState(value);
+    const focused = useRef(false);
+    useEffect(() => {
+        if (!focused.current) setLocal(value);
+    }, [value]);
+    return (
+        <input
+            {...props}
+            className={cn(FIELD_BASE, className)}
+            value={local}
+            onChange={(e) => setLocal(e.target.value)}
+            onFocus={() => {
+                focused.current = true;
+            }}
+            onBlur={() => {
+                focused.current = false;
+                if (local !== value) onCommit(local);
+            }}
+        />
+    );
+}
+
 function pad(n: number) {
     return String(n).padStart(2, '0');
 }
@@ -200,6 +234,7 @@ interface DateFieldProps {
     onChange: (value: string) => void;
     withTime?: boolean;
     placeholder?: string;
+    disabled?: boolean;
 }
 
 export function DateField({
@@ -208,6 +243,7 @@ export function DateField({
     onChange,
     withTime = false,
     placeholder = withTime ? 'Pick a date and time' : 'Pick a date',
+    disabled = false,
 }: DateFieldProps) {
     const [open, setOpen] = useState(false);
     const selectedDate = datePartToDate(value);
@@ -243,11 +279,17 @@ export function DateField({
     };
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover
+            open={open}
+            onOpenChange={(next) => {
+                if (!disabled) setOpen(next);
+            }}
+        >
             <PopoverTrigger asChild>
                 <button
                     id={id}
                     type="button"
+                    disabled={disabled}
                     className={cn(
                         FIELD_BASE,
                         'justify-between text-left',

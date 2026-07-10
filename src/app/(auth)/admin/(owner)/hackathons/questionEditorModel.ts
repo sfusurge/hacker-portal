@@ -11,7 +11,7 @@ export type Question = Record<string, unknown> & {
     displayRole?: string | string[];
     placeHolder?: string;
     choices?: Choice[];
-    questions?: Question[];
+    content?: Question[];
 };
 
 export type Page = Record<string, unknown> & {
@@ -26,6 +26,10 @@ export const CHOICE_TYPES = [
 ];
 export const isChoiceType = (type?: string) =>
     CHOICE_TYPES.includes(type ?? '');
+
+export const usesAllowOther = (type?: string) => type === 'multiple-checkbox';
+export const usesAllowCustom = (type?: string) =>
+    type === 'multiple-choice' || type === 'dropdown';
 
 export const PLACEHOLDER_TYPES = [
     'text-line',
@@ -48,13 +52,15 @@ export const QUESTION_TYPE_OPTIONS: { value: string; label: string }[] = [
     { value: 'number', label: 'Number' },
     { value: 'link', label: 'URL / link' },
     { value: 'file-upload', label: 'File upload' },
-    { value: 'date-ymd', label: 'Date' },
+    { value: 'date', label: 'Date (calendar)' },
+    { value: 'date-ymd', label: 'Date (year / month / day)' },
     { value: 'name', label: 'Name' },
     { value: 'api-dropdown', label: 'API dropdown (school, etc.)' },
     { value: 'major', label: 'Major' },
     { value: 'title-line', label: 'Section heading' },
     { value: 'rich-text', label: 'Rich text' },
     { value: 'markdown', label: 'Markdown' },
+    { value: 'inline', label: 'Inline group' },
 ];
 
 export function typeLabel(type?: string): string {
@@ -72,7 +78,7 @@ export function maxQuestionId(pages: Page[]): number {
             if (typeof q.questionId === 'number' && q.questionId > max) {
                 max = q.questionId;
             }
-            if (Array.isArray(q.questions)) walk(q.questions);
+            if (Array.isArray(q.content)) walk(q.content);
         }
     };
     pages.forEach((p) => walk(p.questions ?? []));
@@ -179,4 +185,60 @@ export function removeChoice(
     ci: number
 ): Page[] {
     return mapChoices(pages, pi, qi, (cs) => cs.filter((_, k) => k !== ci));
+}
+
+export function updateChoice(
+    pages: Page[],
+    pi: number,
+    qi: number,
+    ci: number,
+    patch: Partial<Choice>
+): Page[] {
+    return mapChoices(pages, pi, qi, (cs) =>
+        cs.map((c, k) => (k === ci ? { ...c, ...patch } : c))
+    );
+}
+
+function mapInlineChildren(
+    pages: Page[],
+    pi: number,
+    qi: number,
+    fn: (children: Question[]) => Question[]
+): Page[] {
+    return updateQuestion(pages, pi, qi, {
+        content: fn(pages[pi]?.questions?.[qi]?.content ?? []),
+    });
+}
+
+export function addInlineChild(pages: Page[], pi: number, qi: number): Page[] {
+    const child: Question = {
+        type: 'text-line',
+        title: '',
+        required: false,
+        questionId: maxQuestionId(pages) + 1,
+    };
+    return mapInlineChildren(pages, pi, qi, (cs) => [...cs, child]);
+}
+
+export function updateInlineChild(
+    pages: Page[],
+    pi: number,
+    qi: number,
+    ci: number,
+    patch: Partial<Question>
+): Page[] {
+    return mapInlineChildren(pages, pi, qi, (cs) =>
+        cs.map((c, k) => (k === ci ? { ...c, ...patch } : c))
+    );
+}
+
+export function removeInlineChild(
+    pages: Page[],
+    pi: number,
+    qi: number,
+    ci: number
+): Page[] {
+    return mapInlineChildren(pages, pi, qi, (cs) =>
+        cs.filter((_, k) => k !== ci)
+    );
 }

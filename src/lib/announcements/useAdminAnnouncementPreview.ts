@@ -7,10 +7,11 @@ import {
     viewerAnnouncementLocationKeyAtom,
 } from '@/app/(auth)/ClientContext';
 import { useAtomValue } from 'jotai';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 // used for visibility filtering (Ably + preview mode)
 export function useEffectiveAnnouncementLocationKey(): string | null {
-    const isAdmin = useAtomValue(userInfoAtom)?.userRole === 'admin';
+    const isAdmin = hasAdminAccess(useAtomValue(userInfoAtom)?.userRole);
     const viewAllChannels = useAtomValue(adminAnnouncementsViewAllAtom);
     const previewLocationKey = useAtomValue(
         adminAnnouncementsPreviewLocationKeyAtom
@@ -30,7 +31,7 @@ export function useAdminAnnouncementPreviewQueryInput():
     | { viewAll: false; previewLocationKey: string | null }
     | { viewAll: true }
     | undefined {
-    const isAdmin = useAtomValue(userInfoAtom)?.userRole === 'admin';
+    const isAdmin = hasAdminAccess(useAtomValue(userInfoAtom)?.userRole);
     const viewAllChannels = useAtomValue(adminAnnouncementsViewAllAtom);
     const previewLocationKey = useAtomValue(
         adminAnnouncementsPreviewLocationKeyAtom

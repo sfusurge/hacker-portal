@@ -1,8 +1,10 @@
 'use client';
 
+import { useRef, useState } from 'react';
 import { trpc } from '@/trpc/client';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label/label';
+import { Button } from '@/components/ui/button';
 import {
     Select,
     SelectContent,
@@ -11,6 +13,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import type { EventPagePayloadInput } from '@/db/schema/hackathons';
+import { uploadEventPageImage } from '@/utils/blobHelper';
 import { TextField } from './fields';
 
 const IMPORT_PLACEHOLDER = 'none';
@@ -70,10 +73,12 @@ export function EventPageFields({
     values,
     onChange,
     currentHackathonId,
+    slug,
 }: {
     values: EventPagePayloadInput;
     onChange: (values: EventPagePayloadInput) => void;
     currentHackathonId?: number;
+    slug?: string;
 }) {
     const { toast } = useToast();
     const utils = trpc.useUtils();
@@ -82,6 +87,10 @@ export function EventPageFields({
 
     const set = (key: keyof EventPagePayloadInput, value: string) =>
         onChange({ ...values, [key]: value });
+
+    const currentSlug =
+        slug ??
+        allHackathons.find((h) => h.id === currentHackathonId)?.eventPageSlug;
 
     const handleImport = async (value: string) => {
         if (value === IMPORT_PLACEHOLDER) return;
@@ -203,22 +212,28 @@ export function EventPageFields({
                     <section className="space-y-4">
                         <h2 className="text-lg font-semibold">Images</h2>
                         <p className="text-xs text-white/40">
-                            Paste image URLs (e.g. uploaded blob links).
+                            Upload an image or paste a URL.
                         </p>
                         <ImageField
                             label="Icon / logo"
                             value={values.iconSrc}
                             onChange={(v) => set('iconSrc', v)}
+                            slug={currentSlug}
+                            kind="icon"
                         />
                         <ImageField
                             label="Desktop banner"
                             value={values.desktopBannerSrc}
                             onChange={(v) => set('desktopBannerSrc', v)}
+                            slug={currentSlug}
+                            kind="desktop-banner"
                         />
                         <ImageField
                             label="Mobile banner"
                             value={values.mobileBannerSrc}
                             onChange={(v) => set('mobileBannerSrc', v)}
+                            slug={currentSlug}
+                            kind="mobile-banner"
                         />
                     </section>
 
@@ -372,21 +387,80 @@ function ImageField({
     label,
     value,
     onChange,
+    slug,
+    kind,
 }: {
     label: string;
     value: string;
     onChange: (value: string) => void;
+    slug?: string;
+    kind: string;
 }) {
+    const { toast } = useToast();
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [uploading, setUploading] = useState(false);
+
+    const handleFile = async (file: File | undefined) => {
+        if (!file || !slug) return;
+        setUploading(true);
+        try {
+            const url = await uploadEventPageImage(slug, kind, file);
+            onChange(url);
+            toast({ title: 'Image uploaded', variant: 'success' });
+        } catch (e) {
+            toast({
+                title: 'Upload failed',
+                description: (e as Error).message,
+                variant: 'error',
+            });
+        } finally {
+            setUploading(false);
+            if (inputRef.current) inputRef.current.value = '';
+        }
+    };
+
     return (
         <div className="flex items-start gap-3">
             <div className="flex-1">
                 <Label>{label}</Label>
-                <TextField
-                    className="mt-1 text-sm"
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    placeholder="https://..."
-                />
+                <div className="mt-1 flex gap-2">
+                    <TextField
+                        className="text-sm"
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        placeholder="https://... or upload"
+                    />
+                    {slug ? (
+                        <>
+                            <input
+                                ref={inputRef}
+                                type="file"
+                                accept="image/png,image/jpeg"
+                                className="hidden"
+                                onChange={(e) =>
+                                    handleFile(e.target.files?.[0])
+                                }
+                            />
+                            <Button
+                                type="button"
+                                variant="brand"
+                                hierarchy="secondary"
+                                size="cozy"
+                                className="shrink-0"
+                                disabled={uploading}
+                                onClick={() => inputRef.current?.click()}
+                            >
+                                {uploading ? 'Uploading...' : 'Upload'}
+                            </Button>
+                        </>
+                    ) : null}
+                </div>
+                {!slug && (
+                    <p className="mt-1 text-xs text-white/40">
+                        Set a unique event page slug on the Details tab to
+                        upload, or paste a URL.
+                    </p>
+                )}
             </div>
             <div className="mt-6 h-11 w-16 shrink-0 overflow-hidden rounded-md border border-neutral-700/40 bg-neutral-950">
                 {value && (

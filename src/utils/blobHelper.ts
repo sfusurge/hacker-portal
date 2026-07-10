@@ -88,3 +88,19 @@ export async function uploadFileToBlob(
     console.log(`Uploaded blob: ${blob.url}`);
     return fileName;
 }
+
+export async function uploadEventPageImage(
+    slug: string,
+    kind: string,
+    file: File
+): Promise<string> {
+    const fileName = `${kind}${mimeToExtension(file.type)}`;
+    const blob = await upload(`hackathons/${slug}/${fileName}`, file, {
+        access: 'public',
+        handleUploadUrl: '/api/blob/generic',
+        clientPayload: JSON.stringify({
+            uploadPath: 'event_page',
+        } as UploadPayload),
+    });
+    return blob.url;
+}

@@ -36,7 +36,8 @@ const questionSchema: z.ZodType<Record<string, unknown>> = z.lazy(() =>
             questionId: z.number().int().optional(),
             required: z.boolean().optional(),
             displayRole: z.union([z.string(), z.array(z.string())]).optional(),
-            questions: z.array(questionSchema).optional(),
+            // Inline groups nest their fields under `content`.
+            content: z.array(questionSchema).optional(),
         })
         .passthrough()
 );
@@ -68,13 +69,24 @@ function collectQuestionIds(
 ) {
     for (const q of questions) {
         if (typeof q.questionId === 'number') out.push(q.questionId);
-        if (Array.isArray(q.questions)) {
+        if (Array.isArray(q.content)) {
             collectQuestionIds(
-                q.questions as Array<Record<string, unknown>>,
+                q.content as Array<Record<string, unknown>>,
                 out
             );
         }
     }
+}
+
+export function getQuestionIds(pages: InputFormPageData[]): number[] {
+    const ids: number[] = [];
+    pages.forEach((page) =>
+        collectQuestionIds(
+            page.questions as unknown as Array<Record<string, unknown>>,
+            ids
+        )
+    );
+    return ids;
 }
 
 function collectRoles(
@@ -85,8 +97,8 @@ function collectRoles(
         const role = q.displayRole;
         if (typeof role === 'string') out.add(role);
         else if (Array.isArray(role)) role.forEach((r) => out.add(String(r)));
-        if (Array.isArray(q.questions)) {
-            collectRoles(q.questions as Array<Record<string, unknown>>, out);
+        if (Array.isArray(q.content)) {
+            collectRoles(q.content as Array<Record<string, unknown>>, out);
         }
     }
 }

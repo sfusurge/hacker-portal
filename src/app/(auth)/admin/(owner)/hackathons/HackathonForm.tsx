@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label/label';
 import { useToast } from '@/hooks/use-toast';
 import type { HackathonConfigInput } from '@/db/schema/hackathons';
@@ -102,15 +102,29 @@ const DATETIME_FIELDS: {
     key: keyof HackathonFormValues;
     label: string;
     required?: boolean;
+    // Field is read-only unless this boolean flag is on.
+    requiresFlag?: keyof HackathonFormValues;
 }[] = [
     { key: 'applicationOpen', label: 'Application opens' },
     { key: 'applicationCloses', label: 'Application closes' },
     { key: 'submissionOpen', label: 'Submission opens' },
     { key: 'submissionDeadline', label: 'Submission deadline', required: true },
     { key: 'projectGalleryOpen', label: 'Project gallery opens' },
-    { key: 'paymentDeadline', label: 'Payment deadline' },
-    { key: 'audienceVotingOpen', label: 'Audience voting opens' },
-    { key: 'audienceVotingCloses', label: 'Audience voting closes' },
+    {
+        key: 'paymentDeadline',
+        label: 'Payment deadline',
+        requiresFlag: 'isPaid',
+    },
+    {
+        key: 'audienceVotingOpen',
+        label: 'Audience voting opens',
+        requiresFlag: 'audienceVotingEnabled',
+    },
+    {
+        key: 'audienceVotingCloses',
+        label: 'Audience voting closes',
+        requiresFlag: 'audienceVotingEnabled',
+    },
 ];
 
 const FLAG_FIELDS: {
@@ -142,6 +156,7 @@ interface HackathonFormProps {
     onCancel?: () => void;
     formId?: string;
     hideActions?: boolean;
+    onSlugChange?: (slug: string) => void;
 }
 
 export function HackathonForm({
@@ -152,9 +167,14 @@ export function HackathonForm({
     onCancel,
     formId,
     hideActions = false,
+    onSlugChange,
 }: HackathonFormProps) {
     const { toast } = useToast();
     const [values, setValues] = useState<HackathonFormValues>(initialValues);
+
+    useEffect(() => {
+        onSlugChange?.(values.eventPageSlug);
+    }, [values.eventPageSlug, onSlugChange]);
 
     const setField = <K extends keyof HackathonFormValues>(
         key: K,
@@ -282,24 +302,30 @@ export function HackathonForm({
                     Leave a field blank to leave it unset.
                 </p>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    {DATETIME_FIELDS.map((field) => (
-                        <div key={field.key}>
-                            <Label
-                                htmlFor={field.key}
-                                required={field.required}
-                            >
-                                {field.label}
-                            </Label>
-                            <div className="mt-1">
-                                <DateField
-                                    id={field.key}
-                                    withTime
-                                    value={values[field.key] as string}
-                                    onChange={(v) => setField(field.key, v)}
-                                />
+                    {DATETIME_FIELDS.map((field) => {
+                        const disabled = field.requiresFlag
+                            ? !values[field.requiresFlag]
+                            : false;
+                        return (
+                            <div key={field.key}>
+                                <Label
+                                    htmlFor={field.key}
+                                    required={field.required}
+                                >
+                                    {field.label}
+                                </Label>
+                                <div className="mt-1">
+                                    <DateField
+                                        id={field.key}
+                                        withTime
+                                        value={values[field.key] as string}
+                                        onChange={(v) => setField(field.key, v)}
+                                        disabled={disabled}
+                                    />
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </section>
 
@@ -307,46 +333,37 @@ export function HackathonForm({
                 <h2 className="text-lg font-semibold">Settings</h2>
                 <div className="space-y-3">
                     {FLAG_FIELDS.map((field) => (
-                        <label
+                        <div
                             key={field.key}
-                            htmlFor={field.key}
-                            className="flex cursor-pointer items-start gap-3 rounded-lg border border-neutral-700/40 bg-neutral-900/40 px-3 py-2.5 transition-colors hover:border-neutral-600/60"
+                            className="flex items-center justify-between gap-4 rounded-lg border border-neutral-700/40 bg-neutral-900/40 px-3 py-2.5"
                         >
-                            <Checkbox
-                                id={field.key}
-                                checked={values[field.key] as boolean}
-                                onCheckedChange={(checked) =>
-                                    setField(field.key, checked === true)
-                                }
-                                className="data-[state=checked]:border-brand-600 data-[state=checked]:bg-brand-600 mt-0.5 h-5 w-5 border-white/30 data-[state=checked]:text-white"
-                            />
-                            <span>
-                                <span className="block text-sm font-medium text-white/90">
+                            <div className="min-w-0">
+                                <label
+                                    htmlFor={field.key}
+                                    className="block cursor-pointer text-sm font-medium text-white/90"
+                                >
                                     {field.label}
-                                </span>
+                                </label>
                                 {field.help && (
                                     <span className="mt-0.5 block text-xs text-white/45">
                                         {field.help}
                                     </span>
                                 )}
-                            </span>
-                        </label>
+                            </div>
+                            <Switch
+                                id={field.key}
+                                checked={values[field.key] as boolean}
+                                onCheckedChange={(checked) =>
+                                    setField(field.key, checked)
+                                }
+                            />
+                        </div>
                     ))}
                 </div>
             </section>
 
             {!hideActions && (
-                <div className="flex flex-col gap-3 border-t border-neutral-700/40 pt-6 sm:flex-row">
-                    <Button
-                        type="submit"
-                        variant="brand"
-                        hierarchy="primary"
-                        size="cozy"
-                        disabled={submitting}
-                        className="bg-brand-600 hover:bg-brand-500 shadow-brand-950/40 px-8 text-base font-semibold shadow-lg"
-                    >
-                        {submitting ? 'Saving...' : submitLabel}
-                    </Button>
+                <div className="flex flex-col gap-3 border-t border-neutral-700/40 pt-6 sm:flex-row sm:justify-end">
                     {onCancel && (
                         <Button
                             type="button"
@@ -354,11 +371,19 @@ export function HackathonForm({
                             hierarchy="secondary"
                             size="cozy"
                             onClick={onCancel}
-                            className="px-8"
                         >
                             Cancel
                         </Button>
                     )}
+                    <Button
+                        type="submit"
+                        variant="brand"
+                        hierarchy="primary"
+                        size="cozy"
+                        disabled={submitting}
+                    >
+                        {submitting ? 'Saving...' : submitLabel}
+                    </Button>
                 </div>
             )}
         </form>

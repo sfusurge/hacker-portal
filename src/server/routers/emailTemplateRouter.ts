@@ -1,7 +1,6 @@
 import { publicProcedure, router } from '../trpc';
 import { z } from 'zod';
 import { databaseClient } from '@/db/client';
-import { UserRoleEnum } from '@/db/schema/users/users';
 import { UnauthorizedError, InternalServerError } from '../exceptions';
 import {
     emailTemplates,
@@ -14,6 +13,7 @@ import { hackathonEmailTypeEnum } from '@/db/schema/emails';
 import { hackathons } from '@/db/schema/hackathons';
 import { eq, desc, and, getTableColumns } from 'drizzle-orm';
 import { getUserData } from '@/server/routers/usersRouter';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 export const emailTemplatesRouter = router({
     createEmailTemplate: publicProcedure
@@ -22,7 +22,7 @@ export const emailTemplatesRouter = router({
             const user = await getUserData();
 
             // Only admin can create email templates
-            if (user?.userRole !== UserRoleEnum.admin) {
+            if (!hasAdminAccess(user?.userRole)) {
                 throw new UnauthorizedError({
                     email: user?.email,
                     role: user?.userRole,
@@ -55,7 +55,7 @@ export const emailTemplatesRouter = router({
             }
 
             // Only admin can view all templates
-            if (user.userRole !== UserRoleEnum.admin) {
+            if (!hasAdminAccess(user.userRole)) {
                 throw new UnauthorizedError({
                     email: user.email,
                     role: user.userRole,
@@ -88,7 +88,7 @@ export const emailTemplatesRouter = router({
             }
 
             // Only admin can view templates
-            if (user.userRole !== UserRoleEnum.admin) {
+            if (!hasAdminAccess(user.userRole)) {
                 throw new UnauthorizedError({
                     email: user.email,
                     role: user.userRole,
@@ -223,7 +223,7 @@ export const emailTemplatesRouter = router({
         .mutation(async ({ input }) => {
             const user = await getUserData();
 
-            if (user?.userRole !== UserRoleEnum.admin) {
+            if (!hasAdminAccess(user?.userRole)) {
                 throw new UnauthorizedError({
                     email: user?.email,
                     role: user?.userRole,
@@ -254,7 +254,7 @@ export const emailTemplatesRouter = router({
             const user = await getUserData();
 
             // Only admin can delete templates
-            if (user?.userRole !== UserRoleEnum.admin) {
+            if (!hasAdminAccess(user?.userRole)) {
                 throw new UnauthorizedError({
                     email: user?.email,
                     role: user?.userRole,
