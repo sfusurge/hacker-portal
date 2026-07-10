@@ -23,6 +23,7 @@ import { submissions } from '@/db/schema/submissions';
 import { teams } from '@/db/schema/teams';
 import { members } from '@/db/schema/members';
 import { JudgingFormQuestion } from '@/components/application_components/types';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 export interface JudgingScoreResponse {
     hackathonId: number;
@@ -51,7 +52,7 @@ export const judgingRouter = router({
                 throw new InternalServerError('User not authenticated');
             }
 
-            if (user.userRole !== UserRoleEnum.admin) {
+            if (!hasAdminAccess(user.userRole)) {
                 throw new UnauthorizedError({
                     email: user.email,
                     role: user.userRole,
@@ -99,10 +100,7 @@ export const judgingRouter = router({
             }
 
             // Only allow users to update their own projects or admins to update any
-            if (
-                user.userRole !== UserRoleEnum.admin &&
-                user.id !== input.userId
-            ) {
+            if (!hasAdminAccess(user.userRole) && user.id !== input.userId) {
                 throw new UnauthorizedError({
                     email: user.email,
                     role: user.userRole,
@@ -185,7 +183,7 @@ export const judgingRouter = router({
             }
 
             if (
-                user.userRole !== UserRoleEnum.admin &&
+                !hasAdminAccess(user.userRole) &&
                 user.userRole !== UserRoleEnum.judge
             ) {
                 throw new UnauthorizedError({
@@ -196,7 +194,7 @@ export const judgingRouter = router({
 
             // If admin, get all projects, otherwise get only projects assigned to the user
             let projectsQuery;
-            if (user.userRole === UserRoleEnum.admin) {
+            if (hasAdminAccess(user.userRole)) {
                 projectsQuery = databaseClient
                     .select({
                         hackathonId: judgingAssignments.hackathonId,
@@ -279,7 +277,7 @@ export const judgingRouter = router({
             }
 
             if (
-                user.userRole !== UserRoleEnum.admin &&
+                !hasAdminAccess(user.userRole) &&
                 user.userRole !== UserRoleEnum.judge
             ) {
                 throw new UnauthorizedError({
@@ -291,7 +289,7 @@ export const judgingRouter = router({
             const judgeId = input.judgeId || user.id;
 
             // If not admin and tries to access other judge's assignments
-            if (user.userRole !== UserRoleEnum.admin && judgeId !== user.id) {
+            if (!hasAdminAccess(user.userRole) && judgeId !== user.id) {
                 throw new UnauthorizedError({
                     email: user.email,
                     role: user.userRole,
@@ -388,7 +386,7 @@ export const judgingRouter = router({
                 throw new InternalServerError('User not authenticated');
             }
             if (
-                user.userRole !== UserRoleEnum.admin &&
+                !hasAdminAccess(user.userRole) &&
                 user.userRole !== UserRoleEnum.judge
             ) {
                 throw new UnauthorizedError({
@@ -430,7 +428,7 @@ export const judgingRouter = router({
                 throw new InternalServerError('User not authenticated');
             }
 
-            if (user.userRole !== UserRoleEnum.admin) {
+            if (!hasAdminAccess(user.userRole)) {
                 throw new UnauthorizedError({
                     email: user.email,
                     role: user.userRole,
@@ -485,7 +483,7 @@ export const judgingRouter = router({
             }
 
             if (
-                user.userRole !== UserRoleEnum.admin &&
+                !hasAdminAccess(user.userRole) &&
                 user.userRole !== UserRoleEnum.judge
             ) {
                 throw new UnauthorizedError({

@@ -2,12 +2,12 @@ import { z } from 'zod';
 import { publicProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
 import { user } from '@/db/schema/users/users';
-import { UserRoleEnum } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
 import { InternalServerError } from '../exceptions';
 import { getUserData } from './usersRouter';
 import { fetchAnnouncementAudiences } from '@/server/announcements/fetchAnnouncementAudiences';
 import { fetchAnnouncementsForViewer } from '@/server/announcements/fetchAnnouncementsForViewer';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 export const announcementsRouter = router({
     getAnnouncements: publicProcedure
@@ -23,7 +23,7 @@ export const announcementsRouter = router({
         .query(async ({ input }) => {
             try {
                 const viewer = await getUserData();
-                const isAdmin = viewer?.userRole === UserRoleEnum.admin;
+                const isAdmin = hasAdminAccess(viewer?.userRole);
                 const viewAll = isAdmin ? (input.viewAll ?? true) : false;
                 const previewLocationKey =
                     isAdmin &&
@@ -50,7 +50,7 @@ export const announcementsRouter = router({
         .query(async ({ input }) => {
             try {
                 const viewer = await getUserData();
-                if (viewer?.userRole !== UserRoleEnum.admin) {
+                if (!hasAdminAccess(viewer?.userRole)) {
                     return [];
                 }
                 return await fetchAnnouncementAudiences(input.hackathonId);

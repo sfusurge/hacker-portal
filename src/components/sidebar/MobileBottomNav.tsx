@@ -17,6 +17,7 @@ import {
     isSparkjamProjectsArea,
     SPARKJAM_PROJECTS_PATH,
 } from '@/lib/projects/projectsPaths';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 interface MobileBottomNavProps {
     className?: string;
@@ -203,7 +204,7 @@ export default function MobileBottomNav({
                                 />
                             ))}
 
-                            {initialData?.userRole === 'admin' &&
+                            {hasAdminAccess(initialData?.userRole) &&
                                 adminLinks.map((link) => (
                                     <NavLink
                                         key={link.href}

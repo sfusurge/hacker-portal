@@ -53,6 +53,7 @@ import {
     useState,
 } from 'react';
 import type { AnnouncementWithAttachments } from '@/db/schema/announcements';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 const ANNOUNCEMENT_BREAKPOINT_PX = 920;
 
@@ -96,7 +97,7 @@ export default function AnnouncementsPage() {
     const [query, setQuery] = useState('');
     const hackathon = useAtomValue(hackathonAtom);
     const userInfo = useAtomValue(userInfoAtom);
-    const isAdmin = userInfo?.userRole === 'admin';
+    const isAdmin = hasAdminAccess(userInfo?.userRole);
     const [viewAllChannels, setViewAllChannels] = useAtom(
         adminAnnouncementsViewAllAtom
     );
