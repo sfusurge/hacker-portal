@@ -10,6 +10,7 @@ import ClientLayoutWrapper from './ClientLayoutWrapper';
 import MobileTopNav from '@/components/sidebar/MobileTopNav';
 import SideBar from '@/components/sidebar/SideBar';
 import AuthLayoutFallback from './AuthLayoutFallback';
+import TimeShiftCond from '@/components/testmenu/TimeShiftCond';
 
 export default function Layout({ children }: { children: ReactNode }) {
     return (
@@ -63,6 +64,7 @@ async function AuthLayoutContent({ children }: { children: ReactNode }) {
                 <main className="md:bg-neutral-925 mt-20 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-x-auto overflow-y-auto p-6 md:mt-0 md:overflow-y-auto md:rounded-2xl md:border md:border-neutral-600/30 md:p-10">
                     {children}
                 </main>
+                <TimeShiftCond />
             </ClientLayoutWrapper>
         </ClientContext>
     );
