@@ -8,6 +8,7 @@ import DiscordCard from '@/components/home/DiscordCard';
 import HackathonCard from '@/components/home/HackathonCard';
 import { PageHeader } from '@/components/PageHeader';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 export default async function Home() {
     const data = await getCachedUserData();
@@ -52,7 +53,7 @@ export default async function Home() {
         ? await generateQRCode(data!.id.toString(), opts)
         : undefined;
 
-    const isAdmin = data?.userRole === 'admin';
+    const isAdmin = hasAdminAccess(data?.userRole);
 
     return (
         <div className="flex flex-col gap-6 md:gap-8">

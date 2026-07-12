@@ -27,6 +27,7 @@ import {
 import { useWindowSize } from '@/lib/useWindowSize';
 import { trpc } from '@/trpc/client';
 import { MobileCalendar } from '@/components/calendar/MobileMonthCalendar/MobileCalendar';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 export function ClientCalendarPage({
     events: _events,
@@ -48,7 +49,7 @@ export function ClientCalendarPage({
 
     const userInfo = useAtomValue(userInfoAtom);
     const isAdmin = useMemo(
-        () => userInfo && userInfo.userRole === 'admin',
+        () => userInfo && hasAdminAccess(userInfo.userRole),
         [userInfo]
     );
 

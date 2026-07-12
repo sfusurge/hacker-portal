@@ -11,6 +11,7 @@ import MobileTopNav from '@/components/sidebar/MobileTopNav';
 import SideBar from '@/components/sidebar/SideBar';
 import AuthLayoutFallback from './AuthLayoutFallback';
 import TimeShiftCond from '@/components/testmenu/TimeShiftCond';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 export default function Layout({ children }: { children: ReactNode }) {
     return (
@@ -38,7 +39,7 @@ async function AuthLayoutContent({ children }: { children: ReactNode }) {
             ? getInitialAnnouncements(
                   hackathon.id,
                   userData.id,
-                  userData.userRole === 'admin'
+                  hasAdminAccess(userData.userRole)
               )
             : Promise.resolve({ items: [], hasMore: false }),
         hackathon != null

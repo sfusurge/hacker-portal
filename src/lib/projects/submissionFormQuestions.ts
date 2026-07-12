@@ -6,6 +6,7 @@ import type {
     DisplayRole,
     DisplayRoles,
 } from '@/components/application_components/types';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 export type SubmissionReviewTableQuestion = {
     questionId: number;
@@ -60,7 +61,7 @@ export function isVisibleForUserRole(
     userRole: string | undefined
 ): boolean {
     const roles = normalizeDisplayRoles(question.displayRole);
-    const isJudgeViewer = userRole === 'judge' || userRole === 'admin';
+    const isJudgeViewer = userRole === 'judge' || hasAdminAccess(userRole);
 
     if (roles.includes('all')) return true;
     if (roles.includes('judge') && isJudgeViewer) return true;

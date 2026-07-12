@@ -10,12 +10,12 @@ import {
 import { publicProcedure, router } from '../trpc';
 import { InternalServerError, UnauthorizedError } from '../exceptions';
 
-import { UserRoleEnum } from '@/db/schema/users/users';
 import { databaseClient } from '@/db/client';
 import { and, asc, eq, getTableColumns } from 'drizzle-orm';
 import { checkIns } from '@/db/schema/checkIn';
 import { z } from 'zod';
 import { getUserData } from '@/server/routers/usersRouter';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 export interface CalendarEvent {
     id: number;
@@ -40,7 +40,7 @@ export const eventsRouter = router({
             const user = await getUserData();
 
             // Only admin can create events
-            if (user?.userRole !== UserRoleEnum.admin) {
+            if (!hasAdminAccess(user?.userRole)) {
                 throw new UnauthorizedError({
                     email: user?.email,
                     role: user?.userRole,

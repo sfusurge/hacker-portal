@@ -5,7 +5,7 @@ import {
     insertCheckInSchema,
     isCheckInSchema,
 } from '@/db/schema/checkIn';
-import { UserRoleEnum, user as usersTable } from '@/db/schema/users/users';
+import { user as usersTable } from '@/db/schema/users/users';
 import { ResourceNotFoundError, UnauthorizedError } from '../exceptions';
 import { TRPCError } from '@trpc/server';
 import { publicProcedure, router } from '../trpc';
@@ -14,6 +14,7 @@ import { getUserData } from '@/server/routers/usersRouter';
 import { events } from '@/db/schema/events';
 import { applications } from '@/db/schema/applications';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 export const checkInRouter = router({
     checkIn: publicProcedure
@@ -22,7 +23,7 @@ export const checkInRouter = router({
             const user = await getUserData();
 
             // Only admin can check people in
-            if (user?.userRole !== UserRoleEnum.admin) {
+            if (!hasAdminAccess(user?.userRole)) {
                 throw new UnauthorizedError({
                     email: user?.email,
                     role: user?.userRole,
@@ -116,7 +117,7 @@ export const checkInRouter = router({
         .query(async ({ input }) => {
             const user = await getUserData();
 
-            if (user?.userRole !== UserRoleEnum.admin) {
+            if (!hasAdminAccess(user?.userRole)) {
                 throw new UnauthorizedError({
                     email: user?.email,
                     role: user?.userRole,

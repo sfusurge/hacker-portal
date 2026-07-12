@@ -2,16 +2,16 @@ import { publicProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
 import { emailQueue, emailTemplates } from '@/db/schema/emails';
 import { hackathons } from '@/db/schema/hackathons';
-import { UserRoleEnum } from '@/db/schema/users/users';
 import { UnauthorizedError, InternalServerError } from '../exceptions';
 import { getUserData } from '@/server/routers/usersRouter';
 import { z } from 'zod';
 import { and, desc, eq } from 'drizzle-orm';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 async function assertAdmin() {
     const user = await getUserData();
     if (!user) throw new InternalServerError('User not authenticated');
-    if (user.userRole !== UserRoleEnum.admin) {
+    if (!hasAdminAccess(user.userRole)) {
         throw new UnauthorizedError({
             email: user.email,
             role: user.userRole,
