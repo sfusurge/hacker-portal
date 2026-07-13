@@ -3,6 +3,7 @@ import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { magicLink } from 'better-auth/plugins';
 import { nextCookies } from 'better-auth/next-js';
 import { headers } from 'next/headers';
+import { cache } from 'react';
 import { max } from 'drizzle-orm';
 import { databaseClient } from '@/db/client';
 import { account, session, verification } from '@/db/schema/auth';
@@ -114,22 +115,46 @@ export interface SessionType {
     userId: string;
 }
 
-export async function getSession(): Promise<SessionType | null> {
-    const session = await auth.api.getSession({
-        headers: await headers(),
-    });
-
-    if (!session) {
-        return null;
+function isAbortError(error: unknown): boolean {
+    if (!(error instanceof Error)) {
+        return false;
     }
 
-    return {
-        user: {
-            name: session.user.name,
-            email: session.user.email,
-            image: session.user.image ?? null,
-        },
-        expires: session.session.expiresAt.toISOString(),
-        userId: String(session.user.id),
-    };
+    if (error.message.includes('aborted')) {
+        return true;
+    }
+
+    const sourceError = (error as { sourceError?: Error }).sourceError;
+    return sourceError?.name === 'AbortError';
 }
+
+export const getSession = cache(async (): Promise<SessionType | null> => {
+    for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+            const session = await auth.api.getSession({
+                headers: await headers(),
+            });
+
+            if (!session) {
+                return null;
+            }
+
+            return {
+                user: {
+                    name: session.user.name,
+                    email: session.user.email,
+                    image: session.user.image ?? null,
+                },
+                expires: session.session.expiresAt.toISOString(),
+                userId: String(session.user.id),
+            };
+        } catch (error) {
+            if (isAbortError(error) && attempt === 0) {
+                continue;
+            }
+            throw error;
+        }
+    }
+
+    return null;
+});

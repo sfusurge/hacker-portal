@@ -22,7 +22,7 @@ import { authClient } from '@/auth/auth-client';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
     Popover,
     PopoverContent,
@@ -43,6 +43,7 @@ import {
     isSparkjamProjectsArea,
     SPARKJAM_PROJECTS_PATH,
 } from '@/lib/projects/projectsPaths';
+import { toggleTimeShiftMenu } from '@/lib/testmenu/toggleTimeShiftMenu';
 
 /** mobile (under 768px) user can expand/collapse. */
 const SIDEBAR_MOBILE_MAX_PX = 768;
@@ -290,6 +291,18 @@ export default function SideBar({ className, initialData }: NavProps) {
             >
                 <div className="flex h-full flex-col items-center justify-between">
                     <div className={clsx('flex w-full flex-col gap-5')}>
+                        <button
+                            type="button"
+                            onClick={toggleTimeShiftMenu}
+                            className={clsx(
+                                'cursor-pointer text-left text-sm font-medium text-white/60 hover:text-white',
+                                collapsed
+                                    ? 'mx-auto px-0 text-[10px] leading-tight'
+                                    : 'px-4 md:px-0'
+                            )}
+                        >
+                            {collapsed ? 'TS' : 'TIMESHIFT MENU'}
+                        </button>
                         <div
                             className={clsx(
                                 'links flex w-full flex-1 flex-col items-stretch gap-1 px-4 md:px-0'

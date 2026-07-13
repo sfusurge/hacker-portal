@@ -20,6 +20,7 @@ const globalForDb = globalThis as unknown as {
 function createDatabaseClient(): DatabaseClient {
     if (isNeon) {
         neonConfig.webSocketConstructor = ws;
+        neonConfig.fetchConnectionCache = true;
 
         if (!globalForDb.neonSql) {
             globalForDb.neonSql = neon(connectionString);
