@@ -37,8 +37,12 @@ export function scrollToFirstInvalidInForm(
     if (!target) return;
 
     const el = target.closest<HTMLElement>('[data-question-id]') ?? target;
-    const offset = matchMedia('(max-width: 767.5px)').matches ? 88 : 24;
-    let parent = scrollContainer ?? null;
+    const isMobile = matchMedia('(max-width: 767.5px)').matches;
+    const offset = isMobile ? 88 : 24;
+
+    let parent: HTMLElement | null = isMobile
+        ? document.querySelector('main')
+        : (scrollContainer ?? null);
     for (
         let node = el.parentElement;
         node && !parent;
