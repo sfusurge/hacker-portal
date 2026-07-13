@@ -99,7 +99,8 @@ function ClientOnly({ children, ...delegated }: ComponentProps<'div'>) {
 
 // Atoms
 export const pageIndexAtom = atom(0); // defining the state
-export const finalErrCheckAtom = atom(false); // when the user clicks the review & submit for the first time,
+export const finalErrCheckAtom = atom(false); // validate all pages (review / submit)
+export const validatedPagesAtom = atom<number[]>([]); // pages validated via "Next"
 export const isReviewPageAtom = atom(false);
 
 interface InputFormProps {
@@ -283,6 +284,7 @@ export function InputForm({
                         {pagesAtoms.map((pageAtom, index) => (
                             <Page
                                 key={index}
+                                pageIndex={index}
                                 pageAtom={pageAtom}
                                 pageStateAtom={pageStateAtoms[index]}
                                 hidden={index !== currentPageIndex}
@@ -315,10 +317,12 @@ export function InputForm({
 }
 
 function Page({
+    pageIndex,
     pageAtom,
     hidden,
     pageStateAtom,
 }: {
+    pageIndex: number;
     pageAtom: PrimitiveAtom<InputFormPageData>;
     hidden: boolean;
     pageStateAtom: PrimitiveAtom<PageFormState>;
@@ -340,26 +344,25 @@ function Page({
     );
 
     const finalErrCheck = useAtomValue(finalErrCheckAtom);
+    const validatedPages = useAtomValue(validatedPagesAtom);
+    const shouldShowErrors =
+        finalErrCheck || validatedPages.includes(pageIndex);
 
     function updateFormStatus(extraCheck = false) {
         if (formRef.current) {
-            // Check form validity
-            let error = finalErrCheck
-                ? !formRef.current.checkValidity() // was report
-                : !formRef.current.checkValidity();
-
             const { state } = computePageFormProgress(page.questions || []);
 
-            if (finalErrCheck && state !== 'completed') {
-                error = true;
+            let error = false;
+            if (shouldShowErrors) {
+                error = !formRef.current.checkValidity();
+                if (state !== 'completed') {
+                    error = true;
+                }
+                if (error && extraCheck && state === 'completed') {
+                    error = !formRef.current.reportValidity();
+                }
             }
 
-            // Extra validation check
-            if (error && extraCheck && state === 'completed') {
-                error = !formRef.current.reportValidity();
-            }
-
-            // Update page state
             setPageState({
                 title: page.title || '',
                 error,
@@ -369,7 +372,7 @@ function Page({
     }
     useEffect(() => {
         updateFormStatus();
-    }, [page, finalErrCheck]);
+    }, [page, shouldShowErrors]);
 
     useEffect(() => {
         updateFormStatus(true);
@@ -384,7 +387,7 @@ function Page({
             className={cn(style.page, 'md:pb-0')}
             style={hidden ? { display: 'none' } : {}}
             noValidate
-            data-validated={finalErrCheck || undefined}
+            data-validated={shouldShowErrors || undefined}
         >
             <div className="flex flex-col gap-4">
                 {page.title && (
@@ -738,25 +741,27 @@ function PageButtons({
     const [index, setIndex] = useAtom(indexAtom);
     const pageStates = useAtomValue(pageStatesAtom);
     const setErrCheck = useSetAtom(finalErrCheckAtom);
+    const setValidatedPages = useSetAtom(validatedPagesAtom);
     const [dialogOpen, setDialogOpen] = useState(false);
 
     const [pendingNav, setPendingNav] = useState<'next' | 'review' | null>(
         null
     );
 
-    function queueValidation(action: 'next' | 'review') {
+    function tryReview() {
         setErrCheck(true);
         requestAnimationFrame(() => {
-            setTimeout(() => setPendingNav(action), 0);
+            setTimeout(() => setPendingNav('review'), 0);
         });
     }
 
-    function tryReview() {
-        queueValidation('review');
-    }
-
     function tryNext() {
-        queueValidation('next');
+        setValidatedPages((prev) =>
+            prev.includes(index) ? prev : [...prev, index]
+        );
+        requestAnimationFrame(() => {
+            setTimeout(() => setPendingNav('next'), 0);
+        });
     }
 
     useEffect(() => {

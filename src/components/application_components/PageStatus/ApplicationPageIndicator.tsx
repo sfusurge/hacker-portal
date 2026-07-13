@@ -1,6 +1,6 @@
 import { PrimitiveAtom, useAtomValue, useSetAtom, useAtom, Atom } from 'jotai';
 import style from './ApplicationPageIndicator.module.css';
-import { finalErrCheckAtom } from '../InputForm';
+import { finalErrCheckAtom, validatedPagesAtom } from '../InputForm';
 import { canAdvanceFromPageState } from '../InputFormComponents/shared';
 import {
     ArrowLeftIcon,
@@ -34,8 +34,8 @@ function IconHolder({ children }: { children: ReactNode }) {
     return <div className={style.iconHolder}>{children}</div>;
 }
 
-function getPageStatus(pageState: PageFormState, errCheck: boolean) {
-    if (pageState.error && errCheck) {
+function getPageStatus(pageState: PageFormState) {
+    if (pageState.error) {
         return (
             <IconHolder>
                 <ExclamationCircleIcon color="red"></ExclamationCircleIcon>
@@ -77,7 +77,7 @@ export function DesktopPageIndicator({
 }) {
     const pageStates = useAtomValue(pageStateAtoms);
     const setIndex = useSetAtom(indexAtom);
-    const [errCheck, setErrCheck] = useAtom(finalErrCheckAtom);
+    const setErrCheck = useSetAtom(finalErrCheckAtom);
 
     const [validationPerformed, setValidationPerformed] = useState(false);
     function tryReview() {
@@ -129,7 +129,7 @@ export function DesktopPageIndicator({
                             )}
                         >
                             <span className="mr-2 flex-shrink-0">
-                                {getPageStatus(item, errCheck)}
+                                {getPageStatus(item)}
                             </span>
                             <span className="flex-grow">{item.title}</span>
                         </button>
@@ -168,7 +168,9 @@ export function MobilePageIndicator({
 }) {
     const pageStates = useAtomValue(pageStateAtoms);
     const [index, setIndex] = useAtom(indexAtom);
-    const [errCheck, setErrCheck] = useAtom(finalErrCheckAtom);
+    const setErrCheck = useSetAtom(finalErrCheckAtom);
+
+    const setValidatedPages = useSetAtom(validatedPagesAtom);
 
     const [showPages, setShowPages] = useState(false);
 
@@ -188,15 +190,11 @@ export function MobilePageIndicator({
         null
     );
 
-    function queueValidation(action: 'next' | 'review') {
+    function tryReview() {
         setErrCheck(true);
         requestAnimationFrame(() => {
-            setTimeout(() => setPendingNav(action), 0);
+            setTimeout(() => setPendingNav('review'), 0);
         });
-    }
-
-    function tryReview() {
-        queueValidation('review');
     }
 
     function incrementIndex(incre: number) {
@@ -204,7 +202,13 @@ export function MobilePageIndicator({
             if (index + incre === pageStates.length) {
                 return tryReview();
             }
-            return queueValidation('next');
+            setValidatedPages((prev) =>
+                prev.includes(index) ? prev : [...prev, index]
+            );
+            requestAnimationFrame(() => {
+                setTimeout(() => setPendingNav('next'), 0);
+            });
+            return;
         }
         if (index + incre >= 0) {
             setIndex(index + incre);
@@ -323,7 +327,7 @@ export function MobilePageIndicator({
                             }}
                         >
                             <span className="mr-2 flex-shrink-0">
-                                {getPageStatus(item, errCheck)}
+                                {getPageStatus(item)}
                             </span>
                             <span className="flex-grow">
                                 {getPageTitle(_index)}
