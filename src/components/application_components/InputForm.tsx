@@ -44,10 +44,12 @@ import {
 } from 'react';
 import { Label } from '@/components/ui/label/label';
 import {
-    canAdvanceFromPageState,
-    computePageFormProgress,
+    computePageErrorState,
     submittedAtom,
 } from './InputFormComponents/shared';
+import { scrollToFirstInvalidInForm } from './formScroll';
+import { useFormPageNavigation } from './hooks/useFormPageNavigation';
+import { usePageScrollOnChange } from './hooks/usePageScrollOnChange';
 import { NumberInput } from './InputFormComponents/NumberInput';
 import { RadioInput } from './InputFormComponents/RadioInput';
 import { CheckBoxInput } from './InputFormComponents/CheckboxInput';
@@ -76,7 +78,6 @@ import { DropdownInput } from '@/components/application_components/InputFormComp
 import { ChoiceConditionalAlert } from '@/components/application_components/InputFormComponents/ChoiceConditionalAlert';
 import { InlineInput } from '@/components/application_components/InputFormComponents/InlineInput';
 import { DateInput } from '@/components/application_components/InputFormComponents/DateInput';
-import { toast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import ReviewApplicationDialog from './ReviewApplicationDialog';
 import { isSubmissionQuestionDisabled } from '@/lib/projects/submissionFormQuestions';
@@ -98,9 +99,10 @@ function ClientOnly({ children, ...delegated }: ComponentProps<'div'>) {
 }
 
 // Atoms
-export const pageIndexAtom = atom(0); // defining the state
-export const finalErrCheckAtom = atom(false); // validate all pages (review / submit)
-export const validatedPagesAtom = atom<number[]>([]); // pages validated via "Next"
+export const pageIndexAtom = atom(0);
+export const finalErrCheckAtom = atom(false);
+export const validatedPagesAtom = atom<number[]>([]);
+export const focusInvalidOnPageAtom = atom<number | null>(null);
 export const isReviewPageAtom = atom(false);
 
 interface InputFormProps {
@@ -206,6 +208,7 @@ export function InputForm({
         //     }, 0);
         // }
     }, [currentPageIndex, isMobile]);
+    usePageScrollOnChange(currentPageIndex, pageContainerRef, isMobile);
 
     // Guard against empty pages
     if (!pages || pages.length === 0) {
@@ -345,30 +348,24 @@ function Page({
 
     const finalErrCheck = useAtomValue(finalErrCheckAtom);
     const validatedPages = useAtomValue(validatedPagesAtom);
+    const focusInvalidOnPage = useAtomValue(focusInvalidOnPageAtom);
+    const setFocusInvalidOnPage = useSetAtom(focusInvalidOnPageAtom);
     const shouldShowErrors =
         finalErrCheck || validatedPages.includes(pageIndex);
 
     function updateFormStatus(extraCheck = false) {
-        if (formRef.current) {
-            const { state } = computePageFormProgress(page.questions || []);
-
-            let error = false;
-            if (shouldShowErrors) {
-                error = !formRef.current.checkValidity();
-                if (state !== 'completed') {
-                    error = true;
-                }
-                if (error && extraCheck && state === 'completed') {
-                    error = !formRef.current.reportValidity();
-                }
-            }
-
-            setPageState({
-                title: page.title || '',
-                error,
-                state,
-            });
-        }
+        if (!formRef.current) return;
+        const { state, error } = computePageErrorState(
+            formRef.current,
+            page.questions || [],
+            shouldShowErrors,
+            extraCheck
+        );
+        setPageState({
+            title: page.title || '',
+            error,
+            state,
+        });
     }
     useEffect(() => {
         updateFormStatus();
@@ -377,6 +374,21 @@ function Page({
     useEffect(() => {
         updateFormStatus(true);
     }, []);
+
+    useEffect(() => {
+        if (focusInvalidOnPage !== pageIndex) return;
+        const timer = setTimeout(() => {
+            scrollToFirstInvalidInForm(
+                formRef.current,
+                page.questions ?? [],
+                formRef.current?.closest(
+                    `.${style.appFormContent}`
+                ) as HTMLElement | null
+            );
+            setFocusInvalidOnPage(null);
+        }, 50);
+        return () => clearTimeout(timer);
+    }, [focusInvalidOnPage, pageIndex, page.questions, setFocusInvalidOnPage]);
 
     const questionAtomsAtom = splitAtom(questionsAtom);
     const [questionAtoms] = useAtom(questionAtomsAtom);
@@ -657,6 +669,9 @@ function Question({
         <div
             className={cn(style.ver, isDisabled && 'opacity-50')}
             style={{ width: '100%' }}
+            {...(question.questionId != null
+                ? { 'data-question-id': question.questionId }
+                : {})}
         >
             {showNonCanadaWarning && (
                 <Alert variant="warning" className="mb-4 max-w-[480px]">
@@ -738,72 +753,12 @@ function PageButtons({
     setSubmitted: (val: boolean) => void;
     applicationType: 'application' | 'submission';
 }) {
-    const [index, setIndex] = useAtom(indexAtom);
-    const pageStates = useAtomValue(pageStatesAtom);
-    const setErrCheck = useSetAtom(finalErrCheckAtom);
-    const setValidatedPages = useSetAtom(validatedPagesAtom);
+    const { index, setIndex, tryNext, tryReview } = useFormPageNavigation({
+        indexAtom,
+        pageStatesAtom,
+        pageCount,
+    });
     const [dialogOpen, setDialogOpen] = useState(false);
-
-    const [pendingNav, setPendingNav] = useState<'next' | 'review' | null>(
-        null
-    );
-
-    function tryReview() {
-        setErrCheck(true);
-        requestAnimationFrame(() => {
-            setTimeout(() => setPendingNav('review'), 0);
-        });
-    }
-
-    function tryNext() {
-        setValidatedPages((prev) =>
-            prev.includes(index) ? prev : [...prev, index]
-        );
-        requestAnimationFrame(() => {
-            setTimeout(() => setPendingNav('next'), 0);
-        });
-    }
-
-    useEffect(() => {
-        if (!pendingNav) return;
-
-        if (pendingNav === 'next') {
-            const current = pageStates[index];
-            if (!current || !canAdvanceFromPageState(current)) {
-                toast({
-                    title: 'Incomplete section',
-                    description:
-                        'Answer all required questions on this page before continuing.',
-                    variant: 'error',
-                });
-            } else {
-                setIndex(index + 1);
-            }
-        } else {
-            let valid = true;
-            let idx = 0;
-            for (; idx < pageStates.length; idx++) {
-                valid &&= canAdvanceFromPageState(pageStates[idx]);
-                if (!valid) {
-                    break;
-                }
-            }
-
-            if (!valid) {
-                toast({
-                    title: 'Invalid form',
-                    description:
-                        'Some of the questions are not filled correctly.',
-                    variant: 'error',
-                });
-                setIndex(idx);
-            } else {
-                setIndex(pageCount);
-            }
-        }
-
-        setPendingNav(null);
-    }, [pendingNav, pageStates, index, pageCount, setIndex]);
 
     return (
         <>
