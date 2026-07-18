@@ -29,7 +29,6 @@ export function ApiDropdown({
     apiUrl,
     initialData = '',
     onChange,
-    required,
     readOnly,
     placeholder = 'Select an option',
     debounceMs = 300,
@@ -291,7 +290,6 @@ export function ApiDropdown({
             >
                 <div className="px-2 py-2 pb-1">
                     <input
-                        required={required}
                         type="text"
                         placeholder="Search..."
                         value={searchQuery}
