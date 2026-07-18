@@ -13,7 +13,16 @@ import {
 } from '@/db/schema/houses';
 import { hasAdminAccess } from '@/lib/auth/roles';
 import { TRPCError } from '@trpc/server';
-import { and, asc, count, countDistinct, desc, eq, sql } from 'drizzle-orm';
+import {
+    and,
+    asc,
+    count,
+    countDistinct,
+    desc,
+    eq,
+    sql,
+    sum,
+} from 'drizzle-orm';
 import { assignUnassignedHouses } from '@/server/houses/assignHouse';
 import { UnauthorizedError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
@@ -122,7 +131,8 @@ export const housesRouter = router({
                     houseId: houses.id,
                     name: houses.name,
                     memberCount: countDistinct(houseMemberships.userId),
-                    points: count(events.id),
+                    // points: count(events.id),
+                    points: sql<number>`coalesce(${sum(events.points)}, 0)`,
                 })
                 .from(houses)
                 .leftJoin(
@@ -142,7 +152,10 @@ export const housesRouter = router({
                 )
                 .where(eq(houses.hackathonId, input.hackathonId))
                 .groupBy(houses.id, houses.name)
-                .orderBy(desc(sql`count(${events.id})`), asc(houses.name));
+                .orderBy(
+                    desc(sql`coalesce(sum(${events.points}), 0)`),
+                    asc(houses.name)
+                );
 
             return rows.map((row) => ({
                 houseId: row.houseId,

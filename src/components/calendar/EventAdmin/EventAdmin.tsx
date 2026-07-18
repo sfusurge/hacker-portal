@@ -317,7 +317,21 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                             }}
                         ></CheckBoxWithLabel>
                     </div>
-
+                    <div>
+                        <Label>Points</Label>
+                        <FormTextInput
+                            type="number"
+                            defaultValue={event?.points ?? 1}
+                            lazy
+                            onLazyChange={(t) => {
+                                const n = Number(t);
+                                setEvent({
+                                    ...event!,
+                                    points: Number(isNaN(n) ? 1 : n),
+                                });
+                            }}
+                        />
+                    </div>
                     <Button
                         role="submit"
                         type="submit"
@@ -356,7 +370,8 @@ function convertEvent(hackathonId: number, e?: InternalCalendarEventType) {
         return {
             color: '#6466F1',
             hackathonId: hackathonId,
-        } as CalendarEvent;
+            points: 1,
+        } as unknown as CalendarEvent;
     }
     return {} as CalendarEvent;
 }
