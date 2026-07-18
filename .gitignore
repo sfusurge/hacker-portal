@@ -44,3 +44,4 @@ next-env.d.ts
 certificates
 # Local Netlify folder
 .netlify
+dump.sql

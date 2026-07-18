@@ -258,6 +258,7 @@ export function ApiDropdown({
             <CollapsibleTrigger asChild>
                 <button
                     type="button"
+                    data-validation-control
                     disabled={readOnly}
                     className={cn(
                         'flex items-center justify-between gap-2',

@@ -13,10 +13,6 @@
     /* width: max-content; */
 }
 
-.hasLength > textarea:user-invalid {
-    border-color: var(--danger-500);
-}
-
 .textarea {
     border: 1px solid var(--border-neutral-secondary);
     background-color: var(--background-neutral-secondary);
@@ -31,4 +27,10 @@
 .textarea:focus {
     border-color: var(--border-brand-primary);
     background-color: var(--background-brand-focus);
+}
+
+.textarea:user-invalid,
+.textarea:invalid:not(:placeholder-shown),
+form[data-validated] .textarea:invalid {
+    border-color: var(--danger-500) !important;
 }

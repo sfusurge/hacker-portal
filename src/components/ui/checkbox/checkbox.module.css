@@ -80,6 +80,11 @@
     border-color: var(--border-brand-primary);
 }
 
+.label:has(input:user-invalid),
+form[data-validated] .label:has(input:invalid) {
+    border-color: var(--danger-500);
+}
+
 .label:has(input:checked) .inlineLabel {
     color: white;
 }

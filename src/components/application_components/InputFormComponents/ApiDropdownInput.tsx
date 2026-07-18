@@ -1,11 +1,10 @@
 'use client';
 
-import { type PrimitiveAtom, useAtom, useAtomValue, WritableAtom } from 'jotai';
+import { type PrimitiveAtom, useAtom, WritableAtom } from 'jotai';
 import type { QuestionApiDropdown } from '../types';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { cn } from '@/lib/utils';
 import { ApiDropdown } from '@/components/ui/ApiDropdown/ApiDropdown';
-import { finalErrCheckAtom } from '../InputForm';
+import style from './ApiDropdownInput.module.css';
 
 export function ApiDropdownInput({
     dataAtom,
@@ -20,7 +19,6 @@ export function ApiDropdownInput({
     const [errorMsg, setErrorMsg] = useState('');
     const [isInvalid, setIsInvalid] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
-    const showErrors = useAtomValue(finalErrCheckAtom);
 
     const getErrorMessage = useCallback(() => {
         const words = question.title.toLowerCase().split(/\s+/);
@@ -45,7 +43,7 @@ export function ApiDropdownInput({
         let message = '';
         const selection = question.selection ?? '';
 
-        if (question.required && showErrors) {
+        if ((question.required ?? false) && !disabled) {
             if (!selection || selection.trim().length === 0) {
                 message = getErrorMessage();
             }
@@ -56,8 +54,10 @@ export function ApiDropdownInput({
         inputRef.current.value = inputValue;
         inputRef.current.setCustomValidity(message);
         setErrorMsg(message);
-        setIsInvalid(message !== '');
-    }, [question.selection, question.required, showErrors, getErrorMessage]);
+        if (!message) {
+            setIsInvalid(false);
+        }
+    }, [disabled, question.selection, question.required, getErrorMessage]);
 
     const selectionStr = question.selection ?? '';
     const inputValue =
@@ -65,16 +65,7 @@ export function ApiDropdownInput({
 
     return (
         <div
-            className={cn(
-                'relative',
-                isInvalid && [
-                    'after:content-[var(--errorMsg)]',
-                    'after:block',
-                    'after:text-xs',
-                    'after:text-danger-400',
-                    'after:mt-2',
-                ]
-            )}
+            className={style.field}
             style={
                 {
                     '--errorMsg': `"${errorMsg}"`,
@@ -85,9 +76,12 @@ export function ApiDropdownInput({
                 ref={inputRef}
                 type="text"
                 style={{ display: 'none' }}
-                required={question.required}
+                required={(question.required ?? false) && !disabled}
                 value={inputValue}
                 onChange={() => {}}
+                onInvalid={() => {
+                    setIsInvalid(true);
+                }}
             />
 
             <ApiDropdown
@@ -99,11 +93,15 @@ export function ApiDropdownInput({
                             val && val.trim().length > 0 ? val : '';
                         inputRef.current.value = inputValue;
                         const message =
-                            question.required &&
+                            (question.required ?? false) &&
+                            !disabled &&
                             (!val || val.trim().length === 0)
                                 ? getErrorMessage()
                                 : '';
                         inputRef.current.setCustomValidity(message);
+                        if (!message) {
+                            setIsInvalid(false);
+                        }
                         inputRef.current.dispatchEvent(
                             new Event('input', {
                                 bubbles: true,
