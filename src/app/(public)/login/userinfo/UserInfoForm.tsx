@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input/input';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { uploadFileToBlob } from '@/utils/blobHelper';
+import { getLoginBannerSrc } from '@/components/login/constants';
 
 export default function UserInfoForm() {
     const searchParams = useSearchParams();
@@ -91,7 +92,7 @@ export default function UserInfoForm() {
         >
             <div className="block h-full w-full bg-[#C4D086] lg:hidden" />
             <Image
-                src="/dashboard/sparkjamhead26.webp"
+                src={getLoginBannerSrc()}
                 alt="Sparky studying"
                 fill
                 className="absolute hidden h-full w-full object-cover lg:block"
