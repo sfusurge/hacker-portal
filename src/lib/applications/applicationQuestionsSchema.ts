@@ -7,6 +7,7 @@ export const SUPPORTED_QUESTION_TYPES = [
     'date-ymd',
     'text-area',
     'text-line',
+    'phone',
     'title-line',
     'number',
     'multiple-choice',

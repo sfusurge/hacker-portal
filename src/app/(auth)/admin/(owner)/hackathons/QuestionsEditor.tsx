@@ -1349,6 +1349,7 @@ export function QuestionsEditor({
                                                         </div>
                                                     )}
                                                     {(q.type === 'text-line' ||
+                                                        q.type === 'phone' ||
                                                         q.type ===
                                                             'text-area') && (
                                                         <div className="mt-2">

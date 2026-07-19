@@ -215,7 +215,8 @@ export default function SideBar({ className, initialData }: NavProps) {
             now,
             hackathon.projectGalleryOpen?.toDate() ?? null,
             hackathon.submissionDeadline.toDate(),
-            initialData?.userRole
+            initialData?.userRole,
+            hackathon.submissionOpen?.toDate() ?? null
         );
 
     const mainNavLinks = useMemo(() => {

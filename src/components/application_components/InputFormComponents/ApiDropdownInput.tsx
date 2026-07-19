@@ -37,29 +37,30 @@ export function ApiDropdownInput({
         return `Required, please select a ${optionName}`;
     }, [question.title]);
 
+    const selectionStr =
+        typeof question.selection === 'string' ? question.selection : '';
+
     useEffect(() => {
         if (!inputRef.current) return;
 
         let message = '';
-        const selection = question.selection ?? '';
 
         if ((question.required ?? false) && !disabled) {
-            if (!selection || selection.trim().length === 0) {
+            if (!selectionStr || selectionStr.trim().length === 0) {
                 message = getErrorMessage();
             }
         }
 
         const inputValue =
-            selection && selection.trim().length > 0 ? selection : '';
+            selectionStr && selectionStr.trim().length > 0 ? selectionStr : '';
         inputRef.current.value = inputValue;
         inputRef.current.setCustomValidity(message);
         setErrorMsg(message);
         if (!message) {
             setIsInvalid(false);
         }
-    }, [disabled, question.selection, question.required, getErrorMessage]);
+    }, [disabled, selectionStr, question.required, getErrorMessage]);
 
-    const selectionStr = question.selection ?? '';
     const inputValue =
         selectionStr && selectionStr.trim().length > 0 ? selectionStr : '';
 
