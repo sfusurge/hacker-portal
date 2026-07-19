@@ -66,11 +66,7 @@ export default function TimeShift() {
                 <label className="text-sm text-white/90">
                     Set Simulated DateTime
                 </label>
-                <div
-                    className={
-                        'flex flex-col items-start gap-2 md:flex-row md:items-center'
-                    }
-                >
+                <div className="flex w-full max-w-full flex-wrap items-center gap-2">
                     <input
                         type="datetime-local"
                         value={selectedDateTime}
@@ -80,7 +76,7 @@ export default function TimeShift() {
                             storeDateTime(v);
                             setNowTick((x) => x + 1);
                         }}
-                        className="rounded bg-neutral-800 px-2 py-1 outline-none"
+                        className="max-w-full min-w-0 rounded bg-neutral-800 px-2 py-1 outline-none"
                         aria-label="Set simulated date and time"
                     />
                     <Button
@@ -99,7 +95,7 @@ export default function TimeShift() {
                         className="text-sm"
                         onClick={refreshPortal}
                     >
-                        Apply / Refresh
+                        Update page
                     </Button>
                 </div>
                 <div className="text-xs text-white/60">
@@ -107,9 +103,9 @@ export default function TimeShift() {
                     {shiftedNow.toLocaleString()}
                 </div>
                 <p className="text-xs text-white/40">
-                    Changing the date updates client time immediately. Click
-                    Apply / Refresh (or the Refresh button below) once
-                    you&apos;re done so server-rendered pages catch up.
+                    The time above changes as soon as you pick a date. Click
+                    Update page when you&apos;re done so the rest of the site
+                    uses the new time.
                 </p>
             </div>
         </Card>

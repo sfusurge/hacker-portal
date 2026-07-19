@@ -110,7 +110,7 @@ export default function TimeShiftCond() {
                             }
                         }}
                     >
-                        Refresh
+                        Close & update page
                     </Button>
                 </div>
             </DialogContent>
