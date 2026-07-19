@@ -19,8 +19,29 @@ import {
 import { useState, useEffect } from 'react';
 import { useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import {
+    DEMOGRAPHIC_CHART_DESCRIPTIONS,
+    DEMOGRAPHIC_CHART_LABELS,
+    DEMOGRAPHIC_STAT_ROLES,
+    type DemographicStatRole,
+} from '@/lib/statistics/demographicRoles';
 
-// responsive chart sizing
+type PieSlice = { name: string; value: number; fill: string };
+type Cohort = 'all' | 'accepted';
+type ChartsByRole = Partial<Record<DemographicStatRole, PieSlice[]>>;
+
+type StatsPayload = {
+    datasets?: {
+        all?: ChartsByRole;
+        accepted?: ChartsByRole;
+    };
+    // legacy shape before this change
+    pronouns?: PieSlice[];
+    experience?: PieSlice[];
+    school?: PieSlice[];
+    levelStudy?: PieSlice[];
+};
+
 function useResponsiveChartSize() {
     const [chartSize, setChartSize] = useState({
         outerRadius: 80,
@@ -33,23 +54,20 @@ function useResponsiveChartSize() {
         const updateSize = () => {
             const width = window.innerWidth;
             if (width < 640) {
-                // sm
                 setChartSize({
                     outerRadius: 50,
                     innerRadius: 30,
                     fontSize: 10,
-                    legendLayout: 'horizontal' as 'vertical' | 'horizontal',
+                    legendLayout: 'horizontal',
                 });
             } else if (width < 768) {
-                // md
                 setChartSize({
                     outerRadius: 60,
                     innerRadius: 35,
                     fontSize: 11,
-                    legendLayout: 'horizontal' as 'vertical' | 'horizontal',
+                    legendLayout: 'horizontal',
                 });
             } else if (width < 1024) {
-                // lg
                 setChartSize({
                     outerRadius: 70,
                     innerRadius: 45,
@@ -74,7 +92,6 @@ function useResponsiveChartSize() {
     return chartSize;
 }
 
-// custom legend component with hover interactions
 function CustomLegend({
     payload,
     onMouseEnter,
@@ -115,10 +132,10 @@ function StatisticsCard({
 }: {
     title: string;
     description: string;
-    data: any[];
+    data: PieSlice[];
     activeIndex: number | null;
     setActiveIndex: (index: number | null) => void;
-    chartSize: any;
+    chartSize: ReturnType<typeof useResponsiveChartSize>;
 }) {
     return (
         <Card>
@@ -130,90 +147,111 @@ function StatisticsCard({
             </CardHeader>
             <CardContent>
                 <div className="h-[350px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <RechartsPieChart>
-                            <RechartsPie
-                                data={data}
-                                dataKey="value"
-                                nameKey="name"
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={chartSize.outerRadius}
-                                innerRadius={chartSize.innerRadius}
-                                stroke="none"
-                                onMouseEnter={(data: any, index: number) =>
-                                    setActiveIndex(index)
-                                }
-                                onMouseLeave={() => setActiveIndex(null)}
-                            >
-                                {data.map((entry: any, index: number) => (
-                                    <Cell
-                                        key={`cell-${index}`}
-                                        fill={entry.fill}
-                                        opacity={
-                                            activeIndex === null ||
-                                            activeIndex === index
-                                                ? 1
-                                                : 0.3
-                                        }
-                                    />
-                                ))}
-                            </RechartsPie>
-                            <RechartsTooltip
-                                contentStyle={{
-                                    backgroundColor: '#0f0f0f',
-                                    border: '1px solid #525252',
-                                    borderRadius: '8px',
-                                    fontSize: chartSize.fontSize,
-                                    color: '#f5f5f5 !important',
-                                    boxShadow:
-                                        '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
-                                }}
-                                labelStyle={{ color: '#f5f5f5' }}
-                                itemStyle={{ color: '#f5f5f5' }}
-                            />
-                            <Legend
-                                content={(props) => (
-                                    <CustomLegend
-                                        {...props}
-                                        onMouseEnter={(index: number) =>
-                                            setActiveIndex(index)
-                                        }
-                                        onMouseLeave={() =>
-                                            setActiveIndex(null)
-                                        }
-                                        activeIndex={activeIndex}
-                                    />
-                                )}
-                            />
-                        </RechartsPieChart>
-                    </ResponsiveContainer>
+                    {data.length === 0 ? (
+                        <p className="text-sm text-white/50">
+                            No data for this field (question may be missing
+                            displayRole on this hackathon form).
+                        </p>
+                    ) : (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <RechartsPieChart>
+                                <RechartsPie
+                                    data={data}
+                                    dataKey="value"
+                                    nameKey="name"
+                                    cx="50%"
+                                    cy="50%"
+                                    outerRadius={chartSize.outerRadius}
+                                    innerRadius={chartSize.innerRadius}
+                                    stroke="none"
+                                    onMouseEnter={(_data: any, index: number) =>
+                                        setActiveIndex(index)
+                                    }
+                                    onMouseLeave={() => setActiveIndex(null)}
+                                >
+                                    {data.map((entry, index) => (
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={entry.fill}
+                                            opacity={
+                                                activeIndex === null ||
+                                                activeIndex === index
+                                                    ? 1
+                                                    : 0.3
+                                            }
+                                        />
+                                    ))}
+                                </RechartsPie>
+                                <RechartsTooltip
+                                    contentStyle={{
+                                        backgroundColor: '#0f0f0f',
+                                        border: '1px solid #525252',
+                                        borderRadius: '8px',
+                                        fontSize: chartSize.fontSize,
+                                        color: '#f5f5f5',
+                                        boxShadow:
+                                            '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
+                                    }}
+                                    labelStyle={{ color: '#f5f5f5' }}
+                                    itemStyle={{ color: '#f5f5f5' }}
+                                />
+                                <Legend
+                                    content={(props) => (
+                                        <CustomLegend
+                                            {...props}
+                                            onMouseEnter={(index: number) =>
+                                                setActiveIndex(index)
+                                            }
+                                            onMouseLeave={() =>
+                                                setActiveIndex(null)
+                                            }
+                                            activeIndex={activeIndex}
+                                        />
+                                    )}
+                                />
+                            </RechartsPieChart>
+                        </ResponsiveContainer>
+                    )}
                 </div>
             </CardContent>
         </Card>
     );
 }
 
+function resolveChartsForCohort(
+    payload: StatsPayload | null,
+    cohort: Cohort
+): ChartsByRole {
+    if (!payload) return {};
+
+    if (payload.datasets?.[cohort]) {
+        return payload.datasets[cohort] ?? {};
+    }
+
+    // Legacy blob (pre-rewrite): treat as accepted-only with old keys
+    if (cohort === 'accepted') {
+        return {
+            pronouns: payload.pronouns ?? [],
+            priorHackathons: payload.experience ?? [],
+            school: payload.school ?? [],
+            education: payload.levelStudy ?? [],
+        };
+    }
+
+    return {};
+}
+
 export default function StatisticsPage() {
     const hackathon = useAtomValue(hackathonAtom);
     const chartSize = useResponsiveChartSize();
 
-    const [pieChartData, setPieChartData] = useState<any>(null);
+    const [payload, setPayload] = useState<StatsPayload | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
-    const [activePronounsIndex, setActivePronounsIndex] = useState<
-        number | null
-    >(null);
-    const [activeExperienceIndex, setActiveExperienceIndex] = useState<
-        number | null
-    >(null);
-    const [activeLevelStudyIndex, setActiveLevelStudyIndex] = useState<
-        number | null
-    >(null);
-    const [activeSchoolIndex, setActiveSchoolIndex] = useState<number | null>(
-        null
-    );
+    const [cohort, setCohort] = useState<Cohort>('accepted');
+    const [activeIndexes, setActiveIndexes] = useState<
+        Partial<Record<DemographicStatRole, number | null>>
+    >({});
 
     useEffect(() => {
         const fetchData = async () => {
@@ -225,15 +263,15 @@ export default function StatisticsPage() {
                 const result = await response.json();
 
                 if (result.success) {
-                    setPieChartData(result.data);
+                    setPayload(result.data);
                     setError(null);
                 } else {
                     setError(result.error || 'Failed to fetch statistics data');
-                    setPieChartData(null);
+                    setPayload(null);
                 }
-            } catch (err) {
+            } catch {
                 setError('Failed to fetch statistics data');
-                setPieChartData(null);
+                setPayload(null);
             } finally {
                 setLoading(false);
             }
@@ -242,10 +280,7 @@ export default function StatisticsPage() {
         fetchData();
     }, [hackathon.id]);
 
-    const pronounsData = pieChartData?.pronouns || [];
-    const experienceData = pieChartData?.experience || [];
-    const levelStudyData = pieChartData?.levelStudy || [];
-    const schoolData = pieChartData?.school || [];
+    const activeCharts = resolveChartsForCohort(payload, cohort);
 
     if (loading) {
         return (
@@ -258,7 +293,6 @@ export default function StatisticsPage() {
                         Data visualization of hackers
                     </p>
                 </div>
-
                 <div className="grid grid-cols-1 gap-4 pb-28 sm:gap-6 md:pb-10 xl:grid-cols-2">
                     {[...Array(4)].map((_, index) => (
                         <Card key={index}>
@@ -267,7 +301,6 @@ export default function StatisticsPage() {
                             </CardHeader>
                             <CardContent>
                                 <Skeleton className="h-[250px] w-full sm:h-[300px]" />
-                                <Skeleton className="h-4 w-full" />
                             </CardContent>
                         </Card>
                     ))}
@@ -293,51 +326,59 @@ export default function StatisticsPage() {
 
     return (
         <div className="mx-auto flex h-full w-full flex-col gap-4 sm:gap-6">
-            <div className="text-white">
-                <h1 className="mb-2 text-2xl font-bold text-white sm:text-3xl">
-                    Application Statistics
-                </h1>
-                <p className="text-sm text-white/60 sm:text-base">
-                    Data visualization of hackers
-                </p>
+            <div className="flex flex-col gap-3 text-white sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <h1 className="mb-2 text-2xl font-bold text-white sm:text-3xl">
+                        Application Statistics
+                    </h1>
+                    <p className="text-sm text-white/60 sm:text-base">
+                        Data visualization of hackers
+                    </p>
+                </div>
+
+                <div className="flex gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setCohort('all')}
+                        className={`rounded-md px-3 py-1.5 text-sm ${
+                            cohort === 'all'
+                                ? 'bg-white text-black'
+                                : 'bg-white/10 text-white/80 hover:bg-white/20'
+                        }`}
+                    >
+                        All applicants
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setCohort('accepted')}
+                        className={`rounded-md px-3 py-1.5 text-sm ${
+                            cohort === 'accepted'
+                                ? 'bg-white text-black'
+                                : 'bg-white/10 text-white/80 hover:bg-white/20'
+                        }`}
+                    >
+                        Accepted only
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 pb-28 sm:gap-6 md:pb-10 xl:grid-cols-2">
-                <StatisticsCard
-                    title="Pronouns Distribution"
-                    description="Applicant pronouns"
-                    data={pronounsData}
-                    activeIndex={activePronounsIndex}
-                    setActiveIndex={setActivePronounsIndex}
-                    chartSize={chartSize}
-                />
-
-                <StatisticsCard
-                    title="Hackathon Experience"
-                    description="Previous hackathon participation"
-                    data={experienceData}
-                    activeIndex={activeExperienceIndex}
-                    setActiveIndex={setActiveExperienceIndex}
-                    chartSize={chartSize}
-                />
-
-                <StatisticsCard
-                    title="Level of Study"
-                    description="Distribution of academic levels"
-                    data={levelStudyData}
-                    activeIndex={activeLevelStudyIndex}
-                    setActiveIndex={setActiveLevelStudyIndex}
-                    chartSize={chartSize}
-                />
-
-                <StatisticsCard
-                    title="School Demographics"
-                    description="Participant distribution by institution"
-                    data={schoolData}
-                    activeIndex={activeSchoolIndex}
-                    setActiveIndex={setActiveSchoolIndex}
-                    chartSize={chartSize}
-                />
+                {DEMOGRAPHIC_STAT_ROLES.map((role) => (
+                    <StatisticsCard
+                        key={role}
+                        title={DEMOGRAPHIC_CHART_LABELS[role]}
+                        description={DEMOGRAPHIC_CHART_DESCRIPTIONS[role]}
+                        data={activeCharts[role] ?? []}
+                        activeIndex={activeIndexes[role] ?? null}
+                        setActiveIndex={(index) =>
+                            setActiveIndexes((prev) => ({
+                                ...prev,
+                                [role]: index,
+                            }))
+                        }
+                        chartSize={chartSize}
+                    />
+                ))}
             </div>
         </div>
     );
