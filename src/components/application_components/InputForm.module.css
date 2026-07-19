@@ -159,6 +159,9 @@
         overflow: visible;
         padding: 10px;
         padding-top: 0px;
+        border: none;
+        background-color: transparent;
+        border-radius: 0;
     }
 
     .appFormContent {
