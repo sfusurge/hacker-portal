@@ -43,6 +43,7 @@ export interface SubmitApplicationResponse {
     createdDate: Date;
     currentStatus: StatusEnum;
     pendingStatus: StatusEnum;
+    flagged: boolean;
 }
 
 export const applicationsRouter = router({
@@ -341,6 +342,10 @@ export const applicationsRouter = router({
                 payload['currentStatus'] = input.status;
             }
 
+            if (input.flagged !== undefined) {
+                payload['flagged'] = input.flagged;
+            }
+
             if (input.response) {
                 payload['response'] = input.response;
             }
@@ -359,7 +364,8 @@ export const applicationsRouter = router({
             if (
                 application &&
                 (input.status !== undefined ||
-                    input.pendingStatus !== undefined)
+                    input.pendingStatus !== undefined ||
+                    input.flagged !== undefined)
             ) {
                 void publishReviewTableEvent({
                     hackathonId: input.hackathonId,
@@ -372,12 +378,24 @@ export const applicationsRouter = router({
     updateApplicationBatch: publicProcedure
         .input(batchUpdateApplicationStatusSchema)
         .mutation(async ({ input }) => {
+            const payload: {
+                pendingStatus?: StatusEnum;
+                currentStatus?: StatusEnum;
+                flagged?: boolean;
+            } = {};
+            if (input.pendingStatus !== undefined) {
+                payload.pendingStatus = input.pendingStatus;
+            }
+            if (input.status !== undefined) {
+                payload.currentStatus = input.status;
+            }
+            if (input.flagged !== undefined) {
+                payload.flagged = input.flagged;
+            }
+
             const updatedApplications = await databaseClient
                 .update(applications)
-                .set({
-                    pendingStatus: input.pendingStatus ?? undefined,
-                    currentStatus: input.status ?? undefined,
-                })
+                .set(payload)
                 .where(
                     and(
                         eq(applications.hackathonId, input.hackathonId),
@@ -389,7 +407,8 @@ export const applicationsRouter = router({
             if (
                 updatedApplications.length > 0 &&
                 (input.status !== undefined ||
-                    input.pendingStatus !== undefined)
+                    input.pendingStatus !== undefined ||
+                    input.flagged !== undefined)
             ) {
                 void publishReviewTableEvent({
                     hackathonId: input.hackathonId,
@@ -541,6 +560,7 @@ export interface ApplicationWithTeamInfo {
     userId: number;
     currentStatus: StatusEnum;
     pendingStatus: StatusEnum;
+    flagged: boolean;
     createdDate: number;
     checkIns: {
         eventId: number;
@@ -557,5 +577,6 @@ export interface ApplicationInfo {
     userId: number;
     currentStatus: StatusEnum;
     pendingStatus: StatusEnum;
+    flagged: boolean;
     createdDate: Date;
 }
