@@ -104,7 +104,7 @@ export function ReviewTableToolbar({
                             'inline-flex min-h-9 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                             applicantTab === 'all'
                                 ? 'bg-neutral-700/60 text-white'
-                                : 'text-white/55 hover:bg-neutral-900 hover:text-white'
+                                : 'text-white/60 hover:bg-neutral-900 hover:text-white'
                         )}
                     >
                         <UserIcon className="size-5" />
@@ -117,7 +117,7 @@ export function ReviewTableToolbar({
                             'inline-flex min-h-9 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                             applicantTab === 'flagged'
                                 ? 'bg-neutral-700/60 text-white'
-                                : 'text-white/55 hover:bg-neutral-900 hover:text-white'
+                                : 'text-white/60 hover:bg-neutral-900 hover:text-white'
                         )}
                     >
                         <FlagOutlineIcon className="size-4" />
@@ -131,7 +131,7 @@ export function ReviewTableToolbar({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                    <div className="flex h-9 w-[300px] max-w-full items-center gap-2 rounded-lg border border-zinc-700 bg-neutral-800 px-3">
+                    <div className="flex h-9 w-[300px] max-w-full items-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800 px-3">
                         <MagnifyingGlassIcon className="size-4 shrink-0 text-white/50" />
                         <input
                             type="text"

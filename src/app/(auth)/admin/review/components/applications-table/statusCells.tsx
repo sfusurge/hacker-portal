@@ -101,7 +101,7 @@ export function currentStatusTone(status: string): {
         case 'Awaiting Review':
         default:
             return {
-                textClass: 'text-white/55',
+                textClass: 'text-white/60',
                 dotClass: 'bg-neutral-400',
             };
     }

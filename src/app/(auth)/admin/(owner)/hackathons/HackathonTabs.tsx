@@ -62,7 +62,7 @@ export function HackathonTabs({
                             title="Save the hackathon first"
                             className={cn(
                                 base,
-                                'cursor-not-allowed border-transparent text-white/25'
+                                'cursor-not-allowed border-transparent text-white/30'
                             )}
                         >
                             {tab.label}

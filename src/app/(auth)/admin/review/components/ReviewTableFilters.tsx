@@ -106,7 +106,7 @@ function currentStatusOptionTone(value: string): {
         case 'Declined':
             return { text: 'text-danger-300', dot: 'bg-danger-400' };
         default:
-            return { text: 'text-white/55', dot: 'bg-neutral-400' };
+            return { text: 'text-white/60', dot: 'bg-neutral-400' };
     }
 }
 
