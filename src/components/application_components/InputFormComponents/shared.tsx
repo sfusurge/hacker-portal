@@ -3,6 +3,7 @@
 import { atom } from 'jotai';
 import { quillDeltaToPlainText } from '@/lib/markdown/content';
 import { isQuestionApplicableOnForm } from '@/lib/projects/submissionFormQuestions';
+import { isValidPhoneNumber } from '@/components/ui/input/FormPhoneInput';
 import type { PageFormState } from '../PageStatus/ApplicationPageIndicator';
 import type { InputFormQuestion } from '../types';
 
@@ -65,6 +66,26 @@ export function computePageFormProgress(
 export function canAdvanceFromPageState(pageState: PageFormState): boolean {
     return pageState.state === 'completed' && !pageState.error;
 }
+
+export function computePageErrorState(
+    form: HTMLFormElement | null,
+    questions: InputFormQuestion[],
+    shouldShowErrors: boolean,
+    extraCheck = false
+): Pick<PageFormState, 'state' | 'error'> {
+    const { state } = computePageFormProgress(questions);
+
+    let error = false;
+    if (shouldShowErrors && form) {
+        error = !form.checkValidity() || state !== 'completed';
+        if (error && extraCheck && state === 'completed') {
+            error = !form.reportValidity();
+        }
+    }
+
+    return { state, error };
+}
+
 export function isApplicationQuestionFilled(
     question: InputFormQuestion
 ): boolean {
@@ -77,6 +98,11 @@ export function isApplicationQuestionFilled(
             case 'date-ymd':
                 return (
                     question.value !== undefined && question.value.length > 0
+                );
+            case 'phone':
+                return (
+                    typeof question.value === 'string' &&
+                    isValidPhoneNumber(question.value)
                 );
 
             case 'number':
