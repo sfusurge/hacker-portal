@@ -25,6 +25,7 @@ const localAppResponseAtom = atomWithStorage('application_response', {
     hackathonId: -1,
     email: '',
     response: {} as Record<string, any>,
+    savedAt: null as number | null,
 });
 
 const applicationWithLocalAtom = atom(
@@ -66,6 +67,7 @@ const applicationWithLocalAtom = atom(
             id: hackathon.id,
             pages,
             version: hackathon.version,
+            savedAt: hasSavedDraft ? local.savedAt : null,
         } as InputFormData;
     },
     (get, set, val: InputFormData) => {
@@ -74,10 +76,13 @@ const applicationWithLocalAtom = atom(
             return;
         }
 
+        const savedAt = Date.now();
+
         set(localAppResponseAtom, {
             hackathonId: val.id,
             email: userInfo.email,
             response: getResponseMap(val.pages),
+            savedAt,
         });
         const data = get(hackathonAtom)!;
         set(hackathonAtom, { ...data, applicationQuestionPages: val.pages });
