@@ -269,9 +269,8 @@ export function InputForm({
                             <HomeIcon className="h-6 w-6" />
                         </button>
                         <p className={style.mobileStepLabel}>
-                            Step{' '}
-                            {Math.min(currentPageIndex + 1, pagesAtoms.length)}{' '}
-                            of {pagesAtoms.length}
+                            Step {currentPageIndex + 1} of{' '}
+                            {pagesAtoms.length + 1}
                         </p>
                     </div>
                 )}
