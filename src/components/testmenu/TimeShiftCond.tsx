@@ -13,6 +13,7 @@ import {
 import ApplicationSelfDelete from '@/components/testmenu/ApplicationSelfDelete';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
+import { bootTimeShiftFromStorage } from '@/lib/testmenu/timeShift';
 
 const VISIBILITY_KEY = 'timeShift.visible';
 
@@ -21,6 +22,13 @@ export default function TimeShiftCond() {
     const router = useRouter();
 
     useEffect(() => {
+        // Restore simulated time on every page load (menu does not need to be open)
+        try {
+            bootTimeShiftFromStorage();
+        } catch (e) {
+            console.error('TimeShiftCond: Failed to boot time shift', e);
+        }
+
         try {
             const v = localStorage.getItem(VISIBILITY_KEY);
             setVisible(v === 'true');
@@ -31,7 +39,6 @@ export default function TimeShiftCond() {
             );
         }
 
-        // Listen to storage updates (e.g., from other tabs) and custom toggle event
         const onStorage = (e: StorageEvent) => {
             if (e.key === VISIBILITY_KEY) {
                 setVisible(e.newValue === 'true');
@@ -67,6 +74,7 @@ export default function TimeShiftCond() {
         } catch (e) {
             console.error('TimeShiftCond: Failed to persist visibility', e);
         }
+        // Notify other listeners (e.g. sidebar) without re-entering via our own setState path
         try {
             window.dispatchEvent(new Event('timeShift-toggle'));
         } catch (e) {
@@ -93,7 +101,7 @@ export default function TimeShiftCond() {
                         variant="default"
                         hierarchy={'primary'}
                         className="text-sm"
-                        onClick={(e) => {
+                        onClick={() => {
                             try {
                                 handleOpenChange(false);
                                 router.refresh();
