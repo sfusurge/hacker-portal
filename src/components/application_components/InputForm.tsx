@@ -69,6 +69,7 @@ import {
 } from './PageStatus/ApplicationPageIndicator';
 
 import { ArrowLeftIcon } from 'lucide-react';
+import { HomeIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { cn } from '@/lib/utils';
@@ -255,6 +256,25 @@ export function InputForm({
                 </div>
             )}
             <div className={style.appFormWrapper}>
+                {applicationType === 'application' && isMobile && (
+                    <div className={style.mobileFormNav}>
+                        <button
+                            type="button"
+                            aria-label="Go to dashboard"
+                            className={style.mobileHomeButton}
+                            onClick={() => {
+                                router.push('/home');
+                            }}
+                        >
+                            <HomeIcon className="h-6 w-6" />
+                        </button>
+                        <p className={style.mobileStepLabel}>
+                            Step{' '}
+                            {Math.min(currentPageIndex + 1, pagesAtoms.length)}{' '}
+                            of {pagesAtoms.length}
+                        </p>
+                    </div>
+                )}
                 <div className={style.appFormContent} ref={pageContainerRef}>
                     {!disablePageTab &&
                         (isMobile ? (
@@ -301,6 +321,10 @@ export function InputForm({
                                 pageAtom={pageAtom}
                                 pageStateAtom={pageStateAtoms[index]}
                                 hidden={index !== currentPageIndex}
+                                hideAlert={
+                                    applicationType === 'application' &&
+                                    isMobile
+                                }
                             />
                         ))}
                     </div>
@@ -334,11 +358,13 @@ function Page({
     pageAtom,
     hidden,
     pageStateAtom,
+    hideAlert,
 }: {
     pageIndex: number;
     pageAtom: PrimitiveAtom<InputFormPageData>;
     hidden: boolean;
     pageStateAtom: PrimitiveAtom<PageFormState>;
+    hideAlert?: boolean;
 }) {
     const [page, setPage] = useAtom(pageAtom);
 
@@ -423,7 +449,7 @@ function Page({
                     </p>
                 )}
             </div>
-            {page.alert && (
+            {page.alert && !hideAlert && (
                 <Alert variant={'info'} className="-mt-4 max-w-[480px]">
                     <AlertTitle>{page.alert.title}</AlertTitle>
                     <AlertDescription>

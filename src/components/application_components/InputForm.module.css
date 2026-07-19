@@ -141,6 +141,18 @@
     transition: background-color 300ms ease-in-out;
 }
 
+.mobileHomeButton {
+    display: none;
+}
+
+.mobileFormNav {
+    display: none;
+}
+
+.mobileStepLabel {
+    display: none;
+}
+
 @media only screen and (min-width: 768px) {
     .page {
         padding-bottom: 24px;
@@ -150,12 +162,15 @@
 /* mobile */
 @media only screen and (max-width: 767.5px) {
     .appFormRoot {
+        gap: 0;
         padding: 0;
         border: none;
         border-radius: 0;
     }
 
     .appFormWrapper {
+        flex-direction: column;
+        gap: 12px;
         overflow: visible;
         padding: 10px;
         padding-top: 0px;
@@ -166,6 +181,38 @@
 
     .appFormContent {
         overflow: visible;
+    }
+
+    .mobileFormNav {
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+        align-items: flex-start;
+    }
+
+    .mobileHomeButton {
+        display: flex;
+        width: 56px;
+        height: 56px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border-neutral-secondary);
+        border-radius: 12px;
+        background-color: var(--background-neutral-secondary);
+        color: var(--text-regular);
+        transition: background-color 300ms ease-in-out;
+    }
+
+    .mobileHomeButton:hover {
+        background-color: var(--neutral-800);
+    }
+
+    .mobileStepLabel {
+        display: block;
+        color: var(--text-brand-primary);
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.2;
     }
 
     .ver {
