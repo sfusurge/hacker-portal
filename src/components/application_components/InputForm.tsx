@@ -84,7 +84,7 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import ReviewApplicationDialog from './ReviewApplicationDialog';
 import { isSubmissionQuestionDisabled } from '@/lib/projects/submissionFormQuestions';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
-import { MobileTopNav } from './MobileTopNav';
+import { MobileTopNav } from './MobileTopHeader';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.

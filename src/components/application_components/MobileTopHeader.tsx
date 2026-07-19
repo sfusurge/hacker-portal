@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import styles from './MobileTopNav.module.css';
+import styles from './MobileTopHeader.module.css';
 
 interface MobileTopNavProps {
     className?: string;
