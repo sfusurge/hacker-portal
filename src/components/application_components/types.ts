@@ -65,6 +65,7 @@ export interface HackathonData {
 export interface InputFormData {
     id: number;
     version: number;
+    savedAt?: number | null;
 
     pages: InputFormPageData[];
 }
