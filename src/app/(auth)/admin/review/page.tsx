@@ -145,6 +145,8 @@ export default function ReviewApplicationsPage() {
                 onNext={onNext}
                 selected={selected}
                 onRefresh={refresh}
+                applicantIndex={selectedIndex ?? undefined}
+                applicantTotal={data.length}
             />
         </div>
     );
@@ -180,6 +182,7 @@ function transformResponse(
                 teamName,
                 currentStatus: item.currentStatus,
                 pendingStatus: item.pendingStatus,
+                flagged: Boolean(item.flagged),
                 lastEmailSent,
                 applicationDate: new Date(item.createdDate),
                 members,
