@@ -109,6 +109,12 @@
     --color-danger-900: #7f1c1d;
     --color-danger-950: #45090a;
 
+    --color-fuchsia-100: #fae8ff;
+    --color-fuchsia-200: #f5d0fe;
+    --color-fuchsia-500: #d946ef;
+    --color-fuchsia-600: #c026d3;
+    --color-fuchsia-950: #4a044e;
+
     /* White color */
     --color-white: #ffffff;
     /* Black color */
@@ -282,6 +288,13 @@ body {
 
     /* Danger */
     --danger-500: #ef4444;
+
+    /* Fuchsia */
+    --fuchsia-100: #fae8ff;
+    --fuchsia-200: #f5d0fe;
+    --fuchsia-500: #d946ef;
+    --fuchsia-600: #c026d3;
+    --fuchsia-950: #4a044e;
 
     /* ==== END COLORS ==== */
 
