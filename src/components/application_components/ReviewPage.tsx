@@ -5,6 +5,7 @@ import type {
     InputFormPageData,
     QuestionTextLineInput,
     QuestionTextAreaInput,
+    QuestionPhoneInput,
     QuestionNumberInput,
     QuestionCheckBoxInput,
     QuestionMultipleChoice,
@@ -61,10 +62,12 @@ export function ReviewPage({
         // Type-specific handling based on question type
         switch (question.type) {
             case 'text-line':
+            case 'phone':
             case 'text-area':
                 const textQuestion = question as
                     | QuestionTextLineInput
-                    | QuestionTextAreaInput;
+                    | QuestionTextAreaInput
+                    | QuestionPhoneInput;
                 return typeof textQuestion.value === 'string'
                     ? textQuestion.value.trim() || 'N/A'
                     : 'N/A';

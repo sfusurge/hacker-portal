@@ -387,20 +387,34 @@ export function loadResponseIntoSchema(
                     question.value = dataSource[id];
                     break;
                 case 'markdown':
+                case 'text-area':
+                case 'text-line':
+                case 'title-line':
+                case 'link':
+                case 'phone':
                     question.value =
                         typeof dataSource[id] === 'string'
                             ? dataSource[id]
                             : '';
                     break;
                 case 'api-dropdown':
-                    question.selection = dataSource[id];
+                    question.selection =
+                        typeof dataSource[id] === 'string'
+                            ? dataSource[id]
+                            : '';
                     break;
                 case 'major':
                     (question as { selection?: string[] }).selection =
-                        (dataSource[id] as string[]) || [];
+                        Array.isArray(dataSource[id])
+                            ? (dataSource[id] as string[])
+                            : [];
                     break;
                 case 'dropdown':
-                    question.value = dataSource[id];
+                    question.value =
+                        typeof dataSource[id] === 'string' ||
+                        Array.isArray(dataSource[id])
+                            ? dataSource[id]
+                            : '';
                     break;
                 default:
                     question.value = dataSource[id];

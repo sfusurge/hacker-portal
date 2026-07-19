@@ -7,7 +7,10 @@ import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import LoginContainer from '@/components/login/LoginContainer';
-import type { OAuthProvider } from '@/components/login/constants';
+import {
+    getLoginBannerSrc,
+    type OAuthProvider,
+} from '@/components/login/constants';
 
 export default function Login({
     searchParams,
@@ -94,7 +97,7 @@ async function LoginContent({
             className="relative h-[100dvh] w-[100dvw] overflow-hidden"
         >
             <Image
-                src="/dashboard/sparkjamhead26.webp"
+                src={getLoginBannerSrc()}
                 alt="Sparky Studying"
                 fill
                 className="absolute h-full w-full object-cover"

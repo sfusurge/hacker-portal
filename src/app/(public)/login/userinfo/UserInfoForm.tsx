@@ -5,6 +5,10 @@ import type React from 'react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { FormTextInput } from '@/components/ui/input/input';
+import {
+    FormPhoneInput,
+    isValidPhoneNumber,
+} from '@/components/ui/input/FormPhoneInput';
 import { Label } from '@/components/ui/label/label';
 import { useEffect, useRef, useState } from 'react';
 import { redirect, useSearchParams } from 'next/navigation';
@@ -14,6 +18,7 @@ import { Input } from '@/components/ui/input/input';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { uploadFileToBlob } from '@/utils/blobHelper';
+import { getLoginBannerSrc } from '@/components/login/constants';
 
 export default function UserInfoForm() {
     const searchParams = useSearchParams();
@@ -87,7 +92,7 @@ export default function UserInfoForm() {
         >
             <div className="block h-full w-full bg-[#C4D086] lg:hidden" />
             <Image
-                src="/dashboard/sparkjamhead26.webp"
+                src={getLoginBannerSrc()}
                 alt="Sparky studying"
                 fill
                 className="absolute hidden h-full w-full object-cover lg:block"
@@ -231,18 +236,12 @@ export default function UserInfoForm() {
                                     <Label required={true} className="mb-2">
                                         Phone number
                                     </Label>
-                                    <FormTextInput
+                                    <FormPhoneInput
                                         name="phone"
-                                        type="tel"
-                                        lazy
-                                        onLazyChange={(text) =>
-                                            setPhoneNumber(text as string)
-                                        }
                                         required
-                                        placeholder="6048622113"
-                                        pattern="^(1|)[2-9]\d{2}[2-9]\d{6}$"
-                                        errorMsg="Not a valid phone number"
+                                        placeholder="(604)-862-2113"
                                         disabled={isSubmitting}
+                                        onValueChange={setPhoneNumber}
                                     />
                                 </div>
                             </div>
@@ -256,7 +255,7 @@ export default function UserInfoForm() {
                                     !(
                                         firstName.length > 0 &&
                                         lastName.length > 0 &&
-                                        phoneNumber.length > 0
+                                        isValidPhoneNumber(phoneNumber)
                                     )
                                 }
                                 size="cozy"

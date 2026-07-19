@@ -5,11 +5,10 @@ import { NavLink } from './NavLink';
 import { HomeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
-import { BellAlertIcon } from '@heroicons/react/24/outline';
 import { InboxStackIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { QrCodeIcon } from '@heroicons/react/24/solid';
 import SelectOption from '@/app/(auth)/admin/qr/checkin_components/SelectOption';
 import { UserData } from '@/server/routers/usersRouter';
@@ -18,6 +17,9 @@ import {
     SPARKJAM_PROJECTS_PATH,
 } from '@/lib/projects/projectsPaths';
 import { hasAdminAccess } from '@/lib/auth/roles';
+import { useAtomValue } from 'jotai';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { canAccessProjectGallery } from '@/lib/submissionWindow';
 
 interface MobileBottomNavProps {
     className?: string;
@@ -69,7 +71,7 @@ const sponsorNavLinks = [
     },
 ];
 
-const navLinks = [
+const baseNavLinks = [
     {
         href: '/home',
         label: 'Home',
@@ -94,23 +96,16 @@ const navLinks = [
         active: false,
         disabled: false,
     },
-    {
-        href: '/projects',
-        label: 'Project Gallery',
-        icon: <InboxStackIcon />,
-        iconAlt: 'Project gallery logo',
-        active: false,
-        disabled: false,
-    },
-    // {
-    //     href: '#',
-    //     label: 'Alerts',
-    //     icon: <BellAlertIcon />,
-    //     iconAlt: 'Alerts logo',
-    //     active: false,
-    //     disabled: true,
-    // },
 ];
+
+const projectGalleryLink = {
+    href: '/projects',
+    label: 'Project Gallery',
+    icon: <InboxStackIcon />,
+    iconAlt: 'Project gallery logo',
+    active: false,
+    disabled: false,
+};
 
 const adminLinks = [
     {
@@ -129,6 +124,8 @@ export default function MobileBottomNav({
     className,
 }: MobileBottomNavProps) {
     const [hideBottomNav, setHideBottom] = useState(false);
+    const hackathon = useAtomValue(hackathonAtom);
+    const [now] = useState(() => Date.now());
 
     const url = usePathname();
 
@@ -150,6 +147,31 @@ export default function MobileBottomNav({
     const openSelectEventTypeOptions = () => {
         setIsEventTypeOptionsOpen(true);
     };
+
+    const galleryAccessible =
+        hackathon != null &&
+        canAccessProjectGallery(
+            now,
+            hackathon.projectGalleryOpen?.toDate() ?? null,
+            hackathon.submissionDeadline.toDate(),
+            initialData?.userRole,
+            hackathon.submissionOpen?.toDate() ?? null
+        );
+
+    const navLinks = useMemo(() => {
+        if (!galleryAccessible) return baseNavLinks;
+        const scheduleIndex = baseNavLinks.findIndex(
+            (link) => link.href === '/schedule'
+        );
+        if (scheduleIndex === -1) {
+            return [...baseNavLinks, projectGalleryLink];
+        }
+        return [
+            ...baseNavLinks.slice(0, scheduleIndex + 1),
+            projectGalleryLink,
+            ...baseNavLinks.slice(scheduleIndex + 1),
+        ];
+    }, [galleryAccessible]);
 
     return (
         <>
