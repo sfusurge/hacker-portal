@@ -167,6 +167,7 @@
 
     .ver {
         width: 100% !important;
+        scroll-margin-top: 1.5rem;
     }
 
     .page {

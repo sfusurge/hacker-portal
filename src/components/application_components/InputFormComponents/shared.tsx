@@ -65,6 +65,26 @@ export function computePageFormProgress(
 export function canAdvanceFromPageState(pageState: PageFormState): boolean {
     return pageState.state === 'completed' && !pageState.error;
 }
+
+export function computePageErrorState(
+    form: HTMLFormElement | null,
+    questions: InputFormQuestion[],
+    shouldShowErrors: boolean,
+    extraCheck = false
+): Pick<PageFormState, 'state' | 'error'> {
+    const { state } = computePageFormProgress(questions);
+
+    let error = false;
+    if (shouldShowErrors && form) {
+        error = !form.checkValidity() || state !== 'completed';
+        if (error && extraCheck && state === 'completed') {
+            error = !form.reportValidity();
+        }
+    }
+
+    return { state, error };
+}
+
 export function isApplicationQuestionFilled(
     question: InputFormQuestion
 ): boolean {

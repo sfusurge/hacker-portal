@@ -207,6 +207,12 @@ export function InlineInput({
                         <div
                             className={cn(style.ver)}
                             style={{ width: '100%' }}
+                            {...(contentQuestion.questionId != null
+                                ? {
+                                      'data-question-id':
+                                          contentQuestion.questionId,
+                                  }
+                                : {})}
                         >
                             {contentQuestion.title && (
                                 <Label required={contentQuestion.required}>
