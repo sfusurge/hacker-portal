@@ -84,6 +84,7 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import ReviewApplicationDialog from './ReviewApplicationDialog';
 import { isSubmissionQuestionDisabled } from '@/lib/projects/submissionFormQuestions';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { MobileTopNav } from './MobileTopNav';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -142,7 +143,8 @@ export function InputForm({
         []
     );
 
-    const pages = useAtomValue(pagesAtom);
+    const appData = useAtomValue(appDataAtom);
+    const pages = appData.pages;
     const hackathon = useAtomValue(hackathonAtom);
 
     // which page is currently displayed
@@ -228,8 +230,14 @@ export function InputForm({
                 isReviewPage && style.reviewPageWrapper
             )}
         >
+            {applicationType === 'application' && isMobile && (
+                <MobileTopNav
+                    hackathonName={hackathon?.hackathonName}
+                    savedAt={appData.savedAt}
+                />
+            )}
             {applicationType === 'application' && (
-                <div className="flex flex-col gap-1">
+                <div className="hidden flex-col gap-1 md:flex">
                     <button
                         className={cn(style.homeButton)}
                         onClick={() => {

@@ -1,0 +1,27 @@
+.content {
+    display: flex;
+    height: 100%;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-regular);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.25;
+}
+
+.description {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-secondary);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.25;
+}
