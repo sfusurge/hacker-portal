@@ -4,10 +4,14 @@ import { useCallback } from 'react';
 import type { Row } from '@tanstack/react-table';
 import { trpc } from '@/trpc/client';
 import type { StatusEnum } from '@/db/schema/applications';
+import { getAcceptPendingStatusForEventLocation } from '@/lib/applicationAcceptStatus';
 import { isAcceptedStatus } from './statusCells';
 import type { Applicant } from './types';
 
-export function useReviewApplicantMutations(hackathonId: number) {
+export function useReviewApplicantMutations(
+    hackathonId: number,
+    showLocationColumn: boolean
+) {
     const utils = trpc.useUtils();
 
     const batchUpdateApplicationStatus =
@@ -109,15 +113,8 @@ export function useReviewApplicantMutations(hackathonId: number) {
             const ids = rows.map((row) => row.original.id);
 
             if (ids.length === 0) {
-                console.debug(
-                    `No user ids to update status pendingStatus=${pendingStatus} status=${status} flagged=${flagged}`
-                );
                 return;
             }
-
-            console.debug(
-                `Setting Applications pendingStatus=${pendingStatus}, status=${status}, flagged=${flagged}`
-            );
 
             await batchUpdateApplicationStatus.mutateAsync({
                 hackathonId,
@@ -137,11 +134,28 @@ export function useReviewApplicantMutations(hackathonId: number) {
                 return;
             }
 
-            await batchUpdateApplicants(rows, {
-                pendingStatus: 'Accepted - RSVP to Confirm',
-            });
+            if (!showLocationColumn) {
+                await batchUpdateApplicants(rows, {
+                    pendingStatus: 'Accepted',
+                });
+                return;
+            }
+
+            const groups = new Map<StatusEnum, Row<Applicant>[]>();
+            for (const row of rows) {
+                const pending = getAcceptPendingStatusForEventLocation(
+                    row.original.eventLocationKey
+                );
+                const list = groups.get(pending) ?? [];
+                list.push(row);
+                groups.set(pending, list);
+            }
+
+            for (const [pendingStatus, groupRows] of groups) {
+                await batchUpdateApplicants(groupRows, { pendingStatus });
+            }
         },
-        [batchUpdateApplicants]
+        [batchUpdateApplicants, showLocationColumn]
     );
 
     return {

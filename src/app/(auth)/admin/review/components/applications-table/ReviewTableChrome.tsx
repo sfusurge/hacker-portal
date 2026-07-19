@@ -205,6 +205,7 @@ type SelectionActionBarProps = {
     selectedCount: number;
     position: { top: number; left: number };
     disabled?: boolean;
+    acceptPendingStatus: StatusEnum;
     onClearSelection: () => void;
     onChangePendingStatus: (next: StatusEnum) => void;
     onFlag: () => void;
@@ -214,6 +215,7 @@ export function SelectionActionBar({
     selectedCount,
     position,
     disabled,
+    acceptPendingStatus,
     onClearSelection,
     onChangePendingStatus,
     onFlag,
@@ -256,7 +258,7 @@ export function SelectionActionBar({
                         className="z-[100] w-[180px] rounded-lg border-neutral-600/30 bg-neutral-900 p-1 text-white shadow-[0px_2px_2px_-1px_rgba(0,0,0,0.04),0px_4px_6px_-2px_rgba(0,0,0,0.12),0px_12px_16px_-4px_rgba(0,0,0,0.08)]"
                     >
                         <PendingStatusMenuItems
-                            acceptPendingStatus="Accepted - RSVP to Confirm"
+                            acceptPendingStatus={acceptPendingStatus}
                             onSelect={onChangePendingStatus}
                         />
                     </DropdownMenuContent>

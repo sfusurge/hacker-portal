@@ -129,8 +129,9 @@ export default function ReviewApplicationsPage() {
                         await applicationData.fetchNextPage();
                     }
                 }}
-                onRowClick={(app, idx) => {
-                    setSelectedIndex(idx);
+                onRowClick={(app) => {
+                    const idx = data.findIndex((d) => d.id === app.id);
+                    setSelectedIndex(idx === -1 ? null : idx);
                     const full = applicationDataMap.get(app.id);
                     if (full) setSideCardAtom(full);
                     openSideCard();

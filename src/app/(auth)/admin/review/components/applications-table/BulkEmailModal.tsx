@@ -130,8 +130,8 @@ export function BulkEmailModal({
     batchUpdateApplicationStatus,
     onSent,
 }: BulkEmailModalProps) {
-    const updateLastEmailSent =
-        trpc.applications.updateLastEmailSent.useMutation();
+    const batchUpdateLastEmailSent =
+        trpc.applications.batchUpdateLastEmailSent.useMutation();
     const queueBatchEmails = trpc.emailQueue.queueBatchEmails.useMutation();
     const { data: hackathons = [] } = trpc.hackathons.getHackathons.useQuery();
     const [isSending, setIsSending] = useState(false);
@@ -302,25 +302,30 @@ export function BulkEmailModal({
                     selectedEmailTemplate.purpose,
             });
 
-            for (const row of rowData) {
-                try {
-                    await updateLastEmailSent.mutateAsync({
-                        hackathonId,
-                        userId: row.id,
-                        emailType: selectedEmailTemplate.purpose,
-                    });
+            const userIds = rowData.map((r) => r.id);
 
-                    await batchUpdateApplicationStatus.mutateAsync({
-                        userIds: [row.id],
-                        hackathonId,
-                        pendingStatus: 'N/A',
-                    });
-                } catch (error) {
-                    console.error(
-                        `Error updating status for ${row.email}:`,
-                        error
-                    );
-                }
+            try {
+                await batchUpdateLastEmailSent.mutateAsync({
+                    hackathonId,
+                    userIds,
+                    emailType: selectedEmailTemplate.purpose,
+                });
+
+                await batchUpdateApplicationStatus.mutateAsync({
+                    userIds,
+                    hackathonId,
+                    pendingStatus: 'N/A',
+                });
+            } catch (error) {
+                console.error(
+                    'Error batch-updating last email sent / pending status:',
+                    error
+                );
+                toast({
+                    title: 'Error',
+                    description:
+                        'Emails were queued, but updating applicant status failed.',
+                });
             }
 
             const updateApplicationStatusInfos = rowData
@@ -341,11 +346,11 @@ export function BulkEmailModal({
 
             await Promise.all(
                 Object.entries(statusToIds).map(async ([status, items]) => {
-                    const userIds = items.map(({ id }) => id);
+                    const ids = items.map(({ id }) => id);
 
                     try {
                         await batchUpdateApplicationStatus.mutateAsync({
-                            userIds,
+                            userIds: ids,
                             hackathonId,
                             status: status as StatusEnum,
                         });
@@ -362,6 +367,7 @@ export function BulkEmailModal({
             setQueuedCount(queueResult.queued);
             setStep('success');
             setIsSending(false);
+            onSent?.();
         } catch (error) {
             console.error('Error in email sending process:', error);
             toast({

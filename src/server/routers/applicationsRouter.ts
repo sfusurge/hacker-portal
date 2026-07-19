@@ -2,6 +2,7 @@ import { databaseClient } from '@/db/client';
 import {
     applications,
     batchUpdateApplicationStatusSchema,
+    batchUpdateLastEmailSentSchema,
     insertApplicationSchema,
     queryApplicationsSchema,
     StatusEnum,
@@ -20,7 +21,7 @@ import {
     count,
 } from 'drizzle-orm';
 import { z } from 'zod';
-import { InternalServerError } from '../exceptions';
+import { InternalServerError, UnauthorizedError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
 import { transporter } from '@/server/nodemailerTransporter';
 import { teams } from '@/db/schema/teams';
@@ -35,6 +36,103 @@ import {
     prepareEmailContent,
 } from '@/app/(auth)/admin/email/templates/emailPreview';
 import { publishReviewTableEvent } from '@/lib/realtime/publishReviewTableEvent';
+import { hasAdminAccess } from '@/lib/auth/roles';
+
+async function assertAdmin() {
+    const user = await getUserData();
+    if (!user) {
+        throw new InternalServerError('User not authenticated');
+    }
+    if (!hasAdminAccess(user.userRole)) {
+        throw new UnauthorizedError({
+            email: user.email,
+            role: user.userRole,
+        });
+    }
+    return user;
+}
+
+async function assertAdminOrSponsor() {
+    const user = await getUserData();
+    if (!user) {
+        throw new InternalServerError('User not authenticated');
+    }
+    if (!hasAdminAccess(user.userRole) && user.userRole !== 'sponsor') {
+        throw new UnauthorizedError({
+            email: user.email,
+            role: user.userRole,
+        });
+    }
+    return user;
+}
+
+type UpdateApplicationInput = z.infer<typeof updateApplicationStatusSchema>;
+type UpdateLastEmailSentInput = z.infer<typeof updateLastEmailSentSchema>;
+
+// shared write path for tRPC + trusted server callers (Stripe webhook / RSVP result)
+export async function applyApplicationStatusUpdate(
+    input: UpdateApplicationInput
+) {
+    const payload: Record<string, unknown> = {};
+    if (input.pendingStatus) {
+        payload['pendingStatus'] = input.pendingStatus;
+    }
+
+    if (input.status) {
+        payload['currentStatus'] = input.status;
+    }
+
+    if (input.flagged !== undefined) {
+        payload['flagged'] = input.flagged;
+    }
+
+    if (input.response) {
+        payload['response'] = input.response;
+    }
+
+    const [application] = await databaseClient
+        .update(applications)
+        .set(payload)
+        .where(
+            and(
+                eq(applications.hackathonId, input.hackathonId),
+                eq(applications.userId, input.userId)
+            )
+        )
+        .returning();
+
+    if (
+        application &&
+        (input.status !== undefined ||
+            input.pendingStatus !== undefined ||
+            input.flagged !== undefined)
+    ) {
+        void publishReviewTableEvent({
+            hackathonId: input.hackathonId,
+        });
+    }
+
+    return application;
+}
+
+export async function applyLastEmailSentUpdate(
+    input: UpdateLastEmailSentInput
+) {
+    const [application] = await databaseClient
+        .update(applications)
+        .set({
+            lastEmailSent: input.emailType,
+        })
+        .where(
+            and(
+                eq(applications.hackathonId, input.hackathonId),
+                eq(applications.userId, input.userId)
+            )
+        )
+        .returning();
+
+    return application;
+}
 
 export interface SubmitApplicationResponse {
     hackathonId: number;
@@ -175,6 +273,8 @@ export const applicationsRouter = router({
     getApplications: publicProcedure
         .input(queryApplicationsSchema)
         .query(async ({ input }) => {
+            await assertAdminOrSponsor();
+
             const offset = Number(input.cursor ?? 0);
 
             const applicationInfos = await databaseClient
@@ -322,6 +422,8 @@ export const applicationsRouter = router({
     getApplicationCount: publicProcedure
         .input(z.object({ hackathonId: z.number().int() }))
         .query(async ({ input }) => {
+            await assertAdmin();
+
             const [{ applicationCount }] = await databaseClient
                 .select({ applicationCount: count(applications.userId) })
                 .from(applications)
@@ -333,51 +435,35 @@ export const applicationsRouter = router({
     updateApplication: publicProcedure
         .input(updateApplicationStatusSchema)
         .mutation(async ({ input }) => {
-            const payload: Record<string, any> = {};
-            if (input.pendingStatus) {
-                payload['pendingStatus'] = input.pendingStatus;
+            const user = await getUserData();
+            if (!user) {
+                throw new InternalServerError('User not authenticated');
             }
 
-            if (input.status) {
-                payload['currentStatus'] = input.status;
+            if (!hasAdminAccess(user.userRole)) {
+                if (user.id !== input.userId) {
+                    throw new UnauthorizedError({
+                        email: user.email,
+                        role: user.userRole,
+                    });
+                }
+                // Hackers may update their own status (RSVP / withdraw), not flags.
+                if (input.flagged !== undefined) {
+                    throw new UnauthorizedError({
+                        email: user.email,
+                        role: user.userRole,
+                    });
+                }
             }
 
-            if (input.flagged !== undefined) {
-                payload['flagged'] = input.flagged;
-            }
-
-            if (input.response) {
-                payload['response'] = input.response;
-            }
-
-            const [application] = await databaseClient
-                .update(applications)
-                .set(payload)
-                .where(
-                    and(
-                        eq(applications.hackathonId, input.hackathonId),
-                        eq(applications.userId, input.userId)
-                    )
-                )
-                .returning();
-
-            if (
-                application &&
-                (input.status !== undefined ||
-                    input.pendingStatus !== undefined ||
-                    input.flagged !== undefined)
-            ) {
-                void publishReviewTableEvent({
-                    hackathonId: input.hackathonId,
-                });
-            }
-
-            return application;
+            return applyApplicationStatusUpdate(input);
         }),
 
     updateApplicationBatch: publicProcedure
         .input(batchUpdateApplicationStatusSchema)
         .mutation(async ({ input }) => {
+            await assertAdmin();
+
             const payload: {
                 pendingStatus?: StatusEnum;
                 currentStatus?: StatusEnum;
@@ -502,7 +588,31 @@ export const applicationsRouter = router({
     updateLastEmailSent: publicProcedure
         .input(updateLastEmailSentSchema)
         .mutation(async ({ input }) => {
-            const [application] = await databaseClient
+            const user = await getUserData();
+            if (!user) {
+                throw new InternalServerError('User not authenticated');
+            }
+
+            if (!hasAdminAccess(user.userRole) && user.id !== input.userId) {
+                throw new UnauthorizedError({
+                    email: user.email,
+                    role: user.userRole,
+                });
+            }
+
+            return applyLastEmailSentUpdate(input);
+        }),
+
+    batchUpdateLastEmailSent: publicProcedure
+        .input(batchUpdateLastEmailSentSchema)
+        .mutation(async ({ input }) => {
+            await assertAdmin();
+
+            if (input.userIds.length === 0) {
+                return [];
+            }
+
+            return await databaseClient
                 .update(applications)
                 .set({
                     lastEmailSent: input.emailType,
@@ -510,12 +620,10 @@ export const applicationsRouter = router({
                 .where(
                     and(
                         eq(applications.hackathonId, input.hackathonId),
-                        eq(applications.userId, input.userId)
+                        inArray(applications.userId, input.userIds)
                     )
                 )
                 .returning();
-
-            return application;
         }),
 
     getStatisticsData: publicProcedure

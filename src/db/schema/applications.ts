@@ -118,3 +118,9 @@ export const updateLastEmailSentSchema = z.object({
     userId: z.number().int(),
     emailType: z.string(),
 });
+
+export const batchUpdateLastEmailSentSchema = z.object({
+    hackathonId: z.number().int(),
+    userIds: z.array(z.number().int()),
+    emailType: z.string(),
+});

@@ -7,6 +7,7 @@ import { FlagIcon as FlagOutlineIcon } from '@heroicons/react/24/outline';
 import { FlagIcon } from '@heroicons/react/24/solid';
 import type { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
 import type { StatusEnum } from '@/db/schema/applications';
+import { getAcceptPendingStatusForEventLocation } from '@/lib/applicationAcceptStatus';
 import { resolveCurrentStatusFilterValues } from '../ReviewTableFilters';
 import { CurrentStatusCell, PendingStatusSelect } from './statusCells';
 import { IndeterminateCheckbox } from './tablePrimitives';
@@ -18,7 +19,7 @@ type UseReviewTableColumnsArgs = {
     isPendingUpdate: boolean;
     applicationDataMap: Map<number, ApplicationWithTeamInfo>;
     lastSelectionAnchorRef: MutableRefObject<number | null>;
-    onRowClick?: (app: Applicant, idx: number) => void;
+    onRowClick?: (app: Applicant) => void;
     onOpenSideCard: (app: ApplicationWithTeamInfo | undefined) => void;
     updateApplicantById: (
         userId: number,
@@ -131,7 +132,7 @@ export function useReviewTableColumns({
                                 onOpenSideCard(
                                     applicationDataMap.get(row.original.id)
                                 );
-                                onRowClick?.(row.original, row.index);
+                                onRowClick?.(row.original);
                             }}
                         >
                             {name}
@@ -194,7 +195,13 @@ export function useReviewTableColumns({
                     <PendingStatusSelect
                         value={getValue<string>()}
                         currentStatus={row.original.currentStatus}
-                        acceptPendingStatus="Accepted - RSVP to Confirm"
+                        acceptPendingStatus={
+                            showLocationColumn
+                                ? getAcceptPendingStatusForEventLocation(
+                                      row.original.eventLocationKey
+                                  )
+                                : 'Accepted'
+                        }
                         disabled={isPendingUpdate}
                         readOnly={row.original.currentStatus === 'Accepted'}
                         onChange={(next) => {

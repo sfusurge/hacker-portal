@@ -4,14 +4,12 @@ import { useMemo, useState, type ReactNode } from 'react';
 import clsx from 'clsx';
 import { XMarkIcon } from '@heroicons/react/16/solid';
 import type { SortingState } from '@tanstack/react-table';
-import type { StatusEnum } from '@/db/schema/applications';
 import type { DisplayRole } from '@/components/application_components/types';
 
 export type ReviewFilterFieldKind =
     | 'currentStatus'
     | 'pendingStatus'
     | 'values'
-    /** Multi-select answers: filter options are individual values, matched one at a time. */
     | 'multiValues';
 
 export type ReviewFilterField = {
@@ -25,7 +23,7 @@ export type ReviewFilterValueOption = {
     label: string;
 };
 
-/** Application display roles whose answers may contain multiple values. */
+// application display roles whose answers may contain multiple values
 export const MULTI_VALUE_FILTER_ROLES = [
     'dietaryRestrictions',
 ] as const satisfies readonly DisplayRole[];
@@ -36,7 +34,7 @@ export const MULTI_VALUE_FILTER_LABELS: Record<MultiValueFilterRole, string> = {
     dietaryRestrictions: 'Dietary',
 };
 
-/** Split array or comma-joined answers into individual filterable values. */
+// split array or comma-joined answers into individual filterable values
 export function splitMultiValueTokens(value: unknown): string[] {
     if (value == null || value === '') return [];
     if (Array.isArray(value)) {
@@ -135,11 +133,25 @@ export const CURRENT_STATUS_FILTER_OPTIONS: ReviewFilterValueOption[] = [
 ];
 
 export function getPendingStatusFilterOptions(
-    acceptPendingStatus: StatusEnum
+    multiLocation: boolean
 ): ReviewFilterValueOption[] {
+    const acceptOptions: ReviewFilterValueOption[] = multiLocation
+        ? [
+              { value: 'Accepted', label: 'Accepted (Virtual)' },
+              {
+                  value: 'Accepted - Pending Payment',
+                  label: 'Accepted (SFU)',
+              },
+              {
+                  value: 'Accepted - RSVP to Confirm',
+                  label: 'Accepted (Waterloo)',
+              },
+          ]
+        : [{ value: 'Accepted', label: 'Accepted' }];
+
     return [
         { value: 'Awaiting Review', label: 'Under review' },
-        { value: acceptPendingStatus, label: 'Accepted' },
+        ...acceptOptions,
         { value: 'Wait List', label: 'Waitlisted' },
         { value: 'Declined', label: 'Rejected' },
         { value: 'N/A', label: 'N/A' },

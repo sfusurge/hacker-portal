@@ -158,7 +158,7 @@ type ReviewApplicantsTableProps = {
     applicationQuestionPages: InputFormPageData[];
     applicationDataMap: Map<number, ApplicationWithTeamInfo>;
     fetchNextPage: () => Promise<void>;
-    onRowClick?: (app: Applicant, idx: number) => void;
+    onRowClick?: (app: Applicant) => void;
     hackathonId: number;
     showLocationColumn: boolean;
 };
@@ -254,7 +254,7 @@ export function ReviewApplicantsTable({
         batchUpdateApplicants,
         batchSetPendingStatus,
         isPending,
-    } = useReviewApplicantMutations(hackathonId);
+    } = useReviewApplicantMutations(hackathonId, showLocationColumn);
 
     const defaultColumns = useReviewTableColumns({
         extraColumns,
@@ -270,6 +270,7 @@ export function ReviewApplicantsTable({
     const table = useReactTable({
         data: tableData,
         columns: defaultColumns,
+        getRowId: (row) => String(row.id),
         state: {
             globalFilter,
             sorting,
@@ -425,9 +426,7 @@ export function ReviewApplicantsTable({
                 return CURRENT_STATUS_FILTER_OPTIONS;
             }
             if (field.kind === 'pendingStatus') {
-                return getPendingStatusFilterOptions(
-                    'Accepted - RSVP to Confirm'
-                );
+                return getPendingStatusFilterOptions(showLocationColumn);
             }
 
             const unique = new Set<string>();
@@ -473,7 +472,7 @@ export function ReviewApplicantsTable({
                 .slice(0, 100)
                 .map((value) => ({ value, label: value }));
         },
-        [tableData]
+        [tableData, showLocationColumn]
     );
 
     const activeFilterChips = useMemo(() => {
@@ -623,6 +622,7 @@ export function ReviewApplicantsTable({
                         selectedCount={selectedCount}
                         position={selectionMenuPos}
                         disabled={isPending}
+                        acceptPendingStatus="Accepted"
                         onClearSelection={() => setRowSelection({})}
                         onChangePendingStatus={(next) => {
                             void batchSetPendingStatus(
@@ -888,6 +888,7 @@ export function ReviewApplicantsTable({
                 hackathonId={hackathonId}
                 selectedRows={table.getSelectedRowModel().rows}
                 batchUpdateApplicationStatus={batchUpdateApplicationStatus}
+                onSent={() => setRowSelection({})}
             />
         </div>
     );
