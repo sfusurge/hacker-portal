@@ -30,11 +30,13 @@ import type {
     QuestionDateYmd,
     QuestionMajorInput,
     QuestionTitleLineInput,
+    QuestionPhoneInput,
 } from './types';
 import { splitAtom } from 'jotai/utils';
 import style from './InputForm.module.css';
 import { TextLineInput } from './InputFormComponents/TextLineInput';
 import { TitleLineInput } from './InputFormComponents/TitleLineInput';
+import { PhoneNumberInput } from './InputFormComponents/PhoneNumberInput';
 import {
     type ComponentProps,
     useEffect,
@@ -505,6 +507,15 @@ function Question({
                         disabled={inputDisabled}
                     />
                 );
+            case 'phone':
+                return (
+                    <PhoneNumberInput
+                        dataAtom={
+                            _questionAtom as PrimitiveAtom<QuestionPhoneInput>
+                        }
+                        disabled={inputDisabled}
+                    />
+                );
             case 'title-line':
                 return (
                     <TitleLineInput
@@ -658,9 +669,12 @@ function Question({
         const isCountryQuestion =
             apiDropdownQuestion.apiUrl.includes('country') ||
             apiDropdownQuestion.title.toLowerCase().includes('country');
-        if (!isCountryQuestion || !apiDropdownQuestion.selection) return false;
-        const selectedCountry = apiDropdownQuestion.selection.trim();
-        return selectedCountry.toLowerCase() !== 'canada';
+        const selection =
+            typeof apiDropdownQuestion.selection === 'string'
+                ? apiDropdownQuestion.selection
+                : '';
+        if (!isCountryQuestion || !selection) return false;
+        return selection.trim().toLowerCase() !== 'canada';
     }, [question]);
 
     if (!isVisible) return null;

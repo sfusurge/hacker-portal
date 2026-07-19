@@ -17,7 +17,8 @@ function normalizeTextValue(
     if (value == null) return '';
     if (typeof value === 'string') return value;
     if (typeof value === 'number') return String(value);
-    return value.join('');
+    if (Array.isArray(value)) return value.join('');
+    return '';
 }
 
 function countTextLength(

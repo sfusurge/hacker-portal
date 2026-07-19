@@ -110,7 +110,8 @@ export default function ProjectsClient({
             Date.now(),
             hackathon.projectGalleryOpen?.toDate() ?? null,
             hackathon.submissionDeadline.toDate(),
-            user?.userRole
+            user?.userRole,
+            hackathon.submissionOpen?.toDate() ?? null
         );
 
     if (!galleryOpen) {
