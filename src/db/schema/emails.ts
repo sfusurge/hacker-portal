@@ -95,7 +95,17 @@ export const emailTemplates = pgTable('email_templates', {
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-export const emails = pgTable('sh_25_emails', {
+export const emails = pgTable('sh_26_emails', {
+    id: uuid('id')
+        .default(sql`gen_random_uuid()`)
+        .primaryKey(),
+    email: varchar('email', { length: 256 }).notNull().unique(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+        .notNull()
+        .defaultNow(),
+});
+
+export const emailsSh25 = pgTable('sh_25_emails', {
     id: uuid('id')
         .default(sql`gen_random_uuid()`)
         .primaryKey(),
