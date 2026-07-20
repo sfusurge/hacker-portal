@@ -140,7 +140,7 @@ export default function NewEmailTemplateStylingPage() {
                                 setHtml(BASIC_EMAIL_STYLING_TEMPLATE)
                             }
                         >
-                            Use basic template (no scripts, no 404s)
+                            Use basic template
                         </Button>
                         <Button
                             type="button"

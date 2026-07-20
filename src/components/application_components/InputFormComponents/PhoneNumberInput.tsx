@@ -12,8 +12,7 @@ export {
     PHONE_PATTERN,
     PHONE_ERROR_MSG,
     PHONE_MAX_DIGITS,
-    sanitizePhoneDigits,
-    formatPhoneDisplay,
+    clampPhoneDigits,
 } from '@/components/ui/input/FormPhoneInput';
 
 export function PhoneNumberInput({
@@ -31,7 +30,7 @@ export function PhoneNumberInput({
         <FormPhoneInput
             name={`phone-${question.questionId}`}
             value={typeof question.value === 'string' ? question.value : ''}
-            placeholder={question.placeHolder ?? '(604)-862-2113'}
+            placeholder={question.placeHolder ?? '6048622113'}
             required={(question.required ?? false) && !disabled}
             disabled={disabled}
             readOnly={disabled}

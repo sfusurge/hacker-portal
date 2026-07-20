@@ -1,129 +1,241 @@
 .background {
     position: fixed;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100dvw;
     height: 100dvh;
-
-    background-color: #00000077;
+    background-color: rgb(0 0 0 / 0.45);
     backdrop-filter: blur(8px);
-
     z-index: 10000;
 }
 
 .cardContainer {
-    display: flex;
-    padding: 2rem;
-    max-height: 100dvh;
-
     position: fixed;
     top: 0;
     right: 0;
-    width: 90dvw;
-    max-width: 600px;
-    height: 100dvh;
-
     z-index: 20000;
-
-    display: flex;
-
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
-    gap: 2rem;
-    padding: 1.5rem;
-    background-color: var(--neutral-900);
-    border-left: var(--neutral-800) 2px solid;
+    width: min(586px, 100dvw);
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    background-color: #171717;
+    border: 1px solid rgb(82 82 82 / 0.6);
+    border-radius: 16px 0 0 16px;
 }
 
-.titleRow {
+.header {
     display: flex;
-    align-items: stretch;
-    gap: 0.75rem;
-    min-height: 2.75rem;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-shrink: 0;
+    padding: 2rem;
+    background-color: #1f1f1f;
+    border-bottom: 1px solid rgb(82 82 82 / 0.3);
+}
+
+.titleBlock {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
 .titleHeading {
     margin: 0;
     min-width: 0;
-    flex: 1;
-    align-self: center;
-    font-size: 24px;
+    font-size: 1.8125rem;
+    font-weight: 600;
     line-height: 1.25;
+    letter-spacing: -0.027em;
+    color: white;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.titleRowNav {
-    display: flex;
-    flex-shrink: 0;
-    align-items: center;
-    gap: 0.25rem;
-    align-self: stretch;
+.teamLine {
+    margin: 0;
+    min-width: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: -0.0075em;
+    color: rgb(255 255 255 / 0.6);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .titleClose {
+    display: inline-flex;
     flex-shrink: 0;
-    align-self: center;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.5rem;
+    color: white;
+    transition: background-color 0.15s ease;
 }
 
-.headerBlock {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.headerToolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 1rem 1.5rem;
-}
-
-.headerCheckboxes {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    min-width: 0;
-    margin-top: 0.5rem;
+.titleClose:hover {
+    background-color: rgb(38 38 38 / 0.8);
 }
 
 .scroll {
-    width: 100%;
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
-}
-
-.horDiv {
-    width: auto;
-    height: 2px;
-    background-color: var(--neutral-600);
-}
-
-.hor {
+    padding: 2rem;
     display: flex;
-    align-items: flex-start;
+    flex-direction: column;
+    gap: 2.5rem;
+}
+
+.sectionCard {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgb(64 64 64 / 0.18);
+    background-color: #1f1f1f;
+}
+
+.sectionTitle {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+    color: white;
+}
+
+.fieldGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.fieldRow {
+    display: flex;
+    gap: 2rem;
+    width: 100%;
+}
+
+.fieldRow > * {
+    flex: 1;
+    min-width: 0;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 100%;
+}
+
+.fieldLabel {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: -0.0075em;
+    color: rgb(255 255 255 / 0.6);
+}
+
+.fieldValue {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: -0.0075em;
+    color: white;
+    word-break: break-word;
+}
+
+.footer {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    flex-shrink: 0;
+    padding: 1.5rem;
+    background-color: #1f1f1f;
+    border-top: 1px solid rgb(82 82 82 / 0.3);
+}
+
+.footerActions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
     gap: 1rem;
 }
 
 .statusActions {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
-    min-width: 0;
+    gap: 0.5rem;
+    min-width: 10.5rem;
     max-width: 16rem;
 }
 
 .statusSelectLabel {
-    display: block;
-    margin-bottom: 0.35rem;
+    margin: 0;
     font-size: 0.875rem;
-    line-height: 1.25rem;
-    color: var(--neutral-400);
+    font-weight: 500;
+    line-height: 1.25;
+    color: rgb(255 255 255 / 0.6);
 }
 
-.selectedButton {
-    border-color: var(--brand-400);
-    border-width: 3px;
+.navRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.navButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.5rem;
+    color: white;
+    transition: background-color 0.15s ease;
+}
+
+.navButton:hover {
+    background-color: rgb(38 38 38 / 0.8);
+}
+
+.navButton:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.navLabel {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.25;
+    letter-spacing: -0.0075em;
+    color: white;
+    white-space: nowrap;
+}
+
+.htmlHolder {
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.25;
+    color: rgb(255 255 255 / 0.6);
+    margin-bottom: 0.25rem;
+}
+
+.htmlHolder :global(p) {
+    margin: 0;
 }
