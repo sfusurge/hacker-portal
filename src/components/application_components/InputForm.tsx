@@ -69,6 +69,7 @@ import {
 } from './PageStatus/ApplicationPageIndicator';
 
 import { ArrowLeftIcon } from 'lucide-react';
+import { HomeIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { cn } from '@/lib/utils';
@@ -84,6 +85,7 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import ReviewApplicationDialog from './ReviewApplicationDialog';
 import { isSubmissionQuestionDisabled } from '@/lib/projects/submissionFormQuestions';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { MobileTopNav } from './MobileTopHeader';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -142,7 +144,8 @@ export function InputForm({
         []
     );
 
-    const pages = useAtomValue(pagesAtom);
+    const appData = useAtomValue(appDataAtom);
+    const pages = appData.pages;
     const hackathon = useAtomValue(hackathonAtom);
 
     // which page is currently displayed
@@ -228,8 +231,14 @@ export function InputForm({
                 isReviewPage && style.reviewPageWrapper
             )}
         >
+            {applicationType === 'application' && isMobile && (
+                <MobileTopNav
+                    hackathonName={hackathon?.hackathonName}
+                    savedAt={appData.savedAt}
+                />
+            )}
             {applicationType === 'application' && (
-                <div className="flex flex-col gap-1">
+                <div className="hidden flex-col gap-1 md:flex">
                     <button
                         className={cn(style.homeButton)}
                         onClick={() => {
@@ -247,6 +256,24 @@ export function InputForm({
                 </div>
             )}
             <div className={style.appFormWrapper}>
+                {applicationType === 'application' && isMobile && (
+                    <div className={style.mobileFormNav}>
+                        <button
+                            type="button"
+                            aria-label="Go to dashboard"
+                            className={style.mobileHomeButton}
+                            onClick={() => {
+                                router.push('/home');
+                            }}
+                        >
+                            <HomeIcon className="h-6 w-6" />
+                        </button>
+                        <p className={style.mobileStepLabel}>
+                            Step {currentPageIndex + 1} of{' '}
+                            {pagesAtoms.length + 1}
+                        </p>
+                    </div>
+                )}
                 <div className={style.appFormContent} ref={pageContainerRef}>
                     {!disablePageTab &&
                         (isMobile ? (
@@ -293,6 +320,10 @@ export function InputForm({
                                 pageAtom={pageAtom}
                                 pageStateAtom={pageStateAtoms[index]}
                                 hidden={index !== currentPageIndex}
+                                hideAlert={
+                                    applicationType === 'application' &&
+                                    isMobile
+                                }
                             />
                         ))}
                     </div>
@@ -326,11 +357,13 @@ function Page({
     pageAtom,
     hidden,
     pageStateAtom,
+    hideAlert,
 }: {
     pageIndex: number;
     pageAtom: PrimitiveAtom<InputFormPageData>;
     hidden: boolean;
     pageStateAtom: PrimitiveAtom<PageFormState>;
+    hideAlert?: boolean;
 }) {
     const [page, setPage] = useAtom(pageAtom);
 
@@ -415,7 +448,7 @@ function Page({
                     </p>
                 )}
             </div>
-            {page.alert && (
+            {page.alert && !hideAlert && (
                 <Alert variant={'info'} className="-mt-4 max-w-[480px]">
                     <AlertTitle>{page.alert.title}</AlertTitle>
                     <AlertDescription>

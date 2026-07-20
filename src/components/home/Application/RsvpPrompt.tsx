@@ -64,7 +64,7 @@ function formatRsvpEventDates(start: Dayjs, end: Dayjs) {
                     <span className="font-medium text-white/90">
                         {dateWithWeekday(end)}
                     </span>{' '}
-                    (Recommended)
+                    (Required)
                 </ResponsiveDialogDescription>
             </>
         );

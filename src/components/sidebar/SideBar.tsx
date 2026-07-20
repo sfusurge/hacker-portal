@@ -21,7 +21,6 @@ import { EnvelopeIcon } from '@heroicons/react/24/outline';
 import { authClient } from '@/auth/auth-client';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
-import React from 'react';
 import { motion } from 'motion/react';
 import {
     Popover,
