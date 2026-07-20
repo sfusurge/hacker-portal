@@ -36,7 +36,9 @@ function getColorByIndex(index: number): string {
     return colors[index % colors.length];
 }
 
-/** Count keys across applicants; rare values (< 5) roll into Other */
+/** Count keys across applicants; singleton answers (count < 2) roll into Other */
+const MIN_COUNT_FOR_OWN_SLICE = 2;
+
 export function processFieldData(allKeys: string[]): PieSlice[] {
     const fieldCount = allKeys.reduce(
         (acc: Record<string, number>, key: string) => {
@@ -50,7 +52,7 @@ export function processFieldData(allKeys: string[]): PieSlice[] {
     let otherCount = 0;
 
     Object.entries(fieldCount).forEach(([value, count]) => {
-        if (count >= 5) {
+        if (count >= MIN_COUNT_FOR_OWN_SLICE) {
             processedData[value] = count;
         } else {
             otherCount += count;
