@@ -21,6 +21,7 @@ const allowedPaths = {
     team_icon: /^team_icon\/?$/,
     user_icon: /^user_icon\/?$/,
     resumes: /^resumes\/hackathon-\d+\/?$/,
+    event_page: /^hackathons\/[a-zA-Z0-9-_]+\/?$/,
 };
 
 export type AllowedUploadPaths = keyof typeof allowedPaths;

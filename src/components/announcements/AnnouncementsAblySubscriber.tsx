@@ -27,6 +27,7 @@ import { parseAnnouncementRealtimeWire } from '@/lib/announcements/parseAnnounce
 import { announcementVisibleToViewer } from '@/lib/announcements/announcementRealtimeVisibility';
 import { upsertAnnouncementsTopN } from '@/lib/announcements/upsertAnnouncementsTopN';
 import { trpc } from '@/trpc/client';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 const ANNOUNCEMENTS_REALTIME_LIMIT = 10;
 
@@ -34,7 +35,7 @@ export function AnnouncementsAblySubscriber() {
     const hackathon = useAtomValue(hackathonAtom);
     const hackathonId = hackathon?.id;
     const viewerLocationKey = useEffectiveAnnouncementLocationKey();
-    const isAdmin = useAtomValue(userInfoAtom)?.userRole === 'admin';
+    const isAdmin = hasAdminAccess(useAtomValue(userInfoAtom)?.userRole);
     const adminPreviewInput = useAdminAnnouncementPreviewQueryInput();
     const adminViewAll = adminPreviewInput?.viewAll ?? true;
     const setAnnouncements = useSetAtom(announcementsAtom);

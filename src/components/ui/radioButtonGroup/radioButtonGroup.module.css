@@ -9,7 +9,9 @@
 }
 
 .finalcheck.optionsContainer:invalid::after,
-.optionsContainer:user-invalid::after {
+.optionsContainer:user-invalid::after,
+.optionsContainer:has(input:user-invalid)::after,
+form[data-validated] .optionsContainer:invalid::after {
     content: 'Required, please make a selection';
     color: var(--color-danger-400);
     font-size: 12px;
@@ -34,6 +36,13 @@
 .optionLabel:has(input:checked) {
     background-color: var(--background-brand-focus);
     border-color: var(--border-brand-primary);
+}
+
+.finalcheck.optionsContainer:invalid .optionLabel,
+.optionsContainer:user-invalid .optionLabel,
+.optionsContainer:has(input:user-invalid) .optionLabel,
+form[data-validated] .optionsContainer:invalid .optionLabel {
+    border-color: var(--danger-500);
 }
 
 .optionLabel:hover::before {

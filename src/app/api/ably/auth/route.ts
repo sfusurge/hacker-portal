@@ -1,14 +1,14 @@
-import { auth, SessionType } from '@/auth/auth';
+import { getSession, SessionType } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
 import { applications } from '@/db/schema/applications';
-import { UserRoleEnum } from '@/db/schema/users/users';
 import { createAblyTokenRequest } from '@/lib/realtime/createAblyTokenRequest';
 import { getUserData } from '@/server/routers/usersRouter';
 import { and, eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 export async function GET(req: Request) {
-    const session = (await auth()) as SessionType;
+    const session = (await getSession()) as SessionType;
     if (!session?.userId) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -40,7 +40,7 @@ export async function GET(req: Request) {
         );
     }
 
-    const isAdmin = userData.userRole === UserRoleEnum.admin;
+    const isAdmin = hasAdminAccess(userData.userRole);
 
     const [applicationRow] = await databaseClient
         .select({ userId: applications.userId })

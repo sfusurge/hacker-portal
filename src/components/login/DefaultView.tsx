@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import LinkLogin from './LinkLogin';
-import { OAUTH_PROVIDERS, OAuthProvider } from './constants';
+import { OAUTH_PROVIDERS, OAuthProvider, getLoginIconSrc } from './constants';
 
 interface DefaultViewProps {
     loginWithNodeMail: (
@@ -19,11 +19,11 @@ export default function DefaultView({
     return (
         <div className="flex w-full flex-col items-start gap-10">
             <Image
-                src="/dashboard/sparkjamhead.webp"
+                src={getLoginIconSrc()}
                 width={100}
                 height={100}
                 className="h-16 w-16 rounded-lg sm:h-25 sm:w-25"
-                alt="SparkJam 2026 Logo"
+                alt="Event logo"
             />
             <div className="space-y-3 text-white">
                 <h1 className="text-3xl leading-tight font-semibold">

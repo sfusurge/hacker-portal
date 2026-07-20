@@ -1,12 +1,16 @@
-import { auth, signIn } from '@/auth/auth';
+import { auth, getSession } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
 import { user } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
+import { headers } from 'next/headers';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import LoginContainer from '@/components/login/LoginContainer';
-import type { OAuthProvider } from '@/components/login/constants';
+import {
+    getLoginBannerSrc,
+    type OAuthProvider,
+} from '@/components/login/constants';
 
 export default function Login({
     searchParams,
@@ -26,7 +30,7 @@ async function LoginContent({
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
     const redirectTarget = (await searchParams)['from'] as string;
-    const session = await auth();
+    const session = await getSession();
 
     if (session) {
         const res = (
@@ -58,15 +62,31 @@ async function LoginContent({
     async function loginWithProvider(provider: OAuthProvider) {
         'use server';
         const redirectPath = `/login${redirectTarget ? '?from=' + encodeURIComponent(redirectTarget) : ''}`;
+        const providerId = provider.toLowerCase();
+        const requestHeaders = await headers();
 
-        await signIn(provider.toLowerCase(), { redirectTo: redirectPath });
+        const result = await auth.api.signInSocial({
+            body: {
+                provider: providerId,
+                callbackURL: redirectPath,
+                disableRedirect: true,
+            },
+            headers: requestHeaders,
+        });
+
+        if (result.url) {
+            redirect(result.url);
+        }
     }
 
     async function loginWithNodeMail(formData: FormData) {
         'use server';
-        await signIn('nodemailer', {
-            email: formData.get('email'),
-            redirect: false,
+        await auth.api.signInMagicLink({
+            body: {
+                email: formData.get('email') as string,
+                callbackURL: '/login',
+            },
+            headers: await headers(),
         });
         return { success: true, email: formData.get('email') as string };
     }
@@ -77,7 +97,7 @@ async function LoginContent({
             className="relative h-[100dvh] w-[100dvw] overflow-hidden"
         >
             <Image
-                src="/dashboard/sparkjamhead26.webp"
+                src={getLoginBannerSrc()}
                 alt="Sparky Studying"
                 fill
                 className="absolute h-full w-full object-cover"

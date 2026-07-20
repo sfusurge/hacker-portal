@@ -11,16 +11,16 @@ import {
     ChevronRightIcon,
     ChartBarIcon,
     MegaphoneIcon,
+    TrophyIcon,
 } from '@heroicons/react/24/outline';
 
 import { HomeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { QrCodeIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
-import { signOut } from 'next-auth/react';
+import { authClient } from '@/auth/auth-client';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
-import React from 'react';
 import { motion } from 'motion/react';
 import {
     Popover,
@@ -37,6 +37,7 @@ import { DEFAULT_USER_AVATAR, resolveUserIconUrl } from '@/utils/blobHelper';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { useAtomValue } from 'jotai';
 import { canAccessProjectGallery } from '@/lib/submissionWindow';
+import { hasAdminAccess, isOwner } from '@/lib/auth/roles';
 import {
     isSparkjamProjectsArea,
     SPARKJAM_PROJECTS_PATH,
@@ -94,6 +95,16 @@ const projectGalleryLink = {
     icon: <InboxStackIcon className="h-6 w-6" />,
     iconAlt: 'Project gallery logo',
 };
+
+// Owner-only (hackathon configuration).
+const ownerLinks = [
+    {
+        href: '/admin/hackathons',
+        label: 'Hackathons',
+        icon: <TrophyIcon className="h-6 w-6" />,
+        iconAlt: 'Hackathons logo',
+    },
+];
 
 const adminLinks = [
     {
@@ -203,7 +214,8 @@ export default function SideBar({ className, initialData }: NavProps) {
             now,
             hackathon.projectGalleryOpen?.toDate() ?? null,
             hackathon.submissionDeadline.toDate(),
-            initialData?.userRole
+            initialData?.userRole,
+            hackathon.submissionOpen?.toDate() ?? null
         );
 
     const mainNavLinks = useMemo(() => {
@@ -499,7 +511,7 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                     setProfilePopoverOpen(
                                                         false
                                                     );
-                                                    await signOut();
+                                                    await authClient.signOut();
                                                     if (
                                                         typeof window !==
                                                         'undefined'
@@ -514,7 +526,7 @@ export default function SideBar({ className, initialData }: NavProps) {
                                     </Popover>
                                 )}
 
-                            {initialData?.userRole === 'admin' && (
+                            {hasAdminAccess(initialData?.userRole) && (
                                 <>
                                     <div className="my-4 border-t border-white/10" />
                                     {!collapsed ? (
@@ -541,6 +553,21 @@ export default function SideBar({ className, initialData }: NavProps) {
                                         }}
                                         className="flex flex-col gap-1"
                                     >
+                                        {isOwner(initialData?.userRole) &&
+                                            ownerLinks.map((link) => (
+                                                <NavLink
+                                                    key={link.href}
+                                                    href={link.href}
+                                                    label={link.label}
+                                                    icon={link.icon}
+                                                    iconAlt={link.iconAlt}
+                                                    platform="desktop"
+                                                    active={url.startsWith(
+                                                        link.href
+                                                    )}
+                                                    collapsed={collapsed}
+                                                />
+                                            ))}
                                         {adminLinks.map((link) => (
                                             <NavLink
                                                 key={link.href}
@@ -560,7 +587,7 @@ export default function SideBar({ className, initialData }: NavProps) {
                             )}
 
                             {(initialData?.userRole === 'user' ||
-                                initialData?.userRole === 'admin') &&
+                                hasAdminAccess(initialData?.userRole)) &&
                                 eventPageNavLinks.length > 0 && (
                                     <>
                                         <div className="my-4 border-t border-white/10" />
@@ -590,20 +617,25 @@ export default function SideBar({ className, initialData }: NavProps) {
                                             }}
                                             className="flex flex-col gap-1"
                                         >
-                                            {eventPageNavLinks.map((link) => (
-                                                <NavLink
-                                                    key={link.href}
-                                                    href={link.href}
-                                                    label={link.label}
-                                                    icon={link.icon}
-                                                    iconAlt={link.iconAlt}
-                                                    platform="desktop"
-                                                    active={url.startsWith(
-                                                        link.href
-                                                    )}
-                                                    collapsed={collapsed}
-                                                />
-                                            ))}
+                                            {eventPageNavLinks.map(
+                                                (link, index) => (
+                                                    <NavLink
+                                                        key={`${link.href}-${index}`}
+                                                        href={link.href}
+                                                        label={link.label}
+                                                        icon={link.icon}
+                                                        iconAlt={link.iconAlt}
+                                                        platform="desktop"
+                                                        active={
+                                                            url === link.href ||
+                                                            url.startsWith(
+                                                                `${link.href}/`
+                                                            )
+                                                        }
+                                                        collapsed={collapsed}
+                                                    />
+                                                )
+                                            )}
                                         </motion.div>
                                     </>
                                 )}

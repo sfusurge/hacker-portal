@@ -94,7 +94,35 @@ interface DbHackathonType {
     paymentDeadline?: Date | null;
 }
 
-function DeserializeHackathonData(hackathon: DbHackathonType): HackathonData {
+function DeserializeHackathonData(
+    hackathon: DbHackathonType | null
+): HackathonData {
+    if (!hackathon) {
+        return {
+            name: '',
+            hackathonName: '',
+            id: 0,
+            version: 0,
+            eventPagePayload: null,
+            isPaid: false,
+            isMultipleLocations: false,
+            paymentDeadline: null,
+            applicationQuestionPages: [],
+            submissionQuestionPages: [],
+            judgeQuestions: [],
+            judgeRubric: [],
+            submissionDeadline: dayjs(0),
+            projectGalleryOpen: null,
+            submissionOpen: null,
+            applicationOpen: null,
+            applicationCloses: null,
+            audienceVotingEnabled: false,
+            audienceVotingOpen: null,
+            audienceVotingCloses: null,
+            startDate: dayjs(0),
+            endDate: dayjs(0),
+        };
+    }
     return {
         ...hackathon,
         eventPagePayload: hackathon.eventPagePayload ?? null,
@@ -143,7 +171,7 @@ export function HackathonOnlyProvider({
     hackathonData,
     children,
 }: {
-    hackathonData: DbHackathonType;
+    hackathonData: DbHackathonType | null;
     children: ReactNode;
 }) {
     useHydrateAtoms([[hackathonAtom, DeserializeHackathonData(hackathonData)]]);
@@ -160,7 +188,7 @@ export function ClientContext({
     children,
 }: {
     userData: UserData;
-    hackathonData: DbHackathonType;
+    hackathonData: DbHackathonType | null;
     initialAnnouncements: AnnouncementsList;
     initialLastSeenAt: Date | null;
     initialViewerAnnouncementLocationKey: string | null;

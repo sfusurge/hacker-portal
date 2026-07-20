@@ -1,3 +1,12 @@
+import { hasAdminAccess } from '@/lib/auth/roles';
+
+/** Hackathons without a submission open date do not run project submissions. */
+export function hackathonHasProjectSubmissions(
+    submissionOpen: Date | null | undefined
+): boolean {
+    return submissionOpen != null;
+}
+
 export function isSubmissionWindowOpen(
     nowMs: number,
     submissionOpen: Date | null | undefined,
@@ -50,14 +59,22 @@ export function isPreGalleryCheckInPeriod(
     return nowMs >= submissionDeadline.getTime();
 }
 
-/** Judges and admins can browse submissions before the public gallery opens. */
+/**
+ * Whether Project Gallery should appear in nav / be browsable.
+ * Requires the hackathon to have project submissions (`submissionOpen` set).
+ * Judges and admins can browse before the public gallery opens.
+ */
 export function canAccessProjectGallery(
     nowMs: number,
     projectGalleryOpen: Date | null | undefined,
     submissionDeadline: Date,
-    userRole?: string | null
+    userRole?: string | null,
+    submissionOpen?: Date | null
 ): boolean {
-    if (userRole === 'judge' || userRole === 'admin') {
+    if (!hackathonHasProjectSubmissions(submissionOpen)) {
+        return false;
+    }
+    if (userRole === 'judge' || hasAdminAccess(userRole)) {
         return true;
     }
     return isProjectsGalleryOpen(nowMs, projectGalleryOpen, submissionDeadline);

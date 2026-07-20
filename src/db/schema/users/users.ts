@@ -1,5 +1,6 @@
 import { InferSelectModel, sql, eq } from 'drizzle-orm';
 import {
+    boolean,
     index,
     integer,
     pgEnum,
@@ -19,6 +20,7 @@ export const UserRoleEnum = {
     admin: 'admin',
     judge: 'judge',
     sponsor: 'sponsor',
+    owner: 'owner',
 };
 
 export const userRoleDbEnum = pgEnum('user_role', [
@@ -26,6 +28,7 @@ export const userRoleDbEnum = pgEnum('user_role', [
     UserRoleEnum.user,
     UserRoleEnum.judge,
     UserRoleEnum.sponsor,
+    UserRoleEnum.owner,
 ]);
 
 export const user = pgTable(
@@ -39,7 +42,7 @@ export const user = pgTable(
         lastName: varchar('last_name', { length: 64 }),
         phoneNumber: varchar('phone_number', { length: 15 }),
         email: varchar('email', { length: 255 }).unique().notNull(),
-        emailVerified: timestamp('emailVerified', { mode: 'date' }),
+        emailVerified: boolean('emailVerified').default(false).notNull(),
         image: text('image'),
         userRole: userRoleDbEnum('user_role').default('user').notNull(),
         displayId: varchar('display_id', { length: 6 }).notNull().unique(),
@@ -47,6 +50,12 @@ export const user = pgTable(
             mode: 'date',
             withTimezone: true,
         }),
+        createdAt: timestamp('createdAt', { mode: 'date' })
+            .defaultNow()
+            .notNull(),
+        updatedAt: timestamp('updatedAt', { mode: 'date' })
+            .defaultNow()
+            .notNull(),
     },
     (table) => {
         return [

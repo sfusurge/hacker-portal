@@ -2,6 +2,10 @@ import type { Stripe } from 'stripe';
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createCaller } from '@/server/appRouter';
+import {
+    applyApplicationStatusUpdate,
+    applyLastEmailSentUpdate,
+} from '@/server/routers/applicationsRouter';
 import type { InputFormPageData } from '@/components/application_components/types';
 import { getApplicationResponseString } from '@/lib/applications/applicationReviewExport';
 
@@ -106,7 +110,7 @@ export async function POST(req: Request) {
                         break;
                     }
 
-                    await trpcClient.applications.updateApplication({
+                    await applyApplicationStatusUpdate({
                         hackathonId: application.hackathonId,
                         userId: application.userId,
                         status: 'Accepted',
@@ -167,15 +171,13 @@ export async function POST(req: Request) {
                                     },
                                 });
                             if (sendResult.emailSent) {
-                                await trpcClient.applications.updateLastEmailSent(
-                                    {
-                                        hackathonId: application.hackathonId,
-                                        userId: application.userId,
-                                        emailType:
-                                            rsvpTemplate.emailType ??
-                                            rsvpTemplate.purpose,
-                                    }
-                                );
+                                await applyLastEmailSentUpdate({
+                                    hackathonId: application.hackathonId,
+                                    userId: application.userId,
+                                    emailType:
+                                        rsvpTemplate.emailType ??
+                                        rsvpTemplate.purpose,
+                                });
                                 console.log(
                                     'RSVP confirmation email sent successfully'
                                 );

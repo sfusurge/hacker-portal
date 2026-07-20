@@ -8,11 +8,9 @@ export default defineConfig({
         silent: true,
         // 15 seconds
         testTimeout: 15_000,
-        // To fix next-auth 5 importing issue
-        // https://github.com/vitest-dev/vitest/issues/4554
         server: {
             deps: {
-                inline: ['next-auth'],
+                inline: ['better-auth'],
             },
         },
         clearMocks: true,

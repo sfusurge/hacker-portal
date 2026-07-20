@@ -1,57 +1,64 @@
-import { databaseClient } from '@/db/client';
-import {
-    accounts,
-    authenticators,
-    sessions,
-    verificationTokens,
-} from '@/db/schema/auth';
-import { user } from '@/db/schema/users/users';
-
-import { DrizzleAdapter } from '@auth/drizzle-adapter';
-import { NextAuthConfig } from 'next-auth';
-
-import GoogleProvider from 'next-auth/providers/google';
-import GithubProvider from 'next-auth/providers/github';
-import DiscordProvider from 'next-auth/providers/discord';
-import { FigmaProvider } from './FigmaProvider';
-
-export const authAdapter = DrizzleAdapter(databaseClient, {
-    usersTable: user,
-    accountsTable: accounts,
-    sessionsTable: sessions,
-    verificationTokensTable: verificationTokens,
-    authenticatorsTable: authenticators,
-} as never);
+import type { BetterAuthOptions } from 'better-auth';
 
 export const authConfig = {
-    adapter: authAdapter,
-    trustHost: true,
-    secret: process.env.NEXTAUTH_SECRET,
-    providers: [
-        GoogleProvider({
+    account: {
+        accountLinking: {
+            enabled: true,
+            trustedProviders: ['google', 'github', 'discord', 'figma'],
+            requireLocalEmailVerified: false,
+        },
+    },
+    user: {
+        additionalFields: {
+            firstName: {
+                type: 'string',
+                required: false,
+                input: true,
+            },
+            lastName: {
+                type: 'string',
+                required: false,
+                input: true,
+            },
+            phoneNumber: {
+                type: 'string',
+                required: false,
+                input: true,
+            },
+            displayId: {
+                type: 'string',
+                required: false,
+                input: false,
+            },
+            userRole: {
+                type: 'string',
+                required: false,
+                defaultValue: 'user',
+                input: false,
+            },
+            lastSeenAnnouncementsAt: {
+                type: 'date',
+                required: false,
+                input: false,
+            },
+        },
+    },
+    socialProviders: {
+        google: {
             clientId: process.env.AUTH_GOOGLE_ID as string,
             clientSecret: process.env.AUTH_GOOGLE_SECRET as string,
-            allowDangerousEmailAccountLinking: true,
-        }),
-        GithubProvider({
+        },
+        github: {
             clientId: process.env.AUTH_GITHUB_ID as string,
             clientSecret: process.env.AUTH_GITHUB_SECRET as string,
-            allowDangerousEmailAccountLinking: true,
-        }),
-        DiscordProvider({
+        },
+        discord: {
             clientId: process.env.AUTH_DISCORD_ID as string,
             clientSecret: process.env.AUTH_DISCORD_SECRET as string,
-            allowDangerousEmailAccountLinking: true,
-        }),
-        FigmaProvider({
+        },
+        figma: {
             clientId: process.env.AUTH_FIGMA_ID as string,
             clientSecret: process.env.AUTH_FIGMA_SECRET as string,
-        }),
-    ],
-    pages: {
-        signIn: '/login',
+        },
     },
-    session: {
-        strategy: 'jwt',
-    },
-} satisfies NextAuthConfig;
+} satisfies Pick<BetterAuthOptions, 'account' | 'user' | 'socialProviders'>;

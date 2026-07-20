@@ -9,7 +9,7 @@ import {
     type AppStatus,
     type ApplicationAction,
 } from './activeHackathonCardHelpers';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 export type CountdownParts = { d: number; h: number; m: number } | null;
@@ -45,7 +45,9 @@ export function ActiveHackathonCardContent({
     applicationAction,
     onApplicationButtonClick,
 }: ActiveHackathonCardContentProps) {
+    const router = useRouter();
     const statusBadge = getStatusBadge(status);
+    const eventPageHref = `/${bannerConfig.eventPageSlug}`;
 
     const acceptedWithActions =
         isAcceptedStatus &&
@@ -78,6 +80,7 @@ export function ActiveHackathonCardContent({
             )}
         >
             <Button
+                type="button"
                 size="cozy"
                 variant="default"
                 hierarchy="secondary"
@@ -87,14 +90,14 @@ export function ActiveHackathonCardContent({
                         : 'w-full min-w-0',
                     ticketViewFirstOnMobile && 'order-2 @[448px]:order-1'
                 )}
+                onClick={() => router.push(eventPageHref)}
             >
-                <Link href={`/${bannerConfig.eventPageSlug}`} prefetch>
-                    {bannerConfig.eventPageLabel}
-                </Link>
+                {bannerConfig.eventPageLabel}
             </Button>
 
             {showPrimaryAction && applicationAction && (
                 <Button
+                    type="button"
                     size="cozy"
                     variant={applicationAction.variant}
                     hierarchy="primary"
@@ -147,17 +150,14 @@ export function ActiveHackathonCardContent({
                         </div>
 
                         <Button
+                            type="button"
                             size="cozy"
                             variant="default"
                             hierarchy="secondary"
                             className="mt-12 w-full sm:mt-4"
+                            onClick={() => router.push(eventPageHref)}
                         >
-                            <Link
-                                href={`/${bannerConfig.eventPageSlug}`}
-                                prefetch
-                            >
-                                {bannerConfig.eventPageLabel}
-                            </Link>
+                            {bannerConfig.eventPageLabel}
                         </Button>
                     </>
                 ) : (
@@ -204,7 +204,7 @@ export function ActiveHackathonCardContent({
                                 ? `${payloadName} is currently closed for applications. Visit the event page for the latest updates.`
                                 : applicationSubmitted
                                   ? getMessage(status, payloadName)
-                                  : 'Applications are open! Apply now to get your shot at participating in our creative design jam!'}
+                                  : `Applications are open! Apply now to get your shot at participating in ${payloadName}!`}
                         </p>
 
                         {/* {isAcceptedStatus && ticketQr && (

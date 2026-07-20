@@ -6,6 +6,7 @@ import {
     text,
     primaryKey,
     timestamp,
+    boolean,
 } from 'drizzle-orm/pg-core';
 import { hackathons } from './hackathons';
 import { user } from './users/users';
@@ -48,6 +49,7 @@ export const applications = pgTable(
         pendingStatus: applicationStatusEnum('pending_status')
             .default('N/A')
             .notNull(),
+        flagged: boolean('flagged').default(false).notNull(),
         response: json().notNull(),
         createdDate: timestamp('created_date').defaultNow().notNull(),
         lastEmailSent: text('last_email_sent').notNull().default('N/A'),
@@ -94,6 +96,7 @@ export const updateApplicationStatusSchema = z.object({
     userId: z.number().int(),
     status: ApplicationStatusSchema.optional(),
     pendingStatus: ApplicationStatusSchema.optional(),
+    flagged: z.boolean().optional(),
     response: z.record(z.string(), z.any()).optional(),
 });
 
@@ -102,6 +105,7 @@ export const batchUpdateApplicationStatusSchema = z.object({
     userIds: z.array(z.number().int()),
     status: ApplicationStatusSchema.optional(),
     pendingStatus: ApplicationStatusSchema.optional(),
+    flagged: z.boolean().optional(),
 });
 
 export const updateRsvpMailSentSchema = z.object({
@@ -112,5 +116,11 @@ export const updateRsvpMailSentSchema = z.object({
 export const updateLastEmailSentSchema = z.object({
     hackathonId: z.number().int(),
     userId: z.number().int(),
+    emailType: z.string(),
+});
+
+export const batchUpdateLastEmailSentSchema = z.object({
+    hackathonId: z.number().int(),
+    userIds: z.array(z.number().int()),
     emailType: z.string(),
 });

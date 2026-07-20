@@ -1,7 +1,6 @@
-import { PrimitiveAtom, useAtomValue, useSetAtom, useAtom, Atom } from 'jotai';
+import { PrimitiveAtom, useAtomValue, useSetAtom, Atom } from 'jotai';
 import style from './ApplicationPageIndicator.module.css';
-import { finalErrCheckAtom } from '../InputForm';
-import { canAdvanceFromPageState } from '../InputFormComponents/shared';
+import { useFormPageNavigation } from '../hooks/useFormPageNavigation';
 import {
     ArrowLeftIcon,
     ArrowRightIcon,
@@ -17,7 +16,6 @@ import {
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { cn } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
 
 /**
  * completed: every form field that is required is filled.
@@ -34,8 +32,8 @@ function IconHolder({ children }: { children: ReactNode }) {
     return <div className={style.iconHolder}>{children}</div>;
 }
 
-function getPageStatus(pageState: PageFormState, errCheck: boolean) {
-    if (pageState.error && errCheck) {
+function getPageStatus(pageState: PageFormState) {
+    if (pageState.error) {
         return (
             <IconHolder>
                 <ExclamationCircleIcon color="red"></ExclamationCircleIcon>
@@ -77,41 +75,11 @@ export function DesktopPageIndicator({
 }) {
     const pageStates = useAtomValue(pageStateAtoms);
     const setIndex = useSetAtom(indexAtom);
-    const [errCheck, setErrCheck] = useAtom(finalErrCheckAtom);
-
-    const [validationPerformed, setValidationPerformed] = useState(false);
-    function tryReview() {
-        setErrCheck(true);
-
-        setTimeout(() => {
-            setValidationPerformed(true);
-        }, 0);
-    }
-
-    useEffect(() => {
-        if (validationPerformed) {
-            let valid = true;
-            let idx = 0;
-            for (; idx < pageStates.length; idx++) {
-                valid &&= canAdvanceFromPageState(pageStates[idx]);
-                if (!valid) {
-                    break;
-                }
-            }
-            if (!valid) {
-                toast({
-                    title: 'Invalid form',
-                    description:
-                        'Some of the questions are not filled correctly.',
-                    variant: 'error',
-                });
-                setIndex(idx);
-            } else {
-                setIndex(pageStates.length);
-            }
-            setValidationPerformed(false);
-        }
-    }, [validationPerformed]);
+    const { tryReview } = useFormPageNavigation({
+        indexAtom,
+        pageStatesAtom: pageStateAtoms,
+        pageCount: pageStates.length,
+    });
 
     return (
         <div className={style.pageStatusContainer}>
@@ -129,7 +97,7 @@ export function DesktopPageIndicator({
                             )}
                         >
                             <span className="mr-2 flex-shrink-0">
-                                {getPageStatus(item, errCheck)}
+                                {getPageStatus(item)}
                             </span>
                             <span className="flex-grow">{item.title}</span>
                         </button>
@@ -167,8 +135,11 @@ export function MobilePageIndicator({
     indexAtom: PrimitiveAtom<number>;
 }) {
     const pageStates = useAtomValue(pageStateAtoms);
-    const [index, setIndex] = useAtom(indexAtom);
-    const [errCheck, setErrCheck] = useAtom(finalErrCheckAtom);
+    const { index, setIndex, tryNext, tryReview } = useFormPageNavigation({
+        indexAtom,
+        pageStatesAtom: pageStateAtoms,
+        pageCount: pageStates.length,
+    });
 
     const [showPages, setShowPages] = useState(false);
 
@@ -184,68 +155,17 @@ export function MobilePageIndicator({
         );
     }
 
-    const [pendingNav, setPendingNav] = useState<'next' | 'review' | null>(
-        null
-    );
-
-    function queueValidation(action: 'next' | 'review') {
-        setErrCheck(true);
-        requestAnimationFrame(() => {
-            setTimeout(() => setPendingNav(action), 0);
-        });
-    }
-
-    function tryReview() {
-        queueValidation('review');
-    }
-
     function incrementIndex(incre: number) {
         if (incre > 0) {
             if (index + incre === pageStates.length) {
                 return tryReview();
             }
-            return queueValidation('next');
+            return tryNext();
         }
         if (index + incre >= 0) {
             setIndex(index + incre);
         }
     }
-
-    useEffect(() => {
-        if (!pendingNav) return;
-
-        if (pendingNav === 'next') {
-            const current = pageStates[index];
-            if (!current || !canAdvanceFromPageState(current)) {
-                toast({
-                    title: 'Incomplete section',
-                    description:
-                        'Answer all required questions on this page before continuing.',
-                    variant: 'error',
-                });
-            } else {
-                setIndex(index + 1);
-            }
-        } else {
-            let valid = true;
-            for (const pageState of pageStates) {
-                valid &&= canAdvanceFromPageState(pageState);
-            }
-
-            if (!valid) {
-                toast({
-                    title: 'Invalid form',
-                    description:
-                        'Some of the questions are not filled correctly.',
-                    variant: 'error',
-                });
-            } else {
-                setIndex(pageStates.length);
-            }
-        }
-
-        setPendingNav(null);
-    }, [pendingNav, pageStates, index, setIndex]);
 
     // click outside detection
     const pageContainerRef = useRef<HTMLDivElement>(null);
@@ -323,7 +243,7 @@ export function MobilePageIndicator({
                             }}
                         >
                             <span className="mr-2 flex-shrink-0">
-                                {getPageStatus(item, errCheck)}
+                                {getPageStatus(item)}
                             </span>
                             <span className="flex-grow">
                                 {getPageTitle(_index)}
