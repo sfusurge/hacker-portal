@@ -15,6 +15,13 @@
       "when": 1783903138288,
       "tag": "0001_confused_norrin_radd",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784606757227,
+      "tag": "0002_square_luke_cage",
+      "breakpoints": true
     }
   ]
 }
