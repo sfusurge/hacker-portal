@@ -129,8 +129,9 @@ export default function ReviewApplicationsPage() {
                         await applicationData.fetchNextPage();
                     }
                 }}
-                onRowClick={(app, idx) => {
-                    setSelectedIndex(idx);
+                onRowClick={(app) => {
+                    const idx = data.findIndex((d) => d.id === app.id);
+                    setSelectedIndex(idx === -1 ? null : idx);
                     const full = applicationDataMap.get(app.id);
                     if (full) setSideCardAtom(full);
                     openSideCard();
@@ -145,6 +146,8 @@ export default function ReviewApplicationsPage() {
                 onNext={onNext}
                 selected={selected}
                 onRefresh={refresh}
+                applicantIndex={selectedIndex ?? undefined}
+                applicantTotal={data.length}
             />
         </div>
     );
@@ -180,6 +183,7 @@ function transformResponse(
                 teamName,
                 currentStatus: item.currentStatus,
                 pendingStatus: item.pendingStatus,
+                flagged: Boolean(item.flagged),
                 lastEmailSent,
                 applicationDate: new Date(item.createdDate),
                 members,

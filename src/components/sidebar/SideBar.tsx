@@ -18,10 +18,9 @@ import { HomeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { QrCodeIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
-import { authClient } from '@/auth/auth-client';
+import { signOutAndRedirect } from '@/auth/auth-client';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
-import React from 'react';
 import { motion } from 'motion/react';
 import {
     Popover,
@@ -508,19 +507,13 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                 iconAlt="Sign out logo"
                                                 platform="desktop"
                                                 variant="error"
-                                                onClick={async () => {
+                                                onClick={() => {
                                                     setProfilePopoverOpen(
                                                         false
                                                     );
-                                                    await authClient.signOut();
-                                                    if (
-                                                        typeof window !==
-                                                        'undefined'
-                                                    ) {
-                                                        localStorage.removeItem(
-                                                            'auth-login-success'
-                                                        );
-                                                    }
+                                                    void signOutAndRedirect(
+                                                        '/login'
+                                                    );
                                                 }}
                                             />
                                         </PopoverContent>
