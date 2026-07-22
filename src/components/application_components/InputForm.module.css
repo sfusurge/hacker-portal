@@ -141,14 +141,6 @@
     transition: background-color 300ms ease-in-out;
 }
 
-.mobileHomeButton {
-    display: none;
-}
-
-.mobileFormNav {
-    display: none;
-}
-
 .mobileStepLabel {
     display: none;
 }
@@ -170,45 +162,26 @@
 
     .appFormWrapper {
         flex-direction: column;
-        gap: 12px;
+        gap: 0;
         overflow: visible;
-        padding: 10px;
-        padding-top: 0px;
+        padding: 20px 26px 10px;
         border: none;
         background-color: transparent;
         border-radius: 0;
     }
 
     .appFormContent {
+        flex-direction: column;
         overflow: visible;
     }
 
-    .mobileFormNav {
-        display: flex;
-        flex-direction: column;
-        gap: 32px;
-        align-items: flex-start;
-    }
-
-    .mobileHomeButton {
-        display: flex;
-        width: 56px;
-        height: 56px;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid var(--border-neutral-secondary);
-        border-radius: 12px;
-        background-color: var(--background-neutral-secondary);
-        color: var(--text-regular);
-        transition: background-color 300ms ease-in-out;
-    }
-
-    .mobileHomeButton:hover {
-        background-color: var(--neutral-800);
+    .formContainer {
+        width: 100%;
     }
 
     .mobileStepLabel {
         display: block;
+        margin-bottom: 10px;
         color: var(--text-brand-primary);
         font-size: 14px;
         font-weight: 600;
@@ -224,6 +197,23 @@
         padding: 0;
         padding-bottom: 1rem;
         gap: 25px;
+    }
+
+    .pageButtons {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 0;
+        padding: 0 26px 24px;
+    }
+
+    .pageButtons > span {
+        width: 100%;
+        flex: 1 0 100%;
+    }
+
+    .pageButtons button {
+        flex: 1 1 0;
+        min-width: 0;
     }
 }
 

@@ -499,7 +499,7 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                 }
                                             />
                                             <NavLink
-                                                href="#"
+                                                href="/signout"
                                                 label="Sign out"
                                                 icon={
                                                     <ArrowLeftEndOnRectangleIcon className="text-danger-400 h-6 w-6" />
@@ -507,7 +507,8 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                 iconAlt="Sign out logo"
                                                 platform="desktop"
                                                 variant="error"
-                                                onClick={() => {
+                                                onClick={(e) => {
+                                                    e.preventDefault();
                                                     setProfilePopoverOpen(
                                                         false
                                                     );

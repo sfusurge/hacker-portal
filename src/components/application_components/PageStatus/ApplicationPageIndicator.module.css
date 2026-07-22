@@ -60,19 +60,171 @@
 }
 
 .ladderBar {
+    position: relative;
     height: 20px;
-    width: 0;
-
-    border: 1px solid var(--border-neutral-secondary);
+    width: 2px;
+    overflow: hidden;
     border-radius: 2px;
     margin-left: 17px;
+    background-color: var(--border-neutral-secondary);
 }
 
-.ladderBar.done {
-    border-color: var(--outline-brand-primary);
+.ladderBar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    height: 0;
+    background-color: var(--outline-brand-primary);
+    transition: height 280ms ease-out;
+}
+
+.ladderBar.done::after {
+    height: 100%;
 }
 
 /* ==== Mobile ==== */
+.mobileHorizontalStepper {
+    --stepper-line-duration: 280ms;
+    --stepper-ease: ease-out;
+
+    display: none;
+}
+
+.mobileHorizontalSteps {
+    display: flex;
+    width: max-content;
+    min-width: 100%;
+    align-items: flex-start;
+}
+
+.mobileHorizontalStep {
+    position: relative;
+    display: flex;
+    width: 112px;
+    flex: 0 0 112px;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.mobileHorizontalMarkerRow {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 20px;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobileHorizontalConnector {
+    position: absolute;
+    top: 50%;
+    left: calc(50% + 9px);
+    z-index: 0;
+    width: calc(100% - 18px);
+    height: 2px;
+    overflow: hidden;
+    border-radius: 2px;
+    transform: translateY(-50%);
+    background-color: var(--neutral-500);
+}
+
+.mobileHorizontalConnector::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: 0;
+    background-color: var(--outline-brand-primary);
+    transition: width var(--stepper-line-duration, 280ms)
+        var(--stepper-ease, ease-out);
+}
+
+.mobileHorizontalConnectorActive::after {
+    width: 100%;
+}
+
+.mobileHorizontalCircle {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--neutral-500);
+    border-radius: 50%;
+    background-color: var(--neutral-950);
+    color: white;
+}
+
+.mobileHorizontalCircle > svg {
+    width: 12px;
+    height: 12px;
+}
+
+.mobileHorizontalCircleCurrent,
+.mobileHorizontalCircleStarted {
+    border-color: var(--outline-brand-primary);
+    background-color: var(--outline-brand-primary);
+}
+
+.mobileHorizontalCircleCurrent {
+    box-shadow: none;
+}
+
+.mobileHorizontalCircleDone {
+    border-color: var(--outline-brand-primary);
+    background-color: var(--outline-brand-primary);
+}
+
+.mobileHorizontalCircleError {
+    border-color: #ef4444;
+    background-color: #ef4444;
+}
+
+.mobileHorizontalErrorGlyph {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.mobileHorizontalStartedDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: white;
+    opacity: 1;
+    transform: scale(1);
+}
+
+.mobileHorizontalCircle > svg,
+.mobileHorizontalErrorGlyph {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.mobileHorizontalLabel {
+    display: -webkit-box;
+    max-width: 92px;
+    min-height: 28px;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.25;
+    text-wrap: balance;
+}
+
+.mobileHorizontalStepCurrent .mobileHorizontalLabel {
+    color: var(--text-regular);
+    font-weight: 600;
+}
+
 .navContainer {
     display: flex;
     flex-direction: row;
@@ -199,4 +351,26 @@ Use pseudo element to avoid backdrop-filter "root"
 
 .pageButton:hover {
     background-color: var(--brand-500);
+}
+
+@media only screen and (max-width: 767.5px) {
+    .mobileHorizontalStepper {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior-x: contain;
+        border-bottom: 1px solid var(--border-neutral-tertiary);
+        background-color: var(--neutral-950);
+        padding: 24px 0 20px;
+        scrollbar-width: none;
+    }
+
+    .mobileHorizontalStepper::-webkit-scrollbar {
+        display: none;
+    }
+
+    .mobileHorizontalSteps {
+        padding: 0 28px;
+    }
 }
