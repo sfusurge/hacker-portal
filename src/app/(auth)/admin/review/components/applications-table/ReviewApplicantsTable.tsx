@@ -197,6 +197,7 @@ export function ReviewApplicantsTable({
         useState<Set<number> | null>(null);
     const [filterMenuOpen, setFilterMenuOpen] = useState(false);
     const rowRefs = useRef(new Map<string, HTMLTableRowElement>());
+    const tableScrollContainerRef = useRef<HTMLDivElement | null>(null);
     const [selectionMenuPos, setSelectionMenuPos] = useState<{
         top: number;
         left: number;
@@ -313,6 +314,7 @@ export function ReviewApplicantsTable({
             setRowSelection,
             rowRefs,
             lastSelectionAnchorRef,
+            scrollContainerRef: tableScrollContainerRef,
         });
 
     const selectColWidth = table.getColumn('select')?.getSize() ?? 44;
@@ -521,13 +523,30 @@ export function ReviewApplicantsTable({
             return;
         }
 
-        const firstRect = els[0].getBoundingClientRect();
         const lastRect = els[els.length - 1].getBoundingClientRect();
         const horizontalOffset = 225;
-        setSelectionMenuPos({
-            top: lastRect.bottom + 8,
-            left: firstRect.left + horizontalOffset,
-        });
+        const menuWidth = 420;
+        const menuHeight = 48;
+        const pad = 12;
+
+        const scrollRect =
+            tableScrollContainerRef.current?.getBoundingClientRect();
+        const viewLeft = scrollRect?.left ?? pad;
+        const viewRight = scrollRect?.right ?? window.innerWidth;
+
+        // Stay in the visible table area while scrolling horizontally.
+        const preferredLeft = viewLeft + horizontalOffset;
+        const maxLeft = Math.max(viewLeft + pad, viewRight - menuWidth - pad);
+        const left = Math.min(preferredLeft, maxLeft);
+
+        // Stay under the lowest selected row while scrolling vertically.
+        const preferredTop = lastRect.bottom + 8;
+        const top = Math.min(
+            Math.max(preferredTop, pad),
+            window.innerHeight - menuHeight - pad
+        );
+
+        setSelectionMenuPos({ top, left });
     }, [rowSelection, pagination, tableData, sorting, globalFilter]);
 
     useLayoutEffect(() => {
@@ -537,12 +556,24 @@ export function ReviewApplicantsTable({
     useEffect(() => {
         if (!hasSelection) return;
 
-        const onReposition = () => updateSelectionMenuPosition();
-        window.addEventListener('resize', onReposition);
-        window.addEventListener('scroll', onReposition, true);
+        let scrollEndTimer: ReturnType<typeof setTimeout> | null = null;
+
+        const onScroll = () => {
+            if (scrollEndTimer) clearTimeout(scrollEndTimer);
+            // Keep the bar fixed during scroll; snap to the lowest selected row after.
+            scrollEndTimer = setTimeout(() => {
+                updateSelectionMenuPosition();
+            }, 150);
+        };
+
+        const onResize = () => updateSelectionMenuPosition();
+
+        window.addEventListener('resize', onResize);
+        window.addEventListener('scroll', onScroll, true);
         return () => {
-            window.removeEventListener('resize', onReposition);
-            window.removeEventListener('scroll', onReposition, true);
+            window.removeEventListener('resize', onResize);
+            window.removeEventListener('scroll', onScroll, true);
+            if (scrollEndTimer) clearTimeout(scrollEndTimer);
         };
     }, [hasSelection, updateSelectionMenuPosition]);
 
@@ -638,7 +669,7 @@ export function ReviewApplicantsTable({
                         }
                     />
                 ) : null}
-                <div className="overflow-x-auto">
+                <div ref={tableScrollContainerRef} className="overflow-x-auto">
                     <table
                         className="w-full text-left"
                         style={{ tableLayout: 'fixed', width: '100%' }}
