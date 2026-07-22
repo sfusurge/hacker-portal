@@ -65,11 +65,11 @@ import { ReviewProject } from './ReviewProject';
 import {
     type PageFormState,
     DesktopPageIndicator,
+    MobileHorizontalStepper,
     MobilePageIndicator,
 } from './PageStatus/ApplicationPageIndicator';
 
 import { ArrowLeftIcon } from 'lucide-react';
-import { HomeIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { cn } from '@/lib/utils';
@@ -237,6 +237,12 @@ export function InputForm({
                     savedAt={appData.savedAt}
                 />
             )}
+            {!disablePageTab && isMobile && (
+                <MobileHorizontalStepper
+                    pageStateAtoms={pageStatesAtom}
+                    indexAtom={pageIndexAtom}
+                />
+            )}
             {applicationType === 'application' && (
                 <div className="hidden flex-col gap-1 md:flex">
                     <button
@@ -256,24 +262,6 @@ export function InputForm({
                 </div>
             )}
             <div className={style.appFormWrapper}>
-                {applicationType === 'application' && isMobile && (
-                    <div className={style.mobileFormNav}>
-                        <button
-                            type="button"
-                            aria-label="Go to dashboard"
-                            className={style.mobileHomeButton}
-                            onClick={() => {
-                                router.push('/home');
-                            }}
-                        >
-                            <HomeIcon className="h-6 w-6" />
-                        </button>
-                        <p className={style.mobileStepLabel}>
-                            Step {currentPageIndex + 1} of{' '}
-                            {pagesAtoms.length + 1}
-                        </p>
-                    </div>
-                )}
                 <div className={style.appFormContent} ref={pageContainerRef}>
                     {!disablePageTab &&
                         (isMobile ? (
@@ -289,6 +277,12 @@ export function InputForm({
                         ))}
 
                     <div className={style.formContainer}>
+                        {applicationType === 'application' && isMobile && (
+                            <p className={style.mobileStepLabel}>
+                                Step {currentPageIndex + 1} of{' '}
+                                {pagesAtoms.length + 1}
+                            </p>
+                        )}
                         {currentPageIndex === pagesAtoms.length && (
                             <>
                                 {applicationType === 'application' ? (

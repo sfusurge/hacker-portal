@@ -1,4 +1,4 @@
-import { PrimitiveAtom, useAtomValue, useSetAtom, Atom } from 'jotai';
+import { PrimitiveAtom, useAtomValue, Atom } from 'jotai';
 import style from './ApplicationPageIndicator.module.css';
 import { useFormPageNavigation } from '../hooks/useFormPageNavigation';
 import {
@@ -7,6 +7,7 @@ import {
     CheckCircleIcon,
     ExclamationCircleIcon,
     ChevronUpIcon,
+    CheckIcon,
 } from '@heroicons/react/24/solid';
 import {
     EllipsisHorizontalCircleIcon,
@@ -36,7 +37,7 @@ function getPageStatus(pageState: PageFormState) {
     if (pageState.error) {
         return (
             <IconHolder>
-                <ExclamationCircleIcon color="red"></ExclamationCircleIcon>
+                <ExclamationCircleIcon color="red" />
             </IconHolder>
         );
     }
@@ -55,12 +56,66 @@ function getPageStatus(pageState: PageFormState) {
                 <EllipsisHorizontalCircleIcon
                     color="white"
                     style={{ minWidth: '28px', width: '28px' }}
-                ></EllipsisHorizontalCircleIcon>
+                />
             );
 
         default:
             throw 'unexpected page status';
     }
+}
+
+function getMobilePageStatus(pageState: PageFormState, isCurrent: boolean) {
+    if (isCurrent) {
+        return (
+            <span
+                className={cn(
+                    style.mobileHorizontalCircle,
+                    style.mobileHorizontalCircleCurrent
+                )}
+            >
+                <span className={style.mobileHorizontalStartedDot} />
+            </span>
+        );
+    }
+
+    if (pageState.error) {
+        return (
+            <span
+                className={cn(
+                    style.mobileHorizontalCircle,
+                    style.mobileHorizontalCircleError
+                )}
+            >
+                <span className={style.mobileHorizontalErrorGlyph}>!</span>
+            </span>
+        );
+    }
+
+    if (pageState.state === 'completed') {
+        return (
+            <span
+                className={cn(
+                    style.mobileHorizontalCircle,
+                    style.mobileHorizontalCircleDone
+                )}
+            >
+                <CheckIcon />
+            </span>
+        );
+    }
+
+    return (
+        <span
+            className={cn(style.mobileHorizontalCircle, {
+                [style.mobileHorizontalCircleStarted]:
+                    pageState.state === 'started',
+            })}
+        >
+            {pageState.state === 'started' && (
+                <span className={style.mobileHorizontalStartedDot} />
+            )}
+        </span>
+    );
 }
 
 /**
@@ -74,8 +129,7 @@ export function DesktopPageIndicator({
     indexAtom: PrimitiveAtom<number>;
 }) {
     const pageStates = useAtomValue(pageStateAtoms);
-    const setIndex = useSetAtom(indexAtom);
-    const { tryReview } = useFormPageNavigation({
+    const { setIndex, tryReview } = useFormPageNavigation({
         indexAtom,
         pageStatesAtom: pageStateAtoms,
         pageCount: pageStates.length,
@@ -83,13 +137,13 @@ export function DesktopPageIndicator({
 
     return (
         <div className={style.pageStatusContainer}>
-            {pageStates.map((item, index) => {
+            {pageStates.map((item, stepIndex) => {
                 return (
-                    <div key={index}>
+                    <div key={stepIndex}>
                         <button
-                            key={index}
+                            key={stepIndex}
                             onClick={() => {
-                                setIndex(index);
+                                setIndex(stepIndex);
                             }}
                             className={cn(
                                 style.pageStatusItem,
@@ -124,6 +178,94 @@ export function DesktopPageIndicator({
                 <span className="flex-grow">Review</span>
             </button>
         </div>
+    );
+}
+
+export function MobileHorizontalStepper({
+    pageStateAtoms,
+    indexAtom,
+}: {
+    pageStateAtoms: Atom<PageFormState[]>;
+    indexAtom: PrimitiveAtom<number>;
+}) {
+    const pageStates = useAtomValue(pageStateAtoms);
+    const { index, setIndex, tryReview } = useFormPageNavigation({
+        indexAtom,
+        pageStatesAtom: pageStateAtoms,
+        pageCount: pageStates.length,
+    });
+    const currentStepRef = useRef<HTMLButtonElement | null>(null);
+
+    useEffect(() => {
+        currentStepRef.current?.scrollIntoView({
+            block: 'nearest',
+            inline: 'center',
+        });
+    }, [index]);
+
+    const steps: PageFormState[] = [
+        ...pageStates,
+        { title: 'Review', state: 'not started', error: false },
+    ];
+
+    function handleStepClick(stepIndex: number) {
+        if (stepIndex === pageStates.length) {
+            tryReview();
+            return;
+        }
+
+        setIndex(stepIndex);
+    }
+
+    return (
+        <nav className={style.mobileHorizontalStepper} aria-label="Pages">
+            <div className={style.mobileHorizontalSteps}>
+                {steps.map((item, stepIndex) => {
+                    const isCurrent = stepIndex === index;
+                    const isConnectorActive =
+                        item.state === 'completed' && !item.error;
+                    const title =
+                        item.title ||
+                        (stepIndex === pageStates.length
+                            ? 'Review'
+                            : `Step ${stepIndex + 1}`);
+
+                    return (
+                        <button
+                            key={`${title}-${stepIndex}`}
+                            ref={(node) => {
+                                if (isCurrent) currentStepRef.current = node;
+                            }}
+                            type="button"
+                            className={cn(style.mobileHorizontalStep, {
+                                [style.mobileHorizontalStepCurrent]: isCurrent,
+                            })}
+                            aria-current={isCurrent ? 'step' : undefined}
+                            aria-label={`Go to ${title}`}
+                            onClick={() => handleStepClick(stepIndex)}
+                        >
+                            <span className={style.mobileHorizontalMarkerRow}>
+                                {stepIndex < steps.length - 1 && (
+                                    <span
+                                        className={cn(
+                                            style.mobileHorizontalConnector,
+                                            {
+                                                [style.mobileHorizontalConnectorActive]:
+                                                    isConnectorActive,
+                                            }
+                                        )}
+                                    />
+                                )}
+                                {getMobilePageStatus(item, isCurrent)}
+                            </span>
+                            <span className={style.mobileHorizontalLabel}>
+                                {title}
+                            </span>
+                        </button>
+                    );
+                })}
+            </div>
+        </nav>
     );
 }
 
@@ -186,8 +328,8 @@ export function MobilePageIndicator({
         document.addEventListener('mousedown', clickOutside, true);
         document.addEventListener('touchstart', clickOutside, true);
         return () => {
-            document.removeEventListener('mousedown', clickOutside);
-            document.removeEventListener('touchstart', clickOutside);
+            document.removeEventListener('mousedown', clickOutside, true);
+            document.removeEventListener('touchstart', clickOutside, true);
         };
     }, []);
 
@@ -239,7 +381,6 @@ export function MobilePageIndicator({
                             )}
                             onClick={() => {
                                 setIndex(_index);
-                                setShowPages(false);
                             }}
                         >
                             <span className="mr-2 flex-shrink-0">
