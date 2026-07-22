@@ -24,16 +24,25 @@ export function useAuthSession() {
     };
 }
 
-/** Clear the Better Auth session and hard-navigate (avoids stale RSC/session UI). */
+/**
+ * Clear the Better Auth session and hard-navigate (avoids stale RSC/session UI).
+ * Better Auth rejects POSTs without `Content-Type: application/json` (415),
+ * which is why a bare fetch without that header leaves the session cookie intact.
+ */
 export async function signOutAndRedirect(redirectTo = '/login') {
-    // Relative URL so cookies are always sent for the current host in local dev.
     try {
-        await fetch('/api/auth/sign-out', {
-            method: 'POST',
-            credentials: 'include',
-        });
+        await authClient.signOut();
     } catch {
-        // Still leave the app even if the API call fails.
+        try {
+            await fetch('/api/auth/sign-out', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: '{}',
+            });
+        } catch {
+            // Still leave the app even if the API call fails.
+        }
     }
 
     try {
