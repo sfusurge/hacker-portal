@@ -1,32 +1,20 @@
-import { sideCardAtomSJ } from '@/app/(auth)/admin/review/components/ReviewApplicationsTable';
-import { atom, useAtom, useAtomValue, WritableAtom } from 'jotai';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { focusAtom } from 'jotai-optics';
 import style from './SideCard.module.css';
 import { useMemo, useState } from 'react';
 import {
     InputFormPageData,
     InputFormQuestion,
-    QuestionMultipleCheckBox,
-    QuestionApiDropdown,
     QuestionInline,
-    QuestionDropdown,
-    QuestionMajorInput,
-    QuestionFileUploads,
 } from '@/components/application_components/types';
-import { CheckBoxInput } from '@/components/application_components/InputFormComponents/CheckboxInput';
-import { NumberInput } from '@/components/application_components/InputFormComponents/NumberInput';
-import { TextLineInput } from '@/components/application_components/InputFormComponents/TextLineInput';
-import { TextAreaInput } from '@/components/application_components/InputFormComponents/TextAreaInput';
-import { RadioInput } from '@/components/application_components/InputFormComponents/RadioInput';
-import { CheckBoxGroupInput } from '@/components/application_components/InputFormComponents/CheckboxGroupInput';
 import {
     ArrowLeftIcon,
     ArrowRightIcon,
     XMarkIcon,
 } from '@heroicons/react/20/solid';
+import { FlagIcon } from '@heroicons/react/24/solid';
+import { FlagIcon as FlagOutlineIcon } from '@heroicons/react/24/outline';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
-import { Button } from '@/components/ui/button';
-import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 import {
     Select,
     SelectContent,
@@ -37,16 +25,13 @@ import {
 import { StatusEnum } from '@/db/schema/applications';
 import { trpc } from '@/trpc/client';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
-import { TextLinkInput } from '@/components/application_components/InputFormComponents/TextLinkInput';
-import { ApiDropdownInput } from '@/components/application_components/InputFormComponents/ApiDropdownInput';
-import { InlineInput } from '@/components/application_components/InputFormComponents/InlineInput';
-import { DateInput } from '@/components/application_components/InputFormComponents/DateInput';
-import { DropdownInput } from '@/components/application_components/InputFormComponents/DropdownInput';
-import { MajorInput } from '@/components/application_components/InputFormComponents/MajorInput';
-import { FileUploadInput } from '@/components/application_components/InputFormComponents/FileUploadInput';
-import { questionIdsInOrderFromPages } from '@/app/(auth)/admin/review/applicationQuestionOrder';
 import { getAcceptPendingStatusForEventLocation } from '@/lib/applicationAcceptStatus';
-import { getApplicationResponseString } from '@/lib/applications/applicationReviewExport';
+import {
+    getApplicationExportField,
+    getApplicationResponseString,
+} from '@/lib/applications/applicationReviewExport';
+import clsx from 'clsx';
+import { sideCardAtomSJ } from '@/app/(auth)/admin/review/components/ReviewApplicationsTable';
 
 export interface SideCardProps {
     visible: boolean;
@@ -55,6 +40,44 @@ export interface SideCardProps {
     onNext: () => void;
     selected?: ApplicationWithTeamInfo | null;
     onRefresh?: () => void;
+    applicantIndex?: number;
+    applicantTotal?: number;
+}
+
+function stripHtml(html: string): string {
+    return html
+        .replace(/<[^>]*>/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function questionLabel(question: InputFormQuestion): string {
+    if ('title' in question && question.title?.trim()) {
+        return stripHtml(question.title);
+    }
+    if ('label' in question && typeof question.label === 'string') {
+        return stripHtml(question.label);
+    }
+    return 'Question';
+}
+
+function formatDisplayValue(value: unknown): string {
+    if (value == null || value === '') return '—';
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    if (Array.isArray(value)) {
+        const parts = value
+            .map((v) => (v == null ? '' : String(v)))
+            .filter(Boolean);
+        return parts.length > 0 ? parts.join(', ') : '—';
+    }
+    if (typeof value === 'object') {
+        try {
+            return JSON.stringify(value);
+        } catch {
+            return '—';
+        }
+    }
+    return String(value);
 }
 
 const responseAtom = atom(
@@ -85,18 +108,31 @@ export default function SideCard({
     onNext,
     selected,
     onRefresh,
+    applicantIndex,
+    applicantTotal,
 }: SideCardProps) {
     const utils = trpc.useUtils();
 
     const responseData = useAtomValue(responseAtom);
     const applicationData = useAtomValue(sideCardAtomSJ);
+    const setSideCardInfo = useSetAtom(sideCardAtomSJ);
     const [status, _setStatus] = useAtom(statusAtom);
-    const [editing, setEditing] = useState(false);
-    const [updateCurrentStatus, setUpdateCurrentStatus] = useState(false);
+    const [statusDirty, setStatusDirty] = useState(false);
     const hackathon = useAtomValue(hackathonAtom);
     const updateApplication = trpc.applications.updateApplication.useMutation({
         onSuccess: async (updatedEntry) => {
             await utils.applications.getApplications.cancel();
+
+            setSideCardInfo((prev) =>
+                prev && prev.userId === updatedEntry.userId
+                    ? {
+                          ...prev,
+                          currentStatus: updatedEntry.currentStatus,
+                          pendingStatus: updatedEntry.pendingStatus,
+                          flagged: updatedEntry.flagged,
+                      }
+                    : prev
+            );
 
             utils.applications.getApplications.setInfiniteData(
                 {
@@ -130,6 +166,7 @@ export default function SideCard({
                                                 updatedEntry.currentStatus,
                                             pendingStatus:
                                                 updatedEntry.pendingStatus,
+                                            flagged: updatedEntry.flagged,
                                         };
                                     }
                                 ),
@@ -141,6 +178,16 @@ export default function SideCard({
         },
     });
     const cardId = applicationData?.userId;
+    const isFlagged = applicationData?.flagged === true;
+
+    const toggleFlagged = () => {
+        if (!applicationData || !hackathon?.id) return;
+        updateApplication.mutate({
+            hackathonId: hackathon.id,
+            userId: applicationData.userId,
+            flagged: !isFlagged,
+        });
+    };
     /*
     useEffect(() => {
         if (selected) {
@@ -185,6 +232,9 @@ export default function SideCard({
         return undefined;
     }, [status, acceptPendingStatus]);
 
+    const isPendingStatusReadOnly =
+        applicationData?.currentStatus === 'Accepted';
+
     const applicantTitle = useMemo(() => {
         const first = getApplicationResponseString(
             responseData,
@@ -202,305 +252,125 @@ export default function SideCard({
 
     function setStatus(s: StatusEnum) {
         _setStatus(s);
-        setEditing(true);
+        setStatusDirty(true);
     }
 
     function onclose() {
-        if (editing) {
+        if (statusDirty && hackathon?.id && applicationData?.userId) {
             updateApplication
                 .mutateAsync({
-                    hackathonId: hackathon?.id!,
-                    userId: applicationData?.userId!,
-                    pendingStatus: updateCurrentStatus ? status : status,
-                    status: updateCurrentStatus ? status : undefined,
-                    response: responseData,
+                    hackathonId: hackathon.id,
+                    userId: applicationData.userId,
+                    pendingStatus: status,
                 })
                 .then(() => {
                     utils.applications.getApplications.invalidate();
                     if (typeof onRefresh === 'function') onRefresh();
                 });
         }
+        setStatusDirty(false);
         _onclose();
     }
 
-    const orderedQuestionIds = useMemo(
-        () => questionIdsInOrderFromPages(hackathon?.applicationQuestionPages),
-        [hackathon?.applicationQuestionPages]
-    );
+    const questionSections = useMemo(() => {
+        if (!hackathon) return [];
 
-    const sortedResponseKeys = useMemo(() => {
-        const keys = Object.keys(responseData);
-        return [...keys].sort((a, b) => {
-            const ia = orderedQuestionIds.indexOf(a);
-            const ib = orderedQuestionIds.indexOf(b);
-            if (ia === -1 && ib === -1) return a.localeCompare(b);
-            if (ia === -1) return 1;
-            if (ib === -1) return -1;
-            return ia - ib;
-        });
-    }, [responseData, orderedQuestionIds]);
-
-    const questionTypeMap = useMemo(() => {
-        const map = new Map<string, InputFormQuestion>();
-
-        if (!hackathon) {
-            return map;
-        }
-
-        for (const page of hackathon.applicationQuestionPages) {
-            for (const question of page.questions) {
-                if (question.questionId) {
-                    map.set(`${question.questionId}`, question);
-                }
-
-                if (question.type === 'inline') {
-                    const inlineQuestion = question as QuestionInline;
-                    for (const contentQuestion of inlineQuestion.content) {
-                        if (contentQuestion.questionId) {
-                            map.set(
-                                `${contentQuestion.questionId}`,
-                                contentQuestion
-                            );
-                        }
-                    }
-                }
-            }
-        }
-
-        return map;
-    }, [hackathon]);
-
-    function getGenericInputAtom<
-        Q extends InputFormQuestion & { value: unknown },
-    >(question: Q, dataAtom: WritableAtom<any, [any], void>) {
-        return atom(
-            (get) => {
-                return { ...question, value: get(dataAtom) };
-            },
-            (get, set, val: Q) => {
-                set(dataAtom, val.value);
-            }
-        );
-    }
-
-    function getFieldFromType(questionId: string) {
-        const question = questionTypeMap.get(questionId);
-
-        const dataAtom = focusAtom(responseAtom, (optics) =>
-            optics.prop(questionId)
-        );
-
-        if (!question) {
-            return '';
-        }
-
-        switch (question.type) {
-            case 'checkbox':
-                const checkBoxAtom = getGenericInputAtom(question, dataAtom);
-                return <CheckBoxInput dataAtom={checkBoxAtom} />;
-
-            case 'number':
-                const numberAtom = getGenericInputAtom(question, dataAtom);
-                return <NumberInput dataAtom={numberAtom} />;
-
-            case 'link':
-                const linkAtom = getGenericInputAtom(question, dataAtom);
-
-                return <TextLinkInput dataAtom={linkAtom} />;
-
-            case 'api-dropdown':
-                const apiDropdownAtom = atom(
-                    (get) => {
-                        return { ...question, selection: get(dataAtom) };
-                    },
-                    (get, set, val: QuestionApiDropdown) => {
-                        set(dataAtom, val.selection);
-                    }
-                );
-
-                return <ApiDropdownInput dataAtom={apiDropdownAtom} />;
-
-            case 'text-line':
-                const textLineAtom = getGenericInputAtom(question, dataAtom);
-                // @ts-ignore
-                return <TextLineInput dataAtom={textLineAtom} />;
-
-            case 'text-area':
-                const textAreaAtom = getGenericInputAtom(question, dataAtom);
-                return <TextAreaInput dataAtom={textAreaAtom} />;
-            case 'multiple-choice':
-                const choiceAtom = getGenericInputAtom(question, dataAtom);
-                return <RadioInput dataAtom={choiceAtom} />;
-            case 'multiple-checkbox':
-                const multiCheckboxAtom = atom(
-                    (get) => {
-                        const value = get(dataAtom) as unknown;
-                        const arr: unknown[] = Array.isArray(value)
-                            ? value
-                            : [];
-                        const choices = new Set<string>(
-                            arr.map((v) => String(v).toLowerCase())
+        return applicationQuestionPages
+            .map((page, pageIndex) => {
+                const questions = page.questions.flatMap((question) => {
+                    if (question.type === 'inline') {
+                        return (question as QuestionInline).content.filter(
+                            (q) => q.questionId != null
                         );
-                        for (const c of question.choices) {
-                            if (choices.has(c.data.toLowerCase())) {
-                                c.value = true;
-                                choices.delete(c.data);
-                            } else {
-                                c.value = false;
-                            }
-                        }
-
-                        if (choices.size > 0) {
-                            // some value is not yet comsumed, there must be an 'other value available
-                            return {
-                                ...question,
-                                otherValue: choices.values().next().value,
-                            };
-                        }
-
-                        return question;
-                    },
-                    (get, set, val: QuestionMultipleCheckBox) => {
-                        const res: string[] = [];
-                        for (const c of val.choices) {
-                            if (c.value) {
-                                res.push(c.data);
-                            }
-                        }
-                        if (val.allowOther && val.otherValue) {
-                            res.push(val.otherValue);
-                        }
-                        set(dataAtom, res);
                     }
-                );
-                // @ts-ignore
-                return <CheckBoxGroupInput dataAtom={multiCheckboxAtom} />;
+                    if (question.questionId == null) return [];
+                    return [question];
+                });
 
-            case 'inline':
-                const inlineQuestion = question as QuestionInline;
-                const inlineAtom = atom(
-                    (get) => {
-                        const contentWithData = inlineQuestion.content.map(
-                            (contentQ) => {
-                                if (!contentQ.questionId) return contentQ;
-                                const contentDataAtom = focusAtom(
-                                    responseAtom,
-                                    (optics) =>
-                                        optics.prop(String(contentQ.questionId))
-                                );
-                                const contentValue = get(contentDataAtom);
-
-                                return {
-                                    ...contentQ,
-                                    value: contentValue,
-                                    selection: contentValue,
-                                };
-                            }
-                        );
-                        return { ...question, content: contentWithData };
-                    },
-                    (get, set, val: QuestionInline) => {
-                        for (const contentQ of val.content) {
-                            if (contentQ.questionId) {
-                                const contentDataAtom = focusAtom(
-                                    responseAtom,
-                                    (optics) =>
-                                        optics.prop(String(contentQ.questionId))
-                                );
-                                if ('value' in contentQ) {
-                                    set(contentDataAtom, contentQ.value);
-                                } else if ('selection' in contentQ) {
-                                    set(contentDataAtom, contentQ.selection);
-                                }
-                            }
-                        }
-                    }
-                );
-                return <InlineInput dataAtom={inlineAtom} />;
-
-            case 'date-ymd':
-                const dateAtom = getGenericInputAtom(question, dataAtom);
-                return <DateInput dataAtom={dateAtom} />;
-
-            case 'dropdown':
-                const dropdownAtom = atom(
-                    (get) => {
-                        return { ...question, value: get(dataAtom) };
-                    },
-                    (get, set, val: QuestionDropdown) => {
-                        set(dataAtom, val.value);
-                    }
-                );
-                return <DropdownInput dataAtom={dropdownAtom} />;
-
-            case 'major':
-                const majorAtom = atom(
-                    (get) => {
-                        return { ...question, selection: get(dataAtom) };
-                    },
-                    (get, set, val: QuestionMajorInput) => {
-                        set(dataAtom, val.selection);
-                    }
-                );
-                return <MajorInput dataAtom={majorAtom} />;
-
-            case 'file-upload':
-                const fileUploadAtom = atom(
-                    (get) => {
-                        return { ...question, fileLinks: get(dataAtom) };
-                    },
-                    (get, set, val: QuestionFileUploads) => {
-                        set(dataAtom, val.fileLinks);
-                    }
-                );
-                return <FileUploadInput dataAtom={fileUploadAtom} />;
-
-            default:
-                return <p>Unknown question type: {question.type}</p>;
-        }
-    }
+                return {
+                    key: `page-${pageIndex}`,
+                    title: page.title?.trim() || `Section ${pageIndex + 1}`,
+                    questions,
+                };
+            })
+            .filter((section) => section.questions.length > 0);
+    }, [hackathon, applicationQuestionPages]);
 
     if (!responseData) {
         return <h1>Error, application data is not loaded</h1>;
     }
+
+    const navLabel =
+        applicantIndex != null && applicantTotal != null && applicantTotal > 0
+            ? `Applicant ${applicantIndex + 1} of ${applicantTotal}`
+            : 'Applicant';
 
     return (
         <>
             {ready && <div className={style.background} onClick={onclose} />}
             {ready && (
                 <div className={style.cardContainer} key={cardId}>
-                    <div className={style.headerBlock}>
-                        <div className={style.titleRow}>
+                    <header className={style.header}>
+                        <div className={style.titleBlock}>
                             <h1 className={style.titleHeading}>
                                 {applicantTitle}
                             </h1>
-                            <div className={`${style.titleRowNav} h-full`}>
-                                <Button
-                                    onClick={onPrev}
-                                    aria-label="Previous application"
-                                    type="button"
-                                >
-                                    <ArrowLeftIcon className="h-5 w-5" />
-                                </Button>
-                                <Button
-                                    onClick={onNext}
-                                    aria-label="Next application"
-                                    type="button"
-                                >
-                                    <ArrowRightIcon className="h-5 w-5" />
-                                </Button>
-                            </div>
-                            <button
-                                type="button"
-                                className={style.titleClose}
-                                onClick={onclose}
-                                aria-label="Close"
-                            >
-                                <XMarkIcon style={{ width: '2rem' }} />
-                            </button>
+                            <p className={style.teamLine}>
+                                {applicationData?.teamName?.trim()
+                                    ? `Team: ${applicationData.teamName.trim()}`
+                                    : 'No team'}
+                            </p>
                         </div>
+                        <button
+                            type="button"
+                            className={style.titleClose}
+                            onClick={onclose}
+                            aria-label="Close"
+                        >
+                            <XMarkIcon className="size-6" />
+                        </button>
+                    </header>
 
-                        <div className={style.headerToolbar}>
+                    <div className={style.scroll}>
+                        {questionSections.map((section) => (
+                            <section
+                                key={section.key}
+                                className={style.sectionCard}
+                            >
+                                <h2 className={style.sectionTitle}>
+                                    {section.title}
+                                </h2>
+                                <div className={style.fieldGrid}>
+                                    {section.questions.map((question) => {
+                                        const id = String(question.questionId);
+                                        const label = questionLabel(question);
+                                        const raw = getApplicationExportField(
+                                            responseData,
+                                            id
+                                        );
+                                        const display = formatDisplayValue(raw);
+
+                                        return (
+                                            <div
+                                                key={`${cardId}:${id}`}
+                                                className={style.field}
+                                            >
+                                                <p className={style.fieldLabel}>
+                                                    {label}
+                                                </p>
+                                                <p className={style.fieldValue}>
+                                                    {display}
+                                                </p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </section>
+                        ))}
+                    </div>
+
+                    <footer className={style.footer}>
+                        <div className={style.footerActions}>
                             <div className={style.statusActions}>
                                 <label
                                     className={style.statusSelectLabel}
@@ -511,21 +381,23 @@ export default function SideCard({
                                 <Select
                                     key={acceptPendingStatus}
                                     value={reviewerSelectValue}
+                                    disabled={isPendingStatusReadOnly}
                                     onValueChange={(v) =>
                                         setStatus(v as StatusEnum)
                                     }
                                 >
                                     <SelectTrigger
                                         id="sidecard-review-status"
-                                        className="h-11 w-full min-w-[12rem] border-neutral-700 bg-neutral-800"
+                                        className="h-11 w-full min-w-[10.5rem] rounded-xl border-neutral-600/60 bg-neutral-800/60"
                                         aria-label="Select status"
+                                        aria-readonly={isPendingStatusReadOnly}
                                     >
                                         <SelectValue placeholder="Select status" />
                                     </SelectTrigger>
                                     <SelectContent className="z-[21000] border-neutral-800 bg-neutral-900 text-white">
                                         <SelectItem value="N/A">N/A</SelectItem>
                                         <SelectItem value="Awaiting Review">
-                                            Awaiting review
+                                            Under review
                                         </SelectItem>
                                         <SelectItem value={acceptPendingStatus}>
                                             Accept
@@ -538,53 +410,65 @@ export default function SideCard({
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <div className={style.headerCheckboxes}>
-                                    <CheckBoxWithLabel
-                                        name="Editing"
-                                        checked={editing}
-                                        onChange={(e) => {
-                                            setEditing(e.target.checked);
-                                        }}
-                                    />
-                                    <CheckBoxWithLabel
-                                        name="Override Current Status"
-                                        checked={updateCurrentStatus}
-                                        onChange={(e) => {
-                                            setUpdateCurrentStatus(
-                                                e.target.checked
-                                            );
-                                        }}
-                                    />
-                                </div>
                             </div>
+                            <button
+                                type="button"
+                                onClick={toggleFlagged}
+                                disabled={
+                                    !applicationData ||
+                                    updateApplication.isPending
+                                }
+                                className={clsx(
+                                    'inline-flex h-11 shrink-0 items-center gap-2 rounded-xl border px-3 text-sm font-medium transition-colors',
+                                    isFlagged
+                                        ? 'border-caution-500/50 bg-caution-950 text-caution-300'
+                                        : 'border-neutral-600/60 bg-neutral-800/60 text-white/60 hover:text-white'
+                                )}
+                                aria-pressed={isFlagged}
+                                aria-label={
+                                    isFlagged ? 'Remove flag' : 'Flag for later'
+                                }
+                            >
+                                {isFlagged ? (
+                                    <FlagIcon className="text-caution-500 size-4" />
+                                ) : (
+                                    <FlagOutlineIcon className="size-4" />
+                                )}
+                                {isFlagged ? 'Flagged' : 'Flag'}
+                            </button>
                         </div>
-                    </div>
 
-                    {/* application data */}
-
-                    {sortedResponseKeys.map((id) => {
-                        const q = questionTypeMap.get(id);
-
-                        if (!q) {
-                            return (
-                                <p key={`${cardId}:${id}`}>
-                                    Unknown question id: {id}
-                                </p>
-                            );
-                        }
-
-                        return (
-                            <div key={`${cardId}:${id}`}>
-                                <div
-                                    className={style.htmlHolder}
-                                    dangerouslySetInnerHTML={{
-                                        __html: q.title ?? '',
-                                    }}
-                                ></div>
-                                {getFieldFromType(id)}
-                            </div>
-                        );
-                    })}
+                        <div className={style.navRow}>
+                            <button
+                                type="button"
+                                className={style.navButton}
+                                onClick={onPrev}
+                                aria-label="Previous application"
+                                disabled={
+                                    applicantIndex != null
+                                        ? applicantIndex <= 0
+                                        : false
+                                }
+                            >
+                                <ArrowLeftIcon className="size-6" />
+                            </button>
+                            <p className={style.navLabel}>{navLabel}</p>
+                            <button
+                                type="button"
+                                className={style.navButton}
+                                onClick={onNext}
+                                aria-label="Next application"
+                                disabled={
+                                    applicantIndex != null &&
+                                    applicantTotal != null
+                                        ? applicantIndex >= applicantTotal - 1
+                                        : false
+                                }
+                            >
+                                <ArrowRightIcon className="size-6" />
+                            </button>
+                        </div>
+                    </footer>
                 </div>
             )}
         </>

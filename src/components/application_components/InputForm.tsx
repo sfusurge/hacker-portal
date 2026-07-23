@@ -65,6 +65,7 @@ import { ReviewProject } from './ReviewProject';
 import {
     type PageFormState,
     DesktopPageIndicator,
+    MobileHorizontalStepper,
     MobilePageIndicator,
 } from './PageStatus/ApplicationPageIndicator';
 
@@ -84,6 +85,7 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import ReviewApplicationDialog from './ReviewApplicationDialog';
 import { isSubmissionQuestionDisabled } from '@/lib/projects/submissionFormQuestions';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { MobileTopNav } from './MobileTopHeader';
 
 /**
  * Only render the children when page is mounted, ie, clientside *only*.
@@ -142,7 +144,8 @@ export function InputForm({
         []
     );
 
-    const pages = useAtomValue(pagesAtom);
+    const appData = useAtomValue(appDataAtom);
+    const pages = appData.pages;
     const hackathon = useAtomValue(hackathonAtom);
 
     // which page is currently displayed
@@ -228,8 +231,20 @@ export function InputForm({
                 isReviewPage && style.reviewPageWrapper
             )}
         >
+            {applicationType === 'application' && isMobile && (
+                <MobileTopNav
+                    hackathonName={hackathon?.hackathonName}
+                    savedAt={appData.savedAt}
+                />
+            )}
+            {!disablePageTab && isMobile && (
+                <MobileHorizontalStepper
+                    pageStateAtoms={pageStatesAtom}
+                    indexAtom={pageIndexAtom}
+                />
+            )}
             {applicationType === 'application' && (
-                <div className="flex flex-col gap-1">
+                <div className="hidden flex-col gap-1 md:flex">
                     <button
                         className={cn(style.homeButton)}
                         onClick={() => {
@@ -262,6 +277,12 @@ export function InputForm({
                         ))}
 
                     <div className={style.formContainer}>
+                        {applicationType === 'application' && isMobile && (
+                            <p className={style.mobileStepLabel}>
+                                Step {currentPageIndex + 1} of{' '}
+                                {pagesAtoms.length + 1}
+                            </p>
+                        )}
                         {currentPageIndex === pagesAtoms.length && (
                             <>
                                 {applicationType === 'application' ? (
@@ -293,6 +314,10 @@ export function InputForm({
                                 pageAtom={pageAtom}
                                 pageStateAtom={pageStateAtoms[index]}
                                 hidden={index !== currentPageIndex}
+                                hideAlert={
+                                    applicationType === 'application' &&
+                                    isMobile
+                                }
                             />
                         ))}
                     </div>
@@ -326,11 +351,13 @@ function Page({
     pageAtom,
     hidden,
     pageStateAtom,
+    hideAlert,
 }: {
     pageIndex: number;
     pageAtom: PrimitiveAtom<InputFormPageData>;
     hidden: boolean;
     pageStateAtom: PrimitiveAtom<PageFormState>;
+    hideAlert?: boolean;
 }) {
     const [page, setPage] = useAtom(pageAtom);
 
@@ -415,7 +442,7 @@ function Page({
                     </p>
                 )}
             </div>
-            {page.alert && (
+            {page.alert && !hideAlert && (
                 <Alert variant={'info'} className="-mt-4 max-w-[480px]">
                     <AlertTitle>{page.alert.title}</AlertTitle>
                     <AlertDescription>
