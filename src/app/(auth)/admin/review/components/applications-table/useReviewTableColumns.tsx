@@ -104,7 +104,9 @@ export function useReviewTableColumns({
                         >
                             {flagged ? (
                                 <FlagIcon className="text-caution-500 size-5" />
-                            ) : null}
+                            ) : (
+                                <FlagOutlineIcon className="size-5 text-white/40 opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-100" />
+                            )}
                         </button>
                     );
                 },
