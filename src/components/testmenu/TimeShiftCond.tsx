@@ -12,78 +12,35 @@ import {
 } from '@/components/ui/dialog';
 import ApplicationSelfDelete from '@/components/testmenu/ApplicationSelfDelete';
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { bootTimeShiftFromStorage } from '@/lib/testmenu/timeShift';
-
-const VISIBILITY_KEY = 'timeShift.visible';
 
 export default function TimeShiftCond() {
     const [visible, setVisible] = useState(false);
     const router = useRouter();
+    const pathname = usePathname();
 
     useEffect(() => {
-        // Restore simulated time on every page load (menu does not need to be open)
         try {
             bootTimeShiftFromStorage();
         } catch (e) {
             console.error('TimeShiftCond: Failed to boot time shift', e);
         }
 
-        try {
-            const v = localStorage.getItem(VISIBILITY_KEY);
-            setVisible(v === 'true');
-        } catch (e) {
-            console.error(
-                'TimeShiftCond: Failed to read visibility from localStorage',
-                e
-            );
-        }
-
-        const onStorage = (e: StorageEvent) => {
-            if (e.key === VISIBILITY_KEY) {
-                setVisible(e.newValue === 'true');
-            }
-        };
-        const onToggle = () => {
-            try {
-                const v = localStorage.getItem(VISIBILITY_KEY);
-                setVisible(v === 'true');
-            } catch (e) {
-                console.error(
-                    'TimeShiftCond: Failed to read visibility on toggle',
-                    e
-                );
-            }
-        };
-
-        window.addEventListener('storage', onStorage);
-        window.addEventListener('timeShift-toggle', onToggle as EventListener);
+        const onToggle = () => setVisible((v) => !v);
+        window.addEventListener('timeShift-toggle', onToggle);
         return () => {
-            window.removeEventListener('storage', onStorage);
-            window.removeEventListener(
-                'timeShift-toggle',
-                onToggle as EventListener
-            );
+            window.removeEventListener('timeShift-toggle', onToggle);
         };
     }, []);
 
-    const handleOpenChange = (open: boolean) => {
-        setVisible(open);
-        try {
-            localStorage.setItem(VISIBILITY_KEY, open ? 'true' : 'false');
-        } catch (e) {
-            console.error('TimeShiftCond: Failed to persist visibility', e);
-        }
-        // Notify other listeners (e.g. sidebar) without re-entering via our own setState path
-        try {
-            window.dispatchEvent(new Event('timeShift-toggle'));
-        } catch (e) {
-            console.error('TimeShiftCond: Failed to dispatch toggle event', e);
-        }
-    };
+    // Close when navigating to another page (layout stays mounted).
+    useEffect(() => {
+        setVisible(false);
+    }, [pathname]);
 
     return (
-        <Dialog open={visible} onOpenChange={handleOpenChange}>
+        <Dialog open={visible} onOpenChange={setVisible}>
             <DialogContent
                 overlayZIndex={200}
                 className="max-w-full overflow-x-hidden md:w-1/2"
@@ -103,7 +60,7 @@ export default function TimeShiftCond() {
                         className="text-sm"
                         onClick={() => {
                             try {
-                                handleOpenChange(false);
+                                setVisible(false);
                                 router.refresh();
                             } catch (e) {
                                 console.error('router.refresh() failed', e);
