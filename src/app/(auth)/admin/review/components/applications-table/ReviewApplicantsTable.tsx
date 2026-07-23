@@ -28,6 +28,7 @@ import {
 import { useSetAtom } from 'jotai';
 import { mkConfig, generateCsv, download } from 'export-to-csv';
 import clsx from 'clsx';
+import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
 import type { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
 import type { InputFormPageData } from '@/components/application_components/types';
 import { getResponseValue } from '@/lib/admin/submissionExport';
@@ -200,6 +201,7 @@ export function ReviewApplicantsTable({
     const rowRefs = useRef(new Map<string, HTMLTableRowElement>());
     const tableScrollContainerRef = useRef<HTMLDivElement | null>(null);
     const marqueeOverlayRef = useRef<HTMLDivElement | null>(null);
+    const [tableViewportWidth, setTableViewportWidth] = useState(0);
     const [selectionMenuPos, setSelectionMenuPos] = useState<{
         top: number;
         left: number;
@@ -210,6 +212,16 @@ export function ReviewApplicantsTable({
         pageSize: 200,
         pageIndex: 0,
     });
+
+    useEffect(() => {
+        const el = tableScrollContainerRef.current;
+        if (!el) return;
+        const update = () => setTableViewportWidth(el.clientWidth);
+        update();
+        const observer = new ResizeObserver(update);
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
 
     useEffect(() => {
         setPagination({
@@ -777,136 +789,181 @@ export function ReviewApplicantsTable({
                                 if (isMarqueeSelecting) e.preventDefault();
                             }}
                         >
-                            {table
-                                .getRowModel()
-                                .rows.map((row, visualIndex) => {
-                                    const isRowSelected = row.getIsSelected();
-                                    return (
-                                        <Fragment key={row.id}>
-                                            <tr
-                                                ref={(el) => {
-                                                    if (el) {
-                                                        rowRefs.current.set(
-                                                            row.id,
-                                                            el
-                                                        );
-                                                    } else {
-                                                        rowRefs.current.delete(
-                                                            row.id
-                                                        );
-                                                    }
-                                                }}
-                                                data-row-index={visualIndex}
-                                                className={clsx(
-                                                    isMarqueeSelecting &&
-                                                        'cursor-crosshair'
-                                                )}
-                                                onPointerDown={(e) =>
-                                                    handleRowPointerDown(
-                                                        e,
-                                                        visualIndex
-                                                    )
-                                                }
-                                            >
-                                                {row
-                                                    .getVisibleCells()
-                                                    .map((cell, index) => {
-                                                        const sticky =
-                                                            reviewTableStickyColumnProps(
-                                                                index,
-                                                                {
-                                                                    ...stickyColumnOptions,
-                                                                    variant:
-                                                                        'body',
-                                                                    selected:
-                                                                        isRowSelected,
-                                                                }
+                            {table.getRowModel().rows.length === 0 ? (
+                                <tr>
+                                    <td
+                                        colSpan={
+                                            table.getVisibleLeafColumns().length
+                                        }
+                                        className="p-0"
+                                    >
+                                        <div
+                                            className="sticky left-0 flex flex-col items-center justify-center gap-4 bg-neutral-800/60 px-4 py-20"
+                                            style={{
+                                                width:
+                                                    tableViewportWidth > 0
+                                                        ? tableViewportWidth
+                                                        : '100%',
+                                            }}
+                                        >
+                                            <div className="flex items-center rounded-full bg-white/60 p-1">
+                                                <MagnifyingGlassIcon className="size-6 text-neutral-900" />
+                                            </div>
+                                            <div className="flex w-full flex-col gap-1 text-center leading-[1.25]">
+                                                <p className="text-lg font-medium tracking-[-0.0075em] text-white">
+                                                    {globalFilter.trim()
+                                                        ? `No results found for ${globalFilter.trim()}`
+                                                        : 'No results found'}
+                                                </p>
+                                                <p className="text-base tracking-[-0.0075em] text-white/60">
+                                                    Please try entering a
+                                                    different term.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : (
+                                table
+                                    .getRowModel()
+                                    .rows.map((row, visualIndex) => {
+                                        const isRowSelected =
+                                            row.getIsSelected();
+                                        return (
+                                            <Fragment key={row.id}>
+                                                <tr
+                                                    ref={(el) => {
+                                                        if (el) {
+                                                            rowRefs.current.set(
+                                                                row.id,
+                                                                el
                                                             );
-                                                        const isPendingStatusCell =
-                                                            cell.column.id ===
-                                                            'pendingStatus';
-                                                        const cellBg =
-                                                            sticky.isSticky
-                                                                ? isRowSelected
-                                                                    ? 'bg-[color-mix(in_srgb,var(--color-neutral-700)_60%,var(--color-neutral-900))]'
-                                                                    : 'bg-[color-mix(in_srgb,var(--color-neutral-800)_60%,var(--color-neutral-900))]'
-                                                                : isRowSelected
-                                                                  ? 'bg-neutral-700/60'
-                                                                  : 'bg-neutral-800/60';
-                                                        return (
-                                                            <td
-                                                                key={cell.id}
-                                                                style={{
-                                                                    width: cell.column.getSize(),
-                                                                    minWidth:
-                                                                        cell
-                                                                            .column
-                                                                            .columnDef
-                                                                            .minSize,
-                                                                    ...(sticky.styleLeft !=
-                                                                    null
-                                                                        ? {
-                                                                              left: sticky.styleLeft,
-                                                                          }
-                                                                        : {}),
-                                                                }}
-                                                                className={clsx(
-                                                                    'relative h-11 border-b border-neutral-600/30 px-3 text-sm',
-                                                                    cellBg,
-                                                                    isPendingStatusCell &&
-                                                                        !isRowSelected &&
-                                                                        '[&:has([data-state=open])]:bg-neutral-700/60',
-                                                                    sticky.stickyClass
-                                                                )}
-                                                                onClick={
-                                                                    isPendingStatusCell
-                                                                        ? (e) =>
-                                                                              e.stopPropagation()
-                                                                        : undefined
-                                                                }
-                                                                onPointerDown={
-                                                                    isPendingStatusCell
-                                                                        ? (e) =>
-                                                                              e.stopPropagation()
-                                                                        : undefined
-                                                                }
-                                                            >
-                                                                {isPendingStatusCell ? (
-                                                                    flexRender(
-                                                                        cell
-                                                                            .column
-                                                                            .columnDef
-                                                                            .cell,
-                                                                        cell.getContext()
-                                                                    )
-                                                                ) : (
-                                                                    <div
-                                                                        className="truncate"
-                                                                        style={{
-                                                                            whiteSpace:
-                                                                                'nowrap',
-                                                                            overflow:
-                                                                                'hidden',
-                                                                            textOverflow:
-                                                                                'ellipsis',
-                                                                        }}
-                                                                    >
-                                                                        {flexRender(
+                                                        } else {
+                                                            rowRefs.current.delete(
+                                                                row.id
+                                                            );
+                                                        }
+                                                    }}
+                                                    data-row-index={visualIndex}
+                                                    className={clsx(
+                                                        'group',
+                                                        isMarqueeSelecting &&
+                                                            'cursor-crosshair'
+                                                    )}
+                                                    onPointerDown={(e) =>
+                                                        handleRowPointerDown(
+                                                            e,
+                                                            visualIndex
+                                                        )
+                                                    }
+                                                >
+                                                    {row
+                                                        .getVisibleCells()
+                                                        .map((cell, index) => {
+                                                            const sticky =
+                                                                reviewTableStickyColumnProps(
+                                                                    index,
+                                                                    {
+                                                                        ...stickyColumnOptions,
+                                                                        variant:
+                                                                            'body',
+                                                                        selected:
+                                                                            isRowSelected,
+                                                                    }
+                                                                );
+                                                            const isPendingStatusCell =
+                                                                cell.column
+                                                                    .id ===
+                                                                'pendingStatus';
+                                                            const cellBg =
+                                                                sticky.isSticky
+                                                                    ? isRowSelected
+                                                                        ? 'bg-[color-mix(in_srgb,var(--color-neutral-700)_60%,var(--color-neutral-900))]'
+                                                                        : 'bg-[color-mix(in_srgb,var(--color-neutral-800)_60%,var(--color-neutral-900))]'
+                                                                    : isRowSelected
+                                                                      ? 'bg-neutral-700/60'
+                                                                      : 'bg-neutral-800/60';
+                                                            return (
+                                                                <td
+                                                                    key={
+                                                                        cell.id
+                                                                    }
+                                                                    style={{
+                                                                        width: cell.column.getSize(),
+                                                                        minWidth:
+                                                                            cell
+                                                                                .column
+                                                                                .columnDef
+                                                                                .minSize,
+                                                                        ...(sticky.styleLeft !=
+                                                                        null
+                                                                            ? {
+                                                                                  left: sticky.styleLeft,
+                                                                              }
+                                                                            : {}),
+                                                                    }}
+                                                                    className={clsx(
+                                                                        'relative h-11 border-b border-neutral-600/30 px-3 text-sm',
+                                                                        cellBg,
+                                                                        isPendingStatusCell &&
+                                                                            !isRowSelected &&
+                                                                            '[&:has([data-state=open])]:bg-neutral-700/60',
+                                                                        sticky.stickyClass
+                                                                    )}
+                                                                    onClick={
+                                                                        isPendingStatusCell
+                                                                            ? (
+                                                                                  e
+                                                                              ) =>
+                                                                                  e.stopPropagation()
+                                                                            : undefined
+                                                                    }
+                                                                    onPointerDown={
+                                                                        isPendingStatusCell
+                                                                            ? (
+                                                                                  e
+                                                                              ) =>
+                                                                                  e.stopPropagation()
+                                                                            : undefined
+                                                                    }
+                                                                >
+                                                                    {isPendingStatusCell ? (
+                                                                        flexRender(
                                                                             cell
                                                                                 .column
                                                                                 .columnDef
                                                                                 .cell,
                                                                             cell.getContext()
-                                                                        )}
-                                                                    </div>
-                                                                )}
-                                                            </td>
-                                                        );
-                                                    })}
-                                            </tr>
-                                        </Fragment>
-                                    );
-                                })}
+                                                                        )
+                                                                    ) : (
+                                                                        <div
+                                                                            className="truncate"
+                                                                            style={{
+                                                                                whiteSpace:
+                                                                                    'nowrap',
+                                                                                overflow:
+                                                                                    'hidden',
+                                                                                textOverflow:
+                                                                                    'ellipsis',
+                                                                            }}
+                                                                        >
+                                                                            {flexRender(
+                                                                                cell
+                                                                                    .column
+                                                                                    .columnDef
+                                                                                    .cell,
+                                                                                cell.getContext()
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </td>
+                                                            );
+                                                        })}
+                                                </tr>
+                                            </Fragment>
+                                        );
+                                    })
+                            )}
                         </tbody>
                     </table>
                 </div>

@@ -12,8 +12,6 @@ import {
     ArrowRightIcon,
     XMarkIcon,
 } from '@heroicons/react/20/solid';
-import { FlagIcon } from '@heroicons/react/24/solid';
-import { FlagIcon as FlagOutlineIcon } from '@heroicons/react/24/outline';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
 import {
     Select,
@@ -30,7 +28,6 @@ import {
     getApplicationExportField,
     getApplicationResponseString,
 } from '@/lib/applications/applicationReviewExport';
-import clsx from 'clsx';
 import { sideCardAtomSJ } from '@/app/(auth)/admin/review/components/ReviewApplicationsTable';
 
 export interface SideCardProps {
@@ -178,23 +175,6 @@ export default function SideCard({
         },
     });
     const cardId = applicationData?.userId;
-    const isFlagged = applicationData?.flagged === true;
-
-    const toggleFlagged = () => {
-        if (!applicationData || !hackathon?.id) return;
-        updateApplication.mutate({
-            hackathonId: hackathon.id,
-            userId: applicationData.userId,
-            flagged: !isFlagged,
-        });
-    };
-    /*
-    useEffect(() => {
-        if (selected) {
-            setSideCardAtom(selected as unknown as ApplicationWithTeamInfo);
-        }
-    }, [selected, setSideCardAtom]);
-*/
 
     const ready = useMemo(
         () => visible && hackathon !== undefined,
@@ -296,8 +276,8 @@ export default function SideCard({
             .filter((section) => section.questions.length > 0);
     }, [hackathon, applicationQuestionPages]);
 
-    if (!responseData) {
-        return <h1>Error, application data is not loaded</h1>;
+    if (!visible || !ready || !responseData) {
+        return null;
     }
 
     const navLabel =
@@ -306,171 +286,129 @@ export default function SideCard({
             : 'Applicant';
 
     return (
-        <>
-            {ready && <div className={style.background} onClick={onclose} />}
-            {ready && (
-                <div className={style.cardContainer} key={cardId}>
-                    <header className={style.header}>
-                        <div className={style.titleBlock}>
-                            <h1 className={style.titleHeading}>
-                                {applicantTitle}
-                            </h1>
-                            <p className={style.teamLine}>
-                                {applicationData?.teamName?.trim()
-                                    ? `Team: ${applicationData.teamName.trim()}`
-                                    : 'No team'}
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            className={style.titleClose}
-                            onClick={onclose}
-                            aria-label="Close"
-                        >
-                            <XMarkIcon className="size-6" />
-                        </button>
-                    </header>
-
-                    <div className={style.scroll}>
-                        {questionSections.map((section) => (
-                            <section
-                                key={section.key}
-                                className={style.sectionCard}
-                            >
-                                <h2 className={style.sectionTitle}>
-                                    {section.title}
-                                </h2>
-                                <div className={style.fieldGrid}>
-                                    {section.questions.map((question) => {
-                                        const id = String(question.questionId);
-                                        const label = questionLabel(question);
-                                        const raw = getApplicationExportField(
-                                            responseData,
-                                            id
-                                        );
-                                        const display = formatDisplayValue(raw);
-
-                                        return (
-                                            <div
-                                                key={`${cardId}:${id}`}
-                                                className={style.field}
-                                            >
-                                                <p className={style.fieldLabel}>
-                                                    {label}
-                                                </p>
-                                                <p className={style.fieldValue}>
-                                                    {display}
-                                                </p>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </section>
-                        ))}
-                    </div>
-
-                    <footer className={style.footer}>
-                        <div className={style.footerActions}>
-                            <div className={style.statusActions}>
-                                <label
-                                    className={style.statusSelectLabel}
-                                    htmlFor="sidecard-review-status"
-                                >
-                                    Select status
-                                </label>
-                                <Select
-                                    key={acceptPendingStatus}
-                                    value={reviewerSelectValue}
-                                    disabled={isPendingStatusReadOnly}
-                                    onValueChange={(v) =>
-                                        setStatus(v as StatusEnum)
-                                    }
-                                >
-                                    <SelectTrigger
-                                        id="sidecard-review-status"
-                                        className="h-11 w-full min-w-[10.5rem] rounded-xl border-neutral-600/60 bg-neutral-800/60"
-                                        aria-label="Select status"
-                                        aria-readonly={isPendingStatusReadOnly}
-                                    >
-                                        <SelectValue placeholder="Select status" />
-                                    </SelectTrigger>
-                                    <SelectContent className="z-[21000] border-neutral-800 bg-neutral-900 text-white">
-                                        <SelectItem value="N/A">N/A</SelectItem>
-                                        <SelectItem value="Awaiting Review">
-                                            Under review
-                                        </SelectItem>
-                                        <SelectItem value={acceptPendingStatus}>
-                                            Accept
-                                        </SelectItem>
-                                        <SelectItem value="Wait List">
-                                            Waitlist
-                                        </SelectItem>
-                                        <SelectItem value="Declined">
-                                            Decline
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={toggleFlagged}
-                                disabled={
-                                    !applicationData ||
-                                    updateApplication.isPending
-                                }
-                                className={clsx(
-                                    'inline-flex h-11 shrink-0 items-center gap-2 rounded-xl border px-3 text-sm font-medium transition-colors',
-                                    isFlagged
-                                        ? 'border-caution-500/50 bg-caution-950 text-caution-300'
-                                        : 'border-neutral-600/60 bg-neutral-800/60 text-white/60 hover:text-white'
-                                )}
-                                aria-pressed={isFlagged}
-                                aria-label={
-                                    isFlagged ? 'Remove flag' : 'Flag for later'
-                                }
-                            >
-                                {isFlagged ? (
-                                    <FlagIcon className="text-caution-500 size-4" />
-                                ) : (
-                                    <FlagOutlineIcon className="size-4" />
-                                )}
-                                {isFlagged ? 'Flagged' : 'Flag'}
-                            </button>
-                        </div>
-
-                        <div className={style.navRow}>
-                            <button
-                                type="button"
-                                className={style.navButton}
-                                onClick={onPrev}
-                                aria-label="Previous application"
-                                disabled={
-                                    applicantIndex != null
-                                        ? applicantIndex <= 0
-                                        : false
-                                }
-                            >
-                                <ArrowLeftIcon className="size-6" />
-                            </button>
-                            <p className={style.navLabel}>{navLabel}</p>
-                            <button
-                                type="button"
-                                className={style.navButton}
-                                onClick={onNext}
-                                aria-label="Next application"
-                                disabled={
-                                    applicantIndex != null &&
-                                    applicantTotal != null
-                                        ? applicantIndex >= applicantTotal - 1
-                                        : false
-                                }
-                            >
-                                <ArrowRightIcon className="size-6" />
-                            </button>
-                        </div>
-                    </footer>
+        <div className={style.cardContainer} key={cardId}>
+            <header className={style.header}>
+                <div className={style.titleBlock}>
+                    <h1 className={style.titleHeading}>{applicantTitle}</h1>
+                    <p className={style.teamLine}>
+                        {applicationData?.teamName?.trim()
+                            ? `Team: ${applicationData.teamName.trim()}`
+                            : 'No team'}
+                    </p>
                 </div>
-            )}
-        </>
+                <button
+                    type="button"
+                    className={style.titleClose}
+                    onClick={onclose}
+                    aria-label="Close"
+                >
+                    <XMarkIcon className="size-6" />
+                </button>
+            </header>
+
+            <div className={style.scroll}>
+                {questionSections.map((section) => (
+                    <section key={section.key} className={style.sectionCard}>
+                        <h2 className={style.sectionTitle}>{section.title}</h2>
+                        <div className={style.fieldGrid}>
+                            {section.questions.map((question) => {
+                                const id = String(question.questionId);
+                                const label = questionLabel(question);
+                                const raw = getApplicationExportField(
+                                    responseData,
+                                    id
+                                );
+                                const display = formatDisplayValue(raw);
+
+                                return (
+                                    <div
+                                        key={`${cardId}:${id}`}
+                                        className={style.field}
+                                    >
+                                        <p className={style.fieldLabel}>
+                                            {label}
+                                        </p>
+                                        <p className={style.fieldValue}>
+                                            {display}
+                                        </p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </section>
+                ))}
+            </div>
+
+            <footer className={style.footer}>
+                <div className={style.footerActions}>
+                    <div className={style.statusActions}>
+                        <label
+                            className={style.statusSelectLabel}
+                            htmlFor="sidecard-review-status"
+                        >
+                            Select status
+                        </label>
+                        <Select
+                            key={acceptPendingStatus}
+                            value={reviewerSelectValue}
+                            disabled={isPendingStatusReadOnly}
+                            onValueChange={(v) => setStatus(v as StatusEnum)}
+                        >
+                            <SelectTrigger
+                                id="sidecard-review-status"
+                                className="h-11 w-full min-w-[10.5rem] rounded-xl border-neutral-600/60 bg-neutral-800/60"
+                                aria-label="Select status"
+                                aria-readonly={isPendingStatusReadOnly}
+                            >
+                                <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent className="z-[21000] border-neutral-800 bg-neutral-900 text-white">
+                                <SelectItem value="N/A">N/A</SelectItem>
+                                <SelectItem value="Awaiting Review">
+                                    Under review
+                                </SelectItem>
+                                <SelectItem value={acceptPendingStatus}>
+                                    Accept
+                                </SelectItem>
+                                <SelectItem value="Wait List">
+                                    Waitlist
+                                </SelectItem>
+                                <SelectItem value="Declined">
+                                    Decline
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
+                <div className={style.navRow}>
+                    <button
+                        type="button"
+                        className={style.navButton}
+                        onClick={onPrev}
+                        aria-label="Previous application"
+                        disabled={
+                            applicantIndex != null ? applicantIndex <= 0 : false
+                        }
+                    >
+                        <ArrowLeftIcon className="size-6" />
+                    </button>
+                    <p className={style.navLabel}>{navLabel}</p>
+                    <button
+                        type="button"
+                        className={style.navButton}
+                        onClick={onNext}
+                        aria-label="Next application"
+                        disabled={
+                            applicantIndex != null && applicantTotal != null
+                                ? applicantIndex >= applicantTotal - 1
+                                : false
+                        }
+                    >
+                        <ArrowRightIcon className="size-6" />
+                    </button>
+                </div>
+            </footer>
+        </div>
     );
 }
