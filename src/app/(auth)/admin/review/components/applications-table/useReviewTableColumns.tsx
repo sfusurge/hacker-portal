@@ -195,13 +195,9 @@ export function useReviewTableColumns({
                     <PendingStatusSelect
                         value={getValue<string>()}
                         currentStatus={row.original.currentStatus}
-                        acceptPendingStatus={
-                            showLocationColumn
-                                ? getAcceptPendingStatusForEventLocation(
-                                      row.original.eventLocationKey
-                                  )
-                                : 'Accepted'
-                        }
+                        acceptPendingStatus={getAcceptPendingStatusForEventLocation(
+                            row.original.eventLocationKey
+                        )}
                         disabled={isPendingUpdate}
                         readOnly={row.original.currentStatus === 'Accepted'}
                         onChange={(next) => {
