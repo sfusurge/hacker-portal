@@ -8,10 +8,7 @@ import { getAcceptPendingStatusForEventLocation } from '@/lib/applicationAcceptS
 import { isAcceptedStatus } from './statusCells';
 import type { Applicant } from './types';
 
-export function useReviewApplicantMutations(
-    hackathonId: number,
-    showLocationColumn: boolean
-) {
+export function useReviewApplicantMutations(hackathonId: number) {
     const utils = trpc.useUtils();
 
     const batchUpdateApplicationStatus =
@@ -134,13 +131,7 @@ export function useReviewApplicantMutations(
                 return;
             }
 
-            if (!showLocationColumn) {
-                await batchUpdateApplicants(rows, {
-                    pendingStatus: 'Accepted',
-                });
-                return;
-            }
-
+            // Accept → location-aware pending (RSVP / payment / virtual Accepted).
             const groups = new Map<StatusEnum, Row<Applicant>[]>();
             for (const row of rows) {
                 const pending = getAcceptPendingStatusForEventLocation(
@@ -155,7 +146,7 @@ export function useReviewApplicantMutations(
                 await batchUpdateApplicants(groupRows, { pendingStatus });
             }
         },
-        [batchUpdateApplicants, showLocationColumn]
+        [batchUpdateApplicants]
     );
 
     return {

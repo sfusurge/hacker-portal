@@ -37,6 +37,7 @@ import {
     getApplicationExportField,
     resolveApplicationQuestionIdByRole,
 } from '@/lib/applications/applicationReviewExport';
+import { getAcceptPendingStatusForEventLocation } from '@/lib/applicationAcceptStatus';
 import {
     ApplicantStatusSummary,
     getApplicantStatusSummaryMetrics,
@@ -198,6 +199,7 @@ export function ReviewApplicantsTable({
     const [filterMenuOpen, setFilterMenuOpen] = useState(false);
     const rowRefs = useRef(new Map<string, HTMLTableRowElement>());
     const tableScrollContainerRef = useRef<HTMLDivElement | null>(null);
+    const marqueeOverlayRef = useRef<HTMLDivElement | null>(null);
     const [selectionMenuPos, setSelectionMenuPos] = useState<{
         top: number;
         left: number;
@@ -255,7 +257,7 @@ export function ReviewApplicantsTable({
         batchUpdateApplicants,
         batchSetPendingStatus,
         isPending,
-    } = useReviewApplicantMutations(hackathonId, showLocationColumn);
+    } = useReviewApplicantMutations(hackathonId);
 
     const defaultColumns = useReviewTableColumns({
         extraColumns,
@@ -307,15 +309,17 @@ export function ReviewApplicantsTable({
         autoResetPageIndex: false,
     });
 
-    const { marqueeBox, isMarqueeSelecting, handleRowPointerDown } =
-        useMarqueeRowSelection({
+    const { isMarqueeSelecting, handleRowPointerDown } = useMarqueeRowSelection(
+        {
             table,
             rowSelection,
             setRowSelection,
             rowRefs,
             lastSelectionAnchorRef,
             scrollContainerRef: tableScrollContainerRef,
-        });
+            marqueeOverlayRef,
+        }
+    );
 
     const selectColWidth = table.getColumn('select')?.getSize() ?? 44;
     const flaggedColWidth = table.getColumn('flagged')?.getSize() ?? 56;
@@ -323,6 +327,7 @@ export function ReviewApplicantsTable({
         selectColWidth,
         flaggedColWidth,
     };
+    const pageCount = table.getPageCount();
 
     useEffect(() => {
         localStorage.setItem('pagesize', `${pagination.pageSize}`);
@@ -333,12 +338,9 @@ export function ReviewApplicantsTable({
     }, [pagination.pageIndex]);
 
     useEffect(() => {
-        (async () => {
-            if (table.getPageCount() - (pagination.pageIndex + 1) <= 1) {
-                await fetchNextPage();
-            }
-        })();
-    }, [table.getPageCount(), pagination.pageIndex, fetchNextPage, table]);
+        if (pageCount - (pagination.pageIndex + 1) > 1) return;
+        void fetchNextPage();
+    }, [pageCount, pagination.pageIndex, fetchNextPage]);
 
     const exportExcel = () => {
         const selectedRows = table.getSelectedRowModel().rows;
@@ -505,7 +507,7 @@ export function ReviewApplicantsTable({
             (id) => rowSelection[id]
         );
         if (selectedIds.length === 0) {
-            setSelectionMenuPos(null);
+            setSelectionMenuPos((prev) => (prev == null ? prev : null));
             return;
         }
 
@@ -519,7 +521,7 @@ export function ReviewApplicantsTable({
             );
 
         if (els.length === 0) {
-            setSelectionMenuPos(null);
+            setSelectionMenuPos((prev) => (prev == null ? prev : null));
             return;
         }
 
@@ -546,7 +548,10 @@ export function ReviewApplicantsTable({
             window.innerHeight - menuHeight - pad
         );
 
-        setSelectionMenuPos({ top, left });
+        setSelectionMenuPos((prev) => {
+            if (prev && prev.top === top && prev.left === left) return prev;
+            return { top, left };
+        });
     }, [rowSelection, pagination, tableData, sorting, globalFilter]);
 
     useLayoutEffect(() => {
@@ -635,16 +640,15 @@ export function ReviewApplicantsTable({
                 onFilterValueLabelsChange={setFilterValueLabels}
             />
 
-            <div className="relative w-full overflow-hidden rounded-lg bg-neutral-900">
-                {marqueeBox ? (
+            <div
+                data-marquee-bounds
+                className="relative w-full overflow-hidden rounded-lg bg-neutral-900"
+            >
+                {isMarqueeSelecting ? (
                     <div
-                        className="pointer-events-none fixed z-50 border border-dashed border-fuchsia-500 bg-fuchsia-950/45"
-                        style={{
-                            left: marqueeBox.left,
-                            top: marqueeBox.top,
-                            width: marqueeBox.width,
-                            height: marqueeBox.height,
-                        }}
+                        ref={marqueeOverlayRef}
+                        className="pointer-events-none absolute top-0 left-0 z-50 border border-dashed border-fuchsia-500 bg-fuchsia-950/45 will-change-transform"
+                        style={{ width: 0, height: 0 }}
                         aria-hidden
                     />
                 ) : null}
@@ -653,7 +657,9 @@ export function ReviewApplicantsTable({
                         selectedCount={selectedCount}
                         position={selectionMenuPos}
                         disabled={isPending}
-                        acceptPendingStatus="Accepted"
+                        acceptPendingStatus={getAcceptPendingStatusForEventLocation(
+                            undefined
+                        )}
                         onClearSelection={() => setRowSelection({})}
                         onChangePendingStatus={(next) => {
                             void batchSetPendingStatus(

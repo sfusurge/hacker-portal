@@ -4,7 +4,7 @@ import ReviewApplicationsTable, {
     type Applicant,
     sideCardAtomSJ,
 } from '@/app/(auth)/admin/review/components/ReviewApplicationsTable';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import SideCard from '@/app/(auth)/admin/review/components/SideCard';
 import { atom, useSetAtom, useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
@@ -63,6 +63,12 @@ export default function ReviewApplicationsPage() {
     );
 
     const refresh = () => setRefreshFlag((f) => f + 1);
+
+    const fetchNextPage = useCallback(async () => {
+        if (applicationData.hasNextPage) {
+            await applicationData.fetchNextPage();
+        }
+    }, [applicationData.hasNextPage, applicationData.fetchNextPage]);
 
     const selected: ApplicationWithTeamInfo | null = (() => {
         if (selectedIndex == null) return null;
@@ -124,11 +130,7 @@ export default function ReviewApplicationsPage() {
                 applicationQuestionPages={applicationQuestionPages}
                 applicationCount={applicationCountData?.applicationCount ?? -1}
                 applicationDataMap={applicationDataMap}
-                fetchNextPage={async () => {
-                    if (applicationData.hasNextPage) {
-                        await applicationData.fetchNextPage();
-                    }
-                }}
+                fetchNextPage={fetchNextPage}
                 onRowClick={(app) => {
                     const idx = data.findIndex((d) => d.id === app.id);
                     setSelectedIndex(idx === -1 ? null : idx);

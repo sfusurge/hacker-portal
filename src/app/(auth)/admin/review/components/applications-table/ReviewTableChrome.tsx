@@ -242,15 +242,12 @@ export function SelectionActionBar({
                     aria-hidden
                 />
                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <button
-                            type="button"
-                            className="flex items-center gap-3 rounded px-2 py-2 text-sm text-white transition-colors hover:bg-neutral-800"
-                            disabled={disabled}
-                        >
-                            <CircleDot className="size-4 shrink-0 text-white/70" />
-                            Change pending status
-                        </button>
+                    <DropdownMenuTrigger
+                        disabled={disabled}
+                        className="flex items-center gap-3 rounded px-2 py-2 text-sm text-white transition-colors hover:bg-neutral-800 disabled:pointer-events-none disabled:opacity-50"
+                    >
+                        <CircleDot className="size-4 shrink-0 text-white/70" />
+                        Change pending status
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                         align="center"

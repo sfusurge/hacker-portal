@@ -49,13 +49,6 @@ function edgeScrollDelta(distanceIntoEdge: number, edgePx: number): number {
     return Math.ceil(t * t * AUTO_SCROLL_MAX_SPEED);
 }
 
-export type MarqueeBox = {
-    left: number;
-    top: number;
-    width: number;
-    height: number;
-};
-
 type UseMarqueeRowSelectionArgs = {
     table: Table<Applicant>;
     rowSelection: RowSelectionState;
@@ -67,6 +60,7 @@ type UseMarqueeRowSelectionArgs = {
     rowRefs: MutableRefObject<Map<string, HTMLTableRowElement>>;
     lastSelectionAnchorRef: MutableRefObject<number | null>;
     scrollContainerRef: MutableRefObject<HTMLElement | null>;
+    marqueeOverlayRef: MutableRefObject<HTMLDivElement | null>;
 };
 
 export function useMarqueeRowSelection({
@@ -76,8 +70,9 @@ export function useMarqueeRowSelection({
     rowRefs,
     lastSelectionAnchorRef,
     scrollContainerRef,
+    marqueeOverlayRef,
 }: UseMarqueeRowSelectionArgs) {
-    const [marqueeBox, setMarqueeBox] = useState<MarqueeBox | null>(null);
+    const [isMarqueeSelecting, setIsMarqueeSelecting] = useState(false);
     const marqueeSelectRef = useRef<{
         startX: number;
         startY: number;
@@ -88,6 +83,47 @@ export function useMarqueeRowSelection({
         startVisualIndex: number | null;
     } | null>(null);
     const autoScrollRafRef = useRef<number | null>(null);
+    const paintRafRef = useRef<number | null>(null);
+    // Keep latest table/selection in refs so pointer listeners stay stable.
+    const tableRef = useRef(table);
+    const rowSelectionRef = useRef(rowSelection);
+    tableRef.current = table;
+    rowSelectionRef.current = rowSelection;
+
+    const paintMarqueeOverlay = useCallback(() => {
+        paintRafRef.current = null;
+        const drag = marqueeSelectRef.current;
+        const el = marqueeOverlayRef.current;
+        if (!drag || !el) return;
+
+        const boundsEl =
+            scrollContainerRef.current?.closest('[data-marquee-bounds]') ??
+            scrollContainerRef.current;
+        const bounds = boundsEl?.getBoundingClientRect();
+        if (!bounds) return;
+
+        const rawLeft = Math.min(drag.startX, drag.currentX);
+        const rawTop = Math.min(drag.startY, drag.currentY);
+        const rawRight = Math.max(drag.startX, drag.currentX);
+        const rawBottom = Math.max(drag.startY, drag.currentY);
+
+        // Keep the visible marquee inside the table shell.
+        const left = Math.max(rawLeft, bounds.left) - bounds.left;
+        const top = Math.max(rawTop, bounds.top) - bounds.top;
+        const right = Math.min(rawRight, bounds.right) - bounds.left;
+        const bottom = Math.min(rawBottom, bounds.bottom) - bounds.top;
+        const width = Math.max(0, right - left);
+        const height = Math.max(0, bottom - top);
+
+        el.style.transform = `translate3d(${left}px, ${top}px, 0)`;
+        el.style.width = `${width}px`;
+        el.style.height = `${height}px`;
+    }, [marqueeOverlayRef, scrollContainerRef]);
+
+    const schedulePaintMarquee = useCallback(() => {
+        if (paintRafRef.current != null) return;
+        paintRafRef.current = requestAnimationFrame(paintMarqueeOverlay);
+    }, [paintMarqueeOverlay]);
 
     const applyRowRangeSelection = useCallback(
         (
@@ -96,7 +132,7 @@ export function useMarqueeRowSelection({
             additive: boolean,
             baseSelection: RowSelectionState
         ) => {
-            const rows = table.getRowModel().rows;
+            const rows = tableRef.current.getRowModel().rows;
             if (rows.length === 0) return;
 
             const start = Math.max(0, Math.min(fromIndex, toIndex));
@@ -109,7 +145,7 @@ export function useMarqueeRowSelection({
             }
             setRowSelection(next);
         },
-        [setRowSelection, table]
+        [setRowSelection]
     );
 
     const selectRowsIntersectingRect = useCallback(
@@ -118,51 +154,35 @@ export function useMarqueeRowSelection({
             additive: boolean,
             baseSelection: RowSelectionState
         ) => {
-            const rows = table.getRowModel().rows;
+            const rows = tableRef.current.getRowModel().rows;
             const next: RowSelectionState = additive
                 ? { ...baseSelection }
                 : {};
             let lastIndex: number | null = null;
 
-            rows.forEach((row, visualIndex) => {
-                const el = rowRefs.current.get(row.id);
-                if (!el) return;
+            // Rows are visually ordered top→bottom; stop once past the marquee.
+            for (let i = 0; i < rows.length; i++) {
+                const el = rowRefs.current.get(rows[i].id);
+                if (!el) continue;
                 const rect = el.getBoundingClientRect();
+                if (rect.bottom < box.top) continue;
+                if (rect.top > box.bottom) break;
                 const intersects =
                     rect.left < box.right &&
                     rect.right > box.left &&
                     rect.top < box.bottom &&
                     rect.bottom > box.top;
-                if (!intersects) return;
-                next[row.id] = true;
-                if (lastIndex == null || visualIndex > lastIndex) {
-                    lastIndex = visualIndex;
-                }
-            });
+                if (!intersects) continue;
+                next[rows[i].id] = true;
+                lastIndex = i;
+            }
 
             setRowSelection(next);
             if (lastIndex != null) {
                 lastSelectionAnchorRef.current = lastIndex;
             }
         },
-        [lastSelectionAnchorRef, rowRefs, setRowSelection, table]
-    );
-
-    const updateMarqueeBox = useCallback(
-        (
-            startX: number,
-            startY: number,
-            currentX: number,
-            currentY: number
-        ) => {
-            setMarqueeBox({
-                left: Math.min(startX, currentX),
-                top: Math.min(startY, currentY),
-                width: Math.abs(currentX - startX),
-                height: Math.abs(currentY - startY),
-            });
-        },
-        []
+        [lastSelectionAnchorRef, rowRefs, setRowSelection]
     );
 
     const stopAutoScroll = useCallback(() => {
@@ -182,6 +202,7 @@ export function useMarqueeRowSelection({
         const container = scrollContainerRef.current;
         let deltaX = 0;
         let deltaY = 0;
+        let nearEdge = false;
 
         if (container) {
             const rect = container.getBoundingClientRect();
@@ -190,6 +211,7 @@ export function useMarqueeRowSelection({
                 drag.currentX - (rect.right - AUTO_SCROLL_EDGE_PX);
             const leftDelta = edgeScrollDelta(leftEdge, AUTO_SCROLL_EDGE_PX);
             const rightDelta = edgeScrollDelta(rightEdge, AUTO_SCROLL_EDGE_PX);
+            nearEdge = nearEdge || leftEdge > 0 || rightEdge > 0;
 
             if (leftDelta > 0 || rightDelta > 0) {
                 const before = container.scrollLeft;
@@ -209,6 +231,7 @@ export function useMarqueeRowSelection({
                 bottomEdge,
                 AUTO_SCROLL_EDGE_PX
             );
+            nearEdge = nearEdge || topEdge > 0 || bottomEdge > 0;
 
             if (topDelta > 0 || bottomDelta > 0) {
                 const before = verticalParent.scrollTop;
@@ -221,16 +244,15 @@ export function useMarqueeRowSelection({
             // Keep the marquee origin anchored to content as the viewport scrolls.
             drag.startX -= deltaX;
             drag.startY -= deltaY;
-            updateMarqueeBox(
-                drag.startX,
-                drag.startY,
-                drag.currentX,
-                drag.currentY
-            );
+            schedulePaintMarquee();
         }
 
-        autoScrollRafRef.current = requestAnimationFrame(tickAutoScroll);
-    }, [scrollContainerRef, updateMarqueeBox]);
+        if (nearEdge) {
+            autoScrollRafRef.current = requestAnimationFrame(tickAutoScroll);
+        } else {
+            autoScrollRafRef.current = null;
+        }
+    }, [schedulePaintMarquee, scrollContainerRef]);
 
     const startAutoScroll = useCallback(() => {
         if (autoScrollRafRef.current != null) return;
@@ -245,6 +267,7 @@ export function useMarqueeRowSelection({
 
             const additive = event.metaKey || event.ctrlKey;
             const extendRange = event.shiftKey;
+            const selection = rowSelectionRef.current;
 
             if (extendRange && lastSelectionAnchorRef.current != null) {
                 event.preventDefault();
@@ -252,7 +275,7 @@ export function useMarqueeRowSelection({
                     lastSelectionAnchorRef.current,
                     rowIndex,
                     additive,
-                    rowSelection
+                    selection
                 );
                 lastSelectionAnchorRef.current = rowIndex;
                 return;
@@ -265,23 +288,21 @@ export function useMarqueeRowSelection({
                 currentX: event.clientX,
                 currentY: event.clientY,
                 additive,
-                baseSelection: additive ? { ...rowSelection } : {},
+                baseSelection: additive ? { ...selection } : {},
                 startVisualIndex: rowIndex,
             };
-            updateMarqueeBox(
-                event.clientX,
-                event.clientY,
-                event.clientX,
-                event.clientY
-            );
+            setIsMarqueeSelecting(true);
+            // Paint after the overlay mounts.
+            requestAnimationFrame(() => {
+                schedulePaintMarquee();
+            });
             startAutoScroll();
         },
         [
             applyRowRangeSelection,
             lastSelectionAnchorRef,
-            rowSelection,
+            schedulePaintMarquee,
             startAutoScroll,
-            updateMarqueeBox,
         ]
     );
 
@@ -291,12 +312,7 @@ export function useMarqueeRowSelection({
             if (!drag) return;
             drag.currentX = event.clientX;
             drag.currentY = event.clientY;
-            updateMarqueeBox(
-                drag.startX,
-                drag.startY,
-                drag.currentX,
-                drag.currentY
-            );
+            schedulePaintMarquee();
             startAutoScroll();
         };
 
@@ -305,6 +321,10 @@ export function useMarqueeRowSelection({
             if (!drag) return;
 
             stopAutoScroll();
+            if (paintRafRef.current != null) {
+                cancelAnimationFrame(paintRafRef.current);
+                paintRafRef.current = null;
+            }
 
             const left = Math.min(drag.startX, drag.currentX);
             const top = Math.min(drag.startY, drag.currentY);
@@ -313,31 +333,33 @@ export function useMarqueeRowSelection({
             const moved = width >= 4 || height >= 4;
 
             marqueeSelectRef.current = null;
-            setMarqueeBox(null);
+            setIsMarqueeSelecting(false);
 
-            if (!moved) {
-                if (drag.startVisualIndex != null) {
-                    applyRowRangeSelection(
-                        drag.startVisualIndex,
-                        drag.startVisualIndex,
-                        drag.additive,
-                        drag.baseSelection
-                    );
-                    lastSelectionAnchorRef.current = drag.startVisualIndex;
-                }
-                return;
-            }
+            // Tap / click without a drag should not change selection
+            // (use the checkbox or shift-click for that).
+            if (!moved) return;
 
-            selectRowsIntersectingRect(
-                {
-                    left,
-                    top,
-                    right: left + width,
-                    bottom: top + height,
-                },
-                drag.additive,
-                drag.baseSelection
-            );
+            const boundsEl =
+                scrollContainerRef.current?.closest('[data-marquee-bounds]') ??
+                scrollContainerRef.current;
+            const bounds = boundsEl?.getBoundingClientRect();
+            const box = bounds
+                ? {
+                      left: Math.max(left, bounds.left),
+                      top: Math.max(top, bounds.top),
+                      right: Math.min(left + width, bounds.right),
+                      bottom: Math.min(top + height, bounds.bottom),
+                  }
+                : {
+                      left,
+                      top,
+                      right: left + width,
+                      bottom: top + height,
+                  };
+
+            if (box.right <= box.left || box.bottom <= box.top) return;
+
+            selectRowsIntersectingRect(box, drag.additive, drag.baseSelection);
         };
 
         window.addEventListener('pointermove', onPointerMove);
@@ -348,19 +370,22 @@ export function useMarqueeRowSelection({
             window.removeEventListener('pointerup', onPointerUp);
             window.removeEventListener('pointercancel', onPointerUp);
             stopAutoScroll();
+            if (paintRafRef.current != null) {
+                cancelAnimationFrame(paintRafRef.current);
+                paintRafRef.current = null;
+            }
         };
     }, [
-        applyRowRangeSelection,
         lastSelectionAnchorRef,
+        schedulePaintMarquee,
+        scrollContainerRef,
         selectRowsIntersectingRect,
         startAutoScroll,
         stopAutoScroll,
-        updateMarqueeBox,
     ]);
 
     return {
-        marqueeBox,
-        isMarqueeSelecting: marqueeBox != null,
+        isMarqueeSelecting,
         handleRowPointerDown,
     };
 }
