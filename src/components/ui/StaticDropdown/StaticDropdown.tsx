@@ -216,7 +216,9 @@ export function StaticDropdown({
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
                                         e.preventDefault();
-                                        handleAddCustom();
+                                        if (allowCustom) {
+                                            handleAddCustom();
+                                        }
                                     }
                                 }}
                                 className={cn(
@@ -269,7 +271,8 @@ export function StaticDropdown({
                             );
                         })}
 
-                        {searchQuery.trim() &&
+                        {allowCustom &&
+                            searchQuery.trim() &&
                             !staticChoices.find(
                                 (o) =>
                                     o.name.toLowerCase() ===
