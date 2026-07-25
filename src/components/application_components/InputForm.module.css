@@ -192,6 +192,7 @@
         flex-direction: column;
         gap: 32px;
         align-items: flex-start;
+        padding: 24px 10px;
     }
 
     .mobileHomeButton {
