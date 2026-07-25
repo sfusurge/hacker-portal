@@ -175,6 +175,7 @@ export function StaticDropdown({
             <CollapsibleTrigger asChild>
                 <button
                     type="button"
+                    data-validation-control
                     disabled={readOnly}
                     className={cn(
                         'flex items-center justify-between gap-2',
@@ -187,7 +188,7 @@ export function StaticDropdown({
                         'transition-colors',
                         readOnly && 'cursor-not-allowed opacity-50',
                         isInvalid
-                            ? 'border-danger-400'
+                            ? 'border-[var(--danger-500)]'
                             : 'border-neutral-700/60'
                     )}
                 >
