@@ -6,10 +6,12 @@ import {
     createHousesSchema,
     getHouseForUserSchema,
     getHouseStandingsSchema,
+    getHouseTopScorersSchema,
     getHousesSchema,
     houseMemberships,
     houses,
 } from '@/db/schema/houses';
+import { user as usersTable } from '@/db/schema/users/users';
 import { hasAdminAccess } from '@/lib/auth/roles';
 import { TRPCError } from '@trpc/server';
 import { and, asc, countDistinct, desc, eq, sql, sum } from 'drizzle-orm';
@@ -151,6 +153,97 @@ export const housesRouter = router({
                 name: row.name,
                 memberCount: Number(row.memberCount),
                 points: Number(row.points),
+            }));
+        }),
+
+    getHouseTopScorers: publicProcedure
+        .input(getHouseTopScorersSchema)
+        .query(async ({ input }) => {
+            await requireAdmin();
+
+            const houseRows = await databaseClient
+                .select({
+                    houseId: houses.id,
+                    name: houses.name,
+                })
+                .from(houses)
+                .where(eq(houses.hackathonId, input.hackathonId))
+                .orderBy(asc(houses.name));
+
+            if (houseRows.length === 0) {
+                return [];
+            }
+
+            const memberScores = await databaseClient
+                .select({
+                    houseId: houseMemberships.houseId,
+                    userId: usersTable.id,
+                    firstName: usersTable.firstName,
+                    lastName: usersTable.lastName,
+                    email: usersTable.email,
+                    points: sql<number>`coalesce(${sum(events.points)}, 0)`,
+                })
+                .from(houseMemberships)
+                .innerJoin(houses, eq(houseMemberships.houseId, houses.id))
+                .innerJoin(
+                    usersTable,
+                    eq(houseMemberships.userId, usersTable.id)
+                )
+                .leftJoin(
+                    checkIns,
+                    eq(houseMemberships.userId, checkIns.userId)
+                )
+                .leftJoin(
+                    events,
+                    and(
+                        eq(checkIns.eventId, events.id),
+                        eq(events.hackathonId, houses.hackathonId)
+                    )
+                )
+                .where(eq(houseMemberships.hackathonId, input.hackathonId))
+                .groupBy(
+                    houseMemberships.houseId,
+                    usersTable.id,
+                    usersTable.firstName,
+                    usersTable.lastName,
+                    usersTable.email
+                )
+                .orderBy(
+                    asc(houseMemberships.houseId),
+                    desc(sql`coalesce(sum(${events.points}), 0)`),
+                    asc(usersTable.lastName),
+                    asc(usersTable.firstName)
+                );
+
+            const scorersByHouse = new Map<
+                number,
+                {
+                    userId: number;
+                    firstName: string | null;
+                    lastName: string | null;
+                    email: string;
+                    points: number;
+                }[]
+            >();
+
+            for (const row of memberScores) {
+                const list = scorersByHouse.get(row.houseId) ?? [];
+                if (list.length < input.limit) {
+                    list.push({
+                        userId: row.userId,
+                        firstName: row.firstName,
+                        lastName: row.lastName,
+                        email: row.email,
+                        points: Number(row.points),
+                    });
+                    scorersByHouse.set(row.houseId, list);
+                }
+            }
+
+            return houseRows.map((house) => ({
+                houseId: house.houseId,
+                name: house.name,
+                topScorers: scorersByHouse.get(house.houseId) ?? [],
             }));
         }),
 });

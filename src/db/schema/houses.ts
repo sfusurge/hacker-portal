@@ -83,3 +83,8 @@ export const getHouseForUserSchema = z.object({
 export const getHouseStandingsSchema = z.object({
     hackathonId: z.number().int(),
 });
+
+export const getHouseTopScorersSchema = z.object({
+    hackathonId: z.number().int(),
+    limit: z.number().int().min(1).max(20).optional().default(5),
+});

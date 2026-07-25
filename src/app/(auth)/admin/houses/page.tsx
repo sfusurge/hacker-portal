@@ -12,6 +12,11 @@ export default function HousesPage() {
 
     trpc.houses.getHouseStandings.useQuery({ hackathonId }, { enabled: false });
 
+    trpc.houses.getHouseTopScorers.useQuery(
+        { hackathonId },
+        { enabled: false }
+    );
+
     trpc.houses.createHouses.useMutation();
     trpc.houses.assignUnassignedHouses.useMutation();
 
