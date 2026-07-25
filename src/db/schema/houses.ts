@@ -11,7 +11,9 @@ import { z } from 'zod';
 import { hackathons } from './hackathons';
 import { user } from './users/users';
 
-export const HOUSES_PER_HACKATHON = 4;
+export const DEFAULT_HOUSES_PER_HACKATHON = 4;
+export const MIN_HOUSES_PER_HACKATHON = 1;
+export const MAX_HOUSES_PER_HACKATHON = 10;
 
 export const houses = pgTable(
     'houses',
@@ -54,13 +56,15 @@ export const houseMemberships = pgTable(
 export const createHousesSchema = z.object({
     hackathonId: z.number().int(),
     names: z
-        .tuple([
-            z.string().min(1).max(128),
-            z.string().min(1).max(128),
-            z.string().min(1).max(128),
-            z.string().min(1).max(128),
-        ])
-        .describe('Exactly four house names'),
+        .array(z.string().trim().min(1).max(128))
+        .min(MIN_HOUSES_PER_HACKATHON)
+        .max(MAX_HOUSES_PER_HACKATHON)
+        .refine(
+            (names) =>
+                new Set(names.map((name) => name.toLowerCase())).size ===
+                names.length,
+            { message: 'House names must be unique' }
+        ),
 });
 
 export const getHousesSchema = z.object({

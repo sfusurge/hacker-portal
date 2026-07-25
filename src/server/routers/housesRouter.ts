@@ -2,7 +2,6 @@ import { databaseClient } from '@/db/client';
 import { checkIns } from '@/db/schema/checkIn';
 import { events } from '@/db/schema/events';
 import {
-    HOUSES_PER_HACKATHON,
     assignHousesSchema,
     createHousesSchema,
     getHouseForUserSchema,
@@ -13,16 +12,7 @@ import {
 } from '@/db/schema/houses';
 import { hasAdminAccess } from '@/lib/auth/roles';
 import { TRPCError } from '@trpc/server';
-import {
-    and,
-    asc,
-    count,
-    countDistinct,
-    desc,
-    eq,
-    sql,
-    sum,
-} from 'drizzle-orm';
+import { and, asc, countDistinct, desc, eq, sql, sum } from 'drizzle-orm';
 import { assignUnassignedHouses } from '@/server/houses/assignHouse';
 import { UnauthorizedError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
@@ -68,10 +58,10 @@ export const housesRouter = router({
                 )
                 .returning();
 
-            if (created.length !== HOUSES_PER_HACKATHON) {
+            if (created.length !== input.names.length) {
                 throw new TRPCError({
                     code: 'INTERNAL_SERVER_ERROR',
-                    message: `Expected ${HOUSES_PER_HACKATHON} houses, created ${created.length}`,
+                    message: `Expected ${input.names.length} houses, created ${created.length}`,
                 });
             }
 
@@ -131,7 +121,6 @@ export const housesRouter = router({
                     houseId: houses.id,
                     name: houses.name,
                     memberCount: countDistinct(houseMemberships.userId),
-                    // points: count(events.id),
                     points: sql<number>`coalesce(${sum(events.points)}, 0)`,
                 })
                 .from(houses)
