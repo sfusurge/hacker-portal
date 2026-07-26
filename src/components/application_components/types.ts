@@ -231,6 +231,7 @@ export interface QuestionTextAreaInput extends Question {
     placeHolder?: string;
     value?: string;
     maxCount?: number;
+    errorMsg?: string;
 }
 
 export interface QuestionNumberInput extends Question {

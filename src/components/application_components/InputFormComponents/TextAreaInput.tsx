@@ -24,6 +24,7 @@ export function TextAreaInput({
             disabled={disabled}
             readOnly={disabled}
             placeholder={question.placeHolder ?? ''}
+            errorMsg={question.errorMsg}
         ></FormTextArea>
     );
 }
