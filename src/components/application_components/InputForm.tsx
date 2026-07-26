@@ -65,11 +65,11 @@ import { ReviewProject } from './ReviewProject';
 import {
     type PageFormState,
     DesktopPageIndicator,
-    MobileHorizontalStepper,
     MobilePageIndicator,
 } from './PageStatus/ApplicationPageIndicator';
 
 import { ArrowLeftIcon } from 'lucide-react';
+import { HomeIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { cn } from '@/lib/utils';
@@ -237,11 +237,19 @@ export function InputForm({
                     savedAt={appData.savedAt}
                 />
             )}
-            {!disablePageTab && isMobile && (
-                <MobileHorizontalStepper
-                    pageStateAtoms={pageStatesAtom}
-                    indexAtom={pageIndexAtom}
-                />
+            {applicationType === 'application' && isMobile && (
+                <div className={style.mobileFormNav}>
+                    <button
+                        type="button"
+                        className={style.mobileHomeButton}
+                        onClick={() => {
+                            router.push('/home');
+                        }}
+                        aria-label="Go to dashboard"
+                    >
+                        <HomeIcon className="h-6 w-6" />
+                    </button>
+                </div>
             )}
             {applicationType === 'application' && (
                 <div className="hidden flex-col gap-1 md:flex">

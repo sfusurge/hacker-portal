@@ -104,7 +104,9 @@ export function useReviewTableColumns({
                         >
                             {flagged ? (
                                 <FlagIcon className="text-caution-500 size-5" />
-                            ) : null}
+                            ) : (
+                                <FlagOutlineIcon className="size-5 text-white/40 opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-100" />
+                            )}
                         </button>
                     );
                 },
@@ -195,13 +197,9 @@ export function useReviewTableColumns({
                     <PendingStatusSelect
                         value={getValue<string>()}
                         currentStatus={row.original.currentStatus}
-                        acceptPendingStatus={
-                            showLocationColumn
-                                ? getAcceptPendingStatusForEventLocation(
-                                      row.original.eventLocationKey
-                                  )
-                                : 'Accepted'
-                        }
+                        acceptPendingStatus={getAcceptPendingStatusForEventLocation(
+                            row.original.eventLocationKey
+                        )}
                         disabled={isPendingUpdate}
                         readOnly={row.original.currentStatus === 'Accepted'}
                         onChange={(next) => {

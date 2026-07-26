@@ -146,7 +146,7 @@ export function StaticDropdown({
 
     const radioCircleClass = (checked: boolean) =>
         cn(
-            'size-5 rounded-full box-border',
+            'size-5 shrink-0 rounded-full box-border',
             'transition-all duration-[400ms] ease-out',
             checked
                 ? 'border-[6px] border-brand-500 bg-white'
@@ -155,7 +155,7 @@ export function StaticDropdown({
 
     const containerClass = (checked: boolean) =>
         cn(
-            'flex items-center gap-3 px-3 py-3',
+            'flex w-full max-w-full min-w-0 items-center gap-3 px-3 py-3',
             'cursor-pointer',
             'transition-colors duration-[400ms] ease-out',
             'min-h-[48px]'
@@ -170,7 +170,7 @@ export function StaticDropdown({
                     setSearchQuery('');
                 }
             }}
-            className="w-full max-w-[480px]"
+            className="w-full max-w-[480px] min-w-0"
         >
             <CollapsibleTrigger asChild>
                 <button
@@ -178,8 +178,8 @@ export function StaticDropdown({
                     data-validation-control
                     disabled={readOnly}
                     className={cn(
-                        'flex items-center justify-between gap-2',
-                        'min-h-[44px] w-full',
+                        'flex min-w-0 items-center justify-between gap-2',
+                        'min-h-[44px] w-full max-w-full',
                         'rounded-lg border',
                         'bg-neutral-800/60 backdrop-blur',
                         'px-4 py-2',
@@ -192,7 +192,7 @@ export function StaticDropdown({
                             : 'border-neutral-700/60'
                     )}
                 >
-                    <span className="min-w-0 flex-1 truncate text-left text-wrap">
+                    <span className="max-w-full min-w-0 flex-1 truncate text-left">
                         {getDisplayText()}
                     </span>
                     <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
@@ -217,7 +217,9 @@ export function StaticDropdown({
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
                                         e.preventDefault();
-                                        handleAddCustom();
+                                        if (allowCustom) {
+                                            handleAddCustom();
+                                        }
                                     }
                                 }}
                                 className={cn(
@@ -263,14 +265,15 @@ export function StaticDropdown({
                                     <div
                                         className={radioCircleClass(selected)}
                                     />
-                                    <span className="text-base font-normal text-white">
+                                    <span className="max-w-full min-w-0 flex-1 text-base font-normal text-pretty break-words text-white">
                                         {option.name}
                                     </span>
                                 </label>
                             );
                         })}
 
-                        {searchQuery.trim() &&
+                        {allowCustom &&
+                            searchQuery.trim() &&
                             !staticChoices.find(
                                 (o) =>
                                     o.name.toLowerCase() ===
@@ -320,7 +323,7 @@ export function StaticDropdown({
                                             isOtherSelected
                                         )}
                                     />
-                                    <span className="text-base font-normal text-white">
+                                    <span className="max-w-full min-w-0 flex-1 text-base font-normal text-white">
                                         Other
                                     </span>
                                 </label>
