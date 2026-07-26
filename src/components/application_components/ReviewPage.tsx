@@ -118,7 +118,27 @@ export function ReviewPage({
 
             case 'dropdown':
                 const dropdownQuestion = question as QuestionDropdown;
-                return dropdownQuestion.value || 'N/A';
+                if (Array.isArray(dropdownQuestion.value)) {
+                    if (dropdownQuestion.value.length === 0) return 'N/A';
+                    return dropdownQuestion.value
+                        .map((value) => {
+                            const selectedChoice =
+                                dropdownQuestion.choices.find(
+                                    (choice) => choice.data === value
+                                );
+                            return selectedChoice ? selectedChoice.name : value;
+                        })
+                        .join(', ');
+                }
+                if (dropdownQuestion.value) {
+                    const selectedChoice = dropdownQuestion.choices.find(
+                        (choice) => choice.data === dropdownQuestion.value
+                    );
+                    return selectedChoice
+                        ? selectedChoice.name
+                        : dropdownQuestion.value;
+                }
+                return 'N/A';
 
             case 'multiple-choice':
                 const multiChoiceQuestion = question as QuestionMultipleChoice;

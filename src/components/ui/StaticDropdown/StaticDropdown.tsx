@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo, useRef } from 'react';
-import { ChevronsUpDown, Plus } from 'lucide-react';
+import { ChevronsUpDown, Plus, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
     Collapsible,
@@ -17,8 +17,8 @@ export type StaticDropdownOption = {
 
 type StaticDropdownProps = {
     staticChoices: StaticDropdownOption[];
-    initialData?: string;
-    onChange: (val: string) => void;
+    initialData?: string | string[];
+    onChange: (val: string | string[]) => void;
     required?: boolean;
     readOnly?: boolean;
     placeholder?: string;
@@ -26,7 +26,21 @@ type StaticDropdownProps = {
     allowCustom?: boolean;
     customPlaceHolder?: string;
     description?: string;
+    allowMultiple?: boolean;
 };
+
+function normalizeInitialValues(
+    initialData: string | string[] | undefined,
+    allowMultiple: boolean
+): string[] {
+    if (Array.isArray(initialData)) {
+        return initialData.filter((v) => typeof v === 'string' && v.length > 0);
+    }
+    if (typeof initialData === 'string' && initialData.length > 0) {
+        return [initialData];
+    }
+    return [];
+}
 
 export function StaticDropdown({
     staticChoices,
@@ -39,72 +53,78 @@ export function StaticDropdown({
     allowCustom = false,
     customPlaceHolder = 'Please Specify',
     description,
+    allowMultiple = false,
 }: StaticDropdownProps) {
     const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [customValue, setCustomValue] = useState('');
     const [isOtherSelected, setIsOtherSelected] = useState(false);
-    const [selectedValue, setSelectedValue] = useState<string>(() => {
-        return typeof initialData === 'string' && initialData
-            ? initialData
-            : '';
-    });
-    const [selectedObject, setSelectedObject] =
-        useState<StaticDropdownOption | null>(null);
+    const [selectedValues, setSelectedValues] = useState<string[]>(() =>
+        normalizeInitialValues(initialData, allowMultiple)
+    );
     const isManualSwitchToOther = useRef(false);
 
-    useEffect(() => {
-        if (initialData !== undefined && initialData !== selectedValue) {
-            setSelectedValue(initialData);
-            if (initialData) {
-                const found = staticChoices.find(
-                    (opt) => opt.value === initialData
-                );
-                setSelectedObject(found || null);
-            } else {
-                setSelectedObject(null);
-            }
-        } else if (
-            initialData !== undefined &&
-            initialData === selectedValue &&
-            selectedObject
-        ) {
-            const found = staticChoices.find(
-                (opt) => opt.value === initialData
-            );
-            if (found && found.name !== selectedObject.name) {
-                setSelectedObject(found);
-            }
-        }
-    }, [initialData, staticChoices]);
+    const selectedValue = selectedValues[0] ?? '';
 
     useEffect(() => {
-        if (allowCustom) {
-            if (isManualSwitchToOther.current) {
-                isManualSwitchToOther.current = false;
-                return;
+        const next = normalizeInitialValues(initialData, allowMultiple);
+        setSelectedValues((prev) => {
+            if (
+                prev.length === next.length &&
+                prev.every((value, index) => value === next[index])
+            ) {
+                return prev;
             }
+            return next;
+        });
+    }, [initialData, allowMultiple]);
 
-            const isPredefinedChoice = staticChoices.some(
-                (choice) => choice.value === selectedValue
-            );
-
-            if (isPredefinedChoice) {
-                setIsOtherSelected(false);
-            } else if (selectedValue) {
-                setIsOtherSelected(true);
-                setCustomValue(selectedValue);
-            }
-        } else {
+    useEffect(() => {
+        if (allowMultiple || !allowCustom) {
             setIsOtherSelected(false);
+            return;
         }
-    }, [allowCustom, selectedValue, staticChoices]);
+
+        if (isManualSwitchToOther.current) {
+            isManualSwitchToOther.current = false;
+            return;
+        }
+
+        const isPredefinedChoice = staticChoices.some(
+            (choice) => choice.value === selectedValue
+        );
+
+        if (isPredefinedChoice) {
+            setIsOtherSelected(false);
+        } else if (selectedValue) {
+            setIsOtherSelected(true);
+            setCustomValue(selectedValue);
+        }
+    }, [allowCustom, allowMultiple, selectedValue, staticChoices]);
+
+    const emitChange = (values: string[]) => {
+        if (allowMultiple) {
+            onChange(values);
+            return;
+        }
+        onChange(values[0] ?? '');
+    };
 
     const handleToggle = (option: StaticDropdownOption) => {
         setIsOtherSelected(false);
-        setSelectedValue(option.value);
-        setSelectedObject(option);
-        onChange(option.value);
+
+        if (allowMultiple) {
+            const isSelected = selectedValues.includes(option.value);
+            const next = isSelected
+                ? selectedValues.filter((value) => value !== option.value)
+                : [...selectedValues, option.value];
+            setSelectedValues(next);
+            emitChange(next);
+            return;
+        }
+
+        setSelectedValues([option.value]);
+        emitChange([option.value]);
         setOpen(false);
     };
 
@@ -112,17 +132,28 @@ export function StaticDropdown({
         const customVal = searchQuery.trim();
         if (!customVal) return;
 
+        if (allowMultiple) {
+            if (selectedValues.includes(customVal)) {
+                setSearchQuery('');
+                return;
+            }
+            const next = [...selectedValues, customVal];
+            setSelectedValues(next);
+            emitChange(next);
+            setSearchQuery('');
+            return;
+        }
+
         setCustomValue(customVal);
-        setSelectedValue(customVal);
-        setSelectedObject(null);
-        onChange(customVal);
+        setSelectedValues([customVal]);
+        emitChange([customVal]);
         setOpen(false);
     };
 
     const handleCustomInputChange = (value: string) => {
         setCustomValue(value);
-        setSelectedValue(value);
-        onChange(value);
+        setSelectedValues(value ? [value] : []);
+        emitChange(value ? [value] : []);
     };
 
     const searchResults = useMemo(() => {
@@ -136,13 +167,18 @@ export function StaticDropdown({
     }, [staticChoices, searchQuery]);
 
     const getDisplayText = () => {
-        if (!selectedValue) return placeholder;
-        return selectedObject ? selectedObject.name : selectedValue;
+        if (selectedValues.length === 0) return placeholder;
+
+        if (allowMultiple && selectedValues.length > 1) {
+            return `Multiple Selected (${selectedValues.length})`;
+        }
+
+        const value = selectedValues[0];
+        const found = staticChoices.find((opt) => opt.value === value);
+        return found ? found.name : value;
     };
 
-    const isSelected = (value: string) => {
-        return selectedValue === value;
-    };
+    const isSelected = (value: string) => selectedValues.includes(value);
 
     const radioCircleClass = (checked: boolean) =>
         cn(
@@ -153,7 +189,16 @@ export function StaticDropdown({
                 : 'border border-neutral-600 bg-transparent'
         );
 
-    const containerClass = (checked: boolean) =>
+    const checkboxClass = (checked: boolean) =>
+        cn(
+            'flex size-5 min-w-5 shrink-0 items-center justify-center rounded border',
+            'transition-colors duration-[400ms] ease-out',
+            checked
+                ? 'border-brand-500 bg-brand-500 text-white'
+                : 'border-neutral-600 bg-transparent'
+        );
+
+    const containerClass = () =>
         cn(
             'flex w-full max-w-full min-w-0 items-center gap-3 px-3 py-3',
             'cursor-pointer',
@@ -175,6 +220,7 @@ export function StaticDropdown({
             <CollapsibleTrigger asChild>
                 <button
                     type="button"
+                    data-validation-control
                     disabled={readOnly}
                     className={cn(
                         'flex min-w-0 items-center justify-between gap-2',
@@ -187,7 +233,7 @@ export function StaticDropdown({
                         'transition-colors',
                         readOnly && 'cursor-not-allowed opacity-50',
                         isInvalid
-                            ? 'border-danger-400'
+                            ? 'border-[var(--danger-500)]'
                             : 'border-neutral-700/60'
                     )}
                 >
@@ -242,7 +288,7 @@ export function StaticDropdown({
                     <div className="flex flex-col gap-1 px-1">
                         {searchResults.length === 0 &&
                             searchQuery.trim() === '' &&
-                            !selectedValue && (
+                            selectedValues.length === 0 && (
                                 <div className="px-3 py-3 text-center text-sm text-neutral-400">
                                     No results found
                                 </div>
@@ -253,17 +299,31 @@ export function StaticDropdown({
                             return (
                                 <label
                                     key={`option-${option.value}-${idx}-${option.name}`}
-                                    className={containerClass(selected)}
+                                    className={containerClass()}
                                 >
                                     <input
-                                        type="radio"
+                                        type={
+                                            allowMultiple ? 'checkbox' : 'radio'
+                                        }
                                         checked={selected}
                                         onChange={() => handleToggle(option)}
                                         className="sr-only"
                                     />
-                                    <div
-                                        className={radioCircleClass(selected)}
-                                    />
+                                    {allowMultiple ? (
+                                        <div
+                                            className={checkboxClass(selected)}
+                                        >
+                                            {selected && (
+                                                <Check className="size-3.5" />
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div
+                                            className={radioCircleClass(
+                                                selected
+                                            )}
+                                        />
+                                    )}
                                     <span className="max-w-full min-w-0 flex-1 text-base font-normal text-pretty break-words text-white">
                                         {option.name}
                                     </span>
@@ -289,13 +349,10 @@ export function StaticDropdown({
                                 </button>
                             )}
 
-                        {allowCustom && (
+                        {allowCustom && !allowMultiple && (
                             <div className="flex flex-col">
                                 <label
-                                    className={cn(
-                                        containerClass(isOtherSelected),
-                                        'pb-0'
-                                    )}
+                                    className={cn(containerClass(), 'pb-0')}
                                     onClick={(e) => {
                                         if (
                                             e.target instanceof HTMLInputElement
