@@ -1,0 +1,19 @@
+.field {
+    position: relative;
+}
+
+.field:has(> input:user-invalid)::after,
+form[data-validated] .field:has(> input:invalid)::after {
+    content: var(--errorMsg);
+    color: var(--color-danger-400);
+    font-size: smaller;
+    max-width: calc(100% - 2rem);
+    line-height: 1rem;
+    display: block;
+    padding-top: 0.2rem;
+}
+
+.field:has(> input:user-invalid) [data-validation-control],
+form[data-validated] .field:has(> input:invalid) [data-validation-control] {
+    border-color: var(--danger-500) !important;
+}
