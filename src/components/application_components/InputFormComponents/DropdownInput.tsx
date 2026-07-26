@@ -1,11 +1,11 @@
 'use client';
 
-import { type PrimitiveAtom, useAtom, useAtomValue, WritableAtom } from 'jotai';
+import { type PrimitiveAtom, useAtom, WritableAtom } from 'jotai';
 import type { QuestionDropdown } from '../types';
 import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { finalErrCheckAtom } from '../InputForm';
 import { StaticDropdown } from '@/components/ui/StaticDropdown/StaticDropdown';
+import style from './DropdownInput.module.css';
 
 export function DropdownInput({
     dataAtom,
@@ -20,7 +20,6 @@ export function DropdownInput({
     const [errorMsg, setErrorMsg] = useState('');
     const [isInvalid, setIsInvalid] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
-    const showErrors = useAtomValue(finalErrCheckAtom);
 
     const selectedValue =
         typeof question.value === 'string' ? question.value : '';
@@ -30,7 +29,7 @@ export function DropdownInput({
 
         let message = '';
 
-        if (question.required && showErrors) {
+        if ((question.required ?? false) && !disabled) {
             if (
                 typeof selectedValue !== 'string' ||
                 selectedValue.trim().length === 0
@@ -41,26 +40,22 @@ export function DropdownInput({
 
         inputRef.current.setCustomValidity(message);
         setErrorMsg(message);
-        setIsInvalid(message !== '');
-    }, [selectedValue, question.required, showErrors]);
+        if (!message) {
+            setIsInvalid(false);
+        }
+    }, [disabled, selectedValue, question.required]);
 
     const staticChoices = question.choices.map((choice) => ({
         value: choice.data,
         name: choice.name,
     }));
 
+    const inputValue =
+        selectedValue && selectedValue.trim().length > 0 ? selectedValue : '';
+
     return (
         <div
-            className={cn(
-                'relative',
-                isInvalid && [
-                    'after:content-[var(--errorMsg)]',
-                    'after:block',
-                    'after:text-xs',
-                    'after:text-danger-400',
-                    'after:mt-2',
-                ]
-            )}
+            className={style.field}
             style={
                 {
                     '--errorMsg': `"${errorMsg}"`,
@@ -71,13 +66,18 @@ export function DropdownInput({
                 ref={inputRef}
                 type="text"
                 style={{ display: 'none' }}
-                required={question.required}
-                defaultValue="na"
+                required={(question.required ?? false) && !disabled}
+                value={inputValue}
+                onChange={() => {}}
+                onInvalid={() => {
+                    setIsInvalid(true);
+                }}
             />
             <StaticDropdown
                 staticChoices={staticChoices}
                 initialData={selectedValue}
                 onChange={(val) => {
+                    if (val?.trim()) setIsInvalid(false);
                     setQuestion({ ...question, value: val });
                 }}
                 required={(question.required ?? false) && !disabled}
