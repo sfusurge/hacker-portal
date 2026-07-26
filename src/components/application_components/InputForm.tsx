@@ -83,10 +83,8 @@ import { InlineInput } from '@/components/application_components/InputFormCompon
 import { DateInput } from '@/components/application_components/InputFormComponents/DateInput';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import ReviewApplicationDialog from './ReviewApplicationDialog';
-import {
-    isSubmissionQuestionDisabled,
-    questionValueMatches,
-} from '@/lib/projects/submissionFormQuestions';
+import { isSubmissionQuestionDisabled } from '@/lib/projects/submissionFormQuestions';
+import { questionValueMatches } from '@/lib/applications/questionValueMatches';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { MobileTopNav } from './MobileTopHeader';
 
