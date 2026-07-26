@@ -30,6 +30,7 @@ export const isChoiceType = (type?: string) =>
 export const usesAllowOther = (type?: string) => type === 'multiple-checkbox';
 export const usesAllowCustom = (type?: string) =>
     type === 'multiple-choice' || type === 'dropdown';
+export const usesAllowMultiple = (type?: string) => type === 'dropdown';
 
 export const PLACEHOLDER_TYPES = [
     'text-line',

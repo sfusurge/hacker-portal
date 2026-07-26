@@ -7,6 +7,16 @@ import { cn } from '@/lib/utils';
 import { finalErrCheckAtom } from '../InputForm';
 import { StaticDropdown } from '@/components/ui/StaticDropdown/StaticDropdown';
 
+function hasDropdownSelection(
+    value: QuestionDropdown['value'],
+    allowMultiple?: boolean
+): boolean {
+    if (allowMultiple) {
+        return Array.isArray(value) && value.length > 0;
+    }
+    return typeof value === 'string' && value.trim().length > 0;
+}
+
 export function DropdownInput({
     dataAtom,
     disabled = false,
@@ -21,9 +31,7 @@ export function DropdownInput({
     const [isInvalid, setIsInvalid] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const showErrors = useAtomValue(finalErrCheckAtom);
-
-    const selectedValue =
-        typeof question.value === 'string' ? question.value : '';
+    const allowMultiple = question.allowMultiple ?? false;
 
     useEffect(() => {
         if (!inputRef.current) return;
@@ -31,23 +39,32 @@ export function DropdownInput({
         let message = '';
 
         if (question.required && showErrors) {
-            if (
-                typeof selectedValue !== 'string' ||
-                selectedValue.trim().length === 0
-            ) {
-                message = 'Required, please select an option';
+            if (!hasDropdownSelection(question.value, allowMultiple)) {
+                message = allowMultiple
+                    ? 'Required, please select at least one option'
+                    : 'Required, please select an option';
             }
         }
 
         inputRef.current.setCustomValidity(message);
         setErrorMsg(message);
         setIsInvalid(message !== '');
-    }, [selectedValue, question.required, showErrors]);
+    }, [question.value, question.required, showErrors, allowMultiple]);
 
     const staticChoices = question.choices.map((choice) => ({
         value: choice.data,
         name: choice.name,
     }));
+
+    const initialData = allowMultiple
+        ? Array.isArray(question.value)
+            ? question.value
+            : typeof question.value === 'string' && question.value
+              ? [question.value]
+              : []
+        : typeof question.value === 'string'
+          ? question.value
+          : '';
 
     return (
         <div
@@ -76,7 +93,7 @@ export function DropdownInput({
             />
             <StaticDropdown
                 staticChoices={staticChoices}
-                initialData={selectedValue}
+                initialData={initialData}
                 onChange={(val) => {
                     setQuestion({ ...question, value: val });
                 }}
@@ -90,6 +107,7 @@ export function DropdownInput({
                 isInvalid={isInvalid}
                 allowCustom={question.allowCustom}
                 customPlaceHolder={question.customPlaceHolder}
+                allowMultiple={allowMultiple}
                 description={
                     question.dropdownDescription || question.description
                 }

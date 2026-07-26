@@ -83,7 +83,10 @@ import { InlineInput } from '@/components/application_components/InputFormCompon
 import { DateInput } from '@/components/application_components/InputFormComponents/DateInput';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import ReviewApplicationDialog from './ReviewApplicationDialog';
-import { isSubmissionQuestionDisabled } from '@/lib/projects/submissionFormQuestions';
+import {
+    isSubmissionQuestionDisabled,
+    questionValueMatches,
+} from '@/lib/projects/submissionFormQuestions';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { MobileTopNav } from './MobileTopHeader';
 
@@ -490,8 +493,14 @@ function Question({
     const { visibleWhen } = question;
 
     const isVisible = visibleWhen
-        ? (siblings.find((q) => q.questionId === visibleWhen.questionId) as any)
-              ?.value === visibleWhen.value
+        ? questionValueMatches(
+              (
+                  siblings.find(
+                      (q) => q.questionId === visibleWhen.questionId
+                  ) as { value?: unknown } | undefined
+              )?.value,
+              visibleWhen.value
+          )
         : true;
 
     const isDisabled = isSubmissionQuestionDisabled(question, siblings);
