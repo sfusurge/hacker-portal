@@ -125,6 +125,12 @@ const adminLinks = [
         icon: <EnvelopeIcon className="h-6 w-6" />,
         iconAlt: 'Emails logo',
     },
+    {
+        href: '/admin/email/queue',
+        label: 'Email Queue',
+        icon: <InboxStackIcon className="h-6 w-6" />,
+        iconAlt: 'Email queue logo',
+    },
 ];
 
 // JUDGES CAN ONLY SEE THESE LINKS
