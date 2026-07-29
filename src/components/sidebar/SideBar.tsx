@@ -12,6 +12,7 @@ import {
     ChartBarIcon,
     MegaphoneIcon,
     TrophyIcon,
+    HomeModernIcon,
 } from '@heroicons/react/24/outline';
 
 import { HomeIcon } from '@heroicons/react/24/outline';
@@ -113,6 +114,12 @@ const adminLinks = [
         label: 'Hacker Checkin',
         icon: <QrCodeIcon className="h-6 w-6" />,
         iconAlt: 'QR logo',
+    },
+    {
+        href: '/admin/houses',
+        label: 'Houses',
+        icon: <HomeModernIcon className="h-6 w-6" />,
+        iconAlt: 'Houses logo',
     },
     {
         href: '/admin/review',
