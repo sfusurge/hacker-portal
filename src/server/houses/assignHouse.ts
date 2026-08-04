@@ -1,7 +1,7 @@
 import { databaseClient } from '@/db/client';
 import { applications } from '@/db/schema/applications';
 import {
-    HOUSES_PER_HACKATHON,
+    MAX_HOUSES_PER_HACKATHON,
     houseMemberships,
     houses,
 } from '@/db/schema/houses';
@@ -118,10 +118,17 @@ export async function assignUnassignedHouses(
         .from(houses)
         .where(eq(houses.hackathonId, hackathonId));
 
-    if (houseRows.length !== HOUSES_PER_HACKATHON) {
+    if (houseRows.length === 0) {
         throw new TRPCError({
             code: 'PRECONDITION_FAILED',
-            message: `Need exactly ${HOUSES_PER_HACKATHON} houses before assigning`,
+            message: 'Create houses for this hackathon before assigning',
+        });
+    }
+
+    if (houseRows.length > MAX_HOUSES_PER_HACKATHON) {
+        throw new TRPCError({
+            code: 'PRECONDITION_FAILED',
+            message: `A hackathon can have at most ${MAX_HOUSES_PER_HACKATHON} houses`,
         });
     }
 
