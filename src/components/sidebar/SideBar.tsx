@@ -21,6 +21,7 @@ import { EnvelopeIcon } from '@heroicons/react/24/outline';
 import { authClient } from '@/auth/auth-client';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
+import { HomeModernIcon } from '@heroicons/react/24/outline';
 import React from 'react';
 import { motion } from 'motion/react';
 import {
@@ -125,6 +126,12 @@ const adminLinks = [
         label: 'Emails',
         icon: <EnvelopeIcon className="h-6 w-6" />,
         iconAlt: 'Emails logo',
+    },
+    {
+        href: '/admin/houses',
+        label: 'Houses',
+        icon: <HomeModernIcon className="h-6 w-6" />,
+        iconAlt: 'Houses logo',
     },
 ];
 
