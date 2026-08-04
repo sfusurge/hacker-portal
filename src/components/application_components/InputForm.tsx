@@ -191,7 +191,7 @@ export function InputForm({
     // mobile conditional render
     const isMobile = useMediaQuery('(max-width: 767.5px)');
 
-    const [isReviewPage, setIsReviewPage] = useAtom(isReviewPageAtom);
+    const setIsReviewPage = useSetAtom(isReviewPageAtom);
     useEffect(() => {
         setIsReviewPage(currentPageIndex === pagesAtoms.length);
     }, [currentPageIndex, pagesAtoms.length, setIsReviewPage]);
@@ -228,8 +228,7 @@ export function InputForm({
             className={cn(
                 style.appFormRoot,
                 applicationType === 'application' && 'max-md:-mt-20',
-                applicationType === 'submission' && style.submissionForm,
-                isReviewPage && style.reviewPageWrapper
+                applicationType === 'submission' && style.submissionForm
             )}
         >
             {applicationType === 'application' && isMobile && (

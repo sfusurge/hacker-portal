@@ -33,15 +33,6 @@
     border-radius: 12px;
 }
 
-.reviewPageWrapper {
-    max-width: none;
-}
-
-.reviewPageWrapper .appFormWrapper {
-    background-color: transparent;
-    border: none;
-}
-
 .appFormContent {
     position: relative;
     display: flex;
