@@ -134,12 +134,6 @@ const adminLinks = [
         icon: <EnvelopeIcon className="h-6 w-6" />,
         iconAlt: 'Emails logo',
     },
-    {
-        href: '/admin/houses',
-        label: 'Houses',
-        icon: <HomeModernIcon className="h-6 w-6" />,
-        iconAlt: 'Houses logo',
-    },
 ];
 
 // JUDGES CAN ONLY SEE THESE LINKS
