@@ -88,3 +88,17 @@ export const getHouseTopScorersSchema = z.object({
     hackathonId: z.number().int(),
     limit: z.number().int().min(1).max(20).optional().default(5),
 });
+
+export const addHouseSchema = z.object({
+    hackathonId: z.number().int(),
+    name: z.string().trim().min(1).max(128),
+});
+
+export const renameHouseSchema = z.object({
+    houseId: z.number().int(),
+    name: z.string().trim().min(1).max(128),
+});
+
+export const deleteHouseSchema = z.object({
+    houseId: z.number().int(),
+});

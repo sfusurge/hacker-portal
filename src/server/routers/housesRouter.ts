@@ -2,7 +2,11 @@ import { databaseClient } from '@/db/client';
 import { checkIns } from '@/db/schema/checkIn';
 import { events } from '@/db/schema/events';
 import {
+    MAX_HOUSES_PER_HACKATHON,
     assignHousesSchema,
+    addHouseSchema,
+    deleteHouseSchema,
+    renameHouseSchema,
     createHousesSchema,
     getHouseForUserSchema,
     getHouseStandingsSchema,
@@ -68,6 +72,64 @@ export const housesRouter = router({
             }
 
             return created;
+        }),
+    addHouse: publicProcedure
+        .input(addHouseSchema)
+        .mutation(async ({ input }) => {
+            await requireAdmin();
+
+            const existing = await databaseClient
+                .select({ id: houses.id })
+                .from(houses)
+                .where(eq(houses.hackathonId, input.hackathonId));
+
+            if (existing.length >= MAX_HOUSES_PER_HACKATHON) {
+                throw new TRPCError({
+                    code: 'PRECONDITION_FAILED',
+                    message: `A hackathon can have at most ${MAX_HOUSES_PER_HACKATHON} houses`,
+                });
+            }
+
+            const [house] = await databaseClient
+                .insert(houses)
+                .values({
+                    hackathonId: input.hackathonId,
+                    name: input.name,
+                })
+                .returning();
+
+            return house;
+        }),
+
+    renameHouse: publicProcedure
+        .input(renameHouseSchema)
+        .mutation(async ({ input }) => {
+            await requireAdmin();
+
+            const [house] = await databaseClient
+                .update(houses)
+                .set({ name: input.name })
+                .where(eq(houses.id, input.houseId))
+                .returning();
+
+            if (!house) {
+                throw new TRPCError({
+                    code: 'NOT_FOUND',
+                    message: 'House not found',
+                });
+            }
+
+            return house;
+        }),
+
+    deleteHouse: publicProcedure
+        .input(deleteHouseSchema)
+        .mutation(async ({ input }) => {
+            await requireAdmin();
+
+            return await databaseClient
+                .delete(houses)
+                .where(eq(houses.id, input.houseId));
         }),
 
     getHouses: publicProcedure
