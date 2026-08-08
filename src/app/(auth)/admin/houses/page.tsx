@@ -7,6 +7,7 @@ import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { trpc } from '@/trpc/client';
 import { Button } from '@/components/ui/button';
 import { FormTextInput } from '@/components/ui/input/input';
+import { toast } from '@/hooks/use-toast';
 import {
     Table,
     TableBody,
@@ -206,33 +207,96 @@ function ManageHouses({
     }
 
     const createHouses = trpc.houses.createHouses.useMutation({
-        onSuccess: invalidateAll,
+        onSuccess: () => {
+            toast({
+                title: 'Houses created!',
+                description: 'Your houses have been created successfully.',
+                variant: 'default',
+            });
+            invalidateAll();
+        },
+        onError: (err) => {
+            toast({
+                title: 'Failed to create houses',
+                description: err.message,
+                variant: 'error',
+            });
+        },
     });
     const assignUnassigned = trpc.houses.assignUnassignedHouses.useMutation({
-        onSuccess: invalidateAll,
+        onSuccess: (data) => {
+            toast({
+                title: 'Hackers assigned!',
+                description: `Assigned ${data.assigned} hackers to houses.`,
+                variant: 'default',
+            });
+            invalidateAll();
+        },
+        onError: (err) => {
+            toast({
+                title: 'Failed to assign hackers',
+                description: err.message,
+                variant: 'error',
+            });
+        },
     });
     const addHouse = trpc.houses.addHouse.useMutation({
         onSuccess: () => {
+            toast({
+                title: 'House added!',
+                description: 'The new house was created successfully.',
+                variant: 'default',
+            });
             setNewHouseName('');
             setAddHouseKey((k) => k + 1);
             invalidateAll();
         },
+        onError: (err) => {
+            toast({
+                title: 'Failed to add house',
+                description: err.message,
+                variant: 'error',
+            });
+        },
     });
+
     const renameHouse = trpc.houses.renameHouse.useMutation({
         onSuccess: () => {
+            toast({
+                title: 'House renamed!',
+                description: 'The house name was updated successfully.',
+                variant: 'default',
+            });
             setEditingId(null);
             invalidateAll();
         },
-    });
-    const deleteHouse = trpc.houses.deleteHouse.useMutation({
-        onSuccess: invalidateAll,
+        onError: (err) => {
+            toast({
+                title: 'Failed to rename house',
+                description: err.message,
+                variant: 'error',
+            });
+        },
     });
 
-    function updateName(id: number, value: string) {
-        setNames((prev) =>
-            prev.map((n) => (n.id === id ? { ...n, value } : n))
-        );
-    }
+    const deleteHouse = trpc.houses.deleteHouse.useMutation({
+        onSuccess: () => {
+            toast({
+                title: 'House deleted',
+                description:
+                    'The house and its member assignments were removed.',
+                variant: 'default',
+            });
+            invalidateAll();
+        },
+        onError: (err) => {
+            toast({
+                title: 'Failed to delete house',
+                description: err.message,
+                variant: 'error',
+            });
+        },
+    });
 
     function addHouseField() {
         setNames((prev) =>
@@ -315,11 +379,6 @@ function ManageHouses({
                                 : 'Create Houses'}
                         </Button>
                     </div>
-                    {createHouses.error && (
-                        <p className="text-danger-300 text-sm">
-                            {createHouses.error.message}
-                        </p>
-                    )}
                 </div>
             )}
 
@@ -431,11 +490,6 @@ function ManageHouses({
                             {addHouse.isPending ? 'Adding...' : '+ Add House'}
                         </Button>
                     </div>
-                    {addHouse.error && (
-                        <p className="text-danger-300 text-sm">
-                            {addHouse.error.message}
-                        </p>
-                    )}
                 </div>
             )}
 
@@ -502,38 +556,6 @@ export default function HousesPage() {
                     No active hackathon selected.
                 </p>
             </div>
-        );
-    }
-
-    let body;
-    if (isLoading) {
-        body = <p className="text-neutral-400">Loading standings…</p>;
-    } else if (error) {
-        body = (
-            <p className="text-danger-300">
-                Error loading standings: {error.message}
-            </p>
-        );
-    } else if (standings.length === 0) {
-        body = <ManageHouses hackathonId={hackathonId} />;
-    } else {
-        body = (
-            <>
-                <ManageHouses hackathonId={hackathonId} />
-                <section className="space-y-4">
-                    <h2 className="text-lg font-semibold">Standings</h2>
-                    <StandingsTable standings={standings} />
-                </section>
-                <section className="space-y-4">
-                    <h2 className="text-lg font-semibold">
-                        Top scorers by house
-                    </h2>
-                    <TopScorersTabs
-                        houses={standings}
-                        scorersByHouse={scorersByHouse}
-                    />
-                </section>
-            </>
         );
     }
 
