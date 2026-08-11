@@ -1,14 +1,18 @@
 'use client';
 
 import { useEffect, useState, useMemo, useRef } from 'react';
-import { ChevronsUpDown, Plus, Check } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { FormTextInput } from '@/components/ui/input/input';
+import {
+    ComboboxCheckboxIndicator,
+    ComboboxEmptyState,
+    ComboboxOptionRow,
+    ComboboxRadioIndicator,
+    ComboboxSearchInput,
+    ComboboxShell,
+    comboboxNativeControlClass,
+} from '@/components/ui/combobox/ComboboxShared';
 
 export type StaticDropdownOption = {
     value: string;
@@ -30,8 +34,7 @@ type StaticDropdownProps = {
 };
 
 function normalizeInitialValues(
-    initialData: string | string[] | undefined,
-    allowMultiple: boolean
+    initialData: string | string[] | undefined
 ): string[] {
     if (Array.isArray(initialData)) {
         return initialData.filter((v) => typeof v === 'string' && v.length > 0);
@@ -60,14 +63,15 @@ export function StaticDropdown({
     const [customValue, setCustomValue] = useState('');
     const [isOtherSelected, setIsOtherSelected] = useState(false);
     const [selectedValues, setSelectedValues] = useState<string[]>(() =>
-        normalizeInitialValues(initialData, allowMultiple)
+        normalizeInitialValues(initialData)
     );
     const isManualSwitchToOther = useRef(false);
 
     const selectedValue = selectedValues[0] ?? '';
+    const showSearch = staticChoices.length > 10;
 
     useEffect(() => {
-        const next = normalizeInitialValues(initialData, allowMultiple);
+        const next = normalizeInitialValues(initialData);
         setSelectedValues((prev) => {
             if (
                 prev.length === next.length &&
@@ -77,7 +81,7 @@ export function StaticDropdown({
             }
             return next;
         });
-    }, [initialData, allowMultiple]);
+    }, [initialData]);
 
     useEffect(() => {
         if (allowMultiple || !allowCustom) {
@@ -99,6 +103,8 @@ export function StaticDropdown({
         } else if (selectedValue) {
             setIsOtherSelected(true);
             setCustomValue(selectedValue);
+        } else {
+            setIsOtherSelected(false);
         }
     }, [allowCustom, allowMultiple, selectedValue, staticChoices]);
 
@@ -120,6 +126,13 @@ export function StaticDropdown({
                 : [...selectedValues, option.value];
             setSelectedValues(next);
             emitChange(next);
+            return;
+        }
+
+        // Allow deselecting a single-select option by clicking it again
+        if (selectedValues.includes(option.value) && !isOtherSelected) {
+            setSelectedValues([]);
+            emitChange([]);
             return;
         }
 
@@ -145,8 +158,10 @@ export function StaticDropdown({
         }
 
         setCustomValue(customVal);
+        setIsOtherSelected(true);
         setSelectedValues([customVal]);
         emitChange([customVal]);
+        setSearchQuery('');
         setOpen(false);
     };
 
@@ -154,6 +169,21 @@ export function StaticDropdown({
         setCustomValue(value);
         setSelectedValues(value ? [value] : []);
         emitChange(value ? [value] : []);
+    };
+
+    const selectOther = () => {
+        isManualSwitchToOther.current = true;
+        setIsOtherSelected(true);
+        setSelectedValues(customValue ? [customValue] : []);
+        emitChange(customValue ? [customValue] : []);
+        // Keep the menu open so the nested "Please Specify" field stays visible
+    };
+
+    const clearSelection = () => {
+        setIsOtherSelected(false);
+        setCustomValue('');
+        setSelectedValues([]);
+        emitChange([]);
     };
 
     const searchResults = useMemo(() => {
@@ -167,6 +197,10 @@ export function StaticDropdown({
     }, [staticChoices, searchQuery]);
 
     const getDisplayText = () => {
+        if (isOtherSelected) {
+            return customValue.trim() || 'Other';
+        }
+
         if (selectedValues.length === 0) return placeholder;
 
         if (allowMultiple && selectedValues.length > 1) {
@@ -179,229 +213,145 @@ export function StaticDropdown({
     };
 
     const isSelected = (value: string) => selectedValues.includes(value);
+    const hasValue = selectedValues.length > 0 || isOtherSelected;
 
-    const radioCircleClass = (checked: boolean) =>
-        cn(
-            'size-5 shrink-0 rounded-full box-border',
-            'transition-all duration-[400ms] ease-out',
-            checked
-                ? 'border-[6px] border-brand-500 bg-white'
-                : 'border border-neutral-600 bg-transparent'
-        );
-
-    const checkboxClass = (checked: boolean) =>
-        cn(
-            'flex size-5 min-w-5 shrink-0 items-center justify-center rounded border',
-            'transition-colors duration-[400ms] ease-out',
-            checked
-                ? 'border-brand-500 bg-brand-500 text-white'
-                : 'border-neutral-600 bg-transparent'
-        );
-
-    const containerClass = () =>
-        cn(
-            'flex w-full max-w-full min-w-0 items-center gap-3 px-3 py-3',
-            'cursor-pointer',
-            'transition-colors duration-[400ms] ease-out',
-            'min-h-[48px]'
+    const canAddFromSearch =
+        allowCustom &&
+        searchQuery.trim() &&
+        !staticChoices.find(
+            (o) => o.name.toLowerCase() === searchQuery.trim().toLowerCase()
         );
 
     return (
-        <Collapsible
+        <ComboboxShell
             open={open}
             onOpenChange={(newOpen) => {
                 setOpen(newOpen);
-                if (newOpen) {
-                    setSearchQuery('');
-                }
+                if (newOpen) setSearchQuery('');
             }}
-            className="w-full max-w-[480px] min-w-0"
-        >
-            <CollapsibleTrigger asChild>
-                <button
-                    type="button"
-                    data-validation-control
-                    disabled={readOnly}
-                    className={cn(
-                        'flex min-w-0 items-center justify-between gap-2',
-                        'min-h-[44px] w-full max-w-full',
-                        'rounded-lg border',
-                        'bg-neutral-800/60 backdrop-blur',
-                        'px-4 py-2',
-                        'text-base font-medium text-white',
-                        'focus:ring-brand-500/50 focus:ring-2 focus:outline-none',
-                        'transition-colors',
-                        readOnly && 'cursor-not-allowed opacity-50',
-                        isInvalid
-                            ? 'border-[var(--danger-500)]'
-                            : 'border-neutral-700/60'
+            displayText={getDisplayText()}
+            placeholder={placeholder}
+            readOnly={readOnly}
+            isInvalid={isInvalid}
+            hasValue={hasValue}
+            onClear={clearSelection}
+            header={
+                <>
+                    {showSearch && (
+                        <ComboboxSearchInput
+                            value={searchQuery}
+                            onChange={setSearchQuery}
+                            onEnter={() => {
+                                if (allowCustom) handleAddCustom();
+                            }}
+                            autoFocus
+                        />
                     )}
-                >
-                    <span className="max-w-full min-w-0 flex-1 truncate text-left">
-                        {getDisplayText()}
-                    </span>
-                    <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
-                </button>
-            </CollapsibleTrigger>
-
-            <CollapsibleContent className="mt-2">
-                <div
-                    className={cn(
-                        'bg-neutral-800/60 p-1 backdrop-blur',
-                        'rounded-lg border border-neutral-700/30',
-                        'max-h-120 w-full max-w-[480px] overflow-y-auto'
-                    )}
-                >
-                    {staticChoices.length > 10 && (
-                        <div className="px-2 py-2 pb-1">
-                            <input
-                                type="text"
-                                placeholder="Search..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        if (allowCustom) {
-                                            handleAddCustom();
-                                        }
-                                    }
-                                }}
-                                className={cn(
-                                    'w-full rounded px-3 py-2 text-sm',
-                                    'border border-neutral-600/50 bg-neutral-700/40',
-                                    'text-white placeholder:text-neutral-500',
-                                    'focus:ring-brand-500/50 focus:ring-2 focus:outline-none'
-                                )}
-                            />
-                        </div>
-                    )}
-
                     {description && (
-                        <div className="px-2 py-2 pb-1">
-                            <p className="text-xs font-medium tracking-wide text-neutral-400 uppercase">
+                        <div className="w-full px-2 pt-2 pb-1">
+                            <p className="font-mono text-xs leading-tight font-medium text-[var(--text-secondary)] uppercase">
                                 {description}
                             </p>
                         </div>
                     )}
+                </>
+            }
+        >
+            <div className="flex flex-col gap-1">
+                {searchResults.length === 0 && (
+                    <ComboboxEmptyState>
+                        {searchQuery.trim()
+                            ? 'No results found'
+                            : 'No options available'}
+                    </ComboboxEmptyState>
+                )}
 
-                    <div className="flex flex-col gap-1 px-1">
-                        {searchResults.length === 0 &&
-                            searchQuery.trim() === '' &&
-                            selectedValues.length === 0 && (
-                                <div className="px-3 py-3 text-center text-sm text-neutral-400">
-                                    No results found
-                                </div>
+                {searchResults.map((option, idx) => {
+                    const selected =
+                        isSelected(option.value) && !isOtherSelected;
+                    return (
+                        <ComboboxOptionRow
+                            key={`option-${option.value}-${idx}-${option.name}`}
+                            selected={selected}
+                        >
+                            <input
+                                type={allowMultiple ? 'checkbox' : 'radio'}
+                                checked={selected}
+                                onChange={() => handleToggle(option)}
+                                className={comboboxNativeControlClass}
+                            />
+                            {allowMultiple ? (
+                                <ComboboxCheckboxIndicator checked={selected} />
+                            ) : (
+                                <ComboboxRadioIndicator checked={selected} />
                             )}
+                            <span className="max-w-full min-w-0 flex-1 text-base font-normal text-pretty break-words text-white">
+                                {option.name}
+                            </span>
+                        </ComboboxOptionRow>
+                    );
+                })}
 
-                        {searchResults.map((option, idx) => {
-                            const selected = isSelected(option.value);
-                            return (
-                                <label
-                                    key={`option-${option.value}-${idx}-${option.name}`}
-                                    className={containerClass()}
-                                >
-                                    <input
-                                        type={
-                                            allowMultiple ? 'checkbox' : 'radio'
-                                        }
-                                        checked={selected}
-                                        onChange={() => handleToggle(option)}
-                                        className="sr-only"
-                                    />
-                                    {allowMultiple ? (
-                                        <div
-                                            className={checkboxClass(selected)}
-                                        >
-                                            {selected && (
-                                                <Check className="size-3.5" />
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <div
-                                            className={radioCircleClass(
-                                                selected
-                                            )}
-                                        />
-                                    )}
-                                    <span className="max-w-full min-w-0 flex-1 text-base font-normal text-pretty break-words text-white">
-                                        {option.name}
-                                    </span>
-                                </label>
-                            );
-                        })}
+                {canAddFromSearch && (
+                    <button
+                        type="button"
+                        onClick={handleAddCustom}
+                        className="mt-1 flex w-full cursor-pointer items-center gap-3 rounded-lg border-t border-neutral-700 px-3 py-3 text-left transition-colors hover:bg-neutral-700/30"
+                    >
+                        <Plus className="size-4 shrink-0 text-neutral-400" />
+                        <span className="min-w-0 flex-1 truncate text-base font-normal text-white">
+                            Add &quot;{searchQuery.trim()}&quot;
+                        </span>
+                    </button>
+                )}
 
-                        {allowCustom &&
-                            searchQuery.trim() &&
-                            !staticChoices.find(
-                                (o) =>
-                                    o.name.toLowerCase() ===
-                                    searchQuery.trim().toLowerCase()
-                            ) && (
-                                <button
-                                    onClick={handleAddCustom}
-                                    className="mt-2 flex w-full cursor-pointer items-center gap-3 rounded-lg border-t border-neutral-700 px-3 py-3 pt-2 text-left transition-colors hover:bg-neutral-700/30"
-                                >
-                                    <Plus className="size-4 shrink-0 text-neutral-400" />
-                                    <span className="min-w-0 flex-1 truncate text-base font-normal text-white">
-                                        Add &quot;{searchQuery.trim()}&quot;
-                                    </span>
-                                </button>
-                            )}
-
-                        {allowCustom && !allowMultiple && (
-                            <div className="flex flex-col">
-                                <label
-                                    className={cn(containerClass(), 'pb-0')}
-                                    onClick={(e) => {
-                                        if (
-                                            e.target instanceof HTMLInputElement
-                                        )
-                                            return;
-                                        isManualSwitchToOther.current = true;
-                                        setIsOtherSelected(true);
-                                        onChange(customValue);
-                                    }}
-                                >
-                                    <input
-                                        type="radio"
-                                        checked={isOtherSelected}
-                                        onChange={() => {
-                                            isManualSwitchToOther.current =
-                                                true;
-                                            setIsOtherSelected(true);
-                                            onChange(customValue);
-                                        }}
-                                        className="sr-only"
-                                    />
-                                    <div
-                                        className={radioCircleClass(
-                                            isOtherSelected
-                                        )}
-                                    />
-                                    <span className="max-w-full min-w-0 flex-1 text-base font-normal text-white">
-                                        Other
-                                    </span>
-                                </label>
-                                <div className="mr-3 mb-3 ml-11">
-                                    <FormTextInput
-                                        type="text"
-                                        lazy
-                                        timeOut={500}
-                                        onLazyChange={handleCustomInputChange}
-                                        defaultValue={customValue}
-                                        placeholder={customPlaceHolder}
-                                        required={required && isOtherSelected}
-                                        style={{ width: '100%' }}
-                                        hideBackground
-                                        className="overflow-hidden pt-0 pb-0 transition-all duration-300 ease-out placeholder:!text-white/60"
-                                    />
-                                </div>
-                            </div>
+                {allowCustom && !allowMultiple && (
+                    <div
+                        className={cn(
+                            'flex flex-col gap-0.5 rounded-lg p-3',
+                            isOtherSelected &&
+                                'bg-[var(--background-brand-focus)]'
                         )}
+                    >
+                        <div className="relative flex items-center gap-3">
+                            <input
+                                type="radio"
+                                checked={isOtherSelected}
+                                onChange={selectOther}
+                                onClick={(e) => {
+                                    if (isOtherSelected) {
+                                        e.preventDefault();
+                                        clearSelection();
+                                    }
+                                }}
+                                className={comboboxNativeControlClass}
+                            />
+                            <ComboboxRadioIndicator checked={isOtherSelected} />
+                            <span className="max-w-full min-w-0 flex-1 text-base font-normal text-white">
+                                Other
+                            </span>
+                        </div>
+                        <div
+                            className="relative z-20 flex h-8 w-full flex-col justify-center pl-8"
+                            onPointerDown={(e) => e.stopPropagation()}
+                        >
+                            <FormTextInput
+                                type="text"
+                                lazy
+                                timeOut={500}
+                                onLazyChange={handleCustomInputChange}
+                                defaultValue={customValue}
+                                placeholder={customPlaceHolder}
+                                required={required && isOtherSelected}
+                                style={{ width: '100%' }}
+                                hideBackground
+                                onFocus={selectOther}
+                                className="h-8 overflow-hidden pt-0 pb-0 text-sm transition-all duration-300 ease-out placeholder:!text-[var(--text-secondary)]"
+                            />
+                        </div>
                     </div>
-                </div>
-            </CollapsibleContent>
-        </Collapsible>
+                )}
+            </div>
+        </ComboboxShell>
     );
 }

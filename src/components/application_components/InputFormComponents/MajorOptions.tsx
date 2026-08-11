@@ -1,21 +1,16 @@
 'use client';
 
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import {
-    ChevronsUpDown,
-    Plus,
-    Check,
-    X,
-    ChevronDown,
-    ChevronUp,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+import { Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+    ComboboxCheckboxIndicator,
+    ComboboxEmptyState,
+    ComboboxOptionRow,
+    ComboboxSearchInput,
+    ComboboxShell,
+    comboboxNativeControlClass,
+} from '@/components/ui/combobox/ComboboxShared';
 
 export type MajorOptions = {
     value: string;
@@ -139,7 +134,7 @@ export function MajorOptions({
         if (!el) return;
         el.addEventListener('scroll', onScroll);
         return () => el.removeEventListener('scroll', onScroll);
-    }, [onScroll]);
+    }, [onScroll, open]);
 
     const handleToggle = (option: MajorOptions) => {
         const isSelected = selectedValues.includes(option.value);
@@ -208,6 +203,12 @@ export function MajorOptions({
         setSearchQuery('');
     };
 
+    const clearSelection = () => {
+        setSelectedValues([]);
+        setSelectedObjects([]);
+        onChange([]);
+    };
+
     const searchResults = useMemo(() => {
         return fetchedOptions.filter(
             (opt) => !selectedValues.includes(opt.value)
@@ -225,185 +226,134 @@ export function MajorOptions({
         return `Multiple Selected (${selectedValues.length})`;
     };
 
+    const showEmpty =
+        !isSearching &&
+        searchResults.length === 0 &&
+        !(
+            searchQuery.trim() &&
+            !fetchedOptions.find(
+                (o) => o.name.toLowerCase() === searchQuery.trim().toLowerCase()
+            )
+        );
+
     return (
-        <div className={cn('relative')}>
-            <Collapsible
-                open={open}
-                onOpenChange={(newOpen) => {
-                    setOpen(newOpen);
-                    if (newOpen && fetchedOptions.length === 0) {
-                        fetchMajors('', 0);
-                    }
-                }}
-                className="w-full max-w-[480px]"
-            >
-                <CollapsibleTrigger asChild>
+        <ComboboxShell
+            open={open}
+            onOpenChange={(newOpen) => {
+                setOpen(newOpen);
+                if (newOpen && fetchedOptions.length === 0) {
+                    fetchMajors('', 0);
+                }
+            }}
+            displayText={getDisplayText()}
+            placeholder={placeholder}
+            readOnly={readOnly}
+            isInvalid={isInvalid}
+            hasValue={selectedValues.length > 0}
+            onClear={clearSelection}
+            listRef={scrollRef}
+            stableListHeight
+            header={
+                <ComboboxSearchInput
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    onEnter={handleAddCustom}
+                    autoFocus
+                />
+            }
+        >
+            {selectedObjects.length > 0 && (
+                <div className="sticky top-0 z-10 mb-1 border-b border-neutral-700/50 bg-neutral-900/95 backdrop-blur-sm">
                     <button
                         type="button"
-                        data-validation-control
-                        disabled={readOnly}
-                        className={cn(
-                            'flex items-center justify-between gap-2',
-                            'min-h-[44px] w-full',
-                            'rounded-lg border border-neutral-700/60',
-                            'bg-neutral-800/60 backdrop-blur',
-                            'px-4 py-2',
-                            'text-base font-medium text-white',
-                            'focus:ring-brand-500/50 focus:ring-2 focus:outline-none',
-                            'transition-colors',
-                            isInvalid
-                                ? 'border-danger-400'
-                                : 'border-neutral-700/60'
-                        )}
+                        onClick={() => setSelectedExpanded(!selectedExpanded)}
+                        className="flex w-full items-center justify-between px-2 py-1 text-xs font-semibold tracking-wider text-neutral-400 uppercase transition-colors hover:text-neutral-300"
                     >
-                        <span className="min-w-0 flex-1 truncate text-left text-wrap">
-                            {getDisplayText()}
-                        </span>
-                        <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
+                        <span>Selected ({selectedObjects.length})</span>
+                        {selectedExpanded ? (
+                            <ChevronUp className="size-4" />
+                        ) : (
+                            <ChevronDown className="size-4" />
+                        )}
                     </button>
-                </CollapsibleTrigger>
-
-                <CollapsibleContent
-                    className={cn(
-                        'mt-2 w-full overflow-hidden p-1',
-                        'bg-neutral-800/60 backdrop-blur',
-                        'rounded-lg border border-neutral-700/30'
-                    )}
-                >
-                    <div className="px-2 py-2 pb-1">
-                        <input
-                            type="text"
-                            placeholder="Search..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    handleAddCustom();
-                                }
-                            }}
-                            className={cn(
-                                'w-full rounded px-3 py-2 text-sm',
-                                'border border-neutral-600/50 bg-neutral-700/40',
-                                'text-white placeholder:text-neutral-500',
-                                'focus:ring-brand-500/50 focus:ring-2 focus:outline-none'
-                            )}
-                        />
-                    </div>
-
-                    <div
-                        ref={scrollRef}
-                        className="relative mt-2 max-h-[60vh] overflow-y-auto px-1"
-                    >
-                        {selectedObjects.length > 0 && (
-                            <div className="sticky top-0 z-10 mb-2 rounded-xl border-b border-neutral-700/50 bg-neutral-900/95 backdrop-blur-sm">
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        setSelectedExpanded(!selectedExpanded)
-                                    }
-                                    className="flex w-full items-center justify-between px-2 py-1 text-xs font-semibold tracking-wider text-neutral-400 uppercase transition-colors hover:text-neutral-300"
-                                >
-                                    <span>
-                                        Selected ({selectedObjects.length})
-                                    </span>
-                                    {selectedExpanded ? (
-                                        <ChevronUp className="size-4" />
-                                    ) : (
-                                        <ChevronDown className="size-4" />
-                                    )}
-                                </button>
-                                {selectedExpanded && (
-                                    <div className="max-h-48 overflow-y-auto px-1 pb-1">
-                                        {selectedObjects.map((major) => (
-                                            <label
-                                                key={`selected-${major.value}`}
-                                                className="bg-brand-500/10 mb-0.5 flex w-full cursor-pointer items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-neutral-700/30"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={true}
-                                                    onChange={() =>
-                                                        handleToggle(major)
-                                                    }
-                                                    className="sr-only"
-                                                />
-                                                <div className="border-brand-500 bg-brand-500 flex size-5 min-w-5 shrink-0 items-center justify-center rounded border text-white">
-                                                    <Check className="size-3.5" />
-                                                </div>
-                                                <span className="w-40 min-w-0 flex-1 truncate text-sm font-medium text-white">
-                                                    {major.name}
-                                                </span>
-                                                <X className="size-4 shrink-0 text-neutral-400 hover:text-white" />
-                                            </label>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        <div className="flex flex-col gap-1 pb-2">
-                            {isSearching && offset === 0 && (
-                                <div className="px-3 py-3 text-center text-sm text-neutral-400">
-                                    Loading...
-                                </div>
-                            )}
-
-                            {!isSearching &&
-                                searchResults.length === 0 &&
-                                searchQuery.trim() === '' &&
-                                selectedObjects.length === 0 && (
-                                    <div className="px-3 py-3 text-center text-sm text-neutral-400">
-                                        No results found
-                                    </div>
-                                )}
-
-                            {searchResults.map((major) => (
-                                <label
-                                    key={major.value}
-                                    className="group flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-neutral-700/30"
+                    {selectedExpanded && (
+                        <div className="max-h-48 overflow-y-auto px-1 pb-1">
+                            {selectedObjects.map((major) => (
+                                <ComboboxOptionRow
+                                    key={`selected-${major.value}`}
+                                    selected
+                                    className="mb-0.5 rounded-lg py-2"
                                 >
                                     <input
                                         type="checkbox"
-                                        checked={false}
+                                        checked
                                         onChange={() => handleToggle(major)}
-                                        className="sr-only"
+                                        className={comboboxNativeControlClass}
                                     />
-                                    <div className="flex size-5 min-w-5 shrink-0 items-center justify-center rounded border border-neutral-600 transition-colors group-hover:border-neutral-500" />
-                                    <span className="w-40 min-w-0 flex-1 truncate text-base font-normal text-neutral-300">
+                                    <ComboboxCheckboxIndicator checked />
+                                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-white">
                                         {major.name}
                                     </span>
-                                    <Plus className="size-4 text-neutral-500 opacity-0 transition-opacity group-hover:opacity-100" />
-                                </label>
+                                    <X className="size-4 shrink-0 text-neutral-400 hover:text-white" />
+                                </ComboboxOptionRow>
                             ))}
-
-                            {searchQuery.trim() &&
-                                !isSearching &&
-                                !fetchedOptions.find(
-                                    (o) =>
-                                        o.name.toLowerCase() ===
-                                        searchQuery.trim().toLowerCase()
-                                ) && (
-                                    <button
-                                        onClick={handleAddCustom}
-                                        className="mt-2 flex w-full cursor-pointer items-center gap-3 rounded-lg border-t border-neutral-700 px-3 py-3 pt-2 text-left transition-colors hover:bg-neutral-700/30"
-                                    >
-                                        <Plus className="size-4 shrink-0 text-neutral-400" />
-                                        <span className="min-w-0 flex-1 truncate text-base font-normal text-white">
-                                            Add &quot;{searchQuery.trim()}&quot;
-                                        </span>
-                                    </button>
-                                )}
-
-                            {isSearching && offset > 0 && (
-                                <div className="px-3 py-3 text-center text-sm text-neutral-400">
-                                    Loading more...
-                                </div>
-                            )}
                         </div>
-                    </div>
-                </CollapsibleContent>
-            </Collapsible>
-        </div>
+                    )}
+                </div>
+            )}
+
+            <div className="flex flex-col gap-0.5 px-1 pb-1">
+                {isSearching && offset === 0 && (
+                    <ComboboxEmptyState>Loading...</ComboboxEmptyState>
+                )}
+
+                {showEmpty && (
+                    <ComboboxEmptyState>
+                        {searchQuery.trim()
+                            ? 'No results found'
+                            : 'No options available'}
+                    </ComboboxEmptyState>
+                )}
+
+                {searchResults.map((major) => (
+                    <ComboboxOptionRow key={major.value}>
+                        <input
+                            type="checkbox"
+                            checked={false}
+                            onChange={() => handleToggle(major)}
+                            className={comboboxNativeControlClass}
+                        />
+                        <ComboboxCheckboxIndicator checked={false} />
+                        <span className="min-w-0 flex-1 truncate text-base font-normal text-neutral-300">
+                            {major.name}
+                        </span>
+                        <Plus className="size-4 text-neutral-500 opacity-0 transition-opacity group-hover:opacity-100" />
+                    </ComboboxOptionRow>
+                ))}
+
+                {searchQuery.trim() &&
+                    !isSearching &&
+                    !fetchedOptions.find(
+                        (o) =>
+                            o.name.toLowerCase() ===
+                            searchQuery.trim().toLowerCase()
+                    ) && (
+                        <button
+                            type="button"
+                            onClick={handleAddCustom}
+                            className="mt-1 flex w-full cursor-pointer items-center gap-3 rounded-lg border-t border-neutral-700 px-3 py-3 text-left transition-colors hover:bg-neutral-700/30"
+                        >
+                            <Plus className="size-4 shrink-0 text-neutral-400" />
+                            <span className="min-w-0 flex-1 truncate text-base font-normal text-white">
+                                Add &quot;{searchQuery.trim()}&quot;
+                            </span>
+                        </button>
+                    )}
+
+                {isSearching && offset > 0 && (
+                    <ComboboxEmptyState>Loading more...</ComboboxEmptyState>
+                )}
+            </div>
+        </ComboboxShell>
     );
 }

@@ -704,7 +704,7 @@ function Question({
         }
     }
 
-    const showNonCanadaWarning = useMemo(() => {
+    const shouldShowNonCanadaWarning = useMemo(() => {
         if (question.type !== 'api-dropdown') return false;
         const apiDropdownQuestion = question as QuestionApiDropdown;
         const isCountryQuestion =
@@ -718,6 +718,18 @@ function Question({
         return selection.trim().toLowerCase() !== 'canada';
     }, [question]);
 
+    const [showNonCanadaWarning, setShowNonCanadaWarning] = useState(false);
+    useEffect(() => {
+        if (!shouldShowNonCanadaWarning) {
+            setShowNonCanadaWarning(false);
+            return;
+        }
+        const timeoutId = window.setTimeout(() => {
+            setShowNonCanadaWarning(true);
+        }, 180);
+        return () => window.clearTimeout(timeoutId);
+    }, [shouldShowNonCanadaWarning]);
+
     if (!isVisible) return null;
 
     return (
@@ -728,26 +740,41 @@ function Question({
                 ? { 'data-question-id': question.questionId }
                 : {})}
         >
-            {showNonCanadaWarning && (
-                <Alert variant="warning" className="mb-4 max-w-[480px]">
-                    <AlertTitle>
-                        This event requires in-person attendance
-                    </AlertTitle>
-                    <AlertDescription>
-                        {hackathon?.hackathonName} is an in-person event and
-                        requires attendance at SFU Burnaby. For questions about
-                        travel reimbursements, please{' '}
-                        <a
-                            className="underline"
-                            href={`${hackathon?.eventPagePayload?.websiteHref}#faq`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            Read our FAQ
-                        </a>
-                        .
-                    </AlertDescription>
-                </Alert>
+            {question.type === 'api-dropdown' && (
+                <div
+                    className={cn(
+                        'grid transition-[grid-template-rows] duration-300 ease-out',
+                        showNonCanadaWarning
+                            ? 'grid-rows-[1fr]'
+                            : 'grid-rows-[0fr]'
+                    )}
+                    aria-hidden={!showNonCanadaWarning}
+                >
+                    <div className="min-h-0 overflow-hidden">
+                        <Alert variant="warning" className="mb-4 max-w-[480px]">
+                            <AlertTitle>
+                                This event requires in-person attendance
+                            </AlertTitle>
+                            <AlertDescription>
+                                {hackathon?.hackathonName} is an in-person event
+                                and requires attendance at SFU Burnaby. For
+                                questions about travel reimbursements, please{' '}
+                                <a
+                                    className="underline"
+                                    href={`${hackathon?.eventPagePayload?.websiteHref}/faq`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    tabIndex={
+                                        showNonCanadaWarning ? undefined : -1
+                                    }
+                                >
+                                    Read our FAQ
+                                </a>
+                                .
+                            </AlertDescription>
+                        </Alert>
+                    </div>
+                </div>
             )}
             {question.type === 'multiple-choice' && (
                 <ChoiceConditionalAlert
