@@ -1,7 +1,12 @@
 'use client';
 
 import { useEffect, useRef, type HTMLProps } from 'react';
-import { ArrowsUpDownIcon, ChevronDownIcon } from '@heroicons/react/16/solid';
+import {
+    ArrowsUpDownIcon,
+    CheckIcon,
+    ChevronDownIcon,
+    MinusIcon,
+} from '@heroicons/react/16/solid';
 import clsx from 'clsx';
 import {
     resolveApplicationLinkUrl,
@@ -96,25 +101,47 @@ export function IndeterminateCheckbox({
     ...rest
 }: { indeterminate?: boolean } & HTMLProps<HTMLInputElement>) {
     const ref = useRef<HTMLInputElement>(null);
+    const isIndeterminate = Boolean(!rest.checked && indeterminate);
 
     useEffect(() => {
         if (ref.current) {
-            ref.current.indeterminate =
-                (!rest.checked && indeterminate) || false;
+            ref.current.indeterminate = isIndeterminate;
         }
-    }, [indeterminate, rest.checked]);
+    }, [isIndeterminate]);
+
+    const isActive = Boolean(rest.checked) || isIndeterminate;
 
     return (
-        <input
-            type="checkbox"
-            ref={ref}
+        <label
             className={clsx(
-                'accent-brand-500 size-5 cursor-pointer rounded border-neutral-500/60 bg-transparent',
+                'relative inline-flex size-5 shrink-0 cursor-pointer items-center justify-center',
+                rest.disabled && 'cursor-not-allowed opacity-50',
                 className
             )}
-            {...rest}
-            onClick={(e) => e.stopPropagation()}
-        />
+        >
+            <input
+                type="checkbox"
+                ref={ref}
+                className="absolute inset-0 z-10 m-0 size-full cursor-pointer appearance-none opacity-0 disabled:cursor-not-allowed"
+                {...rest}
+                onClick={(e) => e.stopPropagation()}
+            />
+            <span
+                aria-hidden
+                className={clsx(
+                    'pointer-events-none flex size-5 items-center justify-center rounded-[4px] border transition-colors',
+                    isActive
+                        ? 'border-brand-500 bg-brand-500 text-white'
+                        : 'border-neutral-500/60 bg-transparent'
+                )}
+            >
+                {rest.checked ? (
+                    <CheckIcon className="size-3.5" />
+                ) : isIndeterminate ? (
+                    <MinusIcon className="size-3.5" />
+                ) : null}
+            </span>
+        </label>
     );
 }
 

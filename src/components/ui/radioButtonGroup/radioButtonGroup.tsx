@@ -195,7 +195,7 @@ export function RadioButtonGroup({
                                         }
                                     }}
                                     placeholder="Please specify"
-                                    errorMsg="Required!"
+                                    errorMsg="Please specify"
                                     required={usingCustomInput && required}
                                     style={{
                                         flexBasis: '100%',
