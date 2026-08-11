@@ -201,13 +201,15 @@ export default function SideCard({
     const reviewerSelectValue = useMemo((): StatusEnum | undefined => {
         const selectable = new Set<StatusEnum>([
             'N/A',
-            'Awaiting Review',
             acceptPendingStatus,
             'Wait List',
             'Declined',
         ]);
-        if (status && selectable.has(status)) {
-            return status;
+        // Pending empty state is N/A ("Under review"); normalize legacy Awaiting Review
+        const normalized =
+            !status || status === 'Awaiting Review' ? 'N/A' : status;
+        if (selectable.has(normalized)) {
+            return normalized;
         }
         return undefined;
     }, [status, acceptPendingStatus]);
@@ -363,8 +365,7 @@ export default function SideCard({
                                 <SelectValue placeholder="Select status" />
                             </SelectTrigger>
                             <SelectContent className="z-[21000] border-neutral-800 bg-neutral-900 text-white">
-                                <SelectItem value="N/A">N/A</SelectItem>
-                                <SelectItem value="Awaiting Review">
+                                <SelectItem value="N/A">
                                     Under review
                                 </SelectItem>
                                 <SelectItem value={acceptPendingStatus}>

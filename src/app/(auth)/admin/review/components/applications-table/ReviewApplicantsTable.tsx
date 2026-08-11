@@ -659,7 +659,7 @@ export function ReviewApplicantsTable({
                 {isMarqueeSelecting ? (
                     <div
                         ref={marqueeOverlayRef}
-                        className="pointer-events-none absolute top-0 left-0 z-50 border border-dashed border-fuchsia-500 bg-fuchsia-950/45 will-change-transform"
+                        className="pointer-events-none absolute top-0 left-0 z-50 border border-dashed border-neutral-500/60 bg-neutral-700/60 will-change-transform"
                         style={{ width: 0, height: 0 }}
                         aria-hidden
                     />
@@ -687,7 +687,10 @@ export function ReviewApplicantsTable({
                         }
                     />
                 ) : null}
-                <div ref={tableScrollContainerRef} className="overflow-x-auto">
+                <div
+                    ref={tableScrollContainerRef}
+                    className="touch-pan-x overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]"
+                >
                     <table
                         className="w-full text-left"
                         style={{ tableLayout: 'fixed', width: '100%' }}
