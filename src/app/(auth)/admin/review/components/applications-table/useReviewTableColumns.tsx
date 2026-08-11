@@ -82,12 +82,7 @@ export function useReviewTableColumns({
             {
                 id: 'flagged',
                 accessorKey: 'flagged',
-                header: () => (
-                    <FlagOutlineIcon
-                        className="size-4 text-white/50"
-                        aria-hidden
-                    />
-                ),
+                header: () => null,
                 cell: ({ row }) => {
                     const flagged = row.original.flagged;
                     return (
@@ -191,12 +186,16 @@ export function useReviewTableColumns({
                 enableColumnFilter: true,
                 filterFn: (row, columnId, filterValue) => {
                     if (filterValue == null || filterValue === '') return true;
-                    return row.getValue(columnId) === filterValue;
+                    const cell = String(row.getValue(columnId) ?? '');
+                    // N/A is "Under review"; include legacy Awaiting Review pending values
+                    if (filterValue === 'N/A') {
+                        return cell === 'N/A' || cell === 'Awaiting Review';
+                    }
+                    return cell === filterValue;
                 },
                 cell: ({ row, getValue }) => (
                     <PendingStatusSelect
                         value={getValue<string>()}
-                        currentStatus={row.original.currentStatus}
                         acceptPendingStatus={getAcceptPendingStatusForEventLocation(
                             row.original.eventLocationKey
                         )}

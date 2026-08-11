@@ -265,6 +265,12 @@ export function useMarqueeRowSelection({
                 return;
             }
 
+            // Touch needs native scroll (vertical page + horizontal table).
+            // Multi-select on mobile still works via checkboxes.
+            if (event.pointerType === 'touch') {
+                return;
+            }
+
             const additive = event.metaKey || event.ctrlKey;
             const extendRange = event.shiftKey;
             const selection = rowSelectionRef.current;
