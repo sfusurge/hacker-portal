@@ -1,6 +1,9 @@
+import { hackathons } from '@/db/schema/hackathons';
 import { checkUserInTeam } from '@/db/schema/members';
+import { isSubmissionWindowOpen } from '@/lib/submissionWindow';
 import { getUserData } from '@/server/routers/usersRouter';
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
+import { asc, eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { ClientPayload } from '../ClientPayload';
 
@@ -31,6 +34,29 @@ export async function POST(request: Request): Promise<NextResponse> {
                 }
 
                 checkUserInTeam(user.id, teamId);
+
+                const [activeHackathon] = await databaseClient
+                    .select({
+                        submissionOpen: hackathons.submissionOpen,
+                        submissionDeadline: hackathons.submissionDeadline,
+                    })
+                    .from(hackathons)
+                    .where(eq(hackathons.isActive, true))
+                    .orderBy(asc(hackathons.startDate))
+                    .limit(1);
+
+                if (
+                    !activeHackathon ||
+                    !isSubmissionWindowOpen(
+                        Date.now(),
+                        activeHackathon.submissionOpen,
+                        activeHackathon.submissionDeadline
+                    )
+                ) {
+                    throw new Error(
+                        'Submissions are only accepted during the open submission window.'
+                    );
+                }
 
                 return {
                     allowedContentTypes: [

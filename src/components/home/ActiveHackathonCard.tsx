@@ -5,10 +5,7 @@ import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { redirect } from 'next/navigation';
 
-import {
-    defaultEventPagePayload,
-    eventBannerFieldsFromPayload,
-} from './eventPageConfig';
+import { defaultEventPagePayload } from './eventPageConfig';
 import type { HackathonEventPagePayload } from '@/db/schema/hackathons';
 import QRTicket from '@/app/(auth)/admin/qr/checkin_components/QRTicket';
 import { ActiveHackathonCardContent } from './ActiveHackathonCardContent';
@@ -94,7 +91,9 @@ export default function ActiveHackathonCard({
     );
     const payload =
         hackathon.eventPagePayload ?? defaultEventPagePayload(hackathon.name);
-    const bannerConfig = eventBannerFieldsFromPayload(payload);
+    const eventPageLabel =
+        payload.eventPageLabel?.trim() ||
+        defaultEventPagePayload(payload.name || hackathon.name).eventPageLabel;
 
     const applicationAction = getApplicationAction({
         status,
@@ -127,7 +126,7 @@ export default function ActiveHackathonCard({
                         status={status}
                         payloadName={payload.name}
                         bannerConfig={{
-                            eventPageLabel: payload.eventPageLabel,
+                            eventPageLabel,
                             eventPageSlug: hackathon.eventPageSlug,
                         }}
                         isAcceptedStatus={isAcceptedStatus}

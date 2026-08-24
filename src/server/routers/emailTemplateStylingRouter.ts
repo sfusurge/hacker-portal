@@ -1,6 +1,5 @@
 import { publicProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
-import { UserRoleEnum } from '@/db/schema/users/users';
 import { UnauthorizedError, InternalServerError } from '../exceptions';
 import {
     emailTemplateStyling,
@@ -9,6 +8,7 @@ import {
 import { eq, desc } from 'drizzle-orm';
 import { getUserData } from '@/server/routers/usersRouter';
 import { z } from 'zod';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 export const emailTemplateStylingRouter = router({
     getList: publicProcedure.query(async () => {
@@ -16,7 +16,7 @@ export const emailTemplateStylingRouter = router({
         if (!user) {
             throw new InternalServerError('User not authenticated');
         }
-        if (user.userRole !== UserRoleEnum.admin) {
+        if (!hasAdminAccess(user.userRole)) {
             throw new UnauthorizedError({
                 email: user.email,
                 role: user.userRole,
@@ -39,7 +39,7 @@ export const emailTemplateStylingRouter = router({
             if (!user) {
                 throw new InternalServerError('User not authenticated');
             }
-            if (user.userRole !== UserRoleEnum.admin) {
+            if (!hasAdminAccess(user.userRole)) {
                 throw new UnauthorizedError({
                     email: user.email,
                     role: user.userRole,
@@ -57,7 +57,7 @@ export const emailTemplateStylingRouter = router({
         .input(emailTemplateStylingSchema)
         .mutation(async ({ input }) => {
             const user = await getUserData();
-            if (user?.userRole !== UserRoleEnum.admin) {
+            if (!hasAdminAccess(user?.userRole)) {
                 throw new UnauthorizedError({
                     email: user?.email,
                     role: user?.userRole,
@@ -77,7 +77,7 @@ export const emailTemplateStylingRouter = router({
         .input(emailTemplateStylingSchema.extend({ id: z.number().int() }))
         .mutation(async ({ input }) => {
             const user = await getUserData();
-            if (user?.userRole !== UserRoleEnum.admin) {
+            if (!hasAdminAccess(user?.userRole)) {
                 throw new UnauthorizedError({
                     email: user?.email,
                     role: user?.userRole,
@@ -99,7 +99,7 @@ export const emailTemplateStylingRouter = router({
         .input(z.object({ id: z.number().int() }))
         .mutation(async ({ input }) => {
             const user = await getUserData();
-            if (user?.userRole !== UserRoleEnum.admin) {
+            if (!hasAdminAccess(user?.userRole)) {
                 throw new UnauthorizedError({
                     email: user?.email,
                     role: user?.userRole,

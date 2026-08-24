@@ -1,11 +1,30 @@
 'use client';
 
-import { type PrimitiveAtom, useAtom, useAtomValue, WritableAtom } from 'jotai';
+import { type PrimitiveAtom, useAtom, WritableAtom } from 'jotai';
 import type { QuestionDropdown } from '../types';
 import { useState, useEffect, useRef } from 'react';
-import { cn } from '@/lib/utils';
-import { finalErrCheckAtom } from '../InputForm';
 import { StaticDropdown } from '@/components/ui/StaticDropdown/StaticDropdown';
+import style from './DropdownInput.module.css';
+
+function hasDropdownSelection(
+    value: QuestionDropdown['value'],
+    allowMultiple?: boolean
+): boolean {
+    if (allowMultiple) {
+        return Array.isArray(value) && value.length > 0;
+    }
+    return typeof value === 'string' && value.trim().length > 0;
+}
+
+function toInputValue(
+    value: QuestionDropdown['value'],
+    allowMultiple: boolean
+): string {
+    if (allowMultiple) {
+        return Array.isArray(value) && value.length > 0 ? value.join(',') : '';
+    }
+    return typeof value === 'string' && value.trim().length > 0 ? value : '';
+}
 
 export function DropdownInput({
     dataAtom,
@@ -20,47 +39,48 @@ export function DropdownInput({
     const [errorMsg, setErrorMsg] = useState('');
     const [isInvalid, setIsInvalid] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
-    const showErrors = useAtomValue(finalErrCheckAtom);
+    const allowMultiple = question.allowMultiple ?? false;
 
-    const selectedValue =
-        typeof question.value === 'string' ? question.value : '';
+    const inputValue = toInputValue(question.value, allowMultiple);
 
     useEffect(() => {
         if (!inputRef.current) return;
 
         let message = '';
 
-        if (question.required && showErrors) {
-            if (
-                typeof selectedValue !== 'string' ||
-                selectedValue.trim().length === 0
-            ) {
-                message = 'Required, please select an option';
+        if ((question.required ?? false) && !disabled) {
+            if (!hasDropdownSelection(question.value, allowMultiple)) {
+                message = allowMultiple
+                    ? 'Required, please select at least one option'
+                    : 'Required, please select an option';
             }
         }
 
         inputRef.current.setCustomValidity(message);
         setErrorMsg(message);
-        setIsInvalid(message !== '');
-    }, [selectedValue, question.required, showErrors]);
+        if (!message) {
+            setIsInvalid(false);
+        }
+    }, [disabled, question.value, question.required, allowMultiple]);
 
     const staticChoices = question.choices.map((choice) => ({
         value: choice.data,
         name: choice.name,
     }));
 
+    const initialData = allowMultiple
+        ? Array.isArray(question.value)
+            ? question.value
+            : typeof question.value === 'string' && question.value
+              ? [question.value]
+              : []
+        : typeof question.value === 'string'
+          ? question.value
+          : '';
+
     return (
         <div
-            className={cn(
-                'relative',
-                isInvalid && [
-                    'after:content-[var(--errorMsg)]',
-                    'after:block',
-                    'after:text-xs',
-                    'after:text-danger-400',
-                    'after:mt-2',
-                ]
-            )}
+            className={style.field}
             style={
                 {
                     '--errorMsg': `"${errorMsg}"`,
@@ -71,13 +91,20 @@ export function DropdownInput({
                 ref={inputRef}
                 type="text"
                 style={{ display: 'none' }}
-                required={question.required}
-                defaultValue="na"
+                required={(question.required ?? false) && !disabled}
+                value={inputValue}
+                onChange={() => {}}
+                onInvalid={() => {
+                    setIsInvalid(true);
+                }}
             />
             <StaticDropdown
                 staticChoices={staticChoices}
-                initialData={selectedValue}
+                initialData={initialData}
                 onChange={(val) => {
+                    if (hasDropdownSelection(val, allowMultiple)) {
+                        setIsInvalid(false);
+                    }
                     setQuestion({ ...question, value: val });
                 }}
                 required={(question.required ?? false) && !disabled}
@@ -90,6 +117,7 @@ export function DropdownInput({
                 isInvalid={isInvalid}
                 allowCustom={question.allowCustom}
                 customPlaceHolder={question.customPlaceHolder}
+                allowMultiple={allowMultiple}
                 description={
                     question.dropdownDescription || question.description
                 }

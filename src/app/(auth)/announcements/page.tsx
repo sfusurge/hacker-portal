@@ -53,6 +53,7 @@ import {
     useState,
 } from 'react';
 import type { AnnouncementWithAttachments } from '@/db/schema/announcements';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 const ANNOUNCEMENT_BREAKPOINT_PX = 920;
 
@@ -96,7 +97,7 @@ export default function AnnouncementsPage() {
     const [query, setQuery] = useState('');
     const hackathon = useAtomValue(hackathonAtom);
     const userInfo = useAtomValue(userInfoAtom);
-    const isAdmin = userInfo?.userRole === 'admin';
+    const isAdmin = hasAdminAccess(userInfo?.userRole);
     const [viewAllChannels, setViewAllChannels] = useAtom(
         adminAnnouncementsViewAllAtom
     );
@@ -186,8 +187,10 @@ export default function AnnouncementsPage() {
         hackathon?.eventPagePayload
     );
     const displayName = hackathon?.hackathonName || 'Announcements';
-    const hackathonIconSrc: string | undefined =
-        hackathon?.eventPagePayload?.iconSrc ?? undefined;
+    const isAccepted = application?.currentStatus === 'Accepted';
+    const hackathonIconSrc: string | undefined = isAccepted
+        ? (hackathon?.eventPagePayload?.iconSrc ?? undefined)
+        : undefined;
 
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
         trpc.announcements.getAnnouncements.useInfiniteQuery(
@@ -756,10 +759,14 @@ export default function AnnouncementsPage() {
                                 )}
                                 <div className="flex flex-col gap-3">
                                     <h2 className="text-2xl font-semibold text-white">
-                                        {`Join the ${displayName} Discord Server!`}
+                                        {isAccepted
+                                            ? `Join the ${displayName} Discord Server!`
+                                            : 'Join the SFU Surge Discord!'}
                                     </h2>
                                     <p className="text-pretty text-white/60">
-                                        {`Join the ${displayName} Discord to stay updated with pings about your team.`}
+                                        {isAccepted
+                                            ? `Join the ${displayName} Discord to stay updated with pings about your team.`
+                                            : 'Join the SFU Surge Discord to stay updated on our events.'}
                                     </p>
                                 </div>
                                 <Link

@@ -79,7 +79,14 @@ export function resolveHackerPackageHref(
     return defaultEventPagePayload(hackathonName).hackerPackageHref ?? null;
 }
 
-/** Sidebar display order for “Our Events”. */
+type HackathonNavSource = {
+    eventPageSlug: string;
+    name: string;
+    startDate: string;
+    eventPagePayload?: HackathonEventPagePayload | null;
+};
+
+/** Sidebar display order for “Our Events” (known slugs first). */
 export const EVENT_PAGE_NAV_SLUG_ORDER = [
     'stormhacks',
     'journeyhacks',
@@ -107,39 +114,40 @@ export type EventPageNavLink = {
     iconAlt: string;
 };
 
-/** sidebar “Our Events” links (labels/icons; page content comes from the DB). */
-export const EVENT_PAGE_NAV_LINKS: EventPageNavLink[] = [
-    {
-        href: '/stormhacks',
-        label: 'StormHacks',
-        icon: '/dashboard/sh25head.svg',
-        iconAlt: 'StormHacks logo',
-    },
-    {
-        href: '/journeyhacks',
-        label: 'JourneyHacks',
-        icon: '/dashboard/jh26head.png',
-        iconAlt: 'JourneyHacks logo',
-    },
-    {
-        href: '/stormforge',
-        label: 'StormForge',
-        icon: '/dashboard/sf26icon.svg',
-        iconAlt: 'StormForge logo',
-    },
-    {
-        href: '/sillyhacks',
-        label: 'SillyHacks',
-        icon: '/dashboard/sillyhackshead.svg',
-        iconAlt: 'SillyHacks logo',
-    },
-    {
-        href: '/sparkjam',
-        label: 'SparkJam',
-        icon: '/dashboard/sparkjamhead.webp',
-        iconAlt: 'SparkJam logo',
-    },
-];
+export function sortHackathonsForNav<T extends HackathonNavSource>(
+    hackathons: T[]
+): T[] {
+    const orderIndex = (slug: string) => {
+        const i = (EVENT_PAGE_NAV_SLUG_ORDER as readonly string[]).indexOf(
+            slug
+        );
+        return i === -1 ? EVENT_PAGE_NAV_SLUG_ORDER.length : i;
+    };
+
+    return [...hackathons].sort((a, b) => {
+        const bySlug =
+            orderIndex(a.eventPageSlug) - orderIndex(b.eventPageSlug);
+        if (bySlug !== 0) return bySlug;
+        return a.startDate.localeCompare(b.startDate);
+    });
+}
+
+export function buildEventPageNavLinksFromHackathons(
+    hackathons: HackathonNavSource[]
+): EventPageNavLink[] {
+    return sortHackathonsForNav(hackathons).map((hackathon) => {
+        const payload =
+            hackathon.eventPagePayload ??
+            defaultEventPagePayload(hackathon.name);
+
+        return {
+            href: `/${hackathon.eventPageSlug}`,
+            label: payload.name,
+            icon: payload.iconSrc,
+            iconAlt: `${hackathon.name} logo`,
+        };
+    });
+}
 
 function pickEventBannerFields(c: EventPageConfigShape): EventBannerConfig {
     return {

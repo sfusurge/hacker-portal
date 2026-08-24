@@ -1,33 +1,78 @@
-import {
+import type {
+    DisplayRole,
     InputFormPageData,
     InputFormQuestion,
 } from '@/components/application_components/types.js';
-/** autofill targets only these `questionId`s (first / last / email / phone). */
-export const APPLICATION_PROFILE_QUESTION_IDS = {
-    FIRST_NAME: 5,
-    LAST_NAME: 6,
-    EMAIL: 8,
-    PHONE: 9,
-} as const;
+import { resolveApplicationQuestionIdByRole } from '@/lib/applications/applicationReviewExport';
+
+export type ApplicationProfileAutofillField =
+    | 'firstName'
+    | 'lastName'
+    | 'email'
+    | 'phone';
+
+const PROFILE_AUTOFILL_ROLES: Record<
+    ApplicationProfileAutofillField,
+    DisplayRole
+> = {
+    firstName: 'firstName',
+    lastName: 'lastName',
+    email: 'email',
+    phone: 'phone',
+};
+
+// resolve profile autofill targets from the hackathon application form JSON
+export function resolveApplicationProfileQuestionIds(
+    pages: InputFormPageData[] | undefined
+): Partial<Record<ApplicationProfileAutofillField, number>> {
+    const out: Partial<Record<ApplicationProfileAutofillField, number>> = {};
+
+    for (const field of Object.keys(
+        PROFILE_AUTOFILL_ROLES
+    ) as ApplicationProfileAutofillField[]) {
+        const questionId = resolveApplicationQuestionIdByRole(
+            pages,
+            PROFILE_AUTOFILL_ROLES[field]
+        );
+        if (questionId != null) {
+            const numericId = Number(questionId);
+            if (Number.isFinite(numericId)) {
+                out[field] = numericId;
+            }
+        }
+    }
+
+    return out;
+}
 
 /**
- * merge `loadResponseIntoSchema` profile data
+ * Profile defaults keyed by `questionId` for `loadResponseIntoSchema`.
+ * Question ids come from `displayRole` on the current hackathon form.
  */
-export function getApplicationAutofillFromUser(user: {
-    firstName?: string | null;
-    lastName?: string | null;
-    email?: string | null;
-    phoneNumber?: string | null;
-}): Record<number, string> {
+export function getApplicationAutofillFromUser(
+    user: {
+        firstName?: string | null;
+        lastName?: string | null;
+        email?: string | null;
+        phoneNumber?: string | null;
+    },
+    pages: InputFormPageData[] | undefined
+): Record<number, string> {
+    const ids = resolveApplicationProfileQuestionIds(pages);
     const out: Record<number, string> = {};
-    const { FIRST_NAME, LAST_NAME, EMAIL, PHONE } =
-        APPLICATION_PROFILE_QUESTION_IDS;
 
-    if (user.firstName) out[FIRST_NAME] = user.firstName;
-    if (user.lastName) out[LAST_NAME] = user.lastName;
-    if (user.email) out[EMAIL] = user.email;
-
-    if (user.phoneNumber) out[PHONE] = user.phoneNumber;
+    if (user.firstName && ids.firstName != null) {
+        out[ids.firstName] = user.firstName;
+    }
+    if (user.lastName && ids.lastName != null) {
+        out[ids.lastName] = user.lastName;
+    }
+    if (user.email && ids.email != null) {
+        out[ids.email] = user.email;
+    }
+    if (user.phoneNumber && ids.phone != null) {
+        out[ids.phone] = user.phoneNumber;
+    }
 
     return out;
 }
@@ -77,7 +122,9 @@ export function mergeProfileDefaultsWithLocalResponse(
     local: Record<string, any>
 ): Record<string, any> {
     const merged: Record<string, any> = { ...local };
-    for (const qid of Object.values(APPLICATION_PROFILE_QUESTION_IDS)) {
+    for (const [qidStr, value] of Object.entries(profile)) {
+        const qid = Number(qidStr);
+        if (!Number.isFinite(qid)) continue;
         if (
             isMeaningfulLocalValueForProfileField(
                 getResponseValueByQuestionId(merged, qid)
@@ -85,9 +132,8 @@ export function mergeProfileDefaultsWithLocalResponse(
         ) {
             continue;
         }
-        const v = profile[qid];
-        if (v !== undefined && v !== '') {
-            merged[qid] = v;
+        if (value !== undefined && value !== '') {
+            merged[qid] = value;
         }
     }
     return merged;
@@ -341,20 +387,34 @@ export function loadResponseIntoSchema(
                     question.value = dataSource[id];
                     break;
                 case 'markdown':
+                case 'text-area':
+                case 'text-line':
+                case 'title-line':
+                case 'link':
+                case 'phone':
                     question.value =
                         typeof dataSource[id] === 'string'
                             ? dataSource[id]
                             : '';
                     break;
                 case 'api-dropdown':
-                    question.selection = dataSource[id];
+                    question.selection =
+                        typeof dataSource[id] === 'string'
+                            ? dataSource[id]
+                            : '';
                     break;
                 case 'major':
                     (question as { selection?: string[] }).selection =
-                        (dataSource[id] as string[]) || [];
+                        Array.isArray(dataSource[id])
+                            ? (dataSource[id] as string[])
+                            : [];
                     break;
                 case 'dropdown':
-                    question.value = dataSource[id];
+                    question.value =
+                        typeof dataSource[id] === 'string' ||
+                        Array.isArray(dataSource[id])
+                            ? dataSource[id]
+                            : '';
                     break;
                 default:
                     question.value = dataSource[id];

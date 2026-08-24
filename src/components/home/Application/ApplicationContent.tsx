@@ -103,16 +103,12 @@ export function AwaitingRSVPContent({ userData }: { userData: UserData }) {
                 }}
             >
                 <CardTitle className="font-inter text-xl tracking-tight text-pretty">
-                    You&#39;ve been accepted into{' '}
-                    {hackathon?.hackathonName ||
-                        process.env.NEXT_PUBLIC_CURRENT_EVENT}
-                    !
+                    You&#39;ve been accepted into {hackathon?.hackathonName}!
                 </CardTitle>
                 <CardDescription className="text-base">
-                    Complete your payment to secure your spot at{' '}
-                    {hackathon?.hackathonName ||
-                        process.env.NEXT_PUBLIC_CURRENT_EVENT}
-                    .
+                    SFU Surge is excited to offer you acceptance to{' '}
+                    {hackathon?.hackathonName}! 🎉 Please RSVP to reserve your
+                    spot and confirm your attendance.
                 </CardDescription>
                 <CardDescription className="inline text-white/30">
                     {'No longer able to make it?'}
@@ -154,16 +150,11 @@ export function PendingPaymentContent({ userData }: { userData: UserData }) {
                 }}
             >
                 <CardTitle className="font-inter text-xl tracking-tight text-pretty">
-                    You&#39;ve been accepted into{' '}
-                    {hackathon?.hackathonName ||
-                        process.env.NEXT_PUBLIC_CURRENT_EVENT}
-                    ! 🥳
+                    You&#39;ve been accepted into {hackathon?.hackathonName}! 🥳
                 </CardTitle>
                 <CardDescription className="text-base">
                     Complete your payment to secure your spot at{' '}
-                    {hackathon?.hackathonName ||
-                        process.env.NEXT_PUBLIC_CURRENT_EVENT}
-                    .
+                    {hackathon?.hackathonName}.
                 </CardDescription>
                 <CardDescription className="inline text-white/30">
                     {'No longer able to make it?'}
@@ -212,10 +203,7 @@ export function AcceptedContent({
         <>
             <ApplicationStatusPanel className="min-w-[180px]">
                 <CardTitle className="text-xl tracking-tight text-pretty">
-                    You RSVP&apos;d to{' '}
-                    {hackathon?.hackathonName ||
-                        process.env.NEXT_PUBLIC_CURRENT_EVENT}
-                    !
+                    You RSVP&apos;d to {hackathon?.hackathonName}!
                 </CardTitle>
                 <CardDescription className="text-base">
                     Use this ticket to check in to the hackathon and pick up

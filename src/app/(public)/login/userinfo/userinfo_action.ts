@@ -1,6 +1,6 @@
 'use server';
 
-import { auth } from '@/auth/auth';
+import { getSession } from '@/auth/auth';
 import { databaseClient } from '@/db/client';
 import { user } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
@@ -12,7 +12,7 @@ export async function updateUserInfo(
 ) {
     'use server';
 
-    const session = await auth();
+    const session = await getSession();
     await databaseClient
         .update(user)
         .set({

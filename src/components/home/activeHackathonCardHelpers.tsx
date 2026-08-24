@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { JSX, ReactNode } from 'react';
 import { ArrowRightIcon } from 'lucide-react';
 import { QrCodeIcon } from '@heroicons/react/24/outline';
 
@@ -145,7 +145,7 @@ export function getMessage(
         case 'In Progress':
             return 'Complete your application soon. Head back, wrap it up, and hit submit before the deadline.';
         case 'Not Yet Started':
-            return 'Applications are open! Apply now to get your shot at participating in our creative design jam!';
+            return `Applications are open! Apply now to get your shot at participating in ${hackathonName}!`;
         default:
             return 'Your application was submitted and is under review. 📝 Check back soon for updates!';
     }

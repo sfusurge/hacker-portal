@@ -3,6 +3,12 @@ import { FullPageInfo } from '@/components/ui/FullPageInfo';
 import { stripe } from '@/lib/stripe';
 import { JSX } from 'react';
 import { createCaller } from '@/server/appRouter';
+import {
+    applyApplicationStatusUpdate,
+    applyLastEmailSentUpdate,
+} from '@/server/routers/applicationsRouter';
+import type { InputFormPageData } from '@/components/application_components/types';
+import { getApplicationResponseString } from '@/lib/applications/applicationReviewExport';
 
 interface PageProps {
     searchParams: Promise<{ payment_intent?: string }>;
@@ -48,7 +54,7 @@ export default async function ResultPage(
                         application.currentStatus ===
                             'Accepted - Pending Payment'
                     ) {
-                        await trpcClient.applications.updateApplication({
+                        await applyApplicationStatusUpdate({
                             hackathonId: application.hackathonId,
                             userId: application.userId,
                             status: 'Accepted',
@@ -73,15 +79,27 @@ export default async function ResultPage(
                                         (application.response as Record<
                                             string,
                                             unknown
-                                        > | null) ?? null;
+                                        > | null) ?? {};
+                                    const hackathons =
+                                        await trpcClient.hackathons.getHackathons();
+                                    const hackathon = hackathons.find(
+                                        (h) => h.id === application.hackathonId
+                                    );
+                                    const applicationQuestionPages =
+                                        (hackathon?.applicationQuestions ??
+                                            []) as InputFormPageData[];
                                     const firstName =
-                                        typeof response?.['5'] === 'string'
-                                            ? response['5']
-                                            : 'Friend';
+                                        getApplicationResponseString(
+                                            response,
+                                            applicationQuestionPages,
+                                            'firstName'
+                                        ) || 'Friend';
                                     const lastName =
-                                        typeof response?.['6'] === 'string'
-                                            ? response['6']
-                                            : '';
+                                        getApplicationResponseString(
+                                            response,
+                                            applicationQuestionPages,
+                                            'lastName'
+                                        );
                                     const sendResult =
                                         await trpcClient.emails.sendEmail({
                                             templateId: rsvpTemplate.id,
@@ -93,16 +111,14 @@ export default async function ResultPage(
                                             },
                                         });
                                     if (sendResult.emailSent) {
-                                        await trpcClient.applications.updateLastEmailSent(
-                                            {
-                                                hackathonId:
-                                                    application.hackathonId,
-                                                userId: application.userId,
-                                                emailType:
-                                                    rsvpTemplate.emailType ??
-                                                    rsvpTemplate.purpose,
-                                            }
-                                        );
+                                        await applyLastEmailSentUpdate({
+                                            hackathonId:
+                                                application.hackathonId,
+                                            userId: application.userId,
+                                            emailType:
+                                                rsvpTemplate.emailType ??
+                                                rsvpTemplate.purpose,
+                                        });
                                     }
                                 }
                             } catch (e) {

@@ -2,15 +2,16 @@ import EventsCard from '@/components/home/EventsCard';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
 import { createCaller } from '@/server/appRouter';
 import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
-import { getUserData } from '@/server/routers/usersRouter';
+import { getCachedUserData } from '@/server/getCachedUserData';
 import { redirect } from 'next/navigation';
 import DiscordCard from '@/components/home/DiscordCard';
 import HackathonCard from '@/components/home/HackathonCard';
 import { PageHeader } from '@/components/PageHeader';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 export default async function Home() {
-    const data = await getUserData();
+    const data = await getCachedUserData();
 
     // todo/temp: improve redirect for judge
     if (data?.userRole === 'judge') {
@@ -52,7 +53,7 @@ export default async function Home() {
         ? await generateQRCode(data!.id.toString(), opts)
         : undefined;
 
-    const isAdmin = data?.userRole === 'admin';
+    const isAdmin = hasAdminAccess(data?.userRole);
 
     return (
         <div className="flex flex-col gap-6 md:gap-8">
@@ -62,8 +63,48 @@ export default async function Home() {
                 {/* MOBILE */}
                 <div className="flex flex-col gap-6 pb-24 md:gap-8 md:pb-10 xl:hidden">
                     {/* <SubmissionCardHomepage /> */}
-                    {!isAdmin && (
-                        <>
+                    {/* {!isAdmin && ( */}
+                    <>
+                        <HackathonCard
+                            hackathon={activeHackathon}
+                            applicationStatus={application?.currentStatus}
+                            applicationSubmitted={application !== null}
+                            applicationOpen={activeHackathon?.applicationOpen}
+                            applicationCloses={
+                                activeHackathon?.applicationCloses
+                            }
+                            ticketQr={userQR}
+                            userDisplayId={data?.displayId}
+                            userFirstName={data?.firstName}
+                            userLastName={data?.lastName}
+                        />
+
+                        {/* <ApplicationCard
+                                userData={data}
+                                image={userQR}
+                                applicationStatus={application?.currentStatus}
+                                applicationSubmitted={application !== null}
+                            />
+                            {activeHackathon && (
+                                <TeamCard
+                                    userData={data}
+                                    hackathonId={hackathonId}
+                                    team={team}
+                                />
+                            )} */}
+                    </>
+                    {/* )} */}
+                    <EventsCard events={events} />
+                    <DiscordCard
+                        applicationStatus={application?.currentStatus}
+                    />
+                </div>
+
+                {/* DESKTOP */}
+                <div className="hidden xl:grid xl:grid-cols-11 xl:gap-8">
+                    {/* {!isAdmin && ( */}
+                    <>
+                        <div className="col-span-11 flex flex-col gap-8">
                             <HackathonCard
                                 hackathon={activeHackathon}
                                 applicationStatus={application?.currentStatus}
@@ -79,53 +120,9 @@ export default async function Home() {
                                 userFirstName={data?.firstName}
                                 userLastName={data?.lastName}
                             />
-
-                            {/* <ApplicationCard
-                                userData={data}
-                                image={userQR}
-                                applicationStatus={application?.currentStatus}
-                                applicationSubmitted={application !== null}
-                            />
-                            {activeHackathon && (
-                                <TeamCard
-                                    userData={data}
-                                    hackathonId={hackathonId}
-                                    team={team}
-                                />
-                            )} */}
-                        </>
-                    )}
-                    <EventsCard events={events} />
-                    <DiscordCard
-                        applicationStatus={application?.currentStatus}
-                    />
-                </div>
-
-                {/* DESKTOP */}
-                <div className="hidden xl:grid xl:grid-cols-11 xl:gap-8">
-                    {!isAdmin && (
-                        <>
-                            <div className="col-span-11 flex flex-col gap-8">
-                                <HackathonCard
-                                    hackathon={activeHackathon}
-                                    applicationStatus={
-                                        application?.currentStatus
-                                    }
-                                    applicationSubmitted={application !== null}
-                                    applicationOpen={
-                                        activeHackathon?.applicationOpen
-                                    }
-                                    applicationCloses={
-                                        activeHackathon?.applicationCloses
-                                    }
-                                    ticketQr={userQR}
-                                    userDisplayId={data?.displayId}
-                                    userFirstName={data?.firstName}
-                                    userLastName={data?.lastName}
-                                />
-                            </div>
-                        </>
-                    )}
+                        </div>
+                    </>
+                    {/* )} */}
                     <div
                         className={`${isAdmin ? 'col-span-11' : 'col-span-11'} grid grid-cols-2 gap-8`}
                     >

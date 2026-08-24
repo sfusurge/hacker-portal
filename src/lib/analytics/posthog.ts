@@ -7,7 +7,7 @@ export function isPostHogConfigured(): boolean {
     return Boolean(POSTHOG_KEY);
 }
 
-export const POSTHOG_API_HOST = '/ingest';
+export const POSTHOG_API_HOST = '/_sf';
 const POSTHOG_UI_HOST = 'https://us.posthog.com';
 
 export const POSTHOG_APP = 'hacker-portal' as const;

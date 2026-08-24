@@ -60,6 +60,10 @@ const hackathons = pgTable('hackathons', {
         .default([]),
     version: integer('version').notNull().default(1),
     isActive: boolean('is_active').notNull().default(false),
+    isVisible: boolean('is_visible').notNull().default(false),
+    isMultipleLocations: boolean('is_multiple_locations')
+        .notNull()
+        .default(false),
     submissionQuestions: jsonb('submissionQuestions')
         .$type<InputFormPageData[]>()
         .notNull()
@@ -119,9 +123,68 @@ const deleteHackathonSchema = z
 
 const selectHackathonSchema = createSelectSchema(hackathons);
 
+const hackathonConfigSchema = z.object({
+    name: z.string().min(1, 'Name is required').max(255),
+    startDate: z.string().min(1, 'Start date is required'),
+    endDate: z.string().min(1, 'End date is required'),
+    eventPageSlug: z.string().min(1).max(255),
+
+    submissionDeadline: z.number().int(),
+    applicationOpen: z.number().int().nullable(),
+    applicationCloses: z.number().int().nullable(),
+    submissionOpen: z.number().int().nullable(),
+    projectGalleryOpen: z.number().int().nullable(),
+    paymentDeadline: z.number().int().nullable(),
+    audienceVotingOpen: z.number().int().nullable(),
+    audienceVotingCloses: z.number().int().nullable(),
+
+    isActive: z.boolean(),
+    isVisible: z.boolean(),
+    isPaid: z.boolean(),
+    isMultipleLocations: z.boolean(),
+    audienceVotingEnabled: z.boolean(),
+});
+
+const eventPagePayloadSchema = z.object({
+    name: z.string().min(1, 'Name is required').max(255),
+    tagline: z.string().max(500).default(''),
+    dates: z.string().max(255).default(''),
+    location: z.string().max(255).default(''),
+    overview: z.string().max(4000).default(''),
+    targetAudience: z.string().max(255).default(''),
+    eventPageLabel: z.string().max(255).default(''),
+    iconSrc: z.string().max(2000).default(''),
+    desktopBannerSrc: z.string().max(2000).default(''),
+    mobileBannerSrc: z.string().max(2000).default(''),
+    websiteLabel: z.string().max(255).default(''),
+    websiteHref: z.string().max(2000).default(''),
+    recapHref: z.string().max(2000).default(''),
+    hackerPackageHref: z.string().max(2000).default(''),
+    acceptedDiscordInviteHref: z.string().max(2000).default(''),
+});
+
+type EventPagePayloadInput = z.infer<typeof eventPagePayloadSchema>;
+
+const createHackathonSchema = hackathonConfigSchema.extend({
+    /** Optional content saved together with the new hackathon. */
+    eventPagePayload: eventPagePayloadSchema.optional(),
+    applicationQuestions: z.array(z.unknown()).optional(),
+});
+
+const updateHackathonSchema = hackathonConfigSchema.extend({
+    id: z.number().int(),
+});
+
+type HackathonConfigInput = z.infer<typeof hackathonConfigSchema>;
+
 export {
+    createHackathonSchema,
     deleteHackathonSchema,
+    eventPagePayloadSchema,
+    hackathonConfigSchema,
     hackathons,
     insertHackathonSchema,
     selectHackathonSchema,
+    updateHackathonSchema,
 };
+export type { EventPagePayloadInput, HackathonConfigInput };

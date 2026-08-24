@@ -7,11 +7,30 @@ import {
     updateUserSchema,
     user,
 } from '@/db/schema/users/users';
-import { eq, or, sql } from 'drizzle-orm';
+import { eq, max, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { UnauthorizedError } from '../exceptions';
-import { auth, SessionType } from '@/auth/auth';
+import { getSession, SessionType } from '@/auth/auth';
 import { getSixDigitId, userRNGParams } from '@/lib/PRNG/LCG';
+import { hasAdminAccess } from '@/lib/auth/roles';
+
+export async function fetchUserRecordById(userId: number) {
+    const dbUser = (
+        await databaseClient
+            .select()
+            .from(user)
+            .where(eq(user.id, userId))
+            .limit(1)
+    )[0];
+
+    if (!dbUser) {
+        return undefined;
+    }
+
+    return {
+        ...dbUser,
+    };
+}
 
 export const usersRouter = router({
     /**
@@ -55,7 +74,7 @@ export const usersRouter = router({
         .query(async ({ input }) => {
             const userData = await getUserData();
 
-            if (userData?.userRole !== 'admin') {
+            if (!hasAdminAccess(userData?.userRole)) {
                 throw new UnauthorizedError({
                     email: userData?.email,
                     role: userData?.userRole,
@@ -117,7 +136,7 @@ export interface UserType {
 }
 
 export async function getUserData() {
-    const session = (await auth()) as SessionType;
+    const session = (await getSession()) as SessionType;
 
     if (!session || !session.userId) {
         return undefined;
@@ -128,28 +147,14 @@ export async function getUserData() {
         return undefined;
     }
 
-    const dbUser = (
-        await databaseClient
-            .select()
-            .from(user)
-            .where(eq(user.id, userId))
-            .limit(1)
-    )[0];
-
-    if (!dbUser) {
-        return undefined;
-    }
-
-    return {
-        ...dbUser,
-    };
+    return fetchUserRecordById(userId);
 }
 
 /**
  * only returns info contained in user's jwt, without making a db fetch
  */
 export async function getBasicUserInfo() {
-    const session = (await auth()) as SessionType;
+    const session = (await getSession()) as SessionType;
     return {
         email: session.user.email.toLowerCase(),
         image: session.user.image ?? '',
@@ -162,21 +167,9 @@ export type UserData = Awaited<ReturnType<typeof getUserData>>;
 export async function addUser(vals: z.infer<typeof insertUserSchema>) {
     // create the user, and catch their id
     const res = await databaseClient.transaction(async (tx) => {
-        const [_index] = await tx.execute(
-            sql`select (last_value + 1) as "last_value" from user_id_seq`
-        );
-        const index = parseInt(`${_index['last_value']}`, 10);
+        const [row] = await tx.select({ nextId: max(user.id) }).from(user);
+        const index = (row?.nextId ?? 0) + 1;
         console.log('creating user at index: ', index);
-
-        if (isNaN(index)) {
-            // update failed.
-            console.log(`Insert user failed, index fetch failed: ${index}`);
-            console.log(
-                await tx.execute(sql`select (last_value + 1) from user_id_seq`)
-            );
-
-            return undefined;
-        }
 
         const displayId = getSixDigitId(index, userRNGParams);
 

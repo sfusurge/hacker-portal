@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { publicProcedure, router } from '../trpc';
 import { getUserData } from './usersRouter';
 import { UnauthorizedError } from '../exceptions';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 const createCompanySchema = z.object({
     hackathonId: z.number(),
@@ -44,7 +45,7 @@ export const companyRouter = router({
             // Check if user is sponsor, admin, or the record is for themselves
             if (
                 user.userRole !== UserRoleEnum.sponsor &&
-                user.userRole !== UserRoleEnum.admin
+                !hasAdminAccess(user.userRole)
             ) {
                 throw new UnauthorizedError({
                     email: user.email,
@@ -116,7 +117,7 @@ export const companyRouter = router({
             // Check if user is sponsor, admin, or the record is for themselves
             if (
                 user.userRole !== UserRoleEnum.sponsor &&
-                user.userRole !== UserRoleEnum.admin
+                !hasAdminAccess(user.userRole)
             ) {
                 throw new UnauthorizedError({
                     email: user.email,

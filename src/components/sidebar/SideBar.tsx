@@ -11,16 +11,16 @@ import {
     ChevronRightIcon,
     ChartBarIcon,
     MegaphoneIcon,
+    TrophyIcon,
 } from '@heroicons/react/24/outline';
 
 import { HomeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { QrCodeIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
-import { signOut } from 'next-auth/react';
+import { signOutAndRedirect } from '@/auth/auth-client';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
-import React from 'react';
 import { motion } from 'motion/react';
 import {
     Popover,
@@ -30,12 +30,14 @@ import {
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { cn } from '@/lib/utils';
 import { navLinkVariants, NavLink } from './NavLink';
-import { EVENT_PAGE_NAV_LINKS } from '@/components/home/eventPageConfig';
+import { buildEventPageNavLinksFromHackathons } from '@/components/home/eventPageConfig';
+import { trpc } from '@/trpc/client';
 import { UserData } from '@/server/routers/usersRouter';
 import { DEFAULT_USER_AVATAR, resolveUserIconUrl } from '@/utils/blobHelper';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { useAtomValue } from 'jotai';
 import { canAccessProjectGallery } from '@/lib/submissionWindow';
+import { hasAdminAccess, isOwner } from '@/lib/auth/roles';
 import {
     isSparkjamProjectsArea,
     SPARKJAM_PROJECTS_PATH,
@@ -94,6 +96,16 @@ const projectGalleryLink = {
     iconAlt: 'Project gallery logo',
 };
 
+// Owner-only (hackathon configuration).
+const ownerLinks = [
+    {
+        href: '/admin/hackathons',
+        label: 'Hackathons',
+        icon: <TrophyIcon className="h-6 w-6" />,
+        iconAlt: 'Hackathons logo',
+    },
+];
+
 const adminLinks = [
     {
         href: '/admin/qr',
@@ -112,6 +124,12 @@ const adminLinks = [
         label: 'Emails',
         icon: <EnvelopeIcon className="h-6 w-6" />,
         iconAlt: 'Emails logo',
+    },
+    {
+        href: '/admin/email/queue',
+        label: 'Email Queue',
+        icon: <InboxStackIcon className="h-6 w-6" />,
+        iconAlt: 'Email queue logo',
     },
 ];
 
@@ -161,6 +179,12 @@ const sponsorNavLinks = [
 
 export default function SideBar({ className, initialData }: NavProps) {
     const hackathon = useAtomValue(hackathonAtom);
+    const { data: visibleHackathons = [] } =
+        trpc.hackathons.getVisibleHackathonsForNav.useQuery();
+    const eventPageNavLinks = useMemo(
+        () => buildEventPageNavLinksFromHackathons(visibleHackathons),
+        [visibleHackathons]
+    );
     const [now] = useState(() => Date.now());
     const [collapsed, setCollapsed] = useState(false);
     const [showCollapseToggle, setShowCollapseToggle] = useState(false);
@@ -196,7 +220,8 @@ export default function SideBar({ className, initialData }: NavProps) {
             now,
             hackathon.projectGalleryOpen?.toDate() ?? null,
             hackathon.submissionDeadline.toDate(),
-            initialData?.userRole
+            initialData?.userRole,
+            hackathon.submissionOpen?.toDate() ?? null
         );
 
     const mainNavLinks = useMemo(() => {
@@ -480,7 +505,7 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                 }
                                             />
                                             <NavLink
-                                                href="#"
+                                                href="/signout"
                                                 label="Sign out"
                                                 icon={
                                                     <ArrowLeftEndOnRectangleIcon className="text-danger-400 h-6 w-6" />
@@ -488,26 +513,21 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                 iconAlt="Sign out logo"
                                                 platform="desktop"
                                                 variant="error"
-                                                onClick={async () => {
+                                                onClick={(e) => {
+                                                    e.preventDefault();
                                                     setProfilePopoverOpen(
                                                         false
                                                     );
-                                                    await signOut();
-                                                    if (
-                                                        typeof window !==
-                                                        'undefined'
-                                                    ) {
-                                                        localStorage.removeItem(
-                                                            'auth-login-success'
-                                                        );
-                                                    }
+                                                    void signOutAndRedirect(
+                                                        '/login'
+                                                    );
                                                 }}
                                             />
                                         </PopoverContent>
                                     </Popover>
                                 )}
 
-                            {initialData?.userRole === 'admin' && (
+                            {hasAdminAccess(initialData?.userRole) && (
                                 <>
                                     <div className="my-4 border-t border-white/10" />
                                     {!collapsed ? (
@@ -534,6 +554,21 @@ export default function SideBar({ className, initialData }: NavProps) {
                                         }}
                                         className="flex flex-col gap-1"
                                     >
+                                        {isOwner(initialData?.userRole) &&
+                                            ownerLinks.map((link) => (
+                                                <NavLink
+                                                    key={link.href}
+                                                    href={link.href}
+                                                    label={link.label}
+                                                    icon={link.icon}
+                                                    iconAlt={link.iconAlt}
+                                                    platform="desktop"
+                                                    active={url.startsWith(
+                                                        link.href
+                                                    )}
+                                                    collapsed={collapsed}
+                                                />
+                                            ))}
                                         {adminLinks.map((link) => (
                                             <NavLink
                                                 key={link.href}
@@ -553,13 +588,27 @@ export default function SideBar({ className, initialData }: NavProps) {
                             )}
 
                             {(initialData?.userRole === 'user' ||
-                                initialData?.userRole === 'admin') && (
-                                <>
-                                    <div className="my-4 border-t border-white/10" />
+                                hasAdminAccess(initialData?.userRole)) &&
+                                eventPageNavLinks.length > 0 && (
+                                    <>
+                                        <div className="my-4 border-t border-white/10" />
 
-                                    {!collapsed ? (
-                                        <motion.span
-                                            className="mb-2 px-3 text-sm leading-[125%] font-semibold tracking-[-0.0075em] text-white/30"
+                                        {!collapsed ? (
+                                            <motion.span
+                                                className="mb-2 px-3 text-sm leading-[125%] font-semibold tracking-[-0.0075em] text-white/30"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                transition={{
+                                                    duration: 0.5,
+                                                    ease: 'easeInOut',
+                                                }}
+                                            >
+                                                Our Events
+                                            </motion.span>
+                                        ) : null}
+
+                                        <motion.div
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             exit={{ opacity: 0 }}
@@ -567,38 +616,30 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                 duration: 0.5,
                                                 ease: 'easeInOut',
                                             }}
+                                            className="flex flex-col gap-1"
                                         >
-                                            Our Events
-                                        </motion.span>
-                                    ) : null}
-
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{
-                                            duration: 0.5,
-                                            ease: 'easeInOut',
-                                        }}
-                                        className="flex flex-col gap-1"
-                                    >
-                                        {EVENT_PAGE_NAV_LINKS.map((link) => (
-                                            <NavLink
-                                                key={link.href}
-                                                href={link.href}
-                                                label={link.label}
-                                                icon={link.icon}
-                                                iconAlt={link.iconAlt}
-                                                platform="desktop"
-                                                active={url.startsWith(
-                                                    link.href
-                                                )}
-                                                collapsed={collapsed}
-                                            />
-                                        ))}
-                                    </motion.div>
-                                </>
-                            )}
+                                            {eventPageNavLinks.map(
+                                                (link, index) => (
+                                                    <NavLink
+                                                        key={`${link.href}-${index}`}
+                                                        href={link.href}
+                                                        label={link.label}
+                                                        icon={link.icon}
+                                                        iconAlt={link.iconAlt}
+                                                        platform="desktop"
+                                                        active={
+                                                            url === link.href ||
+                                                            url.startsWith(
+                                                                `${link.href}/`
+                                                            )
+                                                        }
+                                                        collapsed={collapsed}
+                                                    />
+                                                )
+                                            )}
+                                        </motion.div>
+                                    </>
+                                )}
                         </div>
                     </div>
 

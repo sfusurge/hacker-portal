@@ -3,6 +3,10 @@
 import { useState, useRef } from 'react';
 import { Label } from '@/components/ui/label/label';
 import { FormTextInput, Input } from '@/components/ui/input/input';
+import {
+    FormPhoneInput,
+    isValidPhoneNumber,
+} from '@/components/ui/input/FormPhoneInput';
 import { UserData } from '@/server/routers/usersRouter';
 import { PencilIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
@@ -53,6 +57,14 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
     });
 
     const handleSave = async () => {
+        if (!isValidPhoneNumber(formData.phoneNumber)) {
+            setErrors((prev) => ({
+                ...prev,
+                phoneNumber: 'Not a valid phone number',
+            }));
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {
@@ -137,7 +149,7 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
     const isFormValid =
         formData.firstName.length > 0 &&
         formData.lastName.length > 0 &&
-        formData.phoneNumber.length > 0 &&
+        isValidPhoneNumber(formData.phoneNumber) &&
         formData.email.length > 0;
 
     return (
@@ -288,18 +300,14 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
 
             <div className="space-y-2">
                 <Label required={true}>Phone Number</Label>
-                <FormTextInput
+                <FormPhoneInput
                     key={`phone-${key}`}
                     name="phone"
-                    type="tel"
-                    lazy
                     defaultValue={formData.phoneNumber}
-                    onLazyChange={(value) =>
+                    onValueChange={(value) =>
                         handleInputChange('phoneNumber', value)
                     }
-                    placeholder="6048622113"
-                    pattern="^(1|)[2-9]\d{2}[2-9]\d{6}$"
-                    errorMsg="Not a valid phone number"
+                    placeholder="(604)-862-2113"
                     required
                     disabled={isSubmitting}
                 />

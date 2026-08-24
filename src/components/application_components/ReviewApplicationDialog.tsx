@@ -46,6 +46,7 @@ export default function ReviewApplicationDialog({
         } catch (error) {
             console.error('Submission error:', error);
             setSubmitted(false);
+            closeDialog();
         }
     };
 

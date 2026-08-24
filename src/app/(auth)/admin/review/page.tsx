@@ -4,7 +4,7 @@ import ReviewApplicationsTable, {
     type Applicant,
     sideCardAtomSJ,
 } from '@/app/(auth)/admin/review/components/ReviewApplicationsTable';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import SideCard from '@/app/(auth)/admin/review/components/SideCard';
 import { atom, useSetAtom, useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
@@ -12,6 +12,12 @@ import { trpc } from '@/trpc/client';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
 import { formatEventLocationLabel } from '@/lib/applicationAcceptStatus';
 import { ReviewTableAblySubscriber } from '@/components/admin/review/ReviewTableAblySubscriber';
+import type { InputFormPageData } from '@/components/application_components/types';
+import {
+    getApplicationResponseField,
+    getApplicationResponseString,
+} from '@/lib/applications/applicationReviewExport';
+import { resolveApplicationLocationQuestionId } from '@/lib/applications/buildApplicationReviewTableColumns';
 
 export type { Applicant };
 
@@ -38,8 +44,6 @@ export default function ReviewApplicationsPage() {
         () => applicationData.data?.pages.flatMap((p) => p.applications) ?? [],
         [applicationData.data]
     );
-    console.log('applications', { applications });
-
     const applicationDataMap = useMemo(() => {
         const map = new Map<number, ApplicationWithTeamInfo>();
 
@@ -50,9 +54,21 @@ export default function ReviewApplicationsPage() {
         return map;
     }, [applications]);
 
-    const data = useMemo(() => transformResponse(applications), [applications]);
+    const applicationQuestionPages = (hackathon?.applicationQuestionPages ??
+        []) as InputFormPageData[];
+
+    const data = useMemo(
+        () => transformResponse(applications, applicationQuestionPages),
+        [applications, applicationQuestionPages]
+    );
 
     const refresh = () => setRefreshFlag((f) => f + 1);
+
+    const fetchNextPage = useCallback(async () => {
+        if (applicationData.hasNextPage) {
+            await applicationData.fetchNextPage();
+        }
+    }, [applicationData.hasNextPage, applicationData.fetchNextPage]);
 
     const selected: ApplicationWithTeamInfo | null = (() => {
         if (selectedIndex == null) return null;
@@ -111,15 +127,13 @@ export default function ReviewApplicationsPage() {
             ) : null}
             <ReviewApplicationsTable
                 data={data}
+                applicationQuestionPages={applicationQuestionPages}
                 applicationCount={applicationCountData?.applicationCount ?? -1}
                 applicationDataMap={applicationDataMap}
-                fetchNextPage={async () => {
-                    if (applicationData.hasNextPage) {
-                        await applicationData.fetchNextPage();
-                    }
-                }}
-                onRowClick={(app, idx) => {
-                    setSelectedIndex(idx);
+                fetchNextPage={fetchNextPage}
+                onRowClick={(app) => {
+                    const idx = data.findIndex((d) => d.id === app.id);
+                    setSelectedIndex(idx === -1 ? null : idx);
                     const full = applicationDataMap.get(app.id);
                     if (full) setSideCardAtom(full);
                     openSideCard();
@@ -134,42 +148,26 @@ export default function ReviewApplicationsPage() {
                 onNext={onNext}
                 selected={selected}
                 onRefresh={refresh}
+                applicantIndex={selectedIndex ?? undefined}
+                applicantTotal={data.length}
             />
         </div>
     );
 }
 
-function transformResponse(response: any[]) {
+function transformResponse(
+    response: any[],
+    applicationQuestionPages: InputFormPageData[]
+) {
     return response
         .map((item) => {
-            const r = item.response as Record<string, any>;
+            const r = (item.response ?? {}) as Record<string, unknown>;
 
-            const {
-                '2': eventLocation,
-                '5': firstName,
-                '6': lastName,
-                '7': pronouns,
-                '8': email,
-                '10': age,
-                '16': school,
-                '17': schoolEmail,
-                '18': background,
-                '19': yearOfStudy,
-                '20': major,
-                '26': haveHackathonExperience,
-                '36': howHeardAbout,
-                '37': dietaryRestrictions,
-                '38': resume,
-                '39': discord,
-                '40': portfolio,
-                '41': github,
-                '42': linkedin,
-                '43': otherLinks,
-                '51': shareResume,
-                '53': acceptSFSS,
-                '55': photoRelease,
-                '57': acceptSurgeEmails,
-            } = r;
+            const eventLocationRaw = getApplicationResponseField(
+                r,
+                applicationQuestionPages,
+                'location'
+            );
 
             const members = item.members;
             const checkIns = item.checkIns;
@@ -179,63 +177,37 @@ function transformResponse(response: any[]) {
                 ? `${item.teamName} (${item.teamId})`
                 : '';
 
-            const majorStr: string = Array.isArray(major)
-                ? major.join(', ')
-                : typeof major === 'string'
-                  ? major
-                  : '';
+            const eventLocationKey =
+                typeof eventLocationRaw === 'string' ? eventLocationRaw : '';
 
             return {
                 id: Number(item.userId),
                 teamName,
                 currentStatus: item.currentStatus,
                 pendingStatus: item.pendingStatus,
+                flagged: Boolean(item.flagged),
                 lastEmailSent,
-                age: age || '',
-                tShirtSize: '',
                 applicationDate: new Date(item.createdDate),
-                dietaryRestrictions: Array.isArray(dietaryRestrictions)
-                    ? dietaryRestrictions
-                    : dietaryRestrictions
-                      ? [dietaryRestrictions]
-                      : [],
-                howHeardAbout: Array.isArray(howHeardAbout)
-                    ? howHeardAbout
-                    : howHeardAbout
-                      ? [howHeardAbout]
-                      : [],
                 members,
-                firstName: firstName || '',
-                lastName: lastName || '',
-                pronouns: pronouns || '',
-                email: email || '',
-                eventLocation: formatEventLocationLabel(
-                    typeof eventLocation === 'string' ? eventLocation : null
+                firstName: getApplicationResponseString(
+                    r,
+                    applicationQuestionPages,
+                    'firstName'
                 ),
-                eventLocationKey:
-                    typeof eventLocation === 'string' ? eventLocation : '',
-                haveHackathonExperience: haveHackathonExperience || '',
-                resume: Array.isArray(resume) ? resume : resume ? [resume] : [],
-                discord: discord || '',
-                github: github || '',
-                linkedin: linkedin || '',
-                portfolio: portfolio || '',
-                otherLinks: otherLinks || '',
-                school: school || '',
-                schoolEmail: schoolEmail || '',
-                background: background || '',
-                yearOfStudy: yearOfStudy || '',
-                major: majorStr,
-                excitement: '',
-                problemOrSkill: '',
-                dreamProject: '',
-                shareResume: shareResume || false,
-                acceptMLH: false,
-                acceptSFSS: acceptSFSS || false,
-                acceptEmails: acceptSurgeEmails || false,
-                authorizeMLH: false,
-                photoRelease: photoRelease || false,
+                lastName: getApplicationResponseString(
+                    r,
+                    applicationQuestionPages,
+                    'lastName'
+                ),
+                email: getApplicationResponseString(
+                    r,
+                    applicationQuestionPages,
+                    'email'
+                ),
+                eventLocation: formatEventLocationLabel(eventLocationKey),
+                eventLocationKey,
                 checkIns,
+                response: r,
             };
         })
         .sort((a, b) => {

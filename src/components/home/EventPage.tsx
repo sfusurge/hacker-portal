@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { createCaller } from '@/server/appRouter';
-import { getUserData } from '@/server/routers/usersRouter';
+import { getCachedUserData } from '@/server/getCachedUserData';
 import generateQRCode, { QROptions } from '@/server/generateQRCode';
 import EventPageLayout from '@/components/home/EventPageLayout';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
@@ -13,7 +13,7 @@ export default async function EventPage({ slug }: { slug: string }) {
     const trpcClient = createCaller({});
 
     const [userData, hackathons] = await Promise.all([
-        getUserData(),
+        getCachedUserData(),
         trpcClient.hackathons.getHackathons(),
     ]);
 

@@ -64,7 +64,7 @@ function formatRsvpEventDates(start: Dayjs, end: Dayjs) {
                     <span className="font-medium text-white/90">
                         {dateWithWeekday(end)}
                     </span>{' '}
-                    (Recommended)
+                    (Required)
                 </ResponsiveDialogDescription>
             </>
         );
@@ -207,6 +207,8 @@ export default function RsvpPrompt({
             ? formatEventWhenSummary(hackathon.startDate, hackathon.endDate)
             : null;
 
+    const eventName = hackathon?.hackathonName ?? 'the event';
+
     return (
         <ResponsiveDialog
             open={isOpen}
@@ -234,13 +236,9 @@ export default function RsvpPrompt({
                             <div className="flex flex-col gap-2 px-2 text-start">
                                 <ResponsiveDialogDescription>
                                     Congratulations on your acceptance to{' '}
-                                    {hackathon?.hackathonName ||
-                                        'SparkJam 2026'}
-                                    . Please check the box below to
+                                    {eventName}. Please check the box below to
                                     indicate/confirm your attendance to{' '}
-                                    {hackathon?.hackathonName ||
-                                        'SparkJam 2026'}
-                                    .
+                                    {eventName}.
                                 </ResponsiveDialogDescription>
                                 <div className="flex flex-col gap-2">
                                     {hackathon?.startDate?.isValid() &&
@@ -264,7 +262,7 @@ export default function RsvpPrompt({
                                     onChange={(e) =>
                                         setIsConfirmed(e.target.checked)
                                     }
-                                    label={`I confirm that I will be attending ${hackathon?.hackathonName || 'StormHacks'}.`}
+                                    label={`I confirm that I will be attending ${eventName}.`}
                                 />
                             </div>
                         </ResponsiveDialogHeader>
@@ -276,8 +274,7 @@ export default function RsvpPrompt({
                                 Your spot has been reserved!
                             </ResponsiveDialogTitle>
                             <ResponsiveDialogDescription>
-                                We&apos;re excited to see you at{' '}
-                                {hackathon?.hackathonName || 'StormHacks'}
+                                We&apos;re excited to see you at {eventName}
                                 {eventWhenSummary ? (
                                     <>
                                         {' '}

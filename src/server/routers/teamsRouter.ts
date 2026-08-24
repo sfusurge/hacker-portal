@@ -16,6 +16,7 @@ import {
     and,
     getTableColumns,
     asc,
+    max,
     TablesRelationalConfig,
     sql,
     inArray,
@@ -36,7 +37,7 @@ import { getSixDigitId, teamRNGParams } from '@/lib/PRNG/LCG';
 import { z } from 'zod';
 import { deleteFileFromVercel } from '@/lib/blobs';
 import { getBasicUserInfo, getUserData } from '@/server/routers/usersRouter';
-import { auth } from '@/auth/auth';
+import { getSession } from '@/auth/auth';
 import slugify from '@/utils/slugify';
 import { submissions } from '@/db/schema/submissions';
 
@@ -53,18 +54,10 @@ export const teamsRouter = router({
             const team = await databaseClient.transaction(async (tx) => {
                 await checkIfUserInExistingTeam(tx, user.id, input.hackathonId);
 
-                // get next index in id sequence
-                const [_index] = await tx.execute(
-                    sql`select (last_value + 1) as "last_value" from teams_id_seq`
-                );
-                const index = parseInt(`${_index['last_value']}`, 10);
-
-                // fetch id failed
-                if (isNaN(index)) {
-                    throw new InternalServerError(
-                        `create team failed, fetch index failed: ${index}`
-                    );
-                }
+                const [row] = await tx
+                    .select({ nextId: max(teams.id) })
+                    .from(teams);
+                const index = (row?.nextId ?? 0) + 1;
 
                 const displayId = getSixDigitId(index, teamRNGParams);
 
@@ -524,7 +517,7 @@ export async function getTeamData(tid: number) {
 }
 
 export async function getMemberIds(tid: number): Promise<number[]> {
-    const session = await auth();
+    const session = await getSession();
 
     if (!session || !session.user || !session.user.email) {
         return [];

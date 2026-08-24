@@ -1,11 +1,10 @@
 'use client';
 
-import { type PrimitiveAtom, useAtom, useAtomValue, WritableAtom } from 'jotai';
+import { type PrimitiveAtom, useAtom, WritableAtom } from 'jotai';
 import type { QuestionMajorInput } from '../types';
 import { useState, useEffect, useRef } from 'react';
-import { cn } from '@/lib/utils';
 import { MajorOptions } from './MajorOptions';
-import { finalErrCheckAtom } from '../InputForm';
+import style from './MajorInput.module.css';
 
 export function MajorInput({
     dataAtom,
@@ -20,7 +19,6 @@ export function MajorInput({
     const [errorMsg, setErrorMsg] = useState('');
     const [isInvalid, setIsInvalid] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
-    const showErrors = useAtomValue(finalErrCheckAtom);
 
     useEffect(() => {
         if (!inputRef.current) return;
@@ -28,7 +26,7 @@ export function MajorInput({
         let message = '';
         const selection = question.selection || [];
 
-        if (question.required && showErrors) {
+        if ((question.required ?? false) && !disabled) {
             if (!Array.isArray(selection) || selection.length === 0) {
                 message = 'Required, please select at least one major';
             }
@@ -41,8 +39,10 @@ export function MajorInput({
         inputRef.current.value = inputValue;
         inputRef.current.setCustomValidity(message);
         setErrorMsg(message);
-        setIsInvalid(message !== '');
-    }, [question.selection, question.required, showErrors]);
+        if (!message) {
+            setIsInvalid(false);
+        }
+    }, [disabled, question.selection, question.required]);
 
     const selection = question.selection || [];
     const inputValue =
@@ -52,16 +52,7 @@ export function MajorInput({
 
     return (
         <div
-            className={cn(
-                'relative',
-                isInvalid && [
-                    'after:content-[var(--errorMsg)]',
-                    'after:block',
-                    'after:text-xs',
-                    'after:text-danger-400',
-                    'after:mt-2',
-                ]
-            )}
+            className={style.field}
             style={
                 {
                     '--errorMsg': `"${errorMsg}"`,
@@ -72,9 +63,12 @@ export function MajorInput({
                 ref={inputRef}
                 type="text"
                 style={{ display: 'none' }}
-                required={question.required}
+                required={(question.required ?? false) && !disabled}
                 value={inputValue}
                 onChange={() => {}}
+                onInvalid={() => {
+                    setIsInvalid(true);
+                }}
             />
             <MajorOptions
                 apiUrl={question.apiUrl}
@@ -87,11 +81,15 @@ export function MajorInput({
                                 : '';
                         inputRef.current.value = inputVal;
                         const message =
-                            question.required &&
+                            (question.required ?? false) &&
+                            !disabled &&
                             (!Array.isArray(val) || val.length === 0)
                                 ? 'Required, please select at least one major'
                                 : '';
                         inputRef.current.setCustomValidity(message);
+                        if (!message) {
+                            setIsInvalid(false);
+                        }
                         // Dispatch both input and change events to ensure form sees the update
                         inputRef.current.dispatchEvent(
                             new Event('input', {
