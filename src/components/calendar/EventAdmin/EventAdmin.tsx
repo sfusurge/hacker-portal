@@ -329,6 +329,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                         <CheckBoxWithLabel
                             name="yes"
                             checked={event?.hasCheckIn ?? false}
+                            disabled={checkIns.isLoading || hasCheckIns}
                             onChange={(e) => {
                                 setEvent((event) => {
                                     if (!event) {
