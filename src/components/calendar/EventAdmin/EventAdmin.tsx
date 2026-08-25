@@ -6,7 +6,7 @@ import {
     selectedEventAtom,
 } from '../MonthCalendarShared';
 import { SideDrawer } from '@/components/ui/SideDrawer/SideDrawer';
-import { useEffect, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import { FormTextInput } from '@/components/ui/input/input';
 import { Label } from '@/components/ui/label';
 import { ColorPicker } from '@/components/ui/ColorPicker/ColorPicker';
@@ -34,7 +34,7 @@ export const editModeAtom = atom(false);
 
 export function EventAdmin({ eventsAtom }: EventAdminProps) {
     const [_selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
-    const [events, setEvents] = useAtom(eventsAtom);
+    const [, setEvents] = useAtom(eventsAtom);
     const [editMode, setEditMode] = useAtom(editModeAtom);
 
     const [event, setEvent] = useState<CalendarEvent>();
@@ -65,68 +65,89 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
     );
 
     const deleteApi = trpc.events.deleteEvent.useMutation();
+    const checkIns = trpc.events.getEventCheckInCount.useQuery(
+        { eventId: event?.id ?? -1 },
+        { enabled: Boolean(_selectedEvent && event?.id) }
+    );
+    const hasCheckIns = (checkIns.data?.checkInCount ?? 0) > 0;
 
-    async function saveEvent(e: SubmitEvent) {
+    async function refreshEvents() {
+        const res = await eventsFetch.refetch();
+        setEvents(
+            DayjsifyEvents(
+                res.data?.map((item) => {
+                    return {
+                        ...item,
+                        startDate: new Date(item.startDate),
+                        endDate: new Date(item.endDate),
+                    };
+                }) ?? []
+            )
+        );
+    }
+
+    function updateEvent<K extends keyof CalendarEvent>(
+        key: K,
+        value: CalendarEvent[K]
+    ) {
+        setEvent((current) => {
+            if (!current) {
+                return current;
+            }
+
+            return {
+                ...current,
+                [key]: value,
+            };
+        });
+    }
+
+    async function saveEvent(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (!event) {
             return;
         }
 
+        const formData = new FormData(e.currentTarget);
+        const getValue = (name: string) => String(formData.get(name) ?? '');
+        const submittedEvent = {
+            ...event,
+            title: getValue('title'),
+            description: getValue('description'),
+            location: getValue('location'),
+            startDate: dayjs(new Date(getValue('startDate'))).toDate(),
+            endDate: dayjs(new Date(getValue('endDate'))).toDate(),
+        };
+        const submittedLongDescription = getValue('longDescription');
+
         if (!_selectedEvent) {
-            createEventApi.mutate({
-                ...event,
-                startDate: event.startDate.getTime(),
-                endDate: event.endDate.getTime(),
-                longDescription,
+            await createEventApi.mutateAsync({
+                ...submittedEvent,
+                startDate: submittedEvent.startDate.getTime(),
+                endDate: submittedEvent.endDate.getTime(),
+                longDescription: submittedLongDescription,
             });
         } else {
-            updateEventapi.mutate({
-                ...event,
-                eventId: event.id!,
-                startDate: event.startDate?.getTime()!,
-                endDate: event.endDate?.getTime()!,
-                longDescription,
+            await updateEventapi.mutateAsync({
+                ...submittedEvent,
+                eventId: submittedEvent.id!,
+                startDate: submittedEvent.startDate?.getTime()!,
+                endDate: submittedEvent.endDate?.getTime()!,
+                longDescription: submittedLongDescription,
             });
         }
 
-        setTimeout(async () => {
-            const res = await eventsFetch.refetch();
-            setEvents(
-                DayjsifyEvents(
-                    res.data?.map((item) => {
-                        return {
-                            ...item,
-                            startDate: new Date(item.startDate),
-                            endDate: new Date(item.endDate),
-                        };
-                    }) ?? []
-                )
-            );
-        }, 2000);
+        await refreshEvents();
         setEditMode(false);
     }
 
-    function deleteEvent() {
-        if (!event) {
+    async function deleteEvent() {
+        if (!event || hasCheckIns) {
             return;
         }
 
-        deleteApi.mutate({ eventId: event.id });
-
-        setTimeout(async () => {
-            const res = await eventsFetch.refetch();
-            setEvents(
-                DayjsifyEvents(
-                    res.data?.map((item) => {
-                        return {
-                            ...item,
-                            startDate: new Date(item.startDate),
-                            endDate: new Date(item.endDate),
-                        };
-                    }) ?? []
-                )
-            );
-        }, 2000);
+        await deleteApi.mutateAsync({ eventId: event.id });
+        await refreshEvents();
         setEditMode(false);
     }
 
@@ -143,19 +164,19 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
     return (
         <>
             <SideDrawer visibleAtom={editModeAtom}>
-                <h1>{event ? 'Edit event' : 'Add event'}</h1>
-                {/* @ts-ignore */}
+                <h1>{_selectedEvent ? 'Edit event' : 'Add event'}</h1>
                 <form onSubmit={saveEvent}>
                     <div>
                         <Label>Event Name</Label>
                         <FormTextInput
+                            name="title"
                             placeholder=" "
                             type="text"
                             defaultValue={event?.title ?? ''}
                             required
                             lazy
                             onLazyChange={(txt) => {
-                                setEvent({ ...event!, title: `${txt}` });
+                                updateEvent('title', txt);
                             }}
                         />
                     </div>
@@ -173,7 +194,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                                 '#84CC16',
                             ]}
                             colorChange={(c) => {
-                                setEvent({ ...event!, color: c });
+                                updateEvent('color', c);
                             }}
                             selectedColor={event?.color ?? ''}
                         />
@@ -182,32 +203,35 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                     <div>
                         <Label>Description</Label>
                         <FormTextInput
+                            name="description"
                             placeholder=" "
                             type="text"
                             required
                             lazy
                             defaultValue={event?.description ?? ''}
                             onLazyChange={(txt) => {
-                                setEvent({ ...event!, description: txt });
+                                updateEvent('description', txt);
                             }}
                         />
                     </div>
                     <div>
                         <Label>Location</Label>
                         <FormTextInput
+                            name="location"
                             placeholder=" "
                             defaultValue={event?.location ?? ''}
                             type="text"
                             required
                             lazy
                             onLazyChange={(t) => {
-                                setEvent({ ...event!, location: `${t}` });
+                                updateEvent('location', t);
                             }}
                         />
                     </div>
                     <div>
                         <Label>Start Time</Label>
                         <FormTextInput
+                            name="startDate"
                             defaultValue={
                                 event?.startDate
                                     ? dayjs(event.startDate).format(
@@ -219,10 +243,10 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                             lazy
                             required
                             onLazyChange={(t) => {
-                                setEvent({
-                                    ...event!,
-                                    startDate: dayjs(new Date(t)).toDate(),
-                                });
+                                updateEvent(
+                                    'startDate',
+                                    dayjs(new Date(t)).toDate()
+                                );
                             }}
                         />
                     </div>
@@ -230,6 +254,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                     <div>
                         <Label>End Time</Label>
                         <FormTextInput
+                            name="endDate"
                             defaultValue={
                                 event?.endDate
                                     ? dayjs(event.endDate).format(
@@ -241,10 +266,10 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                             lazy
                             required
                             onLazyChange={(t) => {
-                                setEvent({
-                                    ...event!,
-                                    endDate: dayjs(new Date(t)).toDate(),
-                                });
+                                updateEvent(
+                                    'endDate',
+                                    dayjs(new Date(t)).toDate()
+                                );
                             }}
                         />
                     </div>
@@ -252,6 +277,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                     <div>
                         <Label>Long Description (Markdown)</Label>
                         <FormTextArea
+                            name="longDescription"
                             placeholder=" "
                             defaultValue={longDescription}
                             lazy
@@ -302,7 +328,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                         <Label>Has check-in?</Label>
                         <CheckBoxWithLabel
                             name="yes"
-                            checked={event?.hasCheckIn}
+                            checked={event?.hasCheckIn ?? false}
                             onChange={(e) => {
                                 setEvent((event) => {
                                     if (!event) {
@@ -331,6 +357,11 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                         <Button
                             type="button"
                             onClick={deleteEvent}
+                            disabled={
+                                checkIns.isLoading ||
+                                hasCheckIns ||
+                                deleteApi.isPending
+                            }
                             size={'compact'}
                             hierarchy={'primary'}
                             variant={'caution'}
@@ -356,6 +387,11 @@ function convertEvent(hackathonId: number, e?: InternalCalendarEventType) {
         return {
             color: '#6466F1',
             hackathonId: hackathonId,
+            title: '',
+            location: '',
+            description: '',
+            eventType: EventType.EVENT,
+            hasCheckIn: false,
         } as CalendarEvent;
     }
     return {} as CalendarEvent;

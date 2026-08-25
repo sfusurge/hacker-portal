@@ -71,6 +71,10 @@ export const getEventLongDescriptionSchema = z.object({
     eventId: z.number().int(),
 });
 
+export const getEventCheckInCountSchema = z.object({
+    eventId: z.number().int(),
+});
+
 export const updateEventSchema = createUpdateSchema(events)
     .omit({
         hackathonId: true,
