@@ -344,31 +344,33 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                         ></CheckBoxWithLabel>
                     </div>
 
-                    <Button
-                        role="submit"
-                        type="submit"
-                        size="compact"
-                        hierarchy="primary"
-                        variant="brand"
-                    >
-                        {_selectedEvent ? 'Save Edit' : 'Create new event'}
-                    </Button>
-                    {_selectedEvent && (
+                    <div className="flex items-center gap-2">
                         <Button
-                            type="button"
-                            onClick={deleteEvent}
-                            disabled={
-                                checkIns.isLoading ||
-                                hasCheckIns ||
-                                deleteApi.isPending
-                            }
-                            size={'compact'}
-                            hierarchy={'primary'}
-                            variant={'caution'}
+                            role="submit"
+                            type="submit"
+                            size="compact"
+                            hierarchy="primary"
+                            variant="brand"
                         >
-                            Delete
+                            {_selectedEvent ? 'Save Edit' : 'Create new event'}
                         </Button>
-                    )}
+                        {_selectedEvent && (
+                            <Button
+                                type="button"
+                                onClick={deleteEvent}
+                                disabled={
+                                    checkIns.isLoading ||
+                                    hasCheckIns ||
+                                    deleteApi.isPending
+                                }
+                                size={'compact'}
+                                hierarchy={'primary'}
+                                variant={'caution'}
+                            >
+                                Delete
+                            </Button>
+                        )}
+                    </div>
                 </form>
             </SideDrawer>
         </>
