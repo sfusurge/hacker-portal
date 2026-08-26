@@ -1,6 +1,11 @@
 import type { BetterAuthOptions } from 'better-auth';
 
 export const authConfig = {
+    session: {
+        // Default Better Auth is 7 days; keep hackers signed in across the app cycle.
+        expiresIn: 60 * 60 * 24 * 90, // 90 days
+        updateAge: 60 * 60 * 24, // refresh expiry when checked after 1 day
+    },
     account: {
         accountLinking: {
             enabled: true,
@@ -61,4 +66,7 @@ export const authConfig = {
             clientSecret: process.env.AUTH_FIGMA_SECRET as string,
         },
     },
-} satisfies Pick<BetterAuthOptions, 'account' | 'user' | 'socialProviders'>;
+} satisfies Pick<
+    BetterAuthOptions,
+    'session' | 'account' | 'user' | 'socialProviders'
+>;
