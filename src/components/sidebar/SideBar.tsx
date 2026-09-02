@@ -127,12 +127,12 @@ const adminLinks = [
         icon: <EnvelopeIcon className="h-6 w-6" />,
         iconAlt: 'Emails logo',
     },
-    {
-        href: '/admin/email/queue',
-        label: 'Email Queue',
-        icon: <InboxStackIcon className="h-6 w-6" />,
-        iconAlt: 'Email queue logo',
-    },
+    // {
+    //     href: '/admin/email/queue',
+    //     label: 'Email Queue',
+    //     icon: <InboxStackIcon className="h-6 w-6" />,
+    //     iconAlt: 'Email queue logo',
+    // },
 ];
 
 // JUDGES CAN ONLY SEE THESE LINKS
@@ -298,7 +298,7 @@ export default function SideBar({ className, initialData }: NavProps) {
             >
                 <div className="flex h-full flex-col items-center justify-between">
                     <div className={clsx('flex w-full flex-col gap-5')}>
-                        <button
+                        {/* <button
                             type="button"
                             onClick={toggleTimeShiftMenu}
                             className={clsx(
@@ -309,7 +309,7 @@ export default function SideBar({ className, initialData }: NavProps) {
                             )}
                         >
                             {collapsed ? 'TS' : 'TIMESHIFT MENU'}
-                        </button>
+                        </button> */}
                         <div
                             className={clsx(
                                 'links flex w-full flex-1 flex-col items-stretch gap-1 px-4 md:px-0'

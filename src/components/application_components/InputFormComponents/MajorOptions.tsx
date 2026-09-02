@@ -17,9 +17,21 @@ export type MajorOptions = {
     name: string;
 };
 
+function normalizeMajorSelection(value: unknown): string[] {
+    if (Array.isArray(value)) {
+        return value.filter(
+            (v): v is string => typeof v === 'string' && v.length > 0
+        );
+    }
+    if (typeof value === 'string' && value.trim()) {
+        return [value.trim()];
+    }
+    return [];
+}
+
 type MajorOptionsProps = {
     apiUrl: string;
-    initialData?: string[];
+    initialData?: unknown;
     onChange: (val: string[]) => void;
     required?: boolean;
     readOnly?: boolean;
@@ -30,13 +42,14 @@ type MajorOptionsProps = {
 
 export function MajorOptions({
     apiUrl,
-    initialData = [],
+    initialData: initialDataProp = [],
     onChange,
     readOnly,
     placeholder = 'Search for Major / Area of Study',
     debounceMs = 300,
     isInvalid = false,
 }: MajorOptionsProps) {
+    const initialData = normalizeMajorSelection(initialDataProp);
     const { toast } = useToast();
     const [fetchedOptions, setFetchedOptions] = useState<MajorOptions[]>([]);
     const MAX_SELECTIONS = 5;
@@ -56,15 +69,16 @@ export function MajorOptions({
     const scrollRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
-        if (initialData !== undefined) {
-            setSelectedValues(initialData);
-            const objects: MajorOptions[] = initialData.map((value) => {
+        const normalized = normalizeMajorSelection(initialDataProp);
+        if (initialDataProp !== undefined) {
+            setSelectedValues(normalized);
+            const objects: MajorOptions[] = normalized.map((value) => {
                 const found = fetchedOptions.find((opt) => opt.value === value);
                 return found || { value, name: value };
             });
             setSelectedObjects(objects);
         }
-    }, [initialData, fetchedOptions]);
+    }, [initialDataProp, fetchedOptions]);
 
     const fetchMajors = useCallback(
         async (query: string, currentOffset: number) => {

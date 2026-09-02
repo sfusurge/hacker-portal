@@ -6,6 +6,18 @@ import { useState, useEffect, useRef } from 'react';
 import { MajorOptions } from './MajorOptions';
 import style from './MajorInput.module.css';
 
+function normalizeMajorSelection(value: unknown): string[] {
+    if (Array.isArray(value)) {
+        return value.filter(
+            (v): v is string => typeof v === 'string' && v.length > 0
+        );
+    }
+    if (typeof value === 'string' && value.trim()) {
+        return [value.trim()];
+    }
+    return [];
+}
+
 export function MajorInput({
     dataAtom,
     disabled = false,
@@ -24,18 +36,15 @@ export function MajorInput({
         if (!inputRef.current) return;
 
         let message = '';
-        const selection = question.selection || [];
+        const selection = normalizeMajorSelection(question.selection);
 
         if ((question.required ?? false) && !disabled) {
-            if (!Array.isArray(selection) || selection.length === 0) {
+            if (selection.length === 0) {
                 message = 'Required, please select at least one major';
             }
         }
 
-        const inputValue =
-            Array.isArray(selection) && selection.length > 0
-                ? selection.join(',')
-                : '';
+        const inputValue = selection.length > 0 ? selection.join(',') : '';
         inputRef.current.value = inputValue;
         inputRef.current.setCustomValidity(message);
         setErrorMsg(message);
@@ -44,11 +53,8 @@ export function MajorInput({
         }
     }, [disabled, question.selection, question.required]);
 
-    const selection = question.selection || [];
-    const inputValue =
-        Array.isArray(selection) && selection.length > 0
-            ? selection.join(',')
-            : '';
+    const selection = normalizeMajorSelection(question.selection);
+    const inputValue = selection.length > 0 ? selection.join(',') : '';
 
     return (
         <div
@@ -72,7 +78,7 @@ export function MajorInput({
             />
             <MajorOptions
                 apiUrl={question.apiUrl}
-                initialData={question.selection || []}
+                initialData={selection}
                 onChange={(val) => {
                     if (inputRef.current) {
                         const inputVal =
