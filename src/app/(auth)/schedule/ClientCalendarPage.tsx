@@ -154,9 +154,10 @@ export function ClientCalendarPage({
                         padding: '0.5rem',
                         flexFlow: 'wrap',
                         gap: '0.25rem',
-                        position: isAdmin && isMobile ? 'sticky' : 'initial',
+                        position: 'initial',
                         top: '5rem',
-                        zIndex: 1000,
+                        zIndex: 60,
+                        justifyContent: isMobile ? 'flex-end' : 'initial',
                     }}
                 >
                     {/* header */}

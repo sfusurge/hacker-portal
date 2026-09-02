@@ -12,8 +12,17 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+/** Pending-status empty state is stored as N/A; legacy rows may still be Awaiting Review. */
+export function normalizePendingStatus(status: string): StatusEnum {
+    if (!status || status === 'Awaiting Review') {
+        return 'N/A';
+    }
+    return status as StatusEnum;
+}
+
 export function statusDisplayLabel(status: string): string {
     switch (status) {
+        case 'N/A':
         case 'Awaiting Review':
             return 'Under review';
         case 'Wait List':
@@ -151,33 +160,29 @@ export function CurrentStatusCell({ value }: { value: string }) {
 
 export function PendingStatusSelect({
     value,
-    currentStatus,
     acceptPendingStatus,
     onChange,
     disabled,
     readOnly,
 }: {
     value: string;
-    currentStatus: string;
     acceptPendingStatus: StatusEnum;
     onChange: (next: StatusEnum) => void;
     disabled?: boolean;
     readOnly?: boolean;
 }) {
+    const normalizedValue = normalizePendingStatus(value);
     const selectableValues: StatusEnum[] = [
-        'Awaiting Review',
+        'N/A',
         acceptPendingStatus,
         'Wait List',
         'Declined',
     ];
-    if (currentStatus !== 'Awaiting Review') {
-        selectableValues.push('N/A');
-    }
     const uniqueValues = Array.from(
         new Set(
-            value && !selectableValues.includes(value as StatusEnum)
-                ? [...selectableValues, value as StatusEnum]
-                : selectableValues
+            selectableValues.includes(normalizedValue)
+                ? selectableValues
+                : [...selectableValues, normalizedValue]
         )
     );
 
@@ -188,7 +193,7 @@ export function PendingStatusSelect({
     if (readOnly) {
         return (
             <div className="absolute inset-0 z-10 flex w-full min-w-0 items-center px-3">
-                <StatusChip status={value || 'Awaiting Review'} />
+                <StatusChip status={normalizedValue} />
             </div>
         );
     }
@@ -203,7 +208,7 @@ export function PendingStatusSelect({
                     onMouseDown={stopRowInteraction}
                     onClick={stopRowInteraction}
                 >
-                    <StatusChip status={value || 'Awaiting Review'} />
+                    <StatusChip status={normalizedValue} />
                     <ChevronDownIcon className="size-4 shrink-0 text-white/60" />
                 </button>
             </DropdownMenuTrigger>
@@ -218,7 +223,7 @@ export function PendingStatusSelect({
                     SELECT STATUS
                 </DropdownMenuLabel>
                 {uniqueValues.map((status) => {
-                    const selected = status === value;
+                    const selected = status === normalizedValue;
                     return (
                         <DropdownMenuItem
                             key={status}
@@ -246,11 +251,10 @@ export function PendingStatusMenuItems({
     onSelect: (next: StatusEnum) => void;
 }) {
     const options: StatusEnum[] = [
-        'Awaiting Review',
+        'N/A',
         acceptPendingStatus,
         'Wait List',
         'Declined',
-        'N/A',
     ];
 
     return (

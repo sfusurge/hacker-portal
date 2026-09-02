@@ -230,3 +230,55 @@
 .htmlHolder :global(p) {
     margin: 0;
 }
+
+@media (max-width: 640px) {
+    .cardContainer {
+        width: 100dvw;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+
+    .header {
+        padding: 1rem 1rem 0.875rem;
+        gap: 0.75rem;
+    }
+
+    .titleHeading {
+        font-size: 1.25rem;
+        letter-spacing: -0.02em;
+    }
+
+    .scroll {
+        padding: 1rem;
+        gap: 1.25rem;
+    }
+
+    .sectionCard {
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .sectionTitle {
+        font-size: 1.125rem;
+    }
+
+    .fieldGrid {
+        gap: 1rem;
+    }
+
+    .footer {
+        gap: 1rem;
+        padding: 1rem;
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+
+    .statusActions {
+        width: 100%;
+        max-width: none;
+    }
+
+    .navLabel {
+        font-size: 0.875rem;
+    }
+}

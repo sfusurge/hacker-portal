@@ -177,10 +177,10 @@ export function ApplicantStatusSummary({
     exportDisabled = false,
 }: ApplicantStatusSummaryProps) {
     return (
-        <div className="flex flex-col gap-4 p-4">
-            <div className="flex items-start justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-white">
+        <div className="flex flex-col gap-4 p-3 sm:p-4">
+            <div className="flex items-start justify-between gap-3 sm:gap-4">
+                <div className="min-w-0">
+                    <h1 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
                         Manage Applicants
                     </h1>
                     <p className="mt-1 text-sm text-white/60">
@@ -195,7 +195,7 @@ export function ApplicantStatusSummary({
                     type="button"
                     onClick={onExport}
                     disabled={exportDisabled}
-                    className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm whitespace-nowrap ${
+                    className={`inline-flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-sm whitespace-nowrap ${
                         exportDisabled
                             ? 'cursor-not-allowed border-neutral-700/40 text-white/30'
                             : 'border-neutral-600/50 text-white hover:bg-neutral-800'

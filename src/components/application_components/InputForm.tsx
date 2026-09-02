@@ -65,11 +65,11 @@ import { ReviewProject } from './ReviewProject';
 import {
     type PageFormState,
     DesktopPageIndicator,
-    MobileHorizontalStepper,
     MobilePageIndicator,
 } from './PageStatus/ApplicationPageIndicator';
 
 import { ArrowLeftIcon } from 'lucide-react';
+import { HomeIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { cn } from '@/lib/utils';
@@ -84,6 +84,7 @@ import { DateInput } from '@/components/application_components/InputFormComponen
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import ReviewApplicationDialog from './ReviewApplicationDialog';
 import { isSubmissionQuestionDisabled } from '@/lib/projects/submissionFormQuestions';
+import { questionValueMatches } from '@/lib/applications/questionValueMatches';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { MobileTopNav } from './MobileTopHeader';
 
@@ -190,7 +191,7 @@ export function InputForm({
     // mobile conditional render
     const isMobile = useMediaQuery('(max-width: 767.5px)');
 
-    const [isReviewPage, setIsReviewPage] = useAtom(isReviewPageAtom);
+    const setIsReviewPage = useSetAtom(isReviewPageAtom);
     useEffect(() => {
         setIsReviewPage(currentPageIndex === pagesAtoms.length);
     }, [currentPageIndex, pagesAtoms.length, setIsReviewPage]);
@@ -227,8 +228,7 @@ export function InputForm({
             className={cn(
                 style.appFormRoot,
                 applicationType === 'application' && 'max-md:-mt-20',
-                applicationType === 'submission' && style.submissionForm,
-                isReviewPage && style.reviewPageWrapper
+                applicationType === 'submission' && style.submissionForm
             )}
         >
             {applicationType === 'application' && isMobile && (
@@ -237,11 +237,19 @@ export function InputForm({
                     savedAt={appData.savedAt}
                 />
             )}
-            {!disablePageTab && isMobile && (
-                <MobileHorizontalStepper
-                    pageStateAtoms={pageStatesAtom}
-                    indexAtom={pageIndexAtom}
-                />
+            {applicationType === 'application' && isMobile && (
+                <div className={style.mobileFormNav}>
+                    <button
+                        type="button"
+                        className={style.mobileHomeButton}
+                        onClick={() => {
+                            router.push('/home');
+                        }}
+                        aria-label="Go to dashboard"
+                    >
+                        <HomeIcon className="h-6 w-6" />
+                    </button>
+                </div>
             )}
             {applicationType === 'application' && (
                 <div className="hidden flex-col gap-1 md:flex">
@@ -482,8 +490,14 @@ function Question({
     const { visibleWhen } = question;
 
     const isVisible = visibleWhen
-        ? (siblings.find((q) => q.questionId === visibleWhen.questionId) as any)
-              ?.value === visibleWhen.value
+        ? questionValueMatches(
+              (
+                  siblings.find(
+                      (q) => q.questionId === visibleWhen.questionId
+                  ) as { value?: unknown } | undefined
+              )?.value,
+              visibleWhen.value
+          )
         : true;
 
     const isDisabled = isSubmissionQuestionDisabled(question, siblings);
@@ -690,7 +704,7 @@ function Question({
         }
     }
 
-    const showNonCanadaWarning = useMemo(() => {
+    const shouldShowNonCanadaWarning = useMemo(() => {
         if (question.type !== 'api-dropdown') return false;
         const apiDropdownQuestion = question as QuestionApiDropdown;
         const isCountryQuestion =
@@ -704,6 +718,18 @@ function Question({
         return selection.trim().toLowerCase() !== 'canada';
     }, [question]);
 
+    const [showNonCanadaWarning, setShowNonCanadaWarning] = useState(false);
+    useEffect(() => {
+        if (!shouldShowNonCanadaWarning) {
+            setShowNonCanadaWarning(false);
+            return;
+        }
+        const timeoutId = window.setTimeout(() => {
+            setShowNonCanadaWarning(true);
+        }, 180);
+        return () => window.clearTimeout(timeoutId);
+    }, [shouldShowNonCanadaWarning]);
+
     if (!isVisible) return null;
 
     return (
@@ -714,26 +740,41 @@ function Question({
                 ? { 'data-question-id': question.questionId }
                 : {})}
         >
-            {showNonCanadaWarning && (
-                <Alert variant="warning" className="mb-4 max-w-[480px]">
-                    <AlertTitle>
-                        This event requires in-person attendance
-                    </AlertTitle>
-                    <AlertDescription>
-                        {hackathon?.hackathonName} is an in-person event and
-                        requires attendance at SFU Burnaby. For questions about
-                        travel reimbursements, please{' '}
-                        <a
-                            className="underline"
-                            href={`${hackathon?.eventPagePayload?.websiteHref}#faq`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            Read our FAQ
-                        </a>
-                        .
-                    </AlertDescription>
-                </Alert>
+            {question.type === 'api-dropdown' && (
+                <div
+                    className={cn(
+                        'grid transition-[grid-template-rows] duration-300 ease-out',
+                        showNonCanadaWarning
+                            ? 'grid-rows-[1fr]'
+                            : 'grid-rows-[0fr]'
+                    )}
+                    aria-hidden={!showNonCanadaWarning}
+                >
+                    <div className="min-h-0 overflow-hidden">
+                        <Alert variant="warning" className="mb-4 max-w-[480px]">
+                            <AlertTitle>
+                                This event requires in-person attendance
+                            </AlertTitle>
+                            <AlertDescription>
+                                {hackathon?.hackathonName} is an in-person event
+                                and requires attendance at SFU Burnaby. For
+                                questions about travel reimbursements, please{' '}
+                                <a
+                                    className="underline"
+                                    href={`${hackathon?.eventPagePayload?.websiteHref}/faq`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    tabIndex={
+                                        showNonCanadaWarning ? undefined : -1
+                                    }
+                                >
+                                    Read our FAQ
+                                </a>
+                                .
+                            </AlertDescription>
+                        </Alert>
+                    </div>
+                </div>
             )}
             {question.type === 'multiple-choice' && (
                 <ChoiceConditionalAlert

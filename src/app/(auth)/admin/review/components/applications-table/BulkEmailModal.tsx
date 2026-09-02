@@ -187,7 +187,9 @@ export function BulkEmailModal({
         const counts = new Map<string, number>();
         for (const r of recipients) {
             const next =
-                r.pendingStatus && r.pendingStatus !== 'N/A'
+                r.pendingStatus &&
+                r.pendingStatus !== 'N/A' &&
+                r.pendingStatus !== 'Awaiting Review'
                     ? r.pendingStatus
                     : r.currentStatus;
             counts.set(next, (counts.get(next) ?? 0) + 1);
@@ -204,6 +206,7 @@ export function BulkEmailModal({
                 (r) =>
                     r.pendingStatus &&
                     r.pendingStatus !== 'N/A' &&
+                    r.pendingStatus !== 'Awaiting Review' &&
                     r.pendingStatus !== r.currentStatus
             ),
         [recipients]
@@ -332,6 +335,7 @@ export function BulkEmailModal({
                 .filter(
                     (r) =>
                         r.pendingStatus !== 'N/A' &&
+                        r.pendingStatus !== 'Awaiting Review' &&
                         r.currentStatus !== 'Accepted'
                 )
                 .map((r) => ({

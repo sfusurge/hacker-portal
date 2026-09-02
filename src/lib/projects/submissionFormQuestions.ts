@@ -7,6 +7,7 @@ import type {
     DisplayRoles,
 } from '@/components/application_components/types';
 import { hasAdminAccess } from '@/lib/auth/roles';
+import { questionValueMatches } from '@/lib/applications/questionValueMatches';
 
 export type SubmissionReviewTableQuestion = {
     questionId: number;
@@ -142,7 +143,7 @@ export function satisfiesSubmissionVisibleWhen(
         response[String(visibleWhen.questionId)] ??
         response[visibleWhen.questionId as unknown as string];
 
-    return parentValue === visibleWhen.value;
+    return questionValueMatches(parentValue, visibleWhen.value);
 }
 
 function getSiblingQuestionValue(
@@ -163,8 +164,8 @@ export function isSubmissionQuestionDisabled(
     const disabledWhen = question.disabledWhen;
     if (!disabledWhen) return false;
 
-    return (
-        getSiblingQuestionValue(siblings, disabledWhen.questionId) ===
+    return questionValueMatches(
+        getSiblingQuestionValue(siblings, disabledWhen.questionId),
         disabledWhen.value
     );
 }
@@ -176,8 +177,8 @@ export function isQuestionVisibleOnForm(
     const visibleWhen = question.visibleWhen;
     if (!visibleWhen) return true;
 
-    return (
-        getSiblingQuestionValue(siblings, visibleWhen.questionId) ===
+    return questionValueMatches(
+        getSiblingQuestionValue(siblings, visibleWhen.questionId),
         visibleWhen.value
     );
 }

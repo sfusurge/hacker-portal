@@ -150,11 +150,10 @@ export function getPendingStatusFilterOptions(
         : [{ value: 'Accepted', label: 'Accepted' }];
 
     return [
-        { value: 'Awaiting Review', label: 'Under review' },
+        { value: 'N/A', label: 'Under review' },
         ...acceptOptions,
         { value: 'Wait List', label: 'Waitlisted' },
         { value: 'Declined', label: 'Rejected' },
-        { value: 'N/A', label: 'N/A' },
     ];
 }
 

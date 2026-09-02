@@ -1,27 +1,8 @@
 /** @type {import('next').NextConfig} */
-function posthogRewrites() {
-    return [
-        {
-            source: '/ingest/static/:path*',
-            destination: 'https://us-assets.i.posthog.com/static/:path*',
-        },
-        {
-            source: '/ingest/:path*',
-            destination: 'https://us.i.posthog.com/:path*',
-        },
-    ];
-}
-
 const nextConfig = {
     cacheComponents: true,
     typescript: { ignoreBuildErrors: true },
     skipTrailingSlashRedirect: true,
-    async rewrites() {
-        if (!process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim()) {
-            return [];
-        }
-        return posthogRewrites();
-    },
     images: {
         remotePatterns: [
             {

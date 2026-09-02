@@ -52,6 +52,7 @@ import {
     updatePage,
     updateQuestion,
     usesAllowCustom,
+    usesAllowMultiple,
     usesAllowOther,
     usesPlaceholder,
 } from './questionEditorModel';
@@ -1272,6 +1273,43 @@ export function QuestionsEditor({
                                                                 <span className="text-xs text-white/60">
                                                                     Allow custom
                                                                     typed answer
+                                                                </span>
+                                                            </label>
+                                                        )}
+                                                        {usesAllowMultiple(
+                                                            q.type
+                                                        ) && (
+                                                            <label className="flex cursor-pointer items-center gap-2">
+                                                                <Checkbox
+                                                                    checked={
+                                                                        q.allowMultiple ===
+                                                                        true
+                                                                    }
+                                                                    onCheckedChange={(
+                                                                        checked
+                                                                    ) =>
+                                                                        apply(
+                                                                            (
+                                                                                p
+                                                                            ) =>
+                                                                                updateQuestion(
+                                                                                    p,
+                                                                                    pi,
+                                                                                    qi,
+                                                                                    {
+                                                                                        allowMultiple:
+                                                                                            checked ===
+                                                                                            true,
+                                                                                    }
+                                                                                )
+                                                                        )
+                                                                    }
+                                                                    className="data-[state=checked]:border-brand-600 data-[state=checked]:bg-brand-600 border-white/30"
+                                                                />
+                                                                <span className="text-xs text-white/60">
+                                                                    Allow
+                                                                    multiple
+                                                                    selections
                                                                 </span>
                                                             </label>
                                                         )}
