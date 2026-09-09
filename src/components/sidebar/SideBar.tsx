@@ -357,7 +357,7 @@ export default function SideBar({ className, initialData }: NavProps) {
                                 />
                             )}
 
-                            {!showJudgeNav &&
+                            {!isPublicSparkjamRoute &&
                                 initialData?.userRole !== 'sponsor' && (
                                     <Popover
                                         open={profilePopoverOpen}
