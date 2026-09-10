@@ -35,7 +35,6 @@ import {
     prepareEmailContent,
 } from '@/app/(auth)/admin/email/templates/emailPreview';
 import { publishReviewTableEvent } from '@/lib/realtime/publishReviewTableEvent';
-import { assignHouseIfNeeded } from '@/server/houses/assignHouse';
 
 export interface SubmitApplicationResponse {
     hackathonId: number;
@@ -367,16 +366,16 @@ export const applicationsRouter = router({
                 });
             }
 
-            if (application && input.status === 'Accepted') {
-                try {
-                    await assignHouseIfNeeded(input.hackathonId, input.userId);
-                } catch (error) {
-                    console.error(
-                        'House assignment failed after status updated to Accepted:',
-                        error
-                    );
-                }
-            }
+            // if (application && input.status === 'Accepted') {
+            //     try {
+            //         await assignHouseIfNeeded(input.hackathonId, input.userId);
+            //     } catch (error) {
+            //         console.error(
+            //             'House assignment failed after status updated to Accepted:',
+            //             error
+            //         );
+            //     }
+            // }
 
             return application;
         }),
@@ -408,21 +407,21 @@ export const applicationsRouter = router({
                 });
             }
 
-            if (input.status === 'Accepted') {
-                for (const application of updatedApplications) {
-                    try {
-                        await assignHouseIfNeeded(
-                            application.hackathonId,
-                            application.userId
-                        );
-                    } catch (error) {
-                        console.error(
-                            'House assignment failed after batch status updated to Accepted:',
-                            error
-                        );
-                    }
-                }
-            }
+            // if (input.status === 'Accepted') {
+            //     for (const application of updatedApplications) {
+            //         try {
+            //             await assignHouseIfNeeded(
+            //                 application.hackathonId,
+            //                 application.userId
+            //             );
+            //         } catch (error) {
+            //             console.error(
+            //                 'House assignment failed after batch status updated to Accepted:',
+            //                 error
+            //             );
+            //         }
+            //     }
+            // }
 
             return updatedApplications;
         }),

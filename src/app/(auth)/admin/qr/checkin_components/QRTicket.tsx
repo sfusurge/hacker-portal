@@ -10,9 +10,18 @@ import { createPortal } from 'react-dom';
 // import {GetUsersOutput} from "@/trpc/client";
 import { useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { trpc } from '@/trpc/client';
+
+const HOUSE_STYLES: Record<string, { icon: string }> = {
+    Sparky: { icon: '/icons/houses/sparky.svg' },
+    Spendy: { icon: '/icons/houses/spendy.svg' },
+    Stormy: { icon: '/icons/houses/stormy.svg' },
+    Trendy: { icon: '/icons/houses/trendy.svg' },
+};
 
 export type QRTicketProps = {
     userId: string | undefined;
+    dbUserId?: number | undefined;
     firstName?: string | null;
     lastName?: string | null;
     image?: string | null;
@@ -21,6 +30,7 @@ export type QRTicketProps = {
 
 export default function QRTicket({
     userId,
+    dbUserId,
     firstName,
     lastName,
     image,
@@ -28,6 +38,14 @@ export default function QRTicket({
 }: QRTicketProps) {
     const [mounted, setMounted] = useState(false);
     const hackathon = useAtomValue(hackathonAtom);
+
+    const houseQuery = trpc.houses.getHouseForUser.useQuery(
+        {
+            hackathonId: hackathon?.id ?? -1,
+            userId: dbUserId ?? -1,
+        },
+        { enabled: !!hackathon?.id && !!dbUserId }
+    );
 
     useEffect(() => {
         setMounted(true);
@@ -121,7 +139,7 @@ export default function QRTicket({
                             <div className="absolute -bottom-2.5 -left-2.5 h-5 w-5 rounded-full bg-neutral-900"></div>
                         </div>
 
-                        <section className="mt-3 flex flex-1 flex-col gap-y-5 p-6 font-sans md:mt-0 md:max-w-56 md:p-10">
+                        <section className="mt-3 flex flex-1 flex-col gap-y-5 p-6 font-sans md:mt-0 md:max-w-80 md:p-10">
                             <div className="hidden md:block">
                                 <Image
                                     src={pfp}
@@ -159,6 +177,19 @@ export default function QRTicket({
                                     </h4>
                                 </div>
                             </section>
+                            {houseQuery.data && (
+                                <div className="relative aspect-[297/70] w-full">
+                                    <Image
+                                        src={
+                                            HOUSE_STYLES[houseQuery.data.name]
+                                                ?.icon ?? '/favicon.png'
+                                        }
+                                        alt={`${houseQuery.data.name} house badge`}
+                                        fill
+                                        className="object-contain"
+                                    />
+                                </div>
+                            )}
                         </section>
                     </section>
                 </div>

@@ -298,6 +298,12 @@ function ManageHouses({
         },
     });
 
+    function updateName(id: number, value: string) {
+        setNames((prev) =>
+            prev.map((n) => (n.id === id ? { ...n, value } : n))
+        );
+    }
+
     function addHouseField() {
         setNames((prev) =>
             prev.length < MAX_HOUSES_PER_HACKATHON
