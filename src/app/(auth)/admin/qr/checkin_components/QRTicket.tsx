@@ -63,6 +63,17 @@ export default function QRTicket({
     // const qrcode: string = await generateQRCode(userId, opts);
 
     const role = 'Hacker';
+    const displayName = [firstName, lastName]
+        .filter((part) => typeof part === 'string' && part.trim().length > 0)
+        .join(' ')
+        .trim();
+    const ticketLabel = displayName ? `${displayName}'s Ticket` : 'Your Ticket';
+    const hackerIdDisplay = (() => {
+        if (!userId) return '';
+        const compact = userId.replace(/\s+/g, '');
+        if (!/^\d+$/.test(compact)) return userId;
+        return compact.replace(/(\d{3})(?=\d)/g, '$1 ');
+    })();
 
     const modal = (
         <div
@@ -98,15 +109,11 @@ export default function QRTicket({
                             className="mb-4 block overflow-hidden rounded-full md:hidden"
                         />
 
-                        <h2 className="tracking-tightest hidden text-sm leading-5 font-normal text-[#ffffff99] md:block">
-                            Your Ticket to
-                        </h2>
+                        <p className="font-sans text-sm leading-normal font-normal tracking-tight text-[var(--text-secondary)]">
+                            {ticketLabel}
+                        </p>
 
-                        <h2 className="tracking-tightest block text-sm leading-5 font-normal text-[#ffffff99] md:hidden">
-                            {firstName + ' ' + lastName + "'s"} Ticket
-                        </h2>
-
-                        <h1 className="tracking-tightest text-center text-xl leading-5 font-semibold text-white">
+                        <h1 className="text-center font-sans text-xl leading-tight font-semibold tracking-tighter text-white">
                             {hackathon?.hackathonName}
                         </h1>
                     </header>
@@ -133,44 +140,44 @@ export default function QRTicket({
                             <div className="absolute -bottom-2.5 -left-2.5 h-5 w-5 rounded-full bg-neutral-900"></div>
                         </div>
 
-                        <section className="mt-3 flex flex-1 flex-col gap-y-5 p-6 font-sans md:mt-0 md:max-w-80 md:p-10">
-                            <div className="hidden md:block">
+                        <section className="mt-3 flex flex-1 flex-col justify-center gap-8 p-6 font-sans md:mt-0 md:max-w-80 md:py-6 md:pr-10 md:pl-6">
+                            <div className="hidden items-start gap-3 md:flex">
                                 <Image
                                     src={pfp}
                                     alt="Profile Picture"
                                     width={44}
                                     height={44}
-                                    className="rounded-full"
+                                    className="size-11 shrink-0 rounded-full object-cover"
                                 />
+                                <div className="flex min-w-0 flex-col gap-1 leading-tight">
+                                    <p className="font-sans text-sm leading-tight font-normal tracking-tight text-[var(--text-secondary)]">
+                                        Name
+                                    </p>
+                                    <p className="text-left font-sans text-base leading-tight font-normal tracking-tight text-white">
+                                        {displayName}
+                                    </p>
+                                </div>
                             </div>
 
-                            <div className="flex flex-col gap-y-1">
-                                <h2 className="tracking-tightest text-sm leading-5 font-light text-[#ffffff99]">
-                                    Name
-                                </h2>
-                                <h1 className="tracking-tightest text-left text-base leading-4 font-light text-white">
-                                    {firstName + ' ' + lastName}
-                                </h1>
-                            </div>
-                            <section className="flex flex-row gap-x-20 md:flex-col md:gap-y-5">
-                                <div className="flex flex-col gap-y-1">
-                                    <h6 className="tracking-tightest text-sm leading-5 font-light text-[#ffffff99]">
+                            <div className="flex flex-row items-start gap-6">
+                                <div className="flex min-w-0 flex-1 flex-col gap-2 leading-tight">
+                                    <p className="font-sans text-sm leading-snug font-normal tracking-tight text-[var(--text-secondary)]">
                                         Role
-                                    </h6>
-                                    <h4 className="tracking-tightest text-left text-base leading-4 font-light text-white">
+                                    </p>
+                                    <p className="text-left font-sans text-base leading-tight font-normal tracking-tight whitespace-nowrap text-white">
                                         {role}
-                                    </h4>
+                                    </p>
                                 </div>
 
-                                <div className="flex flex-col gap-y-2">
-                                    <h6 className="tracking-tightest text-sm leading-5 font-light text-[#ffffff99]">
+                                <div className="flex min-w-0 flex-1 flex-col gap-2 leading-tight">
+                                    <p className="font-sans text-sm leading-snug font-normal tracking-tight text-[var(--text-secondary)]">
                                         Hacker ID
-                                    </h6>
-                                    <h4 className="tracking-tightest text-left text-base leading-4 font-light break-all text-white md:break-all">
-                                        {userId}
-                                    </h4>
+                                    </p>
+                                    <p className="text-left font-mono text-base leading-tight font-normal tracking-normal whitespace-nowrap text-white">
+                                        {hackerIdDisplay}
+                                    </p>
                                 </div>
-                            </section>
+                            </div>
                             {houseQuery.data && (
                                 <HouseBadge name={houseQuery.data.name} />
                             )}
