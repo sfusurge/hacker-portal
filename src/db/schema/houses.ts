@@ -86,7 +86,7 @@ export const getHouseStandingsSchema = z.object({
 
 export const getHouseTopScorersSchema = z.object({
     hackathonId: z.number().int(),
-    limit: z.number().int().min(1).max(20).optional().default(5),
+    limit: z.number().int().min(1).max(5000).optional(),
 });
 
 export const addHouseSchema = z.object({
@@ -100,5 +100,11 @@ export const renameHouseSchema = z.object({
 });
 
 export const deleteHouseSchema = z.object({
+    houseId: z.number().int(),
+});
+
+export const setUserHouseSchema = z.object({
+    hackathonId: z.number().int(),
+    userId: z.number().int(),
     houseId: z.number().int(),
 });

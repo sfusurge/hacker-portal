@@ -14,12 +14,16 @@ import {
     getHousesSchema,
     houseMemberships,
     houses,
+    setUserHouseSchema,
 } from '@/db/schema/houses';
 import { user as usersTable } from '@/db/schema/users/users';
 import { hasAdminAccess } from '@/lib/auth/roles';
 import { TRPCError } from '@trpc/server';
 import { and, asc, countDistinct, desc, eq, sql, sum } from 'drizzle-orm';
-import { assignUnassignedHouses } from '@/server/houses/assignHouse';
+import {
+    assignUnassignedHouses,
+    setUserHouse,
+} from '@/server/houses/assignHouse';
 import { UnauthorizedError } from '../exceptions';
 import { publicProcedure, router } from '../trpc';
 import { getUserData } from '@/server/routers/usersRouter';
@@ -175,6 +179,13 @@ export const housesRouter = router({
             return assignUnassignedHouses(input.hackathonId);
         }),
 
+    setUserHouse: publicProcedure
+        .input(setUserHouseSchema)
+        .mutation(async ({ input }) => {
+            await requireAdmin();
+            return setUserHouse(input.hackathonId, input.userId, input.houseId);
+        }),
+
     getHouseStandings: publicProcedure
         .input(getHouseStandingsSchema)
         .query(async ({ input }) => {
@@ -290,7 +301,7 @@ export const housesRouter = router({
 
             for (const row of memberScores) {
                 const list = scorersByHouse.get(row.houseId) ?? [];
-                if (list.length < input.limit) {
+                if (input.limit == null || list.length < input.limit) {
                     list.push({
                         userId: row.userId,
                         firstName: row.firstName,

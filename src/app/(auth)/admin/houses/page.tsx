@@ -18,6 +18,13 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
     DEFAULT_HOUSES_PER_HACKATHON,
     MAX_HOUSES_PER_HACKATHON,
     MIN_HOUSES_PER_HACKATHON,
@@ -85,8 +92,50 @@ function StandingsTable({ standings }: { standings: StandingRow[] }) {
     );
 }
 
-function ScorersTable({ scorers }: { scorers: ScorerRow[] }) {
+function ScorersTable({
+    hackathonId,
+    currentHouseId,
+    houses,
+    scorers,
+}: {
+    hackathonId: number;
+    currentHouseId: number;
+    houses: StandingRow[];
+    scorers: ScorerRow[];
+}) {
+    const utils = trpc.useUtils();
     const ranks = ranksByPoints(scorers);
+    const [pendingUserId, setPendingUserId] = useState<number | null>(null);
+    const [pageSize, setPageSize] = useState(10);
+    const [pageIndex, setPageIndex] = useState(0);
+
+    const pageCount = Math.max(1, Math.ceil(scorers.length / pageSize));
+    const safePageIndex = Math.min(pageIndex, pageCount - 1);
+    const pageStart = safePageIndex * pageSize;
+    const pageRows = scorers.slice(pageStart, pageStart + pageSize);
+
+    const setUserHouse = trpc.houses.setUserHouse.useMutation({
+        onSuccess: (data) => {
+            toast({
+                title: 'House updated',
+                description: `Moved to ${data.name}.`,
+                variant: 'default',
+            });
+            utils.houses.getHouseStandings.invalidate();
+            utils.houses.getHouseTopScorers.invalidate();
+            utils.houses.getHouseForUser.invalidate();
+        },
+        onError: (err) => {
+            toast({
+                title: 'Failed to update house',
+                description: err.message,
+                variant: 'error',
+            });
+        },
+        onSettled: () => {
+            setPendingUserId(null);
+        },
+    });
 
     if (scorers.length === 0) {
         return (
@@ -98,11 +147,12 @@ function ScorersTable({ scorers }: { scorers: ScorerRow[] }) {
                             <TableHead>Name</TableHead>
                             <TableHead>Email</TableHead>
                             <TableHead>Points</TableHead>
+                            <TableHead>House</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         <TableRow>
-                            <TableCell colSpan={4} className="text-neutral-400">
+                            <TableCell colSpan={5} className="text-neutral-400">
                                 No members yet.
                             </TableCell>
                         </TableRow>
@@ -113,37 +163,153 @@ function ScorersTable({ scorers }: { scorers: ScorerRow[] }) {
     }
 
     return (
-        <div className="rounded-md border border-neutral-800">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>#</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Points</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {scorers.map((scorer, index) => (
-                        <TableRow key={scorer.userId}>
-                            <TableCell>{ranks[index]}</TableCell>
-                            <TableCell>
-                                {formatName(scorer.firstName, scorer.lastName)}
-                            </TableCell>
-                            <TableCell>{scorer.email}</TableCell>
-                            <TableCell>{scorer.points}</TableCell>
+        <div className="space-y-3">
+            <div className="rounded-md border border-neutral-800">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>#</TableHead>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Points</TableHead>
+                            <TableHead>House</TableHead>
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+                    </TableHeader>
+                    <TableBody>
+                        {pageRows.map((scorer, index) => {
+                            const absoluteIndex = pageStart + index;
+                            return (
+                                <TableRow key={scorer.userId}>
+                                    <TableCell>
+                                        {ranks[absoluteIndex]}
+                                    </TableCell>
+                                    <TableCell>
+                                        {formatName(
+                                            scorer.firstName,
+                                            scorer.lastName
+                                        )}
+                                    </TableCell>
+                                    <TableCell>{scorer.email}</TableCell>
+                                    <TableCell>{scorer.points}</TableCell>
+                                    <TableCell>
+                                        <Select
+                                            value={String(currentHouseId)}
+                                            disabled={
+                                                setUserHouse.isPending &&
+                                                pendingUserId === scorer.userId
+                                            }
+                                            onValueChange={(value) => {
+                                                const houseId = Number(value);
+                                                if (
+                                                    houseId === currentHouseId
+                                                ) {
+                                                    return;
+                                                }
+                                                setPendingUserId(scorer.userId);
+                                                setUserHouse.mutate({
+                                                    hackathonId,
+                                                    userId: scorer.userId,
+                                                    houseId,
+                                                });
+                                            }}
+                                        >
+                                            <SelectTrigger className="w-[140px] border-neutral-700 bg-neutral-900">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent className="border-neutral-800 bg-neutral-900 text-white">
+                                                {houses.map((house) => (
+                                                    <SelectItem
+                                                        key={house.houseId}
+                                                        value={String(
+                                                            house.houseId
+                                                        )}
+                                                    >
+                                                        {house.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
+                    </TableBody>
+                </Table>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-neutral-300">
+                <p>
+                    {pageStart + 1}–
+                    {Math.min(pageStart + pageSize, scorers.length)} of{' '}
+                    {scorers.length}
+                </p>
+
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2">
+                        <span className="whitespace-nowrap">Rows per page</span>
+                        <Select
+                            value={String(pageSize)}
+                            onValueChange={(value) => {
+                                setPageSize(Number(value));
+                                setPageIndex(0);
+                            }}
+                        >
+                            <SelectTrigger className="w-[88px] border-neutral-700 bg-neutral-900">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="border-neutral-800 bg-neutral-900 text-white">
+                                {[10, 25, 50, 100].map((size) => (
+                                    <SelectItem key={size} value={String(size)}>
+                                        {size}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <span>
+                            Page {safePageIndex + 1} of {pageCount}
+                        </span>
+                        <Button
+                            type="button"
+                            size="compact"
+                            hierarchy="secondary"
+                            variant="brand"
+                            disabled={safePageIndex <= 0}
+                            onClick={() =>
+                                setPageIndex((prev) => Math.max(0, prev - 1))
+                            }
+                        >
+                            Prev
+                        </Button>
+                        <Button
+                            type="button"
+                            size="compact"
+                            hierarchy="secondary"
+                            variant="brand"
+                            disabled={safePageIndex >= pageCount - 1}
+                            onClick={() =>
+                                setPageIndex((prev) =>
+                                    Math.min(pageCount - 1, prev + 1)
+                                )
+                            }
+                        >
+                            Next
+                        </Button>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
 
-function TopScorersTabs({
+function MembersByHouseTabs({
+    hackathonId,
     houses,
     scorersByHouse,
 }: {
+    hackathonId: number;
     houses: StandingRow[];
     scorersByHouse: Map<number, ScorerRow[]>;
 }) {
@@ -170,6 +336,9 @@ function TopScorersTabs({
                         {house.points} pts · {house.memberCount} members
                     </p>
                     <ScorersTable
+                        hackathonId={hackathonId}
+                        currentHouseId={house.houseId}
+                        houses={houses}
                         scorers={scorersByHouse.get(house.houseId) ?? []}
                     />
                 </TabsContent>
@@ -177,6 +346,7 @@ function TopScorersTabs({
         </Tabs>
     );
 }
+
 function ManageHouses({
     hackathonId,
     housesExist,
@@ -333,11 +503,12 @@ function ManageHouses({
                     {names.map((field, i) => (
                         <div key={field.id} className="flex items-center gap-2">
                             <FormTextInput
+                                type="text"
                                 placeholder={`House ${i + 1} name`}
                                 defaultValue={field.value}
                                 lazy
-                                onLazyChange={(t) =>
-                                    updateName(field.id, `${t}`)
+                                onLazyChange={(t: string) =>
+                                    updateName(field.id, t)
                                 }
                             />
                             {names.length > MIN_HOUSES_PER_HACKATHON && (
@@ -402,10 +573,11 @@ function ManageHouses({
                             {editingId === house.id ? (
                                 <>
                                     <FormTextInput
+                                        type="text"
                                         defaultValue={house.name}
                                         lazy
-                                        onLazyChange={(t) =>
-                                            setEditingName(`${t}`)
+                                        onLazyChange={(t: string) =>
+                                            setEditingName(t)
                                         }
                                     />
                                     <Button
@@ -474,10 +646,11 @@ function ManageHouses({
                     <div className="flex items-center gap-2 pt-2">
                         <FormTextInput
                             key={addHouseKey}
+                            type="text"
                             placeholder="New house name"
                             defaultValue={newHouseName}
                             lazy
-                            onLazyChange={(t) => setNewHouseName(`${t}`)}
+                            onLazyChange={(t: string) => setNewHouseName(t)}
                         />
                         <Button
                             size="compact"
@@ -620,9 +793,14 @@ export default function HousesPage() {
                             </section>
                             <section className="mt-8 space-y-4">
                                 <h2 className="text-lg font-semibold">
-                                    Top scorers by house
+                                    Members by house
                                 </h2>
-                                <TopScorersTabs
+                                <p className="text-sm text-neutral-400">
+                                    Change a member&apos;s house from the
+                                    dropdown.
+                                </p>
+                                <MembersByHouseTabs
+                                    hackathonId={hackathonId}
                                     houses={standings}
                                     scorersByHouse={scorersByHouse}
                                 />

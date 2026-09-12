@@ -167,3 +167,48 @@ export async function assignUnassignedHouses(
 
     return { assigned };
 }
+
+// Assign or move a user to a specific house for this hackathon.
+
+export async function setUserHouse(
+    hackathonId: number,
+    userId: number,
+    houseId: number
+): Promise<HouseAssignment> {
+    const [house] = await databaseClient
+        .select({ id: houses.id, name: houses.name })
+        .from(houses)
+        .where(and(eq(houses.id, houseId), eq(houses.hackathonId, hackathonId)))
+        .limit(1);
+
+    if (!house) {
+        throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'House not found for this hackathon',
+        });
+    }
+
+    const existing = await getMembership(hackathonId, userId);
+    if (existing?.houseId === house.id) {
+        return existing;
+    }
+
+    await databaseClient.transaction(async (tx) => {
+        await tx
+            .delete(houseMemberships)
+            .where(
+                and(
+                    eq(houseMemberships.hackathonId, hackathonId),
+                    eq(houseMemberships.userId, userId)
+                )
+            );
+
+        await tx.insert(houseMemberships).values({
+            hackathonId,
+            houseId: house.id,
+            userId,
+        });
+    });
+
+    return { houseId: house.id, name: house.name };
+}
