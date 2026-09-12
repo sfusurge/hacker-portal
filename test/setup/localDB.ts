@@ -106,7 +106,7 @@ beforeEach(async () => {
         )) as Record<string, any>;
 
         const tables = rows
-            .map((row: Record<string, any>) => row['table_name'])
+            .map((row: Record<string, any>) => `"${row['table_name']}"`)
             ?.join(', ');
 
         console.debug('truncating tables', tables);

@@ -65,6 +65,7 @@ export interface HackathonData {
 export interface InputFormData {
     id: number;
     version: number;
+    savedAt?: number | null;
 
     pages: InputFormPageData[];
 }
@@ -83,6 +84,7 @@ export type InputFormQuestion =
     | QuestionTextAreaInput
     | QuestionTextLineInput
     | QuestionTitleLineInput
+    | QuestionPhoneInput
     | QuestionNumberInput
     | QuestionMultipleChoice
     | QuestionApiDropdown
@@ -181,6 +183,18 @@ export interface QuestionTextLineInput extends Question {
     };
 }
 
+export interface QuestionPhoneInput extends Question {
+    type: 'phone';
+    placeHolder?: string;
+    value?: string;
+    maxCount?: number;
+
+    validator?: {
+        pattern: string;
+        errorMsg: string;
+    };
+}
+
 export interface QuestionTitleLineInput extends Question {
     type: 'title-line';
     placeHolder?: string;
@@ -217,6 +231,7 @@ export interface QuestionTextAreaInput extends Question {
     placeHolder?: string;
     value?: string;
     maxCount?: number;
+    errorMsg?: string;
 }
 
 export interface QuestionNumberInput extends Question {

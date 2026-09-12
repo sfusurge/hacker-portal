@@ -1,20 +1,37 @@
-.hasLength::after {
-    display: block;
-    content: var(--length);
-    color: grey;
-    font-size: smaller;
-    align-self: end;
+.field {
+    display: flex;
+    flex-direction: column;
 }
 
 .hasLength {
-    display: flex;
-    flex-direction: column;
     max-width: 480px;
-    /* width: max-content; */
 }
 
-.hasLength > textarea:user-invalid {
-    border-color: var(--danger-500);
+.footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 1rem;
+    padding-top: 0.2rem;
+    font-size: smaller;
+    line-height: 1rem;
+}
+
+.error {
+    visibility: hidden;
+    color: var(--color-danger-400);
+}
+
+.length {
+    color: grey;
+    margin-left: auto;
+    text-align: right;
+}
+
+.field:has(.textarea:is(:user-invalid, :invalid:not(:placeholder-shown)))
+    .error,
+form[data-validated] .field:has(.textarea:invalid) .error {
+    visibility: visible;
 }
 
 .textarea {
@@ -31,4 +48,9 @@
 .textarea:focus {
     border-color: var(--border-brand-primary);
     background-color: var(--background-brand-focus);
+}
+
+.textarea:is(:user-invalid, :invalid:not(:placeholder-shown)),
+form[data-validated] .textarea:invalid {
+    border-color: var(--danger-500) !important;
 }

@@ -2,6 +2,7 @@ import { createCallerFactory, publicProcedure, router } from './trpc';
 
 import { applicationsRouter } from './routers/applicationsRouter';
 import { checkInRouter } from './routers/checkInRouter';
+import { nfcRouter } from './routers/nfcRouter';
 import { eventsRouter } from './routers/eventsRouter';
 import { housesRouter } from './routers/housesRouter';
 import { hackathonsRouter } from './routers/hackathonsRouter';
@@ -35,6 +36,7 @@ export const appRouter = router({
     events: eventsRouter,
     checkIn: checkInRouter,
     houses: housesRouter,
+    nfc: nfcRouter,
     company: companyRouter,
 
     judging: judgingRouter,

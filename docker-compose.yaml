@@ -14,6 +14,16 @@ services:
         volumes:
             - 'db_data:/var/lib/postgresql/data'
 
+    # Local SMTP catcher for testing email sends without hitting real inboxes.
+    # SMTP on :1025, web UI on http://localhost:8025
+    # Use with .env: SMTP_HOST=localhost, SMTP_PORT=1025, SMTP_SECURE=false
+    mailpit:
+        image: axllent/mailpit
+        container_name: mailpit_container
+        ports:
+            - '1025:1025'
+            - '8025:8025'
+
 volumes:
     db_data:
 # postgres://root:12345@localhost:5432/portaldb

@@ -3,6 +3,10 @@ import { FullPageInfo } from '@/components/ui/FullPageInfo';
 import { stripe } from '@/lib/stripe';
 import { JSX } from 'react';
 import { createCaller } from '@/server/appRouter';
+import {
+    applyApplicationStatusUpdate,
+    applyLastEmailSentUpdate,
+} from '@/server/routers/applicationsRouter';
 import type { InputFormPageData } from '@/components/application_components/types';
 import { getApplicationResponseString } from '@/lib/applications/applicationReviewExport';
 
@@ -50,7 +54,7 @@ export default async function ResultPage(
                         application.currentStatus ===
                             'Accepted - Pending Payment'
                     ) {
-                        await trpcClient.applications.updateApplication({
+                        await applyApplicationStatusUpdate({
                             hackathonId: application.hackathonId,
                             userId: application.userId,
                             status: 'Accepted',
@@ -107,16 +111,14 @@ export default async function ResultPage(
                                             },
                                         });
                                     if (sendResult.emailSent) {
-                                        await trpcClient.applications.updateLastEmailSent(
-                                            {
-                                                hackathonId:
-                                                    application.hackathonId,
-                                                userId: application.userId,
-                                                emailType:
-                                                    rsvpTemplate.emailType ??
-                                                    rsvpTemplate.purpose,
-                                            }
-                                        );
+                                        await applyLastEmailSentUpdate({
+                                            hackathonId:
+                                                application.hackathonId,
+                                            userId: application.userId,
+                                            emailType:
+                                                rsvpTemplate.emailType ??
+                                                rsvpTemplate.purpose,
+                                        });
                                     }
                                 }
                             } catch (e) {

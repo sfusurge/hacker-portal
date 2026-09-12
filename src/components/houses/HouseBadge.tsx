@@ -43,11 +43,10 @@ export default function HouseBadge({
     return (
         <div
             className={cn(
-                'flex h-[70px] items-center gap-3 rounded-xl border px-3',
+                'flex w-full items-center gap-3 rounded-xl border border-solid p-3',
                 className
             )}
             style={{
-                color,
                 backgroundColor: `color-mix(in srgb, ${color} 4%, transparent)`,
                 borderColor: `color-mix(in srgb, ${color} 24%, transparent)`,
             }}
@@ -61,9 +60,17 @@ export default function HouseBadge({
                     className="size-11 shrink-0 rounded-lg object-cover"
                 />
             )}
-            <span className="text-xl leading-none font-medium tracking-tight">
-                {label}
-            </span>
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <span className="text-sm leading-snug tracking-tight text-[var(--text-secondary)]">
+                    House
+                </span>
+                <span
+                    className="text-base leading-tight font-medium tracking-tight whitespace-nowrap"
+                    style={{ color }}
+                >
+                    {label}
+                </span>
+            </div>
         </div>
     );
 }

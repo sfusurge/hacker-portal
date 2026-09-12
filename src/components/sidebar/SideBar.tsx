@@ -19,10 +19,9 @@ import { HomeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { QrCodeIcon } from '@heroicons/react/24/solid';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
-import { authClient } from '@/auth/auth-client';
+import { signOutAndRedirect } from '@/auth/auth-client';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
-import React from 'react';
 import { motion } from 'motion/react';
 import {
     Popover,
@@ -222,7 +221,8 @@ export default function SideBar({ className, initialData }: NavProps) {
             now,
             hackathon.projectGalleryOpen?.toDate() ?? null,
             hackathon.submissionDeadline.toDate(),
-            initialData?.userRole
+            initialData?.userRole,
+            hackathon.submissionOpen?.toDate() ?? null
         );
 
     const mainNavLinks = useMemo(() => {
@@ -358,7 +358,7 @@ export default function SideBar({ className, initialData }: NavProps) {
                                 />
                             )}
 
-                            {!showJudgeNav &&
+                            {!isPublicSparkjamRoute &&
                                 initialData?.userRole !== 'sponsor' && (
                                     <Popover
                                         open={profilePopoverOpen}
@@ -506,7 +506,7 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                 }
                                             />
                                             <NavLink
-                                                href="#"
+                                                href="/signout"
                                                 label="Sign out"
                                                 icon={
                                                     <ArrowLeftEndOnRectangleIcon className="text-danger-400 h-6 w-6" />
@@ -514,19 +514,14 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                 iconAlt="Sign out logo"
                                                 platform="desktop"
                                                 variant="error"
-                                                onClick={async () => {
+                                                onClick={(e) => {
+                                                    e.preventDefault();
                                                     setProfilePopoverOpen(
                                                         false
                                                     );
-                                                    await authClient.signOut();
-                                                    if (
-                                                        typeof window !==
-                                                        'undefined'
-                                                    ) {
-                                                        localStorage.removeItem(
-                                                            'auth-login-success'
-                                                        );
-                                                    }
+                                                    void signOutAndRedirect(
+                                                        '/login'
+                                                    );
                                                 }}
                                             />
                                         </PopoverContent>

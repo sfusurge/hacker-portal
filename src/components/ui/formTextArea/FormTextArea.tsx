@@ -1,6 +1,5 @@
 import {
     ComponentProps,
-    CSSProperties,
     forwardRef,
     useEffect,
     useImperativeHandle,
@@ -18,7 +17,8 @@ function normalizeTextValue(
     if (value == null) return '';
     if (typeof value === 'string') return value;
     if (typeof value === 'number') return String(value);
-    return value.join('');
+    if (Array.isArray(value)) return value.join('');
+    return '';
 }
 
 function countTextLength(
@@ -44,6 +44,7 @@ const FormTextArea = forwardRef<
         lazy?: boolean;
         onLazyChange?: (val: string) => void;
         timeout?: number;
+        errorMsg?: string;
     }
 >(
     (
@@ -53,6 +54,7 @@ const FormTextArea = forwardRef<
             timeout = 500,
             maxLength,
             lengthMode = 'words',
+            errorMsg = 'Invalid',
             defaultValue = '',
             className,
             style: externalStyle,
@@ -69,7 +71,11 @@ const FormTextArea = forwardRef<
             [lengthMode, value]
         );
         const lengthUnit = lengthMode === 'words' ? ' words' : ' characters';
-        const timer = useRef<ReturnType<typeof setTimeout> | undefined>();
+        const lengthText = `${lengthCount}${maxLength ? ` / ${maxLength}` : ''}${lengthUnit}`;
+        const showFooter = maxLength !== undefined || props.required;
+        const timer = useRef<ReturnType<typeof setTimeout> | undefined>(
+            undefined
+        );
 
         useEffect(() => {
             setValue(normalizeTextValue(defaultValue));
@@ -90,12 +96,10 @@ const FormTextArea = forwardRef<
 
         return (
             <div
-                className={maxLength !== undefined ? style.hasLength : ''}
-                style={
-                    {
-                        '--length': `"${lengthCount}${maxLength ? ` / ${maxLength}` : ''}${lengthUnit}"`,
-                    } as CSSProperties
-                }
+                className={cn(
+                    style.field,
+                    maxLength !== undefined && style.hasLength
+                )}
             >
                 <Textarea
                     ref={textRef}
@@ -125,6 +129,14 @@ const FormTextArea = forwardRef<
                     onBlur={change}
                     value={value}
                 />
+                {showFooter && (
+                    <div className={style.footer}>
+                        <span className={style.error}>{errorMsg}</span>
+                        {maxLength !== undefined && (
+                            <span className={style.length}>{lengthText}</span>
+                        )}
+                    </div>
+                )}
             </div>
         );
     }

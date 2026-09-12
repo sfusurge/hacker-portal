@@ -8,8 +8,11 @@
     padding-bottom: 20px;
 }
 
-.finalcheck.optionsContainer:invalid::after,
-.optionsContainer:user-invalid::after {
+/* Only when no radio is selected — not when "Other" text is incomplete */
+.finalcheck.optionsContainer:not(:has(input[type='radio']:checked))::after,
+.optionsContainer:user-invalid:not(:has(input[type='radio']:checked))::after,
+form[data-validated]
+    .optionsContainer:not(:has(input[type='radio']:checked))::after {
     content: 'Required, please make a selection';
     color: var(--color-danger-400);
     font-size: 12px;
@@ -34,6 +37,16 @@
 .optionLabel:has(input:checked) {
     background-color: var(--background-brand-focus);
     border-color: var(--border-brand-primary);
+}
+
+.finalcheck.optionsContainer:not(:has(input[type='radio']:checked))
+    .optionLabel,
+.optionsContainer:user-invalid:not(:has(input[type='radio']:checked))
+    .optionLabel,
+form[data-validated]
+    .optionsContainer:not(:has(input[type='radio']:checked))
+    .optionLabel {
+    border-color: var(--danger-500);
 }
 
 .optionLabel:hover::before {
@@ -70,10 +83,3 @@
 .radio {
     appearance: none;
 }
-
-/* 
-1. no shows, with missing team members
-2. 
-
-
-*/

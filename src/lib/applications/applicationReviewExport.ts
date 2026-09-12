@@ -154,9 +154,16 @@ function getApplicationQuestionCsvValue(
         return resolveApplicationLinkUrl(raw) ?? '';
     }
 
-    if (column.type === 'number' || column.type === 'text-line') {
+    if (
+        column.type === 'number' ||
+        column.type === 'text-line' ||
+        column.type === 'phone'
+    ) {
         const text = formatSubmissionFieldValue(raw).trim();
-        if (column.type === 'text-line' && /^\d{7,15}$/.test(text)) {
+        if (
+            (column.type === 'text-line' || column.type === 'phone') &&
+            /^\d{7,15}$/.test(text)
+        ) {
             return asExcelTextCell(text);
         }
         return text;

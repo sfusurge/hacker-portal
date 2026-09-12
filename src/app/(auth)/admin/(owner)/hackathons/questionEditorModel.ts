@@ -30,9 +30,11 @@ export const isChoiceType = (type?: string) =>
 export const usesAllowOther = (type?: string) => type === 'multiple-checkbox';
 export const usesAllowCustom = (type?: string) =>
     type === 'multiple-choice' || type === 'dropdown';
+export const usesAllowMultiple = (type?: string) => type === 'dropdown';
 
 export const PLACEHOLDER_TYPES = [
     'text-line',
+    'phone',
     'text-area',
     'link',
     'number',
@@ -44,6 +46,7 @@ export const usesPlaceholder = (type?: string) =>
 
 export const QUESTION_TYPE_OPTIONS: { value: string; label: string }[] = [
     { value: 'text-line', label: 'Short text' },
+    { value: 'phone', label: 'Phone number' },
     { value: 'text-area', label: 'Paragraph' },
     { value: 'multiple-choice', label: 'Multiple choice (pick one)' },
     { value: 'multiple-checkbox', label: 'Checkboxes (pick many)' },

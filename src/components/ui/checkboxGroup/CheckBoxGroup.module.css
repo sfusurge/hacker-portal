@@ -1,7 +1,16 @@
-.checkboxgroupfield:has(input[type='text']:invalid)::after {
+.checkboxgroupfield:has(> input[type='text']:user-invalid)::after,
+form[data-validated]
+    .checkboxgroupfield:has(> input[type='text']:invalid)::after {
     content: var(--errorMsg);
 
     display: block;
     color: var(--color-danger-400);
     font-size: 12px;
+}
+
+.checkboxgroupfield:has(> input[type='text']:user-invalid) > label,
+form[data-validated]
+    .checkboxgroupfield:has(> input[type='text']:invalid)
+    > label {
+    border-color: var(--danger-500);
 }

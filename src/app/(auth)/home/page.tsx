@@ -63,8 +63,49 @@ export default async function Home() {
                 {/* MOBILE */}
                 <div className="flex flex-col gap-6 pb-24 md:gap-8 md:pb-10 xl:hidden">
                     {/* <SubmissionCardHomepage /> */}
-                    {!isAdmin && (
-                        <>
+                    {/* {!isAdmin && ( */}
+                    <>
+                        <HackathonCard
+                            hackathon={activeHackathon}
+                            applicationStatus={application?.currentStatus}
+                            applicationSubmitted={application !== null}
+                            applicationOpen={activeHackathon?.applicationOpen}
+                            applicationCloses={
+                                activeHackathon?.applicationCloses
+                            }
+                            ticketQr={userQR}
+                            userDisplayId={data?.displayId}
+                            userDbId={data?.id}
+                            userFirstName={data?.firstName}
+                            userLastName={data?.lastName}
+                        />
+
+                        {/* <ApplicationCard
+                                userData={data}
+                                image={userQR}
+                                applicationStatus={application?.currentStatus}
+                                applicationSubmitted={application !== null}
+                            />
+                            {activeHackathon && (
+                                <TeamCard
+                                    userData={data}
+                                    hackathonId={hackathonId}
+                                    team={team}
+                                />
+                            )} */}
+                    </>
+                    {/* )} */}
+                    <EventsCard events={events} />
+                    <DiscordCard
+                        applicationStatus={application?.currentStatus}
+                    />
+                </div>
+
+                {/* DESKTOP */}
+                <div className="hidden xl:grid xl:grid-cols-11 xl:gap-8">
+                    {/* {!isAdmin && ( */}
+                    <>
+                        <div className="col-span-11 flex flex-col gap-8">
                             <HackathonCard
                                 hackathon={activeHackathon}
                                 applicationStatus={application?.currentStatus}
@@ -81,54 +122,9 @@ export default async function Home() {
                                 userFirstName={data?.firstName}
                                 userLastName={data?.lastName}
                             />
-
-                            {/* <ApplicationCard
-                                userData={data}
-                                image={userQR}
-                                applicationStatus={application?.currentStatus}
-                                applicationSubmitted={application !== null}
-                            />
-                            {activeHackathon && (
-                                <TeamCard
-                                    userData={data}
-                                    hackathonId={hackathonId}
-                                    team={team}
-                                />
-                            )} */}
-                        </>
-                    )}
-                    <EventsCard events={events} />
-                    <DiscordCard
-                        applicationStatus={application?.currentStatus}
-                    />
-                </div>
-
-                {/* DESKTOP */}
-                <div className="hidden xl:grid xl:grid-cols-11 xl:gap-8">
-                    {!isAdmin && (
-                        <>
-                            <div className="col-span-11 flex flex-col gap-8">
-                                <HackathonCard
-                                    hackathon={activeHackathon}
-                                    applicationStatus={
-                                        application?.currentStatus
-                                    }
-                                    applicationSubmitted={application !== null}
-                                    applicationOpen={
-                                        activeHackathon?.applicationOpen
-                                    }
-                                    applicationCloses={
-                                        activeHackathon?.applicationCloses
-                                    }
-                                    ticketQr={userQR}
-                                    userDisplayId={data?.displayId}
-                                    userDbId={data?.id}
-                                    userFirstName={data?.firstName}
-                                    userLastName={data?.lastName}
-                                />
-                            </div>
-                        </>
-                    )}
+                        </div>
+                    </>
+                    {/* )} */}
                     <div
                         className={`${isAdmin ? 'col-span-11' : 'col-span-11'} grid grid-cols-2 gap-8`}
                     >
