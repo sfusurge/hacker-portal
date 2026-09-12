@@ -12,6 +12,7 @@ import {
     ChartBarIcon,
     MegaphoneIcon,
     TrophyIcon,
+    HomeModernIcon,
 } from '@heroicons/react/24/outline';
 
 import { HomeIcon } from '@heroicons/react/24/outline';
@@ -114,6 +115,12 @@ const adminLinks = [
         iconAlt: 'QR logo',
     },
     {
+        href: '/admin/houses',
+        label: 'Houses',
+        icon: <HomeModernIcon className="h-6 w-6" />,
+        iconAlt: 'Houses logo',
+    },
+    {
         href: '/admin/review',
         label: 'Review Applications',
         icon: <UserGroupIcon className="h-6 w-6" />,
@@ -124,12 +131,6 @@ const adminLinks = [
         label: 'Emails',
         icon: <EnvelopeIcon className="h-6 w-6" />,
         iconAlt: 'Emails logo',
-    },
-    {
-        href: '/admin/email/queue',
-        label: 'Email Queue',
-        icon: <InboxStackIcon className="h-6 w-6" />,
-        iconAlt: 'Email queue logo',
     },
 ];
 

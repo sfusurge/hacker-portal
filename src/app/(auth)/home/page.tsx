@@ -75,6 +75,7 @@ export default async function Home() {
                             }
                             ticketQr={userQR}
                             userDisplayId={data?.displayId}
+                            userDbId={data?.id}
                             userFirstName={data?.firstName}
                             userLastName={data?.lastName}
                         />
@@ -117,6 +118,7 @@ export default async function Home() {
                                 }
                                 ticketQr={userQR}
                                 userDisplayId={data?.displayId}
+                                userDbId={data?.id}
                                 userFirstName={data?.firstName}
                                 userLastName={data?.lastName}
                             />

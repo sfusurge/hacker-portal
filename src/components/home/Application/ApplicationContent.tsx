@@ -240,6 +240,7 @@ export function AcceptedContent({
             {ticketOpen && image && (
                 <QRTicket
                     userId={userData?.displayId}
+                    dbUserId={userData?.id}
                     firstName={userData?.firstName ?? ''}
                     lastName={userData?.lastName ?? ''}
                     image={image}

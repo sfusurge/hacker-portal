@@ -28,6 +28,7 @@ type ActiveHackathonCardProps = {
     applicationCloses?: Date | null;
     ticketQr?: string;
     userDisplayId?: string;
+    userDbId?: number;
     userFirstName?: string | null;
     userLastName?: string | null;
 };
@@ -40,6 +41,7 @@ export default function ActiveHackathonCard({
     applicationCloses,
     ticketQr,
     userDisplayId,
+    userDbId,
     userFirstName,
     userLastName,
 }: ActiveHackathonCardProps) {
@@ -161,6 +163,7 @@ export default function ActiveHackathonCard({
             {isTicketOpen && hasTicketData && (
                 <QRTicket
                     userId={userDisplayId}
+                    dbUserId={userDbId}
                     firstName={userFirstName ?? ''}
                     lastName={userLastName ?? ''}
                     image={ticketQr}

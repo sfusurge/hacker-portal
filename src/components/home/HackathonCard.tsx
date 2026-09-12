@@ -30,6 +30,7 @@ export default function HackathonCard({
     applicationCloses,
     ticketQr,
     userDisplayId,
+    userDbId,
     userFirstName,
     userLastName,
 }: {
@@ -40,6 +41,7 @@ export default function HackathonCard({
     applicationCloses?: Date | null;
     ticketQr?: string;
     userDisplayId?: string;
+    userDbId?: number;
     userFirstName?: string | null;
     userLastName?: string | null;
 }) {
@@ -64,6 +66,7 @@ export default function HackathonCard({
                         applicationCloses={applicationCloses}
                         ticketQr={ticketQr}
                         userDisplayId={userDisplayId}
+                        userDbId={userDbId}
                         userFirstName={userFirstName}
                         userLastName={userLastName}
                     />

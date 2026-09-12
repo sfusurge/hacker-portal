@@ -501,6 +501,22 @@ export const applicationsRouter = router({
                 });
             }
 
+            // if (input.status === 'Accepted') {
+            //     for (const application of updatedApplications) {
+            //         try {
+            //             await assignHouseIfNeeded(
+            //                 application.hackathonId,
+            //                 application.userId
+            //             );
+            //         } catch (error) {
+            //             console.error(
+            //                 'House assignment failed after batch status updated to Accepted:',
+            //                 error
+            //             );
+            //         }
+            //     }
+            // }
+
             return updatedApplications;
         }),
 
