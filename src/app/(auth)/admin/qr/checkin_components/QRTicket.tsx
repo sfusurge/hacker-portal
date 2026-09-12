@@ -10,14 +10,8 @@ import { createPortal } from 'react-dom';
 // import {GetUsersOutput} from "@/trpc/client";
 import { useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import HouseBadge from '@/components/houses/HouseBadge';
 import { trpc } from '@/trpc/client';
-
-const HOUSE_STYLES: Record<string, { icon: string }> = {
-    Sparky: { icon: '/icons/houses/sparky.svg' },
-    Spendy: { icon: '/icons/houses/spendy.svg' },
-    Stormy: { icon: '/icons/houses/stormy.svg' },
-    Trendy: { icon: '/icons/houses/trendy.svg' },
-};
 
 export type QRTicketProps = {
     userId: string | undefined;
@@ -178,17 +172,7 @@ export default function QRTicket({
                                 </div>
                             </section>
                             {houseQuery.data && (
-                                <div className="relative aspect-[297/70] w-full">
-                                    <Image
-                                        src={
-                                            HOUSE_STYLES[houseQuery.data.name]
-                                                ?.icon ?? '/favicon.png'
-                                        }
-                                        alt={`${houseQuery.data.name} house badge`}
-                                        fill
-                                        className="object-contain"
-                                    />
-                                </div>
+                                <HouseBadge name={houseQuery.data.name} />
                             )}
                         </section>
                     </section>
