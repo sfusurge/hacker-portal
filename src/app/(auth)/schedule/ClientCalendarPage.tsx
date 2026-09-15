@@ -147,6 +147,15 @@ export function ClientCalendarPage({
                 className="flex flex-col"
                 style={{ height: '100%', opacity: loaded ? 1 : 0 }}
             >
+                <div className="flex flex-col gap-1 px-3 pt-3 pb-2">
+                    <span className="font-sans text-sm leading-none font-normal text-[var(--text-secondary)]">
+                        {hackathon.name} Schedule
+                    </span>
+                    <h1 className="leading-tighter font-sans text-2xl font-semibold text-[var(--text-regular)]">
+                        {monthObj.format('MMMM YYYY')}
+                    </h1>
+                </div>
+
                 <div
                     style={{
                         display: 'flex',
