@@ -46,14 +46,14 @@
 
 .timeLabel {
     min-height: var(--rowHeight);
-    border-bottom: var(--border);
     box-sizing: border-box;
 
     display: flex;
     justify-content: center;
     align-items: start;
-    padding: 0.25rem 0.75rem;
-    font-size: 14px;
+    padding: 0.1rem 0.75rem;
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
 
     text-wrap: nowrap;
 }
