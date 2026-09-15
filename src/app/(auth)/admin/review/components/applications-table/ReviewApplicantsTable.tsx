@@ -161,6 +161,7 @@ type ReviewApplicantsTableProps = {
     applicationDataMap: Map<number, ApplicationWithTeamInfo>;
     fetchNextPage: () => Promise<void>;
     onRowClick?: (app: Applicant) => void;
+    onNavigationListChange?: (applicants: Applicant[]) => void;
     hackathonId: number;
     showLocationColumn: boolean;
 };
@@ -173,6 +174,7 @@ export function ReviewApplicantsTable({
     applicationDataMap,
     fetchNextPage,
     onRowClick,
+    onNavigationListChange,
     hackathonId,
     showLocationColumn,
 }: ReviewApplicantsTableProps) {
@@ -320,6 +322,23 @@ export function ReviewApplicantsTable({
         onPaginationChange: setPagination,
         autoResetPageIndex: false,
     });
+
+    const lastNavigationIdsRef = useRef('');
+    useLayoutEffect(() => {
+        if (!onNavigationListChange) return;
+        const rows = table.getPrePaginationRowModel().rows;
+        const ids = rows.map((row) => row.id).join(',');
+        if (ids === lastNavigationIdsRef.current) return;
+        lastNavigationIdsRef.current = ids;
+        onNavigationListChange(rows.map((row) => row.original));
+    }, [
+        onNavigationListChange,
+        table,
+        tableData,
+        globalFilter,
+        sorting,
+        columnFilters,
+    ]);
 
     const { isMarqueeSelecting, handleRowPointerDown } = useMarqueeRowSelection(
         {

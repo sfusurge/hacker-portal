@@ -36,6 +36,7 @@ export default function ReviewApplicationsTable({
     applicationDataMap,
     fetchNextPage,
     onRowClick,
+    onNavigationListChange,
     hackathonId,
 }: ReviewApplicationsTableProps) {
     const hackathon = useAtomValue(hackathonAtom);
@@ -186,6 +187,7 @@ export default function ReviewApplicationsTable({
             extraColumns={extraColumns}
             fetchNextPage={fetchNextPage}
             onRowClick={onRowClick}
+            onNavigationListChange={onNavigationListChange}
             hackathonId={hackathonId}
             showLocationColumn={showLocationColumn}
         />

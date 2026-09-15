@@ -6,7 +6,7 @@ import ReviewApplicationsTable, {
 } from '@/app/(auth)/admin/review/components/ReviewApplicationsTable';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import SideCard from '@/app/(auth)/admin/review/components/SideCard';
-import { atom, useSetAtom, useAtomValue } from 'jotai';
+import { useSetAtom, useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { trpc } from '@/trpc/client';
 import { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
@@ -26,6 +26,9 @@ export default function ReviewApplicationsPage() {
 
     const [isSideCardOpen, setIsSideCardOpen] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+    const [navigationList, setNavigationList] = useState<Applicant[] | null>(
+        null
+    );
     const [refreshFlag, setRefreshFlag] = useState(0);
     const setSideCardAtom = useSetAtom(sideCardAtomSJ);
     const currentApp = useAtomValue(sideCardAtomSJ);
@@ -62,6 +65,9 @@ export default function ReviewApplicationsPage() {
         [applications, applicationQuestionPages]
     );
 
+    // Prefer the table's filtered/sorted order for SideCard navigation.
+    const navList = navigationList ?? data;
+
     const refresh = () => setRefreshFlag((f) => f + 1);
 
     const fetchNextPage = useCallback(async () => {
@@ -70,9 +76,16 @@ export default function ReviewApplicationsPage() {
         }
     }, [applicationData.hasNextPage, applicationData.fetchNextPage]);
 
+    const handleNavigationListChange = useCallback(
+        (applicants: Applicant[]) => {
+            setNavigationList(applicants);
+        },
+        []
+    );
+
     const selected: ApplicationWithTeamInfo | null = (() => {
         if (selectedIndex == null) return null;
-        const row = data[selectedIndex];
+        const row = navList[selectedIndex];
         if (!row) return null;
         return applicationDataMap.get(row.id) ?? null;
     })();
@@ -82,12 +95,12 @@ export default function ReviewApplicationsPage() {
 
     const onNext = () => {
         const currentId = currentApp?.userId;
-        let i = selectedIndex ?? -1; // default/fallback
+        let i = selectedIndex ?? -1;
         if (currentId != null) {
-            const byId = data.findIndex((d) => d.id === currentId);
-            if (byId !== -1) i = byId; // only override if found
+            const byId = navList.findIndex((d) => d.id === currentId);
+            if (byId !== -1) i = byId;
         }
-        const next = Math.min(i + 1, data.length - 1);
+        const next = Math.min(i + 1, navList.length - 1);
         jumpToIndex(next);
     };
 
@@ -95,7 +108,7 @@ export default function ReviewApplicationsPage() {
         const currentId = currentApp?.userId;
         let i = selectedIndex ?? 0;
         if (currentId != null) {
-            const idx = data.findIndex((d) => d.id === currentId);
+            const idx = navList.findIndex((d) => d.id === currentId);
             if (idx !== -1) i = idx;
         }
         const next = Math.max(i - 1, 0);
@@ -103,9 +116,9 @@ export default function ReviewApplicationsPage() {
     };
 
     function jumpToIndex(nextIdx: number) {
-        if (nextIdx < 0 || nextIdx >= data.length) return;
+        if (nextIdx < 0 || nextIdx >= navList.length) return;
         setSelectedIndex(nextIdx);
-        const sel = data[nextIdx];
+        const sel = navList[nextIdx];
         const full = applicationDataMap.get(sel.id);
         if (full) setSideCardAtom(full);
     }
@@ -115,6 +128,13 @@ export default function ReviewApplicationsPage() {
             setSideCardAtom(selected);
         }
     }, [selected, setSideCardAtom]);
+
+    // Keep selected index aligned when filters/sort change the nav list.
+    useEffect(() => {
+        if (!isSideCardOpen || currentApp?.userId == null) return;
+        const idx = navList.findIndex((d) => d.id === currentApp.userId);
+        setSelectedIndex(idx === -1 ? null : idx);
+    }, [navList, isSideCardOpen, currentApp?.userId]);
 
     useEffect(() => {
         applicationData.refetch();
@@ -131,8 +151,9 @@ export default function ReviewApplicationsPage() {
                 applicationCount={applicationCountData?.applicationCount ?? -1}
                 applicationDataMap={applicationDataMap}
                 fetchNextPage={fetchNextPage}
+                onNavigationListChange={handleNavigationListChange}
                 onRowClick={(app) => {
-                    const idx = data.findIndex((d) => d.id === app.id);
+                    const idx = navList.findIndex((d) => d.id === app.id);
                     setSelectedIndex(idx === -1 ? null : idx);
                     const full = applicationDataMap.get(app.id);
                     if (full) setSideCardAtom(full);
@@ -149,7 +170,7 @@ export default function ReviewApplicationsPage() {
                 selected={selected}
                 onRefresh={refresh}
                 applicantIndex={selectedIndex ?? undefined}
-                applicantTotal={data.length}
+                applicantTotal={navList.length}
             />
         </div>
     );
