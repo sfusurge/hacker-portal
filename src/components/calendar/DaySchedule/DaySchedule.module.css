@@ -78,9 +78,12 @@
 
 .headerContent {
     position: sticky;
-    left: 1.25rem;
+    left: 0;
     top: 0;
-    height: 100%;
+    font-family: var(--font-sans-0);
+    font-size: var(--text-sm);
+    color: var(--text-primary, var(--text-regular));
+    text-align: center;
 }
 
 .dayColumn {
@@ -89,6 +92,11 @@
     border-right: var(--border);
     background-color: var(--background-neutral-secondary);
     height: auto;
+}
+
+.dayColumn > .header {
+    justify-content: center;
+    padding: 8px 4px;
 }
 
 .dayColumnContent {

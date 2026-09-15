@@ -18,7 +18,7 @@ import { LongDescriptionModal } from '../EventLongDescription/EventLongDescripti
 import clsx from 'clsx';
 
 // size of UI, shared
-const [rowHeight, headerHeight] = [90, 30];
+const [rowHeight, headerHeight] = [90, 34];
 
 /**
  * TODO
@@ -154,7 +154,7 @@ export function DaySchedule({
                                 }
                             />
                             {[...Array(24).keys()].map((idx) => {
-                                const timeLabel = zero.format('h a'); //5 am
+                                const timeLabel = zero.format('h A'); //5 AM
                                 zero = zero.add(1, 'hour');
                                 return (
                                     <div key={idx} className={style.timeLabel}>
@@ -186,7 +186,7 @@ export function DaySchedule({
                                         }
                                     >
                                         <div className={style.headerContent}>
-                                            {day.format('MMM D, ddd')}
+                                            {day.format('ddd D')}
                                         </div>
                                     </div>
                                     <div className={style.dayColumnContent}>
