@@ -4,6 +4,7 @@ import { applicationsRouter } from './routers/applicationsRouter';
 import { checkInRouter } from './routers/checkInRouter';
 import { nfcRouter } from './routers/nfcRouter';
 import { eventsRouter } from './routers/eventsRouter';
+import { housesRouter } from './routers/housesRouter';
 import { hackathonsRouter } from './routers/hackathonsRouter';
 import { sendEmailRouter } from './routers/sendEmailRouter';
 import { usersRouter } from './routers/usersRouter';
@@ -34,6 +35,7 @@ export const appRouter = router({
     subscribedEmails: emailsRouter,
     events: eventsRouter,
     checkIn: checkInRouter,
+    houses: housesRouter,
     nfc: nfcRouter,
     company: companyRouter,
 

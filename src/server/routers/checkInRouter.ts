@@ -15,6 +15,7 @@ import { events } from '@/db/schema/events';
 import { applications } from '@/db/schema/applications';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
 import { hasAdminAccess } from '@/lib/auth/roles';
+import { assignHouseIfNeeded } from '@/server/houses/assignHouse';
 
 export const checkInRouter = router({
     checkIn: publicProcedure
@@ -84,6 +85,16 @@ export const checkInRouter = router({
                 .onConflictDoNothing({
                     target: [checkIns.userId, checkIns.eventId],
                 });
+
+            // Fallback assign house if assignment was skipped in RSVP
+            try {
+                await assignHouseIfNeeded(eventRow.hackathonId, input.userId);
+            } catch (error) {
+                console.error(
+                    'House assignment fallback failed during checkin:',
+                    error
+                );
+            }
 
             return true;
         }),
