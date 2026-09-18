@@ -35,7 +35,6 @@ export interface SideCardProps {
     onclose: () => void;
     onPrev: () => void;
     onNext: () => void;
-    selected?: ApplicationWithTeamInfo | null;
     onRefresh?: () => void;
     applicantIndex?: number;
     applicantTotal?: number;
@@ -80,10 +79,7 @@ function formatDisplayValue(value: unknown): string {
 const responseAtom = atom(
     (get) => {
         const val = get(sideCardAtomSJ);
-        if (!val) {
-            return {} as Record<string, any>;
-        }
-        return val.response;
+        return (val?.response ?? {}) as Record<string, any>;
     },
     (get, set, val: Record<string, any>) => {
         set(sideCardAtomSJ, (prev) => {
@@ -103,7 +99,6 @@ export default function SideCard({
     onclose: _onclose,
     onPrev,
     onNext,
-    selected,
     onRefresh,
     applicantIndex,
     applicantTotal,
@@ -198,20 +193,19 @@ export default function SideCard({
         );
     }, [responseData, applicationQuestionPages]);
 
-    const reviewerSelectValue = useMemo((): StatusEnum | undefined => {
+    const reviewerSelectValue = useMemo((): StatusEnum => {
         const selectable = new Set<StatusEnum>([
             'N/A',
             acceptPendingStatus,
             'Wait List',
             'Declined',
         ]);
-        // Pending empty state is N/A ("Under review"); normalize legacy Awaiting Review
         const normalized =
             !status || status === 'Awaiting Review' ? 'N/A' : status;
         if (selectable.has(normalized)) {
             return normalized;
         }
-        return undefined;
+        return 'N/A';
     }, [status, acceptPendingStatus]);
 
     const isPendingStatusReadOnly =
@@ -278,7 +272,7 @@ export default function SideCard({
             .filter((section) => section.questions.length > 0);
     }, [hackathon, applicationQuestionPages]);
 
-    if (!visible || !ready || !responseData) {
+    if (!visible || !ready || !applicationData) {
         return null;
     }
 
@@ -350,35 +344,48 @@ export default function SideCard({
                         >
                             Select status
                         </label>
-                        <Select
-                            key={acceptPendingStatus}
-                            value={reviewerSelectValue}
-                            disabled={isPendingStatusReadOnly}
-                            onValueChange={(v) => setStatus(v as StatusEnum)}
-                        >
-                            <SelectTrigger
+                        {isPendingStatusReadOnly ? (
+                            <div
                                 id="sidecard-review-status"
-                                className="h-11 w-full min-w-[10.5rem] rounded-xl border-neutral-600/60 bg-neutral-800/60"
-                                aria-label="Select status"
-                                aria-readonly={isPendingStatusReadOnly}
+                                className="flex h-11 w-full min-w-[10.5rem] items-center rounded-xl border border-neutral-600/60 bg-neutral-800/60 px-3 text-sm font-medium text-white opacity-50"
+                                aria-label="Accepted"
                             >
-                                <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                            <SelectContent className="z-[21000] border-neutral-800 bg-neutral-900 text-white">
-                                <SelectItem value="N/A">
-                                    Under review
-                                </SelectItem>
-                                <SelectItem value={acceptPendingStatus}>
-                                    Accept
-                                </SelectItem>
-                                <SelectItem value="Wait List">
-                                    Waitlist
-                                </SelectItem>
-                                <SelectItem value="Declined">
-                                    Decline
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
+                                Accepted
+                            </div>
+                        ) : (
+                            <Select
+                                value={reviewerSelectValue}
+                                onValueChange={(v) =>
+                                    setStatus(v as StatusEnum)
+                                }
+                            >
+                                <SelectTrigger
+                                    id="sidecard-review-status"
+                                    className="h-11 w-full min-w-[10.5rem] rounded-xl border-neutral-600/60 bg-neutral-800/60"
+                                    aria-label="Select status"
+                                >
+                                    <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                                <SelectContent
+                                    side="top"
+                                    position="popper"
+                                    className="z-[21000] border-neutral-800 bg-neutral-900 text-white"
+                                >
+                                    <SelectItem value="N/A">
+                                        Under review
+                                    </SelectItem>
+                                    <SelectItem value={acceptPendingStatus}>
+                                        Accept
+                                    </SelectItem>
+                                    <SelectItem value="Wait List">
+                                        Waitlist
+                                    </SelectItem>
+                                    <SelectItem value="Declined">
+                                        Decline
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        )}
                     </div>
                 </div>
 
