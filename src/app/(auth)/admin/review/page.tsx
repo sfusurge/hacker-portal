@@ -17,7 +17,6 @@ import {
     getApplicationResponseField,
     getApplicationResponseString,
 } from '@/lib/applications/applicationReviewExport';
-import { resolveApplicationLocationQuestionId } from '@/lib/applications/buildApplicationReviewTableColumns';
 
 export type { Applicant };
 
