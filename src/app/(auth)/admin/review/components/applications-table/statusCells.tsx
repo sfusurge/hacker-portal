@@ -1,15 +1,20 @@
 'use client';
 
-import { type SyntheticEvent } from 'react';
+import {
+    useEffect,
+    useId,
+    useLayoutEffect,
+    useRef,
+    useState,
+    type SyntheticEvent,
+} from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDownIcon } from '@heroicons/react/16/solid';
 import clsx from 'clsx';
 import type { StatusEnum } from '@/db/schema/applications';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuLabel,
-    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
 /** Pending-status empty state is stored as N/A; legacy rows may still be Awaiting Review. */
@@ -171,6 +176,16 @@ export function PendingStatusSelect({
     disabled?: boolean;
     readOnly?: boolean;
 }) {
+    const menuId = useId();
+    const triggerRef = useRef<HTMLButtonElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const [open, setOpen] = useState(false);
+    const [menuPos, setMenuPos] = useState<{
+        top: number;
+        left: number;
+        maxHeight: number;
+    } | null>(null);
+
     const normalizedValue = normalizePendingStatus(value);
     const selectableValues: StatusEnum[] = [
         'N/A',
@@ -190,6 +205,68 @@ export function PendingStatusSelect({
         e.stopPropagation();
     };
 
+    useLayoutEffect(() => {
+        if (!open || !triggerRef.current) {
+            setMenuPos(null);
+            return;
+        }
+
+        const rect = triggerRef.current.getBoundingClientRect();
+        const menuWidth = 180;
+        const estimatedMenuHeight = 16 + uniqueValues.length * 44;
+        const pad = 8;
+        const spaceBelow = window.innerHeight - rect.bottom - pad;
+        const spaceAbove = rect.top - pad;
+        const placeTop =
+            spaceBelow < estimatedMenuHeight && spaceAbove > spaceBelow;
+        const maxHeight = Math.max(120, placeTop ? spaceAbove : spaceBelow);
+        const left = Math.min(
+            Math.max(pad, rect.left),
+            window.innerWidth - menuWidth - pad
+        );
+        const top = placeTop
+            ? Math.max(pad, rect.top - Math.min(estimatedMenuHeight, maxHeight))
+            : rect.bottom;
+
+        setMenuPos({ top, left, maxHeight });
+    }, [open, uniqueValues.length]);
+
+    useEffect(() => {
+        if (!open) return;
+
+        const onPointerDown = (event: PointerEvent) => {
+            const target = event.target as Node;
+            if (
+                triggerRef.current?.contains(target) ||
+                menuRef.current?.contains(target)
+            ) {
+                return;
+            }
+            setOpen(false);
+        };
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') setOpen(false);
+        };
+        const onScroll = (event: Event) => {
+            if (
+                event.target instanceof Node &&
+                menuRef.current?.contains(event.target)
+            ) {
+                return;
+            }
+            setOpen(false);
+        };
+
+        document.addEventListener('pointerdown', onPointerDown, true);
+        document.addEventListener('keydown', onKeyDown);
+        window.addEventListener('scroll', onScroll, true);
+        return () => {
+            document.removeEventListener('pointerdown', onPointerDown, true);
+            document.removeEventListener('keydown', onKeyDown);
+            window.removeEventListener('scroll', onScroll, true);
+        };
+    }, [open]);
+
     if (readOnly) {
         return (
             <div className="absolute inset-0 z-10 flex w-full min-w-0 items-center px-3">
@@ -199,47 +276,73 @@ export function PendingStatusSelect({
     }
 
     return (
-        <DropdownMenu modal={false}>
-            <DropdownMenuTrigger asChild disabled={disabled}>
-                <button
-                    type="button"
-                    className="absolute inset-0 z-10 flex w-full min-w-0 items-center justify-between gap-2 px-3 outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 focus-visible:ring-inset disabled:cursor-not-allowed disabled:opacity-50"
-                    onPointerDown={stopRowInteraction}
-                    onMouseDown={stopRowInteraction}
-                    onClick={stopRowInteraction}
-                >
-                    <StatusChip status={normalizedValue} />
-                    <ChevronDownIcon className="size-4 shrink-0 text-white/60" />
-                </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-                align="start"
-                sideOffset={0}
-                className="z-[100] w-[180px] rounded-lg rounded-tl-none border-neutral-600/30 bg-neutral-900 p-1 text-white"
-                onClick={stopRowInteraction}
+        <>
+            <button
+                ref={triggerRef}
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={open}
+                aria-controls={open ? menuId : undefined}
+                disabled={disabled}
+                data-state={open ? 'open' : 'closed'}
+                className="absolute inset-0 z-10 flex w-full min-w-0 items-center justify-between gap-2 px-3 outline-none focus-visible:ring-1 focus-visible:ring-neutral-500 focus-visible:ring-inset disabled:cursor-not-allowed disabled:opacity-50"
                 onPointerDown={stopRowInteraction}
+                onMouseDown={stopRowInteraction}
+                onClick={(e) => {
+                    stopRowInteraction(e);
+                    if (!disabled) setOpen((prev) => !prev);
+                }}
             >
-                <DropdownMenuLabel className="px-2 pt-2 pb-1 font-mono text-xs font-medium text-white/60">
-                    SELECT STATUS
-                </DropdownMenuLabel>
-                {uniqueValues.map((status) => {
-                    const selected = status === normalizedValue;
-                    return (
-                        <DropdownMenuItem
-                            key={status}
-                            className={clsx(
-                                'relative cursor-pointer rounded-sm p-2 focus:bg-transparent focus:text-white data-[highlighted]:bg-transparent data-[highlighted]:text-white',
-                                selected &&
-                                    'before:absolute before:top-1 before:bottom-1 before:left-0 before:w-0.5 before:rounded-full before:bg-white'
-                            )}
-                            onSelect={() => onChange(status)}
-                        >
-                            <StatusChip status={status} />
-                        </DropdownMenuItem>
-                    );
-                })}
-            </DropdownMenuContent>
-        </DropdownMenu>
+                <StatusChip status={normalizedValue} />
+                <ChevronDownIcon className="size-4 shrink-0 text-white/60" />
+            </button>
+
+            {open && menuPos
+                ? createPortal(
+                      <div
+                          ref={menuRef}
+                          id={menuId}
+                          role="menu"
+                          aria-label="Select status"
+                          className="z-[21000] w-[180px] overflow-y-auto rounded-lg border border-neutral-600/30 bg-neutral-900 p-1 text-white shadow-lg"
+                          style={{
+                              position: 'fixed',
+                              top: menuPos.top,
+                              left: menuPos.left,
+                              maxHeight: menuPos.maxHeight,
+                          }}
+                          onClick={stopRowInteraction}
+                          onPointerDown={stopRowInteraction}
+                      >
+                          <p className="px-2 pt-2 pb-1 font-mono text-xs font-medium text-white/60">
+                              SELECT STATUS
+                          </p>
+                          {uniqueValues.map((status) => {
+                              const selected = status === normalizedValue;
+                              return (
+                                  <button
+                                      key={status}
+                                      type="button"
+                                      role="menuitem"
+                                      className={clsx(
+                                          'relative flex w-full cursor-pointer rounded-sm p-2 text-left hover:bg-neutral-800/80',
+                                          selected &&
+                                              'before:absolute before:top-1 before:bottom-1 before:left-0 before:w-0.5 before:rounded-full before:bg-white'
+                                      )}
+                                      onClick={() => {
+                                          onChange(status);
+                                          setOpen(false);
+                                      }}
+                                  >
+                                      <StatusChip status={status} />
+                                  </button>
+                              );
+                          })}
+                      </div>,
+                      document.body
+                  )
+                : null}
+        </>
     );
 }
 

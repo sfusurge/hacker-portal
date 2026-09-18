@@ -186,7 +186,8 @@ export function ReviewApplicantsTable({
         [data]
     );
 
-    const [globalFilter, setGlobalFilter] = useState<string>('');
+    const [searchInput, setSearchInput] = useState('');
+    const [globalFilter, setGlobalFilter] = useState('');
     const [groupByTeam, setGroupByTeam] = useState(true);
     const [sorting, setSorting] = useState<SortingState>(() =>
         normalizeSorting([], true)
@@ -214,6 +215,13 @@ export function ReviewApplicantsTable({
         pageSize: 200,
         pageIndex: 0,
     });
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            setGlobalFilter(searchInput);
+        }, 1500);
+        return () => window.clearTimeout(timer);
+    }, [searchInput]);
 
     useEffect(() => {
         const el = tableScrollContainerRef.current;
@@ -626,8 +634,8 @@ export function ReviewApplicantsTable({
                 applicantTab={applicantTab}
                 onApplicantTabChange={handleApplicantTabChange}
                 flaggedCount={flaggedCount}
-                globalFilter={globalFilter}
-                onGlobalFilterChange={setGlobalFilter}
+                globalFilter={searchInput}
+                onGlobalFilterChange={setSearchInput}
                 filterMenuOpen={filterMenuOpen}
                 onFilterMenuOpenChange={setFilterMenuOpen}
                 filterFields={filterFields}
@@ -835,7 +843,9 @@ export function ReviewApplicantsTable({
                                                 <p className="text-lg font-medium tracking-[-0.0075em] text-white">
                                                     {globalFilter.trim()
                                                         ? `No results found for ${globalFilter.trim()}`
-                                                        : 'No results found'}
+                                                        : searchInput.trim()
+                                                          ? 'Searching…'
+                                                          : 'No results found'}
                                                 </p>
                                                 <p className="text-base tracking-[-0.0075em] text-white/60">
                                                     Please try entering a

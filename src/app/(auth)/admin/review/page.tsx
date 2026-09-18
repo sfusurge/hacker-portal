@@ -17,7 +17,6 @@ import {
     getApplicationResponseField,
     getApplicationResponseString,
 } from '@/lib/applications/applicationReviewExport';
-import { resolveApplicationLocationQuestionId } from '@/lib/applications/buildApplicationReviewTableColumns';
 
 export type { Applicant };
 
@@ -65,7 +64,6 @@ export default function ReviewApplicationsPage() {
         [applications, applicationQuestionPages]
     );
 
-    // Prefer the table's filtered/sorted order for SideCard navigation.
     const navList = navigationList ?? data;
 
     const refresh = () => setRefreshFlag((f) => f + 1);
@@ -78,17 +76,19 @@ export default function ReviewApplicationsPage() {
 
     const handleNavigationListChange = useCallback(
         (applicants: Applicant[]) => {
-            setNavigationList(applicants);
+            setNavigationList((prev) => {
+                if (
+                    prev &&
+                    prev.length === applicants.length &&
+                    prev.every((row, i) => row.id === applicants[i]?.id)
+                ) {
+                    return prev;
+                }
+                return applicants;
+            });
         },
         []
     );
-
-    const selected: ApplicationWithTeamInfo | null = (() => {
-        if (selectedIndex == null) return null;
-        const row = navList[selectedIndex];
-        if (!row) return null;
-        return applicationDataMap.get(row.id) ?? null;
-    })();
 
     const openSideCard = () => setIsSideCardOpen(true);
     const closeSideCard = () => setIsSideCardOpen(false);
@@ -124,17 +124,35 @@ export default function ReviewApplicationsPage() {
     }
 
     useEffect(() => {
-        if (selected) {
-            setSideCardAtom(selected);
-        }
-    }, [selected, setSideCardAtom]);
+        if (!isSideCardOpen) return;
 
-    // Keep selected index aligned when filters/sort change the nav list.
-    useEffect(() => {
-        if (!isSideCardOpen || currentApp?.userId == null) return;
-        const idx = navList.findIndex((d) => d.id === currentApp.userId);
-        setSelectedIndex(idx === -1 ? null : idx);
-    }, [navList, isSideCardOpen, currentApp?.userId]);
+        if (navList.length === 0) {
+            setIsSideCardOpen(false);
+            setSelectedIndex(null);
+            return;
+        }
+
+        const currentId = currentApp?.userId;
+        let idx =
+            currentId != null
+                ? navList.findIndex((d) => d.id === currentId)
+                : -1;
+        if (idx === -1) idx = 0;
+
+        const target = navList[idx];
+        setSelectedIndex((prev) => (prev === idx ? prev : idx));
+
+        if (target && target.id !== currentId) {
+            const full = applicationDataMap.get(target.id);
+            if (full) setSideCardAtom(full);
+        }
+    }, [
+        navList,
+        isSideCardOpen,
+        currentApp?.userId,
+        applicationDataMap,
+        setSideCardAtom,
+    ]);
 
     useEffect(() => {
         applicationData.refetch();
@@ -163,11 +181,11 @@ export default function ReviewApplicationsPage() {
             />
 
             <SideCard
+                key={currentApp?.userId ?? 'closed'}
                 visible={isSideCardOpen}
                 onclose={closeSideCard}
                 onPrev={onPrev}
                 onNext={onNext}
-                selected={selected}
                 onRefresh={refresh}
                 applicantIndex={selectedIndex ?? undefined}
                 applicantTotal={navList.length}
