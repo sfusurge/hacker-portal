@@ -226,6 +226,7 @@ export function ClientCalendarPage({
                                     startDate={scheduleStartDate}
                                     events={events}
                                     minColumnWidth={200}
+                                    maxVisibleColumns={4}
                                 />
                             </div>
                         </div>

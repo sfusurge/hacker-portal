@@ -21,11 +21,28 @@
     scrollbar-width: thin;
 }
 
+.scheduleRoot.hiddenScrollbar {
+    scrollbar-width: none;
+}
+
+.scheduleRoot.hiddenScrollbar::-webkit-scrollbar {
+    display: none;
+}
+
 .scheduleContainer {
     height: fit-content;
     width: auto;
     display: flex;
     flex-direction: row;
+}
+
+.scheduleContainer.fixedVisibleColumns {
+    width: var(--scheduleContentWidth);
+}
+
+.scheduleContainer.fixedVisibleColumns .dayColumn {
+    flex: 1 0 0;
+    min-width: 0;
 }
 
 .timeColumn {
@@ -35,7 +52,7 @@
     border-right: var(--border);
     box-sizing: border-box;
 
-    min-width: 50px;
+    min-width: var(--timeColumnWidth);
     height: fit-content;
 
     position: sticky;

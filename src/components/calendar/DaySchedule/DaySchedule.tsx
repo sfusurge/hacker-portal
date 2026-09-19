@@ -18,7 +18,7 @@ import { LongDescriptionModal } from '../EventLongDescription/EventLongDescripti
 import clsx from 'clsx';
 
 // size of UI, shared
-const [rowHeight, headerHeight] = [90, 34];
+const [rowHeight, headerHeight, timeColumnWidth] = [90, 34, 50];
 
 /**
  * TODO
@@ -31,10 +31,12 @@ export function DaySchedule({
     startDate,
     days,
     minColumnWidth,
+    maxVisibleColumns,
 }: {
     startDate: Dayjs;
     days: number;
     minColumnWidth?: number;
+    maxVisibleColumns?: number;
     events: InternalCalendarEventType[];
 }) {
     startDate = dayjs(startDate);
@@ -68,7 +70,18 @@ export function DaySchedule({
         return Object.values(processedEvents).map((dayEventsCols) => {
             return Math.max(dayEventsCols.length * 100, minColumnWidth ?? 200);
         });
-    }, [processedEvents]);
+    }, [minColumnWidth, processedEvents]);
+
+    const scheduleContentWidth = useMemo(() => {
+        if (!maxVisibleColumns || days <= maxVisibleColumns) {
+            return '100%';
+        }
+
+        const widthRatio = days / maxVisibleColumns;
+        const timeColumnOffset = (widthRatio - 1) * timeColumnWidth;
+
+        return `calc(${widthRatio * 100}% - ${timeColumnOffset}px)`;
+    }, [days, maxVisibleColumns]);
 
     let zero = dayjs().hour(0);
 
@@ -85,6 +98,7 @@ export function DaySchedule({
             style={{
                 height: '100%',
                 position: 'relative',
+                width: '100%',
             }}
             ref={rootRef}
         >
@@ -132,17 +146,27 @@ export function DaySchedule({
                     {
                         '--rowHeight': `${rowHeight}px`,
                         '--headerHeight': `${headerHeight}px`,
+                        '--timeColumnWidth': `${timeColumnWidth}px`,
+                        '--scheduleContentWidth': scheduleContentWidth,
                     } as CSSProperties
                 }
             >
-                <div className={style.scheduleRoot}>
+                <div
+                    className={clsx(
+                        style.scheduleRoot,
+                        maxVisibleColumns && style.hiddenScrollbar
+                    )}
+                >
                     <div
                         ref={(ref) => {
                             setContainerHeight(
                                 ref?.scrollHeight! - headerHeight
                             );
                         }}
-                        className={style.scheduleContainer}
+                        className={clsx(
+                            style.scheduleContainer,
+                            maxVisibleColumns && style.fixedVisibleColumns
+                        )}
                     >
                         <div className={style.timeColumn}>
                             <div
