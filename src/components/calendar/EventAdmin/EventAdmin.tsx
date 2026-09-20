@@ -6,7 +6,13 @@ import {
     selectedEventAtom,
 } from '../MonthCalendarShared';
 import { SideDrawer } from '@/components/ui/SideDrawer/SideDrawer';
-import { type FormEvent, useEffect, useState } from 'react';
+import {
+    type CSSProperties,
+    type FormEvent,
+    useEffect,
+    useRef,
+    useState,
+} from 'react';
 import { FormTextInput } from '@/components/ui/input/input';
 import { Label } from '@/components/ui/label';
 import { trpc } from '@/trpc/client';
@@ -25,6 +31,7 @@ import {
 import { EVENT_TYPES, EventType } from '@/db/schema/events';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { cn } from '@/lib/utils';
+import { submitFile } from '@/lib/blobs';
 
 export interface EventAdminProps {
     eventsAtom: PrimitiveAtom<InternalCalendarEventType[]>;
@@ -39,11 +46,21 @@ const eventDateInputClassName =
 const emptyEventDateInputClassName =
     'text-transparent focus:text-[var(--text-secondary)] [&::-webkit-datetime-edit]:text-transparent focus:[&::-webkit-datetime-edit]:text-[var(--text-secondary)]';
 
+const checkerboardBackground: CSSProperties = {
+    background:
+        'repeating-conic-gradient(#f0f0f0 0 25%, #fff 0 50%) 0 0 / 16px 16px',
+};
+
 type EventDateInputProps = {
     name: string;
     value: string;
     required?: boolean;
     onChange: (value: string) => void;
+};
+
+type EventImageUploadProps = {
+    previewUrl?: string;
+    onFileChange: (file?: File) => void;
 };
 
 export function EventAdmin({ eventsAtom }: EventAdminProps) {
@@ -52,6 +69,8 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
     const [editMode, setEditMode] = useAtom(editModeAtom);
 
     const [event, setEvent] = useState<CalendarEvent>();
+    const [imageFile, setImageFile] = useState<File>();
+    const [imagePreviewUrl, setImagePreviewUrl] = useState<string>();
 
     const hackathon = useAtomValue(hackathonAtom);
     const hackathonsFetch = trpc.hackathons.getHackathons.useQuery();
@@ -62,7 +81,22 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
 
     useEffect(() => {
         setEvent(convertEvent(hackathon.id, _selectedEvent?.event));
+        setImageFile(undefined);
     }, [hackathon?.id, _selectedEvent?.event]);
+
+    useEffect(() => {
+        if (!imageFile) {
+            setImagePreviewUrl(undefined);
+            return;
+        }
+
+        const url = URL.createObjectURL(imageFile);
+        setImagePreviewUrl(url);
+
+        return () => {
+            URL.revokeObjectURL(url);
+        };
+    }, [imageFile]);
 
     const longDescriptionFetch = trpc.events.getEventLongDescription.useQuery({
         eventId: event?.id ?? -1,
@@ -129,11 +163,28 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
 
         const formData = new FormData(e.currentTarget);
         const getValue = (name: string) => String(formData.get(name) ?? '');
+        let imageUrl = event.imageUrl;
+
+        if (imageFile) {
+            const extension = imageFile.name.slice(
+                imageFile.name.lastIndexOf('.')
+            );
+            const blob = await submitFile({
+                file: imageFile,
+                path: `events/hackathon-${event.hackathonId}/event-${crypto.randomUUID()}${extension}`,
+                uploadPath: 'event_image',
+                contentType: imageFile.type,
+            });
+
+            imageUrl = blob.url;
+        }
+
         const submittedEvent = {
             ...event,
             title: getValue('title'),
             description: getValue('description'),
             location: getValue('location'),
+            imageUrl,
             startDate: dayjs(new Date(getValue('startDate'))).toDate(),
             endDate: dayjs(new Date(getValue('endDate'))).toDate(),
         };
@@ -350,7 +401,29 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                         </div>
                     </div>
 
+                    <div className="flex flex-col gap-2">
+                        <Label required className={eventFormLabelClassName}>
+                            Location
+                        </Label>
+                        <FormTextInput
+                            name="location"
+                            placeholder="Location"
+                            type="text"
+                            defaultValue={event?.location ?? ''}
+                            required
+                            lazy
+                            onLazyChange={(txt) => {
+                                updateEvent('location', txt);
+                            }}
+                        />
+                    </div>
+
                     <div className="border-t border-[var(--border-neutral-tertiary)]" />
+
+                    <EventImageUpload
+                        previewUrl={imagePreviewUrl ?? event?.imageUrl}
+                        onFileChange={setImageFile}
+                    />
 
                     <div className="flex flex-col gap-3">
                         <Label className={eventFormLabelClassName}>
@@ -444,6 +517,54 @@ function EventDateInput({
                     Pick a date
                 </span>
             )}
+        </div>
+    );
+}
+
+function EventImageUpload({ previewUrl, onFileChange }: EventImageUploadProps) {
+    const inputRef = useRef<HTMLInputElement | null>(null);
+
+    return (
+        <div className="flex items-start gap-6">
+            <div
+                className="h-[110px] w-[196px] shrink-0 overflow-hidden rounded-lg"
+                style={checkerboardBackground}
+            >
+                {previewUrl && (
+                    <img
+                        src={previewUrl}
+                        alt=""
+                        className="h-full w-full object-cover"
+                    />
+                )}
+            </div>
+
+            <div className="flex min-w-0 flex-col gap-3">
+                <Label className={eventFormLabelClassName}>Event image</Label>
+                <input
+                    ref={inputRef}
+                    name="imageFile"
+                    type="file"
+                    accept="image/jpeg,image/png"
+                    className="hidden"
+                    onChange={(e) => onFileChange(e.target.files?.[0])}
+                />
+                <Button
+                    type="button"
+                    size="compact"
+                    hierarchy="primary"
+                    variant="default"
+                    className="w-fit px-3"
+                    onClick={() => inputRef.current?.click()}
+                >
+                    Upload
+                </Button>
+                <p className="text-xs leading-5 text-[var(--text-secondary)]">
+                    .png, .jpeg files up to 16 MB
+                    <br />
+                    At least 800px x 450px
+                </p>
+            </div>
         </div>
     );
 }

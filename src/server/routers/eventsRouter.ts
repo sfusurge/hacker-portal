@@ -29,6 +29,7 @@ export interface CalendarEvent {
     title: string;
     color: string;
     location: string;
+    imageUrl?: string;
     description?: string | undefined;
     checkInTime?: string | undefined;
     hasCheckIn: boolean;
@@ -59,6 +60,7 @@ export const eventsRouter = router({
                     startDate: new Date(input.startDate),
                     endDate: new Date(input.endDate),
                     location: input.location,
+                    imageUrl: input.imageUrl || null,
                     color: input.color,
                     description: input.description,
                     longDescription: input.longDescription,
@@ -114,6 +116,7 @@ export const eventsRouter = router({
                 const { longDescription, ...event } = { ..._event };
                 return {
                     ...event,
+                    imageUrl: event.imageUrl ?? undefined,
                     checkedIn: checkIn != null,
                     description: event.description ?? undefined,
                     hasLongDescription:
@@ -190,6 +193,7 @@ export const eventsRouter = router({
                     startDate: new Date(input.startDate),
                     endDate: new Date(input.endDate),
                     location: input.location,
+                    imageUrl: input.imageUrl || null,
                     description: input.description,
                     longDescription: input.longDescription,
                     eventType: input.eventType as EventType,

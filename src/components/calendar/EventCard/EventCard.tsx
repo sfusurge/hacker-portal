@@ -6,7 +6,6 @@ import {
 import style from './EventCard.module.css';
 import { cn } from '@/lib/utils';
 import { ClockIcon, MapPinIcon } from '@heroicons/react/24/solid';
-import { Dayjs } from 'dayjs';
 
 export interface EventCardProps {
     event: InternalCalendarEventType;
@@ -19,6 +18,10 @@ export function EventCard({ event, children }: EventCardProps) {
             className={cn(style.eventCardContainer)}
             style={{ '--color': event.color } as CSSProperties}
         >
+            {event.imageUrl && (
+                <img src={event.imageUrl} alt="" className={style.eventImage} />
+            )}
+
             <h3 className={cn(style.title, style.line)}>{event.title}</h3>
             <span className={style.line}>
                 <ClockIcon style={{ width: '18px' }} />

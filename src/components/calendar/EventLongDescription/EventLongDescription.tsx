@@ -103,6 +103,10 @@ export function EventLongDescriptionContent({
                 </h1>
             )}
 
+            {event.imageUrl && (
+                <img src={event.imageUrl} alt="" className={style.eventImage} />
+            )}
+
             <span className={style.line}>
                 <ClockIcon style={{ width: '24px' }} />
                 {getEventDurationString(event)}
