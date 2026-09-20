@@ -6,13 +6,7 @@ import {
     selectedEventAtom,
 } from '../MonthCalendarShared';
 import { SideDrawer } from '@/components/ui/SideDrawer/SideDrawer';
-import {
-    type CSSProperties,
-    type FormEvent,
-    useEffect,
-    useRef,
-    useState,
-} from 'react';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { FormTextInput } from '@/components/ui/input/input';
 import { Label } from '@/components/ui/label';
 import { trpc } from '@/trpc/client';
@@ -46,7 +40,7 @@ const eventDateInputClassName =
 const emptyEventDateInputClassName =
     'text-transparent focus:text-[var(--text-secondary)] [&::-webkit-datetime-edit]:text-transparent focus:[&::-webkit-datetime-edit]:text-[var(--text-secondary)]';
 
-const checkerboardBackground: CSSProperties = {
+const checkerboardBackground = {
     background:
         'repeating-conic-gradient(#f0f0f0 0 25%, #fff 0 50%) 0 0 / 16px 16px',
 };
