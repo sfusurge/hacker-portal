@@ -63,12 +63,6 @@ export function ClientCalendarPage({
     }, []);
 
     const [width] = useWindowSize();
-    const eventStarted = useMemo(() => {
-        return (
-            dayjs().isAfter(dayjs(hackathon.startDate).startOf('day')) &&
-            dayjs().isBefore(hackathon.endDate)
-        );
-    }, [hackathon]);
     const isMobile = useMemo(() => width <= 768, [width]);
 
     const [selectedEvent] = useAtom(selectedEventAtom);
@@ -110,8 +104,13 @@ export function ClientCalendarPage({
     }, [events, hackathon.endDate, hackathon.startDate]);
 
     const [desktopStartDate, setDesktopStartDate] = useState<Dayjs>();
+    const [desktopSelectedDate, setDesktopSelectedDate] = useState<Dayjs>();
     const scheduleStartDate = desktopStartDate ?? defaultStartDate;
-    const scheduleDays = eventStarted ? 2 : 7;
+    const calendarSelectedDate = useMemo(
+        () => desktopSelectedDate ?? scheduleStartDate.add(1, 'day'),
+        [desktopSelectedDate, scheduleStartDate]
+    );
+    const scheduleDays = 4;
 
     useEffect(() => {
         if (isMobile) {
@@ -119,17 +118,17 @@ export function ClientCalendarPage({
         }
 
         updateYearMonth('set', {
-            year: scheduleStartDate.year(),
-            month: scheduleStartDate.month(),
+            year: calendarSelectedDate.year(),
+            month: calendarSelectedDate.month(),
         });
-    }, [isMobile, scheduleStartDate, updateYearMonth]);
+    }, [calendarSelectedDate, isMobile, updateYearMonth]);
 
-    function setDesktopScheduleDate(date: Dayjs) {
+    function setDesktopScheduleDate(date: Dayjs, calendarDate = date) {
         const nextDate = date.startOf('day');
         setDesktopStartDate(nextDate);
         updateYearMonth('set', {
-            year: nextDate.year(),
-            month: nextDate.month(),
+            year: calendarDate.year(),
+            month: calendarDate.month(),
         });
     }
 
@@ -138,11 +137,15 @@ export function ClientCalendarPage({
             return;
         }
 
-        setDesktopScheduleDate(dayjs(date));
+        const selectedDate = dayjs(date).startOf('day');
+        setDesktopSelectedDate(selectedDate);
+        setDesktopScheduleDate(selectedDate.subtract(1, 'day'), selectedDate);
     }
 
     function handleDesktopMonthChange(date: Date) {
-        setDesktopScheduleDate(dayjs(date).startOf('month'));
+        const selectedDate = dayjs(date).startOf('month');
+        setDesktopSelectedDate(selectedDate);
+        setDesktopScheduleDate(selectedDate.subtract(1, 'day'), selectedDate);
     }
 
     useEffect(() => {
@@ -236,7 +239,7 @@ export function ClientCalendarPage({
                                 <Calendar
                                     mode="single"
                                     month={monthObj.toDate()}
-                                    selected={scheduleStartDate.toDate()}
+                                    selected={calendarSelectedDate.toDate()}
                                     onSelect={handleDesktopDateSelect}
                                     onMonthChange={handleDesktopMonthChange}
                                     className="w-full p-4"
