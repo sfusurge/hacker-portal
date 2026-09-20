@@ -9,12 +9,11 @@ import { SideDrawer } from '@/components/ui/SideDrawer/SideDrawer';
 import { type FormEvent, useEffect, useState } from 'react';
 import { FormTextInput } from '@/components/ui/input/input';
 import { Label } from '@/components/ui/label';
-import { ColorPicker } from '@/components/ui/ColorPicker/ColorPicker';
 import { trpc } from '@/trpc/client';
 import { FormTextArea } from '@/components/ui/formTextArea/FormTextArea';
 import { Button } from '@/components/ui/button';
 import dayjs from 'dayjs';
-import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import {
     Select,
     SelectContent,
@@ -22,15 +21,30 @@ import {
     SelectItem,
     SelectLabel,
     SelectTrigger,
-    SelectValue,
 } from '@/components/ui/select';
 import { EVENT_TYPES, EventType } from '@/db/schema/events';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { cn } from '@/lib/utils';
 
 export interface EventAdminProps {
     eventsAtom: PrimitiveAtom<InternalCalendarEventType[]>;
 }
 export const editModeAtom = atom(false);
+
+const eventFormLabelClassName = 'font-normal text-[var(--text-secondary)]';
+
+const eventDateInputClassName =
+    'peer focus:border-brand-500 h-11 w-full rounded-md border border-[var(--border-neutral-secondary)] bg-[var(--background-neutral-secondary)] px-3 py-2 pl-10 text-sm text-[var(--text-secondary)] transition-colors outline-none [&::-webkit-calendar-picker-indicator]:opacity-0';
+
+const emptyEventDateInputClassName =
+    'text-transparent focus:text-[var(--text-secondary)] [&::-webkit-datetime-edit]:text-transparent focus:[&::-webkit-datetime-edit]:text-[var(--text-secondary)]';
+
+type EventDateInputProps = {
+    name: string;
+    value: string;
+    required?: boolean;
+    onChange: (value: string) => void;
+};
 
 export function EventAdmin({ eventsAtom }: EventAdminProps) {
     const [_selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
@@ -40,6 +54,11 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
     const [event, setEvent] = useState<CalendarEvent>();
 
     const hackathon = useAtomValue(hackathonAtom);
+    const hackathonsFetch = trpc.hackathons.getHackathons.useQuery();
+    const hackathonOptions = hackathonsFetch.data ?? [hackathon];
+    const selectedHackathonName =
+        hackathonOptions.find((option) => option.id === event?.hackathonId)
+            ?.name ?? hackathon.name;
 
     useEffect(() => {
         setEvent(convertEvent(hackathon.id, _selectedEvent?.event));
@@ -164,13 +183,17 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
     return (
         <>
             <SideDrawer visibleAtom={editModeAtom}>
-                <h1>{_selectedEvent ? 'Edit event' : 'Add event'}</h1>
-                <form onSubmit={saveEvent}>
-                    <div>
-                        <Label>Event Name</Label>
+                <h1 className="mb-4 font-sans text-lg leading-tight font-semibold tracking-tighter text-white">
+                    {_selectedEvent ? 'Edit event' : 'Create new event'}
+                </h1>
+                <form onSubmit={saveEvent} className="flex flex-col gap-5">
+                    <div className="flex flex-col gap-2">
+                        <Label className={eventFormLabelClassName}>
+                            Event name
+                        </Label>
                         <FormTextInput
                             name="title"
-                            placeholder=" "
+                            placeholder="Event Title"
                             type="text"
                             defaultValue={event?.title ?? ''}
                             required
@@ -181,114 +204,48 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                         />
                     </div>
 
-                    <div>
-                        <Label>Color</Label>
-                        <ColorPicker
-                            colors={[
-                                '#6466F1',
-                                '#0EA5E9',
-                                '#F43F5E',
-                                '#D946EF',
-                                '#8B5CF6',
-                                '#14B8A6',
-                                '#84CC16',
-                            ]}
-                            colorChange={(c) => {
-                                updateEvent('color', c);
+                    <div className="flex flex-col gap-2">
+                        <Label className={eventFormLabelClassName}>
+                            Major Event
+                        </Label>
+                        <Select
+                            value={String(event?.hackathonId ?? hackathon.id)}
+                            disabled={Boolean(_selectedEvent)}
+                            onValueChange={(hackathonId) => {
+                                updateEvent('hackathonId', Number(hackathonId));
                             }}
-                            selectedColor={event?.color ?? ''}
-                        />
+                        >
+                            <SelectTrigger className="h-11 w-full disabled:opacity-100">
+                                <span className="flex items-center gap-2">
+                                    <span className="bg-brand-500 size-1.5 rounded-full" />
+                                    {selectedHackathonName}
+                                </span>
+                            </SelectTrigger>
+                            <SelectContent className="z-[9999] bg-neutral-800 text-white">
+                                <SelectGroup>
+                                    <SelectLabel>Major Event</SelectLabel>
+                                    {hackathonOptions.map((option) => {
+                                        return (
+                                            <SelectItem
+                                                key={option.id}
+                                                value={String(option.id)}
+                                            >
+                                                <span className="flex items-center gap-2">
+                                                    <span className="bg-brand-500 size-1.5 rounded-full" />
+                                                    {option.name}
+                                                </span>
+                                            </SelectItem>
+                                        );
+                                    })}
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
                     </div>
 
-                    <div>
-                        <Label>Description</Label>
-                        <FormTextInput
-                            name="description"
-                            placeholder=" "
-                            type="text"
-                            required
-                            lazy
-                            defaultValue={event?.description ?? ''}
-                            onLazyChange={(txt) => {
-                                updateEvent('description', txt);
-                            }}
-                        />
-                    </div>
-                    <div>
-                        <Label>Location</Label>
-                        <FormTextInput
-                            name="location"
-                            placeholder=" "
-                            defaultValue={event?.location ?? ''}
-                            type="text"
-                            required
-                            lazy
-                            onLazyChange={(t) => {
-                                updateEvent('location', t);
-                            }}
-                        />
-                    </div>
-                    <div>
-                        <Label>Start Time</Label>
-                        <FormTextInput
-                            name="startDate"
-                            defaultValue={
-                                event?.startDate
-                                    ? dayjs(event.startDate).format(
-                                          'YYYY-MM-DDTHH:mm:ss'
-                                      )
-                                    : ''
-                            }
-                            type="datetime-local"
-                            lazy
-                            required
-                            onLazyChange={(t) => {
-                                updateEvent(
-                                    'startDate',
-                                    dayjs(new Date(t)).toDate()
-                                );
-                            }}
-                        />
-                    </div>
-
-                    <div>
-                        <Label>End Time</Label>
-                        <FormTextInput
-                            name="endDate"
-                            defaultValue={
-                                event?.endDate
-                                    ? dayjs(event.endDate).format(
-                                          'YYYY-MM-DDTHH:mm:ss'
-                                      )
-                                    : ''
-                            }
-                            type="datetime-local"
-                            lazy
-                            required
-                            onLazyChange={(t) => {
-                                updateEvent(
-                                    'endDate',
-                                    dayjs(new Date(t)).toDate()
-                                );
-                            }}
-                        />
-                    </div>
-
-                    <div>
-                        <Label>Long Description (Markdown)</Label>
-                        <FormTextArea
-                            name="longDescription"
-                            placeholder=" "
-                            defaultValue={longDescription}
-                            lazy
-                            onLazyChange={(t) => {
-                                setLongDescription(t);
-                            }}
-                        />
-                    </div>
-
-                    <div>
-                        <Label>Select Event</Label>
+                    <div className="flex flex-col gap-2">
+                        <Label className={eventFormLabelClassName}>
+                            Event Category
+                        </Label>
                         <Select
                             value={event?.eventType ?? EventType.EVENT}
                             defaultValue="Event"
@@ -303,19 +260,38 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                                 });
                             }}
                         >
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Choose Event Type" />
+                            <SelectTrigger className="h-11 w-full">
+                                <span className="flex items-center gap-2">
+                                    <span
+                                        className="size-1.5 rounded-full"
+                                        style={{
+                                            backgroundColor:
+                                                event?.color ?? '#6466F1',
+                                        }}
+                                    />
+                                    {event?.eventType ?? EventType.EVENT}
+                                </span>
                             </SelectTrigger>
                             <SelectContent className="z-[9999] bg-neutral-800 text-white">
                                 <SelectGroup>
-                                    <SelectLabel>Event Type</SelectLabel>
+                                    <SelectLabel>Event category</SelectLabel>
                                     {EVENT_TYPES.map((eventType) => {
                                         return (
                                             <SelectItem
                                                 key={eventType}
                                                 value={eventType}
                                             >
-                                                {eventType}
+                                                <span className="flex items-center gap-2">
+                                                    <span
+                                                        className="size-1.5 rounded-full"
+                                                        style={{
+                                                            backgroundColor:
+                                                                event?.color ??
+                                                                '#6466F1',
+                                                        }}
+                                                    />
+                                                    {eventType}
+                                                </span>
                                             </SelectItem>
                                         );
                                     })}
@@ -324,53 +300,74 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                         </Select>
                     </div>
 
-                    <div className="mb-2">
-                        <Label>Has check-in?</Label>
-                        <CheckBoxWithLabel
-                            name="yes"
-                            checked={event?.hasCheckIn ?? false}
-                            disabled={checkIns.isLoading || hasCheckIns}
-                            onChange={(e) => {
-                                setEvent((event) => {
-                                    if (!event) {
-                                        return event;
-                                    }
+                    <div className="border-t border-[var(--border-neutral-tertiary)]" />
 
-                                    return {
-                                        ...event,
-                                        hasCheckIn: e.target.checked,
-                                    };
-                                });
-                            }}
-                        ></CheckBoxWithLabel>
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                        <div className="flex flex-col gap-2">
+                            <Label required className={eventFormLabelClassName}>
+                                Start date
+                            </Label>
+                            <EventDateInput
+                                name="startDate"
+                                value={
+                                    event?.startDate
+                                        ? dayjs(event.startDate).format(
+                                              'YYYY-MM-DDTHH:mm:ss'
+                                          )
+                                        : ''
+                                }
+                                required
+                                onChange={(t) => {
+                                    updateEvent(
+                                        'startDate',
+                                        dayjs(new Date(t)).toDate()
+                                    );
+                                }}
+                            />
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <Label required className={eventFormLabelClassName}>
+                                End date
+                            </Label>
+                            <EventDateInput
+                                name="endDate"
+                                value={
+                                    event?.endDate
+                                        ? dayjs(event.endDate).format(
+                                              'YYYY-MM-DDTHH:mm:ss'
+                                          )
+                                        : ''
+                                }
+                                required
+                                onChange={(t) => {
+                                    updateEvent(
+                                        'endDate',
+                                        dayjs(new Date(t)).toDate()
+                                    );
+                                }}
+                            />
+                        </div>
                     </div>
 
-                    <div>
-                        <Label>Points</Label>
-                        <FormTextInput
-                            type="number"
-                            defaultValue={event?.points ?? 1}
+                    <div className="border-t border-[var(--border-neutral-tertiary)]" />
+
+                    <div className="flex flex-col gap-3">
+                        <Label className={eventFormLabelClassName}>
+                            Event description (Optional)
+                        </Label>
+                        <FormTextArea
+                            name="longDescription"
+                            placeholder=" "
+                            defaultValue={longDescription}
                             lazy
                             onLazyChange={(t) => {
-                                const n = Number(t);
-                                setEvent({
-                                    ...event!,
-                                    points: Number(isNaN(n) ? 1 : n),
-                                });
+                                setLongDescription(t);
                             }}
                         />
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <Button
-                            role="submit"
-                            type="submit"
-                            size="compact"
-                            hierarchy="primary"
-                            variant="brand"
-                        >
-                            {_selectedEvent ? 'Save Edit' : 'Create new event'}
-                        </Button>
+                    <div className="flex items-center justify-between gap-3 pt-2">
                         {_selectedEvent && (
                             <Button
                                 type="button"
@@ -387,10 +384,67 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                                 Delete
                             </Button>
                         )}
+                        <div className="ml-auto flex items-center gap-3">
+                            <Button
+                                type="button"
+                                size="compact"
+                                hierarchy="secondary"
+                                variant="default"
+                                onClick={() => {
+                                    setEditMode(false);
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                size="compact"
+                                hierarchy="primary"
+                                variant="brand"
+                            >
+                                {_selectedEvent ? 'Save edit' : 'Create event'}
+                            </Button>
+                        </div>
                     </div>
                 </form>
             </SideDrawer>
         </>
+    );
+}
+
+function EventDateInput({
+    name,
+    value,
+    required,
+    onChange,
+}: EventDateInputProps) {
+    const empty = !value;
+
+    return (
+        <div className="relative">
+            <CalendarIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[var(--text-secondary)]" />
+            <input
+                name={name}
+                type="datetime-local"
+                value={value}
+                required={required}
+                onClick={(e) => {
+                    e.currentTarget.showPicker?.();
+                }}
+                onChange={(e) => {
+                    onChange(e.target.value);
+                }}
+                className={cn(
+                    eventDateInputClassName,
+                    empty && emptyEventDateInputClassName
+                )}
+            />
+            {empty && (
+                <span className="pointer-events-none absolute top-1/2 left-10 -translate-y-1/2 text-sm text-[var(--text-secondary)] peer-focus:hidden">
+                    Pick a date
+                </span>
+            )}
+        </div>
     );
 }
 
