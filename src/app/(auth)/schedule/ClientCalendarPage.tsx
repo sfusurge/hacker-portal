@@ -132,20 +132,40 @@ export function ClientCalendarPage({
         });
     }
 
+    function selectDate(date: Dayjs) {
+        const selectedDate = date.startOf('day');
+        setDesktopSelectedDate(selectedDate);
+        setDesktopScheduleDate(selectedDate.subtract(1, 'day'), selectedDate);
+    }
+
     function handleDesktopDateSelect(date: Date | undefined) {
         if (!date) {
             return;
         }
 
-        const selectedDate = dayjs(date).startOf('day');
-        setDesktopSelectedDate(selectedDate);
-        setDesktopScheduleDate(selectedDate.subtract(1, 'day'), selectedDate);
+        selectDate(dayjs(date));
     }
 
     function handleDesktopMonthChange(date: Date) {
-        const selectedDate = dayjs(date).startOf('month');
-        setDesktopSelectedDate(selectedDate);
-        setDesktopScheduleDate(selectedDate.subtract(1, 'day'), selectedDate);
+        selectDate(dayjs(date).startOf('month'));
+    }
+
+    function shiftRange(days: number) {
+        const nextDate = scheduleStartDate.add(days, 'day');
+        setDesktopSelectedDate(nextDate.add(1, 'day'));
+        setDesktopScheduleDate(nextDate, nextDate.add(1, 'day'));
+    }
+
+    function handlePreviousScheduleRange() {
+        shiftRange(-2);
+    }
+
+    function handleNextScheduleRange() {
+        shiftRange(2);
+    }
+
+    function handleTodayScheduleRange() {
+        selectDate(dayjs());
     }
 
     useEffect(() => {
@@ -230,6 +250,11 @@ export function ClientCalendarPage({
                                     events={events}
                                     minColumnWidth={200}
                                     maxVisibleColumns={4}
+                                    onPreviousRange={
+                                        handlePreviousScheduleRange
+                                    }
+                                    onToday={handleTodayScheduleRange}
+                                    onNextRange={handleNextScheduleRange}
                                 />
                             </div>
                         </div>

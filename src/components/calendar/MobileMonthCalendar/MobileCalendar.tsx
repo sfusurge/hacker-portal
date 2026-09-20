@@ -19,7 +19,7 @@ import dayOfYear from 'dayjs/plugin/dayOfYear';
 import clsx from 'clsx';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { DateControls } from '@/components/calendar/DateControls/DateControls';
 dayjs.extend(dayOfYear);
 
 const firstdayAtom = atom((get) => {
@@ -80,45 +80,18 @@ export function MobileCalendar({
                         Events of {selectedDay?.format('MMM DD')}
                     </DialogTitle>
 
-                    <div
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
+                    <DateControls
+                        className="w-full justify-between"
+                        onPrevious={() => {
+                            setSelectedDay(selectedDay!.subtract(1, 'day'));
                         }}
-                    >
-                        <div style={{ display: 'flex', gap: '1rem' }}>
-                            <Button
-                                variant="default"
-                                hierarchy="secondary"
-                                onClick={() => {
-                                    setSelectedDay(
-                                        selectedDay!.subtract(1, 'day')
-                                    );
-                                }}
-                            >
-                                <ChevronLeftIcon style={{ width: '20px' }} />
-                            </Button>
-                            <Button
-                                variant="default"
-                                hierarchy="secondary"
-                                onClick={() => {
-                                    setSelectedDay(selectedDay!.add(1, 'day'));
-                                }}
-                            >
-                                <ChevronRightIcon style={{ width: '20px' }} />
-                            </Button>
-                        </div>
-                        <Button
-                            variant="default"
-                            hierarchy="secondary"
-                            style={{ padding: '0.25rem' }}
-                            onClick={() => {
-                                setSelectedDay(dayjs());
-                            }}
-                        >
-                            Today
-                        </Button>
-                    </div>
+                        onToday={() => {
+                            setSelectedDay(dayjs());
+                        }}
+                        onNext={() => {
+                            setSelectedDay(selectedDay!.add(1, 'day'));
+                        }}
+                    />
 
                     <div
                         style={{
@@ -131,6 +104,7 @@ export function MobileCalendar({
                         <DaySchedule
                             days={1}
                             events={dayEvents ?? []}
+                            showControls={false}
                             startDate={selectedDay ?? dayjs()}
                         />
                     </div>

@@ -16,6 +16,8 @@ import { EventCard } from '../EventCard/EventCard';
 import { AnimatePresence } from 'motion/react';
 import { LongDescriptionModal } from '../EventLongDescription/EventLongDescription';
 import clsx from 'clsx';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { DateControls } from '@/components/calendar/DateControls/DateControls';
 
 // size of UI, shared
 const [rowHeight, headerHeight, timeColumnWidth] = [90, 34, 50];
@@ -32,11 +34,19 @@ export function DaySchedule({
     days,
     minColumnWidth,
     maxVisibleColumns,
+    showControls = true,
+    onPreviousRange,
+    onToday,
+    onNextRange,
 }: {
     startDate: Dayjs;
     days: number;
     minColumnWidth?: number;
     maxVisibleColumns?: number;
+    showControls?: boolean;
+    onPreviousRange?: () => void;
+    onToday?: () => void;
+    onNextRange?: () => void;
     events: InternalCalendarEventType[];
 }) {
     startDate = dayjs(startDate);
@@ -96,6 +106,9 @@ export function DaySchedule({
     return (
         <div
             style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
                 height: '100%',
                 position: 'relative',
                 width: '100%',
@@ -254,6 +267,35 @@ export function DaySchedule({
                     </div>
                 </div>
             </div>
+            {showControls && (
+                <div className={style.scheduleControls}>
+                    <ToggleGroup
+                        type="single"
+                        defaultValue="week"
+                        className="h-8"
+                    >
+                        <ToggleGroupItem
+                            value="week"
+                            size="sm"
+                            className="rounded-l-md px-3"
+                        >
+                            Week
+                        </ToggleGroupItem>
+                        <ToggleGroupItem
+                            value="event"
+                            size="sm"
+                            className="rounded-r-md px-3"
+                        >
+                            Event
+                        </ToggleGroupItem>
+                    </ToggleGroup>
+                    <DateControls
+                        onPrevious={onPreviousRange}
+                        onToday={onToday}
+                        onNext={onNextRange}
+                    />
+                </div>
+            )}
         </div>
     );
 }
