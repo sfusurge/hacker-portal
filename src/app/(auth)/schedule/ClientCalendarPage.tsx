@@ -268,7 +268,12 @@ function ScheduleHeader({
     className?: string;
 }) {
     return (
-        <div className={cn('flex items-center gap-3', className)}>
+        <div
+            className={cn(
+                'relative z-[150] flex items-center gap-3',
+                className
+            )}
+        >
             <div className="flex min-w-0 flex-col gap-1">
                 <span className="truncate font-sans text-sm leading-none font-normal text-[var(--text-secondary)]">
                     {eyebrow}
@@ -301,7 +306,12 @@ function ScheduleActions({
     className?: string;
 }) {
     return (
-        <div className={cn('flex shrink-0 items-center gap-2', className)}>
+        <div
+            className={cn(
+                'relative z-[150] flex shrink-0 items-center gap-2',
+                className
+            )}
+        >
             {isAdmin && (
                 <EventAdminButton
                     hasSelectedEvent={hasSelectedEvent}
