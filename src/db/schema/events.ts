@@ -14,12 +14,14 @@ import { hackathons } from './hackathons';
 
 export enum EventType {
     EVENT = 'Event',
+    ACTIVITY = 'Activity',
     MEAL = 'Meal',
     WORKSHOP = 'Workshop',
 }
 
 export const EVENT_TYPES = [
     EventType.EVENT,
+    EventType.ACTIVITY,
     EventType.MEAL,
     EventType.WORKSHOP,
 ] as const;

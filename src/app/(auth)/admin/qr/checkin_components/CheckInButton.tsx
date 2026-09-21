@@ -5,10 +5,15 @@ import {
     TicketIcon,
     FireIcon,
     WrenchScrewdriverIcon,
+    FaceSmileIcon,
 } from '@heroicons/react/20/solid';
 
 export const buttonConfig = {
     [EventType.EVENT]: { icon: TicketIcon, label: 'Check in to hackathon' },
+    [EventType.ACTIVITY]: {
+        icon: FaceSmileIcon,
+        label: 'Check in to Activity',
+    },
     [EventType.MEAL]: { icon: FireIcon, label: 'Check in to Meal' },
     [EventType.WORKSHOP]: {
         icon: WrenchScrewdriverIcon,

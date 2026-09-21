@@ -43,6 +43,13 @@
       "when": 1789878821329,
       "tag": "0005_square_mentallo",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789942750000,
+      "tag": "0006_add_activity_event_type",
+      "breakpoints": true
     }
   ]
 }

@@ -86,6 +86,11 @@ export default function Scan({ events, initialEventType }: ScanProps) {
         [openSelectEvent, eventType]
     );
 
+    const isActivitiesOpen = useMemo(
+        () => eventType === EventType.ACTIVITY && openSelectEvent,
+        [openSelectEvent, eventType]
+    );
+
     const workshopEvents = useMemo(() => {
         return groupEventsByDate(
             events.filter((event) => event.eventType === EventType.WORKSHOP)
@@ -106,6 +111,14 @@ export default function Scan({ events, initialEventType }: ScanProps) {
         );
 
         return groupEventsByDate(others);
+    }, [events]);
+
+    const activityEvents = useMemo(() => {
+        const activities = events.filter(
+            (event) => event.eventType === EventType.ACTIVITY
+        );
+
+        return groupEventsByDate(activities);
     }, [events]);
 
     const currentEventTitle = useMemo(() => {
@@ -318,6 +331,13 @@ export default function Scan({ events, initialEventType }: ScanProps) {
                 show={isOtherEventsOpen}
                 onClose={closeSelect}
                 groupedEvents={otherEvents}
+                onEventClick={handleEventClick}
+            />
+
+            <SelectEvent
+                show={isActivitiesOpen}
+                onClose={closeSelect}
+                groupedEvents={activityEvents}
                 onEventClick={handleEventClick}
             />
 
