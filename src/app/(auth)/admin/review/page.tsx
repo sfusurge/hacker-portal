@@ -236,6 +236,7 @@ function transformResponse(
                 currentStatus: item.currentStatus,
                 pendingStatus: item.pendingStatus,
                 flagged: Boolean(item.flagged),
+                hsFlagged: Boolean(item.hsFlagged),
                 lastEmailSent,
                 applicationDate: new Date(item.createdDate),
                 members,

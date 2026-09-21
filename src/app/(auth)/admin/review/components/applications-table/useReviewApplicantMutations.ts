@@ -59,6 +59,8 @@ export function useReviewApplicantMutations(hackathonId: number) {
                                                 pendingStatus:
                                                     updatedEntry.pendingStatus,
                                                 flagged: updatedEntry.flagged,
+                                                hsFlagged:
+                                                    updatedEntry.hsFlagged,
                                             };
                                         }
                                     ),
@@ -77,10 +79,12 @@ export function useReviewApplicantMutations(hackathonId: number) {
                 pendingStatus,
                 status,
                 flagged,
+                hsFlagged,
             }: {
                 status?: StatusEnum;
                 pendingStatus?: StatusEnum;
                 flagged?: boolean;
+                hsFlagged?: boolean;
             }
         ) => {
             await batchUpdateApplicationStatus.mutateAsync({
@@ -89,6 +93,7 @@ export function useReviewApplicantMutations(hackathonId: number) {
                 pendingStatus,
                 status,
                 flagged,
+                hsFlagged,
             });
         },
         [batchUpdateApplicationStatus, hackathonId]
@@ -101,10 +106,12 @@ export function useReviewApplicantMutations(hackathonId: number) {
                 pendingStatus,
                 status,
                 flagged,
+                hsFlagged,
             }: {
                 status?: StatusEnum;
                 pendingStatus?: StatusEnum;
                 flagged?: boolean;
+                hsFlagged?: boolean;
             }
         ) => {
             const ids = rows.map((row) => row.original.id);
@@ -119,6 +126,7 @@ export function useReviewApplicantMutations(hackathonId: number) {
                 pendingStatus,
                 status,
                 flagged,
+                hsFlagged,
             });
         },
         [batchUpdateApplicationStatus, hackathonId]

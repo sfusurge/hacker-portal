@@ -14,6 +14,7 @@ export type Applicant = {
     currentStatus: string;
     pendingStatus: string;
     flagged: boolean;
+    hsFlagged: boolean;
     applicationDate: Date;
     lastEmailSent: string;
     response: Record<string, unknown>;
@@ -24,6 +25,9 @@ export type Applicant = {
         checkInTime: Date | null;
     }[];
 };
+
+/** Flagged-tab filter: both by default, or one subtype. */
+export type FlaggedFilter = 'both' | 'regular' | 'highschooler';
 
 export type ReviewApplicationsTableProps = {
     data: Applicant[];

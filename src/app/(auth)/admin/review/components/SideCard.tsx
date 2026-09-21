@@ -122,6 +122,7 @@ export default function SideCard({
                           currentStatus: updatedEntry.currentStatus,
                           pendingStatus: updatedEntry.pendingStatus,
                           flagged: updatedEntry.flagged,
+                          hsFlagged: updatedEntry.hsFlagged,
                       }
                     : prev
             );
@@ -159,6 +160,7 @@ export default function SideCard({
                                             pendingStatus:
                                                 updatedEntry.pendingStatus,
                                             flagged: updatedEntry.flagged,
+                                            hsFlagged: updatedEntry.hsFlagged,
                                         };
                                     }
                                 ),

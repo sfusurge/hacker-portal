@@ -1,8 +1,10 @@
 'use client';
 
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
+import { useRef, useState } from 'react';
 import {
     AdjustmentsHorizontalIcon,
+    CheckIcon,
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
     ChevronDownIcon,
@@ -15,8 +17,8 @@ import {
 import {
     FlagIcon as FlagOutlineIcon,
     UserIcon,
-} from '@heroicons/react/24/solid';
-import { FlagIcon } from '@heroicons/react/24/solid';
+} from '@heroicons/react/24/outline';
+import { FlagIcon, ShieldCheckIcon } from '@heroicons/react/24/solid';
 import clsx from 'clsx';
 import { CircleDot } from 'lucide-react';
 import type {
@@ -28,6 +30,7 @@ import type { StatusEnum } from '@/db/schema/applications';
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -38,15 +41,29 @@ import {
     type ReviewFilterValueOption,
 } from '../ReviewTableFilters';
 import { PendingStatusMenuItems } from './statusCells';
-import type { Applicant } from './types';
+import type { Applicant, FlaggedFilter } from './types';
 
 const toolbarButtonClass =
     'inline-flex min-h-9 items-center gap-2 rounded-lg border border-neutral-600/60 bg-neutral-800/60 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700/60';
 
+export function matchesFlaggedFilter(
+    filter: FlaggedFilter,
+    flagged: boolean,
+    hsFlagged: boolean
+) {
+    if (filter === 'regular') return flagged && !hsFlagged;
+    if (filter === 'highschooler') return hsFlagged;
+    return flagged || hsFlagged;
+}
+
 type ReviewTableToolbarProps = {
     applicantTab: 'all' | 'flagged';
     onApplicantTabChange: (tab: 'all' | 'flagged') => void;
+    flaggedFilter: FlaggedFilter;
+    onFlaggedFilterChange: (filter: FlaggedFilter) => void;
     flaggedCount: number;
+    regularFlaggedCount: number;
+    highschoolerCount: number;
     globalFilter: string;
     onGlobalFilterChange: (value: string) => void;
     filterMenuOpen: boolean;
@@ -74,10 +91,51 @@ type ReviewTableToolbarProps = {
     ) => void;
 };
 
+function FlaggedFilterMenuItem({
+    selected,
+    icon,
+    label,
+    count,
+    onSelect,
+}: {
+    selected: boolean;
+    icon: ReactNode;
+    label: string;
+    count: number;
+    onSelect: () => void;
+}) {
+    return (
+        <DropdownMenuItem
+            className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm text-white focus:bg-neutral-800 focus:text-white"
+            onSelect={(e) => {
+                e.preventDefault();
+                onSelect();
+            }}
+        >
+            {icon}
+            <span className="flex-1">{label}</span>
+            {count > 0 ? (
+                <span className="rounded-md bg-neutral-700/80 px-1.5 text-xs font-semibold text-white/80">
+                    {count}
+                </span>
+            ) : null}
+            {selected ? (
+                <CheckIcon className="size-4 shrink-0 text-white/60" />
+            ) : (
+                <span className="size-4 shrink-0" aria-hidden />
+            )}
+        </DropdownMenuItem>
+    );
+}
+
 export function ReviewTableToolbar({
     applicantTab,
     onApplicantTabChange,
+    flaggedFilter,
+    onFlaggedFilterChange,
     flaggedCount,
+    regularFlaggedCount,
+    highschoolerCount,
     globalFilter,
     onGlobalFilterChange,
     filterMenuOpen,
@@ -94,6 +152,41 @@ export function ReviewTableToolbar({
     onColumnFiltersChange,
     onFilterValueLabelsChange,
 }: ReviewTableToolbarProps) {
+    const [flaggedMenuOpen, setFlaggedMenuOpen] = useState(false);
+    const closeMenuTimeoutRef = useRef<number | null>(null);
+
+    const openFlaggedMenu = () => {
+        if (closeMenuTimeoutRef.current != null) {
+            window.clearTimeout(closeMenuTimeoutRef.current);
+            closeMenuTimeoutRef.current = null;
+        }
+        setFlaggedMenuOpen(true);
+    };
+
+    const scheduleCloseFlaggedMenu = () => {
+        if (closeMenuTimeoutRef.current != null) {
+            window.clearTimeout(closeMenuTimeoutRef.current);
+        }
+        closeMenuTimeoutRef.current = window.setTimeout(() => {
+            setFlaggedMenuOpen(false);
+            closeMenuTimeoutRef.current = null;
+        }, 150);
+    };
+
+    const selectFlaggedFilter = (filter: FlaggedFilter) => {
+        onFlaggedFilterChange(filter);
+        setFlaggedMenuOpen(false);
+    };
+
+    const badgeCount =
+        applicantTab === 'flagged'
+            ? flaggedFilter === 'regular'
+                ? regularFlaggedCount
+                : flaggedFilter === 'highschooler'
+                  ? highschoolerCount
+                  : flaggedCount
+            : flaggedCount;
+
     return (
         <div className="flex flex-col gap-2 px-3 py-2 sm:px-4">
             <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:justify-between">
@@ -112,24 +205,84 @@ export function ReviewTableToolbar({
                         <span className="sm:hidden">All</span>
                         <span className="hidden sm:inline">All Applicants</span>
                     </button>
-                    <button
-                        type="button"
-                        onClick={() => onApplicantTabChange('flagged')}
-                        className={clsx(
-                            'inline-flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:min-h-9',
-                            applicantTab === 'flagged'
-                                ? 'bg-neutral-700/60 text-white'
-                                : 'text-white/60 hover:bg-neutral-900 hover:text-white'
-                        )}
+                    <DropdownMenu
+                        open={flaggedMenuOpen}
+                        onOpenChange={setFlaggedMenuOpen}
+                        modal={false}
                     >
-                        <FlagOutlineIcon className="size-5 shrink-0" />
-                        Flagged
-                        {flaggedCount > 0 ? (
-                            <span className="bg-caution-500 rounded-md px-1.5 text-xs font-semibold text-white">
-                                {flaggedCount}
-                            </span>
-                        ) : null}
-                    </button>
+                        <div
+                            onMouseEnter={openFlaggedMenu}
+                            onMouseLeave={scheduleCloseFlaggedMenu}
+                        >
+                            <DropdownMenuTrigger asChild>
+                                <button
+                                    type="button"
+                                    onClick={() => selectFlaggedFilter('both')}
+                                    className={clsx(
+                                        'inline-flex min-h-10 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:min-h-9',
+                                        applicantTab === 'flagged'
+                                            ? 'bg-neutral-700/60 text-white'
+                                            : 'text-white/60 hover:bg-neutral-900 hover:text-white'
+                                    )}
+                                >
+                                    <FlagOutlineIcon className="size-5 shrink-0" />
+                                    Flagged
+                                    {badgeCount > 0 ? (
+                                        <span className="bg-caution-500 rounded-md px-1.5 text-xs font-semibold text-white">
+                                            {badgeCount}
+                                        </span>
+                                    ) : null}
+                                </button>
+                            </DropdownMenuTrigger>
+                        </div>
+                        <DropdownMenuContent
+                            align="start"
+                            sideOffset={6}
+                            className="z-[100] w-[220px] rounded-lg border-neutral-600/30 bg-neutral-900 p-1 text-white shadow-[0px_2px_2px_-1px_rgba(0,0,0,0.04),0px_4px_6px_-2px_rgba(0,0,0,0.12),0px_12px_16px_-4px_rgba(0,0,0,0.08)]"
+                            onMouseEnter={openFlaggedMenu}
+                            onMouseLeave={scheduleCloseFlaggedMenu}
+                            onCloseAutoFocus={(e) => e.preventDefault()}
+                        >
+                            <FlaggedFilterMenuItem
+                                selected={
+                                    applicantTab === 'flagged' &&
+                                    flaggedFilter === 'both'
+                                }
+                                icon={
+                                    <FlagOutlineIcon className="size-4 shrink-0 text-white/60" />
+                                }
+                                label="All flagged"
+                                count={flaggedCount}
+                                onSelect={() => selectFlaggedFilter('both')}
+                            />
+                            <FlaggedFilterMenuItem
+                                selected={
+                                    applicantTab === 'flagged' &&
+                                    flaggedFilter === 'regular'
+                                }
+                                icon={
+                                    <FlagIcon className="text-caution-500 size-4 shrink-0" />
+                                }
+                                label="Flagged"
+                                count={regularFlaggedCount}
+                                onSelect={() => selectFlaggedFilter('regular')}
+                            />
+                            <FlaggedFilterMenuItem
+                                selected={
+                                    applicantTab === 'flagged' &&
+                                    flaggedFilter === 'highschooler'
+                                }
+                                icon={
+                                    <ShieldCheckIcon className="text-danger-400 size-4 shrink-0" />
+                                }
+                                label="Highschooler"
+                                count={highschoolerCount}
+                                onSelect={() =>
+                                    selectFlaggedFilter('highschooler')
+                                }
+                            />
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
 
                 <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
@@ -216,7 +369,7 @@ type SelectionActionBarProps = {
     acceptPendingStatus: StatusEnum;
     onClearSelection: () => void;
     onChangePendingStatus: (next: StatusEnum) => void;
-    onFlag: () => void;
+    onFlag: (type: 'regular' | 'highschooler' | 'clear') => void;
 };
 
 export function SelectionActionBar({
@@ -261,7 +414,7 @@ export function SelectionActionBar({
                         disabled={disabled}
                         className="flex shrink-0 items-center gap-2 rounded px-2 py-2 text-sm text-white transition-colors hover:bg-neutral-800 disabled:pointer-events-none disabled:opacity-50 sm:gap-3"
                     >
-                        <CircleDot className="size-4 shrink-0 text-white/70" />
+                        <CircleDot className="size-4 shrink-0 text-white/60" />
                         <span className="sm:hidden">Status</span>
                         <span className="hidden sm:inline">
                             Change pending status
@@ -283,15 +436,43 @@ export function SelectionActionBar({
                     className="w-px shrink-0 self-stretch bg-neutral-600/60"
                     aria-hidden
                 />
-                <button
-                    type="button"
-                    className="flex shrink-0 items-center gap-2 rounded px-2 py-2 text-sm text-white transition-colors hover:bg-neutral-800 sm:gap-3"
-                    disabled={disabled}
-                    onClick={onFlag}
-                >
-                    <FlagIcon className="size-4 shrink-0 text-white/70" />
-                    Flag
-                </button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger
+                        disabled={disabled}
+                        className="flex shrink-0 items-center gap-2 rounded px-2 py-2 text-sm text-white transition-colors hover:bg-neutral-800 disabled:pointer-events-none disabled:opacity-50 sm:gap-3"
+                    >
+                        <FlagIcon className="size-4 shrink-0 text-white/60" />
+                        Flag
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                        align="center"
+                        side="top"
+                        sideOffset={8}
+                        className="z-[100] w-[180px] rounded-lg border-neutral-600/30 bg-neutral-900 p-1 text-white shadow-[0px_2px_2px_-1px_rgba(0,0,0,0.04),0px_4px_6px_-2px_rgba(0,0,0,0.12),0px_12px_16px_-4px_rgba(0,0,0,0.08)]"
+                    >
+                        <DropdownMenuItem
+                            className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm text-white focus:bg-neutral-800 focus:text-white"
+                            onSelect={() => onFlag('regular')}
+                        >
+                            <FlagIcon className="text-caution-500 size-4 shrink-0" />
+                            Flagged
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm text-white focus:bg-neutral-800 focus:text-white"
+                            onSelect={() => onFlag('highschooler')}
+                        >
+                            <ShieldCheckIcon className="text-danger-400 size-4 shrink-0" />
+                            Highschooler
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm text-white focus:bg-neutral-800 focus:text-white"
+                            onSelect={() => onFlag('clear')}
+                        >
+                            <FlagOutlineIcon className="size-4 shrink-0 text-white/50" />
+                            Remove flag
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </div>
     );
@@ -368,7 +549,7 @@ export function ReviewTablePagination({
                         <div className="flex items-center gap-1">
                             <button
                                 type="button"
-                                className="inline-flex size-10 items-center justify-center rounded-lg text-white/70 disabled:opacity-30 sm:size-9"
+                                className="inline-flex size-10 items-center justify-center rounded-lg text-white/60 disabled:opacity-30 sm:size-9"
                                 onClick={() => {
                                     table.setPageIndex(0);
                                 }}
@@ -379,7 +560,7 @@ export function ReviewTablePagination({
                             </button>
                             <button
                                 type="button"
-                                className="inline-flex size-10 items-center justify-center rounded-lg text-white/70 disabled:opacity-30 sm:size-9"
+                                className="inline-flex size-10 items-center justify-center rounded-lg text-white/60 disabled:opacity-30 sm:size-9"
                                 onClick={() => {
                                     table.previousPage();
                                 }}
@@ -390,7 +571,7 @@ export function ReviewTablePagination({
                             </button>
                             <button
                                 type="button"
-                                className="inline-flex size-10 items-center justify-center rounded-lg text-white/70 disabled:opacity-30 sm:size-9"
+                                className="inline-flex size-10 items-center justify-center rounded-lg text-white/60 disabled:opacity-30 sm:size-9"
                                 onClick={() => {
                                     table.nextPage();
                                 }}
@@ -401,7 +582,7 @@ export function ReviewTablePagination({
                             </button>
                             <button
                                 type="button"
-                                className="inline-flex size-10 items-center justify-center rounded-lg text-white/70 disabled:opacity-30 sm:size-9"
+                                className="inline-flex size-10 items-center justify-center rounded-lg text-white/60 disabled:opacity-30 sm:size-9"
                                 onClick={() => {
                                     table.setPageIndex(
                                         table.getPageCount() - 1

@@ -53,12 +53,13 @@ import {
 } from '../ReviewTableFilters';
 import { BulkEmailModal } from './BulkEmailModal';
 import {
+    matchesFlaggedFilter,
     ReviewTablePagination,
     ReviewTableToolbar,
     SelectionActionBar,
 } from './ReviewTableChrome';
 import { reviewTableStickyColumnProps, SortIndicator } from './tablePrimitives';
-import { sideCardAtomSJ, type Applicant } from './types';
+import { sideCardAtomSJ, type Applicant, type FlaggedFilter } from './types';
 import { useMarqueeRowSelection } from './useMarqueeRowSelection';
 import { useReviewApplicantMutations } from './useReviewApplicantMutations';
 import { useReviewTableColumns } from './useReviewTableColumns';
@@ -196,6 +197,7 @@ export function ReviewApplicantsTable({
     >({});
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
     const [applicantTab, setApplicantTab] = useState<'all' | 'flagged'>('all');
+    const [flaggedFilter, setFlaggedFilter] = useState<FlaggedFilter>('both');
     const [stickyFlaggedIds, setStickyFlaggedIds] =
         useState<Set<number> | null>(null);
     const [filterMenuOpen, setFilterMenuOpen] = useState(false);
@@ -241,17 +243,35 @@ export function ReviewApplicantsTable({
     useEffect(() => {
         setPagination((prev) => ({ ...prev, pageIndex: 0 }));
         setRowSelection({});
-    }, [applicantTab]);
+    }, [applicantTab, flaggedFilter]);
 
+    const regularFlaggedCount = useMemo(
+        () => data.filter((row) => row.flagged && !row.hsFlagged).length,
+        [data]
+    );
+    const highschoolerCount = useMemo(
+        () => data.filter((row) => row.hsFlagged).length,
+        [data]
+    );
     const flaggedCount = useMemo(
-        () => data.filter((row) => row.flagged).length,
+        () => data.filter((row) => row.flagged || row.hsFlagged).length,
         [data]
     );
 
     const handleApplicantTabChange = (tab: 'all' | 'flagged') => {
         if (tab === 'flagged') {
             setStickyFlaggedIds(
-                new Set(data.filter((row) => row.flagged).map((row) => row.id))
+                new Set(
+                    data
+                        .filter((row) =>
+                            matchesFlaggedFilter(
+                                flaggedFilter,
+                                row.flagged,
+                                row.hsFlagged
+                            )
+                        )
+                        .map((row) => row.id)
+                )
             );
         } else {
             setStickyFlaggedIds(null);
@@ -259,16 +279,34 @@ export function ReviewApplicantsTable({
         setApplicantTab(tab);
     };
 
+    const handleFlaggedFilterChange = (filter: FlaggedFilter) => {
+        setFlaggedFilter(filter);
+        setStickyFlaggedIds(
+            new Set(
+                data
+                    .filter((row) =>
+                        matchesFlaggedFilter(filter, row.flagged, row.hsFlagged)
+                    )
+                    .map((row) => row.id)
+            )
+        );
+        setApplicantTab('flagged');
+    };
+
     const tableData = useMemo(
         () =>
             applicantTab === 'flagged'
                 ? data.filter(
                       (row) =>
-                          row.flagged ||
+                          matchesFlaggedFilter(
+                              flaggedFilter,
+                              row.flagged,
+                              row.hsFlagged
+                          ) ||
                           (stickyFlaggedIds?.has(row.id) ?? false)
                   )
                 : data,
-        [applicantTab, data, stickyFlaggedIds]
+        [applicantTab, data, flaggedFilter, stickyFlaggedIds]
     );
 
     const {
@@ -625,7 +663,11 @@ export function ReviewApplicantsTable({
             <ReviewTableToolbar
                 applicantTab={applicantTab}
                 onApplicantTabChange={handleApplicantTabChange}
+                flaggedFilter={flaggedFilter}
+                onFlaggedFilterChange={handleFlaggedFilterChange}
                 flaggedCount={flaggedCount}
+                regularFlaggedCount={regularFlaggedCount}
+                highschoolerCount={highschoolerCount}
                 globalFilter={searchInput}
                 onGlobalFilterChange={setSearchInput}
                 filterMenuOpen={filterMenuOpen}
@@ -698,10 +740,14 @@ export function ReviewApplicantsTable({
                                 next
                             );
                         }}
-                        onFlag={() =>
+                        onFlag={(type) =>
                             void batchUpdateApplicants(
                                 table.getSelectedRowModel().rows,
-                                { flagged: true }
+                                type === 'highschooler'
+                                    ? { flagged: false, hsFlagged: true }
+                                    : type === 'clear'
+                                      ? { flagged: false, hsFlagged: false }
+                                      : { flagged: true, hsFlagged: false }
                             )
                         }
                     />
