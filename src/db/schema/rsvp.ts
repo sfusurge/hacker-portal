@@ -18,7 +18,7 @@ export const rsvps = pgTable(
             .references(() => events.id, { onDelete: 'cascade' }),
         userId: integer('user_id')
             .notNull()
-            .references(() => events.id, { onDelete: 'cascade' }),
+            .references(() => user.id, { onDelete: 'cascade' }),
         rsvpTime: timestamp('rsvp_time').notNull().defaultNow(),
     },
     (table) => {
