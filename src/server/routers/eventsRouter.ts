@@ -15,6 +15,7 @@ import { TRPCError } from '@trpc/server';
 import { databaseClient } from '@/db/client';
 import { and, asc, count, eq, getTableColumns } from 'drizzle-orm';
 import { checkIns } from '@/db/schema/checkIn';
+import { rsvps } from '@/db/schema/rsvp';
 import { z } from 'zod';
 import { getUserData } from '@/server/routers/usersRouter';
 import { hasAdminAccess } from '@/lib/auth/roles';
@@ -22,6 +23,7 @@ import { hasAdminAccess } from '@/lib/auth/roles';
 export interface CalendarEvent {
     id: number;
     checkedIn: boolean;
+    rsvped: boolean;
     hasLongDescription: boolean;
     startDate: Date;
     endDate: Date;
@@ -36,6 +38,10 @@ export interface CalendarEvent {
     eventType: EventType;
     points: number;
 }
+
+const rsvpEventSchema = z.object({
+    eventId: z.number().int(),
+});
 
 export const eventsRouter = router({
     createEvent: publicProcedure
@@ -96,6 +102,9 @@ export const eventsRouter = router({
                         userId: checkIns.userId,
                         checkInTime: checkIns.checkInTime,
                     },
+                    rsvp: {
+                        userId: rsvps.userId,
+                    },
                     event: eventsTable,
                 })
                 .from(eventsTable)
@@ -106,18 +115,26 @@ export const eventsRouter = router({
                         eq(checkIns.userId, user.id)
                     )
                 )
+                .leftJoin(
+                    rsvps,
+                    and(
+                        eq(eventsTable.id, rsvps.eventId),
+                        eq(rsvps.userId, user.id)
+                    )
+                )
                 .where(eq(eventsTable.hackathonId, input.hackathonId))
                 // events with earlier startDate comes first
                 // if 2 events have same startDate, then the one with earlier
                 // endDate comes first
                 .orderBy(asc(eventsTable.startDate), asc(eventsTable.endDate));
 
-            const events = rows.map(({ checkIn, event: _event }) => {
+            const events = rows.map(({ checkIn, rsvp, event: _event }) => {
                 const { longDescription, ...event } = { ..._event };
                 return {
                     ...event,
                     imageUrl: event.imageUrl ?? undefined,
                     checkedIn: checkIn != null,
+                    rsvped: rsvp != null,
                     description: event.description ?? undefined,
                     hasLongDescription:
                         longDescription !== undefined &&
@@ -128,6 +145,55 @@ export const eventsRouter = router({
             });
 
             return events as CalendarEvent[];
+        }),
+
+    rsvpEvent: publicProcedure
+        .input(rsvpEventSchema)
+        .mutation(async ({ input }) => {
+            const user = await getUserData();
+
+            if (user === undefined) {
+                throw new TRPCError({
+                    code: 'UNAUTHORIZED',
+                    message: 'You must be logged in to RSVP.',
+                });
+            }
+
+            await databaseClient
+                .insert(rsvps)
+                .values({
+                    eventId: input.eventId,
+                    userId: user.id,
+                })
+                .onConflictDoNothing({
+                    target: [rsvps.eventId, rsvps.userId],
+                });
+
+            return true;
+        }),
+
+    unrsvpEvent: publicProcedure
+        .input(rsvpEventSchema)
+        .mutation(async ({ input }) => {
+            const user = await getUserData();
+
+            if (user === undefined) {
+                throw new TRPCError({
+                    code: 'UNAUTHORIZED',
+                    message: 'You must be logged in to remove an RSVP.',
+                });
+            }
+
+            await databaseClient
+                .delete(rsvps)
+                .where(
+                    and(
+                        eq(rsvps.eventId, input.eventId),
+                        eq(rsvps.userId, user.id)
+                    )
+                );
+
+            return true;
         }),
 
     getHackathonCheckInEvents: publicProcedure
