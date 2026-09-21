@@ -68,11 +68,23 @@ export default function ReviewApplicationsPage() {
 
     const refresh = () => setRefreshFlag((f) => f + 1);
 
-    const fetchNextPage = useCallback(async () => {
-        if (applicationData.hasNextPage) {
-            await applicationData.fetchNextPage();
+    // Keep pulling server batches until everything is in cache (don't wait for next page).
+    useEffect(() => {
+        if (
+            !applicationData.hasNextPage ||
+            applicationData.isFetchingNextPage ||
+            applicationData.isLoading
+        ) {
+            return;
         }
-    }, [applicationData.hasNextPage, applicationData.fetchNextPage]);
+        void applicationData.fetchNextPage();
+    }, [
+        applicationData.hasNextPage,
+        applicationData.isFetchingNextPage,
+        applicationData.isLoading,
+        applicationData.fetchNextPage,
+        applicationData.data?.pages.length,
+    ]);
 
     const handleNavigationListChange = useCallback(
         (applicants: Applicant[]) => {
@@ -168,7 +180,6 @@ export default function ReviewApplicationsPage() {
                 applicationQuestionPages={applicationQuestionPages}
                 applicationCount={applicationCountData?.applicationCount ?? -1}
                 applicationDataMap={applicationDataMap}
-                fetchNextPage={fetchNextPage}
                 onNavigationListChange={handleNavigationListChange}
                 onRowClick={(app) => {
                     const idx = navList.findIndex((d) => d.id === app.id);

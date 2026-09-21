@@ -30,7 +30,6 @@ export type ReviewApplicationsTableProps = {
     applicationQuestionPages: InputFormPageData[];
     applicationCount: number;
     applicationDataMap: Map<number, ApplicationWithTeamInfo>;
-    fetchNextPage: () => Promise<void>;
     onRowClick?: (app: Applicant) => void;
     onNavigationListChange?: (applicants: Applicant[]) => void;
     hackathonId: number;

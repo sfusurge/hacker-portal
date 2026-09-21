@@ -159,7 +159,6 @@ type ReviewApplicantsTableProps = {
     extraColumns: ColumnDef<Applicant>[];
     applicationQuestionPages: InputFormPageData[];
     applicationDataMap: Map<number, ApplicationWithTeamInfo>;
-    fetchNextPage: () => Promise<void>;
     onRowClick?: (app: Applicant) => void;
     onNavigationListChange?: (applicants: Applicant[]) => void;
     hackathonId: number;
@@ -172,7 +171,6 @@ export function ReviewApplicantsTable({
     extraColumns,
     applicationQuestionPages,
     applicationDataMap,
-    fetchNextPage,
     onRowClick,
     onNavigationListChange,
     hackathonId,
@@ -366,7 +364,6 @@ export function ReviewApplicantsTable({
         selectColWidth,
         flaggedColWidth,
     };
-    const pageCount = table.getPageCount();
 
     useEffect(() => {
         localStorage.setItem('pagesize', `${pagination.pageSize}`);
@@ -375,11 +372,6 @@ export function ReviewApplicantsTable({
     useEffect(() => {
         localStorage.setItem('pageindex', `${pagination.pageIndex}`);
     }, [pagination.pageIndex]);
-
-    useEffect(() => {
-        if (pageCount - (pagination.pageIndex + 1) > 1) return;
-        void fetchNextPage();
-    }, [pageCount, pagination.pageIndex, fetchNextPage]);
 
     const exportExcel = () => {
         const selectedRows = table.getSelectedRowModel().rows;
