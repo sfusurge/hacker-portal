@@ -34,7 +34,6 @@ export default function ReviewApplicationsTable({
     applicationQuestionPages,
     applicationCount,
     applicationDataMap,
-    fetchNextPage,
     onRowClick,
     onNavigationListChange,
     hackathonId,
@@ -185,7 +184,6 @@ export default function ReviewApplicationsTable({
             applicationQuestionPages={applicationQuestionPages}
             data={data}
             extraColumns={extraColumns}
-            fetchNextPage={fetchNextPage}
             onRowClick={onRowClick}
             onNavigationListChange={onNavigationListChange}
             hackathonId={hackathonId}

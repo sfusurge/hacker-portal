@@ -4,6 +4,7 @@ import { useMemo, type MutableRefObject } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import dayjs from 'dayjs';
 import { FlagIcon as FlagOutlineIcon } from '@heroicons/react/24/outline';
+import { ShieldCheckIcon } from '@heroicons/react/24/solid';
 import { FlagIcon } from '@heroicons/react/24/solid';
 import type { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
 import type { StatusEnum } from '@/db/schema/applications';
@@ -27,6 +28,7 @@ type UseReviewTableColumnsArgs = {
             status?: StatusEnum;
             pendingStatus?: StatusEnum;
             flagged?: boolean;
+            hsFlagged?: boolean;
         }
     ) => Promise<void>;
 };
@@ -81,23 +83,42 @@ export function useReviewTableColumns({
             },
             {
                 id: 'flagged',
-                accessorKey: 'flagged',
+                accessorFn: (row) => (row.hsFlagged ? 2 : row.flagged ? 1 : 0),
                 header: () => null,
                 cell: ({ row }) => {
-                    const flagged = row.original.flagged;
+                    const { flagged, hsFlagged } = row.original;
+
+                    const cycleFlag = () => {
+                        // none → flag → high schooler → none
+                        if (!flagged && !hsFlagged) {
+                            return { flagged: true, hsFlagged: false };
+                        }
+                        if (flagged && !hsFlagged) {
+                            return { flagged: false, hsFlagged: true };
+                        }
+                        return { flagged: false, hsFlagged: false };
+                    };
+
+                    const next = cycleFlag();
+                    const ariaLabel = hsFlagged
+                        ? 'Clear flag'
+                        : flagged
+                          ? 'Flag as highschooler'
+                          : 'Flag';
+
                     return (
                         <button
                             type="button"
                             className="flex h-11 w-full min-w-[2.75rem] items-center justify-center"
-                            aria-label={flagged ? 'Unflag' : 'Flag'}
+                            aria-label={ariaLabel}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                void updateApplicantById(row.original.id, {
-                                    flagged: !flagged,
-                                });
+                                void updateApplicantById(row.original.id, next);
                             }}
                         >
-                            {flagged ? (
+                            {hsFlagged ? (
+                                <ShieldCheckIcon className="text-danger-400 size-5" />
+                            ) : flagged ? (
                                 <FlagIcon className="text-caution-500 size-5" />
                             ) : (
                                 <FlagOutlineIcon className="size-5 text-white/40 opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-100" />

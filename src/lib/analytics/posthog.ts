@@ -12,27 +12,6 @@ const POSTHOG_UI_HOST = 'https://us.posthog.com';
 
 export const POSTHOG_APP = 'hacker-portal' as const;
 
-// mark static UI that may show PII in session replay (e.g. profile email)
-export const POSTHOG_MASK_ATTR = 'data-ph-mask';
-
-const POSTHOG_MASK_TEXT_SELECTOR = [
-    `[${POSTHOG_MASK_ATTR}]`,
-    '[data-sensitive]',
-    '[type="password"]',
-    '[type="email"]',
-    '[autocomplete="email"]',
-    '[name*="email" i]',
-    '[name*="password" i]',
-].join(', ');
-
-function maskReplayText(text: string, element?: HTMLElement): string {
-    if (!text.trim()) return text;
-    if (element?.closest(`[${POSTHOG_MASK_ATTR}], [data-sensitive]`)) {
-        return '*'.repeat(text.length);
-    }
-    return text.replace(/[^\s@]+@[^\s@]+\.[^\s@]+/g, '***@***.***');
-}
-
 function registerPostHogSuperProperties(): void {
     posthog.register({
         app: POSTHOG_APP,
@@ -59,19 +38,10 @@ export function initPostHog(): void {
         capture_pageleave: true,
         rageclick: true,
         session_recording: {
-            maskAllInputs: true,
+            maskAllInputs: false,
             maskInputOptions: {
-                password: true,
-                email: true,
-                tel: true,
-                text: true,
-                textarea: true,
-                select: true,
-                search: true,
-                url: true,
+                password: false,
             },
-            maskTextSelector: POSTHOG_MASK_TEXT_SELECTOR,
-            maskTextFn: maskReplayText,
         },
         loaded: (client) => {
             registerPostHogSuperProperties();

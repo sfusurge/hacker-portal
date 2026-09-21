@@ -86,6 +86,10 @@ export async function applyApplicationStatusUpdate(
         payload['flagged'] = input.flagged;
     }
 
+    if (input.hsFlagged !== undefined) {
+        payload['hsFlagged'] = input.hsFlagged;
+    }
+
     if (input.response) {
         payload['response'] = input.response;
     }
@@ -105,7 +109,8 @@ export async function applyApplicationStatusUpdate(
         application &&
         (input.status !== undefined ||
             input.pendingStatus !== undefined ||
-            input.flagged !== undefined)
+            input.flagged !== undefined ||
+            input.hsFlagged !== undefined)
     ) {
         void publishReviewTableEvent({
             hackathonId: input.hackathonId,
@@ -142,6 +147,7 @@ export interface SubmitApplicationResponse {
     currentStatus: StatusEnum;
     pendingStatus: StatusEnum;
     flagged: boolean;
+    hsFlagged: boolean;
 }
 
 export const applicationsRouter = router({
@@ -448,7 +454,10 @@ export const applicationsRouter = router({
                     });
                 }
                 // Hackers may update their own status (RSVP / withdraw), not flags.
-                if (input.flagged !== undefined) {
+                if (
+                    input.flagged !== undefined ||
+                    input.hsFlagged !== undefined
+                ) {
                     throw new UnauthorizedError({
                         email: user.email,
                         role: user.userRole,
@@ -468,6 +477,7 @@ export const applicationsRouter = router({
                 pendingStatus?: StatusEnum;
                 currentStatus?: StatusEnum;
                 flagged?: boolean;
+                hsFlagged?: boolean;
             } = {};
             if (input.pendingStatus !== undefined) {
                 payload.pendingStatus = input.pendingStatus;
@@ -477,6 +487,9 @@ export const applicationsRouter = router({
             }
             if (input.flagged !== undefined) {
                 payload.flagged = input.flagged;
+            }
+            if (input.hsFlagged !== undefined) {
+                payload.hsFlagged = input.hsFlagged;
             }
 
             const updatedApplications = await databaseClient
@@ -494,7 +507,8 @@ export const applicationsRouter = router({
                 updatedApplications.length > 0 &&
                 (input.status !== undefined ||
                     input.pendingStatus !== undefined ||
-                    input.flagged !== undefined)
+                    input.flagged !== undefined ||
+                    input.hsFlagged !== undefined)
             ) {
                 void publishReviewTableEvent({
                     hackathonId: input.hackathonId,
@@ -685,6 +699,7 @@ export interface ApplicationWithTeamInfo {
     currentStatus: StatusEnum;
     pendingStatus: StatusEnum;
     flagged: boolean;
+    hsFlagged: boolean;
     createdDate: number;
     checkIns: {
         eventId: number;
@@ -702,5 +717,6 @@ export interface ApplicationInfo {
     currentStatus: StatusEnum;
     pendingStatus: StatusEnum;
     flagged: boolean;
+    hsFlagged: boolean;
     createdDate: Date;
 }
