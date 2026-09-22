@@ -36,6 +36,7 @@ export interface CalendarEvent {
     hasCheckIn: boolean;
     eventType: EventType;
     points: number;
+    variablePoints: boolean;
 }
 
 export const eventsRouter = router({
@@ -58,6 +59,7 @@ export const eventsRouter = router({
                     eventType: input.eventType as EventType,
                     hasCheckIn: input.hasCheckIn,
                     points: input.points,
+                    variablePoints: input.variablePoints,
                 })
                 .returning();
 
@@ -175,6 +177,7 @@ export const eventsRouter = router({
                     eventType: input.eventType as EventType,
                     hasCheckIn: input.hasCheckIn,
                     points: input.points,
+                    variablePoints: input.variablePoints,
                 })
                 .where(eq(eventsTable.id, input.eventId))
                 .returning();

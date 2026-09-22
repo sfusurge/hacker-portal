@@ -50,9 +50,9 @@ function emailTypeChipLabel(emailType: string | null | undefined): string {
         case 'hacker_waitlisted':
             return 'Hacker waitlisted';
         case 'rsvp_received':
-            return 'RSVP Payment Received';
-        case 'rsvp_paid':
             return 'RSVP Confirmed';
+        case 'rsvp_paid':
+            return 'RSVP Payment Received';
         case 'custom':
             return 'Custom';
         default:
@@ -74,9 +74,9 @@ function emailTypeChipClass(emailType: string | null | undefined): string {
         case 'hacker_waitlisted':
             return 'bg-caution-950 text-caution-300';
         case 'rsvp_received':
-            return 'bg-[#082f49] text-[#0ea5e9]';
-        case 'rsvp_paid':
             return 'bg-brand-950 text-brand-300';
+        case 'rsvp_paid':
+            return 'bg-[#082f49] text-[#0ea5e9]';
         case 'custom':
             return 'bg-fuchsia-950 text-fuchsia-200';
         case 'hacker_applied':

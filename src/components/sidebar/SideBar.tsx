@@ -121,6 +121,12 @@ const adminLinks = [
         iconAlt: 'Houses logo',
     },
     {
+        href: '/admin/challenges',
+        label: 'Challenges',
+        icon: <TrophyIcon className="h-6 w-6" />,
+        iconAlt: 'Challenges logo',
+    },
+    {
         href: '/admin/review',
         label: 'Review Applications',
         icon: <UserGroupIcon className="h-6 w-6" />,

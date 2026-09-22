@@ -20,6 +20,7 @@ export const checkIns = pgTable(
             .notNull()
             .references(() => user.id),
         checkInTime: timestamp('check_in_time').notNull().defaultNow(),
+        pointsAwarded: integer('points_awarded').notNull(),
     },
     (table) => {
         return [
@@ -33,9 +34,13 @@ export const checkIns = pgTable(
     }
 );
 
-export const insertCheckInSchema = createInsertSchema(checkIns).omit({
-    checkInTime: true,
-});
+export const insertCheckInSchema = createInsertSchema(checkIns)
+    .omit({
+        checkInTime: true,
+    })
+    .extend({
+        pointsAwarded: z.number().int().optional(),
+    });
 
 export const isCheckInSchema = z.object({
     userId: z.number().int(),
