@@ -1,12 +1,14 @@
-import { publicProcedure, router } from '../trpc';
+import {
+    adminProcedure,
+    judgeOrAdminProcedure,
+    protectedProcedure,
+    router,
+} from '../trpc';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { databaseClient } from '@/db/client';
 import { user, UserRoleEnum } from '@/db/schema/users/users';
-import {
-    UnauthorizedError,
-    InternalServerError,
-    ResourceNotFoundError,
-} from '../exceptions';
+import { InternalServerError, ResourceNotFoundError } from '../exceptions';
 import {
     judgingAssignments,
     insertJudgingAssignmentSchema,
@@ -18,7 +20,7 @@ import {
 } from '@/db/schema/judge';
 import { eq, and, desc, Query, not, isNull, isNotNull } from 'drizzle-orm';
 import { hackathons } from '@/db/schema/hackathons';
-import { getBasicUserInfo, getUserData } from '@/server/routers/usersRouter';
+import { getBasicUserInfo } from '@/server/auth/sessionUser';
 import { submissions } from '@/db/schema/submissions';
 import { teams } from '@/db/schema/teams';
 import { members } from '@/db/schema/members';
@@ -43,22 +45,9 @@ export interface JudgingProjectResponse {
 }
 
 export const judgingRouter = router({
-    assignJudgingProject: publicProcedure
+    assignJudgingProject: adminProcedure
         .input(insertJudgingAssignmentSchema)
         .mutation(async ({ input }): Promise<JudgingProjectResponse> => {
-            const user = await getUserData();
-
-            if (!user) {
-                throw new InternalServerError('User not authenticated');
-            }
-
-            if (!hasAdminAccess(user.userRole)) {
-                throw new UnauthorizedError({
-                    email: user.email,
-                    role: user.userRole,
-                });
-            }
-
             const [project] = await databaseClient
                 .insert(judgingAssignments)
                 .values({
@@ -90,21 +79,14 @@ export const judgingRouter = router({
             };
         }),
 
-    updateJudgingProjectStatus: publicProcedure
+    updateJudgingProjectStatus: protectedProcedure
         .input(updateJudgingStatusSchema)
-        .mutation(async ({ input }): Promise<JudgingProjectResponse> => {
-            const user = await getUserData();
-
-            if (!user) {
-                throw new InternalServerError('User not authenticated');
-            }
-
-            // Only allow users to update their own projects or admins to update any
-            if (!hasAdminAccess(user.userRole) && user.id !== input.userId) {
-                throw new UnauthorizedError({
-                    email: user.email,
-                    role: user.userRole,
-                });
+        .mutation(async ({ input, ctx }): Promise<JudgingProjectResponse> => {
+            if (
+                !hasAdminAccess(ctx.user.userRole) &&
+                ctx.user.id !== input.userId
+            ) {
+                throw new TRPCError({ code: 'UNAUTHORIZED' });
             }
 
             const [project] = await databaseClient
@@ -136,9 +118,9 @@ export const judgingRouter = router({
             };
         }),
 
-    getAllJudgingProjects: publicProcedure
+    getAllJudgingProjects: adminProcedure
         .input(getJudgingProjectsSchema)
-        .query(async ({ input }) => {
+        .query(async ({ input, ctx }) => {
             type DummyProject = {
                 hackathonId?: number;
                 teamId: number;
@@ -149,10 +131,6 @@ export const judgingRouter = router({
                 response: unknown;
                 teamName: string;
             };
-            const user = await getUserData();
-            if (!user) {
-                return [{}] as DummyProject[];
-            }
             let res: DummyProject[] = await databaseClient
                 .select({
                     teamId: teams.id,
@@ -165,7 +143,7 @@ export const judgingRouter = router({
 
             for (const r of res) {
                 r.hackathonId = input.hackathonId;
-                r.userId = user.id;
+                r.userId = ctx.user.id;
                 r.status = 'unjudged';
                 r.updatedDate = new Date();
             }
@@ -173,26 +151,11 @@ export const judgingRouter = router({
             return res;
         }),
 
-    getJudgingProjects: publicProcedure
+    getJudgingProjects: judgeOrAdminProcedure
         .input(getJudgingProjectsSchema)
-        .query(async ({ input }) => {
-            const user = await getUserData();
+        .query(async ({ input, ctx }) => {
+            const user = ctx.user;
 
-            if (!user) {
-                throw new InternalServerError('User not authenticated');
-            }
-
-            if (
-                !hasAdminAccess(user.userRole) &&
-                user.userRole !== UserRoleEnum.judge
-            ) {
-                throw new UnauthorizedError({
-                    email: user.email,
-                    role: user.userRole,
-                });
-            }
-
-            // If admin, get all projects, otherwise get only projects assigned to the user
             let projectsQuery;
             if (hasAdminAccess(user.userRole)) {
                 projectsQuery = databaseClient
@@ -262,38 +225,19 @@ export const judgingRouter = router({
             return projects;
         }),
 
-    getJudgeAssignments: publicProcedure
+    getJudgeAssignments: judgeOrAdminProcedure
         .input(
             z.object({
                 hackathonId: z.number().int(),
                 judgeId: z.number().int().optional(),
             })
         )
-        .query(async ({ input }) => {
-            const user = await getUserData();
-
-            if (!user) {
-                throw new InternalServerError('User not authenticated');
-            }
-
-            if (
-                !hasAdminAccess(user.userRole) &&
-                user.userRole !== UserRoleEnum.judge
-            ) {
-                throw new UnauthorizedError({
-                    email: user.email,
-                    role: user.userRole,
-                });
-            }
-
+        .query(async ({ input, ctx }) => {
+            const user = ctx.user;
             const judgeId = input.judgeId || user.id;
 
-            // If not admin and tries to access other judge's assignments
             if (!hasAdminAccess(user.userRole) && judgeId !== user.id) {
-                throw new UnauthorizedError({
-                    email: user.email,
-                    role: user.userRole,
-                });
+                throw new TRPCError({ code: 'UNAUTHORIZED' });
             }
 
             const assignments = await databaseClient
@@ -310,13 +254,14 @@ export const judgingRouter = router({
             return assignments;
         }),
 
-    submitJudgingScore: publicProcedure
+    submitJudgingScore: protectedProcedure
         .input(updateJudgingAssignmentSchema)
-        .mutation(async ({ input }): Promise<JudgingScoreResponse> => {
-            const user = await getUserData();
-
-            if (!user) {
-                throw new InternalServerError('User not authenticated');
+        .mutation(async ({ input, ctx }): Promise<JudgingScoreResponse> => {
+            if (
+                !hasAdminAccess(ctx.user.userRole) &&
+                ctx.user.userRole !== UserRoleEnum.judge
+            ) {
+                throw new TRPCError({ code: 'UNAUTHORIZED' });
             }
 
             const [score] = await databaseClient
@@ -330,7 +275,7 @@ export const judgingRouter = router({
                     and(
                         eq(judgingAssignments.hackathonId, input.hackathonId),
                         eq(judgingAssignments.teamId, input.teamId),
-                        eq(judgingAssignments.userId, user.id)
+                        eq(judgingAssignments.userId, ctx.user.id)
                     )
                 )
                 .returning();
@@ -344,19 +289,14 @@ export const judgingRouter = router({
             };
         }),
 
-    getJudgedProject: publicProcedure
+    getJudgedProject: protectedProcedure
         .input(
             z.object({
                 hackathonId: z.number().int(),
                 teamId: z.number(),
             })
         )
-        .query(async ({ input }) => {
-            const user = await getUserData();
-
-            if (!user) {
-                throw new InternalServerError('User not authenticated');
-            }
+        .query(async ({ input, ctx }) => {
             const projects = await databaseClient
                 .select()
                 .from(judgingAssignments)
@@ -364,7 +304,7 @@ export const judgingRouter = router({
                     and(
                         eq(judgingAssignments.hackathonId, input.hackathonId),
                         eq(judgingAssignments.teamId, input.teamId),
-                        eq(judgingAssignments.userId, user.id),
+                        eq(judgingAssignments.userId, ctx.user.id),
                         eq(judgingAssignments.status, 'judged')
                     )
                 )
@@ -373,28 +313,19 @@ export const judgingRouter = router({
             return projects[0] || null;
         }),
 
-    getJudgedProjects: publicProcedure
+    getJudgedProjects: judgeOrAdminProcedure
         .input(
             z.object({
                 hackathonId: z.number().int(),
                 judgeId: z.number().int().optional(),
             })
         )
-        .query(async ({ input }) => {
-            const user = await getUserData();
-            if (!user) {
-                throw new InternalServerError('User not authenticated');
-            }
-            if (
-                !hasAdminAccess(user.userRole) &&
-                user.userRole !== UserRoleEnum.judge
-            ) {
-                throw new UnauthorizedError({
-                    email: user.email,
-                    role: user.userRole,
-                });
-            }
+        .query(async ({ input, ctx }) => {
+            const user = ctx.user;
             const judgeId = input.judgeId || user.id;
+            if (!hasAdminAccess(user.userRole) && judgeId !== user.id) {
+                throw new TRPCError({ code: 'UNAUTHORIZED' });
+            }
             const projects = await databaseClient
                 .select({
                     teamId: judgingAssignments.teamId,
@@ -413,7 +344,7 @@ export const judgingRouter = router({
             return projects;
         }),
 
-    removeJudgingProject: publicProcedure
+    removeJudgingProject: adminProcedure
         .input(
             z.object({
                 hackathonId: z.number().int(),
@@ -422,19 +353,6 @@ export const judgingRouter = router({
             })
         )
         .mutation(async ({ input }) => {
-            const user = await getUserData();
-
-            if (!user) {
-                throw new InternalServerError('User not authenticated');
-            }
-
-            if (!hasAdminAccess(user.userRole)) {
-                throw new UnauthorizedError({
-                    email: user.email,
-                    role: user.userRole,
-                });
-            }
-
             const deleted = await databaseClient
                 .delete(judgingAssignments)
                 .where(
@@ -463,7 +381,7 @@ export const judgingRouter = router({
             };
         }),
 
-    getTeamSubmission: publicProcedure
+    getTeamSubmission: judgeOrAdminProcedure
         .input(
             z
                 .object({
@@ -475,22 +393,8 @@ export const judgingRouter = router({
                     message: 'Either teamId or displayId must be provided',
                 })
         )
-        .query(async ({ input }) => {
-            const user = await getUserData();
-
-            if (!user) {
-                throw new InternalServerError('User not authenticated');
-            }
-
-            if (
-                !hasAdminAccess(user.userRole) &&
-                user.userRole !== UserRoleEnum.judge
-            ) {
-                throw new UnauthorizedError({
-                    email: user.email,
-                    role: user.userRole,
-                });
-            }
+        .query(async ({ input, ctx }) => {
+            const user = ctx.user;
 
             const whereConditions = [eq(teams.hackathonId, input.hackathonId)];
 
@@ -531,10 +435,7 @@ export const judgingRouter = router({
                     .limit(1);
 
                 if (assignments.length === 0) {
-                    throw new UnauthorizedError({
-                        email: user.email,
-                        role: user.userRole,
-                    });
+                    throw new TRPCError({ code: 'UNAUTHORIZED' });
                 }
             }
 
@@ -556,7 +457,7 @@ export const judgingRouter = router({
                 currentStatus: submission.currentStatus,
             };
         }),
-    getUserSubmissionFeedbacks: publicProcedure
+    getUserSubmissionFeedbacks: protectedProcedure
         .input(z.object({ hackathonId: z.number().optional() }))
         .query(async ({ input }) => {
             return await getUserSubmissionFeedbacks(input.hackathonId);
@@ -566,7 +467,7 @@ export const judgingRouter = router({
 export async function getUserSubmissionFeedbacks(hackathonId?: number) {
     const userInfo = await getBasicUserInfo();
 
-    if (!user.id) {
+    if (!userInfo?.id) {
         throw new InternalServerError('User not authenticated');
     }
 
