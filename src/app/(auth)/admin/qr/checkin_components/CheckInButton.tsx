@@ -5,6 +5,7 @@ import {
     TicketIcon,
     FireIcon,
     WrenchScrewdriverIcon,
+    TrophyIcon,
 } from '@heroicons/react/20/solid';
 
 export const buttonConfig = {
@@ -16,8 +17,14 @@ export const buttonConfig = {
     },
 };
 
+const challengeConfig = {
+    icon: TrophyIcon,
+    label: 'Complete challenge',
+};
+
 type CheckInButtonProps = {
     eventType: EventType;
+    isChallenge?: boolean;
     toggleCheckInStatus: () => void;
     checkInStatus: boolean;
     acceptanceCheckPending?: boolean;
@@ -27,13 +34,16 @@ type CheckInButtonProps = {
 
 export default function CheckinButton({
     eventType,
+    isChallenge = false,
     toggleCheckInStatus,
     checkInStatus,
     acceptanceCheckPending = false,
     acceptedForCheckIn = true,
     userName,
 }: CheckInButtonProps) {
-    const { icon: Icon, label } = buttonConfig[eventType];
+    const { icon: Icon, label } = isChallenge
+        ? challengeConfig
+        : buttonConfig[eventType];
 
     if (!checkInStatus) {
         const blocked = acceptanceCheckPending || !acceptedForCheckIn;

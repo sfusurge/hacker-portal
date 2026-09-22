@@ -8,6 +8,7 @@ import {
     ChevronDownIcon,
     ChevronLeftIcon,
     QrCodeIcon,
+    TrophyIcon,
 } from '@heroicons/react/24/solid';
 import {
     DropdownMenu,
@@ -31,6 +32,15 @@ import Link from 'next/link';
 import { iconFromEventType } from '@/utils/iconFromEventType';
 import React from 'react';
 
+type ChallengeOption = {
+    id: number;
+    hackathonId: number;
+    title: string;
+    points: number;
+    maxCompletions: number;
+    variablePoints: boolean;
+};
+
 interface ScanProps {
     events: {
         id: number;
@@ -39,27 +49,42 @@ interface ScanProps {
         eventType: EventType;
         startDate: string;
         endDate: string;
+        points: number;
+        variablePoints: boolean;
     }[];
+    challenges: ChallengeOption[];
     initialEventType?: EventType;
+    initialMode?: 'event' | 'challenge';
 }
 
 type GetUserByIdOutput = inferProcedureOutput<UsersRouter['getUserById']>;
 
-export default function Scan({ events, initialEventType }: ScanProps) {
+export default function Scan({
+    events,
+    challenges,
+    initialEventType,
+    initialMode = 'event',
+}: ScanProps) {
+    const [mode, setMode] = useState<'event' | 'challenge'>(initialMode);
+
     const initialEventId = useMemo(() => {
         return (
             events.find((event) => event.eventType === initialEventType)?.id ??
-            // else use first event
             events[0]?.id
         );
     }, [events, initialEventType]);
 
     const initialEventCount = useMemo(() => {
+        if (initialMode === 'challenge') {
+            return challenges.length;
+        }
         return events.filter((event) => event.eventType === initialEventType)
             .length;
-    }, [events, initialEventType]);
+    }, [events, initialEventType, initialMode, challenges.length]);
 
-    const [eventId, setEventId] = useState<number | undefined>(initialEventId);
+    const [eventId, setEventId] = useState<number | undefined>(
+        initialMode === 'challenge' ? challenges[0]?.id : initialEventId
+    );
     const [eventType, setEventType] = useState<EventType>(
         initialEventType ?? EventType.EVENT
     );
@@ -72,18 +97,30 @@ export default function Scan({ events, initialEventType }: ScanProps) {
     );
 
     const isMealsOpen = useMemo(
-        () => eventType === EventType.MEAL && openSelectEvent,
-        [eventType, openSelectEvent]
+        () =>
+            mode === 'event' && eventType === EventType.MEAL && openSelectEvent,
+        [eventType, openSelectEvent, mode]
     );
 
     const isWorkshopsOpen = useMemo(
-        () => eventType === EventType.WORKSHOP && openSelectEvent,
-        [eventType, openSelectEvent]
+        () =>
+            mode === 'event' &&
+            eventType === EventType.WORKSHOP &&
+            openSelectEvent,
+        [eventType, openSelectEvent, mode]
     );
 
     const isOtherEventsOpen = useMemo(
-        () => eventType === EventType.EVENT && openSelectEvent,
-        [openSelectEvent, eventType]
+        () =>
+            mode === 'event' &&
+            eventType === EventType.EVENT &&
+            openSelectEvent,
+        [openSelectEvent, eventType, mode]
+    );
+
+    const isChallengesOpen = useMemo(
+        () => mode === 'challenge' && openSelectEvent,
+        [openSelectEvent, mode]
     );
 
     const workshopEvents = useMemo(() => {
@@ -93,26 +130,40 @@ export default function Scan({ events, initialEventType }: ScanProps) {
     }, [events]);
 
     const mealEvents = useMemo(() => {
-        const meals = events.filter(
-            (event) => event.eventType === EventType.MEAL
+        return groupEventsByDate(
+            events.filter((event) => event.eventType === EventType.MEAL)
         );
-
-        return groupEventsByDate(meals);
     }, [events]);
 
     const otherEvents = useMemo(() => {
-        const others = events.filter(
-            (event) => event.eventType === EventType.EVENT
+        return groupEventsByDate(
+            events.filter((event) => event.eventType === EventType.EVENT)
         );
-
-        return groupEventsByDate(others);
     }, [events]);
 
+    const challengeGroups = useMemo(() => {
+        return [
+            {
+                date: 'Challenges',
+                events: challenges.map((c) => ({
+                    id: c.id,
+                    title: c.title,
+                    startDate: dayjs(),
+                    endDate: dayjs(),
+                })),
+            },
+        ];
+    }, [challenges]);
+
+    const selectedEvent = events.find((e) => e.id === eventId);
+    const selectedChallenge = challenges.find((c) => c.id === eventId);
+
     const currentEventTitle = useMemo(() => {
-        return eventId
-            ? events.find((event) => event.id === eventId)?.title
-            : '';
-    }, [eventId, events]);
+        if (mode === 'challenge') {
+            return selectedChallenge?.title ?? 'Select challenge';
+        }
+        return selectedEvent?.title ?? '';
+    }, [mode, selectedChallenge, selectedEvent]);
 
     const openManualCheckin = () => {
         setManualCheckIn(true);
@@ -123,8 +174,19 @@ export default function Scan({ events, initialEventType }: ScanProps) {
     };
 
     const handleEventTypeChange = (newEventType: string) => {
+        if (newEventType === 'challenge') {
+            setMode('challenge');
+            setEventId(challenges[0]?.id);
+            setOpenSelectEvent(challenges.length > 1);
+            return;
+        }
+        setMode('event');
         setEventType(newEventType as EventType);
-        setOpenSelectEvent(true);
+        const first = events.find((e) => e.eventType === newEventType);
+        setEventId(first?.id);
+        setOpenSelectEvent(
+            events.filter((e) => e.eventType === newEventType).length > 1
+        );
     };
 
     const isCheckInPromptOpen = eventId !== undefined && hacker !== undefined;
@@ -142,7 +204,9 @@ export default function Scan({ events, initialEventType }: ScanProps) {
         if (user) {
             setHacker(user);
             if (!eventId) {
-                setEventId(initialEventId);
+                setEventId(
+                    mode === 'challenge' ? challenges[0]?.id : initialEventId
+                );
             }
         } else {
             setInvalidUserId(`${id}`);
@@ -155,8 +219,8 @@ export default function Scan({ events, initialEventType }: ScanProps) {
         }
     };
 
-    const handleEventClick = (eventId: number) => {
-        setEventId(eventId);
+    const handleEventClick = (id: number) => {
+        setEventId(id);
         setOpenSelectEvent(false);
     };
 
@@ -180,9 +244,10 @@ export default function Scan({ events, initialEventType }: ScanProps) {
         };
     }, []);
 
+    const dropdownValue = mode === 'challenge' ? 'challenge' : eventType;
+
     return (
         <div className="no-scrollable flex min-h-screen flex-col items-center justify-between bg-neutral-900">
-            {/* HACK */}
             <div
                 style={{
                     position: 'fixed',
@@ -228,7 +293,6 @@ export default function Scan({ events, initialEventType }: ScanProps) {
                     </Link>
                 </div>
 
-                {/*Shadcn dropdown*/}
                 <div className="absolute top-20 left-1/2 z-1000 -translate-x-1/2 transform">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -242,21 +306,28 @@ export default function Scan({ events, initialEventType }: ScanProps) {
 
                         <DropdownMenuContent className="border-neutral-750 w-56 bg-neutral-900/80 text-white/80">
                             <DropdownMenuRadioGroup
-                                value={eventType}
+                                value={dropdownValue}
                                 onValueChange={handleEventTypeChange}
                             >
-                                {EVENT_TYPES.map((eventType) => {
+                                {EVENT_TYPES.map((type) => {
                                     return (
                                         <DropdownMenuRadioItem
-                                            key={eventType}
-                                            value={eventType}
+                                            key={type}
+                                            value={type}
                                             className="gap-2"
                                         >
-                                            {iconFromEventType(eventType)}
-                                            <span>{eventType} Check-in</span>
+                                            {iconFromEventType(type)}
+                                            <span>{type} Check-in</span>
                                         </DropdownMenuRadioItem>
                                     );
                                 })}
+                                <DropdownMenuRadioItem
+                                    value="challenge"
+                                    className="gap-2"
+                                >
+                                    <TrophyIcon className="size-6" />
+                                    <span>Challenge Check-in</span>
+                                </DropdownMenuRadioItem>
                             </DropdownMenuRadioGroup>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -273,7 +344,6 @@ export default function Scan({ events, initialEventType }: ScanProps) {
                 </div>
             </div>
 
-            {/* TODO: refactor all of these pop up into 1 single component */}
             <ManualCheckIn
                 show={manualCheckIn}
                 onClose={closeManualCheckin}
@@ -294,9 +364,14 @@ export default function Scan({ events, initialEventType }: ScanProps) {
 
             <CheckinTicket
                 onClose={closeCheckInPrompt}
-                eventId={eventId ?? 0}
+                eventId={mode === 'event' ? (eventId ?? 0) : 0}
+                challengeId={mode === 'challenge' ? eventId : undefined}
                 hackathonId={
-                    events.find((e) => e.id === eventId)?.hackathonId ?? 0
+                    mode === 'challenge'
+                        ? (selectedChallenge?.hackathonId ??
+                          challenges[0]?.hackathonId ??
+                          0)
+                        : (selectedEvent?.hackathonId ?? 0)
                 }
                 currentHacker={
                     hacker ?? {
@@ -312,6 +387,26 @@ export default function Scan({ events, initialEventType }: ScanProps) {
                 }
                 eventType={eventType}
                 open={isCheckInPromptOpen}
+                variablePoints={
+                    mode === 'challenge'
+                        ? (selectedChallenge?.variablePoints ?? false)
+                        : (selectedEvent?.variablePoints ?? false)
+                }
+                maxPoints={
+                    mode === 'challenge'
+                        ? (selectedChallenge?.points ?? 1)
+                        : (selectedEvent?.points ?? 1)
+                }
+                pointsPerCompletion={
+                    mode === 'challenge'
+                        ? (selectedChallenge?.points ?? 1)
+                        : (selectedEvent?.points ?? 1)
+                }
+                maxCompletions={
+                    mode === 'challenge'
+                        ? (selectedChallenge?.maxCompletions ?? 1)
+                        : 1
+                }
             />
 
             <SelectEvent
@@ -319,6 +414,15 @@ export default function Scan({ events, initialEventType }: ScanProps) {
                 onClose={closeSelect}
                 groupedEvents={otherEvents}
                 onEventClick={handleEventClick}
+            />
+
+            <SelectEvent
+                show={isChallengesOpen}
+                onClose={closeSelect}
+                groupedEvents={challengeGroups}
+                onEventClick={handleEventClick}
+                title="Select Challenge"
+                description="What challenge are you checking in for?"
             />
 
             <SelectMeal

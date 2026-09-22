@@ -27,7 +27,6 @@ import {
     adminProcedure,
     adminOrSponsorProcedure,
     protectedProcedure,
-    publicProcedure,
     router,
 } from '../trpc';
 import { transporter } from '@/server/nodemailerTransporter';
