@@ -6,7 +6,10 @@ import { createCaller } from '@/server/appRouter';
 import {
     applyApplicationStatusUpdate,
     applyLastEmailSentUpdate,
+    fetchApplicationByHackathonAndUserId,
 } from '@/server/routers/applicationsRouter';
+import { fetchRsvpPaymentConfirmationTemplate } from '@/server/routers/emailTemplateRouter';
+import { sendTemplatedEmail } from '@/server/routers/sendEmailRouter';
 import type { InputFormPageData } from '@/components/application_components/types';
 import { getApplicationResponseString } from '@/lib/applications/applicationReviewExport';
 
@@ -42,11 +45,9 @@ export default async function ResultPage(
                 ) {
                     const trpcClient = createCaller({});
                     const application =
-                        await trpcClient.applications.getApplicationByHackathonAndUserId(
-                            {
-                                hackathonId: hackathonIdFromMetadata,
-                                userId: userIdFromMetadata,
-                            }
+                        await fetchApplicationByHackathonAndUserId(
+                            hackathonIdFromMetadata,
+                            userIdFromMetadata
                         );
 
                     if (
@@ -68,11 +69,8 @@ export default async function ResultPage(
                         if (payerEmail) {
                             try {
                                 const rsvpTemplate =
-                                    await trpcClient.emailTemplates.getRsvpPaymentConfirmationTemplate(
-                                        {
-                                            hackathonId:
-                                                application.hackathonId,
-                                        }
+                                    await fetchRsvpPaymentConfirmationTemplate(
+                                        application.hackathonId
                                     );
                                 if (rsvpTemplate) {
                                     const response =
@@ -100,8 +98,8 @@ export default async function ResultPage(
                                             applicationQuestionPages,
                                             'lastName'
                                         );
-                                    const sendResult =
-                                        await trpcClient.emails.sendEmail({
+                                    const sendResult = await sendTemplatedEmail(
+                                        {
                                             templateId: rsvpTemplate.id,
                                             user: {
                                                 id: application.userId,
@@ -109,7 +107,8 @@ export default async function ResultPage(
                                                 lastName,
                                                 email: payerEmail,
                                             },
-                                        });
+                                        }
+                                    );
                                     if (sendResult.emailSent) {
                                         await applyLastEmailSentUpdate({
                                             hackathonId:

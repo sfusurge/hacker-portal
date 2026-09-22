@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { publicProcedure, router } from '../trpc';
+import { protectedProcedure, publicProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
 import { user } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
@@ -62,14 +62,12 @@ export const announcementsRouter = router({
             }
         }),
 
-    markSeen: publicProcedure
+    markSeen: protectedProcedure
         .input(z.object({ lastSeenAt: z.coerce.date() }))
-        .mutation(async ({ input }) => {
-            const userData = await getUserData();
-            if (!userData) return;
+        .mutation(async ({ input, ctx }) => {
             await databaseClient
                 .update(user)
                 .set({ lastSeenAnnouncementsAt: input.lastSeenAt })
-                .where(eq(user.id, userData.id));
+                .where(eq(user.id, ctx.user.id));
         }),
 });

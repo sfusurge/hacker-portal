@@ -17,34 +17,18 @@ import {
     setUserHouseSchema,
 } from '@/db/schema/houses';
 import { user as usersTable } from '@/db/schema/users/users';
-import { hasAdminAccess } from '@/lib/auth/roles';
 import { TRPCError } from '@trpc/server';
 import { and, asc, countDistinct, desc, eq, sql, sum } from 'drizzle-orm';
 import {
     assignUnassignedHouses,
     setUserHouse,
 } from '@/server/houses/assignHouse';
-import { UnauthorizedError } from '../exceptions';
-import { publicProcedure, router } from '../trpc';
-import { getUserData } from '@/server/routers/usersRouter';
-
-async function requireAdmin() {
-    const user = await getUserData();
-    if (!hasAdminAccess(user?.userRole)) {
-        throw new UnauthorizedError({
-            email: user?.email,
-            role: user?.userRole,
-        });
-    }
-    return user;
-}
+import { adminProcedure, publicProcedure, router } from '../trpc';
 
 export const housesRouter = router({
-    createHouses: publicProcedure
+    createHouses: adminProcedure
         .input(createHousesSchema)
         .mutation(async ({ input }) => {
-            await requireAdmin();
-
             const existing = await databaseClient
                 .select({ id: houses.id })
                 .from(houses)
@@ -77,11 +61,9 @@ export const housesRouter = router({
 
             return created;
         }),
-    addHouse: publicProcedure
+    addHouse: adminProcedure
         .input(addHouseSchema)
         .mutation(async ({ input }) => {
-            await requireAdmin();
-
             const existing = await databaseClient
                 .select({ id: houses.id })
                 .from(houses)
@@ -105,11 +87,9 @@ export const housesRouter = router({
             return house;
         }),
 
-    renameHouse: publicProcedure
+    renameHouse: adminProcedure
         .input(renameHouseSchema)
         .mutation(async ({ input }) => {
-            await requireAdmin();
-
             const [house] = await databaseClient
                 .update(houses)
                 .set({ name: input.name })
@@ -126,11 +106,9 @@ export const housesRouter = router({
             return house;
         }),
 
-    deleteHouse: publicProcedure
+    deleteHouse: adminProcedure
         .input(deleteHouseSchema)
         .mutation(async ({ input }) => {
-            await requireAdmin();
-
             return await databaseClient
                 .delete(houses)
                 .where(eq(houses.id, input.houseId));
@@ -172,25 +150,21 @@ export const housesRouter = router({
             return row ?? null;
         }),
 
-    assignUnassignedHouses: publicProcedure
+    assignUnassignedHouses: adminProcedure
         .input(assignHousesSchema)
         .mutation(async ({ input }) => {
-            await requireAdmin();
             return assignUnassignedHouses(input.hackathonId);
         }),
 
-    setUserHouse: publicProcedure
+    setUserHouse: adminProcedure
         .input(setUserHouseSchema)
         .mutation(async ({ input }) => {
-            await requireAdmin();
             return setUserHouse(input.hackathonId, input.userId, input.houseId);
         }),
 
-    getHouseStandings: publicProcedure
+    getHouseStandings: adminProcedure
         .input(getHouseStandingsSchema)
         .query(async ({ input }) => {
-            await requireAdmin();
-
             const rows = await databaseClient
                 .select({
                     houseId: houses.id,
@@ -229,11 +203,9 @@ export const housesRouter = router({
             }));
         }),
 
-    getHouseTopScorers: publicProcedure
+    getHouseTopScorers: adminProcedure
         .input(getHouseTopScorersSchema)
         .query(async ({ input }) => {
-            await requireAdmin();
-
             const houseRows = await databaseClient
                 .select({
                     houseId: houses.id,

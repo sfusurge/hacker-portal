@@ -1,7 +1,6 @@
-import { publicProcedure, router } from '../trpc';
+import { adminProcedure, protectedProcedure, router } from '../trpc';
 import { z } from 'zod';
 import { databaseClient } from '@/db/client';
-import { UnauthorizedError, InternalServerError } from '../exceptions';
 import {
     emailTemplates,
     emailTemplateStyling,
@@ -12,23 +11,10 @@ import {
 import { hackathonEmailTypeEnum } from '@/db/schema/emails';
 import { hackathons } from '@/db/schema/hackathons';
 import { eq, desc, and, getTableColumns } from 'drizzle-orm';
-import { getUserData } from '@/server/routers/usersRouter';
-import { hasAdminAccess } from '@/lib/auth/roles';
-
 export const emailTemplatesRouter = router({
-    createEmailTemplate: publicProcedure
+    createEmailTemplate: adminProcedure
         .input(emailTemplateSchema)
         .mutation(async ({ input }) => {
-            const user = await getUserData();
-
-            // Only admin can create email templates
-            if (!hasAdminAccess(user?.userRole)) {
-                throw new UnauthorizedError({
-                    email: user?.email,
-                    role: user?.userRole,
-                });
-            }
-
             const [template] = await databaseClient
                 .insert(emailTemplates)
                 .values({
@@ -45,23 +31,9 @@ export const emailTemplatesRouter = router({
             return template;
         }),
 
-    getEmailTemplates: publicProcedure
+    getEmailTemplates: adminProcedure
         .input(z.object({ hackathonId: z.number().int() }))
         .query(async ({ input }) => {
-            const user = await getUserData();
-
-            if (!user) {
-                throw new InternalServerError('User not authenticated');
-            }
-
-            // Only admin can view all templates
-            if (!hasAdminAccess(user.userRole)) {
-                throw new UnauthorizedError({
-                    email: user.email,
-                    role: user.userRole,
-                });
-            }
-
             const templates = await databaseClient
                 .select({
                     ...getTableColumns(emailTemplates),
@@ -78,23 +50,9 @@ export const emailTemplatesRouter = router({
             return templates;
         }),
 
-    getEmailTemplate: publicProcedure
+    getEmailTemplate: adminProcedure
         .input(getEmailTemplateSchema)
         .query(async ({ input }) => {
-            const user = await getUserData();
-
-            if (!user) {
-                throw new InternalServerError('User not authenticated');
-            }
-
-            // Only admin can view templates
-            if (!hasAdminAccess(user.userRole)) {
-                throw new UnauthorizedError({
-                    email: user.email,
-                    role: user.userRole,
-                });
-            }
-
             const [template] = await databaseClient
                 .select()
                 .from(emailTemplates)
@@ -104,15 +62,9 @@ export const emailTemplatesRouter = router({
             return template || null;
         }),
 
-    getEmailTemplateByName: publicProcedure
+    getEmailTemplateByName: adminProcedure
         .input(z.object({ title: z.string() }))
         .query(async ({ input }) => {
-            const user = await getUserData();
-
-            if (!user) {
-                throw new InternalServerError('User not authenticated');
-            }
-
             const [template] = await databaseClient
                 .select()
                 .from(emailTemplates)
@@ -122,7 +74,7 @@ export const emailTemplatesRouter = router({
             return template || null;
         }),
 
-    getEmailTemplateByPurpose: publicProcedure
+    getEmailTemplateByPurpose: adminProcedure
         .input(z.object({ purpose: z.string() }))
         .query(async ({ input }) => {
             const [template] = await databaseClient
@@ -134,7 +86,7 @@ export const emailTemplatesRouter = router({
             return template || null;
         }),
 
-    getEmailTemplateByHackathonAndType: publicProcedure
+    getEmailTemplateByHackathonAndType: protectedProcedure
         .input(
             z.object({
                 hackathonId: z.number().int(),
@@ -160,76 +112,15 @@ export const emailTemplatesRouter = router({
      * RSVP payment confirmation email: paid hackathons use `rsvp_paid` if set,
      * else `rsvp_received`; unpaid hackathons use `rsvp_received` only.
      */
-    getRsvpPaymentConfirmationTemplate: publicProcedure
+    getRsvpPaymentConfirmationTemplate: adminProcedure
         .input(z.object({ hackathonId: z.number().int() }))
         .query(async ({ input }) => {
-            const { hackathonId } = input;
-
-            const [h] = await databaseClient
-                .select({ isPaid: hackathons.isPaid })
-                .from(hackathons)
-                .where(eq(hackathons.id, hackathonId))
-                .limit(1);
-
-            if (!h) {
-                return null;
-            }
-
-            if (!h.isPaid) {
-                const [t] = await databaseClient
-                    .select()
-                    .from(emailTemplates)
-                    .where(
-                        and(
-                            eq(emailTemplates.hackathonId, hackathonId),
-                            eq(emailTemplates.emailType, 'rsvp_received')
-                        )
-                    )
-                    .limit(1);
-                return t ?? null;
-            }
-
-            const [paidTemplate] = await databaseClient
-                .select()
-                .from(emailTemplates)
-                .where(
-                    and(
-                        eq(emailTemplates.hackathonId, hackathonId),
-                        eq(emailTemplates.emailType, 'rsvp_paid')
-                    )
-                )
-                .limit(1);
-
-            if (paidTemplate) {
-                return paidTemplate;
-            }
-
-            const [fallback] = await databaseClient
-                .select()
-                .from(emailTemplates)
-                .where(
-                    and(
-                        eq(emailTemplates.hackathonId, hackathonId),
-                        eq(emailTemplates.emailType, 'rsvp_received')
-                    )
-                )
-                .limit(1);
-
-            return fallback ?? null;
+            return fetchRsvpPaymentConfirmationTemplate(input.hackathonId);
         }),
 
-    updateEmailTemplate: publicProcedure
+    updateEmailTemplate: adminProcedure
         .input(emailTemplateSchema.extend({ id: z.number().int() }))
         .mutation(async ({ input }) => {
-            const user = await getUserData();
-
-            if (!hasAdminAccess(user?.userRole)) {
-                throw new UnauthorizedError({
-                    email: user?.email,
-                    role: user?.userRole,
-                });
-            }
-
             const [template] = await databaseClient
                 .update(emailTemplates)
                 .set({
@@ -248,21 +139,67 @@ export const emailTemplatesRouter = router({
             return template;
         }),
 
-    deleteEmailTemplate: publicProcedure
+    deleteEmailTemplate: adminProcedure
         .input(deleteEmailTemplateSchema)
         .mutation(async ({ input }) => {
-            const user = await getUserData();
-
-            // Only admin can delete templates
-            if (!hasAdminAccess(user?.userRole)) {
-                throw new UnauthorizedError({
-                    email: user?.email,
-                    role: user?.userRole,
-                });
-            }
-
             return await databaseClient
                 .delete(emailTemplates)
                 .where(eq(emailTemplates.id, input.id));
         }),
 });
+
+export async function fetchRsvpPaymentConfirmationTemplate(
+    hackathonId: number
+) {
+    const [h] = await databaseClient
+        .select({ isPaid: hackathons.isPaid })
+        .from(hackathons)
+        .where(eq(hackathons.id, hackathonId))
+        .limit(1);
+
+    if (!h) {
+        return null;
+    }
+
+    if (!h.isPaid) {
+        const [t] = await databaseClient
+            .select()
+            .from(emailTemplates)
+            .where(
+                and(
+                    eq(emailTemplates.hackathonId, hackathonId),
+                    eq(emailTemplates.emailType, 'rsvp_received')
+                )
+            )
+            .limit(1);
+        return t ?? null;
+    }
+
+    const [paidTemplate] = await databaseClient
+        .select()
+        .from(emailTemplates)
+        .where(
+            and(
+                eq(emailTemplates.hackathonId, hackathonId),
+                eq(emailTemplates.emailType, 'rsvp_paid')
+            )
+        )
+        .limit(1);
+
+    if (paidTemplate) {
+        return paidTemplate;
+    }
+
+    const [fallback] = await databaseClient
+        .select()
+        .from(emailTemplates)
+        .where(
+            and(
+                eq(emailTemplates.hackathonId, hackathonId),
+                eq(emailTemplates.emailType, 'rsvp_received')
+            )
+        )
+        .limit(1);
+
+    return fallback ?? null;
+}

@@ -5,7 +5,11 @@ import { createCaller } from '@/server/appRouter';
 import {
     applyApplicationStatusUpdate,
     applyLastEmailSentUpdate,
+    fetchApplicationByEmail,
+    fetchApplicationByHackathonAndUserId,
 } from '@/server/routers/applicationsRouter';
+import { fetchRsvpPaymentConfirmationTemplate } from '@/server/routers/emailTemplateRouter';
+import { sendTemplatedEmail } from '@/server/routers/sendEmailRouter';
 import type { InputFormPageData } from '@/components/application_components/types';
 import { getApplicationResponseString } from '@/lib/applications/applicationReviewExport';
 
@@ -60,9 +64,6 @@ export async function POST(req: Request) {
                 case 'payment_intent.succeeded':
                     data = event.data.object as Stripe.PaymentIntent;
 
-                    // since payment succeeded, update application status
-                    const trpcClient = createCaller({});
-
                     const hackathonIdFromMetadata = data.metadata?.hackathonId
                         ? Number(data.metadata.hackathonId)
                         : null;
@@ -79,19 +80,14 @@ export async function POST(req: Request) {
                         Number.isFinite(userIdFromMetadata)
                     ) {
                         application =
-                            await trpcClient.applications.getApplicationByHackathonAndUserId(
-                                {
-                                    hackathonId: hackathonIdFromMetadata,
-                                    userId: userIdFromMetadata,
-                                }
+                            await fetchApplicationByHackathonAndUserId(
+                                hackathonIdFromMetadata,
+                                userIdFromMetadata
                             );
                     } else if (data.receipt_email) {
-                        application =
-                            await trpcClient.applications.getApplicationByEmail(
-                                {
-                                    email: data.receipt_email,
-                                }
-                            );
+                        application = await fetchApplicationByEmail(
+                            data.receipt_email
+                        );
                     } else {
                         console.error(
                             'No metadata (hackathonId/userId) and no receipt_email; cannot locate application'
@@ -130,8 +126,8 @@ export async function POST(req: Request) {
                             break;
                         }
                         const rsvpTemplate =
-                            await trpcClient.emailTemplates.getRsvpPaymentConfirmationTemplate(
-                                { hackathonId: application.hackathonId }
+                            await fetchRsvpPaymentConfirmationTemplate(
+                                application.hackathonId
                             );
 
                         if (rsvpTemplate) {
@@ -140,6 +136,7 @@ export async function POST(req: Request) {
                                     string,
                                     unknown
                                 > | null) ?? {};
+                            const trpcClient = createCaller({});
                             const hackathons =
                                 await trpcClient.hackathons.getHackathons();
                             const hackathon = hackathons.find(
@@ -160,16 +157,15 @@ export async function POST(req: Request) {
                                 'lastName'
                             );
 
-                            const sendResult =
-                                await trpcClient.emails.sendEmail({
-                                    templateId: rsvpTemplate.id,
-                                    user: {
-                                        id: application.userId,
-                                        firstName: firstName,
-                                        lastName: lastName,
-                                        email: payerEmail,
-                                    },
-                                });
+                            const sendResult = await sendTemplatedEmail({
+                                templateId: rsvpTemplate.id,
+                                user: {
+                                    id: application.userId,
+                                    firstName: firstName,
+                                    lastName: lastName,
+                                    email: payerEmail,
+                                },
+                            });
                             if (sendResult.emailSent) {
                                 await applyLastEmailSentUpdate({
                                     hackathonId: application.hackathonId,

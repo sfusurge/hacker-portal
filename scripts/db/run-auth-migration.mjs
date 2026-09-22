@@ -21,7 +21,8 @@ const sql = postgres(connectionString, {
 });
 
 try {
-    console.log(`Running auth migration against ${connectionString}`);
+    const redacted = connectionString.replace(/\/\/([^@/]+)@/, '//***@');
+    console.log(`Running auth migration against ${redacted}`);
     await sql.unsafe(migrationSql);
     console.log('Auth migration completed successfully.');
     console.log('Next step: pnpm drizzle:push');

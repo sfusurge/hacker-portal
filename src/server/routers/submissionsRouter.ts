@@ -14,8 +14,14 @@ import { and, eq, getTableColumns } from 'drizzle-orm';
 import { z } from 'zod';
 import { BadRequestError } from '@/server/exceptions';
 import { isSubmissionWindowOpen } from '@/lib/submissionWindow';
-import { publicProcedure, router } from '../trpc';
-import { getUserData } from './usersRouter';
+import {
+    adminProcedure,
+    protectedProcedure,
+    publicProcedure,
+    router,
+} from '../trpc';
+import { TRPCError } from '@trpc/server';
+import { hasAdminAccess } from '@/lib/auth/roles';
 import type { InputFormPageData } from '@/components/application_components/types';
 import { mapSubmissionToProjectListItem } from '@/lib/projects/projectSubmissionDisplay';
 
@@ -38,10 +44,9 @@ export interface SubmissionWithTeamInfo {
 }
 
 export const submissionsRouter = router({
-    getUserTeamSubmission: publicProcedure
+    getUserTeamSubmission: protectedProcedure
         .input(z.object({ hackathonId: z.number().int() }))
-        .query(async ({ input }) => {
-            const userInfo = await getUserData();
+        .query(async ({ input, ctx }) => {
             const [submission] = await databaseClient
                 .select(getTableColumns(submissions))
                 .from(submissions)
@@ -49,7 +54,7 @@ export const submissionsRouter = router({
                 .innerJoin(teams, eq(teams.id, submissions.teamId))
                 .where(
                     and(
-                        eq(members.userId, userInfo?.id ?? -1),
+                        eq(members.userId, ctx.user.id),
                         eq(submissions.hackathonId, input.hackathonId),
                         eq(teams.hackathonId, input.hackathonId)
                     )
@@ -123,10 +128,13 @@ export const submissionsRouter = router({
             };
         }),
 
-    getHasSubmissions: publicProcedure
+    getHasSubmissions: protectedProcedure
         .input(getHasSubmissionSchema)
-        .query(async ({ input }) => {
+        .query(async ({ input, ctx }) => {
             const { userId, hackathonId } = input;
+            if (!hasAdminAccess(ctx.user.userRole) && ctx.user.id !== userId) {
+                throw new TRPCError({ code: 'UNAUTHORIZED' });
+            }
 
             // Step 1: Find the user's team for this hackathon
             const membership = await databaseClient
@@ -164,7 +172,7 @@ export const submissionsRouter = router({
             };
         }),
 
-    getAllSubmissions: publicProcedure
+    getAllSubmissions: adminProcedure
         .input(z.object({ hackathonId: z.number() }))
         .query(async ({ input }) => {
             const allSubmissions = await databaseClient

@@ -21,12 +21,18 @@ import {
     count,
 } from 'drizzle-orm';
 import { z } from 'zod';
-import { InternalServerError, UnauthorizedError } from '../exceptions';
-import { publicProcedure, router } from '../trpc';
+import { InternalServerError } from '../exceptions';
+import { TRPCError } from '@trpc/server';
+import {
+    adminProcedure,
+    adminOrSponsorProcedure,
+    protectedProcedure,
+    publicProcedure,
+    router,
+} from '../trpc';
 import { transporter } from '@/server/nodemailerTransporter';
 import { teams } from '@/db/schema/teams';
 import { members } from '@/db/schema/members';
-import { getBasicUserInfo, getUserData } from '@/server/routers/usersRouter';
 import { checkIns } from '@/db/schema/checkIn';
 import { events } from '@/db/schema/events';
 import { emailTemplates, emailTemplateStyling } from '@/db/schema/emails';
@@ -37,34 +43,6 @@ import {
 } from '@/app/(auth)/admin/email/templates/emailPreview';
 import { publishReviewTableEvent } from '@/lib/realtime/publishReviewTableEvent';
 import { hasAdminAccess } from '@/lib/auth/roles';
-
-async function assertAdmin() {
-    const user = await getUserData();
-    if (!user) {
-        throw new InternalServerError('User not authenticated');
-    }
-    if (!hasAdminAccess(user.userRole)) {
-        throw new UnauthorizedError({
-            email: user.email,
-            role: user.userRole,
-        });
-    }
-    return user;
-}
-
-async function assertAdminOrSponsor() {
-    const user = await getUserData();
-    if (!user) {
-        throw new InternalServerError('User not authenticated');
-    }
-    if (!hasAdminAccess(user.userRole) && user.userRole !== 'sponsor') {
-        throw new UnauthorizedError({
-            email: user.email,
-            role: user.userRole,
-        });
-    }
-    return user;
-}
 
 type UpdateApplicationInput = z.infer<typeof updateApplicationStatusSchema>;
 type UpdateLastEmailSentInput = z.infer<typeof updateLastEmailSentSchema>;
@@ -151,136 +129,133 @@ export interface SubmitApplicationResponse {
 }
 
 export const applicationsRouter = router({
-    submitApplication: publicProcedure
+    submitApplication: protectedProcedure
         .input(insertApplicationSchema)
-        .mutation(async ({ input }): Promise<SubmitApplicationResponse> => {
-            const user = await getUserData();
+        .mutation(
+            async ({ input, ctx }): Promise<SubmitApplicationResponse> => {
+                const user = ctx.user;
+                const email = user.email;
 
-            const email = user?.email;
-
-            if (!email) {
-                throw new InternalServerError(
-                    "Can't get email from getServerSession"
-                );
-            }
-
-            const [application] = await databaseClient
-                .insert(applications)
-                .values({
-                    userId: user.id,
-                    hackathonId: input.hackathonId,
-                    response: input.response,
-                })
-                .onConflictDoNothing({
-                    target: [applications.hackathonId, applications.userId],
-                })
-                // .onConflictDoUpdate({
-                //     target: [applications.hackathonId, applications.userId],
-                //     set: { response: input.response },
-                // })
-                .returning();
-
-            if (application) {
-                if (!user?.email) {
+                if (!email) {
                     throw new InternalServerError(
-                        'User email is missing. Cannot send email.'
+                        "Can't get email from getServerSession"
                     );
                 }
-                try {
-                    const [template] = await databaseClient
-                        .select()
-                        .from(emailTemplates)
-                        .where(
-                            and(
-                                eq(
-                                    emailTemplates.hackathonId,
-                                    input.hackathonId
-                                ),
-                                eq(emailTemplates.emailType, 'hacker_applied')
-                            )
-                        )
-                        .limit(1);
 
-                    if (!template) {
-                        console.error(
-                            `No hacker_applied email template found for hackathon ${input.hackathonId}`
-                        );
-                    } else {
-                        let processedTemplateContent =
-                            template.stylingId != null
-                                ? markdownToHtml(template.content)
-                                : template.content;
+                const [application] = await databaseClient
+                    .insert(applications)
+                    .values({
+                        userId: user.id,
+                        hackathonId: input.hackathonId,
+                        response: input.response,
+                    })
+                    .onConflictDoNothing({
+                        target: [applications.hackathonId, applications.userId],
+                    })
+                    // .onConflictDoUpdate({
+                    //     target: [applications.hackathonId, applications.userId],
+                    //     set: { response: input.response },
+                    // })
+                    .returning();
 
-                        const templateData = {
-                            firstName: user.firstName ?? 'Friend',
-                            lastName: user.lastName ?? '',
-                            email: user.email,
-                            userId: user.id,
-                        };
-
-                        let finalHtmlContent = prepareEmailContent(
-                            processedTemplateContent,
-                            templateData
-                        );
-
-                        if (template.stylingId != null) {
-                            const [styling] = await databaseClient
-                                .select()
-                                .from(emailTemplateStyling)
-                                .where(
-                                    eq(
-                                        emailTemplateStyling.id,
-                                        template.stylingId
-                                    )
-                                )
-                                .limit(1);
-                            if (styling?.html) {
-                                finalHtmlContent = mergeBodyIntoStyling(
-                                    styling.html,
-                                    finalHtmlContent
-                                );
-                            }
-                        }
-
-                        await transporter.sendMail({
-                            from: process.env.SENDINGEMAIL,
-                            subject: template.title,
-                            html: finalHtmlContent,
-                            to: user.email,
-                        });
-
-                        await databaseClient
-                            .update(applications)
-                            .set({ lastEmailSent: 'hacker_applied' })
+                if (application) {
+                    try {
+                        const [template] = await databaseClient
+                            .select()
+                            .from(emailTemplates)
                             .where(
                                 and(
                                     eq(
-                                        applications.hackathonId,
+                                        emailTemplates.hackathonId,
                                         input.hackathonId
                                     ),
-                                    eq(applications.userId, user.id)
+                                    eq(
+                                        emailTemplates.emailType,
+                                        'hacker_applied'
+                                    )
                                 )
+                            )
+                            .limit(1);
+
+                        if (!template) {
+                            console.error(
+                                `No hacker_applied email template found for hackathon ${input.hackathonId}`
                             );
+                        } else {
+                            let processedTemplateContent =
+                                template.stylingId != null
+                                    ? markdownToHtml(template.content)
+                                    : template.content;
+
+                            const templateData = {
+                                firstName: user.firstName ?? 'Friend',
+                                lastName: user.lastName ?? '',
+                                email: user.email,
+                                userId: user.id,
+                            };
+
+                            let finalHtmlContent = prepareEmailContent(
+                                processedTemplateContent,
+                                templateData
+                            );
+
+                            if (template.stylingId != null) {
+                                const [styling] = await databaseClient
+                                    .select()
+                                    .from(emailTemplateStyling)
+                                    .where(
+                                        eq(
+                                            emailTemplateStyling.id,
+                                            template.stylingId
+                                        )
+                                    )
+                                    .limit(1);
+                                if (styling?.html) {
+                                    finalHtmlContent = mergeBodyIntoStyling(
+                                        styling.html,
+                                        finalHtmlContent
+                                    );
+                                }
+                            }
+
+                            await transporter.sendMail({
+                                from: process.env.SENDINGEMAIL,
+                                subject: template.title,
+                                html: finalHtmlContent,
+                                to: user.email,
+                            });
+
+                            await databaseClient
+                                .update(applications)
+                                .set({ lastEmailSent: 'hacker_applied' })
+                                .where(
+                                    and(
+                                        eq(
+                                            applications.hackathonId,
+                                            input.hackathonId
+                                        ),
+                                        eq(applications.userId, user.id)
+                                    )
+                                );
+                        }
+                    } catch (error) {
+                        console.error(
+                            'Error preparing or sending hacker_applied email:',
+                            error
+                        );
                     }
-                } catch (error) {
-                    console.error(
-                        'Error preparing or sending hacker_applied email:',
-                        error
-                    );
                 }
+
+                return {
+                    ...application,
+                    response: application.response as Record<string, unknown>,
+                };
             }
+        ),
 
-            return {
-                ...application,
-                response: application.response as Record<string, unknown>,
-            };
-        }),
-
-    getApplications: publicProcedure
+    getApplications: adminOrSponsorProcedure
         .input(queryApplicationsSchema)
         .query(async ({ input }) => {
-            await assertAdminOrSponsor();
-
             const offset = Number(input.cursor ?? 0);
 
             const applicationInfos = await databaseClient
@@ -425,11 +400,9 @@ export const applicationsRouter = router({
             };
         }),
 
-    getApplicationCount: publicProcedure
+    getApplicationCount: adminProcedure
         .input(z.object({ hackathonId: z.number().int() }))
         .query(async ({ input }) => {
-            await assertAdmin();
-
             const [{ applicationCount }] = await databaseClient
                 .select({ applicationCount: count(applications.userId) })
                 .from(applications)
@@ -438,41 +411,27 @@ export const applicationsRouter = router({
             return { applicationCount };
         }),
 
-    updateApplication: publicProcedure
+    updateApplication: protectedProcedure
         .input(updateApplicationStatusSchema)
-        .mutation(async ({ input }) => {
-            const user = await getUserData();
-            if (!user) {
-                throw new InternalServerError('User not authenticated');
-            }
-
-            if (!hasAdminAccess(user.userRole)) {
-                if (user.id !== input.userId) {
-                    throw new UnauthorizedError({
-                        email: user.email,
-                        role: user.userRole,
-                    });
+        .mutation(async ({ input, ctx }) => {
+            if (!hasAdminAccess(ctx.user.userRole)) {
+                if (ctx.user.id !== input.userId) {
+                    throw new TRPCError({ code: 'UNAUTHORIZED' });
                 }
-                // Hackers may update their own status (RSVP / withdraw), not flags.
                 if (
                     input.flagged !== undefined ||
                     input.hsFlagged !== undefined
                 ) {
-                    throw new UnauthorizedError({
-                        email: user.email,
-                        role: user.userRole,
-                    });
+                    throw new TRPCError({ code: 'UNAUTHORIZED' });
                 }
             }
 
             return applyApplicationStatusUpdate(input);
         }),
 
-    updateApplicationBatch: publicProcedure
+    updateApplicationBatch: adminProcedure
         .input(batchUpdateApplicationStatusSchema)
         .mutation(async ({ input }) => {
-            await assertAdmin();
-
             const payload: {
                 pendingStatus?: StatusEnum;
                 currentStatus?: StatusEnum;
@@ -534,24 +493,16 @@ export const applicationsRouter = router({
             return updatedApplications;
         }),
 
-    getCurrentApplication: publicProcedure
+    getCurrentApplication: protectedProcedure
         .input(z.object({ hackathonId: z.number().int() }))
-        .query(async ({ input }) => {
-            const user = await getBasicUserInfo();
-
-            if (!user) {
-                throw new InternalServerError(
-                    'Unexpected `undefined` userData'
-                );
-            }
-
+        .query(async ({ input, ctx }) => {
             const [application] = await databaseClient
                 .select()
                 .from(applications)
                 .where(
                     and(
                         eq(applications.hackathonId, input.hackathonId),
-                        eq(applications.userId, user.id)
+                        eq(applications.userId, ctx.user.id)
                     )
                 )
                 .limit(1);
@@ -559,25 +510,17 @@ export const applicationsRouter = router({
             return application ?? null;
         }),
 
-    getApplicationByEmail: publicProcedure
+    getApplicationByEmail: adminProcedure
         .input(
             z.object({
                 email: z.string().email(),
             })
         )
         .query(async ({ input }) => {
-            const [application] = await databaseClient
-                .select(getTableColumns(applications))
-                .from(applications)
-                .innerJoin(user, eq(applications.userId, user.id))
-                .where(eq(user.email, input.email))
-                .orderBy(desc(applications.createdDate))
-                .limit(1);
-
-            return application as ApplicationInfo;
+            return fetchApplicationByEmail(input.email);
         }),
 
-    getApplicationByHackathonAndUserId: publicProcedure
+    getApplicationByHackathonAndUserId: adminProcedure
         .input(
             z.object({
                 hackathonId: z.number().int(),
@@ -585,21 +528,13 @@ export const applicationsRouter = router({
             })
         )
         .query(async ({ input }) => {
-            const [application] = await databaseClient
-                .select(getTableColumns(applications))
-                .from(applications)
-                .where(
-                    and(
-                        eq(applications.hackathonId, input.hackathonId),
-                        eq(applications.userId, input.userId)
-                    )
-                )
-                .limit(1);
-
-            return (application ?? null) as ApplicationInfo | null;
+            return fetchApplicationByHackathonAndUserId(
+                input.hackathonId,
+                input.userId
+            );
         }),
 
-    getApplicationsByEmail: publicProcedure
+    getApplicationsByEmail: adminProcedure
         .input(
             z.object({
                 email: z.string().email(),
@@ -615,29 +550,22 @@ export const applicationsRouter = router({
             return applications_result as ApplicationInfo[];
         }),
 
-    updateLastEmailSent: publicProcedure
+    updateLastEmailSent: protectedProcedure
         .input(updateLastEmailSentSchema)
-        .mutation(async ({ input }) => {
-            const user = await getUserData();
-            if (!user) {
-                throw new InternalServerError('User not authenticated');
-            }
-
-            if (!hasAdminAccess(user.userRole) && user.id !== input.userId) {
-                throw new UnauthorizedError({
-                    email: user.email,
-                    role: user.userRole,
-                });
+        .mutation(async ({ input, ctx }) => {
+            if (
+                !hasAdminAccess(ctx.user.userRole) &&
+                ctx.user.id !== input.userId
+            ) {
+                throw new TRPCError({ code: 'UNAUTHORIZED' });
             }
 
             return applyLastEmailSentUpdate(input);
         }),
 
-    batchUpdateLastEmailSent: publicProcedure
+    batchUpdateLastEmailSent: adminProcedure
         .input(batchUpdateLastEmailSentSchema)
         .mutation(async ({ input }) => {
-            await assertAdmin();
-
             if (input.userIds.length === 0) {
                 return [];
             }
@@ -656,7 +584,7 @@ export const applicationsRouter = router({
                 .returning();
         }),
 
-    getStatisticsData: publicProcedure
+    getStatisticsData: adminProcedure
         .input(z.object({ hackathonId: z.number().int() }))
         .query(async ({ input }) => {
             try {
@@ -687,6 +615,36 @@ export const applicationsRouter = router({
             }
         }),
 });
+
+export async function fetchApplicationByEmail(email: string) {
+    const [application] = await databaseClient
+        .select(getTableColumns(applications))
+        .from(applications)
+        .innerJoin(user, eq(applications.userId, user.id))
+        .where(eq(user.email, email))
+        .orderBy(desc(applications.createdDate))
+        .limit(1);
+
+    return application as ApplicationInfo;
+}
+
+export async function fetchApplicationByHackathonAndUserId(
+    hackathonId: number,
+    userId: number
+) {
+    const [application] = await databaseClient
+        .select(getTableColumns(applications))
+        .from(applications)
+        .where(
+            and(
+                eq(applications.hackathonId, hackathonId),
+                eq(applications.userId, userId)
+            )
+        )
+        .limit(1);
+
+    return (application ?? null) as ApplicationInfo | null;
+}
 
 export type ApplicationsRouter = typeof applicationsRouter;
 

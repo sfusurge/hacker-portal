@@ -5,26 +5,13 @@ import {
     getNfcCardByUserIdSchema,
     nfcCards,
 } from '@/db/schema/nfcCards';
-import { UserRoleEnum, user as usersTable } from '@/db/schema/users/users';
+import { user as usersTable } from '@/db/schema/users/users';
 import { and, eq } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
-import { UnauthorizedError } from '../exceptions';
-import { publicProcedure, router } from '../trpc';
-import { getUserData } from '@/server/routers/usersRouter';
+import { adminProcedure, router } from '../trpc';
 
 function normalizeTagUid(tagUid: string): string {
     return tagUid.replace(/[:\s.-]/g, '').toUpperCase();
-}
-
-async function requireAdmin() {
-    const user = await getUserData();
-    if (user?.userRole !== UserRoleEnum.admin) {
-        throw new UnauthorizedError({
-            email: user?.email,
-            role: user?.userRole,
-        });
-    }
-    return user;
 }
 
 export const nfcRouter = router({
@@ -33,11 +20,9 @@ export const nfcRouter = router({
      * Re-provisioning the same user replaces their previous tag for that hackathon.
      * Reusing a tag already bound to someone else is rejected.
      */
-    bindCard: publicProcedure
+    bindCard: adminProcedure
         .input(bindNfcCardSchema)
         .mutation(async ({ input }) => {
-            await requireAdmin();
-
             const tagUid = normalizeTagUid(input.tagUid);
 
             const [targetUser] = await databaseClient
@@ -70,7 +55,6 @@ export const nfcRouter = router({
                 });
             }
 
-            // Drop prior binding for this user+hackathon if re-flashing a new tag
             await databaseClient
                 .delete(nfcCards)
                 .where(
@@ -100,11 +84,9 @@ export const nfcRouter = router({
             return row;
         }),
 
-    getByTagUid: publicProcedure
+    getByTagUid: adminProcedure
         .input(getNfcCardByTagUidSchema)
         .query(async ({ input }) => {
-            await requireAdmin();
-
             const tagUid = normalizeTagUid(input.tagUid);
             const conditions = [eq(nfcCards.tagUid, tagUid)];
             if (input.hackathonId != null) {
@@ -120,11 +102,9 @@ export const nfcRouter = router({
             return row ?? null;
         }),
 
-    getByUserId: publicProcedure
+    getByUserId: adminProcedure
         .input(getNfcCardByUserIdSchema)
         .query(async ({ input }) => {
-            await requireAdmin();
-
             const [row] = await databaseClient
                 .select()
                 .from(nfcCards)

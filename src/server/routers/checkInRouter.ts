@@ -6,31 +6,19 @@ import {
     isCheckInSchema,
 } from '@/db/schema/checkIn';
 import { user as usersTable } from '@/db/schema/users/users';
-import { ResourceNotFoundError, UnauthorizedError } from '../exceptions';
+import { ResourceNotFoundError } from '../exceptions';
 import { TRPCError } from '@trpc/server';
-import { publicProcedure, router } from '../trpc';
+import { adminProcedure, publicProcedure, router } from '../trpc';
 import { and, desc, eq, count } from 'drizzle-orm';
-import { getUserData } from '@/server/routers/usersRouter';
 import { events } from '@/db/schema/events';
 import { applications } from '@/db/schema/applications';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
-import { hasAdminAccess } from '@/lib/auth/roles';
 import { assignHouseIfNeeded } from '@/server/houses/assignHouse';
 
 export const checkInRouter = router({
-    checkIn: publicProcedure
+    checkIn: adminProcedure
         .input(insertCheckInSchema)
         .mutation(async ({ input }) => {
-            const user = await getUserData();
-
-            // Only admin can check people in
-            if (!hasAdminAccess(user?.userRole)) {
-                throw new UnauthorizedError({
-                    email: user?.email,
-                    role: user?.userRole,
-                });
-            }
-
             const [eventRow] = await databaseClient
                 .select({ hackathonId: events.hackathonId })
                 .from(events)
@@ -123,18 +111,9 @@ export const checkInRouter = router({
             };
         }),
 
-    getEventCheckInCounts: publicProcedure
+    getEventCheckInCounts: adminProcedure
         .input(getEventCheckInCountSchema)
         .query(async ({ input }) => {
-            const user = await getUserData();
-
-            if (!hasAdminAccess(user?.userRole)) {
-                throw new UnauthorizedError({
-                    email: user?.email,
-                    role: user?.userRole,
-                });
-            }
-
             const checkInCounts = await databaseClient
                 .select({
                     eventId: events.id,

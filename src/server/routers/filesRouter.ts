@@ -1,4 +1,9 @@
-import { publicProcedure, router } from '../trpc';
+import {
+    adminProcedure,
+    protectedProcedure,
+    publicProcedure,
+    router,
+} from '../trpc';
 import { z } from 'zod';
 import {
     deleteFileFromVercel,
@@ -7,9 +12,7 @@ import {
     FileValidationType,
 } from '@/lib/blobs';
 import { InternalServerError } from '../exceptions';
-import { getUserData } from '@/server/routers/usersRouter';
 import { head } from '@vercel/blob';
-
 // Input validation schemas
 const uploadFileSchema = z.object({
     key: z.string().default(() => crypto.randomUUID()),
@@ -35,17 +38,9 @@ const getFilesSchema = z.object({
 });
 
 export const filesRouter = router({
-    uploadFile: publicProcedure
+    uploadFile: protectedProcedure
         .input(uploadFileSchema)
         .mutation(async ({ input }) => {
-            const userData = await getUserData();
-
-            if (!userData?.id) {
-                throw new InternalServerError(
-                    'Unexpected undefined `userData`'
-                );
-            }
-
             const { key, file, fileName, fileType } = input;
 
             const fileBuffer = Buffer.from(file, 'base64');
@@ -71,7 +66,7 @@ export const filesRouter = router({
             };
         }),
 
-    deleteFile: publicProcedure
+    deleteFile: adminProcedure
         .input(deleteFileSchema)
         .mutation(async ({ input }) => {
             const { key, bucketName } = input;
@@ -140,24 +135,16 @@ export const filesRouter = router({
             return Promise.all(filePromises);
         }),
 
-    getUserImages: publicProcedure
+    getUserImages: protectedProcedure
         .input(z.object({}))
-        .query(async ({ input }) => {
-            const userData = await getUserData();
-
-            if (!userData?.id) {
-                throw new InternalServerError(
-                    'Unexpected undefined `userData`'
-                );
-            }
-
-            if (!userData.image) {
+        .query(async ({ ctx }) => {
+            if (!ctx.user.image) {
                 return '';
             }
 
             try {
                 const file = await getFileFromBlob(
-                    buildBlobPath('profile-pictures', userData.image)
+                    buildBlobPath('profile-pictures', ctx.user.image)
                 );
                 return Buffer.from(file.buffer).toString('base64');
             } catch (error) {

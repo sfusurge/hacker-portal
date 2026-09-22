@@ -8,16 +8,18 @@ import {
     insertEventSchema,
     updateEventSchema,
 } from '@/db/schema/events';
-import { publicProcedure, router } from '../trpc';
-import { InternalServerError, UnauthorizedError } from '../exceptions';
+import {
+    adminProcedure,
+    protectedProcedure,
+    publicProcedure,
+    router,
+} from '../trpc';
 import { TRPCError } from '@trpc/server';
 
 import { databaseClient } from '@/db/client';
 import { and, asc, count, eq, getTableColumns } from 'drizzle-orm';
 import { checkIns } from '@/db/schema/checkIn';
 import { z } from 'zod';
-import { getUserData } from '@/server/routers/usersRouter';
-import { hasAdminAccess } from '@/lib/auth/roles';
 
 export interface CalendarEvent {
     id: number;
@@ -37,18 +39,9 @@ export interface CalendarEvent {
 }
 
 export const eventsRouter = router({
-    createEvent: publicProcedure
+    createEvent: adminProcedure
         .input(insertEventSchema)
         .mutation(async ({ input }) => {
-            const user = await getUserData();
-
-            // Only admin can create events
-            if (!hasAdminAccess(user?.userRole)) {
-                throw new UnauthorizedError({
-                    email: user?.email,
-                    role: user?.userRole,
-                });
-            }
             console.log(`Inserting ${JSON.stringify(input)}`);
 
             const [event] = await databaseClient
@@ -75,19 +68,9 @@ export const eventsRouter = router({
             };
         }),
 
-    getEvents: publicProcedure
+    getEvents: protectedProcedure
         .input(getEventsSchema)
-        .query(async ({ input }) => {
-            const user = await getUserData();
-
-            if (user === undefined) {
-                throw new InternalServerError(
-                    'Unexpected `undefined` userData'
-                );
-            }
-
-            const { longDescription, ...rest } = getTableColumns(eventsTable);
-
+        .query(async ({ input, ctx }) => {
             const rows = await databaseClient
                 .select({
                     checkIn: {
@@ -101,13 +84,10 @@ export const eventsRouter = router({
                     checkIns,
                     and(
                         eq(eventsTable.id, checkIns.eventId),
-                        eq(checkIns.userId, user.id)
+                        eq(checkIns.userId, ctx.user.id)
                     )
                 )
                 .where(eq(eventsTable.hackathonId, input.hackathonId))
-                // events with earlier startDate comes first
-                // if 2 events have same startDate, then the one with earlier
-                // endDate comes first
                 .orderBy(asc(eventsTable.startDate), asc(eventsTable.endDate));
 
             const events = rows.map(({ checkIn, event: _event }) => {
@@ -127,7 +107,7 @@ export const eventsRouter = router({
             return events as CalendarEvent[];
         }),
 
-    getHackathonCheckInEvents: publicProcedure
+    getHackathonCheckInEvents: adminProcedure
         .input(z.object({ hackathonId: z.number() }))
         .query(async ({ input }) => {
             const { longDescription, ...columns } =
@@ -168,7 +148,7 @@ export const eventsRouter = router({
             return event ?? {};
         }),
 
-    getEventCheckInCount: publicProcedure
+    getEventCheckInCount: adminProcedure
         .input(getEventCheckInCountSchema)
         .query(async ({ input }) => {
             const [result] = await databaseClient
@@ -179,7 +159,7 @@ export const eventsRouter = router({
             return { checkInCount: result?.checkInCount ?? 0 };
         }),
 
-    updateEvent: publicProcedure
+    updateEvent: adminProcedure
         .input(updateEventSchema)
         .mutation(async ({ input }) => {
             const [event] = await databaseClient
@@ -202,7 +182,7 @@ export const eventsRouter = router({
             return event;
         }),
 
-    deleteEvent: publicProcedure
+    deleteEvent: adminProcedure
         .input(deleteEventSchema)
         .mutation(async ({ input }) => {
             const [result] = await databaseClient

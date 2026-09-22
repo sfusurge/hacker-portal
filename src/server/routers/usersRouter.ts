@@ -1,5 +1,7 @@
 import { databaseClient } from '@/db/client';
-import { publicProcedure, router } from '../trpc';
+import { adminProcedure, protectedProcedure, router } from '../trpc';
+import { TRPCError } from '@trpc/server';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 import {
     deleteUserSchema,
@@ -9,34 +11,20 @@ import {
 } from '@/db/schema/users/users';
 import { eq, max, or } from 'drizzle-orm';
 import { z } from 'zod';
-import { UnauthorizedError } from '../exceptions';
-import { getSession, SessionType } from '@/auth/auth';
 import { getSixDigitId, userRNGParams } from '@/lib/PRNG/LCG';
-import { hasAdminAccess } from '@/lib/auth/roles';
 
-export async function fetchUserRecordById(userId: number) {
-    const dbUser = (
-        await databaseClient
-            .select()
-            .from(user)
-            .where(eq(user.id, userId))
-            .limit(1)
-    )[0];
-
-    if (!dbUser) {
-        return undefined;
-    }
-
-    return {
-        ...dbUser,
-    };
-}
+export {
+    fetchUserRecordById,
+    getBasicUserInfo,
+    getUserData,
+    type UserData,
+} from '@/server/auth/sessionUser';
 
 export const usersRouter = router({
     /**
      * get users along with their display id.
      */
-    getUsers: publicProcedure.query(async () => {
+    getUsers: adminProcedure.query(async () => {
         const res = await databaseClient
             .select({
                 id: user.id,
@@ -52,7 +40,7 @@ export const usersRouter = router({
         return res;
     }),
 
-    getJudges: publicProcedure.query(async () => {
+    getJudges: adminProcedure.query(async () => {
         const res = await databaseClient
             .select({
                 id: user.id,
@@ -69,18 +57,9 @@ export const usersRouter = router({
         return res;
     }),
 
-    getUserById: publicProcedure
+    getUserById: adminProcedure
         .input(z.object({ userId: z.union([z.number(), z.string()]) }))
         .query(async ({ input }) => {
-            const userData = await getUserData();
-
-            if (!hasAdminAccess(userData?.userRole)) {
-                throw new UnauthorizedError({
-                    email: userData?.email,
-                    role: userData?.userRole,
-                });
-            }
-
             const [res] = await databaseClient
                 .select({
                     id: user.id,
@@ -103,19 +82,22 @@ export const usersRouter = router({
             return res;
         }),
 
-    addUser: publicProcedure.input(insertUserSchema).mutation(async (opts) => {
+    addUser: adminProcedure.input(insertUserSchema).mutation(async (opts) => {
         const res = await addUser(opts.input);
         return res;
     }),
-    deleteUser: publicProcedure
+    deleteUser: adminProcedure
         .input(deleteUserSchema)
         .mutation(async (opts) => {
             await databaseClient.delete(user).where(eq(user.id, opts.input.id));
         }),
-    updateUser: publicProcedure
+    updateUser: protectedProcedure
         .input(updateUserSchema)
-        .mutation(async (opts) => {
-            const { id, ...updateValues } = opts.input;
+        .mutation(async ({ input, ctx }) => {
+            const { id, ...updateValues } = input;
+            if (!hasAdminAccess(ctx.user.userRole) && ctx.user.id !== id) {
+                throw new TRPCError({ code: 'UNAUTHORIZED' });
+            }
             await databaseClient
                 .update(user)
                 .set(updateValues)
@@ -134,35 +116,6 @@ export interface UserType {
     userRole: string;
     displayId: string;
 }
-
-export async function getUserData() {
-    const session = (await getSession()) as SessionType;
-
-    if (!session || !session.userId) {
-        return undefined;
-    }
-
-    const userId = parseInt(session.userId, 10);
-    if (Number.isNaN(userId)) {
-        return undefined;
-    }
-
-    return fetchUserRecordById(userId);
-}
-
-/**
- * only returns info contained in user's jwt, without making a db fetch
- */
-export async function getBasicUserInfo() {
-    const session = (await getSession()) as SessionType;
-    return {
-        email: session.user.email.toLowerCase(),
-        image: session.user.image ?? '',
-        id: parseInt(session.userId),
-    };
-}
-
-export type UserData = Awaited<ReturnType<typeof getUserData>>;
 
 export async function addUser(vals: z.infer<typeof insertUserSchema>) {
     // create the user, and catch their id

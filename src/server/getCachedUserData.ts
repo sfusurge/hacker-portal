@@ -1,7 +1,7 @@
 import { cacheLife, cacheTag } from 'next/cache';
 import { cache } from 'react';
 import { getSession, SessionType } from '@/auth/auth';
-import { fetchUserRecordById } from '@/server/routers/usersRouter';
+import { fetchUserRecordById } from '@/server/auth/sessionUser';
 
 async function getUserDataWithPrivateCache() {
     'use cache: private';
