@@ -12,7 +12,7 @@ import { Card } from '@/components/ui/card';
 import { CalendarEvent } from '@/server/routers/eventsRouter';
 import dayjs, { Dayjs } from 'dayjs';
 import { atom, useAtom, useAtomValue } from 'jotai';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { userInfoAtom } from '../ClientContext';
 import {
     editModeAtom,
@@ -72,6 +72,25 @@ export function ClientCalendarPage({
         { hackathonId: hackathon?.id! },
         { enabled: false }
     );
+
+    const updateEvents = useCallback(async () => {
+        if (!hackathon || !hackathon.id) {
+            return;
+        }
+
+        const res = await fetchEvents.refetch();
+        setEvents(
+            DayjsifyEvents(
+                res.data?.map((item) => {
+                    return {
+                        ...item,
+                        startDate: new Date(item.startDate),
+                        endDate: new Date(item.endDate),
+                    };
+                }) ?? []
+            )
+        );
+    }, [fetchEvents, hackathon, setEvents]);
 
     const defaultStartDate = useMemo(() => {
         const today = dayjs().startOf('day');
@@ -169,28 +188,11 @@ export function ClientCalendarPage({
     }
 
     useEffect(() => {
-        async function updateEvents() {
-            if (!hackathon || !hackathon.id) {
-                return;
-            }
-            const res = await fetchEvents.refetch();
-            setEvents(
-                DayjsifyEvents(
-                    res.data?.map((item) => {
-                        return {
-                            ...item,
-                            startDate: new Date(item.startDate),
-                            endDate: new Date(item.endDate),
-                        };
-                    }) ?? []
-                )
-            );
-        }
         const interval = setInterval(updateEvents, 30000); // 5 mins
         return () => {
             clearInterval(interval);
         };
-    }, [hackathon]);
+    }, [updateEvents]);
 
     return (
         <>
@@ -225,7 +227,10 @@ export function ClientCalendarPage({
                         )}
 
                         <div className="min-h-0 flex-1">
-                            <MobileCalendar events={events} />
+                            <MobileCalendar
+                                events={events}
+                                onEventRsvpChange={updateEvents}
+                            />
                         </div>
                     </>
                 ) : (
@@ -255,6 +260,7 @@ export function ClientCalendarPage({
                                     }
                                     onToday={handleTodayScheduleRange}
                                     onNextRange={handleNextScheduleRange}
+                                    onEventRsvpChange={updateEvents}
                                 />
                             </div>
                         </div>

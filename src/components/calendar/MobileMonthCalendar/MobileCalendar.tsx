@@ -29,8 +29,10 @@ const firstdayAtom = atom((get) => {
 
 export function MobileCalendar({
     events,
+    onEventRsvpChange,
 }: {
     events: InternalCalendarEventType[];
+    onEventRsvpChange?: () => void | Promise<void>;
 }) {
     const [{ year, month }, updateYearMonth] = useAtom(currentYearMonthAtom);
     const firstDay = useAtomValue(firstdayAtom);
@@ -106,6 +108,7 @@ export function MobileCalendar({
                             events={dayEvents ?? []}
                             showControls={false}
                             startDate={selectedDay ?? dayjs()}
+                            onEventRsvpChange={onEventRsvpChange}
                         />
                     </div>
                 </DrawerContent>

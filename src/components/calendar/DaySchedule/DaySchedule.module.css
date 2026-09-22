@@ -147,73 +147,101 @@
 
 .dayEventColumn {
     /* to provide an anchor for all the position abs children */
-    position: relative;
-    flex: 1;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
 }
 
 .dayEvent {
     border-radius: 5px;
     overflow: hidden;
+    box-sizing: border-box;
+    border: 1px solid transparent;
+    color: white;
+    cursor: pointer;
 
     position: absolute;
 
     --margin: 0.15rem;
+    --dayEventPaddingX: 0.5rem;
+    --dayEventContentGap: 2px;
+    --dayEventTitleSize: var(--text-sm);
+    --dayEventMetaGap: 3px;
+    --dayEventMetaSize: 12px;
+    --dayEventIconSize: 12px;
+    --left: 0%;
+    --width: 100%;
+
     /* fake margin */
-    left: var(--margin);
+    left: calc(var(--left) + var(--margin));
     /* top to be controlled by js */
     top: calc(var(--top) + var(--margin));
     height: calc(var(--height) - var(--margin) * 2);
 
-    width: fit-content;
-    max-width: calc(100% - var(--margin) * 2);
+    width: calc(var(--width) - var(--margin) * 2);
 
-    padding: 0.2rem 0.5rem;
-    background-color: var(--neutral-800);
+    padding: 0.2rem var(--dayEventPaddingX);
+    background-color: var(--dayEventBackground);
+    pointer-events: auto;
+    z-index: var(--dayEventZIndex);
 
     transition: all 250ms ease-out;
+}
+
+.dayEventStandard {
+    --dayEventBackground: var(--neutral-700);
+    --dayEventHoverBackground: var(--neutral-600);
+
+    border-color: var(--neutral-500);
+}
+
+.dayEventRsvped {
+    --dayEventBackground: var(--color-brand-600);
+    --dayEventHoverBackground: var(--brand-400);
+
+    border-color: var(--brand-400);
+}
+
+.dayEventNeedsRsvp {
+    --dayEventBackground: color-mix(in srgb, var(--brand-500) 30%, transparent);
+    --dayEventHoverBackground: color-mix(
+        in srgb,
+        var(--color-brand-300) 30%,
+        transparent
+    );
+
+    border-color: var(--brand-400);
+    border-style: dashed;
+}
+
+.dayEventCompact {
+    --dayEventPaddingX: 0.35rem;
+    --dayEventContentGap: 1px;
+    --dayEventTitleSize: 12px;
+    --dayEventMetaGap: 2px;
+    --dayEventMetaSize: 10px;
+    --dayEventIconSize: 10px;
 }
 
 .dayEvent:hover,
 .dayEvent:active,
 .dayEvent.active {
-    max-width: calc(var(--colCount) * 100%);
     z-index: 10;
-}
-
-.dayEvent::after {
-    content: '';
-
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-
-    border-left: 3px solid var(--color);
-}
-
-.dayEvent::before {
-    content: '';
-
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-
-    background-color: var(--color);
-    z-index: 1;
-    opacity: 0.3;
 }
 
 .dayEvent:hover,
 .dayEvent:active {
     min-height: fit-content;
-    z-index: 10;
 }
 
 .dayEvent:hover {
-    filter: brightness(1.2);
+    background-color: var(--dayEventHoverBackground);
+}
+
+.dayEventCompact:hover,
+.dayEventCompact:active,
+.dayEventCompact.active {
+    min-height: 0;
 }
 
 .dayEvent:active {
@@ -223,13 +251,41 @@
 .dayEventContent {
     display: flex;
     flex-direction: column;
-    font-size: 12px;
+    gap: var(--dayEventContentGap);
 }
 
 .dayEventLine {
     max-width: 100%;
     text-overflow: ellipsis;
     overflow: hidden;
+    white-space: nowrap;
+}
+
+.dayEventTitle {
+    font-family: var(--font-sans-0);
+    font-size: var(--dayEventTitleSize);
+    font-weight: var(--font-weight-normal);
+    line-height: 1.25;
+}
+
+.dayEventMeta {
+    display: flex;
+    align-items: center;
+    gap: var(--dayEventMetaGap);
+    color: rgb(255 255 255 / 0.86);
+    font-size: var(--dayEventMetaSize);
+}
+
+.dayEventIcon {
+    width: var(--dayEventIconSize);
+    height: var(--dayEventIconSize);
+    flex: 0 0 auto;
+}
+
+.dayEventMetaText {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 

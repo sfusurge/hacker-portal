@@ -18,6 +18,13 @@ import { LongDescriptionModal } from '../EventLongDescription/EventLongDescripti
 import clsx from 'clsx';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { DateControls } from '@/components/calendar/DateControls/DateControls';
+import { EventType } from '@/db/schema/events';
+import {
+    BoltIcon,
+    BookOpenIcon,
+    FaceSmileIcon,
+} from '@heroicons/react/24/solid';
+import { trpc } from '@/trpc/client';
 
 // size of UI, shared
 const [rowHeight, headerHeight, timeColumnWidth] = [90, 34, 50];
@@ -38,6 +45,7 @@ export function DaySchedule({
     onPreviousRange,
     onToday,
     onNextRange,
+    onEventRsvpChange,
 }: {
     startDate: Dayjs;
     days: number;
@@ -47,6 +55,7 @@ export function DaySchedule({
     onPreviousRange?: () => void;
     onToday?: () => void;
     onNextRange?: () => void;
+    onEventRsvpChange?: () => void | Promise<void>;
     events: InternalCalendarEventType[];
 }) {
     startDate = dayjs(startDate);
@@ -71,6 +80,7 @@ export function DaySchedule({
 
     const rootRef = useRef<HTMLDivElement>(null);
     const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
+    const rsvpEvent = trpc.events.rsvpEvent.useMutation();
 
     const [containerHeight, setContainerHeight] = useState(0);
 
@@ -103,6 +113,31 @@ export function DaySchedule({
         return days - 1;
     }, [startDate]);
 
+    const canRsvpSelectedEvent =
+        selectedEvent?.event &&
+        canRsvpEvent(selectedEvent.event) &&
+        !selectedEvent.event.rsvped;
+
+    const addSelectedEventToSchedule = async () => {
+        if (!selectedEvent?.event) {
+            return;
+        }
+
+        const event = selectedEvent.event;
+
+        await rsvpEvent.mutateAsync({ eventId: event.id });
+
+        setSelectedEvent({
+            ...selectedEvent,
+            event: {
+                ...event,
+                rsvped: true,
+            },
+        });
+
+        await onEventRsvpChange?.();
+    };
+
     return (
         <div
             style={{
@@ -125,6 +160,17 @@ export function DaySchedule({
                         }}
                     >
                         <EventCard event={selectedEvent.event}>
+                            {canRsvpSelectedEvent && (
+                                <SkewmorphicButton
+                                    style={{
+                                        backgroundColor: 'var(--brand-700)',
+                                    }}
+                                    disabled={rsvpEvent.isPending}
+                                    onClick={addSelectedEventToSchedule}
+                                >
+                                    Add to schedule
+                                </SkewmorphicButton>
+                            )}
                             {selectedEvent.event.hasLongDescription && (
                                 <SkewmorphicButton
                                     style={{
@@ -252,8 +298,8 @@ export function DaySchedule({
                                                             parentHeight={
                                                                 containerHeight
                                                             }
-                                                            columnCount={
-                                                                columnsOfDay.length
+                                                            dayColumns={
+                                                                columnsOfDay
                                                             }
                                                             columnIndex={index}
                                                         ></DayEventItem>
@@ -390,13 +436,13 @@ function ProcessEventsForSchedule(eventsMaps: {
 function DayEventItem({
     event,
     parentHeight,
+    dayColumns,
     columnIndex,
-    columnCount,
 }: {
     event: InternalCalendarEventType;
     parentHeight: number;
+    dayColumns: InternalCalendarEventType[][];
     columnIndex: number;
-    columnCount: number;
 }) {
     const minutesInDay = 1440;
     const [top, height] = useMemo(() => {
@@ -412,6 +458,52 @@ function DayEventItem({
     const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
 
     const eventTime = event.startTime;
+    const eventEndTime = eventTime.add(event.duration, 'minute');
+    const overlappingColumnIndexes = dayColumns
+        .map((column, index) => {
+            const hasOverlap =
+                index === columnIndex ||
+                column.some((otherEvent) => {
+                    if (otherEvent === event) {
+                        return false;
+                    }
+
+                    const otherEventEndTime = otherEvent.startTime.add(
+                        otherEvent.duration,
+                        'minute'
+                    );
+
+                    return (
+                        eventTime.isBefore(otherEventEndTime) &&
+                        otherEvent.startTime.isBefore(eventEndTime)
+                    );
+                });
+
+            return hasOverlap ? index : -1;
+        })
+        .filter((index) => index >= 0);
+    const overlapColumnCount = overlappingColumnIndexes.length;
+    const overlapColumnIndex = Math.max(
+        0,
+        overlappingColumnIndexes.indexOf(columnIndex)
+    );
+    const isOverlapping = overlapColumnCount > 1;
+    const isCompact = height < 64;
+    const overlapWidth = isOverlapping ? 65 : 100;
+    const overlapLeft =
+        isOverlapping && overlapColumnCount > 1
+            ? ((100 - overlapWidth) * overlapColumnIndex) /
+              (overlapColumnCount - 1)
+            : 0;
+    const showMeta = height >= 40;
+    const showLocation = event.location && !isOverlapping && !isCompact;
+    const isRsvpEvent = canRsvpEvent(event);
+    const Icon =
+        event.eventType === EventType.WORKSHOP
+            ? BookOpenIcon
+            : event.eventType === EventType.ACTIVITY
+              ? FaceSmileIcon
+              : BoltIcon;
 
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -424,6 +516,9 @@ function DayEventItem({
             ref={containerRef}
             className={clsx([
                 style.dayEvent,
+                isRsvpEvent ? style.dayEventRsvped : style.dayEventStandard,
+                isRsvpEvent && !event.rsvped && style.dayEventNeedsRsvp,
+                isCompact && style.dayEventCompact,
                 {
                     [style.active]: isActive,
                 },
@@ -438,22 +533,36 @@ function DayEventItem({
                 {
                     '--top': `${Math.round(top)}px`,
                     '--height': `${Math.round(height)}px`,
-                    '--color': event.color,
-                    '--col': columnIndex,
-                    '--colCount': columnCount,
+                    '--left': `${overlapLeft}%`,
+                    '--width': `${overlapWidth}%`,
+                    '--dayEventZIndex': columnIndex + 1,
                 } as CSSProperties
             }
         >
             <div className={style.dayEventContent}>
-                <span className={style.dayEventLine}>{event.title}</span>
-                <span className={style.dayEventLine}>
-                    {`${eventTime.format('h:mm A')} - ${eventTime.add(event.duration, 'minutes').format('h:mm A')}`}
+                <span className={clsx(style.dayEventLine, style.dayEventTitle)}>
+                    {event.title}
                 </span>
-                {event.location && (
-                    <span className={style.dayEventLine}>{event.location}</span>
+                {showMeta && (
+                    <span
+                        className={clsx(style.dayEventLine, style.dayEventMeta)}
+                    >
+                        <Icon className={style.dayEventIcon} />
+                        <span className={style.dayEventMetaText}>
+                            {`${eventTime.format('h:mm A')} - ${eventEndTime.format('h:mm A')}`}
+                            {showLocation && ` · ${event.location}`}
+                        </span>
+                    </span>
                 )}
             </div>
         </div>
+    );
+}
+
+function canRsvpEvent(event: InternalCalendarEventType) {
+    return (
+        event.eventType === EventType.WORKSHOP ||
+        event.eventType === EventType.ACTIVITY
     );
 }
 
