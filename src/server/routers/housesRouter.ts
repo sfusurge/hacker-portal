@@ -23,7 +23,13 @@ import {
     assignUnassignedHouses,
     setUserHouse,
 } from '@/server/houses/assignHouse';
-import { adminProcedure, publicProcedure, router } from '../trpc';
+import {
+    adminProcedure,
+    protectedProcedure,
+    publicProcedure,
+    router,
+} from '../trpc';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
 export const housesRouter = router({
     createHouses: adminProcedure
@@ -129,9 +135,15 @@ export const housesRouter = router({
                 .orderBy(asc(houses.name));
         }),
 
-    getHouseForUser: publicProcedure
+    getHouseForUser: protectedProcedure
         .input(getHouseForUserSchema)
-        .query(async ({ input }) => {
+        .query(async ({ input, ctx }) => {
+            if (
+                !hasAdminAccess(ctx.user.userRole) &&
+                ctx.user.id !== input.userId
+            ) {
+                throw new TRPCError({ code: 'UNAUTHORIZED' });
+            }
             const [row] = await databaseClient
                 .select({
                     houseId: houses.id,

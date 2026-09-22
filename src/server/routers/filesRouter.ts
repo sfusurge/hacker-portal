@@ -86,12 +86,14 @@ export const filesRouter = router({
             }
         }),
 
-    getFile: publicProcedure.input(getFileSchema).query(async ({ input }) => {
-        const blobPath = buildBlobPath(input.bucketName, input.key);
-        return await getFileFromBlob(blobPath);
-    }),
+    getFile: protectedProcedure
+        .input(getFileSchema)
+        .query(async ({ input }) => {
+            const blobPath = buildBlobPath(input.bucketName, input.key);
+            return await getFileFromBlob(blobPath);
+        }),
 
-    getFiles: publicProcedure
+    getFiles: protectedProcedure
         .input(getFilesSchema)
         .mutation(async ({ input }) => {
             const { keys, bucketName } = input;

@@ -1,4 +1,6 @@
-import { publicProcedure, router } from '../trpc';
+import { adminProcedure, protectedProcedure, router } from '../trpc';
+import { TRPCError } from '@trpc/server';
+import { hasAdminAccess } from '@/lib/auth/roles';
 import {
     insertUserVoteSchema,
     userVoteTable,
@@ -8,18 +10,16 @@ import {
 import { applications } from '@/db/schema/applications';
 import { databaseClient } from '@/db/client';
 import { eq, and, getTableColumns } from 'drizzle-orm';
-import { getBasicUserInfo } from '@/server/routers/usersRouter';
 
 export const userVoteRouter = router({
-    insertUserVote: publicProcedure
+    insertUserVote: protectedProcedure
         .input(insertUserVoteSchema)
-        .mutation(async ({ input }) => {
-            const user = await getBasicUserInfo();
-            if (!user) {
-                throw new Error('You must be signed in to vote.');
-            }
-            if (input.userId !== user.id) {
-                throw new Error('You can only submit a vote for yourself.');
+        .mutation(async ({ input, ctx }) => {
+            if (input.userId !== ctx.user.id) {
+                throw new TRPCError({
+                    code: 'FORBIDDEN',
+                    message: 'You can only submit a vote for yourself.',
+                });
             }
             const [application] = await databaseClient
                 .select({ currentStatus: applications.currentStatus })
@@ -32,9 +32,11 @@ export const userVoteRouter = router({
                 )
                 .limit(1);
             if (!application || application.currentStatus !== 'Accepted') {
-                throw new Error(
-                    'Only accepted participants can vote for the Audience Choice award.'
-                );
+                throw new TRPCError({
+                    code: 'FORBIDDEN',
+                    message:
+                        'Only accepted participants can vote for the Audience Choice award.',
+                });
             }
 
             try {
@@ -50,7 +52,6 @@ export const userVoteRouter = router({
                     .limit(1);
 
                 if (existingVote.length > 0) {
-                    // Update existing vote
                     const [updatedVote] = await databaseClient
                         .update(userVoteTable)
                         .set({
@@ -91,13 +92,22 @@ export const userVoteRouter = router({
                 }
             } catch (error) {
                 console.error('Error inserting/updating user vote:', error);
-                throw new Error('Failed to process vote');
+                throw new TRPCError({
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: 'Failed to process vote',
+                });
             }
         }),
 
-    getHasUserVoted: publicProcedure
+    getHasUserVoted: protectedProcedure
         .input(getHasUserVotedSchema)
-        .query(async ({ input }) => {
+        .query(async ({ input, ctx }) => {
+            if (
+                !hasAdminAccess(ctx.user.userRole) &&
+                ctx.user.id !== input.userId
+            ) {
+                throw new TRPCError({ code: 'UNAUTHORIZED' });
+            }
             try {
                 const userVote = await databaseClient
                     .select()
@@ -110,18 +120,19 @@ export const userVoteRouter = router({
                     )
                     .limit(1);
 
-                const hasVoted = userVote.length > 0;
-
                 return {
-                    hasVoted,
+                    hasVoted: userVote.length > 0,
                 };
             } catch (error) {
                 console.error('Error checking if user has voted:', error);
-                throw new Error('Failed to check voting status');
+                throw new TRPCError({
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: 'Failed to check voting status',
+                });
             }
         }),
 
-    getAllUserVotes: publicProcedure
+    getAllUserVotes: adminProcedure
         .input(getAllUserVotesSchema)
         .query(async ({ input }) => {
             try {
@@ -138,17 +149,18 @@ export const userVoteRouter = router({
                     {} as Record<number, number>
                 );
 
-                const totalVotes = allVotes.length;
-
                 return {
                     votes: allVotes,
                     votesByTeam,
-                    totalVotes,
+                    totalVotes: allVotes.length,
                     totalParticipants: allVotes.length,
                 };
             } catch (error) {
                 console.error('Error getting all user votes:', error);
-                throw new Error('Failed to retrieve votes');
+                throw new TRPCError({
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: 'Failed to retrieve votes',
+                });
             }
         }),
 });

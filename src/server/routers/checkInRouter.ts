@@ -8,7 +8,7 @@ import {
 import { user as usersTable } from '@/db/schema/users/users';
 import { ResourceNotFoundError } from '../exceptions';
 import { TRPCError } from '@trpc/server';
-import { adminProcedure, publicProcedure, router } from '../trpc';
+import { adminProcedure, router } from '../trpc';
 import { and, desc, eq, count } from 'drizzle-orm';
 import { events } from '@/db/schema/events';
 import { applications } from '@/db/schema/applications';
@@ -87,7 +87,7 @@ export const checkInRouter = router({
             return true;
         }),
 
-    isCheckedIn: publicProcedure
+    isCheckedIn: adminProcedure
         .input(isCheckInSchema)
         .query(async ({ input }) => {
             const checkInRecord = await databaseClient

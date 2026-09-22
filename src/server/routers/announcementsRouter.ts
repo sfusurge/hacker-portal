@@ -1,10 +1,15 @@
 import { z } from 'zod';
-import { protectedProcedure, publicProcedure, router } from '../trpc';
+import {
+    adminProcedure,
+    protectedProcedure,
+    publicProcedure,
+    router,
+} from '../trpc';
 import { databaseClient } from '@/db/client';
 import { user } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
 import { InternalServerError } from '../exceptions';
-import { getUserData } from './usersRouter';
+import { getUserData } from '@/server/auth/sessionUser';
 import { fetchAnnouncementAudiences } from '@/server/announcements/fetchAnnouncementAudiences';
 import { fetchAnnouncementsForViewer } from '@/server/announcements/fetchAnnouncementsForViewer';
 import { hasAdminAccess } from '@/lib/auth/roles';
@@ -45,14 +50,10 @@ export const announcementsRouter = router({
             }
         }),
 
-    getAnnouncementAudiences: publicProcedure
+    getAnnouncementAudiences: adminProcedure
         .input(z.object({ hackathonId: z.number() }))
         .query(async ({ input }) => {
             try {
-                const viewer = await getUserData();
-                if (!hasAdminAccess(viewer?.userRole)) {
-                    return [];
-                }
                 return await fetchAnnouncementAudiences(input.hackathonId);
             } catch (err) {
                 console.error('Error fetching announcement audiences:', err);

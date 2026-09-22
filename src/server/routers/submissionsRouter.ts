@@ -74,9 +74,9 @@ export const submissionsRouter = router({
             return applicationsWithTeamInfo[0]?.submissionQuestions || null;
         }),
 
-    submitSubmission: publicProcedure
+    submitSubmission: protectedProcedure
         .input(insertSubmissionSchema)
-        .mutation(async ({ input }): Promise<SubmitSubmissionResponse> => {
+        .mutation(async ({ input, ctx }): Promise<SubmitSubmissionResponse> => {
             const [team] = await databaseClient
                 .select({ hackathonId: teams.hackathonId })
                 .from(teams)
@@ -84,6 +84,23 @@ export const submissionsRouter = router({
                 .limit(1);
             if (!team || team.hackathonId !== input.hackathonId) {
                 throw new Error('Team does not belong to this hackathon');
+            }
+
+            const [membership] = await databaseClient
+                .select({ userId: members.userId })
+                .from(members)
+                .where(
+                    and(
+                        eq(members.teamId, input.teamId),
+                        eq(members.userId, ctx.user.id)
+                    )
+                )
+                .limit(1);
+            if (!membership) {
+                throw new TRPCError({
+                    code: 'FORBIDDEN',
+                    message: 'You must be on this team to submit a project.',
+                });
             }
 
             const [hackathonRow] = await databaseClient
@@ -121,7 +138,7 @@ export const submissionsRouter = router({
                 .returning();
 
             return {
-                userId: 0,
+                userId: ctx.user.id,
                 response: submission.response as Record<string, unknown>,
                 createdDate: submission.createdDate,
                 currentStatus: submission.currentStatus,
@@ -238,7 +255,7 @@ export const submissionsRouter = router({
             );
         }),
 
-    getSubmissionForTeam: publicProcedure
+    getSubmissionForTeam: protectedProcedure
         .input(
             z.object({
                 teamId: z.number(),

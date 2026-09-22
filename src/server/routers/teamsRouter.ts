@@ -27,7 +27,12 @@ import {
     InternalServerError,
     ResourceNotFoundError,
 } from '../exceptions';
-import { publicProcedure, router } from '../trpc';
+import {
+    adminProcedure,
+    protectedProcedure,
+    publicProcedure,
+    router,
+} from '../trpc';
 import { user } from '@/db/schema/users/users';
 import { PgQueryResultHKT, PgTransaction } from 'drizzle-orm/pg-core';
 
@@ -36,23 +41,20 @@ import { user as userTable } from '@/db/schema/users/users';
 import { getSixDigitId, teamRNGParams } from '@/lib/PRNG/LCG';
 import { z } from 'zod';
 import { deleteFileFromVercel } from '@/lib/blobs';
-import { getBasicUserInfo, getUserData } from '@/server/routers/usersRouter';
 import { getSession } from '@/auth/auth';
 import slugify from '@/utils/slugify';
 import { submissions } from '@/db/schema/submissions';
 
 export const teamsRouter = router({
-    createTeam: publicProcedure
+    createTeam: protectedProcedure
         .input(createTeamSchema)
-        .mutation(async ({ input }) => {
-            const user = await getUserData();
-
-            if (user == null) {
-                throw new InternalServerError('Cannot find user data');
-            }
-
+        .mutation(async ({ input, ctx }) => {
             const team = await databaseClient.transaction(async (tx) => {
-                await checkIfUserInExistingTeam(tx, user.id, input.hackathonId);
+                await checkIfUserInExistingTeam(
+                    tx,
+                    ctx.user.id,
+                    input.hackathonId
+                );
 
                 const [row] = await tx
                     .select({ nextId: max(teams.id) })
@@ -67,7 +69,7 @@ export const teamsRouter = router({
                         hackathonId: input.hackathonId,
                         name: input.name,
                         teamPictureUrl: input.teamPictureUrl,
-                        createdBy: user.id,
+                        createdBy: ctx.user.id,
                         displayId,
                     })
                     .returning();
@@ -77,7 +79,7 @@ export const teamsRouter = router({
                     .insert(membersTable)
                     .values({
                         teamId: team.id,
-                        userId: user.id,
+                        userId: ctx.user.id,
                     })
                     .returning();
 
@@ -94,18 +96,11 @@ export const teamsRouter = router({
      * Join team via the 6 digit display id of the team.
      * Display id is a string of 6 characters.
      */
-    joinTeam: publicProcedure
+    joinTeam: protectedProcedure
         .input(joinTeamSchema)
-        .mutation(async ({ input }) => {
+        .mutation(async ({ input, ctx }) => {
             const { teamDisplayId: _teamDisplayId } = input;
-
-            const user = await getUserData();
-
-            if (user == null) {
-                throw new InternalServerError('Cannot find user data');
-            }
-
-            const userId = user?.id;
+            const userId = ctx.user.id;
 
             const team = await databaseClient.transaction(async (tx) => {
                 // get team info
@@ -161,15 +156,9 @@ export const teamsRouter = router({
      *
      * return includes team info, team members, and team display id(6 digits)
      */
-    getCurrentTeam: publicProcedure
+    getCurrentTeam: protectedProcedure
         .input(getCurrentTeamSchema)
-        .query(async ({ input }) => {
-            const user = await getBasicUserInfo();
-
-            if (user == null) {
-                throw new InternalServerError('Cannot find user data');
-            }
-
+        .query(async ({ input, ctx }) => {
             const [team] = await databaseClient
                 .select({
                     ...getTableColumns(teams),
@@ -179,7 +168,7 @@ export const teamsRouter = router({
                     membersTable,
                     and(
                         eq(membersTable.teamId, teams.id),
-                        eq(membersTable.userId, user.id)
+                        eq(membersTable.userId, ctx.user.id)
                     )
                 )
                 .where(eq(teams.hackathonId, input.hackathonId))
@@ -220,18 +209,9 @@ export const teamsRouter = router({
     /**
      * Leave the team user is currently in, using the internal team id. (NOT, the 6 digit id.)
      */
-    leaveTeam: publicProcedure
+    leaveTeam: protectedProcedure
         .input(leaveTeamSchema)
-        .mutation(async ({ input }) => {
-            const user = await getUserData();
-
-            if (user == null) {
-                throw new ResourceNotFoundError({
-                    id: -1,
-                    resourceType: 'user',
-                });
-            }
-
+        .mutation(async ({ input, ctx }) => {
             const teamPictureUrl = await databaseClient.transaction(
                 async (tx) => {
                     await tx
@@ -239,7 +219,7 @@ export const teamsRouter = router({
                         .where(
                             and(
                                 eq(membersTable.teamId, input.teamId),
-                                eq(membersTable.userId, user.id)
+                                eq(membersTable.userId, ctx.user.id)
                             )
                         );
 
@@ -321,7 +301,7 @@ export const teamsRouter = router({
     /**
      * Get a team by its internal team ID, including its members.
      */
-    getTeamById: publicProcedure
+    getTeamById: protectedProcedure
         .input(
             z.object({
                 teamId: z.number().int(),
@@ -369,7 +349,7 @@ export const teamsRouter = router({
             };
         }),
 
-    getTeams: publicProcedure
+    getTeams: adminProcedure
         .input(
             z.object({
                 hackathonId: z.number().int().optional(),
@@ -379,7 +359,7 @@ export const teamsRouter = router({
             return getTeamsWithMemberCounts(input.hackathonId ?? -1);
         }),
 
-    getTeamsWithMemberCountWithProject: publicProcedure
+    getTeamsWithMemberCountWithProject: adminProcedure
         .input(
             z.object({
                 hackathonId: z.number().int().optional(),
@@ -389,7 +369,7 @@ export const teamsRouter = router({
             return getTeamsWithCountWithProject(input.hackathonId ?? -1);
         }),
 
-    resolveTeamIdentifier: publicProcedure
+    resolveTeamIdentifier: protectedProcedure
         .input(
             z.object({
                 identifier: z.string(),
@@ -532,12 +512,6 @@ export async function getMemberIds(tid: number): Promise<number[]> {
 }
 
 export async function getTeamsWithMemberCounts(hackathonId: number) {
-    const user = await getUserData();
-
-    if (!user) {
-        throw new InternalServerError('User not authenticated');
-    }
-
     let query = databaseClient
         .select({
             id: teams.id,
@@ -575,12 +549,6 @@ export async function getTeamsWithMemberCounts(hackathonId: number) {
 }
 
 export async function getTeamsWithCountWithProject(hackathonId: number) {
-    const user = await getUserData();
-
-    if (!user) {
-        throw new InternalServerError('User not authenticated');
-    }
-
     let countSubQuery = databaseClient
         .selectDistinctOn([members.teamId], {
             teamId: members.teamId,
