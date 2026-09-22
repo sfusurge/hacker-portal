@@ -25,6 +25,7 @@ import { MobileCalendar } from '@/components/calendar/MobileMonthCalendar/Mobile
 import { hasAdminAccess } from '@/lib/auth/roles';
 import { AnnouncementsButton } from '@/components/announcements/AnnouncementsButton';
 import { cn } from '@/lib/utils';
+import { ScheduleEventsCard } from '@/components/calendar/ScheduleEventsCard/ScheduleEventsCard';
 
 export function ClientCalendarPage({
     events: _events,
@@ -276,6 +277,7 @@ export function ClientCalendarPage({
                                     className="w-full p-4"
                                 />
                             </Card>
+                            <ScheduleEventsCard events={events} />
                         </aside>
                     </div>
                 )}
