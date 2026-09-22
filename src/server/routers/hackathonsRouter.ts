@@ -1,5 +1,5 @@
 import { InputFormPageData } from '@/components/application_components/types';
-import { publicProcedure, router } from '../trpc';
+import { ownerProcedure, publicProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
 import {
     createHackathonSchema,
@@ -20,13 +20,7 @@ import {
     validateApplicationQuestions,
 } from '@/lib/applications/applicationQuestionsSchema';
 import { applications } from '@/db/schema/applications';
-import { getUserData } from '@/server/routers/usersRouter';
-import { isOwner } from '@/lib/auth/roles';
-import {
-    BadRequestError,
-    ResourceNotFoundError,
-    UnauthorizedError,
-} from '../exceptions';
+import { BadRequestError, ResourceNotFoundError } from '../exceptions';
 
 async function assertSlugAvailable(slug: string, exceptId?: number) {
     const [conflict] = await databaseClient
@@ -47,18 +41,6 @@ async function assertSlugAvailable(slug: string, exceptId?: number) {
             `Event page slug "${slug}" is already used by another hackathon.`
         );
     }
-}
-
-// Hackathon configuration is owner-only (owner sits above admin).
-async function assertOwner() {
-    const user = await getUserData();
-    if (!isOwner(user?.userRole)) {
-        throw new UnauthorizedError({
-            email: user?.email,
-            role: user?.userRole,
-        });
-    }
-    return user;
 }
 
 function hasMeaningfulValue(value: unknown): boolean {
@@ -171,18 +153,16 @@ export const hackathonsRouter = router({
     }),
 
     /** Admin: list every hackathon (active or not) for the management table. */
-    getHackathonsForAdmin: publicProcedure.query(async () => {
-        await assertOwner();
+    getHackathonsForAdmin: ownerProcedure.query(async () => {
         return await databaseClient
             .select()
             .from(hackathons)
             .orderBy(asc(hackathons.startDate));
     }),
 
-    getHackathonById: publicProcedure
+    getHackathonById: ownerProcedure
         .input(z.object({ id: z.number().int() }))
         .query(async ({ input }) => {
-            await assertOwner();
             const [hackathon] = await databaseClient
                 .select()
                 .from(hackathons)
@@ -191,7 +171,7 @@ export const hackathonsRouter = router({
             return hackathon ?? null;
         }),
 
-    addHackathon: publicProcedure
+    addHackathon: ownerProcedure
         .input(insertHackathonSchema)
         .mutation(async ({ input }) => {
             const [hackathon] = await databaseClient
@@ -211,10 +191,9 @@ export const hackathonsRouter = router({
             return hackathon;
         }),
 
-    createHackathon: publicProcedure
+    createHackathon: ownerProcedure
         .input(createHackathonSchema)
         .mutation(async ({ input }) => {
-            await assertOwner();
             const values = toHackathonColumns(input);
             await assertSlugAvailable(values.eventPageSlug);
 
@@ -253,10 +232,9 @@ export const hackathonsRouter = router({
             return created;
         }),
 
-    updateHackathon: publicProcedure
+    updateHackathon: ownerProcedure
         .input(updateHackathonSchema)
         .mutation(async ({ input }) => {
-            await assertOwner();
             const values = toHackathonColumns(input);
             await assertSlugAvailable(values.eventPageSlug, input.id);
 
@@ -291,10 +269,9 @@ export const hackathonsRouter = router({
             return updated;
         }),
 
-    getApplicationQuestions: publicProcedure
+    getApplicationQuestions: ownerProcedure
         .input(z.object({ id: z.number().int() }))
         .query(async ({ input }) => {
-            await assertOwner();
             const [row] = await databaseClient
                 .select({
                     applicationQuestions: hackathons.applicationQuestions,
@@ -311,11 +288,9 @@ export const hackathonsRouter = router({
             return row.applicationQuestions;
         }),
 
-    getApplicationResponseImpact: publicProcedure
+    getApplicationResponseImpact: ownerProcedure
         .input(z.object({ id: z.number().int(), questions: z.unknown() }))
         .query(async ({ input }) => {
-            await assertOwner();
-
             const result = validateApplicationQuestions(input.questions);
             if (!result.ok) {
                 return { orphanIds: [] as number[], affectedApplications: 0 };
@@ -325,7 +300,7 @@ export const hackathonsRouter = router({
             return await findOrphanedResponses(input.id, keptQuestionIds);
         }),
 
-    updateApplicationQuestions: publicProcedure
+    updateApplicationQuestions: ownerProcedure
         .input(
             z.object({
                 id: z.number().int(),
@@ -334,8 +309,6 @@ export const hackathonsRouter = router({
             })
         )
         .mutation(async ({ input }) => {
-            await assertOwner();
-
             const result = validateApplicationQuestions(input.questions);
             if (!result.ok) {
                 throw new BadRequestError(
@@ -373,10 +346,9 @@ export const hackathonsRouter = router({
             return { id: updated.id, pages: result.data.length };
         }),
 
-    getEventPagePayload: publicProcedure
+    getEventPagePayload: ownerProcedure
         .input(z.object({ id: z.number().int() }))
         .query(async ({ input }) => {
-            await assertOwner();
             const [row] = await databaseClient
                 .select({ eventPagePayload: hackathons.eventPagePayload })
                 .from(hackathons)
@@ -391,13 +363,11 @@ export const hackathonsRouter = router({
             return row.eventPagePayload;
         }),
 
-    updateEventPagePayload: publicProcedure
+    updateEventPagePayload: ownerProcedure
         .input(
             z.object({ id: z.number().int(), payload: eventPagePayloadSchema })
         )
         .mutation(async ({ input }) => {
-            await assertOwner();
-
             const [updated] = await databaseClient
                 .update(hackathons)
                 .set({
@@ -418,11 +388,9 @@ export const hackathonsRouter = router({
             return { id: updated.id };
         }),
 
-    deleteHackathon: publicProcedure
+    deleteHackathon: ownerProcedure
         .input(deleteHackathonSchema)
         .mutation(async (opts) => {
-            await assertOwner();
-
             const [target] = await databaseClient
                 .select({ isActive: hackathons.isActive })
                 .from(hackathons)
