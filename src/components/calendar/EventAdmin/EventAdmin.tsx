@@ -345,8 +345,29 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                         ></CheckBoxWithLabel>
                     </div>
 
+                    <div className="mb-2">
+                        <Label>Variable points at check-in?</Label>
+                        <CheckBoxWithLabel
+                            name="variablePoints"
+                            checked={event?.variablePoints ?? false}
+                            onChange={(e) => {
+                                setEvent((current) => {
+                                    if (!current) {
+                                        return current;
+                                    }
+                                    return {
+                                        ...current,
+                                        variablePoints: e.target.checked,
+                                    };
+                                });
+                            }}
+                        ></CheckBoxWithLabel>
+                    </div>
+
                     <div>
-                        <Label>Points</Label>
+                        <Label>
+                            {event?.variablePoints ? 'Max points' : 'Points'}
+                        </Label>
                         <FormTextInput
                             type="number"
                             defaultValue={event?.points ?? 1}
@@ -412,6 +433,7 @@ function convertEvent(hackathonId: number, e?: InternalCalendarEventType) {
             eventType: EventType.EVENT,
             hasCheckIn: false,
             points: 1,
+            variablePoints: false,
         } as CalendarEvent;
     }
     return {} as CalendarEvent;

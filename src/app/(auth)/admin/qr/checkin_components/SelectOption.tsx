@@ -8,6 +8,7 @@ import {
     DrawerTitle,
     DrawerDescription,
 } from '@/components/ui/drawer';
+import { TrophyIcon } from '@heroicons/react/24/solid';
 
 export interface SelectOptionProps {
     show: boolean;
@@ -22,6 +23,11 @@ export default function SelectOption({ show, onClose }: SelectOptionProps) {
         router.push(
             `/admin/qr?${new URLSearchParams({ initialEventType: eventType }).toString()}`
         );
+    };
+
+    const selectChallenges = () => {
+        onClose();
+        router.push('/admin/qr?mode=challenge');
     };
 
     return (
@@ -55,6 +61,17 @@ export default function SelectOption({ show, onClose }: SelectOptionProps) {
                                     </button>
                                 );
                             })}
+                            <button
+                                className="inline-flex items-center justify-center self-stretch rounded-lg border border-neutral-600/60 bg-neutral-800/60 px-1 py-2"
+                                onClick={selectChallenges}
+                            >
+                                <div className="flex items-center justify-center px-3">
+                                    <div className="flex flex-row gap-2 text-base text-white">
+                                        <TrophyIcon className="size-6" />
+                                        Challenge Check-in
+                                    </div>
+                                </div>
+                            </button>
                         </div>
                     </div>
                 </div>

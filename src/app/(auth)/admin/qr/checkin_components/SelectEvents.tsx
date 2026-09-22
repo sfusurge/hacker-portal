@@ -22,6 +22,8 @@ interface SelectWorkshopProps {
     onEventClick: (eventId: number) => void;
     show: boolean;
     onClose: () => void;
+    title?: string;
+    description?: string;
 }
 
 export default function SelectEvent({
@@ -29,6 +31,8 @@ export default function SelectEvent({
     onEventClick,
     show,
     onClose,
+    title = 'Select Event',
+    description = 'What event are you checking in for?',
 }: SelectWorkshopProps) {
     const handleEventClick = (eventId: number) => {
         onEventClick(eventId);
@@ -40,10 +44,8 @@ export default function SelectEvent({
             <DrawerContent>
                 <div className="flex w-full flex-col items-center justify-start gap-2 pb-6">
                     <DrawerHeader className="mb-6 w-full text-left">
-                        <DrawerTitle>Select Event</DrawerTitle>
-                        <DrawerDescription>
-                            What event are you checking in for?
-                        </DrawerDescription>
+                        <DrawerTitle>{title}</DrawerTitle>
+                        <DrawerDescription>{description}</DrawerDescription>
                     </DrawerHeader>
 
                     <div className="flex flex-col items-start justify-start self-stretch">
