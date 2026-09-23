@@ -14,6 +14,7 @@ import { hackathons } from './hackathons';
 
 export enum EventType {
     EVENT = 'Event',
+    DEADLINE = 'Deadline',
     ACTIVITY = 'Activity',
     MEAL = 'Meal',
     WORKSHOP = 'Workshop',
@@ -21,10 +22,19 @@ export enum EventType {
 
 export const EVENT_TYPES = [
     EventType.EVENT,
+    EventType.DEADLINE,
     EventType.ACTIVITY,
     EventType.MEAL,
     EventType.WORKSHOP,
 ] as const;
+
+export const EVENT_TYPE_COLORS: Record<EventType, string> = {
+    [EventType.EVENT]: '#737373',
+    [EventType.DEADLINE]: '#FACC15',
+    [EventType.ACTIVITY]: '#6466F1',
+    [EventType.MEAL]: '#6466F1',
+    [EventType.WORKSHOP]: '#6466F1',
+};
 
 export const eventTypePgEnum = pgEnum('event_type_enum', EVENT_TYPES);
 
