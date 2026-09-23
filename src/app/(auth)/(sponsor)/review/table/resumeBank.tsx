@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useAtomValue } from 'jotai';
 import { getColumns } from './columns';
 import { User } from './types';
 import ResumeDialog from './ResumeDialog';
@@ -23,12 +24,19 @@ import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import { trpc } from '@/trpc/client';
 import { ListBulletIcon, Squares2X2Icon } from '@heroicons/react/24/solid';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { mapSponsorResumeBankRow } from '@/lib/applications/sponsorResumeBank';
+import type { InputFormPageData } from '@/components/application_components/types';
 
 interface ResumeTableProps {
     hackathonId: number;
 }
 
 export default function ResumeTable({ hackathonId }: ResumeTableProps) {
+    const hackathon = useAtomValue(hackathonAtom);
+    const applicationQuestions = (hackathon?.applicationQuestionPages ??
+        []) as InputFormPageData[];
+
     const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -76,42 +84,33 @@ export default function ResumeTable({ hackathonId }: ResumeTableProps) {
     const data = useMemo((): User[] => {
         if (!applications || !Array.isArray(applications)) return [];
         return applications
-            .map((item: any): User => {
-                const {
-                    '1': firstName,
-                    '2': lastName,
-                    '4': email,
-                    '9': resumeUrls,
-                    '12': github,
-                    '13': linkedin,
-                    '16': school,
-                } = item.response as Record<string, any>;
-
-                const resumeUrl =
-                    Array.isArray(resumeUrls) && resumeUrls.length > 0
-                        ? resumeUrls[0]
-                        : null;
+            .map((item: any): User | null => {
+                const mapped = mapSponsorResumeBankRow(
+                    (item.response ?? {}) as Record<string, unknown>,
+                    applicationQuestions
+                );
+                if (!mapped.resumeUrl) return null;
 
                 return {
                     id: item.userId,
-                    firstName: firstName || 'N/A',
-                    lastName: lastName || 'N/A',
-                    school: school || 'N/A',
-                    github: github || 'N/A',
-                    linkedin: linkedin || 'N/A',
-                    resumeUrl,
-                    email: email || 'N/A',
+                    firstName: mapped.firstName,
+                    lastName: mapped.lastName,
+                    school: mapped.school,
+                    github: mapped.github,
+                    linkedin: mapped.linkedin,
+                    resumeUrl: mapped.resumeUrl,
+                    email: mapped.email,
                     currentStatus: item.currentStatus,
                 };
             })
-            .filter((user: User) => !!user.resumeUrl)
+            .filter((user: User | null): user is User => user != null)
             .filter((user: User) => {
                 return (
                     user.currentStatus === 'Accepted' ||
                     user.currentStatus === 'Accepted - RSVP to Confirm'
                 );
             });
-    }, [applications]);
+    }, [applications, applicationQuestions]);
 
     const openDialog = (userId: number) => {
         setSelectedUserId(userId);

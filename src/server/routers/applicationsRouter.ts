@@ -43,6 +43,9 @@ import {
 import { publishReviewTableEvent } from '@/lib/realtime/publishReviewTableEvent';
 import { hasAdminAccess } from '@/lib/auth/roles';
 import { company } from '@/db/schema/company';
+import { hackathons } from '@/db/schema/hackathons';
+import { toSponsorResumeBankResponse } from '@/lib/applications/sponsorResumeBank';
+import type { InputFormPageData } from '@/components/application_components/types';
 
 type UpdateApplicationInput = z.infer<typeof updateApplicationStatusSchema>;
 type UpdateLastEmailSentInput = z.infer<typeof updateLastEmailSentSchema>;
@@ -425,34 +428,27 @@ export const applicationsRouter = router({
                 : applicationsWithAllInfos;
 
             if (!isAdmin) {
-                const sponsorFields = new Set([
-                    '1',
-                    '2',
-                    '4',
-                    '9',
-                    '12',
-                    '13',
-                    '16',
-                ]);
+                const [hackathon] = await databaseClient
+                    .select({
+                        applicationQuestions: hackathons.applicationQuestions,
+                    })
+                    .from(hackathons)
+                    .where(eq(hackathons.id, input.hackathonId))
+                    .limit(1);
+                const applicationQuestions = (hackathon?.applicationQuestions ??
+                    []) as InputFormPageData[];
+
                 return {
                     applications: page
                         .map((application) => {
-                            const response = application.response as Record<
-                                string,
-                                unknown
-                            >;
-                            const sponsorResponse = Object.fromEntries(
-                                Object.entries(response).filter(([key]) =>
-                                    sponsorFields.has(key)
-                                )
+                            const sponsorResponse = toSponsorResumeBankResponse(
+                                (application.response ?? {}) as Record<
+                                    string,
+                                    unknown
+                                >,
+                                applicationQuestions
                             );
-                            const resume = sponsorResponse['9'];
-                            if (
-                                !resume ||
-                                (Array.isArray(resume) && !resume.length)
-                            ) {
-                                return null;
-                            }
+                            if (!sponsorResponse) return null;
                             return {
                                 userId: application.userId,
                                 currentStatus: application.currentStatus,
