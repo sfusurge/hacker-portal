@@ -28,7 +28,6 @@ import {
     ResourceNotFoundError,
 } from '../exceptions';
 import { adminProcedure, protectedProcedure, router } from '../trpc';
-import { TRPCError } from '@trpc/server';
 import { user } from '@/db/schema/users/users';
 import { PgQueryResultHKT, PgTransaction } from 'drizzle-orm/pg-core';
 
@@ -40,33 +39,12 @@ import { deleteFileFromVercel } from '@/lib/blobs';
 import { getSession } from '@/auth/auth';
 import slugify from '@/utils/slugify';
 import { submissions } from '@/db/schema/submissions';
-import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
 
 export const teamsRouter = router({
     createTeam: protectedProcedure
         .input(createTeamSchema)
         .mutation(async ({ input, ctx }) => {
             const team = await databaseClient.transaction(async (tx) => {
-                const [application] = await tx
-                    .select({ currentStatus: applications.currentStatus })
-                    .from(applications)
-                    .where(
-                        and(
-                            eq(applications.hackathonId, input.hackathonId),
-                            eq(applications.userId, ctx.user.id)
-                        )
-                    )
-                    .limit(1);
-                if (
-                    !isEligibleForHackathonTicketQr(application?.currentStatus)
-                ) {
-                    throw new TRPCError({
-                        code: 'FORBIDDEN',
-                        message:
-                            'Only accepted participants can create a team.',
-                    });
-                }
-
                 await checkIfUserInExistingTeam(
                     tx,
                     ctx.user.id,
@@ -140,25 +118,6 @@ export const teamsRouter = router({
                 }
 
                 const { hackathonId, maxMembersCount, teamId } = team;
-
-                const [application] = await tx
-                    .select({ currentStatus: applications.currentStatus })
-                    .from(applications)
-                    .where(
-                        and(
-                            eq(applications.hackathonId, hackathonId),
-                            eq(applications.userId, userId)
-                        )
-                    )
-                    .limit(1);
-                if (
-                    !isEligibleForHackathonTicketQr(application?.currentStatus)
-                ) {
-                    throw new TRPCError({
-                        code: 'FORBIDDEN',
-                        message: 'Only accepted participants can join a team.',
-                    });
-                }
 
                 const members = await tx
                     .select({ count: membersTable.userId })

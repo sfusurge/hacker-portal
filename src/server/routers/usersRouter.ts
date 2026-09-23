@@ -95,16 +95,8 @@ export const usersRouter = router({
         .input(updateUserSchema)
         .mutation(async ({ input, ctx }) => {
             const { id, ...updateValues } = input;
-            const isAdmin = hasAdminAccess(ctx.user.userRole);
-            if (!isAdmin && ctx.user.id !== id) {
+            if (!hasAdminAccess(ctx.user.userRole) && ctx.user.id !== id) {
                 throw new TRPCError({ code: 'UNAUTHORIZED' });
-            }
-            if (!isAdmin && updateValues.email !== undefined) {
-                throw new TRPCError({
-                    code: 'FORBIDDEN',
-                    message:
-                        'Email changes must use the verified account flow.',
-                });
             }
             await databaseClient
                 .update(user)

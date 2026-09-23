@@ -9,8 +9,8 @@ export const authConfig = {
     account: {
         accountLinking: {
             enabled: true,
-            disableImplicitLinking: true,
-            requireLocalEmailVerified: true,
+            trustedProviders: ['google', 'github', 'discord', 'figma'],
+            requireLocalEmailVerified: false,
         },
     },
     user: {

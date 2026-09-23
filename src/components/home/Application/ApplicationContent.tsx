@@ -9,6 +9,7 @@ import { CardTitle, CardDescription } from '@/components/ui/card';
 import { UserData } from '@/server/routers/usersRouter';
 import { useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { resolveHackerPackageHref } from '@/components/home/eventPageConfig';
 import { ApplicationStatusPanel } from './ApplicationStatusPanel';
 
 export function CountdownContent({
@@ -199,6 +200,11 @@ export function AcceptedContent({
     const ticketOpen =
         isTicketOpen !== undefined ? isTicketOpen : localTicketOpen;
 
+    const hackerPackageHref = resolveHackerPackageHref(
+        hackathon?.eventPagePayload,
+        hackathon?.hackathonName ?? ''
+    );
+
     return (
         <>
             <ApplicationStatusPanel className="min-w-[180px]">
@@ -209,6 +215,7 @@ export function AcceptedContent({
                     Use this ticket to check in to the hackathon and pick up
                     meals throughout the event. Don&apos;t forget to read the
                     Hacker Package ahead of the event 🫶
+                    {!hackerPackageHref ? ", It'll be arriving soon" : null}
                 </CardDescription>
             </ApplicationStatusPanel>
 
