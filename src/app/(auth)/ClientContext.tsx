@@ -87,8 +87,8 @@ interface DbHackathonType {
     applicationQuestions: InputFormPageData[];
     version: number;
     submissionQuestions: InputFormPageData[];
-    judgeQuestions: JudgingFormQuestion[];
-    judgeRubric: SubmissionJudgeRubric[];
+    judgeQuestions?: JudgingFormQuestion[];
+    judgeRubric?: SubmissionJudgeRubric[];
     isPaid?: boolean;
     isMultipleLocations?: boolean;
     paymentDeadline?: Date | null;

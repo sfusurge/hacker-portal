@@ -22,6 +22,8 @@ import {
 } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { hasAdminAccess } from '@/lib/auth/roles';
+import { getUserData } from '@/server/auth/sessionUser';
+import { canAccessProjectGallery } from '@/lib/submissionWindow';
 import type { InputFormPageData } from '@/components/application_components/types';
 import { mapSubmissionToProjectListItem } from '@/lib/projects/projectSubmissionDisplay';
 import { judgingAssignments } from '@/db/schema/judge';
@@ -223,10 +225,31 @@ export const submissionsRouter = router({
             const [hackathonRow] = await databaseClient
                 .select({
                     submissionQuestions: hackathons.submissionQuestions,
+                    projectGalleryOpen: hackathons.projectGalleryOpen,
+                    submissionDeadline: hackathons.submissionDeadline,
+                    submissionOpen: hackathons.submissionOpen,
                 })
                 .from(hackathons)
                 .where(eq(hackathons.id, input.hackathonId))
                 .limit(1);
+
+            if (!hackathonRow) return [];
+
+            const viewer = await getUserData();
+            if (
+                !canAccessProjectGallery(
+                    Date.now(),
+                    hackathonRow.projectGalleryOpen,
+                    hackathonRow.submissionDeadline,
+                    viewer?.userRole,
+                    hackathonRow.submissionOpen
+                )
+            ) {
+                throw new TRPCError({
+                    code: 'FORBIDDEN',
+                    message: 'The project gallery is not open yet.',
+                });
+            }
 
             const submissionQuestionPages =
                 (hackathonRow?.submissionQuestions ??

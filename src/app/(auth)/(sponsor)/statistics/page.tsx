@@ -29,7 +29,8 @@ export default function StatisticsPage() {
     const chartSize = useResponsiveChartSize();
     const hasSetInitialHackathon = useRef(false);
 
-    const { data: hackathons = [] } = trpc.hackathons.getHackathons.useQuery();
+    const { data: hackathons = [] } =
+        trpc.hackathons.getSponsorHackathons.useQuery();
     const [selectedHackathonId, setSelectedHackathonId] = useState<
         number | null
     >(null);

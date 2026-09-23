@@ -1,5 +1,11 @@
 import { InputFormPageData } from '@/components/application_components/types';
-import { ownerProcedure, publicProcedure, router } from '../trpc';
+import {
+    adminOrSponsorProcedure,
+    adminProcedure,
+    ownerProcedure,
+    publicProcedure,
+    router,
+} from '../trpc';
 import { databaseClient } from '@/db/client';
 import {
     createHackathonSchema,
@@ -21,6 +27,7 @@ import {
 } from '@/lib/applications/applicationQuestionsSchema';
 import { applications } from '@/db/schema/applications';
 import { BadRequestError, ResourceNotFoundError } from '../exceptions';
+import { company } from '@/db/schema/company';
 
 async function assertSlugAvailable(slug: string, exceptId?: number) {
     const [conflict] = await databaseClient
@@ -124,17 +131,54 @@ function toHackathonColumns(input: HackathonConfigInput) {
 }
 
 export const hackathonsRouter = router({
-    getHackathons: publicProcedure.query(async () => {
+    getHackathons: adminProcedure.query(async () => {
         return await databaseClient.select().from(hackathons);
     }),
 
+    getSponsorHackathons: adminOrSponsorProcedure.query(async ({ ctx }) => {
+        if (ctx.user.userRole === 'admin' || ctx.user.userRole === 'owner') {
+            return databaseClient
+                .select({
+                    id: hackathons.id,
+                    name: hackathons.name,
+                    startDate: hackathons.startDate,
+                })
+                .from(hackathons)
+                .orderBy(asc(hackathons.startDate));
+        }
+
+        return databaseClient
+            .select({
+                id: hackathons.id,
+                name: hackathons.name,
+                startDate: hackathons.startDate,
+            })
+            .from(hackathons)
+            .innerJoin(
+                company,
+                and(
+                    eq(company.hackathonId, hackathons.id),
+                    eq(company.userId, ctx.user.id),
+                    eq(company.portalRole, 'sponsor')
+                )
+            )
+            .orderBy(asc(hackathons.startDate));
+    }),
+
     getActiveHackathon: publicProcedure.query(async () => {
-        const { isActive, ...restOfHackathonColumns } =
-            getTableColumns(hackathons);
+        const {
+            isActive,
+            judgeQuestions,
+            judgeRubric,
+            ...publicHackathonColumns
+        } = getTableColumns(hackathons);
+        void isActive;
+        void judgeQuestions;
+        void judgeRubric;
 
         const [hackathon] = await databaseClient
             .select({
-                ...restOfHackathonColumns,
+                ...publicHackathonColumns,
             })
             .from(hackathons)
             .where(eq(hackathons.isActive, true))
@@ -146,7 +190,12 @@ export const hackathonsRouter = router({
 
     getVisibleHackathonsForNav: publicProcedure.query(async () => {
         return await databaseClient
-            .select()
+            .select({
+                name: hackathons.name,
+                startDate: hackathons.startDate,
+                eventPageSlug: hackathons.eventPageSlug,
+                eventPagePayload: hackathons.eventPagePayload,
+            })
             .from(hackathons)
             .where(eq(hackathons.isVisible, true))
             .orderBy(asc(hackathons.startDate));

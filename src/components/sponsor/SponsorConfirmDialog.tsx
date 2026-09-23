@@ -5,36 +5,28 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { convertToSponsor } from './convertToSponsor';
-import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { trpc } from '@/trpc/client';
-import { useAtomValue } from 'jotai';
 import { FormTextInput, Input } from '../ui/input/input';
 import { Label } from '../ui/label/label';
 
 interface SponsorConfirmDialogProps {
-    sponsorType: string;
     bypassCode: string;
     userFirstName?: string;
     userLastName?: string;
     isAlreadySponsor: boolean;
-    userId: number;
 }
 
 export default function SponsorConfirmDialog({
-    sponsorType,
     bypassCode,
     userFirstName,
     userLastName,
     isAlreadySponsor,
-    userId,
 }: SponsorConfirmDialogProps) {
     const [isConverting, setIsConverting] = useState(false);
     const [isConverted, setIsConverted] = useState(false);
     const [companyTitle, setCompanyTitle] = useState('');
     const router = useRouter();
 
-    const companyUpsert = trpc.company.upsert.useMutation();
-    const activeHackathon = useAtomValue(hackathonAtom);
     const utils = trpc.useUtils();
 
     const isButtonDisabled = isConverting || !companyTitle.trim();
@@ -50,33 +42,12 @@ export default function SponsorConfirmDialog({
 
         try {
             // convert acc to sponsor, get tier, get active hackathon, update user company
-            const result = await convertToSponsor(userId, bypassCode);
+            const result = await convertToSponsor(
+                bypassCode,
+                companyTitle.trim()
+            );
 
             if (result.success) {
-                if (!activeHackathon?.id) {
-                    throw new Error('No active hackathon found');
-                }
-
-                const sponsorTierMap: Record<
-                    string,
-                    'plat' | 'gold' | 'title'
-                > = {
-                    plat: 'plat',
-                    gold: 'gold',
-                    title: 'title',
-                };
-
-                const sponsorTier = sponsorTierMap[sponsorType];
-
-                if (sponsorTier) {
-                    await companyUpsert.mutateAsync({
-                        hackathonId: activeHackathon.id,
-                        portalRole: 'sponsor',
-                        sponsorTier: sponsorTier,
-                        companyTitle: companyTitle.trim(),
-                    });
-                }
-
                 await utils.users.invalidate();
 
                 setIsConverted(true);

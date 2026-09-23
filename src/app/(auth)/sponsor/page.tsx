@@ -75,12 +75,10 @@ export default async function SponsorPage({
 
     return (
         <SponsorConfirmDialog
-            sponsorType={sponsorType}
             bypassCode={bypassCode}
             userFirstName={userData.firstName || ''}
             userLastName={userData.lastName || ''}
             isAlreadySponsor={userData.userRole === 'sponsor'}
-            userId={userData.id}
         />
     );
 }

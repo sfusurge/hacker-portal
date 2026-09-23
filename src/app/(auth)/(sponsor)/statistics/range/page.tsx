@@ -48,7 +48,8 @@ function sortHackathons(hackathons: HackathonOption[]) {
 export default function StatisticsRangePage() {
     const activeHackathon = useAtomValue(hackathonAtom);
     const chartSize = useResponsiveChartSize();
-    const { data: hackathons = [] } = trpc.hackathons.getHackathons.useQuery();
+    const { data: hackathons = [] } =
+        trpc.hackathons.getSponsorHackathons.useQuery();
 
     const sortedHackathons = useMemo(
         () => sortHackathons(hackathons as HackathonOption[]),
