@@ -68,8 +68,8 @@ export type HackathonEmailType =
 /** Human-readable labels for email types (for UI). */
 export const HACKATHON_EMAIL_TYPE_LABELS: Record<HackathonEmailType, string> = {
     hacker_applied: 'Hacker applied',
-    rsvp_received: 'RSVP received',
-    rsvp_paid: 'RSVP payment received',
+    rsvp_received: 'RSVP Confirmed',
+    rsvp_paid: 'RSVP Payment Received',
     hacker_declined: 'Hacker declined',
     hacker_accepted: 'Hacker accepted',
     hacker_waitlisted: 'Hacker waitlisted',

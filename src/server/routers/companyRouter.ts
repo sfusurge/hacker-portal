@@ -1,12 +1,10 @@
 import { databaseClient } from '@/db/client';
-import { company, portalRoleEnum, sponsorTierEnum } from '@/db/schema/company';
-import { hackathons } from '@/db/schema/hackathons';
+import { company } from '@/db/schema/company';
 import { UserRoleEnum } from '@/db/schema/users/users';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
-import { publicProcedure, router } from '../trpc';
-import { getUserData } from './usersRouter';
-import { UnauthorizedError } from '../exceptions';
+import { protectedProcedure, router } from '../trpc';
+import { TRPCError } from '@trpc/server';
 import { hasAdminAccess } from '@/lib/auth/roles';
 
 const createCompanySchema = z.object({
@@ -17,47 +15,27 @@ const createCompanySchema = z.object({
     skills: z.array(z.string()).optional(),
 });
 
-const updateCompanySchema = z.object({
-    hackathonId: z.number(),
-    portalRole: z.enum(['mentor', 'sponsor']).optional(),
-    sponsorTier: z.enum(['plat', 'gold', 'title']).optional(),
-    companyTitle: z.string().optional(),
-    skills: z.array(z.string()).optional(),
-});
-
 const getCompanySchema = z.object({
     hackathonId: z.number().optional(),
 });
 
+function assertSponsorOrAdmin(userRole: string) {
+    if (userRole !== UserRoleEnum.sponsor && !hasAdminAccess(userRole)) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
+}
+
 export const companyRouter = router({
-    create: publicProcedure
+    create: protectedProcedure
         .input(createCompanySchema)
-        .mutation(async ({ input }) => {
-            const user = await getUserData();
-
-            if (!user) {
-                throw new UnauthorizedError({
-                    email: undefined,
-                    role: undefined,
-                });
-            }
-
-            // Check if user is sponsor, admin, or the record is for themselves
-            if (
-                user.userRole !== UserRoleEnum.sponsor &&
-                !hasAdminAccess(user.userRole)
-            ) {
-                throw new UnauthorizedError({
-                    email: user.email,
-                    role: user.userRole,
-                });
-            }
+        .mutation(async ({ input, ctx }) => {
+            assertSponsorOrAdmin(ctx.user.userRole);
 
             const result = await databaseClient
                 .insert(company)
                 .values({
                     hackathonId: input.hackathonId,
-                    userId: user.id,
+                    userId: ctx.user.id,
                     portalRole: input.portalRole,
                     sponsorTierEnum: input.sponsorTier,
                     companyTitle: input.companyTitle,
@@ -69,67 +47,44 @@ export const companyRouter = router({
             return result[0];
         }),
 
-    get: publicProcedure.input(getCompanySchema).query(async ({ input }) => {
-        const user = await getUserData();
+    get: protectedProcedure
+        .input(getCompanySchema)
+        .query(async ({ input, ctx }) => {
+            const whereConditions = [eq(company.userId, ctx.user.id)];
 
-        if (!user) {
-            throw new UnauthorizedError({
-                email: undefined,
-                role: undefined,
-            });
-        }
+            if (input.hackathonId) {
+                whereConditions.push(
+                    eq(company.hackathonId, input.hackathonId)
+                );
+            }
 
-        const whereConditions = [eq(company.userId, user.id)];
+            const result = await databaseClient
+                .select({
+                    hackathonId: company.hackathonId,
+                    userId: company.userId,
+                    portalRole: company.portalRole,
+                    sponsorTier: company.sponsorTierEnum,
+                    companyTitle: company.companyTitle,
+                    skills: company.skills,
+                    createdDate: company.createdDate,
+                    updatedDate: company.updatedDate,
+                })
+                .from(company)
+                .where(and(...whereConditions));
 
-        if (input.hackathonId) {
-            whereConditions.push(eq(company.hackathonId, input.hackathonId));
-        }
+            return input.hackathonId ? result[0] || null : result;
+        }),
 
-        const result = await databaseClient
-            .select({
-                hackathonId: company.hackathonId,
-                userId: company.userId,
-                portalRole: company.portalRole,
-                sponsorTier: company.sponsorTierEnum,
-                companyTitle: company.companyTitle,
-                skills: company.skills,
-                createdDate: company.createdDate,
-                updatedDate: company.updatedDate,
-            })
-            .from(company)
-            .where(and(...whereConditions));
-
-        return input.hackathonId ? result[0] || null : result;
-    }),
-
-    upsert: publicProcedure
+    upsert: protectedProcedure
         .input(createCompanySchema)
-        .mutation(async ({ input }) => {
-            const user = await getUserData();
-
-            if (!user) {
-                throw new UnauthorizedError({
-                    email: undefined,
-                    role: undefined,
-                });
-            }
-
-            // Check if user is sponsor, admin, or the record is for themselves
-            if (
-                user.userRole !== UserRoleEnum.sponsor &&
-                !hasAdminAccess(user.userRole)
-            ) {
-                throw new UnauthorizedError({
-                    email: user.email,
-                    role: user.userRole,
-                });
-            }
+        .mutation(async ({ input, ctx }) => {
+            assertSponsorOrAdmin(ctx.user.userRole);
 
             const result = await databaseClient
                 .insert(company)
                 .values({
                     hackathonId: input.hackathonId,
-                    userId: user.id,
+                    userId: ctx.user.id,
                     portalRole: input.portalRole,
                     sponsorTierEnum: input.sponsorTier,
                     companyTitle: input.companyTitle,

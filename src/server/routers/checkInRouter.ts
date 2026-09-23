@@ -5,34 +5,27 @@ import {
     insertCheckInSchema,
     isCheckInSchema,
 } from '@/db/schema/checkIn';
+import { challengeCompletions, challenges } from '@/db/schema/challenges';
 import { user as usersTable } from '@/db/schema/users/users';
-import { ResourceNotFoundError, UnauthorizedError } from '../exceptions';
+import { ResourceNotFoundError } from '../exceptions';
 import { TRPCError } from '@trpc/server';
-import { publicProcedure, router } from '../trpc';
+import { adminProcedure, router } from '../trpc';
 import { and, desc, eq, count } from 'drizzle-orm';
-import { getUserData } from '@/server/routers/usersRouter';
 import { events } from '@/db/schema/events';
 import { applications } from '@/db/schema/applications';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
-import { hasAdminAccess } from '@/lib/auth/roles';
 import { assignHouseIfNeeded } from '@/server/houses/assignHouse';
 
 export const checkInRouter = router({
-    checkIn: publicProcedure
+    checkIn: adminProcedure
         .input(insertCheckInSchema)
         .mutation(async ({ input }) => {
-            const user = await getUserData();
-
-            // Only admin can check people in
-            if (!hasAdminAccess(user?.userRole)) {
-                throw new UnauthorizedError({
-                    email: user?.email,
-                    role: user?.userRole,
-                });
-            }
-
             const [eventRow] = await databaseClient
-                .select({ hackathonId: events.hackathonId })
+                .select({
+                    hackathonId: events.hackathonId,
+                    points: events.points,
+                    variablePoints: events.variablePoints,
+                })
                 .from(events)
                 .where(eq(events.id, input.eventId))
                 .limit(1);
@@ -42,6 +35,29 @@ export const checkInRouter = router({
                     code: 'NOT_FOUND',
                     message: `Cannot find event with id ${input.eventId}`,
                 });
+            }
+
+            let pointsAwarded: number;
+            if (eventRow.variablePoints) {
+                if (input.pointsAwarded == null) {
+                    throw new TRPCError({
+                        code: 'BAD_REQUEST',
+                        message:
+                            'pointsAwarded is required for variable-point events',
+                    });
+                }
+                if (
+                    input.pointsAwarded < 1 ||
+                    input.pointsAwarded > eventRow.points
+                ) {
+                    throw new TRPCError({
+                        code: 'BAD_REQUEST',
+                        message: `pointsAwarded must be between 1 and ${eventRow.points}`,
+                    });
+                }
+                pointsAwarded = input.pointsAwarded;
+            } else {
+                pointsAwarded = eventRow.points;
             }
 
             const [[targetUser], [application]] = await Promise.all([
@@ -81,10 +97,40 @@ export const checkInRouter = router({
                 .values({
                     eventId: input.eventId,
                     userId: input.userId,
+                    pointsAwarded,
                 })
                 .onConflictDoNothing({
                     target: [checkIns.userId, checkIns.eventId],
                 });
+
+            const linkedChallenges = await databaseClient
+                .select({
+                    id: challenges.id,
+                    points: challenges.points,
+                    variablePoints: challenges.variablePoints,
+                    maxCompletions: challenges.maxCompletions,
+                })
+                .from(challenges)
+                .where(eq(challenges.eventId, input.eventId));
+
+            for (const challenge of linkedChallenges) {
+                if (challenge.variablePoints || challenge.maxCompletions > 1) {
+                    continue;
+                }
+                await databaseClient
+                    .insert(challengeCompletions)
+                    .values({
+                        challengeId: challenge.id,
+                        userId: input.userId,
+                        pointsAwarded: challenge.points,
+                    })
+                    .onConflictDoNothing({
+                        target: [
+                            challengeCompletions.challengeId,
+                            challengeCompletions.userId,
+                        ],
+                    });
+            }
 
             // Fallback assign house if assignment was skipped in RSVP
             try {
@@ -99,7 +145,7 @@ export const checkInRouter = router({
             return true;
         }),
 
-    isCheckedIn: publicProcedure
+    isCheckedIn: adminProcedure
         .input(isCheckInSchema)
         .query(async ({ input }) => {
             const checkInRecord = await databaseClient
@@ -123,18 +169,9 @@ export const checkInRouter = router({
             };
         }),
 
-    getEventCheckInCounts: publicProcedure
+    getEventCheckInCounts: adminProcedure
         .input(getEventCheckInCountSchema)
         .query(async ({ input }) => {
-            const user = await getUserData();
-
-            if (!hasAdminAccess(user?.userRole)) {
-                throw new UnauthorizedError({
-                    email: user?.email,
-                    role: user?.userRole,
-                });
-            }
-
             const checkInCounts = await databaseClient
                 .select({
                     eventId: events.id,

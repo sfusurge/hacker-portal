@@ -27,28 +27,48 @@ type CheckInTicketProps = {
     currentHacker: GetUsersOutput[0];
     eventType: EventType;
     eventId: number;
+    challengeId?: number;
     hackathonId: number;
     onClose: () => void;
     open: boolean;
+    variablePoints?: boolean;
+    maxPoints?: number;
+    pointsPerCompletion?: number;
+    maxCompletions?: number;
 };
 
 export default function CheckinTicket({
     currentHacker,
     eventType,
     eventId,
+    challengeId,
     hackathonId,
     onClose,
     open,
+    variablePoints = false,
+    maxPoints = 1,
+    pointsPerCompletion = 1,
+    maxCompletions = 1,
 }: CheckInTicketProps) {
     const [QRCode, setQRCode] = useState('/qrfinder.svg');
     const pfp = '/favicon.png';
     const { toast } = useToast();
 
+    const isChallenge = challengeId != null && challengeId > 0;
+
     const submitCheckIn = trpc.checkIn.checkIn.useMutation();
+    const submitChallenge = trpc.challenges.completeChallenge.useMutation();
     const isCheckedIn = trpc.checkIn.isCheckedIn;
+    const isChallengeComplete = trpc.challenges.isChallengeComplete;
 
     const [checkInStatus, setCheckInStatus] = useState(false);
     const [checkInTime, setCheckInTime] = useState('N/A');
+    const isMultiCompletion = !variablePoints && maxCompletions > 1;
+    const needsPointsInput = variablePoints || isMultiCompletion;
+    const [pointsAwarded, setPointsAwarded] = useState(
+        variablePoints ? maxPoints : pointsPerCompletion * maxCompletions
+    );
+    const [completions, setCompletions] = useState(maxCompletions);
 
     const handleOpenChange = (open: boolean) => {
         if (!open) {
@@ -56,10 +76,33 @@ export default function CheckinTicket({
         }
     };
 
-    const checked = isCheckedIn.useQuery({
-        userId: currentHacker?.id,
-        eventId: eventId,
-    });
+    const checked = isCheckedIn.useQuery(
+        {
+            userId: currentHacker?.id,
+            eventId: eventId,
+        },
+        {
+            enabled:
+                open &&
+                !isChallenge &&
+                Boolean(currentHacker?.id) &&
+                eventId > 0,
+        }
+    );
+
+    const challengeStatus = isChallengeComplete.useQuery(
+        {
+            userId: currentHacker?.id,
+            challengeId: challengeId ?? 0,
+        },
+        {
+            enabled:
+                open &&
+                isChallenge &&
+                Boolean(currentHacker?.id) &&
+                (challengeId ?? 0) > 0,
+        }
+    );
 
     const hackathon = useAtomValue(hackathonAtom);
     const applicationQuestionPages = (hackathon?.applicationQuestionPages ??
@@ -118,6 +161,35 @@ export default function CheckinTicket({
     }, [acceptanceCheckPending, acceptedForCheckIn, scannerAttendanceLabel]);
 
     useEffect(() => {
+        setCompletions(maxCompletions);
+        setPointsAwarded(
+            variablePoints ? maxPoints : pointsPerCompletion * maxCompletions
+        );
+    }, [
+        maxPoints,
+        eventId,
+        variablePoints,
+        pointsPerCompletion,
+        maxCompletions,
+    ]);
+
+    useEffect(() => {
+        if (isChallenge) {
+            if (challengeStatus.data) {
+                setCheckInStatus(challengeStatus.data.isComplete);
+                if (
+                    challengeStatus.data.isComplete &&
+                    challengeStatus.data.completedAt
+                ) {
+                    setCheckInTime(
+                        new Date(
+                            challengeStatus.data.completedAt
+                        ).toLocaleString()
+                    );
+                }
+            }
+            return;
+        }
         if (checked.data) {
             setCheckInStatus(checked.data.isCheckedIn);
             if (checked.data.isCheckedIn && checked.data.checkInTime) {
@@ -126,24 +198,64 @@ export default function CheckinTicket({
                 );
             }
         }
-    }, [checked.data]);
+    }, [checked.data, challengeStatus.data, isChallenge]);
 
     const toggleCheckInStatus = async () => {
         if (!currentHacker?.id) return;
         if (acceptanceCheckPending) return;
         if (!acceptedForCheckIn) return;
 
-        await submitCheckIn.mutateAsync({
-            userId: currentHacker.id,
-            eventId: eventId,
-        });
+        let awarded: number | undefined;
+        if (variablePoints) {
+            if (
+                !Number.isInteger(pointsAwarded) ||
+                pointsAwarded < 1 ||
+                pointsAwarded > maxPoints
+            ) {
+                toast({
+                    title: `Points must be between 1 and ${maxPoints}`,
+                    variant: 'error',
+                });
+                return;
+            }
+            awarded = pointsAwarded;
+        } else if (isMultiCompletion) {
+            if (
+                !Number.isInteger(completions) ||
+                completions < 1 ||
+                completions > maxCompletions
+            ) {
+                toast({
+                    title: `Times must be between 1 and ${maxCompletions}`,
+                    variant: 'error',
+                });
+                return;
+            }
+            awarded = completions * pointsPerCompletion;
+        }
+
+        if (isChallenge) {
+            await submitChallenge.mutateAsync({
+                userId: currentHacker.id,
+                challengeId: challengeId!,
+                ...(awarded != null ? { pointsAwarded: awarded } : {}),
+            });
+            challengeStatus.refetch();
+        } else {
+            await submitCheckIn.mutateAsync({
+                userId: currentHacker.id,
+                eventId: eventId,
+                ...(awarded != null ? { pointsAwarded: awarded } : {}),
+            });
+            checked.refetch();
+        }
 
         toast({
-            title: 'Successfully checked in!',
+            title: isChallenge
+                ? 'Challenge completed!'
+                : 'Successfully checked in!',
             variant: 'success',
         });
-
-        checked.refetch();
     };
 
     useEffect(() => {
@@ -245,11 +357,77 @@ export default function CheckinTicket({
                                         </div>
                                     </div>
                                 </div>
+
+                                {needsPointsInput && !checkInStatus && (
+                                    <>
+                                        <div className="h-px w-full border-t border-neutral-700/20" />
+                                        {variablePoints ? (
+                                            <div className="flex w-full items-center justify-between gap-3">
+                                                <div className="text-sm leading-tight font-normal text-white/60">
+                                                    Points (1–{maxPoints})
+                                                </div>
+                                                <input
+                                                    type="number"
+                                                    min={1}
+                                                    max={maxPoints}
+                                                    value={pointsAwarded}
+                                                    onChange={(e) => {
+                                                        const n = Number(
+                                                            e.target.value
+                                                        );
+                                                        setPointsAwarded(
+                                                            Number.isFinite(n)
+                                                                ? n
+                                                                : 1
+                                                        );
+                                                    }}
+                                                    className="w-20 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-1 text-center text-sm font-medium text-white"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="flex w-full flex-col gap-2">
+                                                <div className="flex w-full items-center justify-between gap-3">
+                                                    <div className="text-sm leading-tight font-normal text-white/60">
+                                                        Times (1–
+                                                        {maxCompletions})
+                                                    </div>
+                                                    <input
+                                                        type="number"
+                                                        min={1}
+                                                        max={maxCompletions}
+                                                        value={completions}
+                                                        onChange={(e) => {
+                                                            const n = Number(
+                                                                e.target.value
+                                                            );
+                                                            setCompletions(
+                                                                Number.isFinite(
+                                                                    n
+                                                                )
+                                                                    ? n
+                                                                    : 1
+                                                            );
+                                                        }}
+                                                        className="w-20 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-1 text-center text-sm font-medium text-white"
+                                                    />
+                                                </div>
+                                                <div className="text-right text-xs text-white/50">
+                                                    {pointsPerCompletion} ×{' '}
+                                                    {completions} ={' '}
+                                                    {pointsPerCompletion *
+                                                        completions}{' '}
+                                                    pts
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
                             </div>
 
                             <div className="mt-6 w-full">
                                 <CheckinButton
                                     eventType={eventType}
+                                    isChallenge={isChallenge}
                                     checkInStatus={checkInStatus}
                                     toggleCheckInStatus={toggleCheckInStatus}
                                     acceptanceCheckPending={

@@ -1,9 +1,8 @@
-import { publicProcedure, router } from '../trpc';
+import { adminProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
 import { emailQueue, emailTemplates } from '@/db/schema/emails';
 import { hackathons } from '@/db/schema/hackathons';
-import { UnauthorizedError, InternalServerError } from '../exceptions';
-import { getUserData } from '@/server/routers/usersRouter';
+import { InternalServerError } from '../exceptions';
 import { z } from 'zod';
 import {
     and,
@@ -17,30 +16,17 @@ import {
     sql,
     type SQL,
 } from 'drizzle-orm';
-import { hasAdminAccess } from '@/lib/auth/roles';
 import {
     processEmailQueue,
     MAX_RETRIES,
 } from '@/server/email/processEmailQueue';
-
-async function assertAdmin() {
-    const user = await getUserData();
-    if (!user) throw new InternalServerError('User not authenticated');
-    if (!hasAdminAccess(user.userRole)) {
-        throw new UnauthorizedError({
-            email: user.email,
-            role: user.userRole,
-        });
-    }
-    return user;
-}
 
 const num = (value: unknown) => Number(value ?? 0);
 
 const DEFAULT_PAGE_SIZE = 50;
 
 export const emailQueueRouter = router({
-    queueBatchEmails: publicProcedure
+    queueBatchEmails: adminProcedure
         .input(
             z.object({
                 templateId: z.number(),
@@ -57,8 +43,6 @@ export const emailQueueRouter = router({
             })
         )
         .mutation(async ({ input }) => {
-            await assertAdmin();
-
             const emailJobs = input.users.map((user) => ({
                 userId: user.id,
                 templateId: input.templateId,
@@ -79,11 +63,9 @@ export const emailQueueRouter = router({
             };
         }),
 
-    getQueueStatus: publicProcedure
+    getQueueStatus: adminProcedure
         .input(z.object({ hackathonId: z.number().optional() }))
         .query(async ({ input }) => {
-            await assertAdmin();
-
             const [row] = await databaseClient
                 .select({
                     pending: sql`count(*) filter (where ${emailQueue.status} = 'pending')`,
@@ -109,11 +91,9 @@ export const emailQueueRouter = router({
 
     // Counts grouped by email category (emailType) + template title, so admins
     // see pending/sent/failed per kind of email rather than only global totals.
-    getQueueBreakdown: publicProcedure
+    getQueueBreakdown: adminProcedure
         .input(z.object({ hackathonId: z.number().optional() }))
         .query(async ({ input }) => {
-            await assertAdmin();
-
             const rows = await databaseClient
                 .select({
                     emailType: emailQueue.emailType,
@@ -146,7 +126,7 @@ export const emailQueueRouter = router({
             }));
         }),
 
-    getQueueItems: publicProcedure
+    getQueueItems: adminProcedure
         .input(
             z.object({
                 hackathonId: z.number().optional(),
@@ -163,8 +143,6 @@ export const emailQueueRouter = router({
             })
         )
         .query(async ({ input }) => {
-            await assertAdmin();
-
             const filters: SQL[] = [];
             if (input.hackathonId) {
                 filters.push(eq(emailQueue.hackathonId, input.hackathonId));
@@ -243,7 +221,7 @@ export const emailQueueRouter = router({
         }),
 
     // Reset failed rows back to pending so the next send attempt picks them up.
-    retryFailed: publicProcedure
+    retryFailed: adminProcedure
         .input(
             z.object({
                 ids: z.array(z.number()).optional(),
@@ -252,8 +230,6 @@ export const emailQueueRouter = router({
             })
         )
         .mutation(async ({ input }) => {
-            await assertAdmin();
-
             const filters: SQL[] = [eq(emailQueue.status, 'failed')];
             if (input.ids && input.ids.length > 0) {
                 filters.push(inArray(emailQueue.id, input.ids));
@@ -276,10 +252,9 @@ export const emailQueueRouter = router({
 
     // Admin-triggered send that bypasses the cron (uses admin auth, not
     // CRON_SECRET). Respects the hourly quota.
-    processQueueNow: publicProcedure
+    processQueueNow: adminProcedure
         .input(z.object({ hackathonId: z.number().optional() }))
         .mutation(async ({ input }) => {
-            await assertAdmin();
             return await processEmailQueue({
                 hackathonId: input.hackathonId,
                 respectQuota: true,
@@ -288,10 +263,9 @@ export const emailQueueRouter = router({
 
     // Send specific pending rows immediately, ignoring the hourly quota
     // (emergency override, admin-only).
-    sendNow: publicProcedure
+    sendNow: adminProcedure
         .input(z.object({ ids: z.array(z.number()).min(1) }))
         .mutation(async ({ input }) => {
-            await assertAdmin();
             return await processEmailQueue({
                 ids: input.ids,
                 respectQuota: false,

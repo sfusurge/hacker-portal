@@ -7,7 +7,7 @@ import {
     ChevronUpDownIcon,
     EnvelopeIcon,
 } from '@heroicons/react/16/solid';
-import { FlagIcon } from '@heroicons/react/24/solid';
+import { FlagIcon, ShieldCheckIcon } from '@heroicons/react/24/solid';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -806,7 +806,9 @@ function RecipientsStep({
                                     {r.lastEmailSent || 'N/A'}
                                 </td>
                                 <td className="h-11 w-11 px-2">
-                                    {r.flagged ? (
+                                    {r.hsFlagged ? (
+                                        <ShieldCheckIcon className="text-danger-400 size-5" />
+                                    ) : r.flagged ? (
                                         <FlagIcon className="size-5 text-orange-400" />
                                     ) : null}
                                 </td>

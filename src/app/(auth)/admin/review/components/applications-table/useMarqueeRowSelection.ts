@@ -368,13 +368,49 @@ export function useMarqueeRowSelection({
             selectRowsIntersectingRect(box, drag.additive, drag.baseSelection);
         };
 
+        const onWheel = (event: WheelEvent) => {
+            const drag = marqueeSelectRef.current;
+            if (!drag) return;
+
+            const container = scrollContainerRef.current;
+            let deltaX = 0;
+            let deltaY = 0;
+
+            const verticalParent = getVerticalScrollParent(container);
+            if (verticalParent && event.deltaY !== 0 && !event.shiftKey) {
+                const before = verticalParent.scrollTop;
+                verticalParent.scrollTop += event.deltaY;
+                deltaY += verticalParent.scrollTop - before;
+            }
+
+            if (container) {
+                const horizontalDelta = event.shiftKey
+                    ? event.deltaY || event.deltaX
+                    : event.deltaX;
+                if (horizontalDelta !== 0) {
+                    const before = container.scrollLeft;
+                    container.scrollLeft += horizontalDelta;
+                    deltaX += container.scrollLeft - before;
+                }
+            }
+
+            if (deltaX === 0 && deltaY === 0) return;
+
+            event.preventDefault();
+            drag.startX -= deltaX;
+            drag.startY -= deltaY;
+            schedulePaintMarquee();
+        };
+
         window.addEventListener('pointermove', onPointerMove);
         window.addEventListener('pointerup', onPointerUp);
         window.addEventListener('pointercancel', onPointerUp);
+        window.addEventListener('wheel', onWheel, { passive: false });
         return () => {
             window.removeEventListener('pointermove', onPointerMove);
             window.removeEventListener('pointerup', onPointerUp);
             window.removeEventListener('pointercancel', onPointerUp);
+            window.removeEventListener('wheel', onWheel);
             stopAutoScroll();
             if (paintRafRef.current != null) {
                 cancelAnimationFrame(paintRafRef.current);

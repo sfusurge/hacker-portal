@@ -23,6 +23,20 @@ export const HOURLY_QUOTA = Number.isFinite(rawHourly)
 
 export const MAX_RETRIES = parseInt(process.env.EMAIL_MAX_RETRIES ?? '3', 10);
 
+const rawDelayMs = parseInt(process.env.EMAIL_SEND_DELAY_MS ?? '500', 10);
+export const SEND_DELAY_MS = Number.isFinite(rawDelayMs)
+    ? Math.max(0, rawDelayMs)
+    : 500;
+
+const rawBatch = parseInt(process.env.EMAIL_BATCH_SIZE ?? '175', 10);
+export const BATCH_SIZE = Number.isFinite(rawBatch)
+    ? Math.max(1, rawBatch)
+    : 100;
+
+function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // if email doesn't send, check if the error is because of SMTP login throttling
 function isSmtpAuthThrottleError(err: unknown): boolean {
     if (err == null || typeof err !== 'object') {
@@ -132,13 +146,15 @@ export async function processEmailQueue(
         });
     }
 
-    const pendingQuery = databaseClient
+    const runLimit = respectQuota
+        ? Math.min(remainingHourlyQuota, BATCH_SIZE)
+        : BATCH_SIZE;
+
+    const pendingEmails = await databaseClient
         .select()
         .from(emailQueue)
-        .where(pendingPredicate);
-    const pendingEmails = respectQuota
-        ? await pendingQuery.limit(remainingHourlyQuota)
-        : await pendingQuery;
+        .where(pendingPredicate)
+        .limit(runLimit);
 
     if (pendingEmails.length === 0) {
         return empty('No pending emails', {
@@ -185,7 +201,12 @@ export async function processEmailQueue(
     let failedCount = 0;
     const errors: string[] = [];
 
-    for (const pendingEmail of pendingEmails) {
+    for (let i = 0; i < pendingEmails.length; i++) {
+        const pendingEmail = pendingEmails[i];
+        if (i > 0 && SEND_DELAY_MS > 0) {
+            await sleep(SEND_DELAY_MS);
+        }
+
         try {
             const template = templateById.get(pendingEmail.templateId);
 

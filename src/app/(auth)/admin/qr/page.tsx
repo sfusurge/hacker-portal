@@ -12,16 +12,25 @@ export default async function QRScan({ searchParams }: QRScanProps) {
 
     const activeHackathon = await getCachedActiveHackathon();
 
-    const events = await trpcClient.events.getHackathonCheckInEvents({
-        hackathonId: activeHackathon!.id,
-    });
+    const params = await searchParams;
+    const initialEventType = params.initialEventType;
+    const initialMode = params.mode === 'challenge' ? 'challenge' : 'event';
 
-    const initialEventType = (await searchParams).initialEventType;
+    const [events, challengeRows] = await Promise.all([
+        trpcClient.events.getHackathonCheckInEvents({
+            hackathonId: activeHackathon!.id,
+        }),
+        trpcClient.challenges.getChallenges({
+            hackathonId: activeHackathon!.id,
+        }),
+    ]);
 
     return (
         <Scan
             initialEventType={initialEventType as EventType}
+            initialMode={initialMode}
             events={events}
+            challenges={challengeRows}
         />
     );
 }

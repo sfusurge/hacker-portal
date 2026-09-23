@@ -1,5 +1,6 @@
 import { databaseClient } from '@/db/client';
 import { checkIns } from '@/db/schema/checkIn';
+import { challengeCompletions, challenges } from '@/db/schema/challenges';
 import { events } from '@/db/schema/events';
 import {
     MAX_HOUSES_PER_HACKATHON,
@@ -17,34 +18,62 @@ import {
     setUserHouseSchema,
 } from '@/db/schema/houses';
 import { user as usersTable } from '@/db/schema/users/users';
-import { hasAdminAccess } from '@/lib/auth/roles';
 import { TRPCError } from '@trpc/server';
-import { and, asc, countDistinct, desc, eq, sql, sum } from 'drizzle-orm';
+import { and, asc, countDistinct, desc, eq, sql } from 'drizzle-orm';
 import {
     assignUnassignedHouses,
     setUserHouse,
 } from '@/server/houses/assignHouse';
-import { UnauthorizedError } from '../exceptions';
-import { publicProcedure, router } from '../trpc';
-import { getUserData } from '@/server/routers/usersRouter';
+import {
+    adminProcedure,
+    protectedProcedure,
+    publicProcedure,
+    router,
+} from '../trpc';
+import { hasAdminAccess } from '@/lib/auth/roles';
 
-async function requireAdmin() {
-    const user = await getUserData();
-    if (!hasAdminAccess(user?.userRole)) {
-        throw new UnauthorizedError({
-            email: user?.email,
-            role: user?.userRole,
-        });
-    }
-    return user;
-}
+const housePointsSql = sql<number>`
+    coalesce((
+        select sum(${checkIns.pointsAwarded})
+        from ${checkIns}
+        inner join ${events} on ${events.id} = ${checkIns.eventId}
+            and ${events.hackathonId} = ${houses.hackathonId}
+        inner join ${houseMemberships} on ${houseMemberships.userId} = ${checkIns.userId}
+            and ${houseMemberships.houseId} = ${houses.id}
+    ), 0)
+    +
+    coalesce((
+        select sum(${challengeCompletions.pointsAwarded})
+        from ${challengeCompletions}
+        inner join ${challenges} on ${challenges.id} = ${challengeCompletions.challengeId}
+            and ${challenges.hackathonId} = ${houses.hackathonId}
+        inner join ${houseMemberships} on ${houseMemberships.userId} = ${challengeCompletions.userId}
+            and ${houseMemberships.houseId} = ${houses.id}
+    ), 0)
+`;
+
+const memberPointsSql = sql<number>`
+    coalesce((
+        select sum(${checkIns.pointsAwarded})
+        from ${checkIns}
+        inner join ${events} on ${events.id} = ${checkIns.eventId}
+            and ${events.hackathonId} = ${houses.hackathonId}
+        where ${checkIns.userId} = ${usersTable.id}
+    ), 0)
+    +
+    coalesce((
+        select sum(${challengeCompletions.pointsAwarded})
+        from ${challengeCompletions}
+        inner join ${challenges} on ${challenges.id} = ${challengeCompletions.challengeId}
+            and ${challenges.hackathonId} = ${houses.hackathonId}
+        where ${challengeCompletions.userId} = ${usersTable.id}
+    ), 0)
+`;
 
 export const housesRouter = router({
-    createHouses: publicProcedure
+    createHouses: adminProcedure
         .input(createHousesSchema)
         .mutation(async ({ input }) => {
-            await requireAdmin();
-
             const existing = await databaseClient
                 .select({ id: houses.id })
                 .from(houses)
@@ -77,11 +106,9 @@ export const housesRouter = router({
 
             return created;
         }),
-    addHouse: publicProcedure
+    addHouse: adminProcedure
         .input(addHouseSchema)
         .mutation(async ({ input }) => {
-            await requireAdmin();
-
             const existing = await databaseClient
                 .select({ id: houses.id })
                 .from(houses)
@@ -105,11 +132,9 @@ export const housesRouter = router({
             return house;
         }),
 
-    renameHouse: publicProcedure
+    renameHouse: adminProcedure
         .input(renameHouseSchema)
         .mutation(async ({ input }) => {
-            await requireAdmin();
-
             const [house] = await databaseClient
                 .update(houses)
                 .set({ name: input.name })
@@ -126,11 +151,9 @@ export const housesRouter = router({
             return house;
         }),
 
-    deleteHouse: publicProcedure
+    deleteHouse: adminProcedure
         .input(deleteHouseSchema)
         .mutation(async ({ input }) => {
-            await requireAdmin();
-
             return await databaseClient
                 .delete(houses)
                 .where(eq(houses.id, input.houseId));
@@ -151,9 +174,15 @@ export const housesRouter = router({
                 .orderBy(asc(houses.name));
         }),
 
-    getHouseForUser: publicProcedure
+    getHouseForUser: protectedProcedure
         .input(getHouseForUserSchema)
-        .query(async ({ input }) => {
+        .query(async ({ input, ctx }) => {
+            if (
+                !hasAdminAccess(ctx.user.userRole) &&
+                ctx.user.id !== input.userId
+            ) {
+                throw new TRPCError({ code: 'UNAUTHORIZED' });
+            }
             const [row] = await databaseClient
                 .select({
                     houseId: houses.id,
@@ -172,54 +201,36 @@ export const housesRouter = router({
             return row ?? null;
         }),
 
-    assignUnassignedHouses: publicProcedure
+    assignUnassignedHouses: adminProcedure
         .input(assignHousesSchema)
         .mutation(async ({ input }) => {
-            await requireAdmin();
             return assignUnassignedHouses(input.hackathonId);
         }),
 
-    setUserHouse: publicProcedure
+    setUserHouse: adminProcedure
         .input(setUserHouseSchema)
         .mutation(async ({ input }) => {
-            await requireAdmin();
             return setUserHouse(input.hackathonId, input.userId, input.houseId);
         }),
 
-    getHouseStandings: publicProcedure
+    getHouseStandings: adminProcedure
         .input(getHouseStandingsSchema)
         .query(async ({ input }) => {
-            await requireAdmin();
-
             const rows = await databaseClient
                 .select({
                     houseId: houses.id,
                     name: houses.name,
                     memberCount: countDistinct(houseMemberships.userId),
-                    points: sql<number>`coalesce(${sum(events.points)}, 0)`,
+                    points: housePointsSql,
                 })
                 .from(houses)
                 .leftJoin(
                     houseMemberships,
                     eq(houses.id, houseMemberships.houseId)
                 )
-                .leftJoin(
-                    checkIns,
-                    eq(houseMemberships.userId, checkIns.userId)
-                )
-                .leftJoin(
-                    events,
-                    and(
-                        eq(checkIns.eventId, events.id),
-                        eq(events.hackathonId, houses.hackathonId)
-                    )
-                )
                 .where(eq(houses.hackathonId, input.hackathonId))
                 .groupBy(houses.id, houses.name)
-                .orderBy(
-                    desc(sql`coalesce(sum(${events.points}), 0)`),
-                    asc(houses.name)
-                );
+                .orderBy(desc(housePointsSql), asc(houses.name));
 
             return rows.map((row) => ({
                 houseId: row.houseId,
@@ -229,11 +240,9 @@ export const housesRouter = router({
             }));
         }),
 
-    getHouseTopScorers: publicProcedure
+    getHouseTopScorers: adminProcedure
         .input(getHouseTopScorersSchema)
         .query(async ({ input }) => {
-            await requireAdmin();
-
             const houseRows = await databaseClient
                 .select({
                     houseId: houses.id,
@@ -254,7 +263,7 @@ export const housesRouter = router({
                     firstName: usersTable.firstName,
                     lastName: usersTable.lastName,
                     email: usersTable.email,
-                    points: sql<number>`coalesce(${sum(events.points)}, 0)`,
+                    points: memberPointsSql,
                 })
                 .from(houseMemberships)
                 .innerJoin(houses, eq(houseMemberships.houseId, houses.id))
@@ -262,28 +271,18 @@ export const housesRouter = router({
                     usersTable,
                     eq(houseMemberships.userId, usersTable.id)
                 )
-                .leftJoin(
-                    checkIns,
-                    eq(houseMemberships.userId, checkIns.userId)
-                )
-                .leftJoin(
-                    events,
-                    and(
-                        eq(checkIns.eventId, events.id),
-                        eq(events.hackathonId, houses.hackathonId)
-                    )
-                )
                 .where(eq(houseMemberships.hackathonId, input.hackathonId))
                 .groupBy(
                     houseMemberships.houseId,
                     usersTable.id,
                     usersTable.firstName,
                     usersTable.lastName,
-                    usersTable.email
+                    usersTable.email,
+                    houses.hackathonId
                 )
                 .orderBy(
                     asc(houseMemberships.houseId),
-                    desc(sql`coalesce(sum(${events.points}), 0)`),
+                    desc(memberPointsSql),
                     asc(usersTable.lastName),
                     asc(usersTable.firstName)
                 );

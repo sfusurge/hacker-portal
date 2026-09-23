@@ -1,27 +1,14 @@
-import { publicProcedure, router } from '../trpc';
+import { adminProcedure, router } from '../trpc';
 import { databaseClient } from '@/db/client';
-import { UnauthorizedError, InternalServerError } from '../exceptions';
 import {
     emailTemplateStyling,
     emailTemplateStylingSchema,
 } from '@/db/schema/emails';
 import { eq, desc } from 'drizzle-orm';
-import { getUserData } from '@/server/routers/usersRouter';
 import { z } from 'zod';
-import { hasAdminAccess } from '@/lib/auth/roles';
 
 export const emailTemplateStylingRouter = router({
-    getList: publicProcedure.query(async () => {
-        const user = await getUserData();
-        if (!user) {
-            throw new InternalServerError('User not authenticated');
-        }
-        if (!hasAdminAccess(user.userRole)) {
-            throw new UnauthorizedError({
-                email: user.email,
-                role: user.userRole,
-            });
-        }
+    getList: adminProcedure.query(async () => {
         const list = await databaseClient
             .select()
             .from(emailTemplateStyling)
@@ -29,21 +16,11 @@ export const emailTemplateStylingRouter = router({
         return list;
     }),
 
-    getById: publicProcedure
+    getById: adminProcedure
         .input(z.object({ id: z.number().int().nullable() }))
         .query(async ({ input }) => {
             if (input.id == null) {
                 return null;
-            }
-            const user = await getUserData();
-            if (!user) {
-                throw new InternalServerError('User not authenticated');
-            }
-            if (!hasAdminAccess(user.userRole)) {
-                throw new UnauthorizedError({
-                    email: user.email,
-                    role: user.userRole,
-                });
             }
             const [row] = await databaseClient
                 .select()
@@ -53,16 +30,9 @@ export const emailTemplateStylingRouter = router({
             return row ?? null;
         }),
 
-    create: publicProcedure
+    create: adminProcedure
         .input(emailTemplateStylingSchema)
         .mutation(async ({ input }) => {
-            const user = await getUserData();
-            if (!hasAdminAccess(user?.userRole)) {
-                throw new UnauthorizedError({
-                    email: user?.email,
-                    role: user?.userRole,
-                });
-            }
             const [created] = await databaseClient
                 .insert(emailTemplateStyling)
                 .values({
@@ -73,16 +43,9 @@ export const emailTemplateStylingRouter = router({
             return created;
         }),
 
-    update: publicProcedure
+    update: adminProcedure
         .input(emailTemplateStylingSchema.extend({ id: z.number().int() }))
         .mutation(async ({ input }) => {
-            const user = await getUserData();
-            if (!hasAdminAccess(user?.userRole)) {
-                throw new UnauthorizedError({
-                    email: user?.email,
-                    role: user?.userRole,
-                });
-            }
             const [updated] = await databaseClient
                 .update(emailTemplateStyling)
                 .set({
@@ -95,16 +58,9 @@ export const emailTemplateStylingRouter = router({
             return updated;
         }),
 
-    delete: publicProcedure
+    delete: adminProcedure
         .input(z.object({ id: z.number().int() }))
         .mutation(async ({ input }) => {
-            const user = await getUserData();
-            if (!hasAdminAccess(user?.userRole)) {
-                throw new UnauthorizedError({
-                    email: user?.email,
-                    role: user?.userRole,
-                });
-            }
             return await databaseClient
                 .delete(emailTemplateStyling)
                 .where(eq(emailTemplateStyling.id, input.id));

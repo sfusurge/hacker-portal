@@ -50,6 +50,7 @@ export const applications = pgTable(
             .default('N/A')
             .notNull(),
         flagged: boolean('flagged').default(false).notNull(),
+        hsFlagged: boolean('hs_flagged').default(false).notNull(),
         response: json().notNull(),
         createdDate: timestamp('created_date').defaultNow().notNull(),
         lastEmailSent: text('last_email_sent').notNull().default('N/A'),
@@ -97,6 +98,7 @@ export const updateApplicationStatusSchema = z.object({
     status: ApplicationStatusSchema.optional(),
     pendingStatus: ApplicationStatusSchema.optional(),
     flagged: z.boolean().optional(),
+    hsFlagged: z.boolean().optional(),
     response: z.record(z.string(), z.any()).optional(),
 });
 
@@ -106,6 +108,7 @@ export const batchUpdateApplicationStatusSchema = z.object({
     status: ApplicationStatusSchema.optional(),
     pendingStatus: ApplicationStatusSchema.optional(),
     flagged: z.boolean().optional(),
+    hsFlagged: z.boolean().optional(),
 });
 
 export const updateRsvpMailSentSchema = z.object({

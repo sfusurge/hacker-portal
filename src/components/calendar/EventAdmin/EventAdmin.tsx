@@ -26,6 +26,7 @@ import { EVENT_TYPES, EventType } from '@/db/schema/events';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { cn } from '@/lib/utils';
 import { submitFile } from '@/lib/blobs';
+import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 
 export interface EventAdminProps {
     eventsAtom: PrimitiveAtom<InternalCalendarEventType[]>;
@@ -412,6 +413,58 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                         />
                     </div>
 
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                        <div className="flex flex-col gap-2">
+                            <Label className={eventFormLabelClassName}>
+                                Has check-in?
+                            </Label>
+                            <CheckBoxWithLabel
+                                name="Enabled"
+                                checked={event?.hasCheckIn ?? false}
+                                disabled={checkIns.isLoading || hasCheckIns}
+                                onChange={(e) => {
+                                    updateEvent('hasCheckIn', e.target.checked);
+                                }}
+                            />
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <Label className={eventFormLabelClassName}>
+                                Variable points at check-in?
+                            </Label>
+                            <CheckBoxWithLabel
+                                name="Enabled"
+                                checked={event?.variablePoints ?? false}
+                                onChange={(e) => {
+                                    updateEvent(
+                                        'variablePoints',
+                                        e.target.checked
+                                    );
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <Label className={eventFormLabelClassName}>
+                            {event?.variablePoints ? 'Max points' : 'Points'}
+                        </Label>
+                        <FormTextInput
+                            name="points"
+                            type="number"
+                            min={1}
+                            defaultValue={event?.points ?? 1}
+                            required
+                            lazy
+                            onLazyChange={(value) => {
+                                updateEvent(
+                                    'points',
+                                    Number.isNaN(value) ? 1 : value
+                                );
+                            }}
+                        />
+                    </div>
+
                     <div className="border-t border-[var(--border-neutral-tertiary)]" />
 
                     <EventImageUpload
@@ -581,6 +634,7 @@ function convertEvent(hackathonId: number, e?: InternalCalendarEventType) {
             eventType: EventType.EVENT,
             hasCheckIn: false,
             points: 1,
+            variablePoints: false,
         } as CalendarEvent;
     }
     return {} as CalendarEvent;

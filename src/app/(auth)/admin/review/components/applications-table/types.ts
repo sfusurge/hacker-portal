@@ -14,6 +14,7 @@ export type Applicant = {
     currentStatus: string;
     pendingStatus: string;
     flagged: boolean;
+    hsFlagged: boolean;
     applicationDate: Date;
     lastEmailSent: string;
     response: Record<string, unknown>;
@@ -25,12 +26,14 @@ export type Applicant = {
     }[];
 };
 
+/** Flagged-tab filter: both by default, or one subtype. */
+export type FlaggedFilter = 'both' | 'regular' | 'highschooler';
+
 export type ReviewApplicationsTableProps = {
     data: Applicant[];
     applicationQuestionPages: InputFormPageData[];
     applicationCount: number;
     applicationDataMap: Map<number, ApplicationWithTeamInfo>;
-    fetchNextPage: () => Promise<void>;
     onRowClick?: (app: Applicant) => void;
     onNavigationListChange?: (applicants: Applicant[]) => void;
     hackathonId: number;
