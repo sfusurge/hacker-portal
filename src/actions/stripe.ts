@@ -10,7 +10,8 @@ import { stripe } from '@/lib/stripe';
 import { getUserData } from '@/server/routers/usersRouter';
 
 export async function createPaymentIntent(
-    hackathonId: number
+    hackathonId: number,
+    payerEmail: string
 ): Promise<{ client_secret: string }> {
     const sessionUser = await getUserData();
     if (!sessionUser) {
@@ -46,6 +47,11 @@ export async function createPaymentIntent(
         );
     }
 
+    const normalizedPayerEmail = payerEmail.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedPayerEmail)) {
+        throw new Error('Enter a valid receipt email.');
+    }
+
     const paymentIntent: Stripe.PaymentIntent =
         await stripe.paymentIntents.create({
             amount: formatAmountForStripe(RSVP_TICKET_AMOUNT, 'cad'),
@@ -53,7 +59,7 @@ export async function createPaymentIntent(
             automatic_payment_methods: {
                 enabled: true,
             },
-            receipt_email: sessionUser.email,
+            receipt_email: normalizedPayerEmail,
             description: 'Hackathon ticket',
             metadata: {
                 hackathonId: String(hackathonId),

@@ -1,4 +1,5 @@
 import { hackathons } from '@/db/schema/hackathons';
+import { databaseClient } from '@/db/client';
 import { checkUserInTeam } from '@/db/schema/members';
 import { isSubmissionWindowOpen } from '@/lib/submissionWindow';
 import { getUserData } from '@/server/routers/usersRouter';

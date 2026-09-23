@@ -17,7 +17,7 @@ import {
     type HackathonConfigInput,
 } from '@/db/schema/hackathons';
 import type { HackathonEventPagePayload } from '@/db/schema/hackathons';
-import { and, asc, eq, getTableColumns, ne } from 'drizzle-orm';
+import { and, asc, eq, getTableColumns, isNotNull, ne } from 'drizzle-orm';
 import { z } from 'zod';
 import { revalidateTag } from 'next/cache';
 import { pacificInputToOffsetString } from '@/lib/datetime/pacific';
@@ -133,6 +133,21 @@ function toHackathonColumns(input: HackathonConfigInput) {
 export const hackathonsRouter = router({
     getHackathons: adminProcedure.query(async () => {
         return await databaseClient.select().from(hackathons);
+    }),
+
+    getEventPageHackathons: publicProcedure.query(async () => {
+        return databaseClient
+            .select({
+                id: hackathons.id,
+                name: hackathons.name,
+                isActive: hackathons.isActive,
+                startDate: hackathons.startDate,
+                endDate: hackathons.endDate,
+                eventPageSlug: hackathons.eventPageSlug,
+                eventPagePayload: hackathons.eventPagePayload,
+            })
+            .from(hackathons)
+            .where(isNotNull(hackathons.eventPagePayload));
     }),
 
     getSponsorHackathons: adminOrSponsorProcedure.query(async ({ ctx }) => {

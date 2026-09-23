@@ -66,6 +66,7 @@ export async function convertToSponsor(
                     target: [company.hackathonId, company.userId],
                     set: {
                         portalRole: 'sponsor',
+                        sponsorTierEnum: sponsorTier,
                         companyTitle: normalizedCompanyTitle,
                         updatedDate: new Date(),
                     },

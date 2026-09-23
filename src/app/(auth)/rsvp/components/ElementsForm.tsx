@@ -244,7 +244,7 @@ function CheckoutForm({
                     throw new Error('Missing event for this payment.');
                 }
                 const { client_secret: clientSecret } =
-                    await createPaymentIntent(hackathonId);
+                    await createPaymentIntent(hackathonId, payerEmail);
 
                 const returnUrl = `${window.location.origin}/rsvp/result`;
 
@@ -302,8 +302,10 @@ function CheckoutForm({
             if (hackathonId == null) {
                 throw new Error('Missing event for this payment.');
             }
-            const { client_secret: clientSecret } =
-                await createPaymentIntent(hackathonId);
+            const { client_secret: clientSecret } = await createPaymentIntent(
+                hackathonId,
+                email.trim()
+            );
 
             const { error: submitError } = await elements.submit();
             if (submitError) {

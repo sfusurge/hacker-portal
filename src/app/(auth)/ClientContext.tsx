@@ -128,6 +128,8 @@ function DeserializeHackathonData(
         eventPagePayload: hackathon.eventPagePayload ?? null,
         applicationQuestionPages: hackathon.applicationQuestions ?? [],
         submissionQuestionPages: hackathon.submissionQuestions ?? [],
+        judgeQuestions: hackathon.judgeQuestions ?? [],
+        judgeRubric: hackathon.judgeRubric ?? [],
         hackathonName: hackathon.name,
         startDate: dayjs(hackathon.startDate),
         endDate: dayjs(hackathon.endDate),

@@ -2,7 +2,9 @@ import { Button } from '@/components/ui/button';
 import { FullPageInfo } from '@/components/ui/FullPageInfo';
 import { stripe } from '@/lib/stripe';
 import { JSX } from 'react';
-import { createCaller } from '@/server/appRouter';
+import { databaseClient } from '@/db/client';
+import { hackathons } from '@/db/schema/hackathons';
+import { eq } from 'drizzle-orm';
 import {
     applyApplicationStatusUpdate,
     applyLastEmailSentUpdate,
@@ -43,7 +45,6 @@ export default async function ResultPage(
                     userIdFromMetadata &&
                     Number.isFinite(userIdFromMetadata)
                 ) {
-                    const trpcClient = createCaller({});
                     const application =
                         await fetchApplicationByHackathonAndUserId(
                             hackathonIdFromMetadata,
@@ -78,11 +79,19 @@ export default async function ResultPage(
                                             string,
                                             unknown
                                         > | null) ?? {};
-                                    const hackathons =
-                                        await trpcClient.hackathons.getHackathons();
-                                    const hackathon = hackathons.find(
-                                        (h) => h.id === application.hackathonId
-                                    );
+                                    const [hackathon] = await databaseClient
+                                        .select({
+                                            applicationQuestions:
+                                                hackathons.applicationQuestions,
+                                        })
+                                        .from(hackathons)
+                                        .where(
+                                            eq(
+                                                hackathons.id,
+                                                application.hackathonId
+                                            )
+                                        )
+                                        .limit(1);
                                     const applicationQuestionPages =
                                         (hackathon?.applicationQuestions ??
                                             []) as InputFormPageData[];
