@@ -4,6 +4,7 @@ import { DaySchedule } from '@/components/calendar/DaySchedule/DaySchedule';
 import {
     currentYearMonthAtom,
     DayjsifyEvents,
+    editModeAtom,
     selectedEventAtom,
 } from '@/components/calendar/MonthCalendarShared';
 import { Button } from '@/components/ui/button';
@@ -14,10 +15,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { userInfoAtom } from '../ClientContext';
-import {
-    editModeAtom,
-    EventAdmin,
-} from '@/components/calendar/EventAdmin/EventAdmin';
+import { EventAdmin } from '@/components/calendar/EventAdmin/EventAdmin';
 import { PencilIcon, PlusIcon } from '@heroicons/react/24/solid';
 import { useWindowSize } from '@/lib/useWindowSize';
 import { trpc } from '@/trpc/client';
@@ -230,6 +228,7 @@ export function ClientCalendarPage({
                         <div className="min-h-0 flex-1">
                             <MobileCalendar
                                 events={events}
+                                isAdmin={Boolean(isAdmin)}
                                 onEventRsvpChange={updateEvents}
                             />
                         </div>
@@ -262,6 +261,7 @@ export function ClientCalendarPage({
                                     onToday={handleTodayScheduleRange}
                                     onNextRange={handleNextScheduleRange}
                                     onEventRsvpChange={updateEvents}
+                                    isAdmin={Boolean(isAdmin)}
                                 />
                             </div>
                         </div>

@@ -15,10 +15,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { ClockIcon, MapPinIcon } from '@heroicons/react/24/solid';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence } from 'motion/react';
-import {
-    EventLongDescriptionContent,
-    LongDescriptionModal,
-} from '../EventLongDescription/EventLongDescription';
+import { EventLongDescriptionContent } from '../EventLongDescription/EventLongDescription';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { DialogTitle } from '@/components/ui/dialog';
 
@@ -56,7 +53,6 @@ export function LinearTimeline({
             <div className={style.timelineContainer} style={styles}>
                 {Object.entries(eventsGroupedByDay).map((e) => {
                     const [key, eventsOfDay] = e;
-                    console.log(key);
 
                     return (
                         <TimeLineDayWrapper

@@ -4,15 +4,13 @@ import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import style from './DaySchedule.module.css';
 import {
     currentTimeAtom,
+    editModeAtom,
     groupEventsByDay,
     InternalCalendarEventType,
     selectedEventAtom,
 } from '../MonthCalendarShared';
 import dayjs, { Dayjs } from 'dayjs';
 import { useAtom, useAtomValue } from 'jotai';
-import { DynamicMessage } from '../DynamicMessage/DynamicMessage';
-import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
-import { EventCard } from '../EventCard/EventCard';
 import { AnimatePresence } from 'motion/react';
 import { LongDescriptionModal } from '../EventLongDescription/EventLongDescription';
 import clsx from 'clsx';
@@ -46,12 +44,14 @@ export function DaySchedule({
     onToday,
     onNextRange,
     onEventRsvpChange,
+    isAdmin = false,
 }: {
     startDate: Dayjs;
     days: number;
     minColumnWidth?: number;
     maxVisibleColumns?: number;
     showControls?: boolean;
+    isAdmin?: boolean;
     onPreviousRange?: () => void;
     onToday?: () => void;
     onNextRange?: () => void;
@@ -78,13 +78,11 @@ export function DaySchedule({
         );
     }, [events, startDate, days]);
 
-    const rootRef = useRef<HTMLDivElement>(null);
     const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
+    const [editMode, setEditMode] = useAtom(editModeAtom);
     const rsvpEvent = trpc.events.rsvpEvent.useMutation();
 
     const [containerHeight, setContainerHeight] = useState(0);
-
-    const [showMore, setShowMore] = useState(false);
 
     const columnWidths = useMemo(() => {
         return Object.values(processedEvents).map((dayEventsCols) => {
@@ -116,7 +114,8 @@ export function DaySchedule({
     const canRsvpSelectedEvent =
         selectedEvent?.event &&
         canRsvpEvent(selectedEvent.event) &&
-        !selectedEvent.event.rsvped;
+        !selectedEvent.event.rsvped &&
+        !isAdmin;
 
     const addSelectedEventToSchedule = async () => {
         if (!selectedEvent?.event) {
@@ -148,53 +147,35 @@ export function DaySchedule({
                 position: 'relative',
                 width: '100%',
             }}
-            ref={rootRef}
         >
             <AnimatePresence>
-                {selectedEvent && selectedEvent.element && (
-                    <DynamicMessage
-                        rootRef={rootRef.current!}
-                        parentRef={selectedEvent.element}
+                {selectedEvent?.event && !editMode && (
+                    <LongDescriptionModal
+                        event={selectedEvent.event}
+                        isAdmin={isAdmin}
                         onClose={() => {
                             setSelectedEvent(undefined);
                         }}
-                    >
-                        <EventCard event={selectedEvent.event}>
-                            {canRsvpSelectedEvent && (
-                                <SkewmorphicButton
-                                    style={{
-                                        backgroundColor: 'var(--brand-700)',
-                                    }}
-                                    disabled={rsvpEvent.isPending}
-                                    onClick={addSelectedEventToSchedule}
-                                >
-                                    Add to schedule
-                                </SkewmorphicButton>
-                            )}
-                            {selectedEvent.event.hasLongDescription && (
-                                <SkewmorphicButton
-                                    style={{
-                                        backgroundColor: 'var(--brand-700)',
-                                    }}
-                                    onClick={() => {
-                                        setShowMore(true);
-                                    }}
-                                >
-                                    More Info
-                                </SkewmorphicButton>
-                            )}
-                        </EventCard>
-                    </DynamicMessage>
-                )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-                {selectedEvent && selectedEvent.element && showMore && (
-                    <LongDescriptionModal
-                        event={selectedEvent.event}
-                        onClose={() => {
-                            setShowMore(false);
-                        }}
+                        onAddToSchedule={
+                            canRsvpSelectedEvent
+                                ? addSelectedEventToSchedule
+                                : undefined
+                        }
+                        addToScheduleDisabled={rsvpEvent.isPending}
+                        onEditEvent={
+                            isAdmin
+                                ? () => {
+                                      setEditMode(true);
+                                  }
+                                : undefined
+                        }
+                        onEventDeleted={
+                            isAdmin
+                                ? async () => {
+                                      await onEventRsvpChange?.();
+                                  }
+                                : undefined
+                        }
                     />
                 )}
             </AnimatePresence>
@@ -508,8 +489,8 @@ function DayEventItem({
     const containerRef = useRef<HTMLDivElement>(null);
 
     const isActive = useMemo(() => {
-        return selectedEvent?.event === event;
-    }, [selectedEvent]);
+        return selectedEvent?.event.id === event.id;
+    }, [event.id, selectedEvent]);
 
     return (
         <div

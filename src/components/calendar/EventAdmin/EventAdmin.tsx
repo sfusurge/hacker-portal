@@ -1,7 +1,8 @@
 import { CalendarEvent } from '@/server/routers/eventsRouter';
-import { atom, PrimitiveAtom, useAtom, useAtomValue } from 'jotai';
+import { PrimitiveAtom, useAtom, useAtomValue } from 'jotai';
 import {
     DayjsifyEvents,
+    editModeAtom,
     InternalCalendarEventType,
     selectedEventAtom,
 } from '../MonthCalendarShared';
@@ -31,7 +32,6 @@ import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 export interface EventAdminProps {
     eventsAtom: PrimitiveAtom<InternalCalendarEventType[]>;
 }
-export const editModeAtom = atom(false);
 
 const eventFormLabelClassName = 'font-normal text-[var(--text-secondary)]';
 
@@ -68,6 +68,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
     const [imagePreviewUrl, setImagePreviewUrl] = useState<string>();
 
     const hackathon = useAtomValue(hackathonAtom);
+    const trpcUtils = trpc.useUtils();
     const hackathonsFetch = trpc.hackathons.getHackathons.useQuery();
     const hackathonOptions = hackathonsFetch.data ?? [hackathon];
     const selectedHackathonName =
@@ -93,13 +94,23 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
         };
     }, [imageFile]);
 
-    const longDescriptionFetch = trpc.events.getEventLongDescription.useQuery({
-        eventId: event?.id ?? -1,
-    });
+    const longDescriptionFetch = trpc.events.getEventLongDescription.useQuery(
+        {
+            eventId: event?.id ?? -1,
+        },
+        {
+            enabled: Boolean(event?.id),
+        }
+    );
     const [longDescription, setLongDescription] = useState('');
     useEffect(() => {
+        if (!event?.id) {
+            setLongDescription('');
+            return;
+        }
+
         setLongDescription(longDescriptionFetch.data?.longDescription ?? '');
-    }, [longDescriptionFetch.data]);
+    }, [event?.id, longDescriptionFetch.data]);
 
     const updateEventapi = trpc.events.updateEvent.useMutation();
     const createEventApi = trpc.events.createEvent.useMutation();
@@ -158,6 +169,9 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
 
         const formData = new FormData(e.currentTarget);
         const getValue = (name: string) => String(formData.get(name) ?? '');
+        const description = formData.has('description')
+            ? getValue('description')
+            : (event.description ?? '');
         let imageUrl = event.imageUrl;
 
         if (imageFile) {
@@ -177,21 +191,23 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
         const submittedEvent = {
             ...event,
             title: getValue('title'),
-            description: getValue('description'),
+            description,
             location: getValue('location'),
             imageUrl,
             startDate: dayjs(new Date(getValue('startDate'))).toDate(),
             endDate: dayjs(new Date(getValue('endDate'))).toDate(),
         };
         const submittedLongDescription = getValue('longDescription');
+        let savedEventId = submittedEvent.id;
 
         if (!_selectedEvent) {
-            await createEventApi.mutateAsync({
+            const createdEvent = await createEventApi.mutateAsync({
                 ...submittedEvent,
                 startDate: submittedEvent.startDate.getTime(),
                 endDate: submittedEvent.endDate.getTime(),
                 longDescription: submittedLongDescription,
             });
+            savedEventId = createdEvent.id;
         } else {
             await updateEventapi.mutateAsync({
                 ...submittedEvent,
@@ -202,6 +218,13 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
             });
         }
 
+        if (savedEventId) {
+            await trpcUtils.events.getEventLongDescription.invalidate({
+                eventId: savedEventId,
+            });
+        }
+
+        setLongDescription(submittedLongDescription);
         await refreshEvents();
         setEditMode(false);
     }
@@ -419,7 +442,8 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                                 Has check-in?
                             </Label>
                             <CheckBoxWithLabel
-                                name="Enabled"
+                                id="eventHasCheckIn"
+                                name="Check-in enabled"
                                 checked={event?.hasCheckIn ?? false}
                                 disabled={checkIns.isLoading || hasCheckIns}
                                 onChange={(e) => {
@@ -433,7 +457,8 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                                 Variable points at check-in?
                             </Label>
                             <CheckBoxWithLabel
-                                name="Enabled"
+                                id="eventVariablePoints"
+                                name="Variable points enabled"
                                 checked={event?.variablePoints ?? false}
                                 onChange={(e) => {
                                     updateEvent(

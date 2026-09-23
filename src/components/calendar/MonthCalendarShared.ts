@@ -14,6 +14,7 @@ export interface SelectedEventInfo {
     element: Node | undefined;
 }
 export const selectedEventAtom = atom<SelectedEventInfo | undefined>(undefined);
+export const editModeAtom = atom(false);
 const _currentYearMonth = atom({
     year: dayjs().year(),
     month: dayjs().month(), // 0 index month

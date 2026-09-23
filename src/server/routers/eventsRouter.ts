@@ -19,7 +19,7 @@ import { TRPCError } from '@trpc/server';
 import { databaseClient } from '@/db/client';
 import { and, asc, count, eq, getTableColumns } from 'drizzle-orm';
 import { checkIns } from '@/db/schema/checkIn';
-import { rsvps } from '@/db/schema/rsvp';
+import { getEventRsvpCountSchema, rsvps } from '@/db/schema/rsvp';
 import { z } from 'zod';
 
 export interface CalendarEvent {
@@ -210,6 +210,17 @@ export const eventsRouter = router({
                 .where(eq(checkIns.eventId, input.eventId));
 
             return { checkInCount: result?.checkInCount ?? 0 };
+        }),
+
+    getEventRsvpCount: adminProcedure
+        .input(getEventRsvpCountSchema)
+        .query(async ({ input }) => {
+            const [result] = await databaseClient
+                .select({ rsvpCount: count(rsvps.userId) })
+                .from(rsvps)
+                .where(eq(rsvps.eventId, input.eventId));
+
+            return { rsvpCount: result?.rsvpCount ?? 0 };
         }),
 
     updateEvent: adminProcedure

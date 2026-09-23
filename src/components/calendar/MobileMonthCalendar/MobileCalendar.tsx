@@ -18,7 +18,7 @@ import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import clsx from 'clsx';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { DateControls } from '@/components/calendar/DateControls/DateControls';
 dayjs.extend(dayOfYear);
 
@@ -29,12 +29,14 @@ const firstdayAtom = atom((get) => {
 
 export function MobileCalendar({
     events,
+    isAdmin = false,
     onEventRsvpChange,
 }: {
     events: InternalCalendarEventType[];
+    isAdmin?: boolean;
     onEventRsvpChange?: () => void | Promise<void>;
 }) {
-    const [{ year, month }, updateYearMonth] = useAtom(currentYearMonthAtom);
+    const { year, month } = useAtomValue(currentYearMonthAtom);
     const firstDay = useAtomValue(firstdayAtom);
     const [selectedDay, setSelectedDay] = useAtom(selectedDayAtom);
 
@@ -109,6 +111,7 @@ export function MobileCalendar({
                             showControls={false}
                             startDate={selectedDay ?? dayjs()}
                             onEventRsvpChange={onEventRsvpChange}
+                            isAdmin={isAdmin}
                         />
                     </div>
                 </DrawerContent>
@@ -202,12 +205,6 @@ function CalenderDays({ daysWithEvent }: MobileCalendarProps) {
                                             style.hasEvent
                                     )}
                                     onClick={() => {
-                                        console.log(
-                                            (selectedDay?.dayOfYear() ?? 0) -
-                                                firstDay.dayOfYear() +
-                                                1
-                                        );
-
                                         setSelectedDay(
                                             dayjs(new Date(year, month, 1)).add(
                                                 dayId - 1,

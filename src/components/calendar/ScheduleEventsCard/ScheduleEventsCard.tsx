@@ -7,12 +7,15 @@ import {
     CardHeaderTitle,
 } from '@/components/ui/card';
 import { ScheduleEventCard } from '../ScheduleEventCard/ScheduleEventCard';
+import { useSetAtom } from 'jotai';
+import { selectedEventAtom } from '../MonthCalendarShared';
 
 export function ScheduleEventsCard({
     events,
 }: {
     events: InternalCalendarEventType[];
 }) {
+    const setSelectedEvent = useSetAtom(selectedEventAtom);
     const { addedEvents, notAddedEvents } = useMemo(() => {
         const sortedEvents = [...events].sort((a, b) => {
             return a.startTime.valueOf() - b.startTime.valueOf();
@@ -29,12 +32,15 @@ export function ScheduleEventsCard({
             <CardHeader className="flex-none p-4">
                 <CardHeaderTitle className="text-lg">Events</CardHeaderTitle>
             </CardHeader>
-            <CardContent className="min-h-0 gap-3 overflow-y-auto p-4">
+            <CardContent className="no-scrollbar min-h-0 gap-3 overflow-y-auto p-4">
                 {notAddedEvents.map((event) => (
                     <ScheduleEventCard
                         key={event.id}
                         event={event}
                         statusLabel="Not Yet Added"
+                        onClick={() => {
+                            setSelectedEvent({ event, element: undefined });
+                        }}
                     />
                 ))}
                 {addedEvents.length > 0 && (
@@ -52,6 +58,9 @@ export function ScheduleEventsCard({
                         event={event}
                         statusLabel="Added"
                         statusVariant="brand"
+                        onClick={() => {
+                            setSelectedEvent({ event, element: undefined });
+                        }}
                     />
                 ))}
             </CardContent>
