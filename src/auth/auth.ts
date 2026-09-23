@@ -31,6 +31,14 @@ export const auth = betterAuth({
     }),
     advanced: {
         trustedProxyHeaders: true,
+        ...(process.env.BETTER_AUTH_COOKIE_DOMAIN
+            ? {
+                  crossSubDomainCookies: {
+                      enabled: true,
+                      domain: process.env.BETTER_AUTH_COOKIE_DOMAIN,
+                  },
+              }
+            : {}),
         database: {
             generateId: (options) => {
                 if (options.model === 'user') {
