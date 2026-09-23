@@ -40,7 +40,6 @@ import { deleteFileFromVercel } from '@/lib/blobs';
 import { getSession } from '@/auth/auth';
 import slugify from '@/utils/slugify';
 import { submissions } from '@/db/schema/submissions';
-import { applications } from '@/db/schema/applications';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
 
 export const teamsRouter = router({
