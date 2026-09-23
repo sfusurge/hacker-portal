@@ -1,11 +1,8 @@
 import { databaseClient } from '@/db/client';
 import { company } from '@/db/schema/company';
-import { UserRoleEnum } from '@/db/schema/users/users';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
-import { protectedProcedure, router } from '../trpc';
-import { TRPCError } from '@trpc/server';
-import { hasAdminAccess } from '@/lib/auth/roles';
+import { adminProcedure, protectedProcedure, router } from '../trpc';
 
 const createCompanySchema = z.object({
     hackathonId: z.number(),
@@ -19,18 +16,10 @@ const getCompanySchema = z.object({
     hackathonId: z.number().optional(),
 });
 
-function assertSponsorOrAdmin(userRole: string) {
-    if (userRole !== UserRoleEnum.sponsor && !hasAdminAccess(userRole)) {
-        throw new TRPCError({ code: 'UNAUTHORIZED' });
-    }
-}
-
 export const companyRouter = router({
-    create: protectedProcedure
+    create: adminProcedure
         .input(createCompanySchema)
         .mutation(async ({ input, ctx }) => {
-            assertSponsorOrAdmin(ctx.user.userRole);
-
             const result = await databaseClient
                 .insert(company)
                 .values({
@@ -75,11 +64,9 @@ export const companyRouter = router({
             return input.hackathonId ? result[0] || null : result;
         }),
 
-    upsert: protectedProcedure
+    upsert: adminProcedure
         .input(createCompanySchema)
         .mutation(async ({ input, ctx }) => {
-            assertSponsorOrAdmin(ctx.user.userRole);
-
             const result = await databaseClient
                 .insert(company)
                 .values({

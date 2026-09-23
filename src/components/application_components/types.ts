@@ -114,6 +114,7 @@ export type ApplicationQuestionType = InputFormQuestion['type'];
  * - `firstName`, `lastName`, `email`, `phone` — profile autofill + application identity (`table` where needed)
  * - `pronouns`, `age`, `country`, `school`, `education`, `yearOfStudy`, `major`
  * - `priorHackathons`, `howHeardAbout`, `dietaryRestrictions`
+ * - `resume`, `github`, `linkedin` — sponsor resume bank / portfolio links
  * - `pdfPoster` — poster PDF file upload (admin bulk export)
  * - `eligibleTrack` — sponsor/track eligibility checkbox (grouped on project page)
  *
@@ -150,7 +151,10 @@ export type DisplayRole =
     | 'major'
     | 'priorHackathons'
     | 'howHeardAbout'
-    | 'dietaryRestrictions';
+    | 'dietaryRestrictions'
+    | 'resume'
+    | 'github'
+    | 'linkedin';
 
 export type DisplayRoles = DisplayRole | DisplayRole[];
 

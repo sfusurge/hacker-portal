@@ -1,4 +1,5 @@
 import { hackathons } from '@/db/schema/hackathons';
+import { databaseClient } from '@/db/client';
 import { checkUserInTeam } from '@/db/schema/members';
 import { isSubmissionWindowOpen } from '@/lib/submissionWindow';
 import { getUserData } from '@/server/routers/usersRouter';
@@ -33,7 +34,7 @@ export async function POST(request: Request): Promise<NextResponse> {
                     throw new Error('');
                 }
 
-                checkUserInTeam(user.id, teamId);
+                await checkUserInTeam(user.id, teamId);
 
                 const [activeHackathon] = await databaseClient
                     .select({

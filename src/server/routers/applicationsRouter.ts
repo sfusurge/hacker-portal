@@ -42,6 +42,10 @@ import {
 } from '@/app/(auth)/admin/email/templates/emailPreview';
 import { publishReviewTableEvent } from '@/lib/realtime/publishReviewTableEvent';
 import { hasAdminAccess } from '@/lib/auth/roles';
+import { company } from '@/db/schema/company';
+import { hackathons } from '@/db/schema/hackathons';
+import { toSponsorResumeBankResponse } from '@/lib/applications/sponsorResumeBank';
+import type { InputFormPageData } from '@/components/application_components/types';
 
 type UpdateApplicationInput = z.infer<typeof updateApplicationStatusSchema>;
 type UpdateLastEmailSentInput = z.infer<typeof updateLastEmailSentSchema>;
@@ -254,7 +258,25 @@ export const applicationsRouter = router({
 
     getApplications: adminOrSponsorProcedure
         .input(queryApplicationsSchema)
-        .query(async ({ input }) => {
+        .query(async ({ input, ctx }) => {
+            const isAdmin = hasAdminAccess(ctx.user.userRole);
+            if (!isAdmin) {
+                const [sponsorAccess] = await databaseClient
+                    .select({ userId: company.userId })
+                    .from(company)
+                    .where(
+                        and(
+                            eq(company.userId, ctx.user.id),
+                            eq(company.hackathonId, input.hackathonId),
+                            eq(company.portalRole, 'sponsor')
+                        )
+                    )
+                    .limit(1);
+                if (!sponsorAccess) {
+                    throw new TRPCError({ code: 'FORBIDDEN' });
+                }
+            }
+
             const offset = Number(input.cursor ?? 0);
 
             const applicationInfos = await databaseClient
@@ -262,7 +284,17 @@ export const applicationsRouter = router({
                     ...getTableColumns(applications),
                 })
                 .from(applications)
-                .where(eq(applications.hackathonId, input.hackathonId))
+                .where(
+                    and(
+                        eq(applications.hackathonId, input.hackathonId),
+                        isAdmin
+                            ? undefined
+                            : inArray(applications.currentStatus, [
+                                  'Accepted',
+                                  'Accepted - RSVP to Confirm',
+                              ])
+                    )
+                )
                 .orderBy(asc(applications.createdDate))
                 // add 1 to see if there are still results
                 .limit(input.maxResult + 1)
@@ -391,12 +423,44 @@ export const applicationsRouter = router({
                 ? `${offset + applicationsWithAllInfos.length - 1}`
                 : null;
 
-            return {
-                applications: hasMoreItem
-                    ? applicationsWithAllInfos.slice(0, -1)
-                    : applicationsWithAllInfos,
-                nextToken,
-            };
+            const page = hasMoreItem
+                ? applicationsWithAllInfos.slice(0, -1)
+                : applicationsWithAllInfos;
+
+            if (!isAdmin) {
+                const [hackathon] = await databaseClient
+                    .select({
+                        applicationQuestions: hackathons.applicationQuestions,
+                    })
+                    .from(hackathons)
+                    .where(eq(hackathons.id, input.hackathonId))
+                    .limit(1);
+                const applicationQuestions = (hackathon?.applicationQuestions ??
+                    []) as InputFormPageData[];
+
+                return {
+                    applications: page
+                        .map((application) => {
+                            const sponsorResponse = toSponsorResumeBankResponse(
+                                (application.response ?? {}) as Record<
+                                    string,
+                                    unknown
+                                >,
+                                applicationQuestions
+                            );
+                            if (!sponsorResponse) return null;
+                            return {
+                                userId: application.userId,
+                                currentStatus: application.currentStatus,
+                                response: sponsorResponse,
+                            };
+                        })
+                        .filter((application) => application !== null),
+                    nextToken,
+                };
+            }
+
+            return { applications: page, nextToken };
         }),
 
     getApplicationCount: adminProcedure
@@ -422,6 +486,37 @@ export const applicationsRouter = router({
                     input.hsFlagged !== undefined
                 ) {
                     throw new TRPCError({ code: 'UNAUTHORIZED' });
+                }
+                if (
+                    input.status !== undefined ||
+                    input.pendingStatus !== undefined
+                ) {
+                    const [existing] = await databaseClient
+                        .select({ currentStatus: applications.currentStatus })
+                        .from(applications)
+                        .where(
+                            and(
+                                eq(applications.hackathonId, input.hackathonId),
+                                eq(applications.userId, ctx.user.id)
+                            )
+                        )
+                        .limit(1);
+
+                    const isWithdraw =
+                        input.status === 'Withdrawn' &&
+                        input.pendingStatus === undefined;
+                    const isRsvp =
+                        input.status === 'Accepted' &&
+                        input.pendingStatus === 'N/A' &&
+                        existing?.currentStatus ===
+                            'Accepted - RSVP to Confirm';
+                    if (!existing || (!isWithdraw && !isRsvp)) {
+                        throw new TRPCError({
+                            code: 'FORBIDDEN',
+                            message:
+                                'You may only withdraw or RSVP to your own application.',
+                        });
+                    }
                 }
             }
 

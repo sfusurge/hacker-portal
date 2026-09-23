@@ -156,7 +156,14 @@ export const sendEmailRouter = router({
             ) {
                 throw new TRPCError({ code: 'UNAUTHORIZED' });
             }
-            return sendTemplatedEmail(input);
+            return sendTemplatedEmail(
+                hasAdminAccess(ctx.user.userRole)
+                    ? input
+                    : {
+                          ...input,
+                          user: { ...input.user, email: ctx.user.email },
+                      }
+            );
         }),
 });
 

@@ -14,7 +14,7 @@ export default async function EventPage({ slug }: { slug: string }) {
 
     const [userData, hackathons] = await Promise.all([
         getCachedUserData(),
-        trpcClient.hackathons.getHackathons(),
+        trpcClient.hackathons.getEventPageHackathons(),
     ]);
 
     if (userData?.userRole === 'judge') {

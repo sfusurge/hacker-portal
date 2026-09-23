@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import dayjs from 'dayjs';
 import { useAtomValue } from 'jotai';
+import { ArrowPathIcon, PaperAirplaneIcon } from '@heroicons/react/16/solid';
 import { trpc } from '@/trpc/client';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { useToast } from '@/hooks/use-toast';
@@ -36,8 +38,7 @@ import {
     type HackathonEmailType,
 } from '@/db/schema/emails';
 
-const pageShellClass =
-    'w-full max-w-full min-w-0 overflow-x-hidden px-3 py-6 sm:px-4 sm:py-10';
+const pageShellClass = 'w-full max-w-full min-w-0';
 
 const STATUS_FILTER_VALUES = ['all', 'pending', 'sent', 'failed'] as const;
 type StatusFilter = (typeof STATUS_FILTER_VALUES)[number];
@@ -51,35 +52,74 @@ const STATUS_FILTER_LABELS: Record<StatusFilter, string> = {
 
 const ALL = 'all';
 
-function statusBadgeClass(status: string): string {
+function statusChipClass(status: string): string {
     switch (status) {
         case 'sent':
             return 'bg-success-950 text-success-300';
         case 'pending':
-            return 'bg-yellow-950 text-yellow-300';
+            return 'bg-caution-950 text-caution-300';
         case 'failed':
             return 'bg-danger-950 text-danger-300';
         default:
-            return 'bg-neutral-600/30';
+            return 'bg-neutral-800 text-white';
+    }
+}
+
+function statusChipLabel(status: string): string {
+    switch (status) {
+        case 'sent':
+            return 'Sent';
+        case 'pending':
+            return 'Pending';
+        case 'failed':
+            return 'Failed';
+        default:
+            return status;
     }
 }
 
 function formatEmailType(emailType: string | null): string {
-    if (!emailType) return '-';
+    if (!emailType) return '—';
     return (
         HACKATHON_EMAIL_TYPE_LABELS[emailType as HackathonEmailType] ??
         emailType
     );
 }
 
-function formatDate(value: Date | string | null): string {
-    if (!value) return '-';
-    return new Date(value).toLocaleString();
+function formatTimestamp(value: Date | string | null): string {
+    if (!value) return '—';
+    return dayjs(value).format('MMM D, YYYY h:mm A');
 }
 
 function formatName(firstName: string | null, lastName: string | null): string {
     const name = [firstName, lastName].filter(Boolean).join(' ').trim();
-    return name.length > 0 ? name : '-';
+    return name.length > 0 ? name : '—';
+}
+
+function StatChip({ label, value }: { label: string; value: number }) {
+    return (
+        <span className="inline-flex h-8 items-center rounded-lg bg-neutral-800 px-3 text-sm font-medium text-white">
+            {label}: {value}
+        </span>
+    );
+}
+
+const filterControlClass =
+    'h-9 w-full rounded-md border border-[var(--border-neutral-secondary)] bg-[var(--background-neutral-secondary)] px-3 text-sm text-white shadow-xs outline-none placeholder:text-neutral-400 focus-visible:border-brand-500 focus-visible:ring-[3px] focus-visible:ring-brand-500/50 [color-scheme:dark]';
+
+function FilterField({
+    label,
+    children,
+}: {
+    label: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <div className="flex min-w-0 flex-col gap-1.5">
+            <span className="text-sm text-white/50">{label}</span>
+            {children}
+        </div>
+    );
 }
 
 export default function EmailQueuePage() {
@@ -101,7 +141,6 @@ export default function EmailQueuePage() {
     const [sentTo, setSentTo] = useState('');
     const [processOpen, setProcessOpen] = useState(false);
 
-    // Each keystroke would otherwise fire an ILIKE across three unindexed columns.
     useEffect(() => {
         const timer = setTimeout(() => setDebouncedSearch(search), 300);
         return () => clearTimeout(timer);
@@ -226,22 +265,27 @@ export default function EmailQueuePage() {
     const busy =
         processNow.isPending || sendNow.isPending || retryFailed.isPending;
 
-    const header = (
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <h1 className="text-2xl font-bold">Email Queue</h1>
-            <div className="flex min-w-0 flex-wrap items-center gap-3">
+    const selectedHackathonName =
+        hackathons.find((h) => h.id === selectedHackathonId)?.name ??
+        'Select hackathon';
+
+    const headerActions = (
+        <div className="flex flex-wrap items-center gap-2.5">
+            {hackathons.length > 0 && (
                 <Select
                     value={
                         selectedHackathonId != null
                             ? String(selectedHackathonId)
-                            : ''
+                            : undefined
                     }
                     onValueChange={(value) =>
                         setSelectedHackathonId(Number(value))
                     }
                 >
-                    <SelectTrigger className="w-full min-w-0 sm:w-[240px]">
-                        <SelectValue placeholder="Select hackathon" />
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select hackathon">
+                            {selectedHackathonName}
+                        </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                         {hackathons.map((h) => (
@@ -251,34 +295,46 @@ export default function EmailQueuePage() {
                         ))}
                     </SelectContent>
                 </Select>
-                <Button
-                    variant="brand"
-                    hierarchy="primary"
-                    size="cozy"
-                    disabled={!enabled || busy}
-                    onClick={() => setProcessOpen(true)}
-                >
-                    Process queue now
+            )}
+            <Link href="/admin/email/templates">
+                <Button variant="default" hierarchy="secondary" size="cozy">
+                    Back to Templates
                 </Button>
-                <Link href="/admin/email/templates">
-                    <Button variant="brand" hierarchy="secondary" size="cozy">
-                        Back to Templates
-                    </Button>
-                </Link>
-            </div>
+            </Link>
+            <Button
+                variant="brand"
+                hierarchy="primary"
+                size="cozy"
+                disabled={!enabled || busy}
+                onClick={() => setProcessOpen(true)}
+                leadingIconChild={<PaperAirplaneIcon className="size-4" />}
+            >
+                Process queue now
+            </Button>
+        </div>
+    );
+
+    const pageHeader = (
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <h1 className="text-[29px] font-semibold tracking-tight text-white">
+                Email Queue
+            </h1>
+            {headerActions}
         </div>
     );
 
     if (!enabled) {
         return (
             <div className={pageShellClass}>
-                {header}
-                <div className="py-10 text-center">
-                    <p className="text-lg text-white/60">
-                        {hackathons.length > 0
-                            ? 'Select a hackathon to view the email queue.'
-                            : 'No hackathons found.'}
-                    </p>
+                <div className="flex flex-col gap-6">
+                    {pageHeader}
+                    <div className="py-10 text-center">
+                        <p className="text-lg text-white/60">
+                            {hackathons.length > 0
+                                ? 'Select a hackathon to view the email queue.'
+                                : 'No hackathons found.'}
+                        </p>
+                    </div>
                 </div>
             </div>
         );
@@ -286,309 +342,328 @@ export default function EmailQueuePage() {
 
     return (
         <div className={pageShellClass}>
-            {header}
+            <div className="flex flex-col gap-6">
+                {pageHeader}
 
-            {/* status tiles */}
-            <div className="mb-6 flex flex-wrap gap-3 text-sm text-white">
-                <StatTile label="Pending" value={counts?.pending ?? 0} />
-                <StatTile label="Sent" value={counts?.sent ?? 0} />
-                <StatTile label="Failed" value={counts?.failed ?? 0} />
-                <StatTile label="Total" value={counts?.total ?? 0} />
-                {(counts?.failed ?? 0) > 0 && (
-                    <Button
-                        variant="caution"
-                        hierarchy="secondary"
-                        size="compact"
-                        disabled={busy}
-                        onClick={() =>
-                            retryFailed.mutate({
-                                hackathonId: hackathonIdInput,
-                            })
-                        }
-                    >
-                        Retry all failed
-                    </Button>
+                <div className="flex flex-wrap items-center gap-2.5">
+                    <StatChip label="Pending" value={counts?.pending ?? 0} />
+                    <StatChip label="Sent" value={counts?.sent ?? 0} />
+                    <StatChip label="Failed" value={counts?.failed ?? 0} />
+                    <StatChip label="Total" value={counts?.total ?? 0} />
+                    {(counts?.failed ?? 0) > 0 && (
+                        <Button
+                            variant="caution"
+                            hierarchy="secondary"
+                            size="compact"
+                            disabled={busy}
+                            onClick={() =>
+                                retryFailed.mutate({
+                                    hackathonId: hackathonIdInput,
+                                })
+                            }
+                            leadingIconChild={
+                                <ArrowPathIcon className="size-4" />
+                            }
+                        >
+                            Retry all failed
+                        </Button>
+                    )}
+                </div>
+
+                {breakdown.length > 0 && (
+                    <details className="overflow-hidden rounded-xl border border-neutral-600/30 bg-neutral-800/60">
+                        <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-white/80 select-none">
+                            Breakdown by category / template ({breakdown.length}
+                            )
+                        </summary>
+                        <div className="border-t border-neutral-600/30 px-4 py-3">
+                            <div className="flex flex-col gap-2">
+                                {breakdown.map((row, i) => (
+                                    <div
+                                        key={i}
+                                        className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-neutral-900/50 px-3 py-2 text-sm"
+                                    >
+                                        <div className="min-w-0">
+                                            <p className="font-medium text-white">
+                                                {row.templateTitle ??
+                                                    'No template'}
+                                            </p>
+                                            <p className="text-white/40">
+                                                {formatEmailType(row.emailType)}
+                                            </p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 text-white/70">
+                                            <span>Pending {row.pending}</span>
+                                            <span>Sent {row.sent}</span>
+                                            <span>Failed {row.failed}</span>
+                                            <span>Total {row.total}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </details>
+                )}
+
+                <div className="overflow-hidden rounded-xl border border-neutral-600/30 bg-neutral-800/60 p-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <FilterField label="Status">
+                            <Select
+                                value={statusFilter}
+                                onValueChange={(v) =>
+                                    setStatusFilter(v as StatusFilter)
+                                }
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {STATUS_FILTER_VALUES.map((value) => (
+                                        <SelectItem key={value} value={value}>
+                                            {STATUS_FILTER_LABELS[value]}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </FilterField>
+                        <FilterField label="Email type">
+                            <Select
+                                value={emailTypeFilter}
+                                onValueChange={setEmailTypeFilter}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value={ALL}>
+                                        All types
+                                    </SelectItem>
+                                    {emailTypeOptions.map((t) => (
+                                        <SelectItem key={t} value={t}>
+                                            {formatEmailType(t)}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </FilterField>
+                        <FilterField label="Template">
+                            <Select
+                                value={templateFilter}
+                                onValueChange={setTemplateFilter}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value={ALL}>
+                                        All templates
+                                    </SelectItem>
+                                    {templates.map((t) => (
+                                        <SelectItem
+                                            key={t.id}
+                                            value={String(t.id)}
+                                        >
+                                            {t.title}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </FilterField>
+                        <FilterField label="Search">
+                            <Input
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Name or email"
+                                className={filterControlClass}
+                            />
+                        </FilterField>
+                        <FilterField label="Created from">
+                            <Input
+                                type="date"
+                                value={createdFrom}
+                                onChange={(e) => setCreatedFrom(e.target.value)}
+                                className={filterControlClass}
+                            />
+                        </FilterField>
+                        <FilterField label="Created to">
+                            <Input
+                                type="date"
+                                value={createdTo}
+                                onChange={(e) => setCreatedTo(e.target.value)}
+                                className={filterControlClass}
+                            />
+                        </FilterField>
+                        <FilterField label="Sent from">
+                            <Input
+                                type="date"
+                                value={sentFrom}
+                                onChange={(e) => setSentFrom(e.target.value)}
+                                className={filterControlClass}
+                            />
+                        </FilterField>
+                        <FilterField label="Sent to">
+                            <Input
+                                type="date"
+                                value={sentTo}
+                                onChange={(e) => setSentTo(e.target.value)}
+                                className={filterControlClass}
+                            />
+                        </FilterField>
+                    </div>
+                </div>
+
+                {itemsQuery.isLoading ? (
+                    <div className="py-10 text-center text-white/60">
+                        Loading email queue...
+                    </div>
+                ) : items.length === 0 ? (
+                    <div className="py-10 text-center">
+                        <p className="text-lg text-white/60">
+                            No emails in the queue for this filter.
+                        </p>
+                    </div>
+                ) : (
+                    <>
+                        <div className="overflow-x-auto rounded-xl border border-neutral-600/30 bg-neutral-800/60">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Recipient</TableHead>
+                                        <TableHead>Email Type</TableHead>
+                                        <TableHead>Template</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Failed</TableHead>
+                                        <TableHead>Error</TableHead>
+                                        <TableHead>Created</TableHead>
+                                        <TableHead>Sent</TableHead>
+                                        <TableHead>Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {items.map((item) => (
+                                        <TableRow key={item.id}>
+                                            <TableCell>
+                                                <div className="font-medium text-white">
+                                                    {formatName(
+                                                        item.firstName,
+                                                        item.lastName
+                                                    )}
+                                                </div>
+                                                <div className="text-white/50">
+                                                    {item.email}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                {formatEmailType(
+                                                    item.emailType
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                {item.templateTitle ?? '—'}
+                                            </TableCell>
+                                            <TableCell>
+                                                <span
+                                                    className={`inline-flex h-7 items-center rounded-lg px-3 text-xs font-medium ${statusChipClass(
+                                                        item.status
+                                                    )}`}
+                                                >
+                                                    {statusChipLabel(
+                                                        item.status
+                                                    )}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell>
+                                                {item.failedCount}
+                                                {item.failedCount > 0
+                                                    ? ` / ${maxRetries}`
+                                                    : ''}
+                                            </TableCell>
+                                            <TableCell className="max-w-xs">
+                                                {item.errorMessage ? (
+                                                    <details>
+                                                        <summary className="cursor-pointer truncate text-white/60 select-none">
+                                                            {item.errorMessage}
+                                                        </summary>
+                                                        <div className="mt-1 text-xs break-words whitespace-pre-wrap text-white/70">
+                                                            {item.errorMessage}
+                                                        </div>
+                                                    </details>
+                                                ) : (
+                                                    <span className="text-white/40">
+                                                        —
+                                                    </span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="whitespace-nowrap">
+                                                {formatTimestamp(
+                                                    item.createdAt
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="whitespace-nowrap">
+                                                {formatTimestamp(item.sentAt)}
+                                            </TableCell>
+                                            <TableCell className="whitespace-nowrap">
+                                                {item.status === 'pending' && (
+                                                    <Button
+                                                        variant="brand"
+                                                        hierarchy="secondary"
+                                                        size="compact"
+                                                        disabled={busy}
+                                                        onClick={() =>
+                                                            sendNow.mutate({
+                                                                ids: [item.id],
+                                                            })
+                                                        }
+                                                        leadingIconChild={
+                                                            <PaperAirplaneIcon className="size-4" />
+                                                        }
+                                                    >
+                                                        Send now
+                                                    </Button>
+                                                )}
+                                                {item.status === 'failed' && (
+                                                    <Button
+                                                        variant="caution"
+                                                        hierarchy="secondary"
+                                                        size="compact"
+                                                        disabled={busy}
+                                                        onClick={() =>
+                                                            retryFailed.mutate({
+                                                                ids: [item.id],
+                                                            })
+                                                        }
+                                                        leadingIconChild={
+                                                            <ArrowPathIcon className="size-4" />
+                                                        }
+                                                    >
+                                                        Retry
+                                                    </Button>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+
+                        {itemsQuery.hasNextPage && (
+                            <div className="flex justify-center">
+                                <Button
+                                    variant="default"
+                                    hierarchy="secondary"
+                                    size="cozy"
+                                    disabled={itemsQuery.isFetchingNextPage}
+                                    onClick={() => itemsQuery.fetchNextPage()}
+                                >
+                                    {itemsQuery.isFetchingNextPage
+                                        ? 'Loading...'
+                                        : 'Load more'}
+                                </Button>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
-
-            {/* breakdown by category / template */}
-            {breakdown.length > 0 && (
-                <details className="mb-6 rounded-lg border border-white/15">
-                    <summary className="cursor-pointer px-4 py-2 text-sm font-medium text-white/80 select-none">
-                        Breakdown by category / template ({breakdown.length})
-                    </summary>
-                    <div className="overflow-x-auto px-2 pb-2">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Email Type</TableHead>
-                                    <TableHead>Template</TableHead>
-                                    <TableHead>Pending</TableHead>
-                                    <TableHead>Sent</TableHead>
-                                    <TableHead>Failed</TableHead>
-                                    <TableHead>Total</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {breakdown.map((row, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell>
-                                            {formatEmailType(row.emailType)}
-                                        </TableCell>
-                                        <TableCell>
-                                            {row.templateTitle ?? '-'}
-                                        </TableCell>
-                                        <TableCell>{row.pending}</TableCell>
-                                        <TableCell>{row.sent}</TableCell>
-                                        <TableCell>{row.failed}</TableCell>
-                                        <TableCell>{row.total}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </details>
-            )}
-
-            {/* filters */}
-            <div className="mb-4 flex flex-wrap items-end gap-3">
-                <FilterField label="Status">
-                    <Select
-                        value={statusFilter}
-                        onValueChange={(v) =>
-                            setStatusFilter(v as StatusFilter)
-                        }
-                    >
-                        <SelectTrigger className="w-[160px]">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {STATUS_FILTER_VALUES.map((value) => (
-                                <SelectItem key={value} value={value}>
-                                    {STATUS_FILTER_LABELS[value]}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </FilterField>
-                <FilterField label="Email type">
-                    <Select
-                        value={emailTypeFilter}
-                        onValueChange={setEmailTypeFilter}
-                    >
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value={ALL}>All types</SelectItem>
-                            {emailTypeOptions.map((t) => (
-                                <SelectItem key={t} value={t}>
-                                    {formatEmailType(t)}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </FilterField>
-                <FilterField label="Template">
-                    <Select
-                        value={templateFilter}
-                        onValueChange={setTemplateFilter}
-                    >
-                        <SelectTrigger className="w-[200px]">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value={ALL}>All templates</SelectItem>
-                            {templates.map((t) => (
-                                <SelectItem key={t.id} value={String(t.id)}>
-                                    {t.title}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </FilterField>
-                <FilterField label="Search">
-                    <Input
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Name or email"
-                        className="w-[200px]"
-                    />
-                </FilterField>
-                <FilterField label="Created from">
-                    <Input
-                        type="date"
-                        value={createdFrom}
-                        onChange={(e) => setCreatedFrom(e.target.value)}
-                        className="w-[160px]"
-                    />
-                </FilterField>
-                <FilterField label="Created to">
-                    <Input
-                        type="date"
-                        value={createdTo}
-                        onChange={(e) => setCreatedTo(e.target.value)}
-                        className="w-[160px]"
-                    />
-                </FilterField>
-                <FilterField label="Sent from">
-                    <Input
-                        type="date"
-                        value={sentFrom}
-                        onChange={(e) => setSentFrom(e.target.value)}
-                        className="w-[160px]"
-                    />
-                </FilterField>
-                <FilterField label="Sent to">
-                    <Input
-                        type="date"
-                        value={sentTo}
-                        onChange={(e) => setSentTo(e.target.value)}
-                        className="w-[160px]"
-                    />
-                </FilterField>
-            </div>
-
-            {/* items table */}
-            {itemsQuery.isLoading ? (
-                <div className="py-10 text-center text-white/60">
-                    Loading email queue...
-                </div>
-            ) : items.length === 0 ? (
-                <div className="py-10 text-center">
-                    <p className="text-lg text-white/60">
-                        No emails in the queue for this filter.
-                    </p>
-                </div>
-            ) : (
-                <>
-                    <div className="overflow-x-auto rounded-lg border border-white/60">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Recipient</TableHead>
-                                    <TableHead>Email Type</TableHead>
-                                    <TableHead>Template</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Failed</TableHead>
-                                    <TableHead>Error</TableHead>
-                                    <TableHead>Created</TableHead>
-                                    <TableHead>Sent</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {items.map((item) => (
-                                    <TableRow key={item.id}>
-                                        <TableCell>
-                                            <div className="font-medium">
-                                                {formatName(
-                                                    item.firstName,
-                                                    item.lastName
-                                                )}
-                                            </div>
-                                            <div className="text-white/60">
-                                                {item.email}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            {formatEmailType(item.emailType)}
-                                        </TableCell>
-                                        <TableCell>
-                                            {item.templateTitle ?? '-'}
-                                        </TableCell>
-                                        <TableCell>
-                                            <span
-                                                className={`rounded-md px-3 py-0.5 text-xs ${statusBadgeClass(
-                                                    item.status
-                                                )}`}
-                                            >
-                                                {item.status}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell>
-                                            {item.failedCount}
-                                            {item.failedCount > 0
-                                                ? ` / ${maxRetries}`
-                                                : ''}
-                                        </TableCell>
-                                        <TableCell className="max-w-xs">
-                                            {item.errorMessage ? (
-                                                <details>
-                                                    <summary className="cursor-pointer truncate text-white/60 select-none">
-                                                        {item.errorMessage}
-                                                    </summary>
-                                                    <div className="mt-1 text-xs break-words whitespace-pre-wrap text-white/70">
-                                                        {item.errorMessage}
-                                                    </div>
-                                                </details>
-                                            ) : (
-                                                <span className="text-white/60">
-                                                    -
-                                                </span>
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="whitespace-nowrap">
-                                            {formatDate(item.createdAt)}
-                                        </TableCell>
-                                        <TableCell className="whitespace-nowrap">
-                                            {formatDate(item.sentAt)}
-                                        </TableCell>
-                                        <TableCell className="whitespace-nowrap">
-                                            {item.status === 'pending' && (
-                                                <Button
-                                                    variant="brand"
-                                                    hierarchy="secondary"
-                                                    size="compact"
-                                                    disabled={busy}
-                                                    onClick={() =>
-                                                        sendNow.mutate({
-                                                            ids: [item.id],
-                                                        })
-                                                    }
-                                                >
-                                                    Send now
-                                                </Button>
-                                            )}
-                                            {item.status === 'failed' && (
-                                                <Button
-                                                    variant="caution"
-                                                    hierarchy="secondary"
-                                                    size="compact"
-                                                    disabled={busy}
-                                                    onClick={() =>
-                                                        retryFailed.mutate({
-                                                            ids: [item.id],
-                                                        })
-                                                    }
-                                                >
-                                                    Retry
-                                                </Button>
-                                            )}
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-
-                    {itemsQuery.hasNextPage && (
-                        <div className="mt-4 flex justify-center">
-                            <Button
-                                variant="default"
-                                hierarchy="secondary"
-                                size="cozy"
-                                disabled={itemsQuery.isFetchingNextPage}
-                                onClick={() => itemsQuery.fetchNextPage()}
-                            >
-                                {itemsQuery.isFetchingNextPage
-                                    ? 'Loading...'
-                                    : 'Load more'}
-                            </Button>
-                        </div>
-                    )}
-                </>
-            )}
 
             <Dialog open={processOpen} onOpenChange={setProcessOpen}>
                 <DialogContent className="border border-neutral-600/40">
@@ -628,29 +703,6 @@ export default function EmailQueuePage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div>
-    );
-}
-
-function StatTile({ label, value }: { label: string; value: number }) {
-    return (
-        <div className="rounded-md bg-neutral-800 px-3 py-2">
-            <span className="font-medium">{label}:</span> {value}
-        </div>
-    );
-}
-
-function FilterField({
-    label,
-    children,
-}: {
-    label: string;
-    children: React.ReactNode;
-}) {
-    return (
-        <div className="flex flex-col gap-1">
-            <span className="text-xs text-white/50">{label}</span>
-            {children}
         </div>
     );
 }

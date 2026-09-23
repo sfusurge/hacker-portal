@@ -9,8 +9,11 @@ import {
     deleteEmailTemplateSchema,
 } from '@/db/schema/emails';
 import { hackathonEmailTypeEnum } from '@/db/schema/emails';
+import { applications } from '@/db/schema/applications';
 import { hackathons } from '@/db/schema/hackathons';
 import { eq, desc, and, getTableColumns } from 'drizzle-orm';
+import { TRPCError } from '@trpc/server';
+import { hasAdminAccess } from '@/lib/auth/roles';
 export const emailTemplatesRouter = router({
     createEmailTemplate: adminProcedure
         .input(emailTemplateSchema)
@@ -93,7 +96,31 @@ export const emailTemplatesRouter = router({
                 emailType: z.enum(hackathonEmailTypeEnum.enumValues),
             })
         )
-        .query(async ({ input }) => {
+        .query(async ({ input, ctx }) => {
+            if (
+                !hasAdminAccess(ctx.user.userRole) &&
+                input.emailType !== 'rsvp_received'
+            ) {
+                throw new TRPCError({ code: 'FORBIDDEN' });
+            }
+            if (!hasAdminAccess(ctx.user.userRole)) {
+                const [application] = await databaseClient
+                    .select({ currentStatus: applications.currentStatus })
+                    .from(applications)
+                    .where(
+                        and(
+                            eq(applications.hackathonId, input.hackathonId),
+                            eq(applications.userId, ctx.user.id)
+                        )
+                    )
+                    .limit(1);
+                if (
+                    !application ||
+                    application.currentStatus !== 'Accepted - RSVP to Confirm'
+                ) {
+                    throw new TRPCError({ code: 'FORBIDDEN' });
+                }
+            }
             const [template] = await databaseClient
                 .select()
                 .from(emailTemplates)
