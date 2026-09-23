@@ -73,8 +73,7 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
             // upload new profile picture if one was selected
             if (fileInputRef.current?.files?.[0]) {
                 const file = fileInputRef.current.files[0];
-                // use existing filename to overwrite, or generate new UUID if no existing pfp
-                const fileName = userData.image || crypto.randomUUID();
+                const fileName = crypto.randomUUID();
                 imageFileName = await uploadFileToBlob(
                     'user_icon',
                     fileName,

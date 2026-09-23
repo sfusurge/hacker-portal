@@ -328,19 +328,10 @@ export const teamsRouter = router({
                     userId: membersTable.userId,
                     firstName: userTable.firstName,
                     lastName: userTable.lastName,
-                    email: userTable.email,
                     image: userTable.image,
-                    currentStatus: applications.currentStatus,
                 })
                 .from(membersTable)
                 .innerJoin(userTable, eq(userTable.id, membersTable.userId))
-                .leftJoin(
-                    applications,
-                    and(
-                        eq(applications.userId, membersTable.userId),
-                        eq(applications.hackathonId, team.hackathonId)
-                    )
-                )
                 .where(eq(membersTable.teamId, team.id));
 
             return {

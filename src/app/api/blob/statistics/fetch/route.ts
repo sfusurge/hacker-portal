@@ -4,6 +4,8 @@ import { applications } from '@/db/schema/applications';
 import { hackathons } from '@/db/schema/hackathons';
 import { eq } from 'drizzle-orm';
 import { put } from '@vercel/blob';
+import { getUserData } from '@/server/auth/sessionUser';
+import { hasAdminAccess } from '@/lib/auth/roles';
 import {
     buildDemographicPieCharts,
     type ApplicationForStats,
@@ -11,6 +13,14 @@ import {
 
 export async function GET(request: NextRequest) {
     await connection();
+
+    const viewer = await getUserData();
+    if (!viewer) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (!hasAdminAccess(viewer.userRole)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     const hackathonId = parseInt(
         request.nextUrl.searchParams.get('hackathonId') || '1'

@@ -27,9 +27,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input/input';
 import inputStyles from '@/components/ui/input/input.module.css';
 import { Label } from '@/components/ui/label/label';
+import { RSVP_TICKET_AMOUNT, RSVP_TICKET_CENTS } from '@/lib/rsvpTicket';
 
-const TICKET_AMOUNT = 15;
-const TICKET_CENTS = 1500;
+const TICKET_AMOUNT = RSVP_TICKET_AMOUNT;
+const TICKET_CENTS = RSVP_TICKET_CENTS;
 
 const elementsAppearance = {
     theme: 'night' as const,
@@ -132,7 +133,6 @@ export default function ElementsForm({
                 initialLastName={userInfo?.lastName ?? ''}
                 hackathonName={hackathon?.hackathonName}
                 hackathonId={hackathon?.id}
-                userId={userInfo?.id}
             />
         </Elements>
     );
@@ -144,14 +144,12 @@ function CheckoutForm({
     initialLastName,
     hackathonName,
     hackathonId,
-    userId,
 }: {
     initialEmail: string;
     initialFirstName: string;
     initialLastName: string;
     hackathonName?: string;
     hackathonId?: number;
-    userId?: number;
 }) {
     const [firstName, setFirstName] = useState(initialFirstName);
     const [lastName, setLastName] = useState(initialLastName);
@@ -242,12 +240,11 @@ function CheckoutForm({
             setCheckoutLocked(true);
 
             try {
+                if (hackathonId == null) {
+                    throw new Error('Missing event for this payment.');
+                }
                 const { client_secret: clientSecret } =
-                    await createPaymentIntent(TICKET_AMOUNT, payerEmail, {
-                        hackathonId,
-                        userId,
-                        hackathonName,
-                    });
+                    await createPaymentIntent(hackathonId);
 
                 const returnUrl = `${window.location.origin}/rsvp/result`;
 
@@ -278,7 +275,7 @@ function CheckoutForm({
                 });
             }
         },
-        [stripe, elements, email, hackathonId, userId, hackathonName]
+        [stripe, elements, email, hackathonId]
     );
 
     const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
@@ -302,15 +299,11 @@ function CheckoutForm({
 
             const returnUrl = `${window.location.origin}/rsvp/result`;
 
-            const { client_secret: clientSecret } = await createPaymentIntent(
-                TICKET_AMOUNT,
-                email.trim(),
-                {
-                    hackathonId,
-                    userId,
-                    hackathonName,
-                }
-            );
+            if (hackathonId == null) {
+                throw new Error('Missing event for this payment.');
+            }
+            const { client_secret: clientSecret } =
+                await createPaymentIntent(hackathonId);
 
             const { error: submitError } = await elements.submit();
             if (submitError) {

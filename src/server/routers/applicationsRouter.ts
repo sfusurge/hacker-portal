@@ -418,6 +418,8 @@ export const applicationsRouter = router({
                     throw new TRPCError({ code: 'UNAUTHORIZED' });
                 }
                 if (
+                    input.status !== undefined ||
+                    input.pendingStatus !== undefined ||
                     input.flagged !== undefined ||
                     input.hsFlagged !== undefined
                 ) {

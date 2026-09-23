@@ -24,6 +24,13 @@ import { TRPCError } from '@trpc/server';
 import { hasAdminAccess } from '@/lib/auth/roles';
 import type { InputFormPageData } from '@/components/application_components/types';
 import { mapSubmissionToProjectListItem } from '@/lib/projects/projectSubmissionDisplay';
+import { judgingAssignments } from '@/db/schema/judge';
+import {
+    flattenSubmissionQuestions,
+    hasDisplayRole,
+    isVisibleForUserRole,
+    satisfiesSubmissionVisibleWhen,
+} from '@/lib/projects/submissionFormQuestions';
 
 export interface SubmitSubmissionResponse {
     userId: number;
@@ -262,20 +269,96 @@ export const submissionsRouter = router({
                 hackathonId: z.number().optional(),
             })
         )
-        .query(async ({ input }) => {
-            const conditions =
-                input.hackathonId != null
-                    ? and(
-                          eq(submissions.teamId, input.teamId),
-                          eq(submissions.hackathonId, input.hackathonId)
-                      )
-                    : eq(submissions.teamId, input.teamId);
+        .query(async ({ input, ctx }) => {
+            const [team] = await databaseClient
+                .select({ hackathonId: teams.hackathonId })
+                .from(teams)
+                .where(eq(teams.id, input.teamId))
+                .limit(1);
+            if (
+                !team ||
+                (input.hackathonId != null &&
+                    team.hackathonId !== input.hackathonId)
+            ) {
+                return null;
+            }
+
+            const isAdmin = hasAdminAccess(ctx.user.userRole);
+            const [membership] = await databaseClient
+                .select({ userId: members.userId })
+                .from(members)
+                .where(
+                    and(
+                        eq(members.teamId, input.teamId),
+                        eq(members.userId, ctx.user.id)
+                    )
+                )
+                .limit(1);
+            let isAssignedJudge = false;
+            if (ctx.user.userRole === 'judge') {
+                const [assignment] = await databaseClient
+                    .select({ userId: judgingAssignments.userId })
+                    .from(judgingAssignments)
+                    .where(
+                        and(
+                            eq(
+                                judgingAssignments.hackathonId,
+                                team.hackathonId
+                            ),
+                            eq(judgingAssignments.teamId, input.teamId),
+                            eq(judgingAssignments.userId, ctx.user.id)
+                        )
+                    )
+                    .limit(1);
+                isAssignedJudge = Boolean(assignment);
+            }
+
             const [submission] = await databaseClient
                 .select()
                 .from(submissions)
-                .where(conditions);
+                .where(
+                    and(
+                        eq(submissions.teamId, input.teamId),
+                        eq(submissions.hackathonId, team.hackathonId)
+                    )
+                )
+                .limit(1);
+            if (!submission) return null;
+            if (isAdmin || membership || isAssignedJudge) return submission;
 
-            return submission ?? null;
+            const [hackathon] = await databaseClient
+                .select({ submissionQuestions: hackathons.submissionQuestions })
+                .from(hackathons)
+                .where(eq(hackathons.id, team.hackathonId))
+                .limit(1);
+            const response = (submission.response ?? {}) as Record<
+                string,
+                unknown
+            >;
+            const visibleQuestionIds = new Set(
+                flattenSubmissionQuestions(
+                    (hackathon?.submissionQuestions ??
+                        []) as InputFormPageData[]
+                )
+                    .filter(
+                        (question) =>
+                            question.questionId != null &&
+                            (isVisibleForUserRole(question, 'user') ||
+                                hasDisplayRole(question, 'banner')) &&
+                            satisfiesSubmissionVisibleWhen(question, response)
+                    )
+                    .map((question) => String(question.questionId))
+            );
+            const { currentStatus, ...publicSubmission } = submission;
+            void currentStatus;
+            return {
+                ...publicSubmission,
+                response: Object.fromEntries(
+                    Object.entries(response).filter(([key]) =>
+                        visibleQuestionIds.has(key)
+                    )
+                ),
+            };
         }),
 
     // getSubmissions: publicProcedure.input(querySubmissionSchema).query(async ({ input }) => {

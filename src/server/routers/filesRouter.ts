@@ -38,7 +38,7 @@ const getFilesSchema = z.object({
 });
 
 export const filesRouter = router({
-    uploadFile: protectedProcedure
+    uploadFile: adminProcedure
         .input(uploadFileSchema)
         .mutation(async ({ input }) => {
             const { key, file, fileName, fileType } = input;
@@ -86,14 +86,12 @@ export const filesRouter = router({
             }
         }),
 
-    getFile: protectedProcedure
-        .input(getFileSchema)
-        .query(async ({ input }) => {
-            const blobPath = buildBlobPath(input.bucketName, input.key);
-            return await getFileFromBlob(blobPath);
-        }),
+    getFile: adminProcedure.input(getFileSchema).query(async ({ input }) => {
+        const blobPath = buildBlobPath(input.bucketName, input.key);
+        return await getFileFromBlob(blobPath);
+    }),
 
-    getFiles: protectedProcedure
+    getFiles: adminProcedure
         .input(getFilesSchema)
         .mutation(async ({ input }) => {
             const { keys, bucketName } = input;
