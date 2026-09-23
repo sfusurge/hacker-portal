@@ -5,7 +5,6 @@ export function iconFromEventType(eventType: EventType) {
     switch (eventType) {
         case EventType.WORKSHOP:
         case EventType.ACTIVITY:
-        case EventType.DEADLINE:
         case EventType.EVENT: {
             return <TicketIcon className="size-6" />;
         }

@@ -215,13 +215,6 @@
     border-style: dashed;
 }
 
-.dayEventDeadline {
-    --dayEventBackground: var(--color-caution-500);
-    --dayEventHoverBackground: var(--color-caution-400);
-
-    border-color: var(--color-caution-400);
-}
-
 .dayEventCompact {
     --dayEventPaddingX: 0.35rem;
     --dayEventContentGap: 1px;

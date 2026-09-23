@@ -23,7 +23,7 @@ import {
     SelectLabel,
     SelectTrigger,
 } from '@/components/ui/select';
-import { EVENT_TYPE_COLORS, EventType } from '@/db/schema/events';
+import { EVENT_TYPES, EventType } from '@/db/schema/events';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { cn } from '@/lib/utils';
 import { submitFile } from '@/lib/blobs';
@@ -45,14 +45,6 @@ const checkerboardBackground = {
     background:
         'repeating-conic-gradient(#f0f0f0 0 25%, #fff 0 50%) 0 0 / 16px 16px',
 };
-
-const EVENT_CATEGORY_OPTIONS = [
-    EventType.EVENT,
-    EventType.DEADLINE,
-    EventType.WORKSHOP,
-    EventType.ACTIVITY,
-    EventType.MEAL,
-] as const;
 
 type EventDateInputProps = {
     name: string;
@@ -199,7 +191,6 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
         const submittedEvent = {
             ...event,
             title: getValue('title'),
-            color: EVENT_TYPE_COLORS[event.eventType],
             description,
             location: getValue('location'),
             imageUrl,
@@ -332,11 +323,9 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                                     return;
                                 }
 
-                                const nextEventType = eventType as EventType;
                                 setEvent({
                                     ...event,
-                                    eventType: nextEventType,
-                                    color: EVENT_TYPE_COLORS[nextEventType],
+                                    eventType: eventType as EventType,
                                 });
                             }}
                         >
@@ -346,10 +335,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                                         className="size-1.5 rounded-full"
                                         style={{
                                             backgroundColor:
-                                                EVENT_TYPE_COLORS[
-                                                    event?.eventType ??
-                                                        EventType.EVENT
-                                                ],
+                                                event?.color ?? '#6466F1',
                                         }}
                                     />
                                     {event?.eventType ?? EventType.EVENT}
@@ -358,7 +344,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                             <SelectContent className="z-[9999] bg-neutral-800 text-white">
                                 <SelectGroup>
                                     <SelectLabel>Event category</SelectLabel>
-                                    {EVENT_CATEGORY_OPTIONS.map((eventType) => {
+                                    {EVENT_TYPES.map((eventType) => {
                                         return (
                                             <SelectItem
                                                 key={eventType}
@@ -369,9 +355,8 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                                                         className="size-1.5 rounded-full"
                                                         style={{
                                                             backgroundColor:
-                                                                EVENT_TYPE_COLORS[
-                                                                    eventType
-                                                                ],
+                                                                event?.color ??
+                                                                '#6466F1',
                                                         }}
                                                     />
                                                     {eventType}
@@ -666,7 +651,7 @@ function convertEvent(hackathonId: number, e?: InternalCalendarEventType) {
         } as CalendarEvent;
     } else {
         return {
-            color: EVENT_TYPE_COLORS[EventType.EVENT],
+            color: '#6466F1',
             hackathonId: hackathonId,
             title: '',
             location: '',

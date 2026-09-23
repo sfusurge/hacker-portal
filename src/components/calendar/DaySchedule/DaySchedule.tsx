@@ -479,7 +479,6 @@ function DayEventItem({
     const showMeta = height >= 40;
     const showLocation = event.location && !isOverlapping && !isCompact;
     const isRsvpEvent = canRsvpEvent(event);
-    const isDeadlineEvent = event.eventType === EventType.DEADLINE;
     const Icon =
         event.eventType === EventType.WORKSHOP
             ? BookOpenIcon
@@ -500,7 +499,6 @@ function DayEventItem({
                 style.dayEvent,
                 isRsvpEvent ? style.dayEventRsvped : style.dayEventStandard,
                 isRsvpEvent && !event.rsvped && style.dayEventNeedsRsvp,
-                isDeadlineEvent && style.dayEventDeadline,
                 isCompact && style.dayEventCompact,
                 {
                     [style.active]: isActive,

@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { EventType } from '@/db/schema/events';
 import {
     TicketIcon,
-    ClockIcon,
     FireIcon,
     WrenchScrewdriverIcon,
     FaceSmileIcon,
@@ -12,10 +11,6 @@ import {
 
 export const buttonConfig = {
     [EventType.EVENT]: { icon: TicketIcon, label: 'Check in to hackathon' },
-    [EventType.DEADLINE]: {
-        icon: ClockIcon,
-        label: 'Check in to Deadline',
-    },
     [EventType.ACTIVITY]: {
         icon: FaceSmileIcon,
         label: 'Check in to Activity',
