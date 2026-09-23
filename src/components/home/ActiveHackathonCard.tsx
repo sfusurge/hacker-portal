@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { useAtomValue } from 'jotai';
 import { Card, CardContent } from '@/components/ui/card';
 import { redirect } from 'next/navigation';
 
@@ -15,6 +16,9 @@ import {
     isAcceptedAndRsvpdStatus,
     type ApplicationStatus,
 } from './activeHackathonCardHelpers';
+import RsvpPrompt from '@/components/home/Application/RsvpPrompt';
+import WithdrawPrompt from '@/components/home/Application/WithdrawPrompt';
+import { userInfoAtom } from '@/app/(auth)/ClientContext';
 
 type ActiveHackathonCardProps = {
     hackathon: {
@@ -45,9 +49,12 @@ export default function ActiveHackathonCard({
     userFirstName,
     userLastName,
 }: ActiveHackathonCardProps) {
+    const userData = useAtomValue(userInfoAtom);
     const [now, setNow] = useState(Date.now());
     const [hasInProgressDraft, setHasInProgressDraft] = useState(false);
     const [isTicketOpen, setIsTicketOpen] = useState(false);
+    const [isRsvpPromptOpen, setIsRsvpPromptOpen] = useState(false);
+    const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
 
     useEffect(() => {
         const interval = setInterval(() => setNow(Date.now()), 60000);
@@ -139,6 +146,10 @@ export default function ActiveHackathonCard({
                                 setIsTicketOpen(true);
                                 return;
                             }
+                            if (applicationAction?.intent === 'confirm-rsvp') {
+                                setIsRsvpPromptOpen(true);
+                                return;
+                            }
                             if (applicationAction) {
                                 redirect(applicationAction.href);
                             }
@@ -168,6 +179,25 @@ export default function ActiveHackathonCard({
                     lastName={userLastName ?? ''}
                     image={ticketQr}
                     closeTicket={() => setIsTicketOpen(false)}
+                />
+            )}
+
+            {userData?.id && (
+                <RsvpPrompt
+                    isOpen={isRsvpPromptOpen}
+                    userData={userData}
+                    closePrompt={() => setIsRsvpPromptOpen(false)}
+                    openWithdrawPrompt={() => {
+                        setIsRsvpPromptOpen(false);
+                        setIsWithdrawPromptOpen(true);
+                    }}
+                />
+            )}
+            {userData?.id && (
+                <WithdrawPrompt
+                    isOpen={isWithdrawPromptOpen}
+                    userId={userData.id}
+                    closePrompt={() => setIsWithdrawPromptOpen(false)}
                 />
             )}
         </div>
