@@ -29,7 +29,7 @@ export default function StatisticsPage() {
     const chartSize = useResponsiveChartSize();
     const hasSetInitialHackathon = useRef(false);
 
-    const { data: hackathons = [] } =
+    const { data: hackathons = [], isFetched: hasFetchedHackathons } =
         trpc.hackathons.getSponsorHackathons.useQuery();
     const [selectedHackathonId, setSelectedHackathonId] = useState<
         number | null
@@ -41,12 +41,17 @@ export default function StatisticsPage() {
     const [cohort, setCohort] = useState<Cohort>('accepted');
 
     useEffect(() => {
-        if (hasSetInitialHackathon.current) return;
-        if (hackathon?.id) {
-            hasSetInitialHackathon.current = true;
-            setSelectedHackathonId(hackathon.id);
-        }
-    }, [hackathon]);
+        if (hasSetInitialHackathon.current || !hasFetchedHackathons) return;
+        hasSetInitialHackathon.current = true;
+        const activeHackathonIsAvailable = hackathons.some(
+            (item) => item.id === hackathon?.id
+        );
+        setSelectedHackathonId(
+            activeHackathonIsAvailable
+                ? hackathon!.id
+                : (hackathons[hackathons.length - 1]?.id ?? null)
+        );
+    }, [hackathons, hackathon, hasFetchedHackathons]);
 
     useEffect(() => {
         if (selectedHackathonId == null) return;
@@ -156,6 +161,17 @@ export default function StatisticsPage() {
             </div>
         </div>
     );
+
+    if (hasFetchedHackathons && hackathons.length === 0) {
+        return (
+            <div className="mx-auto flex h-full w-full flex-col gap-4 sm:gap-6">
+                {header}
+                <p className="text-sm text-white/60">
+                    No hackathons are assigned to your sponsor account yet.
+                </p>
+            </div>
+        );
+    }
 
     if (loading || selectedHackathonId == null) {
         return (
