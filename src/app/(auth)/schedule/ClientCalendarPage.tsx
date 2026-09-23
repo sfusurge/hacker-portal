@@ -12,11 +12,11 @@ import { Calendar } from '@/components/ui/calendar';
 import { Card } from '@/components/ui/card';
 import { CalendarEvent } from '@/server/routers/eventsRouter';
 import dayjs, { Dayjs } from 'dayjs';
-import { atom, useAtom, useAtomValue } from 'jotai';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { userInfoAtom } from '../ClientContext';
 import { EventAdmin } from '@/components/calendar/EventAdmin/EventAdmin';
-import { PencilIcon, PlusIcon } from '@heroicons/react/24/solid';
+import { PlusIcon } from '@heroicons/react/24/solid';
 import { useWindowSize } from '@/lib/useWindowSize';
 import { trpc } from '@/trpc/client';
 import { MobileCalendar } from '@/components/calendar/MobileMonthCalendar/MobileCalendar';
@@ -64,8 +64,8 @@ export function ClientCalendarPage({
     const [width] = useWindowSize();
     const isMobile = useMemo(() => width <= 768, [width]);
 
-    const [selectedEvent] = useAtom(selectedEventAtom);
-    const [editMode, setEditMode] = useAtom(editModeAtom);
+    const setSelectedEvent = useSetAtom(selectedEventAtom);
+    const setEditMode = useSetAtom(editModeAtom);
 
     const fetchEvents = trpc.events.getEvents.useQuery(
         { hackathonId: hackathon?.id! },
@@ -186,6 +186,11 @@ export function ClientCalendarPage({
         selectDate(dayjs());
     }
 
+    const handleAddEvent = useCallback(() => {
+        setSelectedEvent(undefined);
+        setEditMode(true);
+    }, [setEditMode, setSelectedEvent]);
+
     useEffect(() => {
         const interval = setInterval(updateEvents, 30000); // 5 mins
         return () => {
@@ -207,20 +212,14 @@ export function ClientCalendarPage({
                             eyebrow={`${hackathon.name} Schedule`}
                             monthLabel={monthObj.format('MMMM YYYY')}
                             isAdmin={Boolean(isAdmin)}
-                            hasSelectedEvent={Boolean(selectedEvent?.event)}
-                            onToggleEditMode={() => {
-                                setEditMode(!editMode);
-                            }}
+                            onAddEvent={handleAddEvent}
                             showActions={false}
                             className="px-3 pt-3 pb-2"
                         />
                         {isAdmin && (
                             <ScheduleActions
                                 isAdmin={Boolean(isAdmin)}
-                                hasSelectedEvent={Boolean(selectedEvent?.event)}
-                                onToggleEditMode={() => {
-                                    setEditMode(!editMode);
-                                }}
+                                onAddEvent={handleAddEvent}
                                 className="justify-end px-3 pb-2"
                             />
                         )}
@@ -242,10 +241,7 @@ export function ClientCalendarPage({
                                     'MMMM YYYY'
                                 )}
                                 isAdmin={Boolean(isAdmin)}
-                                hasSelectedEvent={Boolean(selectedEvent?.event)}
-                                onToggleEditMode={() => {
-                                    setEditMode(!editMode);
-                                }}
+                                onAddEvent={handleAddEvent}
                                 className="pb-3"
                             />
                             <div className="min-h-0 flex-1">
@@ -290,16 +286,14 @@ function ScheduleHeader({
     eyebrow,
     monthLabel,
     isAdmin,
-    hasSelectedEvent,
-    onToggleEditMode,
+    onAddEvent,
     showActions = true,
     className,
 }: {
     eyebrow: string;
     monthLabel: string;
     isAdmin: boolean;
-    hasSelectedEvent: boolean;
-    onToggleEditMode: () => void;
+    onAddEvent: () => void;
     showActions?: boolean;
     className?: string;
 }) {
@@ -321,8 +315,7 @@ function ScheduleHeader({
             {showActions && (
                 <ScheduleActions
                     isAdmin={isAdmin}
-                    hasSelectedEvent={hasSelectedEvent}
-                    onToggleEditMode={onToggleEditMode}
+                    onAddEvent={onAddEvent}
                     className="ml-auto"
                 />
             )}
@@ -332,13 +325,11 @@ function ScheduleHeader({
 
 function ScheduleActions({
     isAdmin,
-    hasSelectedEvent,
-    onToggleEditMode,
+    onAddEvent,
     className,
 }: {
     isAdmin: boolean;
-    hasSelectedEvent: boolean;
-    onToggleEditMode: () => void;
+    onAddEvent: () => void;
     className?: string;
 }) {
     return (
@@ -348,54 +339,31 @@ function ScheduleActions({
                 className
             )}
         >
-            {isAdmin && (
-                <EventAdminButton
-                    hasSelectedEvent={hasSelectedEvent}
-                    onToggleEditMode={onToggleEditMode}
-                />
-            )}
+            {isAdmin && <EventAdminButton onAddEvent={onAddEvent} />}
             <AnnouncementsButton className="shrink-0" />
         </div>
     );
 }
 
-function EventAdminButton({
-    hasSelectedEvent,
-    onToggleEditMode,
-}: {
-    hasSelectedEvent: boolean;
-    onToggleEditMode: () => void;
-}) {
+function EventAdminButton({ onAddEvent }: { onAddEvent: () => void }) {
     return (
         <Button
             type="button"
-            onClick={onToggleEditMode}
+            onClick={onAddEvent}
             size="compact"
             variant="brand"
             hierarchy="primary"
             className="[&>span]:py-[7px]"
         >
-            {hasSelectedEvent ? (
-                <span>
-                    <PencilIcon
-                        style={{
-                            display: 'inline-block',
-                            width: '16px',
-                        }}
-                    />
-                    Edit Event
-                </span>
-            ) : (
-                <span>
-                    <PlusIcon
-                        style={{
-                            display: 'inline-block',
-                            width: '16px',
-                        }}
-                    />
-                    Add Event
-                </span>
-            )}
+            <span>
+                <PlusIcon
+                    style={{
+                        display: 'inline-block',
+                        width: '16px',
+                    }}
+                />
+                Add Event
+            </span>
         </Button>
     );
 }
