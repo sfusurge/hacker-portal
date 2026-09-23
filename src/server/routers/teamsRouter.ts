@@ -27,12 +27,7 @@ import {
     InternalServerError,
     ResourceNotFoundError,
 } from '../exceptions';
-import {
-    adminProcedure,
-    protectedProcedure,
-    publicProcedure,
-    router,
-} from '../trpc';
+import { adminProcedure, protectedProcedure, router } from '../trpc';
 import { user } from '@/db/schema/users/users';
 import { PgQueryResultHKT, PgTransaction } from 'drizzle-orm/pg-core';
 
@@ -259,7 +254,7 @@ export const teamsRouter = router({
             return true;
         }),
 
-    getTeamByDisplayId: publicProcedure
+    getTeamByDisplayId: protectedProcedure
         .input(
             z.object({
                 teamDisplayId: z.string().length(6),
@@ -328,19 +323,10 @@ export const teamsRouter = router({
                     userId: membersTable.userId,
                     firstName: userTable.firstName,
                     lastName: userTable.lastName,
-                    email: userTable.email,
                     image: userTable.image,
-                    currentStatus: applications.currentStatus,
                 })
                 .from(membersTable)
                 .innerJoin(userTable, eq(userTable.id, membersTable.userId))
-                .leftJoin(
-                    applications,
-                    and(
-                        eq(applications.userId, membersTable.userId),
-                        eq(applications.hackathonId, team.hackathonId)
-                    )
-                )
                 .where(eq(membersTable.teamId, team.id));
 
             return {

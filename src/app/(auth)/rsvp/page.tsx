@@ -42,6 +42,15 @@ export default function PaymentElementPage() {
         return appdata.currentStatus === 'Accepted - Pending Payment';
     }, [getApplication]);
 
+    const needsConfirmRsvp = useMemo(() => {
+        const appdata = getApplication.data;
+        if (!appdata) {
+            return false;
+        }
+
+        return appdata.currentStatus === 'Accepted - RSVP to Confirm';
+    }, [getApplication]);
+
     const accepted = useMemo(() => {
         const appdata = getApplication.data;
         if (!appdata) {
@@ -58,6 +67,10 @@ export default function PaymentElementPage() {
 
         if (pending) {
             return <NeedPayment email={userInfo?.email!} />;
+        }
+
+        if (needsConfirmRsvp) {
+            return <NeedsConfirmRsvp />;
         }
 
         if (accepted) {
@@ -80,6 +93,25 @@ function AlreadyPaid() {
             src="/login/otter-mail.png"
             title={"You are already RSVP'd and Accepted!"}
             body="Stay tuned!"
+        >
+            <Button
+                size="cozy"
+                variant="brand"
+                hierarchy="primary"
+                className="bg-brand-600 hover:bg-brand-700 text-white"
+            >
+                <a href="/home">Return to home</a>
+            </Button>
+        </FullPageInfo>
+    );
+}
+
+function NeedsConfirmRsvp() {
+    return (
+        <FullPageInfo
+            src="/login/otter-mail.png"
+            title="Confirm your RSVP on Home"
+            body="This page is for paid tickets only. Head back to Home to confirm your attendance."
         >
             <Button
                 size="cozy"

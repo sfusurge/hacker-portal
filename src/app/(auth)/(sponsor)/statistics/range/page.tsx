@@ -48,7 +48,8 @@ function sortHackathons(hackathons: HackathonOption[]) {
 export default function StatisticsRangePage() {
     const activeHackathon = useAtomValue(hackathonAtom);
     const chartSize = useResponsiveChartSize();
-    const { data: hackathons = [] } = trpc.hackathons.getHackathons.useQuery();
+    const { data: hackathons = [] } =
+        trpc.hackathons.getSponsorHackathons.useQuery();
 
     const sortedHackathons = useMemo(
         () => sortHackathons(hackathons as HackathonOption[]),
@@ -68,10 +69,12 @@ export default function StatisticsRangePage() {
         if (sortedHackathons.length === 0) return;
         if (fromId != null && toId != null) return;
 
-        const fallbackId =
-            activeHackathon?.id ??
-            sortedHackathons[sortedHackathons.length - 1]?.id ??
-            null;
+        const activeHackathonIsAvailable = sortedHackathons.some(
+            (item) => item.id === activeHackathon?.id
+        );
+        const fallbackId = activeHackathonIsAvailable
+            ? activeHackathon!.id
+            : (sortedHackathons[sortedHackathons.length - 1]?.id ?? null);
         if (fallbackId == null) return;
 
         setFromId((prev) => prev ?? fallbackId);
@@ -243,6 +246,17 @@ export default function StatisticsRangePage() {
             </div>
         </div>
     );
+
+    if (sortedHackathons.length === 0) {
+        return (
+            <div className="mx-auto flex h-full w-full flex-col gap-4 sm:gap-6">
+                {header}
+                <p className="text-sm text-white/60">
+                    No hackathons are assigned to your sponsor account yet.
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div className="mx-auto flex h-full w-full flex-col gap-4 sm:gap-6">

@@ -7,9 +7,7 @@ interface TeamMember {
     userId: number;
     firstName: string | null;
     lastName: string | null;
-    email: string;
     image: string | null;
-    currentStatus?: string | null;
 }
 
 interface TeamMemberListProps {

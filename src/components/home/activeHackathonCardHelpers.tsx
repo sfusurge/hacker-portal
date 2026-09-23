@@ -17,7 +17,8 @@ export type AppStatus = 'Not Yet Started' | 'In Progress' | ApplicationStatus;
 export type ApplicationAction = {
     label: string;
     variant: 'brand' | 'caution';
-    href: '/application' | '/rsvp' | '/application/submitted';
+    href: '/application' | '/rsvp' | '/application/submitted' | '/home';
+    intent?: 'pay-rsvp' | 'confirm-rsvp' | 'view-ticket' | 'apply';
     icon: JSX.Element | undefined;
     trailingIcon?: boolean;
 };
@@ -40,6 +41,7 @@ export function getApplicationAction({
                 label: 'Start application',
                 variant: 'brand',
                 href: '/application',
+                intent: 'apply',
                 icon: <ArrowRightIcon className="inline-flex h-4 w-4" />,
                 trailingIcon: true,
             };
@@ -48,15 +50,24 @@ export function getApplicationAction({
                 label: 'Continue Application',
                 variant: 'caution',
                 href: '/application',
+                intent: 'apply',
                 icon: <ArrowRightIcon className="inline-flex h-4 w-4" />,
                 trailingIcon: true,
             };
         case 'Accepted - Pending Payment':
+            return {
+                label: 'RSVP now',
+                variant: 'brand',
+                href: '/rsvp',
+                intent: 'pay-rsvp',
+                icon: undefined,
+            };
         case 'Accepted - RSVP to Confirm':
             return {
-                label: `RSVP to ${hackathonName}`,
+                label: 'RSVP now',
                 variant: 'brand',
-                href: '/rsvp', // TODO: Update this
+                href: '/home',
+                intent: 'confirm-rsvp',
                 icon: undefined,
             };
         case 'Accepted':
@@ -64,7 +75,8 @@ export function getApplicationAction({
             return {
                 label: `View Ticket`,
                 variant: 'brand',
-                href: '/application/submitted', // TODO: Update these links
+                href: '/application/submitted',
+                intent: 'view-ticket',
                 icon: <QrCodeIcon className="h-4 w-4" />,
             };
         default:

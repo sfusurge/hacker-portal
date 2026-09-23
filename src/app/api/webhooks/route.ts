@@ -1,7 +1,9 @@
 import type { Stripe } from 'stripe';
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
-import { createCaller } from '@/server/appRouter';
+import { databaseClient } from '@/db/client';
+import { hackathons } from '@/db/schema/hackathons';
+import { eq } from 'drizzle-orm';
 import {
     applyApplicationStatusUpdate,
     applyLastEmailSentUpdate,
@@ -136,12 +138,16 @@ export async function POST(req: Request) {
                                     string,
                                     unknown
                                 > | null) ?? {};
-                            const trpcClient = createCaller({});
-                            const hackathons =
-                                await trpcClient.hackathons.getHackathons();
-                            const hackathon = hackathons.find(
-                                (h) => h.id === application.hackathonId
-                            );
+                            const [hackathon] = await databaseClient
+                                .select({
+                                    applicationQuestions:
+                                        hackathons.applicationQuestions,
+                                })
+                                .from(hackathons)
+                                .where(
+                                    eq(hackathons.id, application.hackathonId)
+                                )
+                                .limit(1);
                             const applicationQuestionPages =
                                 (hackathon?.applicationQuestions ??
                                     []) as InputFormPageData[];

@@ -1,4 +1,6 @@
-import { getBasicUserInfo } from '@/server/routers/usersRouter';
+import { getUserData } from '@/server/auth/sessionUser';
+import { checkUserInTeam } from '@/db/schema/members';
+import { isOwner } from '@/lib/auth/roles';
 import {
     handleUpload,
     upload,
@@ -17,7 +19,7 @@ const fileNameFormat =
 const maxFileNameLength = 100;
 
 const allowedPaths = {
-    submissions: /^submissions\/team-\d{1,3}\/?$/,
+    submissions: /^submissions\/team-\d+\/?$/,
     team_icon: /^team_icon\/?$/,
     user_icon: /^user_icon\/?$/,
     resumes: /^resumes\/hackathon-\d+\/?$/,
@@ -66,8 +68,8 @@ function validateUploadPath(
  * throws error invalid user.
  */
 async function validateUser() {
-    const user = await getBasicUserInfo();
-    if (!user || !user.id) {
+    const user = await getUserData();
+    if (!user?.id) {
         throw new Error(`Unauthenticated upload`);
     }
 
@@ -93,6 +95,34 @@ export async function POST(request: Request) {
 
                 validateUploadPath(pathname, uploadPath);
 
+                let allowOverwrite = false;
+                if (uploadPath === 'submissions') {
+                    const teamMatch = pathname.match(
+                        /^submissions\/team-(\d+)\//
+                    );
+                    const teamId = Number(teamMatch?.[1]);
+                    if (!teamMatch || !Number.isSafeInteger(teamId)) {
+                        throw new Error('Invalid team submission path');
+                    }
+                    await checkUserInTeam(user.id, teamId);
+                    allowOverwrite = true;
+                } else if (uploadPath === 'resumes') {
+                    const resumeMatch = pathname.match(
+                        /^resumes\/hackathon-(\d+)\/user-(\d+)\.pdf$/
+                    );
+                    if (!resumeMatch || Number(resumeMatch[2]) !== user.id) {
+                        throw new Error('Resume uploads must belong to you');
+                    }
+                    allowOverwrite = true;
+                } else if (uploadPath === 'event_page') {
+                    if (!isOwner(user.userRole)) {
+                        throw new Error(
+                            'Only event owners can upload page media'
+                        );
+                    }
+                    allowOverwrite = true;
+                }
+
                 console.log(
                     `Processing user upload for ${user.id} (${user.email}), path: ${pathname}`
                 );
@@ -100,7 +130,7 @@ export async function POST(request: Request) {
                 return {
                     allowedContentTypes: allowedFormats,
                     addRandomSuffix: false,
-                    allowOverwrite: true,
+                    allowOverwrite,
                     maximumSizeInBytes: maxAllowedSize,
                     tokenPayload: pathname,
                 };

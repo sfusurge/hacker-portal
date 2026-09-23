@@ -32,7 +32,7 @@ export async function POST(request: Request): Promise<NextResponse> {
                     throw new Error('');
                 }
 
-                checkUserInTeam(user.id, teamId);
+                await checkUserInTeam(user.id, teamId);
 
                 return {
                     allowedContentTypes: ['image/jpeg', 'image/png'],

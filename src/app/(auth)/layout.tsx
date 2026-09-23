@@ -11,6 +11,9 @@ import MobileTopNav from '@/components/sidebar/MobileTopNav';
 import SideBar from '@/components/sidebar/SideBar';
 import AuthLayoutFallback from './AuthLayoutFallback';
 import { hasAdminAccess } from '@/lib/auth/roles';
+import { databaseClient } from '@/db/client';
+import { hackathons } from '@/db/schema/hackathons';
+import { eq } from 'drizzle-orm';
 
 export default function Layout({ children }: { children: ReactNode }) {
     return (
@@ -21,13 +24,31 @@ export default function Layout({ children }: { children: ReactNode }) {
 }
 
 async function AuthLayoutContent({ children }: { children: ReactNode }) {
-    const [hackathon, userData] = await Promise.all([
+    const [activeHackathon, userData] = await Promise.all([
         getCachedActiveHackathon(),
         getCachedUserData(),
     ]);
 
     if (!userData) {
         return redirect('/signout');
+    }
+
+    let hackathon = activeHackathon;
+    if (
+        hackathon &&
+        (hasAdminAccess(userData.userRole) || userData.userRole === 'judge')
+    ) {
+        const [judgingConfig] = await databaseClient
+            .select({
+                judgeQuestions: hackathons.judgeQuestions,
+                judgeRubric: hackathons.judgeRubric,
+            })
+            .from(hackathons)
+            .where(eq(hackathons.id, hackathon.id))
+            .limit(1);
+        if (judgingConfig) {
+            hackathon = { ...hackathon, ...judgingConfig };
+        }
     }
 
     const [

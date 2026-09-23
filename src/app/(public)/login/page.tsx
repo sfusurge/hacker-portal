@@ -1,4 +1,5 @@
 import { auth, getSession } from '@/auth/auth';
+import { safePortalReturnTarget } from '@/auth/returnTarget';
 import { databaseClient } from '@/db/client';
 import { user } from '@/db/schema/users/users';
 import { eq } from 'drizzle-orm';
@@ -29,7 +30,7 @@ async function LoginContent({
 }: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-    const redirectTarget = (await searchParams)['from'] as string;
+    const redirectTarget = safePortalReturnTarget((await searchParams)['from']);
     const session = await getSession();
 
     if (session) {

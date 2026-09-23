@@ -1,0 +1,2 @@
+export const RSVP_TICKET_AMOUNT = 15;
+export const RSVP_TICKET_CENTS = RSVP_TICKET_AMOUNT * 100;
