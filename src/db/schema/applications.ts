@@ -72,7 +72,7 @@ export const insertApplicationSchema = createInsertSchema(applications).pick({
 
 export const queryApplicationsSchema = z.object({
     hackathonId: z.number().int(),
-    maxResult: z.number().int().optional().default(200),
+    maxResult: z.number().int().min(1).max(500).optional().default(200),
     nextToken: z.string().regex(/^\d+$/g).optional(),
     cursor: z.string().optional(),
 });

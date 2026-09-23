@@ -24,7 +24,6 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
         firstName: userData.firstName || '',
         lastName: userData.lastName || '',
         phoneNumber: userData.phoneNumber || '',
-        email: userData.email || '',
     });
     const [profilePicture, setProfilePicture] = useState('');
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -86,7 +85,6 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 phoneNumber: formData.phoneNumber,
-                email: formData.email,
                 image: imageFileName ?? undefined,
             });
         } catch (error) {
@@ -106,7 +104,6 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
             firstName: userData.firstName || '',
             lastName: userData.lastName || '',
             phoneNumber: userData.phoneNumber || '',
-            email: userData.email || '',
         });
         setProfilePicture('');
         if (fileInputRef.current) {
@@ -148,8 +145,7 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
     const isFormValid =
         formData.firstName.length > 0 &&
         formData.lastName.length > 0 &&
-        isValidPhoneNumber(formData.phoneNumber) &&
-        formData.email.length > 0;
+        isValidPhoneNumber(formData.phoneNumber);
 
     return (
         <div className="w-full max-w-[498px] space-y-10">
@@ -280,21 +276,13 @@ export default function ProfileContent({ userData }: ProfileContentProps) {
             </div>
 
             <div className="space-y-2">
-                <Label required={true}>Email Address</Label>
-                <FormTextInput
-                    key={`email-${key}`}
-                    name="email"
+                <Label>Email Address</Label>
+                <Input
                     type="email"
-                    lazy
-                    defaultValue={formData.email}
-                    onLazyChange={(value) => handleInputChange('email', value)}
-                    placeholder="you@example.com"
-                    required
-                    disabled={isSubmitting}
+                    value={userData.email || ''}
+                    disabled
+                    readOnly
                 />
-                {errors.email && (
-                    <p className="text-danger-500 text-sm">{errors.email}</p>
-                )}
             </div>
 
             <div className="space-y-2">

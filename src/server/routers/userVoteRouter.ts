@@ -8,6 +8,8 @@ import {
     getAllUserVotesSchema,
 } from '@/db/schema/userVote';
 import { applications } from '@/db/schema/applications';
+import { hackathons } from '@/db/schema/hackathons';
+import { teams } from '@/db/schema/teams';
 import { databaseClient } from '@/db/client';
 import { eq, and, getTableColumns } from 'drizzle-orm';
 
@@ -36,6 +38,44 @@ export const userVoteRouter = router({
                     code: 'FORBIDDEN',
                     message:
                         'Only accepted participants can vote for the Audience Choice award.',
+                });
+            }
+
+            const [hackathon] = await databaseClient
+                .select({
+                    enabled: hackathons.audienceVotingEnabled,
+                    opensAt: hackathons.audienceVotingOpen,
+                    closesAt: hackathons.audienceVotingCloses,
+                })
+                .from(hackathons)
+                .where(eq(hackathons.id, input.hackathonId))
+                .limit(1);
+            const now = new Date();
+            if (
+                !hackathon?.enabled ||
+                (hackathon.opensAt && now < hackathon.opensAt) ||
+                (hackathon.closesAt && now > hackathon.closesAt)
+            ) {
+                throw new TRPCError({
+                    code: 'FORBIDDEN',
+                    message: 'Audience voting is not currently open.',
+                });
+            }
+
+            const [team] = await databaseClient
+                .select({ id: teams.id })
+                .from(teams)
+                .where(
+                    and(
+                        eq(teams.id, input.vote),
+                        eq(teams.hackathonId, input.hackathonId)
+                    )
+                )
+                .limit(1);
+            if (!team) {
+                throw new TRPCError({
+                    code: 'BAD_REQUEST',
+                    message: 'The selected team is not part of this hackathon.',
                 });
             }
 
