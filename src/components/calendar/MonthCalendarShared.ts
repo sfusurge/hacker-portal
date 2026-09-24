@@ -163,7 +163,7 @@ function getHour(t: Dayjs) {
 }
 
 export function getEventDurationString(event: InternalCalendarEventType) {
-    if (event.isDeadline) {
+    if (event.isDeadline === true) {
         return `Due at ${getHour(event.startTime)}`;
     }
 
@@ -176,7 +176,7 @@ export function getEventTimeLabel(
 ) {
     const startTime = event.startTime.format('h:mm A');
 
-    if (event.isDeadline) {
+    if (event.isDeadline === true) {
         return startTime;
     }
 
@@ -185,7 +185,7 @@ export function getEventTimeLabel(
 
 export function canAddEventToSchedule(event: InternalCalendarEventType) {
     return (
-        !event.isDeadline &&
+        event.isDeadline !== true &&
         (event.eventType === EventType.ACTIVITY ||
             event.eventType === EventType.WORKSHOP)
     );
@@ -198,6 +198,7 @@ export type InternalCalendarEventType = Omit<
     startTime: Dayjs;
     endTime: Dayjs;
     duration: number;
+    isDeadline?: boolean;
 };
 
 export function DayjsifyEvents(
@@ -208,13 +209,9 @@ export function DayjsifyEvents(
             ...e,
             startTime: dayjs(e.startDate),
             endTime: dayjs(e.endDate),
-            duration: e.isDeadline
-                ? 0
-                : Math.abs(
-                      Math.ceil(
-                          dayjs(e.startDate).diff(dayjs(e.endDate), 'minute')
-                      )
-                  ),
+            duration: Math.abs(
+                Math.ceil(dayjs(e.startDate).diff(dayjs(e.endDate), 'minute'))
+            ),
         };
         return res;
     });

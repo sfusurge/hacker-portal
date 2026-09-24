@@ -299,7 +299,7 @@
     height: var(--height);
     overflow: visible;
     color: #fef9c3;
-    cursor: pointer;
+    cursor: default;
     pointer-events: auto;
 }
 

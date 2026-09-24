@@ -498,7 +498,7 @@ function DayEventItem({
             : 0;
     const showMeta = height >= 40;
     const showLocation = event.location && !isOverlapping && !isCompact;
-    const isDeadline = event.isDeadline;
+    const isDeadline = event.isDeadline === true;
     const isRsvpEvent = canAddEventToSchedule(event);
     const Icon =
         event.eventType === EventType.WORKSHOP
@@ -536,9 +536,13 @@ function DayEventItem({
                     [style.active]: isActive,
                 },
             ])}
-            onClick={() => {
-                selectEvent(event, containerRef.current);
-            }}
+            onClick={
+                isDeadline
+                    ? undefined
+                    : () => {
+                          selectEvent(event, containerRef.current);
+                      }
+            }
             style={
                 {
                     '--top': `${Math.round(top)}px`,

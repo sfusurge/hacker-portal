@@ -64,6 +64,13 @@
       "when": 1790227200000,
       "tag": "0008_add_is_deadline_to_events",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790294400000,
+      "tag": "0009_hackathon_hacking_start_deadlines",
+      "breakpoints": true
     }
   ]
 }

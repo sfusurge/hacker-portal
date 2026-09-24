@@ -8,6 +8,7 @@ import {
     currentYearMonthAtom,
     DayjsifyEvents,
     editModeAtom,
+    type InternalCalendarEventType,
     selectEventAtom,
 } from '@/components/calendar/MonthCalendarShared';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ import { hasAdminAccess } from '@/lib/auth/roles';
 import { AnnouncementsButton } from '@/components/announcements/AnnouncementsButton';
 import { cn } from '@/lib/utils';
 import { ScheduleEventsCard } from '@/components/calendar/ScheduleEventsCard/ScheduleEventsCard';
+import { EventType } from '@/db/schema/events';
 
 export function ClientCalendarPage({
     events: _events,
@@ -141,6 +143,17 @@ export function ClientCalendarPage({
             );
         });
     }, [events, hackathon.id, hackathonRange]);
+    const deadlineEvents = useMemo(() => {
+        return buildHackathonDeadlineEvents({
+            hackathonId: hackathon.id,
+            hackingStart: hackathon.hackingStart,
+            submissionDeadline: hackathon.submissionDeadline,
+        });
+    }, [hackathon.hackingStart, hackathon.id, hackathon.submissionDeadline]);
+    const scheduleEvents = useMemo(
+        () => [...activeHackathonEvents, ...deadlineEvents],
+        [activeHackathonEvents, deadlineEvents]
+    );
 
     useEffect(() => {
         if (isMobile) {
@@ -238,7 +251,7 @@ export function ClientCalendarPage({
 
                         <div className="min-h-0 flex-1">
                             <MobileCalendar
-                                events={activeHackathonEvents}
+                                events={scheduleEvents}
                                 isAdmin={Boolean(isAdmin)}
                                 onEventRsvpChange={updateEvents}
                             />
@@ -260,7 +273,7 @@ export function ClientCalendarPage({
                                 <DaySchedule
                                     days={visibleScheduleDays}
                                     startDate={visibleScheduleStartDate}
-                                    events={activeHackathonEvents}
+                                    events={scheduleEvents}
                                     minColumnWidth={200}
                                     maxVisibleColumns={4}
                                     onPreviousRange={
@@ -306,6 +319,51 @@ export function ClientCalendarPage({
             </div>
         </>
     );
+}
+
+function buildHackathonDeadlineEvents({
+    hackathonId,
+    hackingStart,
+    submissionDeadline,
+}: {
+    hackathonId: number;
+    hackingStart: Dayjs;
+    submissionDeadline: Dayjs;
+}): InternalCalendarEventType[] {
+    return [
+        {
+            id: -1,
+            title: 'Hacking starts',
+            time: hackingStart,
+        },
+        {
+            id: -2,
+            title: 'Submission deadline',
+            time: submissionDeadline,
+        },
+    ]
+        .filter(({ time }) => time.isValid() && time.valueOf() > 0)
+        .map(({ id, title, time }) => ({
+            id,
+            checkedIn: false,
+            rsvped: false,
+            hasLongDescription: false,
+            startTime: time,
+            endTime: time,
+            duration: 0,
+            hackathonId,
+            title,
+            color: '#EAB308',
+            location: '',
+            imageUrl: undefined,
+            description: undefined,
+            checkInTime: undefined,
+            hasCheckIn: false,
+            eventType: EventType.EVENT,
+            points: 1,
+            variablePoints: false,
+            isDeadline: true,
+        }));
 }
 
 function ScheduleHeader({

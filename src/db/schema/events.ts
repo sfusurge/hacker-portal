@@ -49,7 +49,6 @@ export const events = pgTable(
         hasCheckIn: boolean('has_check_in').notNull().default(false),
         points: integer('points').notNull().default(1),
         variablePoints: boolean('variable_points').notNull().default(false),
-        isDeadline: boolean('is_deadline').notNull().default(false),
     },
     (table) => {
         return [index().on(table.hackathonId)];
@@ -70,7 +69,6 @@ export const insertEventSchema = z.object({
     hasCheckIn: z.boolean().optional(),
     points: z.number().int().optional(),
     variablePoints: z.boolean().optional(),
-    isDeadline: z.boolean().optional(),
 });
 
 export const getEventsSchema = z.object({
