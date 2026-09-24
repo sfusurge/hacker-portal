@@ -389,10 +389,10 @@ function ScheduleHeader({
             )}
         >
             <div className="flex min-w-0 flex-col gap-1">
-                <span className="truncate font-sans text-sm leading-none font-normal text-[var(--text-secondary)]">
+                <span className="truncate text-sm leading-none font-normal text-[var(--text-secondary)]">
                     {eyebrow}
                 </span>
-                <h1 className="leading-tighter truncate font-sans text-2xl font-semibold text-[var(--text-regular)]">
+                <h1 className="leading-tighter truncate text-2xl font-semibold text-[var(--text-regular)]">
                     {monthLabel}
                 </h1>
             </div>
