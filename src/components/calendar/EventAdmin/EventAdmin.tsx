@@ -76,6 +76,9 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
     const selectedHackathonName =
         hackathonOptions.find((option) => option.id === event?.hackathonId)
             ?.name ?? hackathon.name;
+    const checkInEnabled = Boolean(event?.hasCheckIn);
+    const variablePointsEnabled =
+        checkInEnabled && Boolean(event?.variablePoints);
 
     useEffect(() => {
         setEvent(convertEvent(hackathon.id, _selectedEvent?.event));
@@ -447,6 +450,9 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                                 disabled={checkIns.isLoading || hasCheckIns}
                                 onChange={(e) => {
                                     updateEvent('hasCheckIn', e.target.checked);
+                                    if (!e.target.checked) {
+                                        updateEvent('variablePoints', false);
+                                    }
                                 }}
                             />
                         </div>
@@ -458,7 +464,8 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                             <CheckBoxWithLabel
                                 id="eventVariablePoints"
                                 name="Variable points enabled"
-                                checked={event?.variablePoints ?? false}
+                                checked={variablePointsEnabled}
+                                disabled={!checkInEnabled}
                                 onChange={(e) => {
                                     updateEvent(
                                         'variablePoints',
@@ -471,7 +478,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
 
                     <div className="flex flex-col gap-2">
                         <Label className={eventFormLabelClassName}>
-                            {event?.variablePoints ? 'Max points' : 'Points'}
+                            {variablePointsEnabled ? 'Max points' : 'Points'}
                         </Label>
                         <FormTextInput
                             name="points"
@@ -479,6 +486,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                             min={1}
                             defaultValue={event?.points ?? 1}
                             required
+                            disabled={!variablePointsEnabled}
                             lazy
                             onLazyChange={(value) => {
                                 updateEvent(
