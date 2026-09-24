@@ -127,7 +127,9 @@ export function SubmitFormCard({
             activeHackathon.submissionOpen != null
                 ? new Date(activeHackathon.submissionOpen)
                 : null,
-            new Date(activeHackathon.submissionDeadline)
+            activeHackathon.submissionDeadline != null
+                ? new Date(activeHackathon.submissionDeadline)
+                : null
         );
     }
 

@@ -60,7 +60,12 @@ export function isAudienceVotingPeriodForTeamDashboard(
     >
 ): boolean {
     if (!isAudienceVotingEnabled(hackathon)) return false;
-    if (nowMs < hackathon.submissionDeadline.valueOf()) return false;
+    if (
+        hackathon.submissionDeadline == null ||
+        nowMs < hackathon.submissionDeadline.valueOf()
+    ) {
+        return false;
+    }
     if (
         hackathon.audienceVotingOpen == null ||
         hackathon.audienceVotingCloses == null

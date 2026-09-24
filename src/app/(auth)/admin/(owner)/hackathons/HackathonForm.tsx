@@ -111,9 +111,9 @@ const DATETIME_FIELDS: {
 }[] = [
     { key: 'applicationOpen', label: 'Application opens' },
     { key: 'applicationCloses', label: 'Application closes' },
-    { key: 'hackingStart', label: 'Hacking starts', required: true },
+    { key: 'hackingStart', label: 'Hacking starts' },
     { key: 'submissionOpen', label: 'Submission opens' },
-    { key: 'submissionDeadline', label: 'Submission deadline', required: true },
+    { key: 'submissionDeadline', label: 'Submission deadline' },
     { key: 'projectGalleryOpen', label: 'Project gallery opens' },
     {
         key: 'paymentDeadline',
@@ -194,8 +194,6 @@ export function HackathonForm({
         if (!values.startDate) missing.push('Start date');
         if (!values.endDate) missing.push('End date');
         if (!values.eventPageSlug.trim()) missing.push('Event page slug');
-        if (!values.hackingStart) missing.push('Hacking starts');
-        if (!values.submissionDeadline) missing.push('Submission deadline');
         if (missing.length > 0) {
             toast({
                 title: 'Missing required fields',
@@ -205,8 +203,10 @@ export function HackathonForm({
             return;
         }
 
-        const hackingStart = toEpoch(values.hackingStart);
-        if (hackingStart == null) {
+        const hackingStart = values.hackingStart
+            ? toEpoch(values.hackingStart)
+            : null;
+        if (values.hackingStart && hackingStart == null) {
             toast({
                 title: 'Invalid hacking start',
                 description: 'Please pick a valid date and time.',
@@ -215,8 +215,10 @@ export function HackathonForm({
             return;
         }
 
-        const submissionDeadline = toEpoch(values.submissionDeadline);
-        if (submissionDeadline == null) {
+        const submissionDeadline = values.submissionDeadline
+            ? toEpoch(values.submissionDeadline)
+            : null;
+        if (values.submissionDeadline && submissionDeadline == null) {
             toast({
                 title: 'Invalid submission deadline',
                 description: 'Please pick a valid date and time.',

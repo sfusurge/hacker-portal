@@ -233,7 +233,7 @@ export default function SideBar({ className, initialData }: NavProps) {
         canAccessProjectGallery(
             now,
             hackathon.projectGalleryOpen?.toDate() ?? null,
-            hackathon.submissionDeadline.toDate(),
+            hackathon.submissionDeadline?.toDate() ?? null,
             initialData?.userRole,
             hackathon.submissionOpen?.toDate() ?? null
         );

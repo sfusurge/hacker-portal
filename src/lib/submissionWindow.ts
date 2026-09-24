@@ -10,9 +10,9 @@ export function hackathonHasProjectSubmissions(
 export function isSubmissionWindowOpen(
     nowMs: number,
     submissionOpen: Date | null | undefined,
-    submissionDeadline: Date
+    submissionDeadline: Date | null | undefined
 ): boolean {
-    if (submissionOpen == null) return false;
+    if (submissionOpen == null || submissionDeadline == null) return false;
     const openMs = submissionOpen.getTime();
     const deadlineMs = submissionDeadline.getTime();
     return nowMs >= openMs && nowMs <= deadlineMs;
@@ -28,31 +28,31 @@ export function isSubmissionUiHiddenBeforeOpen(
 
 export function getProjectGalleryOpenDate(
     projectGalleryOpen: Date | null | undefined,
-    submissionDeadline: Date
-): Date {
-    return projectGalleryOpen ?? submissionDeadline;
+    submissionDeadline: Date | null | undefined
+): Date | null {
+    return projectGalleryOpen ?? submissionDeadline ?? null;
 }
 
 export function isProjectsGalleryOpen(
     nowMs: number,
     projectGalleryOpen: Date | null | undefined,
-    submissionDeadline: Date
+    submissionDeadline: Date | null | undefined
 ): boolean {
-    return (
-        nowMs >=
-        getProjectGalleryOpenDate(
-            projectGalleryOpen,
-            submissionDeadline
-        ).getTime()
+    const openAt = getProjectGalleryOpenDate(
+        projectGalleryOpen,
+        submissionDeadline
     );
+    if (openAt == null) return false;
+    return nowMs >= openAt.getTime();
 }
 
 /** After submissions close and before the project gallery opens (check-in ticket period). */
 export function isPreGalleryCheckInPeriod(
     nowMs: number,
     projectGalleryOpen: Date | null | undefined,
-    submissionDeadline: Date
+    submissionDeadline: Date | null | undefined
 ): boolean {
+    if (submissionDeadline == null) return false;
     if (isProjectsGalleryOpen(nowMs, projectGalleryOpen, submissionDeadline)) {
         return false;
     }
@@ -67,7 +67,7 @@ export function isPreGalleryCheckInPeriod(
 export function canAccessProjectGallery(
     nowMs: number,
     projectGalleryOpen: Date | null | undefined,
-    submissionDeadline: Date,
+    submissionDeadline: Date | null | undefined,
     userRole?: string | null,
     submissionOpen?: Date | null
 ): boolean {

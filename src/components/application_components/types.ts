@@ -47,8 +47,8 @@ export interface HackathonData {
     applicationQuestionPages: InputFormPageData[];
     submissionQuestionPages: InputFormPageData[];
 
-    hackingStart: dayjs.Dayjs;
-    submissionDeadline: dayjs.Dayjs;
+    hackingStart: dayjs.Dayjs | null;
+    submissionDeadline: dayjs.Dayjs | null;
     projectGalleryOpen: dayjs.Dayjs | null;
     submissionOpen: dayjs.Dayjs | null;
     applicationOpen: dayjs.Dayjs | null;

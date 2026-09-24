@@ -40,7 +40,7 @@ function getTeamDashboardCardPhase(
     hackathon: HackathonData
 ): TeamDashboardCardPhase {
     const submissionOpen = hackathon.submissionOpen?.toDate() ?? null;
-    const submissionDeadline = hackathon.submissionDeadline.toDate();
+    const submissionDeadline = hackathon.submissionDeadline?.toDate() ?? null;
     const projectGalleryOpen = hackathon.projectGalleryOpen?.toDate() ?? null;
 
     if (isSubmissionUiHiddenBeforeOpen(nowMs, submissionOpen)) {
@@ -313,10 +313,16 @@ function SubmitCardContent({
         return (
             <>
                 {!teamdata.data && <p>You are not in a team yet!</p>}
-                <span className="text-sm text-white/60">{`Projects are due on ${hackathon.submissionDeadline.format('MMM D, h:mm A')}!`}</span>
-                <CountdownTimer
-                    targetDate={hackathon.submissionDeadline.toDate()}
-                />
+                <span className="text-sm text-white/60">
+                    {hackathon.submissionDeadline != null
+                        ? `Projects are due on ${hackathon.submissionDeadline.format('MMM D, h:mm A')}!`
+                        : 'Set a submission deadline to open project submissions.'}
+                </span>
+                {hackathon.submissionDeadline != null && (
+                    <CountdownTimer
+                        targetDate={hackathon.submissionDeadline.toDate()}
+                    />
+                )}
             </>
         );
     }

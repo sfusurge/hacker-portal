@@ -323,8 +323,8 @@ function buildHackathonDeadlineEvents({
     submissionDeadline,
 }: {
     hackathonId: number;
-    hackingStart: Dayjs;
-    submissionDeadline: Dayjs;
+    hackingStart: Dayjs | null;
+    submissionDeadline: Dayjs | null;
 }): InternalCalendarEventType[] {
     return [
         {
@@ -338,7 +338,12 @@ function buildHackathonDeadlineEvents({
             time: submissionDeadline,
         },
     ]
-        .filter(({ time }) => time.isValid() && time.valueOf() > 0)
+        .filter(
+            (entry): entry is { id: number; title: string; time: Dayjs } =>
+                entry.time != null &&
+                entry.time.isValid() &&
+                entry.time.valueOf() > 0
+        )
         .map(({ id, title, time }) => ({
             id,
             checkedIn: false,

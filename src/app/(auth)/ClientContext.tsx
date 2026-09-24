@@ -86,8 +86,8 @@ interface DbHackathonType {
     name: string;
     startDate: string;
     endDate: string;
-    hackingStart: Date;
-    submissionDeadline: Date;
+    hackingStart: Date | null;
+    submissionDeadline: Date | null;
     projectGalleryOpen?: Date | null;
     submissionOpen: Date | null;
     applicationOpen?: Date | null;
@@ -123,7 +123,7 @@ function DeserializeHackathonData(
             submissionQuestionPages: [],
             judgeQuestions: [],
             judgeRubric: [],
-            submissionDeadline: dayjs(0),
+            submissionDeadline: null,
             projectGalleryOpen: null,
             submissionOpen: null,
             applicationOpen: null,
@@ -133,7 +133,7 @@ function DeserializeHackathonData(
             audienceVotingCloses: null,
             startDate: dayjs(0),
             endDate: dayjs(0),
-            hackingStart: dayjs(0),
+            hackingStart: null,
         };
     }
     return {
@@ -146,8 +146,14 @@ function DeserializeHackathonData(
         hackathonName: hackathon.name,
         startDate: dayjs(hackathon.startDate),
         endDate: dayjs(hackathon.endDate),
-        hackingStart: dayjs(hackathon.hackingStart),
-        submissionDeadline: dayjs(hackathon.submissionDeadline),
+        hackingStart:
+            hackathon.hackingStart != null
+                ? dayjs(hackathon.hackingStart)
+                : null,
+        submissionDeadline:
+            hackathon.submissionDeadline != null
+                ? dayjs(hackathon.submissionDeadline)
+                : null,
         projectGalleryOpen:
             hackathon.projectGalleryOpen != null
                 ? dayjs(hackathon.projectGalleryOpen)

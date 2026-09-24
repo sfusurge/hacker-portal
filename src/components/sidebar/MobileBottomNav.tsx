@@ -153,7 +153,7 @@ export default function MobileBottomNav({
         canAccessProjectGallery(
             now,
             hackathon.projectGalleryOpen?.toDate() ?? null,
-            hackathon.submissionDeadline.toDate(),
+            hackathon.submissionDeadline?.toDate() ?? null,
             initialData?.userRole,
             hackathon.submissionOpen?.toDate() ?? null
         );

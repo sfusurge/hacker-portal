@@ -18,6 +18,13 @@ export default function SubmissionInfoCard() {
     const [formattedTime, setFormattedTime] = useState<string>('');
 
     useEffect(() => {
+        if (hackathon.submissionDeadline == null) {
+            setHoursUntil(null);
+            setFormattedDate('');
+            setFormattedTime('');
+            return;
+        }
+
         const deadline = hackathon.submissionDeadline.toDate();
 
         const calculateHoursLeft = (targetDate: Date): number => {
