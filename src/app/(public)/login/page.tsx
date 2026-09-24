@@ -85,7 +85,7 @@ async function LoginContent({
         await auth.api.signInMagicLink({
             body: {
                 email: formData.get('email') as string,
-                callbackURL: '/login',
+                callbackURL: `/login${redirectTarget ? '?from=' + encodeURIComponent(redirectTarget) : ''}`,
             },
             headers: await headers(),
         });
