@@ -40,6 +40,7 @@ export interface CalendarEvent {
     eventType: EventType;
     points: number;
     variablePoints: boolean;
+    isDeadline: boolean;
 }
 
 const rsvpEventSchema = z.object({
@@ -51,23 +52,27 @@ export const eventsRouter = router({
         .input(insertEventSchema)
         .mutation(async ({ input }) => {
             console.log(`Inserting ${JSON.stringify(input)}`);
+            const startDate = new Date(input.startDate);
+            const isDeadline = Boolean(input.isDeadline);
 
             const [event] = await databaseClient
                 .insert(eventsTable)
                 .values({
                     hackathonId: input.hackathonId,
                     title: input.title,
-                    startDate: new Date(input.startDate),
-                    endDate: new Date(input.endDate),
-                    location: input.location,
-                    imageUrl: input.imageUrl || null,
+                    startDate,
+                    endDate: isDeadline ? startDate : new Date(input.endDate),
+                    location: isDeadline ? '' : (input.location ?? ''),
+                    imageUrl: isDeadline ? null : input.imageUrl || null,
                     color: input.color,
-                    description: input.description,
-                    longDescription: input.longDescription,
-                    eventType: input.eventType as EventType,
-                    hasCheckIn: input.hasCheckIn,
-                    points: input.points,
-                    variablePoints: input.variablePoints,
+                    description: isDeadline ? '' : input.description,
+                    longDescription: isDeadline ? null : input.longDescription,
+                    eventType: (input.eventType ??
+                        EventType.EVENT) as EventType,
+                    isDeadline,
+                    hasCheckIn: isDeadline ? false : input.hasCheckIn,
+                    points: isDeadline ? 1 : input.points,
+                    variablePoints: isDeadline ? false : input.variablePoints,
                 })
                 .returning();
 
@@ -226,21 +231,26 @@ export const eventsRouter = router({
     updateEvent: adminProcedure
         .input(updateEventSchema)
         .mutation(async ({ input }) => {
+            const startDate = new Date(input.startDate);
+            const isDeadline = Boolean(input.isDeadline);
+
             const [event] = await databaseClient
                 .update(eventsTable)
                 .set({
                     title: input.title,
                     color: input.color,
-                    startDate: new Date(input.startDate),
-                    endDate: new Date(input.endDate),
-                    location: input.location,
-                    imageUrl: input.imageUrl || null,
-                    description: input.description,
-                    longDescription: input.longDescription,
-                    eventType: input.eventType as EventType,
-                    hasCheckIn: input.hasCheckIn,
-                    points: input.points,
-                    variablePoints: input.variablePoints,
+                    startDate,
+                    endDate: isDeadline ? startDate : new Date(input.endDate),
+                    location: isDeadline ? '' : (input.location ?? ''),
+                    imageUrl: isDeadline ? null : input.imageUrl || null,
+                    description: isDeadline ? '' : input.description,
+                    longDescription: isDeadline ? null : input.longDescription,
+                    eventType: (input.eventType ??
+                        EventType.EVENT) as EventType,
+                    isDeadline,
+                    hasCheckIn: isDeadline ? false : input.hasCheckIn,
+                    points: isDeadline ? 1 : input.points,
+                    variablePoints: isDeadline ? false : input.variablePoints,
                 })
                 .where(eq(eventsTable.id, input.eventId))
                 .returning();

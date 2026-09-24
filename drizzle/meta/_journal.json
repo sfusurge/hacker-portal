@@ -57,6 +57,13 @@
       "when": 1789966461274,
       "tag": "0007_busy_talkback",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790227200000,
+      "tag": "0008_add_is_deadline_to_events",
+      "breakpoints": true
     }
   ]
 }

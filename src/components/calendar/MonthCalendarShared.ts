@@ -162,7 +162,24 @@ function getHour(t: Dayjs) {
 }
 
 export function getEventDurationString(event: InternalCalendarEventType) {
+    if (event.isDeadline) {
+        return `Due at ${getHour(event.startTime)}`;
+    }
+
     return `${getHour(event.startTime)} to ${getHour(event.endTime)}`;
+}
+
+export function getEventTimeLabel(
+    event: InternalCalendarEventType,
+    separator = ' - '
+) {
+    const startTime = event.startTime.format('h:mm A');
+
+    if (event.isDeadline) {
+        return startTime;
+    }
+
+    return `${startTime}${separator}${event.endTime.format('h:mm A')}`;
 }
 
 export type InternalCalendarEventType = Omit<
@@ -182,11 +199,14 @@ export function DayjsifyEvents(
             ...e,
             startTime: dayjs(e.startDate),
             endTime: dayjs(e.endDate),
-            duration: 0,
+            duration: e.isDeadline
+                ? 0
+                : Math.abs(
+                      Math.ceil(
+                          dayjs(e.startDate).diff(dayjs(e.endDate), 'minute')
+                      )
+                  ),
         };
-        res.duration = Math.abs(
-            Math.ceil(res.startTime.diff(res.endTime, 'minute'))
-        );
         return res;
     });
 }

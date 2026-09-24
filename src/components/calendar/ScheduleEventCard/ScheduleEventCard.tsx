@@ -1,5 +1,8 @@
 import type { ButtonHTMLAttributes, ComponentType, SVGProps } from 'react';
-import type { InternalCalendarEventType } from '../MonthCalendarShared';
+import {
+    getEventTimeLabel,
+    type InternalCalendarEventType,
+} from '../MonthCalendarShared';
 import style from './ScheduleEventCard.module.css';
 import { cn } from '@/lib/utils';
 import { EventType } from '@/db/schema/events';
@@ -42,8 +45,7 @@ export function ScheduleEventCard({
                 <Icon className={style.icon} />
                 <span className={style.metaText}>
                     {event.startTime.format('MMM. D')} ·{' '}
-                    {event.startTime.format('h:mm A')} -{' '}
-                    {event.endTime.format('h:mm A')}
+                    {getEventTimeLabel(event)}
                 </span>
             </span>
         </button>

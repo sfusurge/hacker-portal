@@ -39,7 +39,9 @@ export function ScheduleEventsCard({
                     <ScheduleEventCard
                         key={event.id}
                         event={event}
-                        statusLabel="Not Yet Added"
+                        statusLabel={
+                            event.isDeadline ? 'Deadline' : 'Not Yet Added'
+                        }
                         onClick={() => {
                             selectEvent(event);
                         }}

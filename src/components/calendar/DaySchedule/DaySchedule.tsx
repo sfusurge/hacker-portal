@@ -481,6 +481,7 @@ function DayEventItem({
             : 0;
     const showMeta = height >= 40;
     const showLocation = event.location && !isOverlapping && !isCompact;
+    const isDeadline = event.isDeadline;
     const isRsvpEvent = canRsvpEvent(event);
     const Icon =
         event.eventType === EventType.WORKSHOP
@@ -488,6 +489,11 @@ function DayEventItem({
             : event.eventType === EventType.ACTIVITY
               ? FaceSmileIcon
               : BoltIcon;
+    const dayEventTitleClassName = clsx(
+        style.dayEventLine,
+        style.dayEventTitle
+    );
+    const dayEventMetaClassName = clsx(style.dayEventLine, style.dayEventMeta);
 
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -499,10 +505,16 @@ function DayEventItem({
         <div
             ref={containerRef}
             className={clsx([
-                style.dayEvent,
-                isRsvpEvent ? style.dayEventRsvped : style.dayEventStandard,
-                isRsvpEvent && !event.rsvped && style.dayEventNeedsRsvp,
-                isCompact && style.dayEventCompact,
+                isDeadline ? style.deadlineEvent : style.dayEvent,
+                !isDeadline &&
+                    (isRsvpEvent
+                        ? style.dayEventRsvped
+                        : style.dayEventStandard),
+                !isDeadline &&
+                    isRsvpEvent &&
+                    !event.rsvped &&
+                    style.dayEventNeedsRsvp,
+                !isDeadline && isCompact && style.dayEventCompact,
                 {
                     [style.active]: isActive,
                 },
@@ -513,37 +525,51 @@ function DayEventItem({
             style={
                 {
                     '--top': `${Math.round(top)}px`,
-                    '--height': `${Math.round(height)}px`,
-                    '--left': `${overlapLeft}%`,
-                    '--width': `${overlapWidth}%`,
+                    '--height': `${Math.round(isDeadline ? 52 : height)}px`,
+                    '--left': `${isDeadline ? 0 : overlapLeft}%`,
+                    '--width': `${isDeadline ? 100 : overlapWidth}%`,
                     '--dayEventZIndex': columnIndex + 1,
                 } as CSSProperties
             }
         >
-            <div className={style.dayEventContent}>
-                <span className={clsx(style.dayEventLine, style.dayEventTitle)}>
-                    {event.title}
-                </span>
-                {showMeta && (
-                    <span
-                        className={clsx(style.dayEventLine, style.dayEventMeta)}
-                    >
-                        <Icon className={style.dayEventIcon} />
-                        <span className={style.dayEventMetaText}>
-                            {`${eventTime.format('h:mm A')} - ${eventEndTime.format('h:mm A')}`}
-                            {showLocation && ` · ${event.location}`}
-                        </span>
+            {isDeadline ? (
+                <div className={style.deadlineEventContent}>
+                    <span className={style.deadlineEventTitle}>
+                        {event.title}
                     </span>
-                )}
-            </div>
+                    <span className={style.deadlineEventTime}>
+                        {getDeadlineTimeLabel(eventTime)}
+                    </span>
+                </div>
+            ) : (
+                <div className={style.dayEventContent}>
+                    <span className={dayEventTitleClassName}>
+                        {event.title}
+                    </span>
+                    {showMeta && (
+                        <span className={dayEventMetaClassName}>
+                            <Icon className={style.dayEventIcon} />
+                            <span className={style.dayEventMetaText}>
+                                {`${eventTime.format('h:mm A')} - ${eventEndTime.format('h:mm A')}`}
+                                {showLocation && ` · ${event.location}`}
+                            </span>
+                        </span>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
 
+function getDeadlineTimeLabel(time: Dayjs) {
+    return time.format(time.minute() === 0 ? 'hA' : 'h:mmA');
+}
+
 function canRsvpEvent(event: InternalCalendarEventType) {
     return (
-        event.eventType === EventType.WORKSHOP ||
-        event.eventType === EventType.ACTIVITY
+        !event.isDeadline &&
+        (event.eventType === EventType.WORKSHOP ||
+            event.eventType === EventType.ACTIVITY)
     );
 }
 

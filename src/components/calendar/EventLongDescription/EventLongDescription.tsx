@@ -25,7 +25,10 @@ import { EVENT_DISCORD_URL } from '@/lib/eventDiscord';
 import { cn } from '@/lib/utils';
 import { trpc } from '@/trpc/client';
 import style from './EventLongDescription.module.css';
-import { InternalCalendarEventType } from '../MonthCalendarShared';
+import {
+    getEventTimeLabel,
+    InternalCalendarEventType,
+} from '../MonthCalendarShared';
 
 type LongDescriptionModalProps = {
     event: InternalCalendarEventType;
@@ -338,5 +341,5 @@ function getEventDetailsTimeLabel(event: InternalCalendarEventType) {
         ? startDate
         : `${startDate} - ${endDate}`;
 
-    return `${dateLabel} · ${event.startTime.format('h:mm A')}-${event.endTime.format('h:mm A')}`;
+    return `${dateLabel} · ${getEventTimeLabel(event, '-')}`;
 }

@@ -76,6 +76,7 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
     const selectedHackathonName =
         hackathonOptions.find((option) => option.id === event?.hackathonId)
             ?.name ?? hackathon.name;
+    const isDeadline = event?.isDeadline ?? false;
 
     useEffect(() => {
         setEvent(convertEvent(hackathon.id, _selectedEvent?.event));
@@ -163,6 +164,23 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
         });
     }
 
+    function updateDeadlineMode(isDeadline: boolean) {
+        setEvent((current) => {
+            if (!current) {
+                return current;
+            }
+
+            return {
+                ...current,
+                isDeadline,
+                color: isDeadline ? '#EAB308' : current.color,
+                endDate: isDeadline ? current.startDate : current.endDate,
+                hasCheckIn: isDeadline ? false : current.hasCheckIn,
+                variablePoints: isDeadline ? false : current.variablePoints,
+            };
+        });
+    }
+
     async function saveEvent(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (!event) {
@@ -171,12 +189,19 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
 
         const formData = new FormData(e.currentTarget);
         const getValue = (name: string) => String(formData.get(name) ?? '');
-        const description = formData.has('description')
-            ? getValue('description')
-            : (event.description ?? '');
-        let imageUrl = event.imageUrl;
+        const isDeadline = event.isDeadline;
+        const startDate = dayjs(new Date(getValue('startDate'))).toDate();
+        const endDate = isDeadline
+            ? startDate
+            : dayjs(new Date(getValue('endDate'))).toDate();
+        const description = isDeadline
+            ? ''
+            : formData.has('description')
+              ? getValue('description')
+              : (event.description ?? '');
+        let imageUrl = isDeadline ? undefined : event.imageUrl;
 
-        if (imageFile) {
+        if (!isDeadline && imageFile) {
             const extension = imageFile.name.slice(
                 imageFile.name.lastIndexOf('.')
             );
@@ -194,12 +219,14 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
             ...event,
             title: getValue('title'),
             description,
-            location: getValue('location'),
+            location: isDeadline ? '' : getValue('location'),
             imageUrl,
-            startDate: dayjs(new Date(getValue('startDate'))).toDate(),
-            endDate: dayjs(new Date(getValue('endDate'))).toDate(),
+            startDate,
+            endDate,
         };
-        const submittedLongDescription = getValue('longDescription');
+        const submittedLongDescription = isDeadline
+            ? ''
+            : getValue('longDescription');
         let savedEventId = submittedEvent.id;
 
         if (!_selectedEvent) {
@@ -325,10 +352,10 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                                     return;
                                 }
 
-                                setEvent({
-                                    ...event,
-                                    eventType: eventType as EventType,
-                                });
+                                updateEvent(
+                                    'eventType',
+                                    eventType as EventType
+                                );
                             }}
                         >
                             <SelectTrigger className="h-11 w-full">
@@ -371,9 +398,28 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                         </Select>
                     </div>
 
+                    <div className="flex flex-col gap-2">
+                        <Label className={eventFormLabelClassName}>
+                            Calendar display
+                        </Label>
+                        <CheckBoxWithLabel
+                            id="eventIsDeadline"
+                            name="Deadline"
+                            checked={isDeadline}
+                            onChange={(e) => {
+                                updateDeadlineMode(e.target.checked);
+                            }}
+                        />
+                    </div>
+
                     <div className="border-t border-[var(--border-neutral-tertiary)]" />
 
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    <div
+                        className={cn(
+                            'grid grid-cols-1 gap-5',
+                            !isDeadline && 'sm:grid-cols-2'
+                        )}
+                    >
                         <div className="flex flex-col gap-2">
                             <Label required className={eventFormLabelClassName}>
                                 Start date
@@ -397,122 +443,140 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                             />
                         </div>
 
-                        <div className="flex flex-col gap-2">
-                            <Label required className={eventFormLabelClassName}>
-                                End date
-                            </Label>
-                            <EventDateInput
-                                name="endDate"
-                                value={
-                                    event?.endDate
-                                        ? dayjs(event.endDate).format(
-                                              'YYYY-MM-DDTHH:mm:ss'
-                                          )
-                                        : ''
-                                }
-                                required
-                                onChange={(t) => {
-                                    updateEvent(
-                                        'endDate',
-                                        dayjs(new Date(t)).toDate()
-                                    );
-                                }}
+                        {!isDeadline && (
+                            <div className="flex flex-col gap-2">
+                                <Label
+                                    required
+                                    className={eventFormLabelClassName}
+                                >
+                                    End date
+                                </Label>
+                                <EventDateInput
+                                    name="endDate"
+                                    value={
+                                        event?.endDate
+                                            ? dayjs(event.endDate).format(
+                                                  'YYYY-MM-DDTHH:mm:ss'
+                                              )
+                                            : ''
+                                    }
+                                    required
+                                    onChange={(t) => {
+                                        updateEvent(
+                                            'endDate',
+                                            dayjs(new Date(t)).toDate()
+                                        );
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {!isDeadline && (
+                        <>
+                            <div className="flex flex-col gap-2">
+                                <Label
+                                    required
+                                    className={eventFormLabelClassName}
+                                >
+                                    Location
+                                </Label>
+                                <FormTextInput
+                                    name="location"
+                                    placeholder="Location"
+                                    type="text"
+                                    defaultValue={event?.location ?? ''}
+                                    required
+                                    lazy
+                                    onLazyChange={(txt) => {
+                                        updateEvent('location', txt);
+                                    }}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                                <div className="flex flex-col gap-2">
+                                    <Label className={eventFormLabelClassName}>
+                                        Has check-in?
+                                    </Label>
+                                    <CheckBoxWithLabel
+                                        id="eventHasCheckIn"
+                                        name="Check-in enabled"
+                                        checked={event?.hasCheckIn ?? false}
+                                        disabled={
+                                            checkIns.isLoading || hasCheckIns
+                                        }
+                                        onChange={(e) => {
+                                            updateEvent(
+                                                'hasCheckIn',
+                                                e.target.checked
+                                            );
+                                        }}
+                                    />
+                                </div>
+
+                                <div className="flex flex-col gap-2">
+                                    <Label className={eventFormLabelClassName}>
+                                        Variable points at check-in?
+                                    </Label>
+                                    <CheckBoxWithLabel
+                                        id="eventVariablePoints"
+                                        name="Variable points enabled"
+                                        checked={event?.variablePoints ?? false}
+                                        onChange={(e) => {
+                                            updateEvent(
+                                                'variablePoints',
+                                                e.target.checked
+                                            );
+                                        }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                <Label className={eventFormLabelClassName}>
+                                    {event?.variablePoints
+                                        ? 'Max points'
+                                        : 'Points'}
+                                </Label>
+                                <FormTextInput
+                                    name="points"
+                                    type="number"
+                                    min={1}
+                                    defaultValue={event?.points ?? 1}
+                                    required
+                                    lazy
+                                    onLazyChange={(value) => {
+                                        updateEvent(
+                                            'points',
+                                            Number.isNaN(value) ? 1 : value
+                                        );
+                                    }}
+                                />
+                            </div>
+                            <div className="border-t border-[var(--border-neutral-tertiary)]" />
+
+                            <EventImageUpload
+                                previewUrl={imagePreviewUrl ?? event?.imageUrl}
+                                onFileChange={setImageFile}
                             />
-                        </div>
-                    </div>
 
-                    <div className="flex flex-col gap-2">
-                        <Label required className={eventFormLabelClassName}>
-                            Location
-                        </Label>
-                        <FormTextInput
-                            name="location"
-                            placeholder="Location"
-                            type="text"
-                            defaultValue={event?.location ?? ''}
-                            required
-                            lazy
-                            onLazyChange={(txt) => {
-                                updateEvent('location', txt);
-                            }}
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                        <div className="flex flex-col gap-2">
-                            <Label className={eventFormLabelClassName}>
-                                Has check-in?
-                            </Label>
-                            <CheckBoxWithLabel
-                                id="eventHasCheckIn"
-                                name="Check-in enabled"
-                                checked={event?.hasCheckIn ?? false}
-                                disabled={checkIns.isLoading || hasCheckIns}
-                                onChange={(e) => {
-                                    updateEvent('hasCheckIn', e.target.checked);
-                                }}
-                            />
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <Label className={eventFormLabelClassName}>
-                                Variable points at check-in?
-                            </Label>
-                            <CheckBoxWithLabel
-                                id="eventVariablePoints"
-                                name="Variable points enabled"
-                                checked={event?.variablePoints ?? false}
-                                onChange={(e) => {
-                                    updateEvent(
-                                        'variablePoints',
-                                        e.target.checked
-                                    );
-                                }}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                        <Label className={eventFormLabelClassName}>
-                            {event?.variablePoints ? 'Max points' : 'Points'}
-                        </Label>
-                        <FormTextInput
-                            name="points"
-                            type="number"
-                            min={1}
-                            defaultValue={event?.points ?? 1}
-                            required
-                            lazy
-                            onLazyChange={(value) => {
-                                updateEvent(
-                                    'points',
-                                    Number.isNaN(value) ? 1 : value
-                                );
-                            }}
-                        />
-                    </div>
-
-                    <div className="border-t border-[var(--border-neutral-tertiary)]" />
-
-                    <EventImageUpload
-                        previewUrl={imagePreviewUrl ?? event?.imageUrl}
-                        onFileChange={setImageFile}
-                    />
-
-                    <div className="flex flex-col gap-3">
-                        <Label className={eventFormLabelClassName}>
-                            Event description (Optional)
-                        </Label>
-                        <FormTextArea
-                            name="longDescription"
-                            placeholder=" "
-                            defaultValue={longDescription}
-                            lazy
-                            onLazyChange={(t) => {
-                                setLongDescription(t);
-                            }}
-                        />
-                    </div>
+                            <div className="flex flex-col gap-3">
+                                <Label className={eventFormLabelClassName}>
+                                    Event description (Optional)
+                                </Label>
+                                <FormTextArea
+                                    name="longDescription"
+                                    placeholder=" "
+                                    defaultValue={longDescription}
+                                    lazy
+                                    onLazyChange={(t) => {
+                                        setLongDescription(t);
+                                    }}
+                                />
+                            </div>
+                        </>
+                    )}
 
                     <div className="flex items-center justify-between gap-3 pt-2">
                         {_selectedEvent && (
@@ -662,6 +726,7 @@ function convertEvent(hackathonId: number, e?: InternalCalendarEventType) {
             hasCheckIn: false,
             points: 1,
             variablePoints: false,
+            isDeadline: false,
         } as CalendarEvent;
     }
     return {} as CalendarEvent;
