@@ -16,6 +16,7 @@ import { FormTextArea } from '@/components/ui/formTextArea/FormTextArea';
 import { Button } from '@/components/ui/button';
 import dayjs from 'dayjs';
 import { Calendar as CalendarIcon } from 'lucide-react';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/solid';
 import {
     Select,
     SelectContent,
@@ -46,6 +47,11 @@ const checkerboardBackground = {
     background:
         'repeating-conic-gradient(#f0f0f0 0 25%, #fff 0 50%) 0 0 / 16px 16px',
 };
+
+const eventImageAllowedTypes = ['image/png', 'image/jpeg'];
+const eventImageMaxSizeBytes = 16 * 1024 * 1024;
+const eventImageMinWidth = 800;
+const eventImageMinHeight = 450;
 
 type EventDateInputProps = {
     name: string;
@@ -601,6 +607,53 @@ function EventDateInput({
 
 function EventImageUpload({ previewUrl, onFileChange }: EventImageUploadProps) {
     const inputRef = useRef<HTMLInputElement | null>(null);
+    const [errorMsg, setError] = useState('');
+
+    function rejectFile(message: string) {
+        setError(message);
+        onFileChange(undefined);
+        if (inputRef.current) inputRef.current.value = '';
+    }
+
+    async function handleFileChange(file?: File) {
+        setError('');
+
+        if (!file) {
+            onFileChange(undefined);
+            return;
+        }
+
+        if (!eventImageAllowedTypes.includes(file.type)) {
+            return rejectFile(
+                'Unsupported format. Please upload a PNG or JPEG.'
+            );
+        }
+
+        if (file.size > eventImageMaxSizeBytes) {
+            return rejectFile('File size too large. Limit is 16 MB.');
+        }
+
+        const imageUrl = URL.createObjectURL(file);
+        const image = new Image();
+        image.src = imageUrl;
+
+        try {
+            await image.decode();
+        } catch {
+            return rejectFile('Image could not be loaded.');
+        } finally {
+            URL.revokeObjectURL(imageUrl);
+        }
+
+        if (
+            image.naturalWidth < eventImageMinWidth ||
+            image.naturalHeight < eventImageMinHeight
+        ) {
+            return rejectFile('Image must be at least 800px x 450px.');
+        }
+
+        onFileChange(file);
+    }
 
     return (
         <div className="flex items-start gap-6">
@@ -625,7 +678,9 @@ function EventImageUpload({ previewUrl, onFileChange }: EventImageUploadProps) {
                     type="file"
                     accept="image/jpeg,image/png"
                     className="hidden"
-                    onChange={(e) => onFileChange(e.target.files?.[0])}
+                    onChange={(e) => {
+                        handleFileChange(e.target.files?.[0]);
+                    }}
                 />
                 <Button
                     type="button"
@@ -642,6 +697,12 @@ function EventImageUpload({ previewUrl, onFileChange }: EventImageUploadProps) {
                     <br />
                     At least 800px x 450px
                 </p>
+                {errorMsg && (
+                    <div className="text-danger-400 animate-in fade-in slide-in-from-top-1 flex items-center gap-2">
+                        <ExclamationTriangleIcon className="h-4 w-4 shrink-0" />
+                        <span className="text-xs font-medium">{errorMsg}</span>
+                    </div>
+                )}
             </div>
         </div>
     );
