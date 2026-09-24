@@ -7,6 +7,7 @@ import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
     getEventsOfMonth,
     groupEventsByDay,
+    selectEventAtom,
     selectedEventAtom,
     selectedDayAtom,
     yearMonthDay,
@@ -50,7 +51,8 @@ export function MonthCalendar({
         return dayjs(new Date(year, month, 1));
     }, [year, month]);
 
-    const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
+    const selectedEvent = useAtomValue(selectedEventAtom);
+    const selectEvent = useSetAtom(selectEventAtom);
     const renderRootRef = useRef<HTMLDivElement>(null);
 
     const setRowHeight = useSetAtom(rowHeightAtom);
@@ -72,7 +74,7 @@ export function MonthCalendar({
                     <LongDescriptionModal
                         event={selectedEvent.event}
                         onClose={() => {
-                            setSelectedEvent(undefined);
+                            selectEvent();
                         }}
                     />
                 )}
@@ -236,7 +238,7 @@ function MonthDay({
 }
 
 function MonthDayEvent({ event }: { event: InternalCalendarEventType }) {
-    const setSelectedEvent = useSetAtom(selectedEventAtom);
+    const selectEvent = useSetAtom(selectEventAtom);
     const ref = useRef<HTMLDivElement>(null);
     return (
         <div
@@ -249,7 +251,7 @@ function MonthDayEvent({ event }: { event: InternalCalendarEventType }) {
             }
             onClick={(e) => {
                 e.stopPropagation();
-                setSelectedEvent({ event, element: ref.current!.parentNode! });
+                selectEvent(event, ref.current?.parentNode);
             }}
         >
             {event.title}

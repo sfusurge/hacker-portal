@@ -5,7 +5,7 @@ import {
     currentYearMonthAtom,
     DayjsifyEvents,
     editModeAtom,
-    selectedEventAtom,
+    selectEventAtom,
 } from '@/components/calendar/MonthCalendarShared';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -64,7 +64,7 @@ export function ClientCalendarPage({
     const [width] = useWindowSize();
     const isMobile = useMemo(() => width <= 768, [width]);
 
-    const setSelectedEvent = useSetAtom(selectedEventAtom);
+    const selectEvent = useSetAtom(selectEventAtom);
     const setEditMode = useSetAtom(editModeAtom);
 
     const fetchEvents = trpc.events.getEvents.useQuery(
@@ -187,9 +187,9 @@ export function ClientCalendarPage({
     }
 
     const handleAddEvent = useCallback(() => {
-        setSelectedEvent(undefined);
+        selectEvent();
         setEditMode(true);
-    }, [setEditMode, setSelectedEvent]);
+    }, [selectEvent, setEditMode]);
 
     useEffect(() => {
         const interval = setInterval(updateEvents, 30000); // 5 mins

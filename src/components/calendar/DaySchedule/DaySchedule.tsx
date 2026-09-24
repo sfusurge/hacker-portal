@@ -7,10 +7,11 @@ import {
     editModeAtom,
     groupEventsByDay,
     InternalCalendarEventType,
+    selectEventAtom,
     selectedEventAtom,
 } from '../MonthCalendarShared';
 import dayjs, { Dayjs } from 'dayjs';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { AnimatePresence } from 'motion/react';
 import { LongDescriptionModal } from '../EventLongDescription/EventLongDescription';
 import clsx from 'clsx';
@@ -78,7 +79,8 @@ export function DaySchedule({
         );
     }, [events, startDate, days]);
 
-    const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
+    const selectedEvent = useAtomValue(selectedEventAtom);
+    const selectEvent = useSetAtom(selectEventAtom);
     const [editMode, setEditMode] = useAtom(editModeAtom);
     const rsvpEvent = trpc.events.rsvpEvent.useMutation();
 
@@ -126,13 +128,13 @@ export function DaySchedule({
 
         await rsvpEvent.mutateAsync({ eventId: event.id });
 
-        setSelectedEvent({
-            ...selectedEvent,
-            event: {
+        selectEvent(
+            {
                 ...event,
                 rsvped: true,
             },
-        });
+            selectedEvent.element
+        );
 
         await onEventRsvpChange?.();
     };
@@ -154,7 +156,7 @@ export function DaySchedule({
                         event={selectedEvent.event}
                         isAdmin={isAdmin}
                         onClose={() => {
-                            setSelectedEvent(undefined);
+                            selectEvent();
                         }}
                         onAddToSchedule={
                             canRsvpSelectedEvent
@@ -436,7 +438,8 @@ function DayEventItem({
         ];
     }, [parentHeight]);
 
-    const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
+    const selectedEvent = useAtomValue(selectedEventAtom);
+    const selectEvent = useSetAtom(selectEventAtom);
 
     const eventTime = event.startTime;
     const eventEndTime = eventTime.add(event.duration, 'minute');
@@ -505,10 +508,7 @@ function DayEventItem({
                 },
             ])}
             onClick={() => {
-                setSelectedEvent({
-                    element: containerRef.current ?? undefined,
-                    event,
-                });
+                selectEvent(event, containerRef.current);
             }}
             style={
                 {

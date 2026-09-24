@@ -1,9 +1,10 @@
 import { CalendarEvent } from '@/server/routers/eventsRouter';
-import { PrimitiveAtom, useAtom, useAtomValue } from 'jotai';
+import { PrimitiveAtom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
     DayjsifyEvents,
     editModeAtom,
     InternalCalendarEventType,
+    selectEventAtom,
     selectedEventAtom,
 } from '../MonthCalendarShared';
 import { SideDrawer } from '@/components/ui/SideDrawer/SideDrawer';
@@ -59,7 +60,8 @@ type EventImageUploadProps = {
 };
 
 export function EventAdmin({ eventsAtom }: EventAdminProps) {
-    const [_selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
+    const _selectedEvent = useAtomValue(selectedEventAtom);
+    const clearSelectedEvent = useSetAtom(selectEventAtom);
     const [, setEvents] = useAtom(eventsAtom);
     const [editMode, setEditMode] = useAtom(editModeAtom);
 
@@ -241,9 +243,9 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
 
     useEffect(() => {
         if (!editMode) {
-            setSelectedEvent(undefined);
+            clearSelectedEvent();
         }
-    }, [editMode]);
+    }, [clearSelectedEvent, editMode]);
 
     if (!hackathon) {
         return false;

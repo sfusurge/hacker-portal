@@ -303,19 +303,18 @@ function EventDetailsContent({ event }: { event: InternalCalendarEventType }) {
                 <img alt="" className={style.eventImage} src={event.imageUrl} />
             )}
 
-            <div className={style.descriptionScrollArea}>
-                {showShortDescription && (
-                    <p className={style.shortDescription}>{shortDescription}</p>
-                )}
-                {longDescriptionText && (
-                    <MarkdownDisplay content={longDescriptionText} />
-                )}
-                {!hasDescription && (
-                    <p className={style.emptyDescription}>
-                        No description yet.
-                    </p>
-                )}
-            </div>
+            {hasDescription && (
+                <div className={style.descriptionScrollArea}>
+                    {showShortDescription && (
+                        <p className={style.shortDescription}>
+                            {shortDescription}
+                        </p>
+                    )}
+                    {longDescriptionText && (
+                        <MarkdownDisplay content={longDescriptionText} />
+                    )}
+                </div>
+            )}
         </>
     );
 }

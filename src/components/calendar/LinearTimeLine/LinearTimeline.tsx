@@ -8,7 +8,7 @@ import {
     InternalCalendarEventType,
     currentYearMonthAtom,
     getEventDurationString,
-    selectedEventAtom,
+    selectEventAtom,
 } from '../MonthCalendarShared';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import dayjs, { Dayjs } from 'dayjs';
@@ -108,14 +108,14 @@ function TimeLineDayWrapper({
 function TimelineItem({ event }: { event: InternalCalendarEventType }) {
     const [contentHeight, setContentHeight] = useState(0);
     const innerContentRef = useRef<HTMLDivElement | null>(null);
-    const setSelected = useSetAtom(selectedEventAtom);
+    const selectEvent = useSetAtom(selectEventAtom);
     function expandContent() {
         if (contentHeight === 0) {
             setContentHeight(innerContentRef.current?.scrollHeight!);
-            setSelected({ element: undefined, event: event });
+            selectEvent(event);
         } else {
             setContentHeight(0);
-            setSelected(undefined);
+            selectEvent();
         }
     }
 

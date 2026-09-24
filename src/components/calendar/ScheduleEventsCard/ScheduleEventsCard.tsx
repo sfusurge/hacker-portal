@@ -1,5 +1,8 @@
 import { useMemo } from 'react';
-import type { InternalCalendarEventType } from '../MonthCalendarShared';
+import {
+    selectEventAtom,
+    type InternalCalendarEventType,
+} from '../MonthCalendarShared';
 import {
     Card,
     CardContent,
@@ -8,14 +11,13 @@ import {
 } from '@/components/ui/card';
 import { ScheduleEventCard } from '../ScheduleEventCard/ScheduleEventCard';
 import { useSetAtom } from 'jotai';
-import { selectedEventAtom } from '../MonthCalendarShared';
 
 export function ScheduleEventsCard({
     events,
 }: {
     events: InternalCalendarEventType[];
 }) {
-    const setSelectedEvent = useSetAtom(selectedEventAtom);
+    const selectEvent = useSetAtom(selectEventAtom);
     const { addedEvents, notAddedEvents } = useMemo(() => {
         const sortedEvents = [...events].sort((a, b) => {
             return a.startTime.valueOf() - b.startTime.valueOf();
@@ -39,7 +41,7 @@ export function ScheduleEventsCard({
                         event={event}
                         statusLabel="Not Yet Added"
                         onClick={() => {
-                            setSelectedEvent({ event, element: undefined });
+                            selectEvent(event);
                         }}
                     />
                 ))}
@@ -59,7 +61,7 @@ export function ScheduleEventsCard({
                         statusLabel="Added"
                         statusVariant="brand"
                         onClick={() => {
-                            setSelectedEvent({ event, element: undefined });
+                            selectEvent(event);
                         }}
                     />
                 ))}

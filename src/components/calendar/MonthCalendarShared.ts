@@ -14,6 +14,14 @@ export interface SelectedEventInfo {
     element: Node | undefined;
 }
 export const selectedEventAtom = atom<SelectedEventInfo | undefined>(undefined);
+export const selectEventAtom = atom(
+    null,
+    (_get, set, event?: InternalCalendarEventType, element?: Node | null) =>
+        set(
+            selectedEventAtom,
+            event ? { event, element: element ?? undefined } : undefined
+        )
+);
 export const editModeAtom = atom(false);
 const _currentYearMonth = atom({
     year: dayjs().year(),

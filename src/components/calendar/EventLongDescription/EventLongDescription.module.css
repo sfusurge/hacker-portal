@@ -120,10 +120,6 @@
     color: var(--text-secondary);
 }
 
-.emptyDescription {
-    color: var(--text-tertiary);
-}
-
 .detailRows {
     display: flex;
     flex-direction: column;
