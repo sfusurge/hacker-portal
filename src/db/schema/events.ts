@@ -8,7 +8,6 @@ import {
     timestamp,
     varchar,
 } from 'drizzle-orm/pg-core';
-import { createUpdateSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { hackathons } from './hackathons';
 
@@ -44,8 +43,6 @@ export const events = pgTable(
             .notNull()
             .default(EventType.EVENT),
         hasCheckIn: boolean('has_check_in').notNull().default(false),
-        points: integer('points').notNull().default(1),
-        variablePoints: boolean('variable_points').notNull().default(false),
     },
     (table) => {
         return [index().on(table.hackathonId)];
@@ -63,8 +60,6 @@ export const insertEventSchema = z.object({
     longDescription: z.string().optional(),
     eventType: z.string().optional(),
     hasCheckIn: z.boolean().optional(),
-    points: z.number().int().optional(),
-    variablePoints: z.boolean().optional(),
 });
 
 export const getEventsSchema = z.object({
@@ -79,15 +74,18 @@ export const getEventCheckInCountSchema = z.object({
     eventId: z.number().int(),
 });
 
-export const updateEventSchema = createUpdateSchema(events)
-    .omit({
-        hackathonId: true,
-    })
-    .extend({
-        eventId: z.number().int(),
-        startDate: z.number().int(),
-        endDate: z.number().int(),
-    });
+export const updateEventSchema = z.object({
+    eventId: z.number().int(),
+    title: z.string().optional(),
+    color: z.string().optional(),
+    startDate: z.number().int(),
+    endDate: z.number().int(),
+    location: z.string().optional(),
+    description: z.string().optional(),
+    longDescription: z.string().nullable().optional(),
+    eventType: z.string().optional(),
+    hasCheckIn: z.boolean().optional(),
+});
 
 export const deleteEventSchema = z.object({
     eventId: z.number().int(),

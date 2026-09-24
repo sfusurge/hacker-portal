@@ -14,7 +14,8 @@ export type ChallengeFormState = {
     id: number | null;
     title: string;
     longDescription: string;
-    points: number;
+    lowestPoints: number;
+    highestPoints: number;
     maxCompletions: number;
     variablePoints: boolean;
     eventIds: number[];
@@ -24,7 +25,8 @@ export const emptyChallengeForm = (): ChallengeFormState => ({
     id: null,
     title: '',
     longDescription: '',
-    points: 5,
+    lowestPoints: 5,
+    highestPoints: 5,
     maxCompletions: 1,
     variablePoints: false,
     eventIds: [],
@@ -71,10 +73,10 @@ export function ChallengeSideCard({
 
     const isEdit = form.id != null;
     const pointsHint = form.variablePoints
-        ? `Variable 1–${form.points} pts`
+        ? `Variable ${form.lowestPoints}–${form.highestPoints} pts`
         : form.maxCompletions > 1
-          ? `${form.points} × ${form.maxCompletions} (max ${form.points * form.maxCompletions} pts)`
-          : `${form.points} pts once`;
+          ? `${form.highestPoints} × ${form.maxCompletions} (max ${form.highestPoints * form.maxCompletions} pts)`
+          : `${form.highestPoints} pts once`;
 
     return (
         <div className={style.cardContainer}>
@@ -253,24 +255,86 @@ export function ChallengeSideCard({
                     <h2 className={style.sectionTitle}>Points</h2>
                     <div className={style.fieldGrid}>
                         <div className={style.fieldRow}>
-                            <div className={style.field}>
-                                <Label required>Points</Label>
-                                <FormTextInput
-                                    key={`points-${form.id ?? 'new'}`}
-                                    type="number"
-                                    min={1}
-                                    required
-                                    lazy
-                                    defaultValue={form.points}
-                                    onLazyChange={(val) =>
-                                        onChange({
-                                            ...form,
-                                            points: Number(val) || 1,
-                                        })
-                                    }
-                                    className={fieldControlClass}
-                                />
-                            </div>
+                            {form.variablePoints ? (
+                                <>
+                                    <div className={style.field}>
+                                        <Label required>Lowest points</Label>
+                                        <FormTextInput
+                                            key={`low-${form.id ?? 'new'}`}
+                                            type="number"
+                                            min={1}
+                                            required
+                                            lazy
+                                            defaultValue={form.lowestPoints}
+                                            onLazyChange={(val) => {
+                                                const lowest = Math.max(
+                                                    1,
+                                                    Number(val) || 1
+                                                );
+                                                onChange({
+                                                    ...form,
+                                                    lowestPoints: lowest,
+                                                    highestPoints: Math.max(
+                                                        form.highestPoints,
+                                                        lowest
+                                                    ),
+                                                });
+                                            }}
+                                            className={fieldControlClass}
+                                        />
+                                    </div>
+                                    <div className={style.field}>
+                                        <Label required>Highest points</Label>
+                                        <FormTextInput
+                                            key={`high-${form.id ?? 'new'}`}
+                                            type="number"
+                                            min={1}
+                                            required
+                                            lazy
+                                            defaultValue={form.highestPoints}
+                                            onLazyChange={(val) => {
+                                                const highest = Math.max(
+                                                    1,
+                                                    Number(val) || 1
+                                                );
+                                                onChange({
+                                                    ...form,
+                                                    highestPoints: highest,
+                                                    lowestPoints: Math.min(
+                                                        form.lowestPoints,
+                                                        highest
+                                                    ),
+                                                });
+                                            }}
+                                            className={fieldControlClass}
+                                        />
+                                    </div>
+                                </>
+                            ) : (
+                                <div className={style.field}>
+                                    <Label required>Points</Label>
+                                    <FormTextInput
+                                        key={`points-${form.id ?? 'new'}`}
+                                        type="number"
+                                        min={1}
+                                        required
+                                        lazy
+                                        defaultValue={form.highestPoints}
+                                        onLazyChange={(val) => {
+                                            const unit = Math.max(
+                                                1,
+                                                Number(val) || 1
+                                            );
+                                            onChange({
+                                                ...form,
+                                                lowestPoints: unit,
+                                                highestPoints: unit,
+                                            });
+                                        }}
+                                        className={fieldControlClass}
+                                    />
+                                </div>
+                            )}
                             <div className={style.field}>
                                 <Label required>Times</Label>
                                 <FormTextInput
@@ -296,21 +360,26 @@ export function ChallengeSideCard({
                             </div>
                         </div>
                         <div className={style.field}>
-                            <Label>Variable points (1…Points)?</Label>
+                            <Label>Variable points?</Label>
                             <label className="mt-1 flex cursor-pointer items-center gap-2 text-sm text-white">
                                 <input
                                     type="checkbox"
                                     className="size-4 shrink-0 rounded border-neutral-600 bg-neutral-800 accent-indigo-500"
                                     checked={form.variablePoints}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
+                                        const enabled = e.target.checked;
                                         onChange({
                                             ...form,
-                                            variablePoints: e.target.checked,
-                                            maxCompletions: e.target.checked
+                                            variablePoints: enabled,
+                                            maxCompletions: enabled
                                                 ? 1
                                                 : form.maxCompletions,
-                                        })
-                                    }
+                                            lowestPoints: enabled
+                                                ? 1
+                                                : form.highestPoints,
+                                            highestPoints: form.highestPoints,
+                                        });
+                                    }}
                                 />
                                 Enable variable points
                             </label>
@@ -334,7 +403,8 @@ export function ChallengeSideCard({
                             saving ||
                             !form.title.trim() ||
                             !form.longDescription.trim() ||
-                            form.points < 1
+                            form.lowestPoints < 1 ||
+                            form.highestPoints < form.lowestPoints
                         }
                     >
                         {isEdit ? 'Save changes' : 'Create challenge'}

@@ -28,7 +28,7 @@ export async function getLinkedEventProgress(
 ): Promise<{ completed: number; total: number; points: number }> {
     const [challenge] = await databaseClient
         .select({
-            points: challenges.points,
+            highestPoints: challenges.highestPoints,
             maxCompletions: challenges.maxCompletions,
             variablePoints: challenges.variablePoints,
         })
@@ -40,6 +40,7 @@ export async function getLinkedEventProgress(
         return { completed: 0, total: 0, points: 0 };
     }
 
+    const unitPoints = challenge.highestPoints;
     const linkedIds = await getChallengeLinkedEventIds(challengeId);
     const maxCompletions = Math.max(1, challenge.maxCompletions ?? 1);
 
@@ -62,24 +63,21 @@ export async function getLinkedEventProgress(
             return {
                 completed: 0,
                 total: maxCompletions,
-                points: challenge.points,
+                points: unitPoints,
             };
         }
 
         const completed =
-            challenge.variablePoints || challenge.points < 1
+            challenge.variablePoints || unitPoints < 1
                 ? 1
                 : Math.min(
                       maxCompletions,
-                      Math.max(
-                          1,
-                          Math.floor(row.pointsAwarded / challenge.points)
-                      )
+                      Math.max(1, Math.floor(row.pointsAwarded / unitPoints))
                   );
         return {
             completed,
             total: maxCompletions,
-            points: challenge.points,
+            points: unitPoints,
         };
     }
 
@@ -96,13 +94,13 @@ export async function getLinkedEventProgress(
         );
 
     const completed = Math.min(total, Number(checkInCount?.n ?? 0));
-    return { completed, total, points: challenge.points };
+    return { completed, total, points: unitPoints };
 }
 
 /**
  * After a check-in, refresh challenge_completions for every challenge linked
  * to that event. Progress = # of linked events checked into (capped).
- * Points awarded = challenge.points × completed (skipped for variable-points).
+ * Points awarded = highestPoints × completed (skipped for variable-points).
  */
 export async function syncChallengesForEventCheckIn(
     eventId: number,
@@ -111,7 +109,7 @@ export async function syncChallengesForEventCheckIn(
     const linked = await databaseClient
         .select({
             challengeId: challengeEvents.challengeId,
-            points: challenges.points,
+            highestPoints: challenges.highestPoints,
             variablePoints: challenges.variablePoints,
         })
         .from(challengeEvents)
@@ -127,7 +125,7 @@ export async function syncChallengesForEventCheckIn(
         );
         if (progress.completed < 1) continue;
 
-        const pointsAwarded = challenge.points * progress.completed;
+        const pointsAwarded = challenge.highestPoints * progress.completed;
 
         await databaseClient
             .insert(challengeCompletions)

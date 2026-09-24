@@ -24,7 +24,8 @@ export const challenges = pgTable(
         description: varchar('description', { length: 2048 }).default(''),
         longDescription: text('long_description'),
         color: varchar('color', { length: 128 }).notNull().default('#6466F1'),
-        points: integer('points').notNull().default(5),
+        lowestPoints: integer('lowest_points').notNull().default(5),
+        highestPoints: integer('highest_points').notNull().default(5),
         maxCompletions: integer('max_completions').notNull().default(1),
         variablePoints: boolean('variable_points').notNull().default(false),
     },
@@ -68,15 +69,22 @@ export const challengeCompletions = pgTable(
     ]
 );
 
+const pointsFieldsSchema = {
+    lowestPoints: z.number().int().min(1).optional(),
+    highestPoints: z.number().int().min(1).optional(),
+    /** @deprecated Prefer lowestPoints/highestPoints. Mapped to both when set alone. */
+    points: z.number().int().min(1).optional(),
+    maxCompletions: z.number().int().min(1).optional(),
+    variablePoints: z.boolean().optional(),
+};
+
 export const insertChallengeSchema = z.object({
     hackathonId: z.number().int(),
     title: z.string().min(1),
     description: z.string().optional(),
     longDescription: z.string().optional(),
     color: z.string().optional(),
-    points: z.number().int().min(1).optional(),
-    maxCompletions: z.number().int().min(1).optional(),
-    variablePoints: z.boolean().optional(),
+    ...pointsFieldsSchema,
     eventIds: z.array(z.number().int()).optional(),
 });
 
@@ -86,9 +94,7 @@ export const updateChallengeSchema = z.object({
     description: z.string().optional(),
     longDescription: z.string().nullable().optional(),
     color: z.string().optional(),
-    points: z.number().int().min(1).optional(),
-    maxCompletions: z.number().int().min(1).optional(),
-    variablePoints: z.boolean().optional(),
+    ...pointsFieldsSchema,
     eventIds: z.array(z.number().int()).optional(),
 });
 
@@ -116,9 +122,7 @@ const challengeImportRowSchema = z.object({
     description: z.string().max(2048).optional(),
     longDescription: z.string().optional(),
     color: z.string().max(128).optional(),
-    points: z.number().int().min(1).optional(),
-    maxCompletions: z.number().int().min(1).optional(),
-    variablePoints: z.boolean().optional(),
+    ...pointsFieldsSchema,
     eventIds: z.array(z.number().int()).optional(),
 });
 
@@ -126,3 +130,31 @@ export const importChallengesSchema = z.object({
     hackathonId: z.number().int(),
     challenges: z.array(challengeImportRowSchema).min(1).max(500),
 });
+
+/** Resolve stored min/max from API input (supports legacy `points`). */
+export function resolveChallengePointBounds(input: {
+    lowestPoints?: number;
+    highestPoints?: number;
+    points?: number;
+    variablePoints?: boolean;
+}): { lowestPoints: number; highestPoints: number; variablePoints: boolean } {
+    const variablePoints = input.variablePoints ?? false;
+    const legacy = input.points;
+
+    let lowest =
+        input.lowestPoints ??
+        (variablePoints ? 1 : (legacy ?? input.highestPoints ?? 5));
+    let highest = input.highestPoints ?? legacy ?? input.lowestPoints ?? 5;
+
+    if (!variablePoints) {
+        // Fixed award: both bounds are the same unit value.
+        const unit = input.highestPoints ?? input.lowestPoints ?? legacy ?? 5;
+        lowest = unit;
+        highest = unit;
+    }
+
+    lowest = Math.max(1, Math.floor(lowest));
+    highest = Math.max(lowest, Math.floor(highest));
+
+    return { lowestPoints: lowest, highestPoints: highest, variablePoints };
+}

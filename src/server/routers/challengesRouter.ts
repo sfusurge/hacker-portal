@@ -9,6 +9,7 @@ import {
     importChallengesSchema,
     insertChallengeSchema,
     isChallengeCompleteSchema,
+    resolveChallengePointBounds,
     updateChallengeSchema,
 } from '@/db/schema/challenges';
 import { user as usersTable } from '@/db/schema/users/users';
@@ -101,6 +102,8 @@ export const challengesRouter = router({
                 : (input.maxCompletions ??
                   (eventIds.length > 0 ? eventIds.length : 1));
 
+            const bounds = resolveChallengePointBounds(input);
+
             const [row] = await databaseClient
                 .insert(challenges)
                 .values({
@@ -109,9 +112,10 @@ export const challengesRouter = router({
                     description: input.description ?? '',
                     longDescription: input.longDescription,
                     color: input.color ?? '#6466F1',
-                    points: input.points ?? 5,
+                    lowestPoints: bounds.lowestPoints,
+                    highestPoints: bounds.highestPoints,
                     maxCompletions,
-                    variablePoints: input.variablePoints ?? false,
+                    variablePoints: bounds.variablePoints,
                 })
                 .returning();
 
@@ -147,6 +151,8 @@ export const challengesRouter = router({
                         : (row.maxCompletions ??
                           (eventIds.length > 0 ? eventIds.length : 1));
 
+                    const bounds = resolveChallengePointBounds(row);
+
                     const [inserted] = await tx
                         .insert(challenges)
                         .values({
@@ -155,9 +161,10 @@ export const challengesRouter = router({
                             description: row.description ?? '',
                             longDescription: row.longDescription,
                             color: row.color ?? '#6466F1',
-                            points: row.points ?? 5,
+                            lowestPoints: bounds.lowestPoints,
+                            highestPoints: bounds.highestPoints,
                             maxCompletions,
-                            variablePoints: row.variablePoints ?? false,
+                            variablePoints: bounds.variablePoints,
                         })
                         .returning();
 
@@ -176,7 +183,12 @@ export const challengesRouter = router({
             const { challengeId, eventIds: eventIdsInput, ...rest } = input;
 
             const [existing] = await databaseClient
-                .select({ hackathonId: challenges.hackathonId })
+                .select({
+                    hackathonId: challenges.hackathonId,
+                    lowestPoints: challenges.lowestPoints,
+                    highestPoints: challenges.highestPoints,
+                    variablePoints: challenges.variablePoints,
+                })
                 .from(challenges)
                 .where(eq(challenges.id, challengeId))
                 .limit(1);
@@ -207,9 +219,35 @@ export const challengesRouter = router({
                 await replaceChallengeEvents(challengeId, eventIds);
             }
 
+            const {
+                points: legacyPoints,
+                lowestPoints,
+                highestPoints,
+                variablePoints,
+                ...updateRest
+            } = rest;
+
+            const touchingPoints =
+                lowestPoints !== undefined ||
+                highestPoints !== undefined ||
+                variablePoints !== undefined ||
+                legacyPoints !== undefined;
+
+            const pointPatch = touchingPoints
+                ? resolveChallengePointBounds({
+                      lowestPoints: lowestPoints ?? existing.lowestPoints,
+                      highestPoints: highestPoints ?? existing.highestPoints,
+                      points: legacyPoints,
+                      variablePoints: variablePoints ?? existing.variablePoints,
+                  })
+                : null;
+
             const [row] = await databaseClient
                 .update(challenges)
-                .set(rest)
+                .set({
+                    ...updateRest,
+                    ...(pointPatch ?? {}),
+                })
                 .where(eq(challenges.id, challengeId))
                 .returning();
 
@@ -265,6 +303,7 @@ export const challengesRouter = router({
             }
 
             const maxCompletions = Math.max(1, challenge.maxCompletions ?? 1);
+            const unitPoints = challenge.highestPoints;
             let pointsAwarded: number;
 
             if (challenge.variablePoints) {
@@ -276,12 +315,12 @@ export const challengesRouter = router({
                     });
                 }
                 if (
-                    input.pointsAwarded < 1 ||
-                    input.pointsAwarded > challenge.points
+                    input.pointsAwarded < challenge.lowestPoints ||
+                    input.pointsAwarded > challenge.highestPoints
                 ) {
                     throw new TRPCError({
                         code: 'BAD_REQUEST',
-                        message: `pointsAwarded must be between 1 and ${challenge.points}`,
+                        message: `pointsAwarded must be between ${challenge.lowestPoints} and ${challenge.highestPoints}`,
                     });
                 }
                 pointsAwarded = input.pointsAwarded;
@@ -293,20 +332,20 @@ export const challengesRouter = router({
                             'pointsAwarded is required for multi-completion challenges',
                     });
                 }
-                const maxTotal = challenge.points * maxCompletions;
+                const maxTotal = unitPoints * maxCompletions;
                 if (
-                    input.pointsAwarded < challenge.points ||
+                    input.pointsAwarded < unitPoints ||
                     input.pointsAwarded > maxTotal ||
-                    input.pointsAwarded % challenge.points !== 0
+                    input.pointsAwarded % unitPoints !== 0
                 ) {
                     throw new TRPCError({
                         code: 'BAD_REQUEST',
-                        message: `pointsAwarded must be ${challenge.points} × (1–${maxCompletions}), up to ${maxTotal}`,
+                        message: `pointsAwarded must be ${unitPoints} × (1–${maxCompletions}), up to ${maxTotal}`,
                     });
                 }
                 pointsAwarded = input.pointsAwarded;
             } else {
-                pointsAwarded = challenge.points;
+                pointsAwarded = unitPoints;
             }
 
             const [[targetUser], [application]] = await Promise.all([

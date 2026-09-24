@@ -23,7 +23,8 @@ type ChallengeRow = {
     id: number;
     title: string;
     longDescription: string | null;
-    points: number;
+    lowestPoints: number;
+    highestPoints: number;
     maxCompletions: number;
     variablePoints: boolean;
     eventIds: number[];
@@ -31,9 +32,13 @@ type ChallengeRow = {
 };
 
 function pointsLabel(c: ChallengeRow) {
-    if (c.variablePoints) return `1–${c.points}`;
-    if (c.maxCompletions > 1) return `${c.points} × ${c.maxCompletions}`;
-    return String(c.points);
+    if (c.variablePoints) {
+        return `${c.lowestPoints}–${c.highestPoints}`;
+    }
+    if (c.maxCompletions > 1) {
+        return `${c.highestPoints} × ${c.maxCompletions}`;
+    }
+    return String(c.highestPoints);
 }
 
 export default function ChallengesAdminPage() {
@@ -146,7 +151,8 @@ export default function ChallengesAdminPage() {
             id: c.id,
             title: c.title,
             longDescription: c.longDescription ?? '',
-            points: c.points,
+            lowestPoints: c.lowestPoints,
+            highestPoints: c.highestPoints,
             maxCompletions: c.maxCompletions,
             variablePoints: c.variablePoints,
             eventIds: c.eventIds ?? [],
@@ -163,8 +169,11 @@ export default function ChallengesAdminPage() {
             toast({ title: 'Description is required', variant: 'error' });
             return;
         }
-        if (form.points < 1) {
-            toast({ title: 'Points must be at least 1', variant: 'error' });
+        if (form.lowestPoints < 1 || form.highestPoints < form.lowestPoints) {
+            toast({
+                title: 'Highest points must be ≥ lowest points (≥ 1)',
+                variant: 'error',
+            });
             return;
         }
 
@@ -172,7 +181,8 @@ export default function ChallengesAdminPage() {
             title: form.title.trim(),
             description: '',
             longDescription: form.longDescription,
-            points: form.points,
+            lowestPoints: form.lowestPoints,
+            highestPoints: form.highestPoints,
             maxCompletions: form.variablePoints
                 ? 1
                 : Math.max(
@@ -226,6 +236,8 @@ export default function ChallengesAdminPage() {
                                 longDescription?: string;
                                 color?: string;
                                 points?: number;
+                                lowestPoints?: number;
+                                highestPoints?: number;
                                 maxCompletions?: number;
                                 variablePoints?: boolean;
                                 eventIds?: number[];
@@ -276,6 +288,14 @@ export default function ChallengesAdminPage() {
                                         points:
                                             typeof r.points === 'number'
                                                 ? r.points
+                                                : undefined,
+                                        lowestPoints:
+                                            typeof r.lowestPoints === 'number'
+                                                ? r.lowestPoints
+                                                : undefined,
+                                        highestPoints:
+                                            typeof r.highestPoints === 'number'
+                                                ? r.highestPoints
                                                 : undefined,
                                         maxCompletions:
                                             typeof r.maxCompletions === 'number'
