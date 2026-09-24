@@ -248,7 +248,11 @@ export function DaySchedule({
                             return (
                                 <div
                                     key={`${epochTimeString}_${index}`}
-                                    className={style.dayColumn}
+                                    className={clsx(
+                                        style.dayColumn,
+                                        day.isSame(dayjs(), 'day') &&
+                                            style.todayColumn
+                                    )}
                                     style={
                                         {
                                             '--minColWidth': `${columnWidths[index]}px`,

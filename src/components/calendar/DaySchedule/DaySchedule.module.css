@@ -122,6 +122,11 @@
     height: auto;
 }
 
+.todayColumn,
+.todayColumn > .header {
+    background-color: color-mix(in srgb, var(--brand-700) 30%, transparent);
+}
+
 .dayColumn > .header {
     justify-content: center;
     padding: 8px 4px;
