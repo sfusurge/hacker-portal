@@ -17,6 +17,7 @@ import {
     emptyChallengeForm,
     type ChallengeFormState,
 } from './components/ChallengeSideCard';
+import { JsonImportButton } from '@/app/(auth)/admin/components/JsonImportButton';
 
 type ChallengeRow = {
     id: number;
@@ -25,8 +26,8 @@ type ChallengeRow = {
     points: number;
     maxCompletions: number;
     variablePoints: boolean;
-    eventId: number | null;
-    eventTitle: string | null;
+    eventIds: number[];
+    eventTitles: string[];
 };
 
 function pointsLabel(c: ChallengeRow) {
@@ -99,6 +100,21 @@ export default function ChallengesAdminPage() {
         },
     });
 
+    const importMutation = trpc.challenges.importChallenges.useMutation({
+        onSuccess: async (data) => {
+            await utils.challenges.getChallenges.invalidate({
+                hackathonId: hackathon.id,
+            });
+            toast({
+                title: `Imported ${data.created} challenge${data.created === 1 ? '' : 's'}`,
+                variant: 'success',
+            });
+        },
+        onError: (err) => {
+            toast({ title: err.message, variant: 'error' });
+        },
+    });
+
     const challenges = useMemo(
         () => (listQuery.data ?? []) as ChallengeRow[],
         [listQuery.data]
@@ -111,7 +127,7 @@ export default function ChallengesAdminPage() {
             (c) =>
                 c.title.toLowerCase().includes(q) ||
                 (c.longDescription ?? '').toLowerCase().includes(q) ||
-                (c.eventTitle ?? '').toLowerCase().includes(q)
+                (c.eventTitles ?? []).some((t) => t.toLowerCase().includes(q))
         );
     }, [challenges, search]);
 
@@ -133,7 +149,7 @@ export default function ChallengesAdminPage() {
             points: c.points,
             maxCompletions: c.maxCompletions,
             variablePoints: c.variablePoints,
-            eventId: c.eventId,
+            eventIds: c.eventIds ?? [],
         });
         setSideOpen(true);
     }
@@ -159,9 +175,14 @@ export default function ChallengesAdminPage() {
             points: form.points,
             maxCompletions: form.variablePoints
                 ? 1
-                : Math.max(1, form.maxCompletions),
+                : Math.max(
+                      1,
+                      form.eventIds.length > 0
+                          ? Math.max(form.maxCompletions, form.eventIds.length)
+                          : form.maxCompletions
+                  ),
             variablePoints: form.variablePoints,
-            eventId: form.eventId,
+            eventIds: form.eventIds,
         };
 
         if (form.id != null) {
@@ -192,6 +213,98 @@ export default function ChallengesAdminPage() {
                             className="min-h-9 w-56 rounded-lg border border-neutral-600/60 bg-neutral-800/60 py-2 pr-3 pl-9 text-sm font-medium text-white placeholder:text-white/40"
                         />
                     </div>
+                    <JsonImportButton
+                        disabled={importMutation.isPending}
+                        arrayKeys={['challenges', 'items']}
+                        onError={(message) =>
+                            toast({ title: message, variant: 'error' })
+                        }
+                        onParsed={async (rows) => {
+                            let challenges: {
+                                title: string;
+                                description?: string;
+                                longDescription?: string;
+                                color?: string;
+                                points?: number;
+                                maxCompletions?: number;
+                                variablePoints?: boolean;
+                                eventIds?: number[];
+                            }[];
+                            try {
+                                challenges = rows.map((row, i) => {
+                                    if (
+                                        !row ||
+                                        typeof row !== 'object' ||
+                                        Array.isArray(row)
+                                    ) {
+                                        throw new Error(
+                                            `Challenge ${i + 1} must be an object`
+                                        );
+                                    }
+                                    const r = row as Record<string, unknown>;
+                                    const title =
+                                        typeof r.title === 'string'
+                                            ? r.title.trim()
+                                            : '';
+                                    if (!title) {
+                                        throw new Error(
+                                            `Challenge ${i + 1}: title is required`
+                                        );
+                                    }
+                                    const eventIds = Array.isArray(r.eventIds)
+                                        ? r.eventIds.filter(
+                                              (id): id is number =>
+                                                  typeof id === 'number' &&
+                                                  Number.isInteger(id)
+                                          )
+                                        : undefined;
+                                    return {
+                                        title,
+                                        description:
+                                            typeof r.description === 'string'
+                                                ? r.description
+                                                : undefined,
+                                        longDescription:
+                                            typeof r.longDescription ===
+                                            'string'
+                                                ? r.longDescription
+                                                : undefined,
+                                        color:
+                                            typeof r.color === 'string'
+                                                ? r.color
+                                                : undefined,
+                                        points:
+                                            typeof r.points === 'number'
+                                                ? r.points
+                                                : undefined,
+                                        maxCompletions:
+                                            typeof r.maxCompletions === 'number'
+                                                ? r.maxCompletions
+                                                : undefined,
+                                        variablePoints:
+                                            typeof r.variablePoints ===
+                                            'boolean'
+                                                ? r.variablePoints
+                                                : undefined,
+                                        eventIds,
+                                    };
+                                });
+                            } catch (err) {
+                                toast({
+                                    title:
+                                        err instanceof Error
+                                            ? err.message
+                                            : 'Invalid JSON',
+                                    variant: 'error',
+                                });
+                                return;
+                            }
+                            await importMutation.mutateAsync({
+                                hackathonId: hackathon.id,
+                                challenges,
+                            });
+                        }}
+                    />
                     <Button
                         type="button"
                         variant="brand"
@@ -226,7 +339,7 @@ export default function ChallengesAdminPage() {
                                         Points
                                     </th>
                                     <th className="px-4 py-3 font-medium">
-                                        Linked event
+                                        Linked events
                                     </th>
                                     <th className="px-4 py-3 font-medium">
                                         Description
@@ -246,8 +359,9 @@ export default function ChallengesAdminPage() {
                                         <td className="px-4 py-3 whitespace-nowrap text-white/60">
                                             {pointsLabel(c)}
                                         </td>
-                                        <td className="px-4 py-3 text-white/60">
-                                            {c.eventTitle ?? '—'}
+                                        <td className="max-w-xs truncate px-4 py-3 text-white/60">
+                                            {(c.eventTitles ?? []).join(', ') ||
+                                                '—'}
                                         </td>
                                         <td className="max-w-xl truncate px-4 py-3 text-white/60">
                                             {c.longDescription || '—'}

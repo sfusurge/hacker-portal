@@ -13,6 +13,7 @@ import {
     MegaphoneIcon,
     TrophyIcon,
     HomeModernIcon,
+    GiftIcon,
 } from '@heroicons/react/24/outline';
 
 import { HomeIcon } from '@heroicons/react/24/outline';
@@ -125,6 +126,12 @@ const adminLinks = [
         label: 'Challenges',
         icon: <TrophyIcon className="h-6 w-6" />,
         iconAlt: 'Challenges logo',
+    },
+    {
+        href: '/admin/shop',
+        label: 'Shop',
+        icon: <GiftIcon className="h-6 w-6" />,
+        iconAlt: 'Shop logo',
     },
     {
         href: '/admin/review',

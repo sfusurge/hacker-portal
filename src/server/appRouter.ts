@@ -21,6 +21,7 @@ import { judgingRouter } from './routers/judgingRouter';
 import { userVoteRouter } from '@/server/routers/userVoteRouter';
 import { emailsRouter } from './routers/emailsRouter';
 import { emailQueueRouter } from './routers/emailQueueRouter';
+import { shopRouter } from './routers/shopRouter';
 
 export const appRouter = router({
     health_check: publicProcedure.query(() => {
@@ -50,6 +51,7 @@ export const appRouter = router({
     announcements: announcementsRouter,
 
     emailQueue: emailQueueRouter,
+    shop: shopRouter,
 });
 
 // For server side call in unit test

@@ -5,7 +5,6 @@ import {
     primaryKey,
     timestamp,
 } from 'drizzle-orm/pg-core';
-import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { events } from './events';
 import { user } from './users/users';
@@ -34,13 +33,11 @@ export const checkIns = pgTable(
     }
 );
 
-export const insertCheckInSchema = createInsertSchema(checkIns)
-    .omit({
-        checkInTime: true,
-    })
-    .extend({
-        pointsAwarded: z.number().int().optional(),
-    });
+export const insertCheckInSchema = z.object({
+    eventId: z.number().int(),
+    userId: z.number().int(),
+    pointsAwarded: z.number().int().optional(),
+});
 
 export const isCheckInSchema = z.object({
     userId: z.number().int(),
