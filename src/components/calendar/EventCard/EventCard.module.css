@@ -19,6 +19,14 @@
     font-weight: 500;
 }
 
+.eventImage {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 6px;
+    background-color: var(--background-neutral-tertiary);
+}
+
 .title::before {
     /* color label */
     content: '';

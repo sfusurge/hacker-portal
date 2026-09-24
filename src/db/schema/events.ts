@@ -13,12 +13,14 @@ import { hackathons } from './hackathons';
 
 export enum EventType {
     EVENT = 'Event',
+    ACTIVITY = 'Activity',
     MEAL = 'Meal',
     WORKSHOP = 'Workshop',
 }
 
 export const EVENT_TYPES = [
     EventType.EVENT,
+    EventType.ACTIVITY,
     EventType.MEAL,
     EventType.WORKSHOP,
 ] as const;
@@ -37,6 +39,7 @@ export const events = pgTable(
         startDate: timestamp('start_date').notNull(),
         endDate: timestamp('end_date').notNull(),
         location: varchar('location', { length: 1024 }).notNull(),
+        imageUrl: text('image_url'),
         description: varchar('description', { length: 2048 }).default(''),
         longDescription: text('long_description'),
         eventType: eventTypePgEnum('event_type')
@@ -56,6 +59,7 @@ export const insertEventSchema = z.object({
     startDate: z.number(),
     endDate: z.number(),
     location: z.string(),
+    imageUrl: z.string().optional(),
     description: z.string().optional(),
     longDescription: z.string().optional(),
     eventType: z.string().optional(),
@@ -81,6 +85,7 @@ export const updateEventSchema = z.object({
     startDate: z.number().int(),
     endDate: z.number().int(),
     location: z.string().optional(),
+    imageUrl: z.string().nullable().optional(),
     description: z.string().optional(),
     longDescription: z.string().nullable().optional(),
     eventType: z.string().optional(),

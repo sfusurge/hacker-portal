@@ -122,6 +122,14 @@ export default function Scan({
         [openSelectEvent, mode]
     );
 
+    const isActivitiesOpen = useMemo(
+        () =>
+            mode === 'event' &&
+            eventType === EventType.ACTIVITY &&
+            openSelectEvent,
+        [openSelectEvent, eventType, mode]
+    );
+
     const workshopEvents = useMemo(() => {
         return groupEventsByDate(
             events.filter((event) => event.eventType === EventType.WORKSHOP)
@@ -140,6 +148,13 @@ export default function Scan({
         );
     }, [events]);
 
+    const activityEvents = useMemo(() => {
+        const activities = events.filter(
+            (event) => event.eventType === EventType.ACTIVITY
+        );
+
+        return groupEventsByDate(activities);
+    }, [events]);
     const challengeGroups = useMemo(() => {
         return [
             {
@@ -417,6 +432,13 @@ export default function Scan({
                 show={isOtherEventsOpen}
                 onClose={closeSelect}
                 groupedEvents={otherEvents}
+                onEventClick={handleEventClick}
+            />
+
+            <SelectEvent
+                show={isActivitiesOpen}
+                onClose={closeSelect}
+                groupedEvents={activityEvents}
                 onEventClick={handleEventClick}
             />
 

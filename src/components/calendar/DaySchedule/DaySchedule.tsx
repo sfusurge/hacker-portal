@@ -1,24 +1,34 @@
 'use client';
 
-import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
+import { CSSProperties, useEffect, useMemo, useRef } from 'react';
 import style from './DaySchedule.module.css';
 import {
     currentTimeAtom,
+    editModeAtom,
+    canAddEventToSchedule,
     groupEventsByDay,
     InternalCalendarEventType,
+    selectEventAtom,
     selectedEventAtom,
 } from '../MonthCalendarShared';
 import dayjs, { Dayjs } from 'dayjs';
-import { useAtom, useAtomValue } from 'jotai';
-import { DynamicMessage } from '../DynamicMessage/DynamicMessage';
-import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
-import { EventCard } from '../EventCard/EventCard';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { AnimatePresence } from 'motion/react';
 import { LongDescriptionModal } from '../EventLongDescription/EventLongDescription';
 import clsx from 'clsx';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { DateControls } from '@/components/calendar/DateControls/DateControls';
+import { EventType } from '@/db/schema/events';
+import {
+    BoltIcon,
+    BookOpenIcon,
+    FaceSmileIcon,
+} from '@heroicons/react/24/solid';
+import { trpc } from '@/trpc/client';
 
 // size of UI, shared
-const [rowHeight, headerHeight] = [90, 30];
+const [rowHeight, headerHeight, timeColumnWidth] = [90, 34, 50];
+export type ScheduleViewMode = 'week' | 'event';
 
 /**
  * TODO
@@ -31,10 +41,28 @@ export function DaySchedule({
     startDate,
     days,
     minColumnWidth,
+    maxVisibleColumns,
+    showControls = true,
+    onPreviousRange,
+    onToday,
+    onNextRange,
+    onEventRsvpChange,
+    viewMode = 'week',
+    onViewModeChange,
+    isAdmin = false,
 }: {
     startDate: Dayjs;
     days: number;
     minColumnWidth?: number;
+    maxVisibleColumns?: number;
+    showControls?: boolean;
+    isAdmin?: boolean;
+    onPreviousRange?: () => void;
+    onToday?: () => void;
+    onNextRange?: () => void;
+    onEventRsvpChange?: () => void | Promise<void>;
+    viewMode?: ScheduleViewMode;
+    onViewModeChange?: (mode: ScheduleViewMode) => void;
     events: InternalCalendarEventType[];
 }) {
     startDate = dayjs(startDate);
@@ -57,18 +85,28 @@ export function DaySchedule({
         );
     }, [events, startDate, days]);
 
-    const rootRef = useRef<HTMLDivElement>(null);
-    const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
-
-    const [containerHeight, setContainerHeight] = useState(0);
-
-    const [showMore, setShowMore] = useState(false);
+    const selectedEvent = useAtomValue(selectedEventAtom);
+    const selectEvent = useSetAtom(selectEventAtom);
+    const [editMode, setEditMode] = useAtom(editModeAtom);
+    const rsvpEvent = trpc.events.rsvpEvent.useMutation();
+    const unrsvpEvent = trpc.events.unrsvpEvent.useMutation();
 
     const columnWidths = useMemo(() => {
         return Object.values(processedEvents).map((dayEventsCols) => {
             return Math.max(dayEventsCols.length * 100, minColumnWidth ?? 200);
         });
-    }, [processedEvents]);
+    }, [minColumnWidth, processedEvents]);
+
+    const scheduleContentWidth = useMemo(() => {
+        if (!maxVisibleColumns || days <= maxVisibleColumns) {
+            return '100%';
+        }
+
+        const widthRatio = days / maxVisibleColumns;
+        const timeColumnOffset = (widthRatio - 1) * timeColumnWidth;
+
+        return `calc(${widthRatio * 100}% - ${timeColumnOffset}px)`;
+    }, [days, maxVisibleColumns]);
 
     let zero = dayjs().hour(0);
 
@@ -80,48 +118,76 @@ export function DaySchedule({
         return days - 1;
     }, [startDate]);
 
+    const canScheduleSelectedEvent =
+        selectedEvent?.event &&
+        canAddEventToSchedule(selectedEvent.event) &&
+        !isAdmin;
+
+    const toggleSelectedEventSchedule = async () => {
+        if (!selectedEvent?.event) {
+            return;
+        }
+
+        const event = selectedEvent.event;
+
+        if (event.rsvped) {
+            await unrsvpEvent.mutateAsync({ eventId: event.id });
+        } else {
+            await rsvpEvent.mutateAsync({ eventId: event.id });
+        }
+
+        selectEvent(
+            {
+                ...event,
+                rsvped: !event.rsvped,
+            },
+            selectedEvent.element
+        );
+
+        await onEventRsvpChange?.();
+    };
+
     return (
         <div
             style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
                 height: '100%',
                 position: 'relative',
+                width: '100%',
             }}
-            ref={rootRef}
         >
             <AnimatePresence>
-                {selectedEvent && selectedEvent.element && (
-                    <DynamicMessage
-                        rootRef={rootRef.current!}
-                        parentRef={selectedEvent.element}
-                        onClose={() => {
-                            setSelectedEvent(undefined);
-                        }}
-                    >
-                        <EventCard event={selectedEvent.event}>
-                            {selectedEvent.event.hasLongDescription && (
-                                <SkewmorphicButton
-                                    style={{
-                                        backgroundColor: 'var(--brand-700)',
-                                    }}
-                                    onClick={() => {
-                                        setShowMore(true);
-                                    }}
-                                >
-                                    More Info
-                                </SkewmorphicButton>
-                            )}
-                        </EventCard>
-                    </DynamicMessage>
-                )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-                {selectedEvent && selectedEvent.element && showMore && (
+                {selectedEvent?.event && !editMode && (
                     <LongDescriptionModal
                         event={selectedEvent.event}
+                        isAdmin={isAdmin}
                         onClose={() => {
-                            setShowMore(false);
+                            selectEvent();
                         }}
+                        onToggleSchedule={
+                            canScheduleSelectedEvent
+                                ? toggleSelectedEventSchedule
+                                : undefined
+                        }
+                        scheduleActionDisabled={
+                            rsvpEvent.isPending || unrsvpEvent.isPending
+                        }
+                        onEditEvent={
+                            isAdmin
+                                ? () => {
+                                      setEditMode(true);
+                                  }
+                                : undefined
+                        }
+                        onEventDeleted={
+                            isAdmin
+                                ? async () => {
+                                      await onEventRsvpChange?.();
+                                  }
+                                : undefined
+                        }
                     />
                 )}
             </AnimatePresence>
@@ -132,17 +198,22 @@ export function DaySchedule({
                     {
                         '--rowHeight': `${rowHeight}px`,
                         '--headerHeight': `${headerHeight}px`,
+                        '--timeColumnWidth': `${timeColumnWidth}px`,
+                        '--scheduleContentWidth': scheduleContentWidth,
                     } as CSSProperties
                 }
             >
-                <div className={style.scheduleRoot}>
+                <div
+                    className={clsx(
+                        style.scheduleRoot,
+                        maxVisibleColumns && style.hiddenScrollbar
+                    )}
+                >
                     <div
-                        ref={(ref) => {
-                            setContainerHeight(
-                                ref?.scrollHeight! - headerHeight
-                            );
-                        }}
-                        className={style.scheduleContainer}
+                        className={clsx(
+                            style.scheduleContainer,
+                            maxVisibleColumns && style.fixedVisibleColumns
+                        )}
                     >
                         <div className={style.timeColumn}>
                             <div
@@ -154,7 +225,7 @@ export function DaySchedule({
                                 }
                             />
                             {[...Array(24).keys()].map((idx) => {
-                                const timeLabel = zero.format('h a'); //5 am
+                                const timeLabel = zero.format('h A'); //5 AM
                                 zero = zero.add(1, 'hour');
                                 return (
                                     <div key={idx} className={style.timeLabel}>
@@ -170,7 +241,11 @@ export function DaySchedule({
                             return (
                                 <div
                                     key={`${epochTimeString}_${index}`}
-                                    className={style.dayColumn}
+                                    className={clsx(
+                                        style.dayColumn,
+                                        day.isSame(dayjs(), 'day') &&
+                                            style.todayColumn
+                                    )}
                                     style={
                                         {
                                             '--minColWidth': `${columnWidths[index]}px`,
@@ -186,43 +261,37 @@ export function DaySchedule({
                                         }
                                     >
                                         <div className={style.headerContent}>
-                                            {day.format('MMM D, ddd')}
+                                            {day.format('ddd D')}
                                         </div>
                                     </div>
                                     <div className={style.dayColumnContent}>
-                                        {containerHeight > 0 &&
-                                            index == timeLabelColumn && (
-                                                <TimelineMarker
-                                                    startDate={startDate}
-                                                    parentHeight={
-                                                        containerHeight
-                                                    }
-                                                ></TimelineMarker>
-                                            )}
+                                        {index == timeLabelColumn && (
+                                            <TimelineMarker
+                                                startDate={startDate}
+                                                parentHeight={rowHeight * 24}
+                                            ></TimelineMarker>
+                                        )}
 
-                                        {containerHeight > 0 &&
-                                            columnsOfDay.map((col, index) => (
-                                                <div
-                                                    key={index}
-                                                    className={
-                                                        style.dayEventColumn
-                                                    }
-                                                >
-                                                    {col.map((event) => (
-                                                        <DayEventItem
-                                                            key={event.id}
-                                                            event={event}
-                                                            parentHeight={
-                                                                containerHeight
-                                                            }
-                                                            columnCount={
-                                                                columnsOfDay.length
-                                                            }
-                                                            columnIndex={index}
-                                                        ></DayEventItem>
-                                                    ))}
-                                                </div>
-                                            ))}
+                                        {columnsOfDay.map((col, index) => (
+                                            <div
+                                                key={index}
+                                                className={style.dayEventColumn}
+                                            >
+                                                {col.map((event) => (
+                                                    <DayEventItem
+                                                        key={event.id}
+                                                        event={event}
+                                                        parentHeight={
+                                                            rowHeight * 24
+                                                        }
+                                                        dayColumns={
+                                                            columnsOfDay
+                                                        }
+                                                        columnIndex={index}
+                                                    ></DayEventItem>
+                                                ))}
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             );
@@ -230,6 +299,40 @@ export function DaySchedule({
                     </div>
                 </div>
             </div>
+            {showControls && (
+                <div className={style.scheduleControls}>
+                    <ToggleGroup
+                        type="single"
+                        value={viewMode}
+                        onValueChange={(value) => {
+                            if (value === 'week' || value === 'event') {
+                                onViewModeChange?.(value);
+                            }
+                        }}
+                        className="h-8"
+                    >
+                        <ToggleGroupItem
+                            value="week"
+                            size="sm"
+                            className="rounded-l-md px-3"
+                        >
+                            Week
+                        </ToggleGroupItem>
+                        <ToggleGroupItem
+                            value="event"
+                            size="sm"
+                            className="rounded-r-md px-3"
+                        >
+                            Event
+                        </ToggleGroupItem>
+                    </ToggleGroup>
+                    <DateControls
+                        onPrevious={onPreviousRange}
+                        onToday={onToday}
+                        onNext={onNextRange}
+                    />
+                </div>
+            )}
         </div>
     );
 }
@@ -324,13 +427,13 @@ function ProcessEventsForSchedule(eventsMaps: {
 function DayEventItem({
     event,
     parentHeight,
+    dayColumns,
     columnIndex,
-    columnCount,
 }: {
     event: InternalCalendarEventType;
     parentHeight: number;
+    dayColumns: InternalCalendarEventType[][];
     columnIndex: number;
-    columnCount: number;
 }) {
     const minutesInDay = 1440;
     const [top, height] = useMemo(() => {
@@ -343,52 +446,135 @@ function DayEventItem({
         ];
     }, [parentHeight]);
 
-    const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
+    const selectedEvent = useAtomValue(selectedEventAtom);
+    const selectEvent = useSetAtom(selectEventAtom);
 
     const eventTime = event.startTime;
+    const eventEndTime = eventTime.add(event.duration, 'minute');
+    const overlappingColumnIndexes = dayColumns
+        .map((column, index) => {
+            const hasOverlap =
+                index === columnIndex ||
+                column.some((otherEvent) => {
+                    if (otherEvent === event) {
+                        return false;
+                    }
+
+                    const otherEventEndTime = otherEvent.startTime.add(
+                        otherEvent.duration,
+                        'minute'
+                    );
+
+                    return (
+                        eventTime.isBefore(otherEventEndTime) &&
+                        otherEvent.startTime.isBefore(eventEndTime)
+                    );
+                });
+
+            return hasOverlap ? index : -1;
+        })
+        .filter((index) => index >= 0);
+    const overlapColumnCount = overlappingColumnIndexes.length;
+    const overlapColumnIndex = Math.max(
+        0,
+        overlappingColumnIndexes.indexOf(columnIndex)
+    );
+    const isOverlapping = overlapColumnCount > 1;
+    const isCompact = height < 64;
+    const overlapWidth = isOverlapping ? 65 : 100;
+    const overlapLeft =
+        isOverlapping && overlapColumnCount > 1
+            ? ((100 - overlapWidth) * overlapColumnIndex) /
+              (overlapColumnCount - 1)
+            : 0;
+    const showMeta = height >= 40;
+    const showLocation = event.location && !isOverlapping && !isCompact;
+    const isDeadline = event.isDeadline === true;
+    const isRsvpEvent = canAddEventToSchedule(event);
+    const Icon =
+        event.eventType === EventType.WORKSHOP
+            ? BookOpenIcon
+            : event.eventType === EventType.ACTIVITY
+              ? FaceSmileIcon
+              : BoltIcon;
+    const dayEventTitleClassName = clsx(
+        style.dayEventLine,
+        style.dayEventTitle
+    );
+    const dayEventMetaClassName = clsx(style.dayEventLine, style.dayEventMeta);
 
     const containerRef = useRef<HTMLDivElement>(null);
 
     const isActive = useMemo(() => {
-        return selectedEvent?.event === event;
-    }, [selectedEvent]);
+        return selectedEvent?.event.id === event.id;
+    }, [event.id, selectedEvent]);
 
     return (
         <div
             ref={containerRef}
             className={clsx([
-                style.dayEvent,
+                isDeadline ? style.deadlineEvent : style.dayEvent,
+                !isDeadline &&
+                    (isRsvpEvent
+                        ? style.dayEventRsvped
+                        : style.dayEventStandard),
+                !isDeadline &&
+                    isRsvpEvent &&
+                    !event.rsvped &&
+                    style.dayEventNeedsRsvp,
+                !isDeadline && isCompact && style.dayEventCompact,
                 {
                     [style.active]: isActive,
                 },
             ])}
-            onClick={() => {
-                setSelectedEvent({
-                    element: containerRef.current ?? undefined,
-                    event,
-                });
-            }}
+            onClick={
+                isDeadline
+                    ? undefined
+                    : () => {
+                          selectEvent(event, containerRef.current);
+                      }
+            }
             style={
                 {
                     '--top': `${Math.round(top)}px`,
-                    '--height': `${Math.round(height)}px`,
-                    '--color': event.color,
-                    '--col': columnIndex,
-                    '--colCount': columnCount,
+                    '--height': `${Math.round(isDeadline ? 52 : height)}px`,
+                    '--left': `${isDeadline ? 0 : overlapLeft}%`,
+                    '--width': `${isDeadline ? 100 : overlapWidth}%`,
+                    '--dayEventZIndex': columnIndex + 1,
                 } as CSSProperties
             }
         >
-            <div className={style.dayEventContent}>
-                <span className={style.dayEventLine}>{event.title}</span>
-                <span className={style.dayEventLine}>
-                    {`${eventTime.format('h:mm A')} - ${eventTime.add(event.duration, 'minutes').format('h:mm A')}`}
-                </span>
-                {event.location && (
-                    <span className={style.dayEventLine}>{event.location}</span>
-                )}
-            </div>
+            {isDeadline ? (
+                <div className={style.deadlineEventContent}>
+                    <span className={style.deadlineEventTitle}>
+                        {event.title}
+                    </span>
+                    <span className={style.deadlineEventTime}>
+                        {getDeadlineTimeLabel(eventTime)}
+                    </span>
+                </div>
+            ) : (
+                <div className={style.dayEventContent}>
+                    <span className={dayEventTitleClassName}>
+                        {event.title}
+                    </span>
+                    {showMeta && (
+                        <span className={dayEventMetaClassName}>
+                            <Icon className={style.dayEventIcon} />
+                            <span className={style.dayEventMetaText}>
+                                {`${eventTime.format('h:mm A')} - ${eventEndTime.format('h:mm A')}`}
+                                {showLocation && ` · ${event.location}`}
+                            </span>
+                        </span>
+                    )}
+                </div>
+            )}
         </div>
     );
+}
+
+function getDeadlineTimeLabel(time: Dayjs) {
+    return time.format(time.minute() === 0 ? 'hA' : 'h:mmA');
 }
 
 function TimelineMarker({

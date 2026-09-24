@@ -7,6 +7,7 @@ import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
     getEventsOfMonth,
     groupEventsByDay,
+    selectEventAtom,
     selectedEventAtom,
     selectedDayAtom,
     yearMonthDay,
@@ -15,13 +16,10 @@ import {
     getMonthInfo,
     range,
 } from '../MonthCalendarShared';
-import { DynamicMessage } from '../DynamicMessage/DynamicMessage';
 
 import { AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
-import { EventCard } from '../EventCard/EventCard';
 
-import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { LongDescriptionModal } from '../EventLongDescription/EventLongDescription';
 
 const rowHeightAtom = atom(170);
@@ -49,16 +47,12 @@ export function MonthCalendar({
         );
     }, [year, month, events]);
 
-    const [prevMonth, currMonth, nextMonth] = useMemo(
-        () => [
-            dayjs(new Date(year, month, 1)).month(-1),
-            dayjs(new Date(year, month, 1)),
-            dayjs(new Date(year, month, 1)).month(1),
-        ],
-        [year, month]
-    );
+    const currMonth = useMemo(() => {
+        return dayjs(new Date(year, month, 1));
+    }, [year, month]);
 
-    const [selectedEvent, setSelectedEvent] = useAtom(selectedEventAtom);
+    const selectedEvent = useAtomValue(selectedEventAtom);
+    const selectEvent = useSetAtom(selectEventAtom);
     const renderRootRef = useRef<HTMLDivElement>(null);
 
     const setRowHeight = useSetAtom(rowHeightAtom);
@@ -73,17 +67,14 @@ export function MonthCalendar({
         return () => resizeObserver.disconnect();
     }, []);
 
-    // full details display
-    const [showMoreInfo, setShowMore] = useState(false);
-
     return (
         <div style={{ height: '100%', width: '100%' }}>
             <AnimatePresence>
-                {selectedEvent && selectedEvent.element && showMoreInfo && (
+                {selectedEvent?.event && (
                     <LongDescriptionModal
                         event={selectedEvent.event}
                         onClose={() => {
-                            setShowMore(false);
+                            selectEvent();
                         }}
                     />
                 )}
@@ -101,34 +92,6 @@ export function MonthCalendar({
                         </span>
                     ))}
                 </div>
-
-                <AnimatePresence>
-                    {selectedEvent && selectedEvent.element && (
-                        <DynamicMessage
-                            rootRef={renderRootRef.current!}
-                            parentRef={selectedEvent.element}
-                            onClose={() => {
-                                // disable prompt
-                                setSelectedEvent(undefined);
-                            }}
-                        >
-                            <EventCard event={selectedEvent.event}>
-                                {selectedEvent.event.hasLongDescription && (
-                                    <SkewmorphicButton
-                                        style={{
-                                            backgroundColor: 'var(--brand-700)',
-                                        }}
-                                        onClick={() => {
-                                            setShowMore(true);
-                                        }}
-                                    >
-                                        More Info
-                                    </SkewmorphicButton>
-                                )}
-                            </EventCard>
-                        </DynamicMessage>
-                    )}
-                </AnimatePresence>
 
                 <div
                     className={style.calendarContainer}
@@ -275,7 +238,7 @@ function MonthDay({
 }
 
 function MonthDayEvent({ event }: { event: InternalCalendarEventType }) {
-    const setSelectedEvent = useSetAtom(selectedEventAtom);
+    const selectEvent = useSetAtom(selectEventAtom);
     const ref = useRef<HTMLDivElement>(null);
     return (
         <div
@@ -288,7 +251,7 @@ function MonthDayEvent({ event }: { event: InternalCalendarEventType }) {
             }
             onClick={(e) => {
                 e.stopPropagation();
-                setSelectedEvent({ event, element: ref.current!.parentNode! });
+                selectEvent(event, ref.current?.parentNode);
             }}
         >
             {event.title}

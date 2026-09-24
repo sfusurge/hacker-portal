@@ -3,6 +3,7 @@ import {
     TEST_HACKATHON_END_DATE,
     TEST_HACKATHON_NAME,
     TEST_HACKATHON_START_DATE,
+    TEST_HACKING_START,
 } from '../utils';
 
 describe('Hackathon CRUDL tests', () => {
@@ -13,6 +14,7 @@ describe('Hackathon CRUDL tests', () => {
             name: TEST_HACKATHON_NAME,
             startDate: TEST_HACKATHON_START_DATE,
             endDate: TEST_HACKATHON_END_DATE,
+            hackingStart: TEST_HACKING_START,
         });
 
         const hackathons = await trpcClient.hackathons.getHackathons();
@@ -32,6 +34,7 @@ describe('Hackathon CRUDL tests', () => {
             name: TEST_HACKATHON_NAME,
             startDate: TEST_HACKATHON_START_DATE,
             endDate: TEST_HACKATHON_END_DATE,
+            hackingStart: TEST_HACKING_START,
         });
 
         const hackathons = await trpcClient.hackathons.getHackathons();
@@ -63,6 +66,7 @@ describe('Hackathon CRUDL tests', () => {
                 name: 'n'.repeat(1000),
                 startDate: TEST_HACKATHON_START_DATE,
                 endDate: TEST_HACKATHON_END_DATE,
+                hackingStart: TEST_HACKING_START,
             },
         },
         {
@@ -71,6 +75,7 @@ describe('Hackathon CRUDL tests', () => {
                 name: TEST_HACKATHON_NAME,
                 startDate: 'invalid_date',
                 endDate: TEST_HACKATHON_END_DATE,
+                hackingStart: TEST_HACKING_START,
             },
         },
         {
@@ -79,6 +84,7 @@ describe('Hackathon CRUDL tests', () => {
                 name: 'n'.repeat(1000),
                 startDate: TEST_HACKATHON_START_DATE,
                 endDate: 'invalid_date',
+                hackingStart: TEST_HACKING_START,
             },
         },
     ])(

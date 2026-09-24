@@ -114,6 +114,7 @@ function toHackathonColumns(input: HackathonConfigInput) {
         startDate: pacificInputToOffsetString(input.startDate),
         endDate: pacificInputToOffsetString(input.endDate),
         eventPageSlug: input.eventPageSlug,
+        hackingStart: new Date(input.hackingStart),
         submissionDeadline: new Date(input.submissionDeadline),
         applicationOpen: toDate(input.applicationOpen),
         applicationCloses: toDate(input.applicationCloses),
@@ -244,6 +245,8 @@ export const hackathonsRouter = router({
                     name: input.name,
                     startDate: input.startDate,
                     endDate: input.endDate,
+                    hackingStart: input.hackingStart,
+                    submissionDeadline: input.submissionDeadline,
                     isActive: input.isActive,
                     applicationQuestions:
                         input.applicationQuestions as InputFormPageData[],

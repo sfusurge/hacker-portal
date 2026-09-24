@@ -4,6 +4,7 @@ import { atom } from 'jotai';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/en-ca';
 import { CalendarEvent } from '@/server/routers/eventsRouter';
+import { EventType } from '@/db/schema/events';
 dayjs.locale('en-ca'); // use canadian locale, always.
 
 // ===== start atoms =====
@@ -14,6 +15,15 @@ export interface SelectedEventInfo {
     element: Node | undefined;
 }
 export const selectedEventAtom = atom<SelectedEventInfo | undefined>(undefined);
+export const selectEventAtom = atom(
+    null,
+    (_get, set, event?: InternalCalendarEventType, element?: Node | null) =>
+        set(
+            selectedEventAtom,
+            event ? { event, element: element ?? undefined } : undefined
+        )
+);
+export const editModeAtom = atom(false);
 const _currentYearMonth = atom({
     year: dayjs().year(),
     month: dayjs().month(), // 0 index month
@@ -153,7 +163,32 @@ function getHour(t: Dayjs) {
 }
 
 export function getEventDurationString(event: InternalCalendarEventType) {
+    if (event.isDeadline === true) {
+        return `Due at ${getHour(event.startTime)}`;
+    }
+
     return `${getHour(event.startTime)} to ${getHour(event.endTime)}`;
+}
+
+export function getEventTimeLabel(
+    event: InternalCalendarEventType,
+    separator = ' - '
+) {
+    const startTime = event.startTime.format('h:mm A');
+
+    if (event.isDeadline === true) {
+        return startTime;
+    }
+
+    return `${startTime}${separator}${event.endTime.format('h:mm A')}`;
+}
+
+export function canAddEventToSchedule(event: InternalCalendarEventType) {
+    return (
+        event.isDeadline !== true &&
+        (event.eventType === EventType.ACTIVITY ||
+            event.eventType === EventType.WORKSHOP)
+    );
 }
 
 export type InternalCalendarEventType = Omit<
@@ -163,6 +198,7 @@ export type InternalCalendarEventType = Omit<
     startTime: Dayjs;
     endTime: Dayjs;
     duration: number;
+    isDeadline?: boolean;
 };
 
 export function DayjsifyEvents(
@@ -173,11 +209,10 @@ export function DayjsifyEvents(
             ...e,
             startTime: dayjs(e.startDate),
             endTime: dayjs(e.endDate),
-            duration: 0,
+            duration: Math.abs(
+                Math.ceil(dayjs(e.startDate).diff(dayjs(e.endDate), 'minute'))
+            ),
         };
-        res.duration = Math.abs(
-            Math.ceil(res.startTime.diff(res.endTime, 'minute'))
-        );
         return res;
     });
 }

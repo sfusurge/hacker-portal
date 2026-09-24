@@ -51,6 +51,17 @@ export const userInfoAtom = atom<UserDataType>({} as unknown as UserDataType);
 export const hackathonAtom = atom<HackathonData>(
     {} as unknown as HackathonData
 );
+export const hackathonScheduleRangeAtom = atom((get) => {
+    const hackathon = get(hackathonAtom);
+    const startDate = hackathon.startDate.startOf('day');
+    const endDate = hackathon.endDate.endOf('day');
+
+    return {
+        startDate,
+        endDate,
+        days: Math.max(1, endDate.diff(startDate, 'day') + 1),
+    };
+});
 
 export const viewerAnnouncementLocationKeyAtom = atom<string | null>(null);
 
@@ -75,6 +86,7 @@ interface DbHackathonType {
     name: string;
     startDate: string;
     endDate: string;
+    hackingStart: Date;
     submissionDeadline: Date;
     projectGalleryOpen?: Date | null;
     submissionOpen: Date | null;
@@ -121,6 +133,7 @@ function DeserializeHackathonData(
             audienceVotingCloses: null,
             startDate: dayjs(0),
             endDate: dayjs(0),
+            hackingStart: dayjs(0),
         };
     }
     return {
@@ -133,6 +146,7 @@ function DeserializeHackathonData(
         hackathonName: hackathon.name,
         startDate: dayjs(hackathon.startDate),
         endDate: dayjs(hackathon.endDate),
+        hackingStart: dayjs(hackathon.hackingStart),
         submissionDeadline: dayjs(hackathon.submissionDeadline),
         projectGalleryOpen:
             hackathon.projectGalleryOpen != null

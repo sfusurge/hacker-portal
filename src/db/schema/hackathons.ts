@@ -43,6 +43,7 @@ const hackathons = pgTable('hackathons', {
     name: varchar('name', { length: 255 }).notNull(),
     startDate: varchar('start_date', { length: 255 }).notNull(),
     endDate: varchar('end_date', { length: 255 }).notNull(),
+    hackingStart: timestamp('hacking_start').notNull(),
     submissionDeadline: timestamp('submission_deadline')
         .notNull()
         .default(JOURNEY_HACK_2025_DEADLINE),
@@ -129,6 +130,7 @@ const hackathonConfigSchema = z.object({
     endDate: z.string().min(1, 'End date is required'),
     eventPageSlug: z.string().min(1).max(255),
 
+    hackingStart: z.number().int(),
     submissionDeadline: z.number().int(),
     applicationOpen: z.number().int().nullable(),
     applicationCloses: z.number().int().nullable(),
