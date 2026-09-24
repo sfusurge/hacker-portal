@@ -11,7 +11,7 @@ export default function SignOutContent({ redirectTo }: { redirectTo: string }) {
     useEffect(() => {
         if (session.status === 'loading') return;
         resetPostHogUser();
-        void signOutAndRedirect(redirectTo);
+        signOutAndRedirect(redirectTo);
     }, [session.status, redirectTo]);
 
     return (

@@ -22,16 +22,16 @@ export function useAuthSession() {
     };
 }
 
-/** Sign out via Better Auth client, then hard-navigate to clear RSC session UI. */
-export async function signOutAndRedirect(redirectTo = '/login') {
+/**
+ * Navigate to the server sign-out route so every cookie domain scope
+ * (host-only, portal host, and shared parent domain) can be expired.
+ */
+export function signOutAndRedirect(redirectTo = '/login') {
     try {
-        await authClient.signOut();
-    } finally {
-        try {
-            localStorage.removeItem('auth-login-success');
-        } catch {
-            // ignore
-        }
-        window.location.assign(redirectTo);
+        localStorage.removeItem('auth-login-success');
+    } catch {
+        // ignore
     }
+    const params = new URLSearchParams({ from: redirectTo });
+    window.location.assign(`/api/auth/sign-out?${params}`);
 }

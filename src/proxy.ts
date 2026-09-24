@@ -1,6 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { headers } from 'next/headers';
 import { auth } from '@/auth/auth';
+import {
+    expireLegacyPortalAuthCookies,
+    migrateSessionCookieToSharedDomain,
+} from '@/auth/expireAuthCookies';
 
 // Keep in sync with POSTHOG_API_HOST in src/lib/analytics/posthog.ts
 const POSTHOG_PROXY_PATH = '/_sf';
@@ -65,8 +69,22 @@ export async function proxy(req: NextRequest) {
         if (!session?.user) {
             const target = new URL('/login', req.url);
             target.searchParams.set('from', path);
-            return NextResponse.redirect(target, { status: 302 });
+            const response = NextResponse.redirect(target, { status: 302 });
+            // Dual-cookie collision → clear portal host-only so login can work
+            expireLegacyPortalAuthCookies(req, response);
+            return response;
         }
+
+        // TODO(cookie-migration): remove after all sessions are on .sfusurge.com
+        const response = NextResponse.next();
+        migrateSessionCookieToSharedDomain(req, response);
+        return response;
+    }
+
+    if (path === '/login' || path.startsWith('/login/')) {
+        const response = NextResponse.next();
+        expireLegacyPortalAuthCookies(req, response);
+        return response;
     }
 
     return NextResponse.next();

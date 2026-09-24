@@ -31,11 +31,15 @@ export const auth = betterAuth({
     }),
     advanced: {
         trustedProxyHeaders: true,
-        ...(process.env.BETTER_AUTH_COOKIE_DOMAIN
+        ...(process.env.BETTER_AUTH_COOKIE_DOMAIN?.trim()
             ? {
                   crossSubDomainCookies: {
                       enabled: true,
-                      domain: process.env.BETTER_AUTH_COOKIE_DOMAIN,
+                      // Leading dot: one cookie for portal + sibling subdomains
+                      domain: process.env.BETTER_AUTH_COOKIE_DOMAIN.trim().replace(
+                          /^\.?/,
+                          '.'
+                      ),
                   },
               }
             : {}),
