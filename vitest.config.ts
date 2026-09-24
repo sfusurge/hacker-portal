@@ -17,6 +17,34 @@ export default defineConfig({
         mockReset: true,
         restoreMocks: true,
         dangerouslyIgnoreUnhandledErrors: true,
+        projects: [
+            {
+                extends: true,
+                test: {
+                    name: 'unit',
+                    dir: 'test/unit',
+                    setupFiles: [
+                        './test/setup/localDB.ts',
+                        './test/setup/userData.ts',
+                    ],
+                },
+            },
+            {
+                extends: true,
+                test: {
+                    name: 'e2e',
+                    dir: 'test/e2e',
+                    setupFiles: ['./test/setup/localDB.ts'],
+                },
+            },
+            {
+                extends: true,
+                test: {
+                    name: 'r2',
+                    dir: 'test/r2',
+                },
+            },
+        ],
     },
     // https://github.com/vitest-dev/vitest/discussions/3042
     resolve: {
