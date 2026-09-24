@@ -14,7 +14,7 @@ const portalOrigin = originFrom(
 );
 const timeGamesOrigin = originFrom(
     process.env.TIME_GAMES_URL,
-    'https://games.sfusurge.com'
+    'https://points.sfusurge.com'
 );
 
 /** Accept Portal-relative paths and the configured Time Games origin only. */
