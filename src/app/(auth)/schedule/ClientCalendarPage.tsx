@@ -1,6 +1,9 @@
 'use client';
 
-import { DaySchedule } from '@/components/calendar/DaySchedule/DaySchedule';
+import {
+    DaySchedule,
+    type ScheduleViewMode,
+} from '@/components/calendar/DaySchedule/DaySchedule';
 import {
     currentYearMonthAtom,
     DayjsifyEvents,
@@ -14,7 +17,11 @@ import { CalendarEvent } from '@/server/routers/eventsRouter';
 import dayjs, { Dayjs } from 'dayjs';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { userInfoAtom } from '../ClientContext';
+import {
+    hackathonAtom,
+    hackathonScheduleRangeAtom,
+    userInfoAtom,
+} from '../ClientContext';
 import { EventAdmin } from '@/components/calendar/EventAdmin/EventAdmin';
 import { PlusIcon } from '@heroicons/react/24/solid';
 import { useWindowSize } from '@/lib/useWindowSize';
@@ -27,23 +34,15 @@ import { ScheduleEventsCard } from '@/components/calendar/ScheduleEventsCard/Sch
 
 export function ClientCalendarPage({
     events: _events,
-    hackathon,
 }: {
     events: CalendarEvent[];
-    hackathon: {
-        id: number;
-        name: string;
-        startDate: string;
-        endDate: string;
-        submissionDeadline: Date;
-
-        version: number;
-    };
 }) {
     const eventsAtom = useMemo(() => atom(DayjsifyEvents(_events)), [_events]);
     const [events, setEvents] = useAtom(eventsAtom);
 
     const userInfo = useAtomValue(userInfoAtom);
+    const hackathon = useAtomValue(hackathonAtom);
+    const hackathonRange = useAtomValue(hackathonScheduleRangeAtom);
     const isAdmin = useMemo(
         () => userInfo && hasAdminAccess(userInfo.userRole),
         [userInfo]
@@ -94,9 +93,6 @@ export function ClientCalendarPage({
     const defaultStartDate = useMemo(() => {
         const today = dayjs().startOf('day');
 
-        const firstDay = dayjs(hackathon.startDate);
-        const lastDay = dayjs(hackathon.endDate).endOf('day');
-
         let minDate = dayjs(new Date(2099, 1, 1));
         let updated = false;
         for (const e of events) {
@@ -109,38 +105,42 @@ export function ClientCalendarPage({
             minDate = today;
         }
 
-        if (today.isBefore(firstDay)) {
+        if (today.isBefore(hackathonRange.startDate)) {
             return minDate.startOf('day');
         }
 
-        if (today.isBefore(lastDay)) {
-            return firstDay.startOf('day');
+        if (today.isBefore(hackathonRange.endDate)) {
+            return hackathonRange.startDate;
         }
 
         // after event, just display today
         return today;
-    }, [events, hackathon.endDate, hackathon.startDate]);
+    }, [events, hackathonRange]);
 
     const [desktopStartDate, setDesktopStartDate] = useState<Dayjs>();
     const [desktopSelectedDate, setDesktopSelectedDate] = useState<Dayjs>();
+    const [scheduleViewMode, setScheduleViewMode] =
+        useState<ScheduleViewMode>('week');
     const scheduleStartDate = desktopStartDate ?? defaultStartDate;
+    const visibleScheduleStartDate =
+        scheduleViewMode === 'event'
+            ? hackathonRange.startDate
+            : scheduleStartDate;
+    const visibleScheduleDays =
+        scheduleViewMode === 'event' ? hackathonRange.days : 4;
     const calendarSelectedDate = useMemo(
-        () => desktopSelectedDate ?? scheduleStartDate.add(1, 'day'),
-        [desktopSelectedDate, scheduleStartDate]
+        () => desktopSelectedDate ?? visibleScheduleStartDate.add(1, 'day'),
+        [desktopSelectedDate, visibleScheduleStartDate]
     );
-    const scheduleDays = 4;
     const activeHackathonEvents = useMemo(() => {
-        const firstDay = dayjs(hackathon.startDate).startOf('day');
-        const lastDay = dayjs(hackathon.endDate).endOf('day');
-
         return events.filter((event) => {
             return (
                 event.hackathonId === hackathon.id &&
-                !event.startTime.isBefore(firstDay) &&
-                !event.startTime.isAfter(lastDay)
+                !event.startTime.isBefore(hackathonRange.startDate) &&
+                !event.startTime.isAfter(hackathonRange.endDate)
             );
         });
-    }, [events, hackathon.endDate, hackathon.id, hackathon.startDate]);
+    }, [events, hackathon.id, hackathonRange]);
 
     useEffect(() => {
         if (isMobile) {
@@ -238,7 +238,7 @@ export function ClientCalendarPage({
 
                         <div className="min-h-0 flex-1">
                             <MobileCalendar
-                                events={events}
+                                events={activeHackathonEvents}
                                 isAdmin={Boolean(isAdmin)}
                                 onEventRsvpChange={updateEvents}
                             />
@@ -249,7 +249,7 @@ export function ClientCalendarPage({
                         <div className="flex min-h-0 flex-col">
                             <ScheduleHeader
                                 eyebrow={`${hackathon.name} Schedule`}
-                                monthLabel={scheduleStartDate.format(
+                                monthLabel={visibleScheduleStartDate.format(
                                     'MMMM YYYY'
                                 )}
                                 isAdmin={Boolean(isAdmin)}
@@ -258,16 +258,28 @@ export function ClientCalendarPage({
                             />
                             <div className="min-h-0 flex-1">
                                 <DaySchedule
-                                    days={scheduleDays}
-                                    startDate={scheduleStartDate}
-                                    events={events}
+                                    days={visibleScheduleDays}
+                                    startDate={visibleScheduleStartDate}
+                                    events={activeHackathonEvents}
                                     minColumnWidth={200}
                                     maxVisibleColumns={4}
                                     onPreviousRange={
-                                        handlePreviousScheduleRange
+                                        scheduleViewMode === 'week'
+                                            ? handlePreviousScheduleRange
+                                            : undefined
                                     }
-                                    onToday={handleTodayScheduleRange}
-                                    onNextRange={handleNextScheduleRange}
+                                    onToday={
+                                        scheduleViewMode === 'week'
+                                            ? handleTodayScheduleRange
+                                            : undefined
+                                    }
+                                    onNextRange={
+                                        scheduleViewMode === 'week'
+                                            ? handleNextScheduleRange
+                                            : undefined
+                                    }
+                                    viewMode={scheduleViewMode}
+                                    onViewModeChange={setScheduleViewMode}
                                     onEventRsvpChange={updateEvents}
                                     isAdmin={Boolean(isAdmin)}
                                 />

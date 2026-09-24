@@ -20,6 +20,7 @@ export function DateControls({
                 variant="default"
                 hierarchy="secondary"
                 onClick={onPrevious}
+                disabled={!onPrevious}
                 aria-label="Previous date range"
                 className="h-8 w-8 [&>span]:p-0"
             >
@@ -31,6 +32,7 @@ export function DateControls({
                 hierarchy="secondary"
                 style={{ padding: '0.25rem' }}
                 onClick={onToday}
+                disabled={!onToday}
                 className="h-8 [&>span]:px-2 [&>span]:py-0"
             >
                 Today
@@ -40,6 +42,7 @@ export function DateControls({
                 variant="default"
                 hierarchy="secondary"
                 onClick={onNext}
+                disabled={!onNext}
                 aria-label="Next date range"
                 className="h-8 w-8 [&>span]:p-0"
             >

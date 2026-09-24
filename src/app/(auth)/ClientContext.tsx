@@ -51,6 +51,17 @@ export const userInfoAtom = atom<UserDataType>({} as unknown as UserDataType);
 export const hackathonAtom = atom<HackathonData>(
     {} as unknown as HackathonData
 );
+export const hackathonScheduleRangeAtom = atom((get) => {
+    const hackathon = get(hackathonAtom);
+    const startDate = hackathon.startDate.startOf('day');
+    const endDate = hackathon.endDate.endOf('day');
+
+    return {
+        startDate,
+        endDate,
+        days: Math.max(1, endDate.diff(startDate, 'day') + 1),
+    };
+});
 
 export const viewerAnnouncementLocationKeyAtom = atom<string | null>(null);
 

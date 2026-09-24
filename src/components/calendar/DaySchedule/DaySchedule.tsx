@@ -28,6 +28,7 @@ import { trpc } from '@/trpc/client';
 
 // size of UI, shared
 const [rowHeight, headerHeight, timeColumnWidth] = [90, 34, 50];
+export type ScheduleViewMode = 'week' | 'event';
 
 /**
  * TODO
@@ -46,6 +47,8 @@ export function DaySchedule({
     onToday,
     onNextRange,
     onEventRsvpChange,
+    viewMode = 'week',
+    onViewModeChange,
     isAdmin = false,
 }: {
     startDate: Dayjs;
@@ -58,6 +61,8 @@ export function DaySchedule({
     onToday?: () => void;
     onNextRange?: () => void;
     onEventRsvpChange?: () => void | Promise<void>;
+    viewMode?: ScheduleViewMode;
+    onViewModeChange?: (mode: ScheduleViewMode) => void;
     events: InternalCalendarEventType[];
 }) {
     startDate = dayjs(startDate);
@@ -307,7 +312,12 @@ export function DaySchedule({
                 <div className={style.scheduleControls}>
                     <ToggleGroup
                         type="single"
-                        defaultValue="week"
+                        value={viewMode}
+                        onValueChange={(value) => {
+                            if (value === 'week' || value === 'event') {
+                                onViewModeChange?.(value);
+                            }
+                        }}
                         className="h-8"
                     >
                         <ToggleGroupItem
