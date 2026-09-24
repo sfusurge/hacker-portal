@@ -30,6 +30,8 @@ const announcement = {
 const PAGE_TITLE_MAP: { prefix: string; label: string }[] = [
     { prefix: '/announcements', label: 'Announcements' },
     { prefix: '/schedule', label: 'Schedule' },
+    { prefix: '/shop', label: 'Shop' },
+    { prefix: '/admin/shop', label: 'Shop' },
     { prefix: '/sparkjam/projects', label: 'Projects' },
     { prefix: '/projects', label: 'Project Gallery' },
     { prefix: '/home', label: 'Home' },

@@ -5,7 +5,6 @@ import {
     insertCheckInSchema,
     isCheckInSchema,
 } from '@/db/schema/checkIn';
-import { challengeCompletions, challenges } from '@/db/schema/challenges';
 import { user as usersTable } from '@/db/schema/users/users';
 import { ResourceNotFoundError } from '../exceptions';
 import { TRPCError } from '@trpc/server';
@@ -15,6 +14,7 @@ import { events } from '@/db/schema/events';
 import { applications } from '@/db/schema/applications';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
 import { assignHouseIfNeeded } from '@/server/houses/assignHouse';
+import { syncChallengesForEventCheckIn } from '@/server/challenges/linkedEvents';
 
 export const checkInRouter = router({
     checkIn: adminProcedure
@@ -103,34 +103,7 @@ export const checkInRouter = router({
                     target: [checkIns.userId, checkIns.eventId],
                 });
 
-            const linkedChallenges = await databaseClient
-                .select({
-                    id: challenges.id,
-                    points: challenges.points,
-                    variablePoints: challenges.variablePoints,
-                    maxCompletions: challenges.maxCompletions,
-                })
-                .from(challenges)
-                .where(eq(challenges.eventId, input.eventId));
-
-            for (const challenge of linkedChallenges) {
-                if (challenge.variablePoints || challenge.maxCompletions > 1) {
-                    continue;
-                }
-                await databaseClient
-                    .insert(challengeCompletions)
-                    .values({
-                        challengeId: challenge.id,
-                        userId: input.userId,
-                        pointsAwarded: challenge.points,
-                    })
-                    .onConflictDoNothing({
-                        target: [
-                            challengeCompletions.challengeId,
-                            challengeCompletions.userId,
-                        ],
-                    });
-            }
+            await syncChallengesForEventCheckIn(input.eventId, input.userId);
 
             // Fallback assign house if assignment was skipped in RSVP
             try {

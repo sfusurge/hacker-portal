@@ -7,13 +7,6 @@ import { FormTextInput } from '@/components/ui/input/input';
 import { FormTextArea } from '@/components/ui/formTextArea/FormTextArea';
 import { Label } from '@/components/ui/label/label';
 import { MarkdownDisplay } from '@/components/ui/Markdown/MarkdownDisplay';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import style from '@/app/(auth)/admin/review/components/SideCard.module.css';
 import { cn } from '@/lib/utils';
 
@@ -24,7 +17,7 @@ export type ChallengeFormState = {
     points: number;
     maxCompletions: number;
     variablePoints: boolean;
-    eventId: number | null;
+    eventIds: number[];
 };
 
 export const emptyChallengeForm = (): ChallengeFormState => ({
@@ -34,7 +27,7 @@ export const emptyChallengeForm = (): ChallengeFormState => ({
     points: 5,
     maxCompletions: 1,
     variablePoints: false,
-    eventId: null,
+    eventIds: [],
 });
 
 type ChallengeEventOption = {
@@ -193,45 +186,64 @@ export function ChallengeSideCard({
                             )}
                         </div>
                         <div className={style.field}>
-                            <Label>Linked event</Label>
-                            <Select
-                                value={
-                                    form.eventId != null
-                                        ? String(form.eventId)
-                                        : 'none'
-                                }
-                                onValueChange={(v) =>
-                                    onChange({
-                                        ...form,
-                                        eventId:
-                                            v === 'none' ? null : Number(v),
+                            <Label>Linked events</Label>
+                            <div className="max-h-48 space-y-1 overflow-y-auto rounded-xl border border-neutral-600/60 bg-neutral-800/60 p-2">
+                                {events.length === 0 ? (
+                                    <p className="px-1 py-2 text-sm text-white/60">
+                                        No events in this hackathon yet.
+                                    </p>
+                                ) : (
+                                    events.map((ev) => {
+                                        const checked = form.eventIds.includes(
+                                            ev.id
+                                        );
+                                        return (
+                                            <label
+                                                key={ev.id}
+                                                className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-white hover:bg-white/5"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    className="accent-brand-500 size-4 shrink-0 rounded border-neutral-600 bg-neutral-800"
+                                                    checked={checked}
+                                                    onChange={() => {
+                                                        const next = checked
+                                                            ? form.eventIds.filter(
+                                                                  (id) =>
+                                                                      id !==
+                                                                      ev.id
+                                                              )
+                                                            : [
+                                                                  ...form.eventIds,
+                                                                  ev.id,
+                                                              ];
+                                                        onChange({
+                                                            ...form,
+                                                            eventIds: next,
+                                                            maxCompletions:
+                                                                form.variablePoints
+                                                                    ? 1
+                                                                    : Math.max(
+                                                                          form.maxCompletions,
+                                                                          next.length ||
+                                                                              1
+                                                                      ),
+                                                        });
+                                                    }}
+                                                />
+                                                <span className="truncate">
+                                                    {ev.title}
+                                                </span>
+                                            </label>
+                                        );
                                     })
-                                }
-                            >
-                                <SelectTrigger
-                                    className="h-11 w-full rounded-xl border-neutral-600/60 bg-neutral-800/60"
-                                    aria-label="Linked event"
-                                >
-                                    <SelectValue placeholder="None" />
-                                </SelectTrigger>
-                                <SelectContent
-                                    position="popper"
-                                    className="z-[21000] border-neutral-800 bg-neutral-900 text-white"
-                                >
-                                    <SelectItem value="none">None</SelectItem>
-                                    {events.map((ev) => (
-                                        <SelectItem
-                                            key={ev.id}
-                                            value={String(ev.id)}
-                                        >
-                                            {ev.title}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                )}
+                            </div>
                             <p className="mt-2 text-xs text-white/60">
-                                Checking into this event auto-completes the
-                                challenge (fixed points, once).
+                                Check-ins to these events count toward this
+                                challenge (e.g. Attend Workshops → link every
+                                workshop). Points = challenge points × check-ins
+                                (capped by Times).
                             </p>
                         </div>
                     </div>

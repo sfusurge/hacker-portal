@@ -8,7 +8,6 @@ import {
     timestamp,
     varchar,
 } from 'drizzle-orm/pg-core';
-import { createUpdateSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { hackathons } from './hackathons';
 import { events } from './events';
@@ -21,9 +20,6 @@ export const challenges = pgTable(
         hackathonId: integer('hackathon_id')
             .notNull()
             .references(() => hackathons.id),
-        eventId: integer('event_id').references(() => events.id, {
-            onDelete: 'set null',
-        }),
         title: varchar('title', { length: 1024 }).notNull(),
         description: varchar('description', { length: 2048 }).default(''),
         longDescription: text('long_description'),
@@ -32,7 +28,24 @@ export const challenges = pgTable(
         maxCompletions: integer('max_completions').notNull().default(1),
         variablePoints: boolean('variable_points').notNull().default(false),
     },
-    (table) => [index().on(table.hackathonId), index().on(table.eventId)]
+    (table) => [index().on(table.hackathonId)]
+);
+
+/** Many events can feed progress on one challenge */
+export const challengeEvents = pgTable(
+    'challenge_events',
+    {
+        challengeId: integer('challenge_id')
+            .notNull()
+            .references(() => challenges.id, { onDelete: 'cascade' }),
+        eventId: integer('event_id')
+            .notNull()
+            .references(() => events.id, { onDelete: 'cascade' }),
+    },
+    (table) => [
+        primaryKey({ columns: [table.challengeId, table.eventId] }),
+        index().on(table.eventId),
+    ]
 );
 
 export const challengeCompletions = pgTable(
@@ -64,15 +77,20 @@ export const insertChallengeSchema = z.object({
     points: z.number().int().min(1).optional(),
     maxCompletions: z.number().int().min(1).optional(),
     variablePoints: z.boolean().optional(),
-    eventId: z.number().int().nullable().optional(),
+    eventIds: z.array(z.number().int()).optional(),
 });
 
-export const updateChallengeSchema = createUpdateSchema(challenges)
-    .omit({ hackathonId: true })
-    .extend({
-        challengeId: z.number().int(),
-        eventId: z.number().int().nullable().optional(),
-    });
+export const updateChallengeSchema = z.object({
+    challengeId: z.number().int(),
+    title: z.string().min(1).optional(),
+    description: z.string().optional(),
+    longDescription: z.string().nullable().optional(),
+    color: z.string().optional(),
+    points: z.number().int().min(1).optional(),
+    maxCompletions: z.number().int().min(1).optional(),
+    variablePoints: z.boolean().optional(),
+    eventIds: z.array(z.number().int()).optional(),
+});
 
 export const deleteChallengeSchema = z.object({
     challengeId: z.number().int(),
@@ -91,4 +109,20 @@ export const completeChallengeSchema = z.object({
 export const isChallengeCompleteSchema = z.object({
     challengeId: z.number().int(),
     userId: z.number().int(),
+});
+
+const challengeImportRowSchema = z.object({
+    title: z.string().trim().min(1).max(1024),
+    description: z.string().max(2048).optional(),
+    longDescription: z.string().optional(),
+    color: z.string().max(128).optional(),
+    points: z.number().int().min(1).optional(),
+    maxCompletions: z.number().int().min(1).optional(),
+    variablePoints: z.boolean().optional(),
+    eventIds: z.array(z.number().int()).optional(),
+});
+
+export const importChallengesSchema = z.object({
+    hackathonId: z.number().int(),
+    challenges: z.array(challengeImportRowSchema).min(1).max(500),
 });
