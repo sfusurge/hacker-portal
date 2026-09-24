@@ -393,23 +393,6 @@ function ManageHouses({
             });
         },
     });
-    const assignUnassigned = trpc.houses.assignUnassignedHouses.useMutation({
-        onSuccess: (data) => {
-            toast({
-                title: 'Hackers assigned!',
-                description: `Assigned ${data.assigned} hackers to houses.`,
-                variant: 'default',
-            });
-            invalidateAll();
-        },
-        onError: (err) => {
-            toast({
-                title: 'Failed to assign hackers',
-                description: err.message,
-                variant: 'error',
-            });
-        },
-    });
     const addHouse = trpc.houses.addHouse.useMutation({
         onSuccess: () => {
             toast({
@@ -671,25 +654,6 @@ function ManageHouses({
                     </div>
                 </div>
             )}
-
-            <div>
-                <Button
-                    onClick={() => assignUnassigned.mutate({ hackathonId })}
-                    disabled={assignUnassigned.isPending}
-                    hierarchy="secondary"
-                    variant="brand"
-                    size="compact"
-                >
-                    {assignUnassigned.isPending
-                        ? 'Assigning...'
-                        : 'Assign Unassigned Hackers'}
-                </Button>
-                {assignUnassigned.data && (
-                    <p className="mt-2 text-sm text-neutral-400">
-                        Assigned {assignUnassigned.data.assigned} hackers.
-                    </p>
-                )}
-            </div>
         </section>
     );
 }

@@ -23,8 +23,6 @@ export const checkInRouter = router({
             const [eventRow] = await databaseClient
                 .select({
                     hackathonId: events.hackathonId,
-                    points: events.points,
-                    variablePoints: events.variablePoints,
                 })
                 .from(events)
                 .where(eq(events.id, input.eventId))
@@ -35,29 +33,6 @@ export const checkInRouter = router({
                     code: 'NOT_FOUND',
                     message: `Cannot find event with id ${input.eventId}`,
                 });
-            }
-
-            let pointsAwarded: number;
-            if (eventRow.variablePoints) {
-                if (input.pointsAwarded == null) {
-                    throw new TRPCError({
-                        code: 'BAD_REQUEST',
-                        message:
-                            'pointsAwarded is required for variable-point events',
-                    });
-                }
-                if (
-                    input.pointsAwarded < 1 ||
-                    input.pointsAwarded > eventRow.points
-                ) {
-                    throw new TRPCError({
-                        code: 'BAD_REQUEST',
-                        message: `pointsAwarded must be between 1 and ${eventRow.points}`,
-                    });
-                }
-                pointsAwarded = input.pointsAwarded;
-            } else {
-                pointsAwarded = eventRow.points;
             }
 
             const [[targetUser], [application]] = await Promise.all([
@@ -92,12 +67,13 @@ export const checkInRouter = router({
                 });
             }
 
+            // Event check-ins never award points — only challenges do.
             await databaseClient
                 .insert(checkIns)
                 .values({
                     eventId: input.eventId,
                     userId: input.userId,
-                    pointsAwarded,
+                    pointsAwarded: 0,
                 })
                 .onConflictDoNothing({
                     target: [checkIns.userId, checkIns.eventId],

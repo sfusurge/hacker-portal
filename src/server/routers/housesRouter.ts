@@ -1,7 +1,5 @@
 import { databaseClient } from '@/db/client';
-import { checkIns } from '@/db/schema/checkIn';
 import { challengeCompletions, challenges } from '@/db/schema/challenges';
-import { events } from '@/db/schema/events';
 import {
     MAX_HOUSES_PER_HACKATHON,
     assignHousesSchema,
@@ -34,15 +32,6 @@ import { hasAdminAccess } from '@/lib/auth/roles';
 
 const housePointsSql = sql<number>`
     coalesce((
-        select sum(${checkIns.pointsAwarded})
-        from ${checkIns}
-        inner join ${events} on ${events.id} = ${checkIns.eventId}
-            and ${events.hackathonId} = ${houses.hackathonId}
-        inner join ${houseMemberships} on ${houseMemberships.userId} = ${checkIns.userId}
-            and ${houseMemberships.houseId} = ${houses.id}
-    ), 0)
-    +
-    coalesce((
         select sum(${challengeCompletions.pointsAwarded})
         from ${challengeCompletions}
         inner join ${challenges} on ${challenges.id} = ${challengeCompletions.challengeId}
@@ -53,14 +42,6 @@ const housePointsSql = sql<number>`
 `;
 
 const memberPointsSql = sql<number>`
-    coalesce((
-        select sum(${checkIns.pointsAwarded})
-        from ${checkIns}
-        inner join ${events} on ${events.id} = ${checkIns.eventId}
-            and ${events.hackathonId} = ${houses.hackathonId}
-        where ${checkIns.userId} = ${usersTable.id}
-    ), 0)
-    +
     coalesce((
         select sum(${challengeCompletions.pointsAwarded})
         from ${challengeCompletions}

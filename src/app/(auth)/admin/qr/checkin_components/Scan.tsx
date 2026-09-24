@@ -36,7 +36,8 @@ type ChallengeOption = {
     id: number;
     hackathonId: number;
     title: string;
-    points: number;
+    lowestPoints: number;
+    highestPoints: number;
     maxCompletions: number;
     variablePoints: boolean;
 };
@@ -49,8 +50,6 @@ interface ScanProps {
         eventType: EventType;
         startDate: string;
         endDate: string;
-        points: number;
-        variablePoints: boolean;
     }[];
     challenges: ChallengeOption[];
     initialEventType?: EventType;
@@ -390,17 +389,22 @@ export default function Scan({
                 variablePoints={
                     mode === 'challenge'
                         ? (selectedChallenge?.variablePoints ?? false)
-                        : (selectedEvent?.variablePoints ?? false)
+                        : false
+                }
+                minPoints={
+                    mode === 'challenge'
+                        ? (selectedChallenge?.lowestPoints ?? 1)
+                        : 1
                 }
                 maxPoints={
                     mode === 'challenge'
-                        ? (selectedChallenge?.points ?? 1)
-                        : (selectedEvent?.points ?? 1)
+                        ? (selectedChallenge?.highestPoints ?? 1)
+                        : 1
                 }
                 pointsPerCompletion={
                     mode === 'challenge'
-                        ? (selectedChallenge?.points ?? 1)
-                        : (selectedEvent?.points ?? 1)
+                        ? (selectedChallenge?.highestPoints ?? 1)
+                        : 1
                 }
                 maxCompletions={
                     mode === 'challenge'

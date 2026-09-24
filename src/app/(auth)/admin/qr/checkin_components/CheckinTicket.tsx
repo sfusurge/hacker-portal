@@ -32,6 +32,7 @@ type CheckInTicketProps = {
     onClose: () => void;
     open: boolean;
     variablePoints?: boolean;
+    minPoints?: number;
     maxPoints?: number;
     pointsPerCompletion?: number;
     maxCompletions?: number;
@@ -46,6 +47,7 @@ export default function CheckinTicket({
     onClose,
     open,
     variablePoints = false,
+    minPoints = 1,
     maxPoints = 1,
     pointsPerCompletion = 1,
     maxCompletions = 1,
@@ -166,6 +168,7 @@ export default function CheckinTicket({
             variablePoints ? maxPoints : pointsPerCompletion * maxCompletions
         );
     }, [
+        minPoints,
         maxPoints,
         eventId,
         variablePoints,
@@ -209,11 +212,11 @@ export default function CheckinTicket({
         if (variablePoints) {
             if (
                 !Number.isInteger(pointsAwarded) ||
-                pointsAwarded < 1 ||
+                pointsAwarded < minPoints ||
                 pointsAwarded > maxPoints
             ) {
                 toast({
-                    title: `Points must be between 1 and ${maxPoints}`,
+                    title: `Points must be between ${minPoints} and ${maxPoints}`,
                     variant: 'error',
                 });
                 return;
@@ -364,11 +367,12 @@ export default function CheckinTicket({
                                         {variablePoints ? (
                                             <div className="flex w-full items-center justify-between gap-3">
                                                 <div className="text-sm leading-tight font-normal text-white/60">
-                                                    Points (1–{maxPoints})
+                                                    Points ({minPoints}–
+                                                    {maxPoints})
                                                 </div>
                                                 <input
                                                     type="number"
-                                                    min={1}
+                                                    min={minPoints}
                                                     max={maxPoints}
                                                     value={pointsAwarded}
                                                     onChange={(e) => {
@@ -378,7 +382,7 @@ export default function CheckinTicket({
                                                         setPointsAwarded(
                                                             Number.isFinite(n)
                                                                 ? n
-                                                                : 1
+                                                                : minPoints
                                                         );
                                                     }}
                                                     className="w-20 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-1 text-center text-sm font-medium text-white"

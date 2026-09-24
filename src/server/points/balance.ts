@@ -1,7 +1,5 @@
 import { databaseClient } from '@/db/client';
-import { checkIns } from '@/db/schema/checkIn';
 import { challengeCompletions, challenges } from '@/db/schema/challenges';
-import { events } from '@/db/schema/events';
 import { shopPurchases } from '@/db/schema/shop';
 import { and, eq, sql } from 'drizzle-orm';
 
@@ -11,24 +9,11 @@ export type PointsBalance = {
     balance: number;
 };
 
-/** Lifetime earned from check-ins + challenges. Used for leaderboard. */
+/** Lifetime earned from challenges. Used for leaderboard. */
 export async function getEarnedPoints(
     hackathonId: number,
     userId: number
 ): Promise<number> {
-    const [checkInRow] = await databaseClient
-        .select({
-            total: sql<number>`coalesce(sum(${checkIns.pointsAwarded}), 0)`,
-        })
-        .from(checkIns)
-        .innerJoin(events, eq(events.id, checkIns.eventId))
-        .where(
-            and(
-                eq(events.hackathonId, hackathonId),
-                eq(checkIns.userId, userId)
-            )
-        );
-
     const [challengeRow] = await databaseClient
         .select({
             total: sql<number>`coalesce(sum(${challengeCompletions.pointsAwarded}), 0)`,
@@ -45,7 +30,7 @@ export async function getEarnedPoints(
             )
         );
 
-    return Number(checkInRow?.total ?? 0) + Number(challengeRow?.total ?? 0);
+    return Number(challengeRow?.total ?? 0);
 }
 
 /** Points spent via shop redemptions. */
