@@ -133,6 +133,22 @@ export const eventsRouter = router({
     rsvpEvent: protectedProcedure
         .input(rsvpEventSchema)
         .mutation(async ({ input, ctx }) => {
+            const [event] = await databaseClient
+                .select({
+                    id: eventsTable.id,
+                    hackathonId: eventsTable.hackathonId,
+                })
+                .from(eventsTable)
+                .where(eq(eventsTable.id, input.eventId))
+                .limit(1);
+
+            if (!event) {
+                throw new TRPCError({
+                    code: 'NOT_FOUND',
+                    message: `Cannot find event with id ${input.eventId}`,
+                });
+            }
+
             await databaseClient
                 .insert(rsvps)
                 .values({
@@ -149,6 +165,22 @@ export const eventsRouter = router({
     unrsvpEvent: protectedProcedure
         .input(rsvpEventSchema)
         .mutation(async ({ input, ctx }) => {
+            const [event] = await databaseClient
+                .select({
+                    id: eventsTable.id,
+                    hackathonId: eventsTable.hackathonId,
+                })
+                .from(eventsTable)
+                .where(eq(eventsTable.id, input.eventId))
+                .limit(1);
+
+            if (!event) {
+                throw new TRPCError({
+                    code: 'NOT_FOUND',
+                    message: `Cannot find event with id ${input.eventId}`,
+                });
+            }
+
             await databaseClient
                 .delete(rsvps)
                 .where(
