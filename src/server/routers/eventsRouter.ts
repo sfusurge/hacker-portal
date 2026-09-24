@@ -54,6 +54,7 @@ export const eventsRouter = router({
             console.log(`Inserting ${JSON.stringify(input)}`);
             const startDate = new Date(input.startDate);
             const isDeadline = Boolean(input.isDeadline);
+            const eventType = (input.eventType ?? EventType.EVENT) as EventType;
 
             const [event] = await databaseClient
                 .insert(eventsTable)
@@ -67,8 +68,7 @@ export const eventsRouter = router({
                     color: input.color,
                     description: isDeadline ? '' : input.description,
                     longDescription: isDeadline ? null : input.longDescription,
-                    eventType: (input.eventType ??
-                        EventType.EVENT) as EventType,
+                    eventType,
                     isDeadline,
                     hasCheckIn: isDeadline ? false : input.hasCheckIn,
                     points: isDeadline ? 1 : input.points,
@@ -233,6 +233,7 @@ export const eventsRouter = router({
         .mutation(async ({ input }) => {
             const startDate = new Date(input.startDate);
             const isDeadline = Boolean(input.isDeadline);
+            const eventType = (input.eventType ?? EventType.EVENT) as EventType;
 
             const [event] = await databaseClient
                 .update(eventsTable)
@@ -245,8 +246,7 @@ export const eventsRouter = router({
                     imageUrl: isDeadline ? null : input.imageUrl || null,
                     description: isDeadline ? '' : input.description,
                     longDescription: isDeadline ? null : input.longDescription,
-                    eventType: (input.eventType ??
-                        EventType.EVENT) as EventType,
+                    eventType,
                     isDeadline,
                     hasCheckIn: isDeadline ? false : input.hasCheckIn,
                     points: isDeadline ? 1 : input.points,

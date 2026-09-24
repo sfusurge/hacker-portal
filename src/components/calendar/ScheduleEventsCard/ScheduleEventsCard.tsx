@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import {
+    canAddEventToSchedule,
     selectEventAtom,
     type InternalCalendarEventType,
 } from '../MonthCalendarShared';
@@ -23,9 +24,11 @@ export function ScheduleEventsCard({
             return a.startTime.valueOf() - b.startTime.valueOf();
         });
 
+        const scheduleEvents = sortedEvents.filter(canAddEventToSchedule);
+
         return {
-            addedEvents: sortedEvents.filter((event) => event.rsvped),
-            notAddedEvents: sortedEvents.filter((event) => !event.rsvped),
+            addedEvents: scheduleEvents.filter((event) => event.rsvped),
+            notAddedEvents: scheduleEvents.filter((event) => !event.rsvped),
         };
     }, [events]);
 
@@ -39,9 +42,7 @@ export function ScheduleEventsCard({
                     <ScheduleEventCard
                         key={event.id}
                         event={event}
-                        statusLabel={
-                            event.isDeadline ? 'Deadline' : 'Not Yet Added'
-                        }
+                        statusLabel="Not Yet Added"
                         onClick={() => {
                             selectEvent(event);
                         }}

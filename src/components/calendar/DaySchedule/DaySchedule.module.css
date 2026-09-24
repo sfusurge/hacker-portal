@@ -169,7 +169,7 @@
     --dayEventTitleSize: var(--text-sm);
     --dayEventMetaGap: 3px;
     --dayEventMetaSize: 12px;
-    --dayEventIconSize: 12px;
+    --dayEventIconSize: 14px;
     --left: 0%;
     --width: 100%;
 
@@ -221,7 +221,7 @@
     --dayEventTitleSize: 12px;
     --dayEventMetaGap: 2px;
     --dayEventMetaSize: 10px;
-    --dayEventIconSize: 10px;
+    --dayEventIconSize: 11px;
 }
 
 .dayEvent:hover,

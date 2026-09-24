@@ -34,8 +34,8 @@ type LongDescriptionModalProps = {
     event: InternalCalendarEventType;
     onClose: () => void;
     isAdmin?: boolean;
-    onAddToSchedule?: () => void | Promise<void>;
-    addToScheduleDisabled?: boolean;
+    onToggleSchedule?: () => void | Promise<void>;
+    scheduleActionDisabled?: boolean;
     onEditEvent?: () => void;
     onEventDeleted?: () => void | Promise<void>;
 };
@@ -56,8 +56,8 @@ export function LongDescriptionModal({
     event,
     onClose,
     isAdmin = false,
-    onAddToSchedule,
-    addToScheduleDisabled = false,
+    onToggleSchedule,
+    scheduleActionDisabled = false,
     onEditEvent,
     onEventDeleted,
 }: LongDescriptionModalProps) {
@@ -73,7 +73,7 @@ export function LongDescriptionModal({
 
     const hasCheckIns = (checkIns.data?.checkInCount ?? 0) > 0;
     const canDelete = Boolean(isAdmin && onEventDeleted && !hasCheckIns);
-    const showFooter = Boolean(onAddToSchedule || isAdmin);
+    const showFooter = Boolean(onToggleSchedule || isAdmin);
     const discordLink = (
         <a
             className={style.detailLink}
@@ -252,17 +252,21 @@ export function LongDescriptionModal({
                                     </Button>
                                 </>
                             ) : (
-                                onAddToSchedule && (
+                                onToggleSchedule && (
                                     <Button
                                         className={style.footerButton}
-                                        disabled={addToScheduleDisabled}
+                                        disabled={scheduleActionDisabled}
                                         hierarchy="primary"
-                                        onClick={onAddToSchedule}
+                                        onClick={onToggleSchedule}
                                         size="compact"
                                         type="button"
-                                        variant="brand"
+                                        variant={
+                                            event.rsvped ? 'default' : 'brand'
+                                        }
                                     >
-                                        Add to schedule
+                                        {event.rsvped
+                                            ? 'Remove from schedule'
+                                            : 'Add to schedule'}
                                     </Button>
                                 )
                             )}

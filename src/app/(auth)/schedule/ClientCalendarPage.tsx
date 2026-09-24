@@ -129,6 +129,18 @@ export function ClientCalendarPage({
         [desktopSelectedDate, scheduleStartDate]
     );
     const scheduleDays = 4;
+    const activeHackathonEvents = useMemo(() => {
+        const firstDay = dayjs(hackathon.startDate).startOf('day');
+        const lastDay = dayjs(hackathon.endDate).endOf('day');
+
+        return events.filter((event) => {
+            return (
+                event.hackathonId === hackathon.id &&
+                !event.startTime.isBefore(firstDay) &&
+                !event.startTime.isAfter(lastDay)
+            );
+        });
+    }, [events, hackathon.endDate, hackathon.id, hackathon.startDate]);
 
     useEffect(() => {
         if (isMobile) {
@@ -273,7 +285,9 @@ export function ClientCalendarPage({
                                     className="w-full p-4"
                                 />
                             </Card>
-                            <ScheduleEventsCard events={events} />
+                            <ScheduleEventsCard
+                                events={activeHackathonEvents}
+                            />
                         </aside>
                     </div>
                 )}

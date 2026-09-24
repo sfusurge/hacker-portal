@@ -5,6 +5,7 @@ import style from './DaySchedule.module.css';
 import {
     currentTimeAtom,
     editModeAtom,
+    canAddEventToSchedule,
     groupEventsByDay,
     InternalCalendarEventType,
     selectEventAtom,
@@ -83,6 +84,7 @@ export function DaySchedule({
     const selectEvent = useSetAtom(selectEventAtom);
     const [editMode, setEditMode] = useAtom(editModeAtom);
     const rsvpEvent = trpc.events.rsvpEvent.useMutation();
+    const unrsvpEvent = trpc.events.unrsvpEvent.useMutation();
 
     const [containerHeight, setContainerHeight] = useState(0);
 
@@ -113,25 +115,28 @@ export function DaySchedule({
         return days - 1;
     }, [startDate]);
 
-    const canRsvpSelectedEvent =
+    const canScheduleSelectedEvent =
         selectedEvent?.event &&
-        canRsvpEvent(selectedEvent.event) &&
-        !selectedEvent.event.rsvped &&
+        canAddEventToSchedule(selectedEvent.event) &&
         !isAdmin;
 
-    const addSelectedEventToSchedule = async () => {
+    const toggleSelectedEventSchedule = async () => {
         if (!selectedEvent?.event) {
             return;
         }
 
         const event = selectedEvent.event;
 
-        await rsvpEvent.mutateAsync({ eventId: event.id });
+        if (event.rsvped) {
+            await unrsvpEvent.mutateAsync({ eventId: event.id });
+        } else {
+            await rsvpEvent.mutateAsync({ eventId: event.id });
+        }
 
         selectEvent(
             {
                 ...event,
-                rsvped: true,
+                rsvped: !event.rsvped,
             },
             selectedEvent.element
         );
@@ -158,12 +163,14 @@ export function DaySchedule({
                         onClose={() => {
                             selectEvent();
                         }}
-                        onAddToSchedule={
-                            canRsvpSelectedEvent
-                                ? addSelectedEventToSchedule
+                        onToggleSchedule={
+                            canScheduleSelectedEvent
+                                ? toggleSelectedEventSchedule
                                 : undefined
                         }
-                        addToScheduleDisabled={rsvpEvent.isPending}
+                        scheduleActionDisabled={
+                            rsvpEvent.isPending || unrsvpEvent.isPending
+                        }
                         onEditEvent={
                             isAdmin
                                 ? () => {
@@ -482,7 +489,7 @@ function DayEventItem({
     const showMeta = height >= 40;
     const showLocation = event.location && !isOverlapping && !isCompact;
     const isDeadline = event.isDeadline;
-    const isRsvpEvent = canRsvpEvent(event);
+    const isRsvpEvent = canAddEventToSchedule(event);
     const Icon =
         event.eventType === EventType.WORKSHOP
             ? BookOpenIcon
@@ -563,14 +570,6 @@ function DayEventItem({
 
 function getDeadlineTimeLabel(time: Dayjs) {
     return time.format(time.minute() === 0 ? 'hA' : 'h:mmA');
-}
-
-function canRsvpEvent(event: InternalCalendarEventType) {
-    return (
-        !event.isDeadline &&
-        (event.eventType === EventType.WORKSHOP ||
-            event.eventType === EventType.ACTIVITY)
-    );
 }
 
 function TimelineMarker({

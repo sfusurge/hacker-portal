@@ -4,6 +4,7 @@ import { atom } from 'jotai';
 import dayjs, { Dayjs } from 'dayjs';
 import 'dayjs/locale/en-ca';
 import { CalendarEvent } from '@/server/routers/eventsRouter';
+import { EventType } from '@/db/schema/events';
 dayjs.locale('en-ca'); // use canadian locale, always.
 
 // ===== start atoms =====
@@ -180,6 +181,14 @@ export function getEventTimeLabel(
     }
 
     return `${startTime}${separator}${event.endTime.format('h:mm A')}`;
+}
+
+export function canAddEventToSchedule(event: InternalCalendarEventType) {
+    return (
+        !event.isDeadline &&
+        (event.eventType === EventType.ACTIVITY ||
+            event.eventType === EventType.WORKSHOP)
+    );
 }
 
 export type InternalCalendarEventType = Omit<
