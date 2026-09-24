@@ -45,10 +45,6 @@ export default function EventPageLayout({
     events,
     ticketQr,
 }: EventPageLayoutProps) {
-    const applicationsOpened = activeHackathon?.applicationOpen
-        ? Date.now() >= new Date(activeHackathon.applicationOpen).getTime()
-        : false;
-
     const applicationCard = activeHackathon ? (
         <ApplicationOrSubmissionCard
             userData={userData}
@@ -78,37 +74,25 @@ export default function EventPageLayout({
 
             <div className="mb-6 flex flex-col gap-6 md:gap-8">
                 {activeHackathon ? (
-                    applicationsOpened ? (
-                        <div className="grid grid-cols-1 gap-6 xl:grid-cols-11 xl:gap-8">
-                            <div className="flex flex-col gap-6 xl:col-span-6 xl:gap-8">
-                                {applicationCard}
-                            </div>
-                            <div className="h-full xl:col-span-5">
-                                <TeamCard
-                                    className="h-full xl:col-span-5"
-                                    userData={userData}
-                                    hackathonId={activeHackathon.id}
-                                    team={team}
-                                />
-                            </div>
-                            <div className="grid grid-cols-1 gap-6 xl:col-span-11 xl:grid-cols-2 xl:gap-8">
-                                <EventsCard events={events} />
-                                <DiscordCard
-                                    applicationStatus={applicationStatus}
-                                />
-                            </div>
-                        </div>
-                    ) : (
-                        <>
+                    <div className="grid grid-cols-1 gap-6 xl:grid-cols-11 xl:gap-8">
+                        <div className="flex flex-col gap-6 xl:col-span-6 xl:gap-8">
                             {applicationCard}
-                            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:gap-8">
-                                <EventsCard events={events} />
-                                <DiscordCard
-                                    applicationStatus={applicationStatus}
-                                />
-                            </div>
-                        </>
-                    )
+                        </div>
+                        <div className="h-full xl:col-span-5">
+                            <TeamCard
+                                className="h-full xl:col-span-5"
+                                userData={userData}
+                                hackathonId={activeHackathon.id}
+                                team={team}
+                            />
+                        </div>
+                        <div className="grid grid-cols-1 gap-6 xl:col-span-11 xl:grid-cols-2 xl:gap-8">
+                            <EventsCard events={events} />
+                            <DiscordCard
+                                applicationStatus={applicationStatus}
+                            />
+                        </div>
+                    </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:gap-8">
                         {eventConfig.recapHref ? (
