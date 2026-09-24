@@ -10,10 +10,5 @@ export default async function CalendarPage() {
         hackathonId: hackathon.id,
     });
 
-    return (
-        <ClientCalendarPage
-            events={ssrEvents}
-            hackathon={hackathon}
-        ></ClientCalendarPage>
-    );
+    return <ClientCalendarPage events={ssrEvents}></ClientCalendarPage>;
 }

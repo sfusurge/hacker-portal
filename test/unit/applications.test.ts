@@ -3,6 +3,7 @@ import {
     TEST_HACKATHON_NAME,
     TEST_HACKATHON_START_DATE,
     TEST_HACKATHON_END_DATE,
+    TEST_HACKING_START,
 } from '../utils';
 import { mockCaller } from '../utils/mocks';
 
@@ -20,6 +21,7 @@ describe('applications routes tests', () => {
             name: TEST_HACKATHON_NAME,
             startDate: TEST_HACKATHON_START_DATE,
             endDate: TEST_HACKATHON_END_DATE,
+            hackingStart: TEST_HACKING_START,
         });
     });
 

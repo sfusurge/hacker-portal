@@ -1,53 +1,57 @@
 'use client';
 
-import { DaySchedule } from '@/components/calendar/DaySchedule/DaySchedule';
+import {
+    DaySchedule,
+    type ScheduleViewMode,
+} from '@/components/calendar/DaySchedule/DaySchedule';
 import {
     currentYearMonthAtom,
     DayjsifyEvents,
-    selectedEventAtom,
+    editModeAtom,
+    type InternalCalendarEventType,
+    selectEventAtom,
 } from '@/components/calendar/MonthCalendarShared';
 import { Button } from '@/components/ui/button';
-import { ToggleButton } from '@/components/ui/ToggleButton/ToggleButton';
+import { Calendar } from '@/components/ui/calendar';
+import { Card } from '@/components/ui/card';
 import { CalendarEvent } from '@/server/routers/eventsRouter';
-import dayjs from 'dayjs';
-import { atom, useAtom, useAtomValue } from 'jotai';
-import { useEffect, useMemo, useState } from 'react';
-import { userInfoAtom } from '../ClientContext';
-import { MonthCalendar } from '@/components/calendar/MonthCalendar/MonthCalendar';
+import dayjs, { Dayjs } from 'dayjs';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-    editModeAtom,
-    EventAdmin,
-} from '@/components/calendar/EventAdmin/EventAdmin';
-import {
-    ChevronLeftIcon,
-    ChevronRightIcon,
-    PencilIcon,
-    PlusIcon,
-} from '@heroicons/react/24/solid';
+    hackathonAtom,
+    hackathonScheduleRangeAtom,
+    userInfoAtom,
+} from '../ClientContext';
+import { EventAdmin } from '@/components/calendar/EventAdmin/EventAdmin';
+import { PlusIcon } from '@heroicons/react/24/solid';
 import { useWindowSize } from '@/lib/useWindowSize';
 import { trpc } from '@/trpc/client';
 import { MobileCalendar } from '@/components/calendar/MobileMonthCalendar/MobileCalendar';
 import { hasAdminAccess } from '@/lib/auth/roles';
+import { AnnouncementsButton } from '@/components/announcements/AnnouncementsButton';
+import { cn } from '@/lib/utils';
+import { ScheduleEventsCard } from '@/components/calendar/ScheduleEventsCard/ScheduleEventsCard';
+import { EventType } from '@/db/schema/events';
 
 export function ClientCalendarPage({
     events: _events,
-    hackathon,
 }: {
     events: CalendarEvent[];
-    hackathon: {
-        id: number;
-        name: string;
-        startDate: string;
-        endDate: string;
-        submissionDeadline: Date;
-
-        version: number;
-    };
 }) {
-    const eventsAtom = useMemo(() => atom(DayjsifyEvents(_events)), [_events]);
-    const [events, setEvents] = useAtom(eventsAtom);
-
     const userInfo = useAtomValue(userInfoAtom);
+    const hackathon = useAtomValue(hackathonAtom);
+    const hackathonRange = useAtomValue(hackathonScheduleRangeAtom);
+    const eventsAtom = useMemo(
+        () =>
+            atom(
+                DayjsifyEvents(_events).filter(
+                    (event) => event.hackathonId === hackathon.id
+                )
+            ),
+        [_events, hackathon.id]
+    );
+    const [events, setEvents] = useAtom(eventsAtom);
     const isAdmin = useMemo(
         () => userInfo && hasAdminAccess(userInfo.userRole),
         [userInfo]
@@ -65,33 +69,38 @@ export function ClientCalendarPage({
         setLoaded(true);
     }, []);
 
-    const [width, height] = useWindowSize();
-    const [showSchedule, setShowSchedule] = useState(true);
-    const showCalendar = useMemo(() => !showSchedule, [showSchedule]);
-    const eventStarted = useMemo(() => {
-        return (
-            dayjs().isAfter(dayjs(hackathon.startDate).startOf('day')) &&
-            dayjs().isBefore(hackathon.endDate)
-        );
-    }, [hackathon]);
+    const [width] = useWindowSize();
     const isMobile = useMemo(() => width <= 768, [width]);
 
-    const [selectedEvent, _] = useAtom(selectedEventAtom);
-    const [editMode, setEditMode] = useAtom(editModeAtom);
+    const selectEvent = useSetAtom(selectEventAtom);
+    const setEditMode = useSetAtom(editModeAtom);
 
     const fetchEvents = trpc.events.getEvents.useQuery(
         { hackathonId: hackathon?.id! },
         { enabled: false }
     );
 
-    const [weekOffset, setWeekOffset] = useState(0);
+    const updateEvents = useCallback(async () => {
+        if (!hackathon || !hackathon.id) {
+            return;
+        }
 
-    function getStartDate(period: number) {
-        const dayOffset = weekOffset * period;
+        const res = await fetchEvents.refetch();
+        setEvents(
+            DayjsifyEvents(
+                res.data?.map((item) => {
+                    return {
+                        ...item,
+                        startDate: new Date(item.startDate),
+                        endDate: new Date(item.endDate),
+                    };
+                }) ?? []
+            )
+        );
+    }, [fetchEvents, hackathon, setEvents]);
+
+    const defaultStartDate = useMemo(() => {
         const today = dayjs().startOf('day');
-
-        const firstDay = dayjs(hackathon.startDate);
-        const lastDay = dayjs(hackathon.endDate).endOf('day');
 
         let minDate = dayjs(new Date(2099, 1, 1));
         let updated = false;
@@ -105,241 +114,336 @@ export function ClientCalendarPage({
             minDate = today;
         }
 
-        if (today.isBefore(firstDay)) {
-            return minDate.startOf('day').add(dayOffset, 'day');
-        } else if (today.isBefore(lastDay)) {
-            return firstDay.startOf('day').add(dayOffset, 'day');
-        } else {
-            // after event, just display today
-            return today.add(dayOffset, 'day');
+        if (today.isBefore(hackathonRange.startDate)) {
+            return minDate.startOf('day');
         }
-    }
+
+        if (today.isBefore(hackathonRange.endDate)) {
+            return hackathonRange.startDate;
+        }
+
+        // after event, just display today
+        return today;
+    }, [events, hackathonRange]);
+
+    const [desktopStartDate, setDesktopStartDate] = useState<Dayjs>();
+    const [desktopSelectedDate, setDesktopSelectedDate] = useState<Dayjs>();
+    const [scheduleViewMode, setScheduleViewMode] =
+        useState<ScheduleViewMode>('week');
+    const scheduleStartDate = desktopStartDate ?? defaultStartDate;
+    const visibleScheduleStartDate =
+        scheduleViewMode === 'event'
+            ? hackathonRange.startDate
+            : scheduleStartDate;
+    const visibleScheduleDays =
+        scheduleViewMode === 'event' ? hackathonRange.days : 4;
+    const calendarSelectedDate = useMemo(
+        () => desktopSelectedDate ?? visibleScheduleStartDate.add(1, 'day'),
+        [desktopSelectedDate, visibleScheduleStartDate]
+    );
+    const deadlineEvents = useMemo(() => {
+        return buildHackathonDeadlineEvents({
+            hackathonId: hackathon.id,
+            hackingStart: hackathon.hackingStart,
+            submissionDeadline: hackathon.submissionDeadline,
+        });
+    }, [hackathon.hackingStart, hackathon.id, hackathon.submissionDeadline]);
+    const scheduleEvents = useMemo(
+        () => [...events, ...deadlineEvents],
+        [events, deadlineEvents]
+    );
 
     useEffect(() => {
-        async function updateEvents() {
-            if (!hackathon || !hackathon.id) {
-                return;
-            }
-            const res = await fetchEvents.refetch();
-            setEvents(
-                DayjsifyEvents(
-                    res.data?.map((item) => {
-                        return {
-                            ...item,
-                            startDate: new Date(item.startDate),
-                            endDate: new Date(item.endDate),
-                        };
-                    }) ?? []
-                )
-            );
+        if (isMobile) {
+            return;
         }
+
+        updateYearMonth('set', {
+            year: calendarSelectedDate.year(),
+            month: calendarSelectedDate.month(),
+        });
+    }, [calendarSelectedDate, isMobile, updateYearMonth]);
+
+    function setDesktopScheduleDate(date: Dayjs, calendarDate = date) {
+        const nextDate = date.startOf('day');
+        setDesktopStartDate(nextDate);
+        updateYearMonth('set', {
+            year: calendarDate.year(),
+            month: calendarDate.month(),
+        });
+    }
+
+    function selectDate(date: Dayjs) {
+        const selectedDate = date.startOf('day');
+        setDesktopSelectedDate(selectedDate);
+        setDesktopScheduleDate(selectedDate.subtract(1, 'day'), selectedDate);
+    }
+
+    function handleDesktopDateSelect(date: Date | undefined) {
+        if (!date) {
+            return;
+        }
+
+        selectDate(dayjs(date));
+    }
+
+    function handleDesktopMonthChange(date: Date) {
+        selectDate(dayjs(date).startOf('month'));
+    }
+
+    function shiftRange(days: number) {
+        const nextDate = scheduleStartDate.add(days, 'day');
+        setDesktopSelectedDate(nextDate.add(1, 'day'));
+        setDesktopScheduleDate(nextDate, nextDate.add(1, 'day'));
+    }
+
+    function handlePreviousScheduleRange() {
+        shiftRange(-2);
+    }
+
+    function handleNextScheduleRange() {
+        shiftRange(2);
+    }
+
+    function handleTodayScheduleRange() {
+        selectDate(dayjs());
+    }
+
+    const handleAddEvent = useCallback(() => {
+        selectEvent();
+        setEditMode(true);
+    }, [selectEvent, setEditMode]);
+
+    useEffect(() => {
         const interval = setInterval(updateEvents, 30000); // 5 mins
         return () => {
             clearInterval(interval);
         };
-    }, [hackathon]);
+    }, [updateEvents]);
 
     return (
         <>
             {isAdmin && <EventAdmin eventsAtom={eventsAtom} />}
 
             <div
-                className="flex flex-col"
+                className="flex h-full min-h-0 flex-col"
                 style={{ height: '100%', opacity: loaded ? 1 : 0 }}
             >
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        padding: '0.5rem',
-                        flexFlow: 'wrap',
-                        gap: '0.25rem',
-                        position: 'initial',
-                        top: '5rem',
-                        zIndex: 60,
-                        justifyContent: isMobile ? 'flex-end' : 'initial',
-                    }}
-                >
-                    {/* header */}
-                    {!isMobile && showCalendar && (
-                        <MonthControl
-                            monthObj={monthObj}
-                            updateYearMonth={updateYearMonth}
+                {isMobile ? (
+                    <>
+                        <ScheduleHeader
+                            eyebrow={`${hackathon.name} Schedule`}
+                            monthLabel={monthObj.format('MMMM YYYY')}
+                            isAdmin={Boolean(isAdmin)}
+                            onAddEvent={handleAddEvent}
+                            showActions={false}
+                            className="px-3 pt-3 pb-2"
                         />
-                    )}
+                        {isAdmin && (
+                            <ScheduleActions
+                                isAdmin={Boolean(isAdmin)}
+                                onAddEvent={handleAddEvent}
+                                className="justify-end px-3 pb-2"
+                            />
+                        )}
 
-                    {!isMobile && showSchedule && (
-                        <WeekControl
-                            reset={() => {
-                                setWeekOffset(0);
-                            }}
-                            updateWeek={(d) => {
-                                setWeekOffset(weekOffset + d);
-                            }}
-                        />
-                    )}
+                        <div className="min-h-0 flex-1">
+                            <MobileCalendar
+                                events={scheduleEvents}
+                                isAdmin={Boolean(isAdmin)}
+                                onEventRsvpChange={updateEvents}
+                            />
+                        </div>
+                    </>
+                ) : (
+                    <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_18rem] gap-4">
+                        <div className="flex min-h-0 flex-col">
+                            <ScheduleHeader
+                                eyebrow={`${hackathon.name} Schedule`}
+                                monthLabel={visibleScheduleStartDate.format(
+                                    'MMMM YYYY'
+                                )}
+                                isAdmin={Boolean(isAdmin)}
+                                onAddEvent={handleAddEvent}
+                                className="pb-3"
+                            />
+                            <div className="min-h-0 flex-1">
+                                <DaySchedule
+                                    days={visibleScheduleDays}
+                                    startDate={visibleScheduleStartDate}
+                                    events={scheduleEvents}
+                                    minColumnWidth={200}
+                                    maxVisibleColumns={4}
+                                    onPreviousRange={
+                                        scheduleViewMode === 'week'
+                                            ? handlePreviousScheduleRange
+                                            : undefined
+                                    }
+                                    onToday={
+                                        scheduleViewMode === 'week'
+                                            ? handleTodayScheduleRange
+                                            : undefined
+                                    }
+                                    onNextRange={
+                                        scheduleViewMode === 'week'
+                                            ? handleNextScheduleRange
+                                            : undefined
+                                    }
+                                    viewMode={scheduleViewMode}
+                                    onViewModeChange={setScheduleViewMode}
+                                    onEventRsvpChange={updateEvents}
+                                    isAdmin={Boolean(isAdmin)}
+                                />
+                            </div>
+                        </div>
 
-                    {!isMobile && (
-                        <ToggleButton
-                            A="Day"
-                            B="Month"
-                            onToggle={(val) => {
-                                setShowSchedule(!val);
-                            }}
-                            toggle={showCalendar}
-                            style={{ marginLeft: 'auto', marginRight: '1rem' }}
-                        />
-                    )}
-
-                    {isAdmin && (
-                        <Button
-                            onClick={() => {
-                                setEditMode(!editMode);
-                            }}
-                            size="compact"
-                            variant="brand"
-                            hierarchy="primary"
-                        >
-                            {selectedEvent?.event ? (
-                                <span>
-                                    <PencilIcon
-                                        style={{
-                                            display: 'inline-block',
-                                            width: '16px',
-                                        }}
-                                    />
-                                    Edit Event
-                                </span>
-                            ) : (
-                                <span>
-                                    <PlusIcon
-                                        style={{
-                                            display: 'inline-block',
-                                            width: '16px',
-                                        }}
-                                    />
-                                    Add Event
-                                </span>
-                            )}
-                        </Button>
-                    )}
-                </div>
-
-                <div style={{ flex: '1', minHeight: '0' }}>
-                    {/* DESKTOP */}
-                    {!isMobile && showSchedule && (
-                        <DaySchedule
-                            days={eventStarted ? 2 : 7}
-                            startDate={getStartDate(eventStarted ? 2 : 7)}
-                            events={events}
-                            minColumnWidth={200}
-                        />
-                    )}
-                    {!isMobile && showCalendar && (
-                        <MonthCalendar events={events} />
-                    )}
-
-                    {/* Mobile */}
-                    {isMobile && <MobileCalendar events={events} />}
-                </div>
+                        <aside className="flex min-h-0 flex-col gap-4">
+                            <Card className="flex-none overflow-hidden bg-neutral-900">
+                                <Calendar
+                                    mode="single"
+                                    month={monthObj.toDate()}
+                                    selected={calendarSelectedDate.toDate()}
+                                    onSelect={handleDesktopDateSelect}
+                                    onMonthChange={handleDesktopMonthChange}
+                                    className="w-full p-4"
+                                />
+                            </Card>
+                            <ScheduleEventsCard events={events} />
+                        </aside>
+                    </div>
+                )}
             </div>
         </>
     );
 }
 
-function WeekControl({
-    reset,
-    updateWeek,
+function buildHackathonDeadlineEvents({
+    hackathonId,
+    hackingStart,
+    submissionDeadline,
 }: {
-    reset: () => void;
-    updateWeek: (delta: number) => void;
+    hackathonId: number;
+    hackingStart: Dayjs;
+    submissionDeadline: Dayjs;
+}): InternalCalendarEventType[] {
+    return [
+        {
+            id: -1,
+            title: 'Hacking starts',
+            time: hackingStart,
+        },
+        {
+            id: -2,
+            title: 'Submission deadline',
+            time: submissionDeadline,
+        },
+    ]
+        .filter(({ time }) => time.isValid() && time.valueOf() > 0)
+        .map(({ id, title, time }) => ({
+            id,
+            checkedIn: false,
+            rsvped: false,
+            hasLongDescription: false,
+            startTime: time,
+            endTime: time,
+            duration: 0,
+            hackathonId,
+            title,
+            color: '#EAB308',
+            location: '',
+            imageUrl: undefined,
+            description: undefined,
+            checkInTime: undefined,
+            hasCheckIn: false,
+            eventType: EventType.EVENT,
+            points: 1,
+            variablePoints: false,
+            isDeadline: true,
+        }));
+}
+
+function ScheduleHeader({
+    eyebrow,
+    monthLabel,
+    isAdmin,
+    onAddEvent,
+    showActions = true,
+    className,
+}: {
+    eyebrow: string;
+    monthLabel: string;
+    isAdmin: boolean;
+    onAddEvent: () => void;
+    showActions?: boolean;
+    className?: string;
 }) {
     return (
-        <>
-            <Button
-                size="compact"
-                hierarchy="secondary"
-                variant="default"
-                onClick={() => {
-                    updateWeek(-1);
-                }}
-            >
-                <ChevronLeftIcon style={{ display: 'block', width: '16px' }} />
-            </Button>
-
-            <Button
-                size="compact"
-                hierarchy="secondary"
-                variant="default"
-                onClick={() => {
-                    reset();
-                }}
-            >
-                Reset
-            </Button>
-
-            <Button
-                size="compact"
-                hierarchy="secondary"
-                variant="default"
-                onClick={() => {
-                    updateWeek(+1);
-                }}
-            >
-                <ChevronRightIcon style={{ display: 'block', width: '16px' }} />
-            </Button>
-        </>
+        <div
+            className={cn(
+                'relative z-[150] flex items-center gap-3',
+                className
+            )}
+        >
+            <div className="flex min-w-0 flex-col gap-1">
+                <span className="truncate text-sm leading-none font-normal text-[var(--text-secondary)]">
+                    {eyebrow}
+                </span>
+                <h1 className="leading-tighter truncate text-2xl font-semibold text-[var(--text-regular)]">
+                    {monthLabel}
+                </h1>
+            </div>
+            {showActions && (
+                <ScheduleActions
+                    isAdmin={isAdmin}
+                    onAddEvent={onAddEvent}
+                    className="ml-auto"
+                />
+            )}
+        </div>
     );
 }
 
-function MonthControl({
-    monthObj,
-    updateYearMonth,
+function ScheduleActions({
+    isAdmin,
+    onAddEvent,
+    className,
 }: {
-    monthObj: dayjs.Dayjs;
-    updateYearMonth: (
-        changeType: 'set' | '+1 month' | '-1 month',
-        newVal?: { year: number; month: number } | undefined
-    ) => void;
+    isAdmin: boolean;
+    onAddEvent: () => void;
+    className?: string;
 }) {
     return (
-        <>
-            <span style={{ fontSize: 'large' }}>
-                {monthObj.format('MMMM YYYY')}
+        <div
+            className={cn(
+                'relative z-[150] flex shrink-0 items-center gap-2',
+                className
+            )}
+        >
+            {isAdmin && <EventAdminButton onAddEvent={onAddEvent} />}
+            <AnnouncementsButton className="shrink-0" />
+        </div>
+    );
+}
+
+function EventAdminButton({ onAddEvent }: { onAddEvent: () => void }) {
+    return (
+        <Button
+            type="button"
+            onClick={onAddEvent}
+            size="compact"
+            variant="brand"
+            hierarchy="primary"
+            className="[&>span]:py-[7px]"
+        >
+            <span>
+                <PlusIcon
+                    style={{
+                        display: 'inline-block',
+                        width: '16px',
+                    }}
+                />
+                Add Event
             </span>
-            <Button
-                size="compact"
-                hierarchy="secondary"
-                variant="default"
-                onClick={() => {
-                    updateYearMonth('-1 month');
-                }}
-            >
-                <ChevronLeftIcon style={{ display: 'block', width: '16px' }} />
-            </Button>
-            <Button
-                size="compact"
-                hierarchy="secondary"
-                variant="default"
-                onClick={() => {
-                    updateYearMonth('set', {
-                        year: dayjs().year(),
-                        month: dayjs().month(),
-                    });
-                }}
-            >
-                Today
-            </Button>
-            <Button
-                size="compact"
-                hierarchy="secondary"
-                variant="default"
-                onClick={() => {
-                    updateYearMonth('+1 month');
-                }}
-            >
-                <ChevronRightIcon style={{ display: 'block', width: '16px' }} />
-            </Button>
-        </>
+        </Button>
     );
 }

@@ -3,9 +3,6 @@ import { ReactNode, useEffect } from 'react';
 import style from './SideDrawer.module.css';
 import { motion, AnimatePresence } from 'motion/react';
 import { PrimitiveAtom, useAtom } from 'jotai';
-import { Button } from '../button';
-
-import { ChevronLeftIcon } from '@heroicons/react/24/solid';
 
 export function SideDrawer({
     visibleAtom,
@@ -73,18 +70,6 @@ export function SideDrawer({
                         }}
                         className={style.drawerContainer}
                     >
-                        <Button
-                            onClick={() => {
-                                setVisible(false);
-                                window.history.back();
-                            }}
-                            style={{ alignSelf: 'flex-start', paddingLeft: 0 }}
-                        >
-                            <div style={{ display: 'flex' }}>
-                                <ChevronLeftIcon style={{ width: '20px' }} />
-                                <span>Back</span>
-                            </div>
-                        </Button>
                         <div style={{ minWidth: '250px' }}>{children}</div>
                     </motion.div>
                 )}

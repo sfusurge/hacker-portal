@@ -6,6 +6,7 @@ import {
     TEST_HACKATHON_END_DATE,
     TEST_HACKATHON_NAME,
     TEST_HACKATHON_START_DATE,
+    TEST_HACKING_START,
     TEST_LAST_NAME,
 } from '../utils';
 import { BadRequestError, ResourceNotFoundError } from '@/server/exceptions';
@@ -27,6 +28,7 @@ describe('teams routes tests', () => {
             name: TEST_HACKATHON_NAME,
             startDate: TEST_HACKATHON_START_DATE,
             endDate: TEST_HACKATHON_END_DATE,
+            hackingStart: TEST_HACKING_START,
         });
     });
 
@@ -88,6 +90,7 @@ describe('teams routes tests', () => {
             name: 'Hackathon 2',
             startDate: TEST_HACKATHON_START_DATE,
             endDate: TEST_HACKATHON_END_DATE,
+            hackingStart: TEST_HACKING_START,
         });
 
         await expect(
@@ -110,6 +113,7 @@ describe('teams routes tests', () => {
             name: 'Hackathon 2',
             startDate: TEST_HACKATHON_START_DATE,
             endDate: TEST_HACKATHON_END_DATE,
+            hackingStart: TEST_HACKING_START,
         });
 
         const team1 = await trpcClient.teams.createTeam({
