@@ -39,12 +39,19 @@ export function ClientCalendarPage({
 }: {
     events: CalendarEvent[];
 }) {
-    const eventsAtom = useMemo(() => atom(DayjsifyEvents(_events)), [_events]);
-    const [events, setEvents] = useAtom(eventsAtom);
-
     const userInfo = useAtomValue(userInfoAtom);
     const hackathon = useAtomValue(hackathonAtom);
     const hackathonRange = useAtomValue(hackathonScheduleRangeAtom);
+    const eventsAtom = useMemo(
+        () =>
+            atom(
+                DayjsifyEvents(_events).filter(
+                    (event) => event.hackathonId === hackathon.id
+                )
+            ),
+        [_events, hackathon.id]
+    );
+    const [events, setEvents] = useAtom(eventsAtom);
     const isAdmin = useMemo(
         () => userInfo && hasAdminAccess(userInfo.userRole),
         [userInfo]
@@ -134,15 +141,6 @@ export function ClientCalendarPage({
         () => desktopSelectedDate ?? visibleScheduleStartDate.add(1, 'day'),
         [desktopSelectedDate, visibleScheduleStartDate]
     );
-    const activeHackathonEvents = useMemo(() => {
-        return events.filter((event) => {
-            return (
-                event.hackathonId === hackathon.id &&
-                !event.startTime.isBefore(hackathonRange.startDate) &&
-                !event.startTime.isAfter(hackathonRange.endDate)
-            );
-        });
-    }, [events, hackathon.id, hackathonRange]);
     const deadlineEvents = useMemo(() => {
         return buildHackathonDeadlineEvents({
             hackathonId: hackathon.id,
@@ -151,8 +149,8 @@ export function ClientCalendarPage({
         });
     }, [hackathon.hackingStart, hackathon.id, hackathon.submissionDeadline]);
     const scheduleEvents = useMemo(
-        () => [...activeHackathonEvents, ...deadlineEvents],
-        [activeHackathonEvents, deadlineEvents]
+        () => [...events, ...deadlineEvents],
+        [events, deadlineEvents]
     );
 
     useEffect(() => {
@@ -310,9 +308,7 @@ export function ClientCalendarPage({
                                     className="w-full p-4"
                                 />
                             </Card>
-                            <ScheduleEventsCard
-                                events={activeHackathonEvents}
-                            />
+                            <ScheduleEventsCard events={events} />
                         </aside>
                     </div>
                 )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
+import { CSSProperties, useEffect, useMemo, useRef } from 'react';
 import style from './DaySchedule.module.css';
 import {
     currentTimeAtom,
@@ -90,8 +90,6 @@ export function DaySchedule({
     const [editMode, setEditMode] = useAtom(editModeAtom);
     const rsvpEvent = trpc.events.rsvpEvent.useMutation();
     const unrsvpEvent = trpc.events.unrsvpEvent.useMutation();
-
-    const [containerHeight, setContainerHeight] = useState(0);
 
     const columnWidths = useMemo(() => {
         return Object.values(processedEvents).map((dayEventsCols) => {
@@ -212,11 +210,6 @@ export function DaySchedule({
                     )}
                 >
                     <div
-                        ref={(ref) => {
-                            setContainerHeight(
-                                ref?.scrollHeight! - headerHeight
-                            );
-                        }}
                         className={clsx(
                             style.scheduleContainer,
                             maxVisibleColumns && style.fixedVisibleColumns
@@ -272,39 +265,33 @@ export function DaySchedule({
                                         </div>
                                     </div>
                                     <div className={style.dayColumnContent}>
-                                        {containerHeight > 0 &&
-                                            index == timeLabelColumn && (
-                                                <TimelineMarker
-                                                    startDate={startDate}
-                                                    parentHeight={
-                                                        containerHeight
-                                                    }
-                                                ></TimelineMarker>
-                                            )}
+                                        {index == timeLabelColumn && (
+                                            <TimelineMarker
+                                                startDate={startDate}
+                                                parentHeight={rowHeight * 24}
+                                            ></TimelineMarker>
+                                        )}
 
-                                        {containerHeight > 0 &&
-                                            columnsOfDay.map((col, index) => (
-                                                <div
-                                                    key={index}
-                                                    className={
-                                                        style.dayEventColumn
-                                                    }
-                                                >
-                                                    {col.map((event) => (
-                                                        <DayEventItem
-                                                            key={event.id}
-                                                            event={event}
-                                                            parentHeight={
-                                                                containerHeight
-                                                            }
-                                                            dayColumns={
-                                                                columnsOfDay
-                                                            }
-                                                            columnIndex={index}
-                                                        ></DayEventItem>
-                                                    ))}
-                                                </div>
-                                            ))}
+                                        {columnsOfDay.map((col, index) => (
+                                            <div
+                                                key={index}
+                                                className={style.dayEventColumn}
+                                            >
+                                                {col.map((event) => (
+                                                    <DayEventItem
+                                                        key={event.id}
+                                                        event={event}
+                                                        parentHeight={
+                                                            rowHeight * 24
+                                                        }
+                                                        dayColumns={
+                                                            columnsOfDay
+                                                        }
+                                                        columnIndex={index}
+                                                    ></DayEventItem>
+                                                ))}
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             );
