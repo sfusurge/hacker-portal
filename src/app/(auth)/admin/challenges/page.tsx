@@ -12,6 +12,7 @@ import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { trpc } from '@/trpc/client';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { EVENT_TYPES, type EventType } from '@/db/schema/events';
 import {
     ChallengeSideCard,
     emptyChallengeForm,
@@ -27,8 +28,7 @@ type ChallengeRow = {
     highestPoints: number;
     maxCompletions: number;
     variablePoints: boolean;
-    eventIds: number[];
-    eventTitles: string[];
+    eventType: EventType | null;
 };
 
 function pointsLabel(c: ChallengeRow) {
@@ -41,25 +41,25 @@ function pointsLabel(c: ChallengeRow) {
     return String(c.highestPoints);
 }
 
+function eventTypeLabel(eventType: EventType | null) {
+    if (eventType == null) return '—';
+    return eventType === 'Event' ? 'Event (check-in)' : eventType;
+}
+
+function parseEventType(value: unknown): EventType | null | undefined {
+    if (value === null) return null;
+    if (typeof value !== 'string') return undefined;
+    return (EVENT_TYPES as readonly string[]).includes(value)
+        ? (value as EventType)
+        : undefined;
+}
+
 export default function ChallengesAdminPage() {
     const hackathon = useAtomValue(hackathonAtom);
     const utils = trpc.useUtils();
     const listQuery = trpc.challenges.getChallenges.useQuery(
         { hackathonId: hackathon.id },
         { enabled: hackathon.id > 0 }
-    );
-    const eventsQuery = trpc.events.getEvents.useQuery(
-        { hackathonId: hackathon.id },
-        { enabled: hackathon.id > 0 }
-    );
-
-    const eventOptions = useMemo(
-        () =>
-            (eventsQuery.data ?? []).map((e) => ({
-                id: e.id,
-                title: e.title,
-            })),
-        [eventsQuery.data]
     );
 
     const [sideOpen, setSideOpen] = useState(false);
@@ -132,7 +132,7 @@ export default function ChallengesAdminPage() {
             (c) =>
                 c.title.toLowerCase().includes(q) ||
                 (c.longDescription ?? '').toLowerCase().includes(q) ||
-                (c.eventTitles ?? []).some((t) => t.toLowerCase().includes(q))
+                (c.eventType ?? '').toLowerCase().includes(q)
         );
     }, [challenges, search]);
 
@@ -155,7 +155,7 @@ export default function ChallengesAdminPage() {
             highestPoints: c.highestPoints,
             maxCompletions: c.maxCompletions,
             variablePoints: c.variablePoints,
-            eventIds: c.eventIds ?? [],
+            eventType: c.eventType ?? null,
         });
         setSideOpen(true);
     }
@@ -185,14 +185,9 @@ export default function ChallengesAdminPage() {
             highestPoints: form.highestPoints,
             maxCompletions: form.variablePoints
                 ? 1
-                : Math.max(
-                      1,
-                      form.eventIds.length > 0
-                          ? Math.max(form.maxCompletions, form.eventIds.length)
-                          : form.maxCompletions
-                  ),
+                : Math.max(1, form.maxCompletions),
             variablePoints: form.variablePoints,
-            eventIds: form.eventIds,
+            eventType: form.eventType,
         };
 
         if (form.id != null) {
@@ -240,7 +235,7 @@ export default function ChallengesAdminPage() {
                                 highestPoints?: number;
                                 maxCompletions?: number;
                                 variablePoints?: boolean;
-                                eventIds?: number[];
+                                eventType?: EventType | null;
                             }[];
                             try {
                                 challenges = rows.map((row, i) => {
@@ -263,13 +258,17 @@ export default function ChallengesAdminPage() {
                                             `Challenge ${i + 1}: title is required`
                                         );
                                     }
-                                    const eventIds = Array.isArray(r.eventIds)
-                                        ? r.eventIds.filter(
-                                              (id): id is number =>
-                                                  typeof id === 'number' &&
-                                                  Number.isInteger(id)
-                                          )
-                                        : undefined;
+                                    const eventType = parseEventType(
+                                        r.eventType
+                                    );
+                                    if (
+                                        r.eventType !== undefined &&
+                                        eventType === undefined
+                                    ) {
+                                        throw new Error(
+                                            `Challenge ${i + 1}: eventType must be one of ${EVENT_TYPES.join(', ')}`
+                                        );
+                                    }
                                     return {
                                         title,
                                         description:
@@ -306,7 +305,7 @@ export default function ChallengesAdminPage() {
                                             'boolean'
                                                 ? r.variablePoints
                                                 : undefined,
-                                        eventIds,
+                                        eventType,
                                     };
                                 });
                             } catch (err) {
@@ -359,7 +358,7 @@ export default function ChallengesAdminPage() {
                                         Points
                                     </th>
                                     <th className="px-4 py-3 font-medium">
-                                        Linked events
+                                        Check-in type
                                     </th>
                                     <th className="px-4 py-3 font-medium">
                                         Description
@@ -380,8 +379,7 @@ export default function ChallengesAdminPage() {
                                             {pointsLabel(c)}
                                         </td>
                                         <td className="max-w-xs truncate px-4 py-3 text-white/60">
-                                            {(c.eventTitles ?? []).join(', ') ||
-                                                '—'}
+                                            {eventTypeLabel(c.eventType)}
                                         </td>
                                         <td className="max-w-xl truncate px-4 py-3 text-white/60">
                                             {c.longDescription || '—'}
@@ -435,7 +433,6 @@ export default function ChallengesAdminPage() {
             <ChallengeSideCard
                 visible={sideOpen}
                 form={form}
-                events={eventOptions}
                 onChange={setForm}
                 onClose={closeSide}
                 onSave={() => void save()}

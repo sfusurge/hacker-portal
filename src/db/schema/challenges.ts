@@ -10,7 +10,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { hackathons } from './hackathons';
-import { events } from './events';
+import { EVENT_TYPES, eventTypePgEnum } from './events';
 import { user } from './users/users';
 
 export const challenges = pgTable(
@@ -28,25 +28,10 @@ export const challenges = pgTable(
         highestPoints: integer('highest_points').notNull().default(5),
         maxCompletions: integer('max_completions').notNull().default(1),
         variablePoints: boolean('variable_points').notNull().default(false),
+        /** When set, check-ins to events of this type tally toward the challenge. */
+        eventType: eventTypePgEnum('event_type'),
     },
     (table) => [index().on(table.hackathonId)]
-);
-
-/** Many events can feed progress on one challenge */
-export const challengeEvents = pgTable(
-    'challenge_events',
-    {
-        challengeId: integer('challenge_id')
-            .notNull()
-            .references(() => challenges.id, { onDelete: 'cascade' }),
-        eventId: integer('event_id')
-            .notNull()
-            .references(() => events.id, { onDelete: 'cascade' }),
-    },
-    (table) => [
-        primaryKey({ columns: [table.challengeId, table.eventId] }),
-        index().on(table.eventId),
-    ]
 );
 
 export const challengeCompletions = pgTable(
@@ -76,6 +61,7 @@ const pointsFieldsSchema = {
     points: z.number().int().min(1).optional(),
     maxCompletions: z.number().int().min(1).optional(),
     variablePoints: z.boolean().optional(),
+    eventType: z.enum(EVENT_TYPES).nullable().optional(),
 };
 
 export const insertChallengeSchema = z.object({
@@ -85,7 +71,6 @@ export const insertChallengeSchema = z.object({
     longDescription: z.string().optional(),
     color: z.string().optional(),
     ...pointsFieldsSchema,
-    eventIds: z.array(z.number().int()).optional(),
 });
 
 export const updateChallengeSchema = z.object({
@@ -95,7 +80,6 @@ export const updateChallengeSchema = z.object({
     longDescription: z.string().nullable().optional(),
     color: z.string().optional(),
     ...pointsFieldsSchema,
-    eventIds: z.array(z.number().int()).optional(),
 });
 
 export const deleteChallengeSchema = z.object({
@@ -123,7 +107,6 @@ const challengeImportRowSchema = z.object({
     longDescription: z.string().optional(),
     color: z.string().max(128).optional(),
     ...pointsFieldsSchema,
-    eventIds: z.array(z.number().int()).optional(),
 });
 
 export const importChallengesSchema = z.object({

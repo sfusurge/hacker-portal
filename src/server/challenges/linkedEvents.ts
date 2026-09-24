@@ -1,36 +1,25 @@
 import { databaseClient } from '@/db/client';
 import { checkIns } from '@/db/schema/checkIn';
-import {
-    challengeCompletions,
-    challengeEvents,
-    challenges,
-} from '@/db/schema/challenges';
-import { and, count, eq, inArray, sql } from 'drizzle-orm';
-
-async function getChallengeLinkedEventIds(
-    challengeId: number
-): Promise<number[]> {
-    const linked = await databaseClient
-        .select({ eventId: challengeEvents.eventId })
-        .from(challengeEvents)
-        .where(eq(challengeEvents.challengeId, challengeId));
-
-    return linked.map((r) => r.eventId);
-}
+import { challengeCompletions, challenges } from '@/db/schema/challenges';
+import { events } from '@/db/schema/events';
+import { and, count, eq, sql } from 'drizzle-orm';
 
 /**
- * Count how many linked events a user has checked into for a challenge,
- * capped by maxCompletions (and by linked event count).
+ * Progress for a challenge:
+ * - With eventType: tallies check-ins to events of that type in the hackathon
+ * - Without: uses the completion row only (manual award)
  */
-export async function getLinkedEventProgress(
+export async function getChallengeProgress(
     challengeId: number,
     userId: number
 ): Promise<{ completed: number; total: number; points: number }> {
     const [challenge] = await databaseClient
         .select({
+            hackathonId: challenges.hackathonId,
             highestPoints: challenges.highestPoints,
             maxCompletions: challenges.maxCompletions,
             variablePoints: challenges.variablePoints,
+            eventType: challenges.eventType,
         })
         .from(challenges)
         .where(eq(challenges.id, challengeId))
@@ -41,11 +30,9 @@ export async function getLinkedEventProgress(
     }
 
     const unitPoints = challenge.highestPoints;
-    const linkedIds = await getChallengeLinkedEventIds(challengeId);
     const maxCompletions = Math.max(1, challenge.maxCompletions ?? 1);
 
-    if (linkedIds.length === 0) {
-        // Manual challenge (no events): progress from completion row only.
+    if (challenge.eventType == null) {
         const [row] = await databaseClient
             .select({
                 pointsAwarded: challengeCompletions.pointsAwarded,
@@ -81,15 +68,30 @@ export async function getLinkedEventProgress(
         };
     }
 
-    const total = Math.min(maxCompletions, linkedIds.length);
+    const eventType = challenge.eventType;
+
+    const [eventCountRow] = await databaseClient
+        .select({ n: count() })
+        .from(events)
+        .where(
+            and(
+                eq(events.hackathonId, challenge.hackathonId),
+                eq(events.eventType, eventType)
+            )
+        );
+
+    const typeCount = Number(eventCountRow?.n ?? 0);
+    const total = Math.min(maxCompletions, Math.max(typeCount, 1));
 
     const [checkInCount] = await databaseClient
         .select({ n: count() })
         .from(checkIns)
+        .innerJoin(events, eq(events.id, checkIns.eventId))
         .where(
             and(
                 eq(checkIns.userId, userId),
-                inArray(checkIns.eventId, linkedIds)
+                eq(events.hackathonId, challenge.hackathonId),
+                eq(events.eventType, eventType)
             )
         );
 
@@ -98,28 +100,41 @@ export async function getLinkedEventProgress(
 }
 
 /**
- * After a check-in, refresh challenge_completions for every challenge linked
- * to that event. Progress = # of linked events checked into (capped).
- * Points awarded = highestPoints × completed (skipped for variable-points).
+ * After a check-in, refresh completions for challenges that tally this event's type.
  */
 export async function syncChallengesForEventCheckIn(
     eventId: number,
     userId: number
 ) {
-    const linked = await databaseClient
+    const [eventRow] = await databaseClient
         .select({
-            challengeId: challengeEvents.challengeId,
+            hackathonId: events.hackathonId,
+            eventType: events.eventType,
+        })
+        .from(events)
+        .where(eq(events.id, eventId))
+        .limit(1);
+
+    if (!eventRow) return;
+
+    const matching = await databaseClient
+        .select({
+            challengeId: challenges.id,
             highestPoints: challenges.highestPoints,
             variablePoints: challenges.variablePoints,
         })
-        .from(challengeEvents)
-        .innerJoin(challenges, eq(challenges.id, challengeEvents.challengeId))
-        .where(eq(challengeEvents.eventId, eventId));
+        .from(challenges)
+        .where(
+            and(
+                eq(challenges.hackathonId, eventRow.hackathonId),
+                eq(challenges.eventType, eventRow.eventType)
+            )
+        );
 
-    for (const challenge of linked) {
+    for (const challenge of matching) {
         if (challenge.variablePoints) continue;
 
-        const progress = await getLinkedEventProgress(
+        const progress = await getChallengeProgress(
             challenge.challengeId,
             userId
         );
@@ -143,50 +158,5 @@ export async function syncChallengesForEventCheckIn(
                     pointsAwarded: sql`GREATEST(${challengeCompletions.pointsAwarded}, ${pointsAwarded})`,
                 },
             });
-    }
-}
-
-export async function replaceChallengeEvents(
-    challengeId: number,
-    eventIds: number[],
-    db: {
-        delete: typeof databaseClient.delete;
-        insert: typeof databaseClient.insert;
-    } = databaseClient
-) {
-    const unique = [...new Set(eventIds)];
-    await db
-        .delete(challengeEvents)
-        .where(eq(challengeEvents.challengeId, challengeId));
-
-    if (unique.length === 0) return;
-
-    await db.insert(challengeEvents).values(
-        unique.map((eventId) => ({
-            challengeId,
-            eventId,
-        }))
-    );
-}
-
-export async function assertEventsInHackathon(
-    eventIds: number[],
-    hackathonId: number
-) {
-    if (eventIds.length === 0) return;
-
-    const { events } = await import('@/db/schema/events');
-    const rows = await databaseClient
-        .select({ id: events.id, hackathonId: events.hackathonId })
-        .from(events)
-        .where(inArray(events.id, eventIds));
-
-    if (rows.length !== new Set(eventIds).size) {
-        throw new Error('One or more linked events were not found');
-    }
-    for (const row of rows) {
-        if (row.hackathonId !== hackathonId) {
-            throw new Error('Linked events must belong to the same hackathon');
-        }
     }
 }

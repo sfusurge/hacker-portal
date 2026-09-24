@@ -1,7 +1,6 @@
 import { databaseClient } from '@/db/client';
 import {
     challengeCompletions,
-    challengeEvents,
     challenges,
     completeChallengeSchema,
     deleteChallengeSchema,
@@ -16,91 +15,31 @@ import { user as usersTable } from '@/db/schema/users/users';
 import { ResourceNotFoundError } from '../exceptions';
 import { TRPCError } from '@trpc/server';
 import { adminProcedure, protectedProcedure, router } from '../trpc';
-import {
-    and,
-    asc,
-    count,
-    eq,
-    getTableColumns,
-    inArray,
-    sql,
-} from 'drizzle-orm';
-import { events } from '@/db/schema/events';
+import { and, asc, count, eq, getTableColumns, sql } from 'drizzle-orm';
 import { applications } from '@/db/schema/applications';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
 import { assignHouseIfNeeded } from '@/server/houses/assignHouse';
-import {
-    assertEventsInHackathon,
-    getLinkedEventProgress,
-    replaceChallengeEvents,
-} from '@/server/challenges/linkedEvents';
+import { getChallengeProgress } from '@/server/challenges/linkedEvents';
 
 export const challengesRouter = router({
     getChallenges: protectedProcedure
         .input(getChallengesSchema)
         .query(async ({ input }) => {
-            const rows = await databaseClient
+            return databaseClient
                 .select({
                     ...getTableColumns(challenges),
                 })
                 .from(challenges)
                 .where(eq(challenges.hackathonId, input.hackathonId))
                 .orderBy(asc(challenges.title));
-
-            if (rows.length === 0) return [];
-
-            const challengeIds = rows.map((r) => r.id);
-            const links = await databaseClient
-                .select({
-                    challengeId: challengeEvents.challengeId,
-                    eventId: challengeEvents.eventId,
-                    eventTitle: events.title,
-                })
-                .from(challengeEvents)
-                .innerJoin(events, eq(events.id, challengeEvents.eventId))
-                .where(inArray(challengeEvents.challengeId, challengeIds));
-
-            const linksByChallenge = new Map<
-                number,
-                { eventId: number; eventTitle: string }[]
-            >();
-            for (const link of links) {
-                const list = linksByChallenge.get(link.challengeId) ?? [];
-                list.push({
-                    eventId: link.eventId,
-                    eventTitle: link.eventTitle,
-                });
-                linksByChallenge.set(link.challengeId, list);
-            }
-
-            return rows.map((row) => {
-                const eventLinks = linksByChallenge.get(row.id) ?? [];
-                return {
-                    ...row,
-                    eventIds: eventLinks.map((e) => e.eventId),
-                    eventTitles: eventLinks.map((e) => e.eventTitle),
-                };
-            });
         }),
 
     createChallenge: adminProcedure
         .input(insertChallengeSchema)
         .mutation(async ({ input }) => {
-            const eventIds = [...new Set(input.eventIds ?? [])];
-            try {
-                await assertEventsInHackathon(eventIds, input.hackathonId);
-            } catch (err) {
-                throw new TRPCError({
-                    code: 'BAD_REQUEST',
-                    message:
-                        err instanceof Error ? err.message : 'Invalid events',
-                });
-            }
-
             const maxCompletions = input.variablePoints
                 ? 1
-                : (input.maxCompletions ??
-                  (eventIds.length > 0 ? eventIds.length : 1));
+                : Math.max(1, input.maxCompletions ?? 1);
 
             const bounds = resolveChallengePointBounds(input);
 
@@ -116,59 +55,38 @@ export const challengesRouter = router({
                     highestPoints: bounds.highestPoints,
                     maxCompletions,
                     variablePoints: bounds.variablePoints,
+                    eventType: input.eventType ?? null,
                 })
                 .returning();
 
-            await replaceChallengeEvents(row.id, eventIds);
             return row;
         }),
 
     importChallenges: adminProcedure
         .input(importChallengesSchema)
         .mutation(async ({ input }) => {
-            // Validate every row's events before writing anything.
-            for (const row of input.challenges) {
-                const eventIds = [...new Set(row.eventIds ?? [])];
-                try {
-                    await assertEventsInHackathon(eventIds, input.hackathonId);
-                } catch (err) {
-                    throw new TRPCError({
-                        code: 'BAD_REQUEST',
-                        message:
-                            err instanceof Error
-                                ? err.message
-                                : 'Invalid events',
-                    });
-                }
-            }
-
             const created = await databaseClient.transaction(async (tx) => {
                 let insertedCount = 0;
                 for (const row of input.challenges) {
-                    const eventIds = [...new Set(row.eventIds ?? [])];
                     const maxCompletions = row.variablePoints
                         ? 1
-                        : (row.maxCompletions ??
-                          (eventIds.length > 0 ? eventIds.length : 1));
+                        : Math.max(1, row.maxCompletions ?? 1);
 
                     const bounds = resolveChallengePointBounds(row);
 
-                    const [inserted] = await tx
-                        .insert(challenges)
-                        .values({
-                            hackathonId: input.hackathonId,
-                            title: row.title,
-                            description: row.description ?? '',
-                            longDescription: row.longDescription,
-                            color: row.color ?? '#6466F1',
-                            lowestPoints: bounds.lowestPoints,
-                            highestPoints: bounds.highestPoints,
-                            maxCompletions,
-                            variablePoints: bounds.variablePoints,
-                        })
-                        .returning();
+                    await tx.insert(challenges).values({
+                        hackathonId: input.hackathonId,
+                        title: row.title,
+                        description: row.description ?? '',
+                        longDescription: row.longDescription,
+                        color: row.color ?? '#6466F1',
+                        lowestPoints: bounds.lowestPoints,
+                        highestPoints: bounds.highestPoints,
+                        maxCompletions,
+                        variablePoints: bounds.variablePoints,
+                        eventType: row.eventType ?? null,
+                    });
 
-                    await replaceChallengeEvents(inserted.id, eventIds, tx);
                     insertedCount += 1;
                 }
                 return insertedCount;
@@ -180,11 +98,10 @@ export const challengesRouter = router({
     updateChallenge: adminProcedure
         .input(updateChallengeSchema)
         .mutation(async ({ input }) => {
-            const { challengeId, eventIds: eventIdsInput, ...rest } = input;
+            const { challengeId, ...rest } = input;
 
             const [existing] = await databaseClient
                 .select({
-                    hackathonId: challenges.hackathonId,
                     lowestPoints: challenges.lowestPoints,
                     highestPoints: challenges.highestPoints,
                     variablePoints: challenges.variablePoints,
@@ -198,25 +115,6 @@ export const challengesRouter = router({
                     code: 'NOT_FOUND',
                     message: `Cannot find challenge with id ${challengeId}`,
                 });
-            }
-
-            if (eventIdsInput !== undefined) {
-                const eventIds = [...new Set(eventIdsInput)];
-                try {
-                    await assertEventsInHackathon(
-                        eventIds,
-                        existing.hackathonId
-                    );
-                } catch (err) {
-                    throw new TRPCError({
-                        code: 'BAD_REQUEST',
-                        message:
-                            err instanceof Error
-                                ? err.message
-                                : 'Invalid events',
-                    });
-                }
-                await replaceChallengeEvents(challengeId, eventIds);
             }
 
             const {
@@ -413,7 +311,7 @@ export const challengesRouter = router({
     isChallengeComplete: adminProcedure
         .input(isChallengeCompleteSchema)
         .query(async ({ input }) => {
-            const progress = await getLinkedEventProgress(
+            const progress = await getChallengeProgress(
                 input.challengeId,
                 input.userId
             );

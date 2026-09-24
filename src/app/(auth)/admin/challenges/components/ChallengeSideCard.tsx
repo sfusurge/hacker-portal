@@ -7,6 +7,7 @@ import { FormTextInput } from '@/components/ui/input/input';
 import { FormTextArea } from '@/components/ui/formTextArea/FormTextArea';
 import { Label } from '@/components/ui/label/label';
 import { MarkdownDisplay } from '@/components/ui/Markdown/MarkdownDisplay';
+import { EVENT_TYPES, type EventType } from '@/db/schema/events';
 import style from '@/app/(auth)/admin/review/components/SideCard.module.css';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +19,7 @@ export type ChallengeFormState = {
     highestPoints: number;
     maxCompletions: number;
     variablePoints: boolean;
-    eventIds: number[];
+    eventType: EventType | null;
 };
 
 export const emptyChallengeForm = (): ChallengeFormState => ({
@@ -29,18 +30,12 @@ export const emptyChallengeForm = (): ChallengeFormState => ({
     highestPoints: 5,
     maxCompletions: 1,
     variablePoints: false,
-    eventIds: [],
+    eventType: null,
 });
-
-type ChallengeEventOption = {
-    id: number;
-    title: string;
-};
 
 type ChallengeSideCardProps = {
     visible: boolean;
     form: ChallengeFormState;
-    events: ChallengeEventOption[];
     onChange: (next: ChallengeFormState) => void;
     onClose: () => void;
     onSave: () => void;
@@ -55,7 +50,6 @@ const fieldControlClass =
 export function ChallengeSideCard({
     visible,
     form,
-    events,
     onChange,
     onClose,
     onSave,
@@ -188,64 +182,34 @@ export function ChallengeSideCard({
                             )}
                         </div>
                         <div className={style.field}>
-                            <Label>Linked events</Label>
-                            <div className="max-h-48 space-y-1 overflow-y-auto rounded-xl border border-neutral-600/60 bg-neutral-800/60 p-2">
-                                {events.length === 0 ? (
-                                    <p className="px-1 py-2 text-sm text-white/60">
-                                        No events in this hackathon yet.
-                                    </p>
-                                ) : (
-                                    events.map((ev) => {
-                                        const checked = form.eventIds.includes(
-                                            ev.id
-                                        );
-                                        return (
-                                            <label
-                                                key={ev.id}
-                                                className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-white hover:bg-white/5"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    className="accent-brand-500 size-4 shrink-0 rounded border-neutral-600 bg-neutral-800"
-                                                    checked={checked}
-                                                    onChange={() => {
-                                                        const next = checked
-                                                            ? form.eventIds.filter(
-                                                                  (id) =>
-                                                                      id !==
-                                                                      ev.id
-                                                              )
-                                                            : [
-                                                                  ...form.eventIds,
-                                                                  ev.id,
-                                                              ];
-                                                        onChange({
-                                                            ...form,
-                                                            eventIds: next,
-                                                            maxCompletions:
-                                                                form.variablePoints
-                                                                    ? 1
-                                                                    : Math.max(
-                                                                          form.maxCompletions,
-                                                                          next.length ||
-                                                                              1
-                                                                      ),
-                                                        });
-                                                    }}
-                                                />
-                                                <span className="truncate">
-                                                    {ev.title}
-                                                </span>
-                                            </label>
-                                        );
-                                    })
-                                )}
-                            </div>
+                            <Label>Tally check-ins by type</Label>
+                            <select
+                                className={fieldControlClass}
+                                value={form.eventType ?? ''}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    onChange({
+                                        ...form,
+                                        eventType:
+                                            value === ''
+                                                ? null
+                                                : (value as EventType),
+                                    });
+                                }}
+                            >
+                                <option value="">None (manual award)</option>
+                                {EVENT_TYPES.map((type) => (
+                                    <option key={type} value={type}>
+                                        {type === 'Event'
+                                            ? 'Event (check-in)'
+                                            : type}
+                                    </option>
+                                ))}
+                            </select>
                             <p className="mt-2 text-xs text-white/60">
-                                Check-ins to these events count toward this
-                                challenge (e.g. Attend Workshops → link every
-                                workshop). Points = challenge points × check-ins
-                                (capped by Times).
+                                Auto-counts every check-in of that event type
+                                (e.g. Meal → all meals). Points = challenge
+                                points × check-ins (capped by Times).
                             </p>
                         </div>
                     </div>
