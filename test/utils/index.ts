@@ -4,6 +4,8 @@ export const TEST_HACKATHON_START_DATE = '2024-08-17';
 
 export const TEST_HACKATHON_END_DATE = '2024-08-20';
 
+export const TEST_HACKING_START = new Date('2024-08-17T17:00:00.000Z');
+
 export const TEST_FIRST_NAME = 'first';
 export const TEST_LAST_NAME = 'last';
 export const TEST_EMAIL = 'first-last@sfusurge.com';

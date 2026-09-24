@@ -6,6 +6,7 @@ import {
     TEST_HACKATHON_NAME,
     TEST_HACKATHON_START_DATE,
     TEST_HACKATHON_END_DATE,
+    TEST_HACKING_START,
 } from '../utils';
 
 // revalidateTag() has no static-generation store outside a request, so stub it.
@@ -174,6 +175,7 @@ describe('emailQueue router', () => {
             name: TEST_HACKATHON_NAME,
             startDate: TEST_HACKATHON_START_DATE,
             endDate: TEST_HACKATHON_END_DATE,
+            hackingStart: TEST_HACKING_START,
         });
         const [tpl] = await databaseClient
             .insert(emailTemplates)
