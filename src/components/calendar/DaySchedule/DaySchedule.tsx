@@ -414,6 +414,15 @@ function ProcessEventsForSchedule(eventsMaps: {
                 columns.push([e]);
             }
         }
+
+        // Shortest-duration columns on the left, longest on the right so
+        // multi-hour events stay readable beside concurrent short events.
+        columns.sort((a, b) => {
+            const maxDuration = (col: InternalCalendarEventType[]) =>
+                Math.max(...col.map((event) => event.duration));
+            return maxDuration(a) - maxDuration(b);
+        });
+
         out[eventTimes[i]] = columns;
     }
     // no empty returns
@@ -450,6 +459,7 @@ function DayEventItem({
     const selectEvent = useSetAtom(selectEventAtom);
 
     let overlapColumnCount = 0;
+    let overlapColumnIndex = 0;
     let exactOverlapColumnCount = 0;
     let exactOverlapColumnIndex = 0;
 
@@ -477,6 +487,9 @@ function DayEventItem({
         }
 
         if (hasOverlap) {
+            if (index < columnIndex) {
+                overlapColumnIndex++;
+            }
             overlapColumnCount++;
         }
 
@@ -488,19 +501,21 @@ function DayEventItem({
         }
     });
 
-    const hasExactOverlap = exactOverlapColumnCount > 1;
-    const exactOverlapColumn =
-        exactOverlapColumnCount === 4
-            ? exactOverlapColumnIndex % 2
-            : exactOverlapColumnIndex;
-    const exactOverlapRow =
-        exactOverlapColumnCount === 4
-            ? Math.floor(exactOverlapColumnIndex / 2)
-            : 0;
-    const overlapWidth = hasExactOverlap
-        ? 100 / (exactOverlapColumnCount === 4 ? 2 : exactOverlapColumnCount)
-        : 100;
-    const overlapLeft = hasExactOverlap ? overlapWidth * exactOverlapColumn : 0;
+    // Four identical-time events share a 2x2 grid; otherwise split width by
+    // every concurrent column (including partial overlaps like a long event).
+    const useExactOverlapGrid =
+        exactOverlapColumnCount === 4 && overlapColumnCount === 4;
+    const exactOverlapColumn = useExactOverlapGrid
+        ? exactOverlapColumnIndex % 2
+        : exactOverlapColumnIndex;
+    const exactOverlapRow = useExactOverlapGrid
+        ? Math.floor(exactOverlapColumnIndex / 2)
+        : 0;
+    const concurrentColumns = Math.max(overlapColumnCount, 1);
+    const overlapWidth = useExactOverlapGrid ? 50 : 100 / concurrentColumns;
+    const overlapLeft = useExactOverlapGrid
+        ? overlapWidth * exactOverlapColumn
+        : overlapWidth * overlapColumnIndex;
     const overlapTop = top + Math.min(height * 0.75, 72) * exactOverlapRow;
     const isCompact = height < 64;
     const showMeta = height >= 40;
@@ -557,8 +572,9 @@ function DayEventItem({
                     '--height': `${Math.round(isDeadline ? 52 : height)}px`,
                     '--left': `${isDeadline ? 0 : overlapLeft}%`,
                     '--width': `${isDeadline ? 100 : overlapWidth}%`,
-                    '--marginX': hasExactOverlap ? '0px' : undefined,
-                    '--dayEventZIndex': eventStartMinute + exactOverlapRow + 1,
+                    '--marginX': concurrentColumns > 1 ? '0px' : undefined,
+                    '--dayEventZIndex':
+                        1 + overlapColumnIndex + exactOverlapRow * 4,
                 } as CSSProperties
             }
         >

@@ -14,7 +14,10 @@ import {
 } from '@/components/ui/card';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { defaultEventPagePayload } from '@/components/home/eventPageConfig';
-import { eventDiscordUrlForStatus } from '@/lib/eventDiscord';
+import {
+    eventDiscordUrlForStatus,
+    hasHackathonDiscordInvite,
+} from '@/lib/eventDiscord';
 import { cn } from '@/lib/utils';
 import { useAtomValue } from 'jotai';
 
@@ -28,22 +31,25 @@ export default function DiscordCard({
     className,
 }: DiscordCardProps) {
     const hackathon = useAtomValue(hackathonAtom);
-    const discordLink = eventDiscordUrlForStatus(
-        applicationStatus,
-        hackathon?.eventPagePayload
-    );
     const payload =
         hackathon?.eventPagePayload ??
         (hackathon?.hackathonName
             ? defaultEventPagePayload(hackathon.hackathonName)
             : null);
+    const discordLink = eventDiscordUrlForStatus(
+        applicationStatus,
+        hackathon?.eventPagePayload
+    );
     const eventDisplayName = payload?.name ?? hackathon?.hackathonName;
     const hackathonIconSrc = payload?.iconSrc;
-    const isAccepted = applicationStatus === 'Accepted';
+    const showHackathonDiscord = hasHackathonDiscordInvite(
+        applicationStatus,
+        hackathon?.eventPagePayload
+    );
     const headerTitle =
-        isAccepted && eventDisplayName
+        showHackathonDiscord && eventDisplayName
             ? `Join the ${eventDisplayName} Discord!`
-            : 'Join the Surge Discord!';
+            : 'Join the SFU Surge Discord!';
 
     return (
         <Card className={cn('h-full', className)}>
@@ -64,7 +70,7 @@ export default function DiscordCard({
                 </Link>
             </CardHeader>
             <CardContent className="flex h-full items-center justify-center pb-4 text-center">
-                {isAccepted && hackathonIconSrc ? (
+                {showHackathonDiscord && hackathonIconSrc ? (
                     <Image
                         src={hackathonIconSrc}
                         alt={`${eventDisplayName ?? 'Hackathon'} logo`}

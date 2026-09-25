@@ -39,7 +39,10 @@ import {
     mentionDisplaySearchText,
     normalizeDiscordContentMentions,
 } from '@/lib/discord/mentions';
-import { eventDiscordUrlForStatus } from '@/lib/eventDiscord';
+import {
+    eventDiscordUrlForStatus,
+    hasHackathonDiscordInvite,
+} from '@/lib/eventDiscord';
 import { useWindowSize } from '@/lib/useWindowSize';
 import { trpc } from '@/trpc/client';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
@@ -187,8 +190,11 @@ export default function AnnouncementsPage() {
         hackathon?.eventPagePayload
     );
     const displayName = hackathon?.hackathonName || 'Announcements';
-    const isAccepted = application?.currentStatus === 'Accepted';
-    const hackathonIconSrc: string | undefined = isAccepted
+    const showHackathonDiscord = hasHackathonDiscordInvite(
+        application?.currentStatus,
+        hackathon?.eventPagePayload
+    );
+    const hackathonIconSrc: string | undefined = showHackathonDiscord
         ? (hackathon?.eventPagePayload?.iconSrc ?? undefined)
         : undefined;
 
@@ -759,12 +765,12 @@ export default function AnnouncementsPage() {
                                 )}
                                 <div className="flex flex-col gap-3">
                                     <h2 className="text-2xl font-semibold text-white">
-                                        {isAccepted
+                                        {showHackathonDiscord
                                             ? `Join the ${displayName} Discord Server!`
                                             : 'Join the SFU Surge Discord!'}
                                     </h2>
                                     <p className="text-pretty text-white/60">
-                                        {isAccepted
+                                        {showHackathonDiscord
                                             ? `Join the ${displayName} Discord to stay updated with pings about your team.`
                                             : 'Join the SFU Surge Discord to stay updated on our events.'}
                                     </p>
