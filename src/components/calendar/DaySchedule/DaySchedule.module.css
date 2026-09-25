@@ -170,6 +170,7 @@
     position: absolute;
 
     --margin: 0.15rem;
+    --marginX: var(--margin);
     --dayEventPaddingX: 0.5rem;
     --dayEventContentGap: 2px;
     --dayEventTitleSize: var(--text-sm);
@@ -180,12 +181,12 @@
     --width: 100%;
 
     /* fake margin */
-    left: calc(var(--left) + var(--margin));
+    left: calc(var(--left) + var(--marginX));
     /* top to be controlled by js */
     top: calc(var(--top) + var(--margin));
     height: calc(var(--height) - var(--margin) * 2);
 
-    width: calc(var(--width) - var(--margin) * 2);
+    width: calc(var(--width) - var(--marginX) * 2);
 
     padding: 0.2rem var(--dayEventPaddingX);
     background-color: var(--dayEventBackground);
@@ -230,9 +231,7 @@
     --dayEventIconSize: 11px;
 }
 
-.dayEvent:hover,
-.dayEvent:active,
-.dayEvent.active {
+.dayEvent:active {
     z-index: 10;
 }
 

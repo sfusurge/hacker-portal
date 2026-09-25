@@ -436,59 +436,76 @@ function DayEventItem({
     columnIndex: number;
 }) {
     const minutesInDay = 1440;
+    const eventTime = event.startTime;
+    const eventEndTime = eventTime.add(event.duration, 'minute');
+    const eventStartMinute = eventTime.hour() * 60 + eventTime.minute();
     const [top, height] = useMemo(() => {
-        const minutesAtStart =
-            event.startTime.hour() * 60 + event.startTime.minute();
-
         return [
-            (minutesAtStart / minutesInDay) * parentHeight,
+            (eventStartMinute / minutesInDay) * parentHeight,
             (event.duration / minutesInDay) * parentHeight,
         ];
-    }, [parentHeight]);
+    }, [event.duration, eventStartMinute, parentHeight]);
 
     const selectedEvent = useAtomValue(selectedEventAtom);
     const selectEvent = useSetAtom(selectEventAtom);
 
-    const eventTime = event.startTime;
-    const eventEndTime = eventTime.add(event.duration, 'minute');
-    const overlappingColumnIndexes = dayColumns
-        .map((column, index) => {
-            const hasOverlap =
-                index === columnIndex ||
-                column.some((otherEvent) => {
-                    if (otherEvent === event) {
-                        return false;
-                    }
+    let overlapColumnCount = 0;
+    let exactOverlapColumnCount = 0;
+    let exactOverlapColumnIndex = 0;
 
-                    const otherEventEndTime = otherEvent.startTime.add(
-                        otherEvent.duration,
-                        'minute'
-                    );
+    dayColumns.forEach((column, index) => {
+        let hasExactOverlap = false;
+        let hasOverlap = index === columnIndex;
 
-                    return (
-                        eventTime.isBefore(otherEventEndTime) &&
-                        otherEvent.startTime.isBefore(eventEndTime)
-                    );
-                });
+        for (const otherEvent of column) {
+            const otherEventEndTime = otherEvent.startTime.add(
+                otherEvent.duration,
+                'minute'
+            );
 
-            return hasOverlap ? index : -1;
-        })
-        .filter((index) => index >= 0);
-    const overlapColumnCount = overlappingColumnIndexes.length;
-    const overlapColumnIndex = Math.max(
-        0,
-        overlappingColumnIndexes.indexOf(columnIndex)
-    );
-    const isOverlapping = overlapColumnCount > 1;
-    const isCompact = height < 64;
-    const overlapWidth = isOverlapping ? 65 : 100;
-    const overlapLeft =
-        isOverlapping && overlapColumnCount > 1
-            ? ((100 - overlapWidth) * overlapColumnIndex) /
-              (overlapColumnCount - 1)
+            hasExactOverlap ||=
+                otherEvent.startTime.isSame(eventTime) &&
+                otherEventEndTime.isSame(eventEndTime);
+            hasOverlap ||=
+                otherEvent !== event &&
+                eventTime.isBefore(otherEventEndTime) &&
+                otherEvent.startTime.isBefore(eventEndTime);
+
+            if (hasExactOverlap && hasOverlap) {
+                break;
+            }
+        }
+
+        if (hasOverlap) {
+            overlapColumnCount++;
+        }
+
+        if (hasExactOverlap) {
+            if (index < columnIndex) {
+                exactOverlapColumnIndex++;
+            }
+            exactOverlapColumnCount++;
+        }
+    });
+
+    const hasExactOverlap = exactOverlapColumnCount > 1;
+    const exactOverlapColumn =
+        exactOverlapColumnCount === 4
+            ? exactOverlapColumnIndex % 2
+            : exactOverlapColumnIndex;
+    const exactOverlapRow =
+        exactOverlapColumnCount === 4
+            ? Math.floor(exactOverlapColumnIndex / 2)
             : 0;
+    const overlapWidth = hasExactOverlap
+        ? 100 / (exactOverlapColumnCount === 4 ? 2 : exactOverlapColumnCount)
+        : 100;
+    const overlapLeft = hasExactOverlap ? overlapWidth * exactOverlapColumn : 0;
+    const overlapTop = top + Math.min(height * 0.75, 72) * exactOverlapRow;
+    const isCompact = height < 64;
     const showMeta = height >= 40;
-    const showLocation = event.location && !isOverlapping && !isCompact;
+    const showLocation =
+        event.location && overlapColumnCount <= 1 && !isCompact;
     const isDeadline = event.isDeadline === true;
     const isRsvpEvent = canAddEventToSchedule(event);
     const Icon =
@@ -536,11 +553,12 @@ function DayEventItem({
             }
             style={
                 {
-                    '--top': `${Math.round(top)}px`,
+                    '--top': `${Math.round(overlapTop)}px`,
                     '--height': `${Math.round(isDeadline ? 52 : height)}px`,
                     '--left': `${isDeadline ? 0 : overlapLeft}%`,
                     '--width': `${isDeadline ? 100 : overlapWidth}%`,
-                    '--dayEventZIndex': columnIndex + 1,
+                    '--marginX': hasExactOverlap ? '0px' : undefined,
+                    '--dayEventZIndex': eventStartMinute + exactOverlapRow + 1,
                 } as CSSProperties
             }
         >

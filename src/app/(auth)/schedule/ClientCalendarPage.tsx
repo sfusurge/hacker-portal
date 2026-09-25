@@ -308,7 +308,10 @@ export function ClientCalendarPage({
                                     className="w-full p-4"
                                 />
                             </Card>
-                            <ScheduleEventsCard events={events} />
+                            <ScheduleEventsCard
+                                events={events}
+                                isAdmin={Boolean(isAdmin)}
+                            />
                         </aside>
                     </div>
                 )}
