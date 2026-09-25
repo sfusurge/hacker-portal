@@ -16,6 +16,10 @@ const timeGamesOrigin = originFrom(
     process.env.TIME_GAMES_URL,
     'https://points.sfusurge.com'
 );
+const pointsOrigins = new Set([
+    'https://points.sfusurge.com',
+    'http://points.sfusurge.com',
+]);
 
 /** Accept Portal-relative paths and the configured Time Games origin only. */
 export function safePortalReturnTarget(value: unknown): string | undefined {
@@ -27,7 +31,15 @@ export function safePortalReturnTarget(value: unknown): string | undefined {
         if (target.origin === portalOrigin) {
             return `${target.pathname}${target.search}${target.hash}`;
         }
-        if (target.origin === timeGamesOrigin) {
+        if (
+            target.origin === timeGamesOrigin ||
+            pointsOrigins.has(target.origin)
+        ) {
+            // Points is served over HTTPS. Upgrade older HTTP return URLs before
+            // redirecting so the shared Secure session cookie is sent on arrival.
+            if (target.hostname === 'points.sfusurge.com') {
+                target.protocol = 'https:';
+            }
             return target.toString();
         }
     } catch {
