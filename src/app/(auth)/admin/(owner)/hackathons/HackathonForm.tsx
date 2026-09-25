@@ -18,6 +18,7 @@ export interface HackathonFormValues {
     startDate: string;
     endDate: string;
     eventPageSlug: string;
+    hackingStart: string;
     submissionDeadline: string;
     applicationOpen: string;
     applicationCloses: string;
@@ -38,6 +39,7 @@ export const EMPTY_HACKATHON_FORM_VALUES: HackathonFormValues = {
     startDate: '',
     endDate: '',
     eventPageSlug: 'stormhacks',
+    hackingStart: '',
     submissionDeadline: '',
     applicationOpen: '',
     applicationCloses: '',
@@ -58,6 +60,7 @@ export interface HackathonRowForForm {
     startDate: string;
     endDate: string;
     eventPageSlug: string;
+    hackingStart: Date | string | null;
     submissionDeadline: Date | string | null;
     applicationOpen: Date | string | null;
     applicationCloses: Date | string | null;
@@ -81,6 +84,7 @@ export function hackathonToFormValues(
         startDate: startEndToInput(row.startDate),
         endDate: startEndToInput(row.endDate),
         eventPageSlug: row.eventPageSlug,
+        hackingStart: utcToPacificInput(row.hackingStart),
         submissionDeadline: utcToPacificInput(row.submissionDeadline),
         applicationOpen: utcToPacificInput(row.applicationOpen),
         applicationCloses: utcToPacificInput(row.applicationCloses),
@@ -107,8 +111,9 @@ const DATETIME_FIELDS: {
 }[] = [
     { key: 'applicationOpen', label: 'Application opens' },
     { key: 'applicationCloses', label: 'Application closes' },
+    { key: 'hackingStart', label: 'Hacking starts' },
     { key: 'submissionOpen', label: 'Submission opens' },
-    { key: 'submissionDeadline', label: 'Submission deadline', required: true },
+    { key: 'submissionDeadline', label: 'Submission deadline' },
     { key: 'projectGalleryOpen', label: 'Project gallery opens' },
     {
         key: 'paymentDeadline',
@@ -189,7 +194,6 @@ export function HackathonForm({
         if (!values.startDate) missing.push('Start date');
         if (!values.endDate) missing.push('End date');
         if (!values.eventPageSlug.trim()) missing.push('Event page slug');
-        if (!values.submissionDeadline) missing.push('Submission deadline');
         if (missing.length > 0) {
             toast({
                 title: 'Missing required fields',
@@ -199,8 +203,22 @@ export function HackathonForm({
             return;
         }
 
-        const submissionDeadline = toEpoch(values.submissionDeadline);
-        if (submissionDeadline == null) {
+        const hackingStart = values.hackingStart
+            ? toEpoch(values.hackingStart)
+            : null;
+        if (values.hackingStart && hackingStart == null) {
+            toast({
+                title: 'Invalid hacking start',
+                description: 'Please pick a valid date and time.',
+                variant: 'error',
+            });
+            return;
+        }
+
+        const submissionDeadline = values.submissionDeadline
+            ? toEpoch(values.submissionDeadline)
+            : null;
+        if (values.submissionDeadline && submissionDeadline == null) {
             toast({
                 title: 'Invalid submission deadline',
                 description: 'Please pick a valid date and time.',
@@ -214,6 +232,7 @@ export function HackathonForm({
             startDate: values.startDate,
             endDate: values.endDate,
             eventPageSlug: values.eventPageSlug.trim(),
+            hackingStart,
             submissionDeadline,
             applicationOpen: toEpoch(values.applicationOpen),
             applicationCloses: toEpoch(values.applicationCloses),

@@ -233,7 +233,7 @@ export default function SideBar({ className, initialData }: NavProps) {
         canAccessProjectGallery(
             now,
             hackathon.projectGalleryOpen?.toDate() ?? null,
-            hackathon.submissionDeadline.toDate(),
+            hackathon.submissionDeadline?.toDate() ?? null,
             initialData?.userRole,
             hackathon.submissionOpen?.toDate() ?? null
         );
@@ -497,7 +497,7 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                     : undefined
                                             }
                                             className={cn(
-                                                'z-200 w-48 border border-neutral-600/30',
+                                                'z-[2000] w-48 border border-neutral-600/30',
                                                 profilePopoverSide ===
                                                     'bottom' &&
                                                     '!mr-0 max-w-[min(12rem,calc(100vw-2rem))]'

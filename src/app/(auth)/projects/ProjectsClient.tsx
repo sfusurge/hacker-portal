@@ -109,7 +109,7 @@ export default function ProjectsClient({
         canAccessProjectGallery(
             Date.now(),
             hackathon.projectGalleryOpen?.toDate() ?? null,
-            hackathon.submissionDeadline.toDate(),
+            hackathon.submissionDeadline?.toDate() ?? null,
             user?.userRole,
             hackathon.submissionOpen?.toDate() ?? null
         );
@@ -118,8 +118,9 @@ export default function ProjectsClient({
         return (
             <div className="flex h-full items-center justify-center px-6 text-center">
                 <p className="max-w-md text-pretty text-white/60">
-                    The project gallery opens on{' '}
-                    {galleryOpensAt.format('MMM D, YYYY h:mm A')}.
+                    {galleryOpensAt != null
+                        ? `The project gallery opens on ${galleryOpensAt.format('MMM D, YYYY h:mm A')}.`
+                        : 'The project gallery is not open yet.'}
                 </p>
             </div>
         );

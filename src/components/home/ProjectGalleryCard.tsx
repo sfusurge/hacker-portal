@@ -26,7 +26,7 @@ export function ProjectGalleryCard() {
     const [galleryOpen, setGalleryOpen] = useState(false);
 
     const projectGalleryOpen = hackathon.projectGalleryOpen?.toDate() ?? null;
-    const submissionDeadline = hackathon.submissionDeadline.toDate();
+    const submissionDeadline = hackathon.submissionDeadline?.toDate() ?? null;
     const galleryOpensAt = dayjs(
         getProjectGalleryOpenDate(projectGalleryOpen, submissionDeadline)
     );
@@ -68,8 +68,9 @@ export function ProjectGalleryCard() {
                     </p>
                 ) : (
                     <p className="text-pretty text-white/60 lg:max-w-[550px]">
-                        The project gallery opens on{' '}
-                        {galleryOpensAt.format('MMM D, YYYY h:mm A')}.
+                        {galleryOpensAt.isValid()
+                            ? `The project gallery opens on ${galleryOpensAt.format('MMM D, YYYY h:mm A')}.`
+                            : 'The project gallery is not open yet.'}
                     </p>
                 )}
                 <Link href="/projects">

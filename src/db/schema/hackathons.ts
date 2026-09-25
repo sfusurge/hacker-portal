@@ -43,9 +43,11 @@ const hackathons = pgTable('hackathons', {
     name: varchar('name', { length: 255 }).notNull(),
     startDate: varchar('start_date', { length: 255 }).notNull(),
     endDate: varchar('end_date', { length: 255 }).notNull(),
-    submissionDeadline: timestamp('submission_deadline')
-        .notNull()
-        .default(JOURNEY_HACK_2025_DEADLINE),
+    /** Optional so existing rows can gain the column without truncate. */
+    hackingStart: timestamp('hacking_start'),
+    submissionDeadline: timestamp('submission_deadline').default(
+        JOURNEY_HACK_2025_DEADLINE
+    ),
     projectGalleryOpen: timestamp('project_gallery_open', {
         mode: 'date',
         withTimezone: true,
@@ -129,7 +131,8 @@ const hackathonConfigSchema = z.object({
     endDate: z.string().min(1, 'End date is required'),
     eventPageSlug: z.string().min(1).max(255),
 
-    submissionDeadline: z.number().int(),
+    hackingStart: z.number().int().nullable(),
+    submissionDeadline: z.number().int().nullable(),
     applicationOpen: z.number().int().nullable(),
     applicationCloses: z.number().int().nullable(),
     submissionOpen: z.number().int().nullable(),

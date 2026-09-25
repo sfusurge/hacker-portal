@@ -8,17 +8,14 @@ import {
     InternalCalendarEventType,
     currentYearMonthAtom,
     getEventDurationString,
-    selectedEventAtom,
+    selectEventAtom,
 } from '../MonthCalendarShared';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import dayjs, { Dayjs } from 'dayjs';
 import { ClockIcon, MapPinIcon } from '@heroicons/react/24/solid';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence } from 'motion/react';
-import {
-    EventLongDescriptionContent,
-    LongDescriptionModal,
-} from '../EventLongDescription/EventLongDescription';
+import { EventLongDescriptionContent } from '../EventLongDescription/EventLongDescription';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { DialogTitle } from '@/components/ui/dialog';
 
@@ -56,7 +53,6 @@ export function LinearTimeline({
             <div className={style.timelineContainer} style={styles}>
                 {Object.entries(eventsGroupedByDay).map((e) => {
                     const [key, eventsOfDay] = e;
-                    console.log(key);
 
                     return (
                         <TimeLineDayWrapper
@@ -112,14 +108,14 @@ function TimeLineDayWrapper({
 function TimelineItem({ event }: { event: InternalCalendarEventType }) {
     const [contentHeight, setContentHeight] = useState(0);
     const innerContentRef = useRef<HTMLDivElement | null>(null);
-    const setSelected = useSetAtom(selectedEventAtom);
+    const selectEvent = useSetAtom(selectEventAtom);
     function expandContent() {
         if (contentHeight === 0) {
             setContentHeight(innerContentRef.current?.scrollHeight!);
-            setSelected({ element: undefined, event: event });
+            selectEvent(event);
         } else {
             setContentHeight(0);
-            setSelected(undefined);
+            selectEvent();
         }
     }
 

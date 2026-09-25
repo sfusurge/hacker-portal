@@ -19,11 +19,13 @@ import { TRPCError } from '@trpc/server';
 import { databaseClient } from '@/db/client';
 import { and, asc, count, eq, getTableColumns } from 'drizzle-orm';
 import { checkIns } from '@/db/schema/checkIn';
+import { getEventRsvpCountSchema, rsvps } from '@/db/schema/rsvp';
 import { z } from 'zod';
 
 export interface CalendarEvent {
     id: number;
     checkedIn: boolean;
+    rsvped: boolean;
     hasLongDescription: boolean;
     startDate: Date;
     endDate: Date;
@@ -31,17 +33,23 @@ export interface CalendarEvent {
     title: string;
     color: string;
     location: string;
+    imageUrl?: string;
     description?: string | undefined;
     checkInTime?: string | undefined;
     hasCheckIn: boolean;
     eventType: EventType;
 }
 
+const rsvpEventSchema = z.object({
+    eventId: z.number().int(),
+});
+
 export const eventsRouter = router({
     createEvent: adminProcedure
         .input(insertEventSchema)
         .mutation(async ({ input }) => {
             console.log(`Inserting ${JSON.stringify(input)}`);
+            const eventType = (input.eventType ?? EventType.EVENT) as EventType;
 
             const [event] = await databaseClient
                 .insert(eventsTable)
@@ -51,10 +59,11 @@ export const eventsRouter = router({
                     startDate: new Date(input.startDate),
                     endDate: new Date(input.endDate),
                     location: input.location,
+                    imageUrl: input.imageUrl || null,
                     color: input.color,
                     description: input.description,
                     longDescription: input.longDescription,
-                    eventType: input.eventType as EventType,
+                    eventType,
                     hasCheckIn: input.hasCheckIn,
                 })
                 .returning();
@@ -75,6 +84,9 @@ export const eventsRouter = router({
                         userId: checkIns.userId,
                         checkInTime: checkIns.checkInTime,
                     },
+                    rsvp: {
+                        userId: rsvps.userId,
+                    },
                     event: eventsTable,
                 })
                 .from(eventsTable)
@@ -85,14 +97,23 @@ export const eventsRouter = router({
                         eq(checkIns.userId, ctx.user.id)
                     )
                 )
+                .leftJoin(
+                    rsvps,
+                    and(
+                        eq(eventsTable.id, rsvps.eventId),
+                        eq(rsvps.userId, ctx.user.id)
+                    )
+                )
                 .where(eq(eventsTable.hackathonId, input.hackathonId))
                 .orderBy(asc(eventsTable.startDate), asc(eventsTable.endDate));
 
-            const events = rows.map(({ checkIn, event: _event }) => {
+            const events = rows.map(({ checkIn, rsvp, event: _event }) => {
                 const { longDescription, ...event } = { ..._event };
                 return {
                     ...event,
+                    imageUrl: event.imageUrl ?? undefined,
                     checkedIn: checkIn != null,
+                    rsvped: rsvp != null,
                     description: event.description ?? undefined,
                     hasLongDescription:
                         longDescription !== undefined &&
@@ -103,6 +124,69 @@ export const eventsRouter = router({
             });
 
             return events as CalendarEvent[];
+        }),
+
+    rsvpEvent: protectedProcedure
+        .input(rsvpEventSchema)
+        .mutation(async ({ input, ctx }) => {
+            const [event] = await databaseClient
+                .select({
+                    id: eventsTable.id,
+                    hackathonId: eventsTable.hackathonId,
+                })
+                .from(eventsTable)
+                .where(eq(eventsTable.id, input.eventId))
+                .limit(1);
+
+            if (!event) {
+                throw new TRPCError({
+                    code: 'NOT_FOUND',
+                    message: `Cannot find event with id ${input.eventId}`,
+                });
+            }
+
+            await databaseClient
+                .insert(rsvps)
+                .values({
+                    eventId: input.eventId,
+                    userId: ctx.user.id,
+                })
+                .onConflictDoNothing({
+                    target: [rsvps.eventId, rsvps.userId],
+                });
+
+            return true;
+        }),
+
+    unrsvpEvent: protectedProcedure
+        .input(rsvpEventSchema)
+        .mutation(async ({ input, ctx }) => {
+            const [event] = await databaseClient
+                .select({
+                    id: eventsTable.id,
+                    hackathonId: eventsTable.hackathonId,
+                })
+                .from(eventsTable)
+                .where(eq(eventsTable.id, input.eventId))
+                .limit(1);
+
+            if (!event) {
+                throw new TRPCError({
+                    code: 'NOT_FOUND',
+                    message: `Cannot find event with id ${input.eventId}`,
+                });
+            }
+
+            await databaseClient
+                .delete(rsvps)
+                .where(
+                    and(
+                        eq(rsvps.eventId, input.eventId),
+                        eq(rsvps.userId, ctx.user.id)
+                    )
+                );
+
+            return true;
         }),
 
     getHackathonCheckInEvents: adminProcedure
@@ -157,9 +241,22 @@ export const eventsRouter = router({
             return { checkInCount: result?.checkInCount ?? 0 };
         }),
 
+    getEventRsvpCount: adminProcedure
+        .input(getEventRsvpCountSchema)
+        .query(async ({ input }) => {
+            const [result] = await databaseClient
+                .select({ rsvpCount: count(rsvps.userId) })
+                .from(rsvps)
+                .where(eq(rsvps.eventId, input.eventId));
+
+            return { rsvpCount: result?.rsvpCount ?? 0 };
+        }),
+
     updateEvent: adminProcedure
         .input(updateEventSchema)
         .mutation(async ({ input }) => {
+            const eventType = (input.eventType ?? EventType.EVENT) as EventType;
+
             const [event] = await databaseClient
                 .update(eventsTable)
                 .set({
@@ -168,9 +265,10 @@ export const eventsRouter = router({
                     startDate: new Date(input.startDate),
                     endDate: new Date(input.endDate),
                     location: input.location,
+                    imageUrl: input.imageUrl || null,
                     description: input.description,
                     longDescription: input.longDescription,
-                    eventType: input.eventType as EventType,
+                    eventType,
                     hasCheckIn: input.hasCheckIn,
                 })
                 .where(eq(eventsTable.id, input.eventId))

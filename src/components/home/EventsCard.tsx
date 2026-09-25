@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { LongDescriptionModal } from '@/components/calendar/EventLongDescription/EventLongDescription';
 import {
-    selectedEventAtom,
+    selectEventAtom,
     DayjsifyEvents,
     InternalCalendarEventType,
 } from '@/components/calendar/MonthCalendarShared';
@@ -26,7 +26,7 @@ export default function EventsCard({ events }: { events: CalendarEvent[] }) {
     const [selectedEvent, setSelectedEvent] =
         useState<InternalCalendarEventType | null>(null);
     const [showModal, setShowModal] = useState(false);
-    const setGlobalSelectedEvent = useSetAtom(selectedEventAtom);
+    const selectEvent = useSetAtom(selectEventAtom);
 
     // Filter to show only upcoming
     const upcomingEvents = events
@@ -46,10 +46,7 @@ export default function EventsCard({ events }: { events: CalendarEvent[] }) {
 
         setSelectedEvent(convertedEvent);
         setShowModal(true);
-        setGlobalSelectedEvent({
-            event: convertedEvent,
-            element: undefined,
-        });
+        selectEvent(convertedEvent);
     };
 
     return (
