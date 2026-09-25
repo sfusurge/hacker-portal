@@ -13,7 +13,7 @@ export const buttonConfig = {
     [EventType.EVENT]: { icon: TicketIcon, label: 'Check in to hackathon' },
     [EventType.ACTIVITY]: {
         icon: FaceSmileIcon,
-        label: 'Check in to Activity',
+        label: 'Check in to Side Event',
     },
     [EventType.MEAL]: { icon: FireIcon, label: 'Check in to Meal' },
     [EventType.WORKSHOP]: {

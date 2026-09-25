@@ -13,7 +13,7 @@ import { hackathons } from './hackathons';
 
 export enum EventType {
     EVENT = 'Event',
-    ACTIVITY = 'Activity',
+    ACTIVITY = 'Side Event',
     MEAL = 'Meal',
     WORKSHOP = 'Workshop',
 }
@@ -46,6 +46,8 @@ export const events = pgTable(
             .notNull()
             .default(EventType.EVENT),
         hasCheckIn: boolean('has_check_in').notNull().default(false),
+        points: integer('points').notNull().default(0),
+        variablePoints: boolean('variable_points').notNull().default(false),
     },
     (table) => {
         return [index().on(table.hackathonId)];
