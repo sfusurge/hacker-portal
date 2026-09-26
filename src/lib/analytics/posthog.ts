@@ -38,10 +38,19 @@ export function initPostHog(): void {
         capture_pageleave: true,
         rageclick: true,
         session_recording: {
-            maskAllInputs: false,
+            maskAllInputs: true,
             maskInputOptions: {
-                password: false,
+                password: true,
+                email: true,
+                tel: true,
+                text: true,
+                textarea: true,
+                number: true,
+                search: true,
+                url: true,
             },
+            maskTextClass: 'ph-mask',
+            blockClass: 'ph-no-capture',
         },
         loaded: (client) => {
             registerPostHogSuperProperties();

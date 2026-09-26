@@ -130,22 +130,10 @@
 }
 
 /* --top, --height, --indent, --slot, --slots and --dayEventZIndex are set inline */
-.dayEvent,
-.deadlineEvent {
+.dayEvent {
     --margin: 0.15rem;
     /* cascade indent, capped so stacked events keep at least half the column */
     --inset: min(var(--indent), 50%);
-
-    position: absolute;
-    left: calc(
-        var(--inset) + (100% - var(--inset)) * var(--slot) / var(--slots) +
-            var(--margin)
-    );
-    z-index: var(--dayEventZIndex);
-    width: calc((100% - var(--inset)) / var(--slots) - var(--margin) * 2);
-}
-
-.dayEvent {
     --dayEventPaddingX: 0.5rem;
     --dayEventContentGap: 2px;
     --dayEventTitleSize: var(--text-sm);
@@ -153,7 +141,14 @@
     --dayEventMetaSize: 12px;
     --dayEventIconSize: 14px;
 
+    position: absolute;
     top: calc(var(--top) + var(--margin));
+    left: calc(
+        var(--inset) + (100% - var(--inset)) * var(--slot) / var(--slots) +
+            var(--margin)
+    );
+    z-index: var(--dayEventZIndex);
+    width: calc((100% - var(--inset)) / var(--slots) - var(--margin) * 2);
     height: calc(var(--height) - var(--margin) * 2);
     overflow: hidden;
     padding: 0.2rem var(--dayEventPaddingX);
@@ -291,12 +286,19 @@
     height: var(--dayEventIconSize);
 }
 
-/* --top is the deadline time; the bar sits at the bottom of the box */
+/* Deadline marker: always the right half of the day column (text above, bar on the time). */
 .deadlineEvent {
+    --margin: 0.15rem;
+
+    position: absolute;
     top: calc(var(--top) - var(--height));
+    left: calc(50% + var(--margin));
+    z-index: calc(var(--dayEventZIndex) + 5);
+    width: calc(50% - var(--margin) * 2);
     height: var(--height);
     color: #fef9c3;
     cursor: default;
+    pointer-events: none;
 }
 
 .deadlineEvent::before {
@@ -318,7 +320,7 @@
     gap: 1rem;
     overflow: hidden;
     font-size: var(--text-xs);
-    font-weight: var(--font-weight-normal);
+    font-weight: var(--font-weight-medium);
     line-height: 1.2;
 }
 
