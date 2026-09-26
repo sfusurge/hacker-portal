@@ -33,6 +33,22 @@ export const rsvps = pgTable(
     }
 );
 
+export const ignoredEvents = pgTable(
+    'ignored_events',
+    {
+        eventId: integer('event_id')
+            .notNull()
+            .references(() => events.id, { onDelete: 'cascade' }),
+        userId: integer('user_id')
+            .notNull()
+            .references(() => user.id, { onDelete: 'cascade' }),
+    },
+    (table) => [
+        primaryKey({ columns: [table.eventId, table.userId] }),
+        index().on(table.userId),
+    ]
+);
+
 export const insertRsvpSchema = createInsertSchema(rsvps).omit({
     rsvpTime: true,
 });

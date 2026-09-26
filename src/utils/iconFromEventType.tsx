@@ -1,15 +1,8 @@
 import { EventType } from '@/db/schema/events';
-import { FireIcon, TicketIcon } from '@heroicons/react/24/solid';
+import { getEventTypeDisplay } from '@/utils/eventTypeDisplay';
 
 export function iconFromEventType(eventType: EventType) {
-    switch (eventType) {
-        case EventType.WORKSHOP:
-        case EventType.ACTIVITY:
-        case EventType.EVENT: {
-            return <TicketIcon className="size-6" />;
-        }
-        case EventType.MEAL: {
-            return <FireIcon className="size-6" />;
-        }
-    }
+    const { color, Icon } = getEventTypeDisplay(eventType);
+
+    return <Icon className="size-6" style={{ color }} />;
 }

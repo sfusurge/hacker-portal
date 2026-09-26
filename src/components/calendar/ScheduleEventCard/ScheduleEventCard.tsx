@@ -1,16 +1,11 @@
-import type { ButtonHTMLAttributes, ComponentType, SVGProps } from 'react';
+import type { ButtonHTMLAttributes } from 'react';
 import {
     getEventTimeLabel,
     type InternalCalendarEventType,
 } from '../MonthCalendarShared';
 import style from './ScheduleEventCard.module.css';
 import { cn } from '@/lib/utils';
-import { EventType } from '@/db/schema/events';
-import {
-    BoltIcon,
-    BookOpenIcon,
-    FaceSmileIcon,
-} from '@heroicons/react/24/solid';
+import { getEventTypeDisplay } from '@/utils/eventTypeDisplay';
 
 interface ScheduleEventCardProps
     extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -26,7 +21,7 @@ export function ScheduleEventCard({
     className,
     ...props
 }: ScheduleEventCardProps) {
-    const Icon = getEventIcon(event.eventType);
+    const { Icon } = getEventTypeDisplay(event.eventType);
 
     return (
         <button type="button" className={cn(style.card, className)} {...props}>
@@ -50,18 +45,4 @@ export function ScheduleEventCard({
             </span>
         </button>
     );
-}
-
-function getEventIcon(
-    eventType: EventType
-): ComponentType<SVGProps<SVGSVGElement>> {
-    if (eventType === EventType.WORKSHOP) {
-        return BookOpenIcon;
-    }
-
-    if (eventType === EventType.ACTIVITY) {
-        return FaceSmileIcon;
-    }
-
-    return BoltIcon;
 }

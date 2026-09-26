@@ -100,7 +100,9 @@ export function groupEventsByDay(
     };
 
     for (const [key, val] of Object.entries(grouped)) {
-        val.sort((a, b) => a.startTime.unix() - b.startTime.unix());
+        val.sort(
+            (a, b) => a.startTime.unix() - b.startTime.unix() || a.id - b.id
+        );
         grouped[key] = val;
     }
 
