@@ -519,8 +519,9 @@ function DayEventItem({
         event.location && overlapColumnCount <= 1 && !isCompact;
     const isDeadline = event.isDeadline === true;
     const isRsvpEvent = canAddEventToSchedule(event);
-    const needsRsvp = !isDeadline && isRsvpEvent && !event.rsvped;
-    const useTypeColors = !isDeadline && !needsRsvp;
+    const isRsvped = event.rsvped === true;
+    const needsRsvp = !isDeadline && isRsvpEvent && !isRsvped;
+    const useTypeColors = !isDeadline && (!isRsvpEvent || isRsvped);
     const { Icon, color, background } = getEventTypeDisplay(event.eventType);
     const dayEventTitleClassName = clsx(
         style.dayEventLine,

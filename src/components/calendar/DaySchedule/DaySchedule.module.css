@@ -250,6 +250,16 @@
 /* colours come from getEventTypeDisplay via inline vars */
 .dayEventTyped {
     border-color: transparent;
+    padding-left: calc(var(--dayEventPaddingX) + 6px);
+}
+
+.dayEventTyped::before {
+    content: '';
+    position: absolute;
+    inset: 4px auto 4px 4px;
+    width: 3px;
+    border-radius: 9999px;
+    background-color: var(--dayEventHoverBackground);
 }
 
 .dayEventCompact {
