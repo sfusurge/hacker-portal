@@ -296,6 +296,10 @@ body {
     --fuchsia-600: #c026d3;
     --fuchsia-950: #4a044e;
 
+    /* Teal */
+    --teal-600: #0d9488;
+    --teal-950: #042f2e;
+
     /* ==== END COLORS ==== */
 
     /* ==== SEMANTICS ==== */

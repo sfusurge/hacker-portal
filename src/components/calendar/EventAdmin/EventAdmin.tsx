@@ -30,6 +30,7 @@ import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { cn } from '@/lib/utils';
 import { submitFile } from '@/lib/blobs';
 import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
+import { getEventTypeDisplay } from '@/utils/eventTypeDisplay';
 
 export interface EventAdminProps {
     eventsAtom: PrimitiveAtom<InternalCalendarEventType[]>;
@@ -335,16 +336,11 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                             }}
                         >
                             <SelectTrigger className="h-11 w-full">
-                                <span className="flex items-center gap-2">
-                                    <span
-                                        className="size-1.5 rounded-full"
-                                        style={{
-                                            backgroundColor:
-                                                event?.color ?? '#6466F1',
-                                        }}
-                                    />
-                                    {event?.eventType ?? EventType.EVENT}
-                                </span>
+                                <EventTypeSelectLabel
+                                    eventType={
+                                        event?.eventType ?? EventType.EVENT
+                                    }
+                                />
                             </SelectTrigger>
                             <SelectContent className="z-[9999] bg-neutral-800 text-white">
                                 <SelectGroup>
@@ -355,17 +351,9 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
                                                 key={eventType}
                                                 value={eventType}
                                             >
-                                                <span className="flex items-center gap-2">
-                                                    <span
-                                                        className="size-1.5 rounded-full"
-                                                        style={{
-                                                            backgroundColor:
-                                                                event?.color ??
-                                                                '#6466F1',
-                                                        }}
-                                                    />
-                                                    {eventType}
-                                                </span>
+                                                <EventTypeSelectLabel
+                                                    eventType={eventType}
+                                                />
                                             </SelectItem>
                                         );
                                     })}
@@ -558,6 +546,17 @@ function EventDateInput({
                 </span>
             )}
         </div>
+    );
+}
+
+function EventTypeSelectLabel({ eventType }: { eventType: EventType }) {
+    const { color, Icon, label } = getEventTypeDisplay(eventType);
+
+    return (
+        <span className="flex min-w-0 items-center gap-2">
+            <Icon className="size-4 shrink-0" style={{ color }} />
+            <span className="truncate">{label}</span>
+        </span>
     );
 }
 

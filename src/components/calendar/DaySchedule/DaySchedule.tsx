@@ -19,12 +19,8 @@ import clsx from 'clsx';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { DateControls } from '@/components/calendar/DateControls/DateControls';
 import { EventType } from '@/db/schema/events';
-import {
-    BoltIcon,
-    BookOpenIcon,
-    FaceSmileIcon,
-} from '@heroicons/react/24/solid';
 import { trpc } from '@/trpc/client';
+import { getEventTypeDisplay } from '@/utils/eventTypeDisplay';
 
 // size of UI, shared
 const [rowHeight, headerHeight, timeColumnWidth] = [90, 34, 50];
@@ -523,12 +519,9 @@ function DayEventItem({
         event.location && overlapColumnCount <= 1 && !isCompact;
     const isDeadline = event.isDeadline === true;
     const isRsvpEvent = canAddEventToSchedule(event);
-    const Icon =
-        event.eventType === EventType.WORKSHOP
-            ? BookOpenIcon
-            : event.eventType === EventType.ACTIVITY
-              ? FaceSmileIcon
-              : BoltIcon;
+    const needsRsvp = !isDeadline && isRsvpEvent && !event.rsvped;
+    const useTypeColors = !isDeadline && !needsRsvp;
+    const { Icon, color, background } = getEventTypeDisplay(event.eventType);
     const dayEventTitleClassName = clsx(
         style.dayEventLine,
         style.dayEventTitle
@@ -550,10 +543,12 @@ function DayEventItem({
                     (isRsvpEvent
                         ? style.dayEventRsvped
                         : style.dayEventStandard),
-                !isDeadline &&
-                    isRsvpEvent &&
-                    !event.rsvped &&
-                    style.dayEventNeedsRsvp,
+                needsRsvp && style.dayEventNeedsRsvp,
+                needsRsvp &&
+                    (event.eventType === EventType.WORKSHOP ||
+                        event.eventType === EventType.ACTIVITY) &&
+                    style.dayEventNeutralNeedsRsvp,
+                useTypeColors && style.dayEventTyped,
                 !isDeadline && isCompact && style.dayEventCompact,
                 {
                     [style.active]: isActive,
@@ -575,6 +570,10 @@ function DayEventItem({
                     '--marginX': concurrentColumns > 1 ? '0px' : undefined,
                     '--dayEventZIndex':
                         1 + overlapColumnIndex + exactOverlapRow * 4,
+                    ...(useTypeColors && {
+                        '--dayEventBackground': background,
+                        '--dayEventHoverBackground': color,
+                    }),
                 } as CSSProperties
             }
         >

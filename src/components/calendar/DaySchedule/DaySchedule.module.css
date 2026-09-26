@@ -222,6 +222,36 @@
     border-style: dashed;
 }
 
+/* layered on top of .dayEventNeedsRsvp */
+.dayEventNeutralNeedsRsvp {
+    --dayEventBackground: color-mix(
+        in srgb,
+        var(--neutral-600) 18%,
+        transparent
+    );
+    --dayEventHoverBackground: color-mix(
+        in srgb,
+        var(--neutral-600) 28%,
+        transparent
+    );
+
+    border-color: var(--neutral-500);
+    color: var(--text-regular);
+}
+
+.dayEventNeutralNeedsRsvp .dayEventMeta {
+    color: var(--text-secondary);
+}
+
+.dayEventNeutralNeedsRsvp .dayEventIcon {
+    color: var(--color-neutral-300);
+}
+
+/* colours come from getEventTypeDisplay via inline vars */
+.dayEventTyped {
+    border-color: transparent;
+}
+
 .dayEventCompact {
     --dayEventPaddingX: 0.35rem;
     --dayEventContentGap: 1px;
