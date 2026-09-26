@@ -330,13 +330,23 @@ function processEventsForSchedule(eventsMaps: {
 }
 
 function layoutDay(dayEvents: InternalCalendarEventType[]) {
-    const sorted = [...dayEvents].sort(
-        (a, b) =>
-            a.startTime.valueOf() - b.startTime.valueOf() ||
-            b.duration - a.duration ||
-            a.id - b.id
-    );
+    const deadlines = dayEvents.filter((event) => event.isDeadline);
+    const sorted = dayEvents
+        .filter((event) => !event.isDeadline)
+        .sort(
+            (a, b) =>
+                a.startTime.valueOf() - b.startTime.valueOf() ||
+                b.duration - a.duration ||
+                a.id - b.id
+        );
     const placed: ScheduleLayoutItem[] = [];
+
+    const deadlineAt = (time: Dayjs) =>
+        deadlines.some(
+            (deadline) =>
+                deadline.startTime.diff(time, 'minute') >= 0 &&
+                deadline.startTime.diff(time, 'minute') < splitThresholdMinutes
+        );
 
     for (let i = 0; i < sorted.length; ) {
         const groupStart = sorted[i].startTime;
@@ -353,40 +363,56 @@ function layoutDay(dayEvents: InternalCalendarEventType[]) {
             .sort((a, b) => b.duration - a.duration || a.id - b.id);
         i = j;
 
-        const running = placed.filter(
-            ({ event }) =>
-                !event.isDeadline &&
-                event.startTime
-                    .add(event.duration, 'minute')
-                    .isAfter(groupStart)
+        const running = placed.filter(({ event }) =>
+            event.startTime.add(event.duration, 'minute').isAfter(groupStart)
         );
-        const onlyDeadlines = group.every((e) => e.isDeadline);
 
-        if (!onlyDeadlines) {
-            for (const p of running) {
-                p.visibleMinutes = Math.min(
-                    p.visibleMinutes,
-                    groupStart.diff(p.event.startTime, 'minute')
-                );
-            }
+        for (const p of running) {
+            p.visibleMinutes = Math.min(
+                p.visibleMinutes,
+                groupStart.diff(p.event.startTime, 'minute')
+            );
         }
 
         const level =
-            onlyDeadlines || running.length === 0
+            running.length === 0
                 ? 0
                 : Math.max(...running.map((p) => p.level)) + 1;
-        const overlapsBlock = running.length > 0 || !onlyDeadlines;
+
+        // Reserve the right half for a deadline that starts with this group
+        // (e.g. Valorant left | Hacking starts right).
+        const slots = group.length + (deadlineAt(groupStart) ? 1 : 0);
 
         group.forEach((event, slot) => {
             placed.push({
                 event,
                 level,
                 slot,
-                slots: group.length,
-                zIndex: placed.length + 1 + (event.isDeadline ? 500 : 0),
+                slots,
+                zIndex: placed.length + 1,
                 visibleMinutes: event.duration,
-                overlapsBlock,
+                overlapsBlock: running.length > 0 || slots > 1,
             });
+        });
+    }
+
+    for (const event of deadlines) {
+        const overlapping = placed.some(
+            ({ event: other }) =>
+                !event.startTime.isBefore(other.startTime) &&
+                event.startTime.isBefore(
+                    other.startTime.add(other.duration, 'minute')
+                )
+        );
+
+        placed.push({
+            event,
+            level: 0,
+            slot: 1,
+            slots: 2,
+            zIndex: placed.length + 501,
+            visibleMinutes: event.duration,
+            overlapsBlock: overlapping,
         });
     }
 
