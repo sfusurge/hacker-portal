@@ -9,8 +9,17 @@ import HackathonCard from '@/components/home/HackathonCard';
 import { PageHeader } from '@/components/PageHeader';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
 import { hasAdminAccess } from '@/lib/auth/roles';
+import { Suspense } from 'react';
 
-export default async function Home() {
+export default function Home() {
+    return (
+        <Suspense fallback={null}>
+            <HomeContent />
+        </Suspense>
+    );
+}
+
+async function HomeContent() {
     const data = await getCachedUserData();
 
     // todo/temp: improve redirect for judge

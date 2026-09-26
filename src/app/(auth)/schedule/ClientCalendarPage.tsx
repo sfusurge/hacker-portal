@@ -149,7 +149,7 @@ export function ClientCalendarPage({
         });
     }, [hackathon.hackingStart, hackathon.id, hackathon.submissionDeadline]);
     const scheduleEvents = useMemo(
-        () => [...events, ...deadlineEvents],
+        () => [...events.filter((e) => !e.ignored), ...deadlineEvents],
         [events, deadlineEvents]
     );
 
@@ -351,6 +351,7 @@ function buildHackathonDeadlineEvents({
             id,
             checkedIn: false,
             rsvped: false,
+            ignored: false,
             hasLongDescription: false,
             startTime: time,
             endTime: time,
@@ -387,10 +388,7 @@ function ScheduleHeader({
 }) {
     return (
         <div
-            className={cn(
-                'relative z-[150] flex items-center gap-3',
-                className
-            )}
+            className={cn('relative z-[80] flex items-center gap-3', className)}
         >
             <div className="flex min-w-0 flex-col gap-1">
                 <span className="truncate text-sm leading-none font-normal text-[var(--text-secondary)]">
@@ -423,7 +421,7 @@ function ScheduleActions({
     return (
         <div
             className={cn(
-                'relative z-[150] flex shrink-0 items-center gap-2',
+                'relative z-[80] flex shrink-0 items-center gap-2',
                 className
             )}
         >

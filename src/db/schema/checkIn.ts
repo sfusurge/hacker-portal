@@ -19,7 +19,7 @@ export const checkIns = pgTable(
             .notNull()
             .references(() => user.id),
         checkInTime: timestamp('check_in_time').notNull().defaultNow(),
-        pointsAwarded: integer('points_awarded').notNull(),
+        pointsAwarded: integer('points_awarded'),
     },
     (table) => {
         return [

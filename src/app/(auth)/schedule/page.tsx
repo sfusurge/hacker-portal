@@ -1,8 +1,17 @@
 import { createCaller } from '@/server/appRouter';
 import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
+import { Suspense } from 'react';
 import { ClientCalendarPage } from './ClientCalendarPage';
 
-export default async function CalendarPage() {
+export default function CalendarPage() {
+    return (
+        <Suspense fallback={null}>
+            <CalendarContent />
+        </Suspense>
+    );
+}
+
+async function CalendarContent() {
     const trpcClient = createCaller({});
 
     const hackathon = await getCachedActiveHackathon();
@@ -10,5 +19,5 @@ export default async function CalendarPage() {
         hackathonId: hackathon.id,
     });
 
-    return <ClientCalendarPage events={ssrEvents}></ClientCalendarPage>;
+    return <ClientCalendarPage events={ssrEvents} />;
 }

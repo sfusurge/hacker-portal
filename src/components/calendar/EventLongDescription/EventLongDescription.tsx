@@ -21,9 +21,11 @@ import {
     CardHeaderTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { EVENT_DISCORD_URL } from '@/lib/eventDiscord';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { hackathonDiscordInviteHref } from '@/lib/eventDiscord';
 import { cn } from '@/lib/utils';
 import { trpc } from '@/trpc/client';
+import { useAtomValue } from 'jotai';
 import style from './EventLongDescription.module.css';
 import {
     getEventTimeLabel,
@@ -35,6 +37,7 @@ type LongDescriptionModalProps = {
     onClose: () => void;
     isAdmin?: boolean;
     onToggleSchedule?: () => void | Promise<void>;
+    onToggleIgnore?: () => void | Promise<void>;
     scheduleActionDisabled?: boolean;
     onEditEvent?: () => void;
     onEventDeleted?: () => void | Promise<void>;
@@ -57,6 +60,7 @@ export function LongDescriptionModal({
     onClose,
     isAdmin = false,
     onToggleSchedule,
+    onToggleIgnore,
     scheduleActionDisabled = false,
     onEditEvent,
     onEventDeleted,
@@ -71,19 +75,34 @@ export function LongDescriptionModal({
     );
     const deleteEvent = trpc.events.deleteEvent.useMutation();
 
+    const hackathon = useAtomValue(hackathonAtom);
+    const application = trpc.applications.getCurrentApplication.useQuery(
+        { hackathonId: hackathon.id },
+        { enabled: Boolean(hackathon.id) }
+    );
+    const discordHref = hackathonDiscordInviteHref(
+        application.data?.currentStatus,
+        hackathon?.eventPagePayload
+    );
     const hasCheckIns = (checkIns.data?.checkInCount ?? 0) > 0;
     const canDelete = Boolean(isAdmin && onEventDeleted && !hasCheckIns);
     const showFooter = Boolean(onToggleSchedule || isAdmin);
-    const discordLink = (
-        <a
-            className={style.detailLink}
-            href={EVENT_DISCORD_URL}
-            rel="noreferrer"
-            target="_blank"
-        >
-            Join on Discord
-        </a>
-    );
+    const discordRow = discordHref
+        ? {
+              icon: LinkIcon,
+              label: 'Link',
+              value: (
+                  <a
+                      className={style.detailLink}
+                      href={discordHref}
+                      rel="noreferrer"
+                      target="_blank"
+                  >
+                      Join on Discord
+                  </a>
+              ),
+          }
+        : undefined;
     const locationRow = event.location
         ? {
               icon: MapPinIcon,
@@ -94,11 +113,7 @@ export function LongDescriptionModal({
     const detailRows = [
         ...(isAdmin
             ? [
-                  {
-                      icon: LinkIcon,
-                      label: 'Link',
-                      value: discordLink,
-                  },
+                  discordRow,
                   locationRow,
                   {
                       icon: UserGroupIcon,
@@ -108,14 +123,7 @@ export function LongDescriptionModal({
                           : (rsvpCount.data?.rsvpCount ?? 0),
                   },
               ]
-            : [
-                  locationRow,
-                  {
-                      icon: LinkIcon,
-                      label: 'Link',
-                      value: discordLink,
-                  },
-              ]),
+            : [locationRow, discordRow]),
     ].filter(Boolean) as EventDetailRowData[];
 
     useEffect(() => {
@@ -252,23 +260,45 @@ export function LongDescriptionModal({
                                     </Button>
                                 </>
                             ) : (
-                                onToggleSchedule && (
-                                    <Button
-                                        className={style.footerButton}
-                                        disabled={scheduleActionDisabled}
-                                        hierarchy="primary"
-                                        onClick={onToggleSchedule}
-                                        size="compact"
-                                        type="button"
-                                        variant={
-                                            event.rsvped ? 'default' : 'brand'
-                                        }
-                                    >
-                                        {event.rsvped
-                                            ? 'Remove from schedule'
-                                            : 'Add to schedule'}
-                                    </Button>
-                                )
+                                <>
+                                    {onToggleIgnore && (
+                                        <Button
+                                            className={style.footerButton}
+                                            disabled={scheduleActionDisabled}
+                                            hierarchy="primary"
+                                            onClick={onToggleIgnore}
+                                            size="compact"
+                                            type="button"
+                                            variant="default"
+                                        >
+                                            {event.ignored
+                                                ? 'Unignore'
+                                                : 'Ignore'}
+                                        </Button>
+                                    )}
+                                    {onToggleSchedule && (
+                                        <Button
+                                            className={cn(
+                                                'ml-auto',
+                                                style.footerButton
+                                            )}
+                                            disabled={scheduleActionDisabled}
+                                            hierarchy="primary"
+                                            onClick={onToggleSchedule}
+                                            size="compact"
+                                            type="button"
+                                            variant={
+                                                event.rsvped
+                                                    ? 'default'
+                                                    : 'brand'
+                                            }
+                                        >
+                                            {event.rsvped
+                                                ? 'Remove from schedule'
+                                                : 'Add to schedule'}
+                                        </Button>
+                                    )}
+                                </>
                             )}
                         </CardFooter>
                     )}
