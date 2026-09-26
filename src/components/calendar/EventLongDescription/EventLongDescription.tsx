@@ -21,9 +21,11 @@ import {
     CardHeaderTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { EVENT_DISCORD_URL } from '@/lib/eventDiscord';
+import { hackathonAtom } from '@/app/(auth)/ClientContext';
+import { hackathonDiscordInviteHref } from '@/lib/eventDiscord';
 import { cn } from '@/lib/utils';
 import { trpc } from '@/trpc/client';
+import { useAtomValue } from 'jotai';
 import style from './EventLongDescription.module.css';
 import {
     getEventTimeLabel,
@@ -73,19 +75,34 @@ export function LongDescriptionModal({
     );
     const deleteEvent = trpc.events.deleteEvent.useMutation();
 
+    const hackathon = useAtomValue(hackathonAtom);
+    const application = trpc.applications.getCurrentApplication.useQuery(
+        { hackathonId: hackathon.id },
+        { enabled: Boolean(hackathon.id) }
+    );
+    const discordHref = hackathonDiscordInviteHref(
+        application.data?.currentStatus,
+        hackathon?.eventPagePayload
+    );
     const hasCheckIns = (checkIns.data?.checkInCount ?? 0) > 0;
     const canDelete = Boolean(isAdmin && onEventDeleted && !hasCheckIns);
     const showFooter = Boolean(onToggleSchedule || isAdmin);
-    const discordLink = (
-        <a
-            className={style.detailLink}
-            href={EVENT_DISCORD_URL}
-            rel="noreferrer"
-            target="_blank"
-        >
-            Join on Discord
-        </a>
-    );
+    const discordRow = discordHref
+        ? {
+              icon: LinkIcon,
+              label: 'Link',
+              value: (
+                  <a
+                      className={style.detailLink}
+                      href={discordHref}
+                      rel="noreferrer"
+                      target="_blank"
+                  >
+                      Join on Discord
+                  </a>
+              ),
+          }
+        : undefined;
     const locationRow = event.location
         ? {
               icon: MapPinIcon,
@@ -96,11 +113,7 @@ export function LongDescriptionModal({
     const detailRows = [
         ...(isAdmin
             ? [
-                  {
-                      icon: LinkIcon,
-                      label: 'Link',
-                      value: discordLink,
-                  },
+                  discordRow,
                   locationRow,
                   {
                       icon: UserGroupIcon,
@@ -110,14 +123,7 @@ export function LongDescriptionModal({
                           : (rsvpCount.data?.rsvpCount ?? 0),
                   },
               ]
-            : [
-                  locationRow,
-                  {
-                      icon: LinkIcon,
-                      label: 'Link',
-                      value: discordLink,
-                  },
-              ]),
+            : [locationRow, discordRow]),
     ].filter(Boolean) as EventDetailRowData[];
 
     useEffect(() => {
