@@ -105,7 +105,11 @@ export const eventsRouter = router({
                     )
                 )
                 .where(eq(eventsTable.hackathonId, input.hackathonId))
-                .orderBy(asc(eventsTable.startDate), asc(eventsTable.endDate));
+                .orderBy(
+                    asc(eventsTable.startDate),
+                    asc(eventsTable.endDate),
+                    asc(eventsTable.id)
+                );
 
             const events = rows.map(({ checkIn, rsvp, event: _event }) => {
                 const { longDescription, ...event } = { ..._event };

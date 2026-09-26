@@ -24,7 +24,7 @@ export function ScheduleEventsCard({
     const selectEvent = useSetAtom(selectEventAtom);
     const { addedEvents, notAddedEvents, scheduleEvents } = useMemo(() => {
         const sortedEvents = [...events].sort((a, b) => {
-            return a.startTime.valueOf() - b.startTime.valueOf();
+            return a.startTime.valueOf() - b.startTime.valueOf() || a.id - b.id;
         });
 
         const scheduleEvents = sortedEvents.filter(canAddEventToSchedule);
