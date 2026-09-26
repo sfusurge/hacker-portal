@@ -19,13 +19,18 @@ import { TRPCError } from '@trpc/server';
 import { databaseClient } from '@/db/client';
 import { and, asc, count, eq, getTableColumns } from 'drizzle-orm';
 import { checkIns } from '@/db/schema/checkIn';
-import { getEventRsvpCountSchema, rsvps } from '@/db/schema/rsvp';
+import {
+    getEventRsvpCountSchema,
+    ignoredEvents,
+    rsvps,
+} from '@/db/schema/rsvp';
 import { z } from 'zod';
 
 export interface CalendarEvent {
     id: number;
     checkedIn: boolean;
     rsvped: boolean;
+    ignored: boolean;
     hasLongDescription: boolean;
     startDate: Date;
     endDate: Date;
@@ -43,6 +48,21 @@ export interface CalendarEvent {
 const rsvpEventSchema = z.object({
     eventId: z.number().int(),
 });
+
+async function checkEventExists(eventId: number) {
+    const [event] = await databaseClient
+        .select({ id: eventsTable.id })
+        .from(eventsTable)
+        .where(eq(eventsTable.id, eventId))
+        .limit(1);
+
+    if (!event) {
+        throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: `Cannot find event with id ${eventId}`,
+        });
+    }
+}
 
 export const eventsRouter = router({
     createEvent: adminProcedure
@@ -87,6 +107,9 @@ export const eventsRouter = router({
                     rsvp: {
                         userId: rsvps.userId,
                     },
+                    ignored: {
+                        userId: ignoredEvents.userId,
+                    },
                     event: eventsTable,
                 })
                 .from(eventsTable)
@@ -100,8 +123,15 @@ export const eventsRouter = router({
                 .leftJoin(
                     rsvps,
                     and(
-                        eq(eventsTable.id, rsvps.eventId),
+                        eq(rsvps.eventId, eventsTable.id),
                         eq(rsvps.userId, ctx.user.id)
+                    )
+                )
+                .leftJoin(
+                    ignoredEvents,
+                    and(
+                        eq(ignoredEvents.eventId, eventsTable.id),
+                        eq(ignoredEvents.userId, ctx.user.id)
                     )
                 )
                 .where(eq(eventsTable.hackathonId, input.hackathonId))
@@ -111,21 +141,24 @@ export const eventsRouter = router({
                     asc(eventsTable.id)
                 );
 
-            const events = rows.map(({ checkIn, rsvp, event: _event }) => {
-                const { longDescription, ...event } = { ..._event };
-                return {
-                    ...event,
-                    imageUrl: event.imageUrl ?? undefined,
-                    checkedIn: checkIn != null,
-                    rsvped: rsvp != null,
-                    description: event.description ?? undefined,
-                    hasLongDescription:
-                        longDescription !== undefined &&
-                        longDescription !== null &&
-                        longDescription.length > 0,
-                    checkInTime: checkIn?.checkInTime ?? undefined,
-                };
-            });
+            const events = rows.map(
+                ({ checkIn, rsvp, ignored, event: _event }) => {
+                    const { longDescription, ...event } = { ..._event };
+                    return {
+                        ...event,
+                        imageUrl: event.imageUrl ?? undefined,
+                        checkedIn: checkIn != null,
+                        rsvped: rsvp != null,
+                        ignored: ignored != null,
+                        description: event.description ?? undefined,
+                        hasLongDescription:
+                            longDescription !== undefined &&
+                            longDescription !== null &&
+                            longDescription.length > 0,
+                        checkInTime: checkIn?.checkInTime ?? undefined,
+                    };
+                }
+            );
 
             return events as CalendarEvent[];
         }),
@@ -133,21 +166,7 @@ export const eventsRouter = router({
     rsvpEvent: protectedProcedure
         .input(rsvpEventSchema)
         .mutation(async ({ input, ctx }) => {
-            const [event] = await databaseClient
-                .select({
-                    id: eventsTable.id,
-                    hackathonId: eventsTable.hackathonId,
-                })
-                .from(eventsTable)
-                .where(eq(eventsTable.id, input.eventId))
-                .limit(1);
-
-            if (!event) {
-                throw new TRPCError({
-                    code: 'NOT_FOUND',
-                    message: `Cannot find event with id ${input.eventId}`,
-                });
-            }
+            await checkEventExists(input.eventId);
 
             await databaseClient
                 .insert(rsvps)
@@ -158,6 +177,48 @@ export const eventsRouter = router({
                 .onConflictDoNothing({
                     target: [rsvps.eventId, rsvps.userId],
                 });
+            await databaseClient
+                .delete(ignoredEvents)
+                .where(
+                    and(
+                        eq(ignoredEvents.eventId, input.eventId),
+                        eq(ignoredEvents.userId, ctx.user.id)
+                    )
+                );
+
+            return true;
+        }),
+
+    ignoreEvent: protectedProcedure
+        .input(rsvpEventSchema.extend({ ignored: z.boolean() }))
+        .mutation(async ({ input, ctx }) => {
+            const { eventId, ignored } = input;
+            await checkEventExists(eventId);
+
+            if (!ignored) {
+                await databaseClient
+                    .delete(ignoredEvents)
+                    .where(
+                        and(
+                            eq(ignoredEvents.eventId, eventId),
+                            eq(ignoredEvents.userId, ctx.user.id)
+                        )
+                    );
+                return true;
+            }
+
+            await databaseClient
+                .insert(ignoredEvents)
+                .values({ eventId, userId: ctx.user.id })
+                .onConflictDoNothing();
+            await databaseClient
+                .delete(rsvps)
+                .where(
+                    and(
+                        eq(rsvps.eventId, eventId),
+                        eq(rsvps.userId, ctx.user.id)
+                    )
+                );
 
             return true;
         }),
@@ -165,21 +226,7 @@ export const eventsRouter = router({
     unrsvpEvent: protectedProcedure
         .input(rsvpEventSchema)
         .mutation(async ({ input, ctx }) => {
-            const [event] = await databaseClient
-                .select({
-                    id: eventsTable.id,
-                    hackathonId: eventsTable.hackathonId,
-                })
-                .from(eventsTable)
-                .where(eq(eventsTable.id, input.eventId))
-                .limit(1);
-
-            if (!event) {
-                throw new TRPCError({
-                    code: 'NOT_FOUND',
-                    message: `Cannot find event with id ${input.eventId}`,
-                });
-            }
+            await checkEventExists(input.eventId);
 
             await databaseClient
                 .delete(rsvps)

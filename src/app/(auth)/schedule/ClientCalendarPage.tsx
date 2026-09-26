@@ -149,7 +149,7 @@ export function ClientCalendarPage({
         });
     }, [hackathon.hackingStart, hackathon.id, hackathon.submissionDeadline]);
     const scheduleEvents = useMemo(
-        () => [...events, ...deadlineEvents],
+        () => [...events.filter((e) => !e.ignored), ...deadlineEvents],
         [events, deadlineEvents]
     );
 
@@ -351,6 +351,7 @@ function buildHackathonDeadlineEvents({
             id,
             checkedIn: false,
             rsvped: false,
+            ignored: false,
             hasLongDescription: false,
             startTime: time,
             endTime: time,

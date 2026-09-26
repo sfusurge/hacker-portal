@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { type ComponentProps, Fragment, useMemo } from 'react';
 import {
     canAddEventToSchedule,
     selectEventAtom,
@@ -14,6 +14,14 @@ import { ScheduleEventCard } from '../ScheduleEventCard/ScheduleEventCard';
 import { useSetAtom } from 'jotai';
 import { trpc } from '@/trpc/client';
 
+type ScheduleSection = Pick<
+    ComponentProps<typeof ScheduleEventCard>,
+    'statusLabel' | 'statusVariant'
+> & {
+    label?: string;
+    events: InternalCalendarEventType[];
+};
+
 export function ScheduleEventsCard({
     events,
     isAdmin = false,
@@ -22,18 +30,30 @@ export function ScheduleEventsCard({
     isAdmin?: boolean;
 }) {
     const selectEvent = useSetAtom(selectEventAtom);
-    const { addedEvents, notAddedEvents, scheduleEvents } = useMemo(() => {
+    const { sections, scheduleEvents } = useMemo(() => {
         const sortedEvents = [...events].sort((a, b) => {
             return a.startTime.valueOf() - b.startTime.valueOf() || a.id - b.id;
         });
 
         const scheduleEvents = sortedEvents.filter(canAddEventToSchedule);
+        const sections: ScheduleSection[] = [
+            {
+                events: scheduleEvents.filter((e) => !e.rsvped && !e.ignored),
+                statusLabel: 'Not Yet Added',
+            },
+            {
+                label: 'On your schedule',
+                events: scheduleEvents.filter((e) => e.rsvped),
+                statusLabel: 'Added',
+                statusVariant: 'brand',
+            },
+            {
+                label: 'Ignored',
+                events: scheduleEvents.filter((e) => e.ignored),
+            },
+        ];
 
-        return {
-            addedEvents: scheduleEvents.filter((event) => event.rsvped),
-            notAddedEvents: scheduleEvents.filter((event) => !event.rsvped),
-            scheduleEvents,
-        };
+        return { sections, scheduleEvents };
     }, [events]);
 
     return (
@@ -42,50 +62,42 @@ export function ScheduleEventsCard({
                 <CardHeaderTitle className="text-lg">Events</CardHeaderTitle>
             </CardHeader>
             <CardContent className="no-scrollbar min-h-0 gap-3 overflow-y-auto p-4">
-                {isAdmin ? (
-                    scheduleEvents.map((event) => (
-                        <AdminScheduleEventCard
-                            key={event.id}
-                            event={event}
-                            onClick={() => {
-                                selectEvent(event);
-                            }}
-                        />
-                    ))
-                ) : (
-                    <>
-                        {notAddedEvents.map((event) => (
-                            <ScheduleEventCard
-                                key={event.id}
-                                event={event}
-                                statusLabel="Not Yet Added"
-                                onClick={() => {
-                                    selectEvent(event);
-                                }}
-                            />
-                        ))}
-                        {addedEvents.length > 0 && (
-                            <div className="flex items-center gap-2 py-1">
-                                <div className="h-px flex-1 bg-neutral-700/60" />
-                                <span className="shrink-0 text-[10px] font-medium text-[var(--text-secondary)] uppercase">
-                                    On your schedule
-                                </span>
-                                <div className="h-px flex-1 bg-neutral-700/60" />
-                            </div>
-                        )}
-                        {addedEvents.map((event) => (
-                            <ScheduleEventCard
-                                key={event.id}
-                                event={event}
-                                statusLabel="Added"
-                                statusVariant="brand"
-                                onClick={() => {
-                                    selectEvent(event);
-                                }}
-                            />
-                        ))}
-                    </>
-                )}
+                {isAdmin
+                    ? scheduleEvents.map((event) => (
+                          <AdminScheduleEventCard
+                              key={event.id}
+                              event={event}
+                              onClick={() => {
+                                  selectEvent(event);
+                              }}
+                          />
+                      ))
+                    : sections.map(
+                          ({ label, events, ...cardProps }, index) =>
+                              events.length > 0 && (
+                                  <Fragment key={index}>
+                                      {label && (
+                                          <div className="flex items-center gap-2 py-1">
+                                              <div className="h-px flex-1 bg-neutral-700/60" />
+                                              <span className="shrink-0 text-[10px] font-medium text-[var(--text-secondary)] uppercase">
+                                                  {label}
+                                              </span>
+                                              <div className="h-px flex-1 bg-neutral-700/60" />
+                                          </div>
+                                      )}
+                                      {events.map((event) => (
+                                          <ScheduleEventCard
+                                              key={event.id}
+                                              event={event}
+                                              {...cardProps}
+                                              onClick={() => {
+                                                  selectEvent(event);
+                                              }}
+                                          />
+                                      ))}
+                                  </Fragment>
+                              )
+                      )}
             </CardContent>
         </Card>
     );

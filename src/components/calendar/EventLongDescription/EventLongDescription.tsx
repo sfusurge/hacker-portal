@@ -35,6 +35,7 @@ type LongDescriptionModalProps = {
     onClose: () => void;
     isAdmin?: boolean;
     onToggleSchedule?: () => void | Promise<void>;
+    onToggleIgnore?: () => void | Promise<void>;
     scheduleActionDisabled?: boolean;
     onEditEvent?: () => void;
     onEventDeleted?: () => void | Promise<void>;
@@ -57,6 +58,7 @@ export function LongDescriptionModal({
     onClose,
     isAdmin = false,
     onToggleSchedule,
+    onToggleIgnore,
     scheduleActionDisabled = false,
     onEditEvent,
     onEventDeleted,
@@ -252,23 +254,45 @@ export function LongDescriptionModal({
                                     </Button>
                                 </>
                             ) : (
-                                onToggleSchedule && (
-                                    <Button
-                                        className={style.footerButton}
-                                        disabled={scheduleActionDisabled}
-                                        hierarchy="primary"
-                                        onClick={onToggleSchedule}
-                                        size="compact"
-                                        type="button"
-                                        variant={
-                                            event.rsvped ? 'default' : 'brand'
-                                        }
-                                    >
-                                        {event.rsvped
-                                            ? 'Remove from schedule'
-                                            : 'Add to schedule'}
-                                    </Button>
-                                )
+                                <>
+                                    {onToggleIgnore && (
+                                        <Button
+                                            className={style.footerButton}
+                                            disabled={scheduleActionDisabled}
+                                            hierarchy="primary"
+                                            onClick={onToggleIgnore}
+                                            size="compact"
+                                            type="button"
+                                            variant="default"
+                                        >
+                                            {event.ignored
+                                                ? 'Unignore'
+                                                : 'Ignore'}
+                                        </Button>
+                                    )}
+                                    {onToggleSchedule && (
+                                        <Button
+                                            className={cn(
+                                                'ml-auto',
+                                                style.footerButton
+                                            )}
+                                            disabled={scheduleActionDisabled}
+                                            hierarchy="primary"
+                                            onClick={onToggleSchedule}
+                                            size="compact"
+                                            type="button"
+                                            variant={
+                                                event.rsvped
+                                                    ? 'default'
+                                                    : 'brand'
+                                            }
+                                        >
+                                            {event.rsvped
+                                                ? 'Remove from schedule'
+                                                : 'Add to schedule'}
+                                        </Button>
+                                    )}
+                                </>
                             )}
                         </CardFooter>
                     )}

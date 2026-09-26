@@ -22,21 +22,30 @@ import { EventType } from '@/db/schema/events';
 import { trpc } from '@/trpc/client';
 import { getEventTypeDisplay } from '@/utils/eventTypeDisplay';
 
-// size of UI, shared
 const [rowHeight, headerHeight, timeColumnWidth] = [90, 34, 50];
+const splitThresholdMinutes = 15;
+const cascadeIndent = 10;
+
 export type ScheduleViewMode = 'week' | 'event';
 
-/**
- * TODO
- * add callbacks or atoms etc etc for selected CalendarEvents or other "events"
- * @param param0
- * @returns
- */
+type ScheduleLayoutItem = {
+    event: InternalCalendarEventType;
+    level: number;
+    slot: number;
+    slots: number;
+    zIndex: number;
+    visibleMinutes: number;
+    overlapsBlock: boolean;
+};
+
+const minutesToPx = (minutes: number) => (minutes / 60) * rowHeight;
+const minuteOfDay = (time: Dayjs) => time.hour() * 60 + time.minute();
+
 export function DaySchedule({
     events,
     startDate,
     days,
-    minColumnWidth,
+    minColumnWidth = 200,
     maxVisibleColumns,
     showControls = true,
     onPreviousRange,
@@ -61,20 +70,20 @@ export function DaySchedule({
     onViewModeChange?: (mode: ScheduleViewMode) => void;
     events: InternalCalendarEventType[];
 }) {
-    startDate = dayjs(startDate);
-    const endDate = startDate.add(Math.max(0, days - 1), 'day').endOf('day');
-
     const processedEvents = useMemo(() => {
-        return ProcessEventsForSchedule(
+        const rangeStart = startDate.startOf('day');
+        const rangeEnd = startDate
+            .add(Math.max(0, days - 1), 'day')
+            .endOf('day');
+
+        return processEventsForSchedule(
             groupEventsByDay(
-                events.filter((item) => {
-                    const startTime = item.startTime;
-                    return (
-                        startTime.isAfter(startDate.startOf('day')) &&
-                        startTime.isBefore(endDate.endOf('day'))
-                    );
-                }),
-                dayjs(new Date(startDate.year(), startDate.month(), 1)),
+                events.filter(
+                    ({ startTime }) =>
+                        startTime.isAfter(rangeStart) &&
+                        startTime.isBefore(rangeEnd)
+                ),
+                startDate.startOf('month'),
                 startDate,
                 days
             )
@@ -86,104 +95,90 @@ export function DaySchedule({
     const [editMode, setEditMode] = useAtom(editModeAtom);
     const rsvpEvent = trpc.events.rsvpEvent.useMutation();
     const unrsvpEvent = trpc.events.unrsvpEvent.useMutation();
+    const ignoreEvent = trpc.events.ignoreEvent.useMutation();
 
-    const columnWidths = useMemo(() => {
-        return Object.values(processedEvents).map((dayEventsCols) => {
-            return Math.max(dayEventsCols.length * 100, minColumnWidth ?? 200);
-        });
-    }, [minColumnWidth, processedEvents]);
+    const columnWidths = Object.values(processedEvents).map((items) =>
+        Math.max(
+            minColumnWidth,
+            ...items.map(
+                ({ level, slots }) => level * cascadeIndent + slots * 100
+            )
+        )
+    );
 
-    const scheduleContentWidth = useMemo(() => {
-        if (!maxVisibleColumns || days <= maxVisibleColumns) {
-            return '100%';
-        }
+    const widthRatio = maxVisibleColumns ? days / maxVisibleColumns : 1;
+    const scheduleContentWidth =
+        widthRatio > 1
+            ? `calc(${widthRatio * 100}% - ${(widthRatio - 1) * timeColumnWidth}px)`
+            : '100%';
 
-        const widthRatio = days / maxVisibleColumns;
-        const timeColumnOffset = (widthRatio - 1) * timeColumnWidth;
-
-        return `calc(${widthRatio * 100}% - ${timeColumnOffset}px)`;
-    }, [days, maxVisibleColumns]);
-
-    let zero = dayjs().hour(0);
-
-    const timeLabelColumn = useMemo(() => {
-        const diff = dayjs().startOf('day').diff(startDate, 'day');
-        if (diff >= 0 && diff < days) {
-            return diff;
-        }
-        return days - 1;
-    }, [startDate]);
+    const todayIndex = dayjs().startOf('day').diff(startDate, 'day');
+    const markerColumn =
+        todayIndex >= 0 && todayIndex < days ? todayIndex : days - 1;
 
     const canScheduleSelectedEvent =
         selectedEvent?.event &&
         canAddEventToSchedule(selectedEvent.event) &&
         !isAdmin;
 
-    const toggleSelectedEventSchedule = async () => {
-        if (!selectedEvent?.event) {
+    const updateSelectedEvent = async (
+        mutate: (eventId: number) => Promise<unknown>,
+        patch: Pick<InternalCalendarEventType, 'rsvped' | 'ignored'>
+    ) => {
+        if (!selectedEvent) {
             return;
         }
 
-        const event = selectedEvent.event;
-
-        if (event.rsvped) {
-            await unrsvpEvent.mutateAsync({ eventId: event.id });
-        } else {
-            await rsvpEvent.mutateAsync({ eventId: event.id });
-        }
-
-        selectEvent(
-            {
-                ...event,
-                rsvped: !event.rsvped,
-            },
-            selectedEvent.element
-        );
-
+        const { event, element } = selectedEvent;
+        await mutate(event.id);
+        selectEvent({ ...event, ...patch }, element);
         await onEventRsvpChange?.();
     };
 
+    const toggleSelectedEventSchedule = () => {
+        const rsvped = !selectedEvent?.event.rsvped;
+        return updateSelectedEvent(
+            (eventId) =>
+                (rsvped ? rsvpEvent : unrsvpEvent).mutateAsync({ eventId }),
+            { rsvped, ignored: false }
+        );
+    };
+
+    const toggleSelectedEventIgnored = () => {
+        const ignored = !selectedEvent?.event.ignored;
+        return updateSelectedEvent(
+            (eventId) => ignoreEvent.mutateAsync({ eventId, ignored }),
+            { rsvped: false, ignored }
+        );
+    };
+
     return (
-        <div
-            style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-                height: '100%',
-                position: 'relative',
-                width: '100%',
-            }}
-        >
+        <div className="relative flex h-full w-full flex-col gap-2">
             <AnimatePresence>
                 {selectedEvent?.event && !editMode && (
                     <LongDescriptionModal
                         event={selectedEvent.event}
                         isAdmin={isAdmin}
-                        onClose={() => {
-                            selectEvent();
-                        }}
+                        onClose={() => selectEvent()}
                         onToggleSchedule={
                             canScheduleSelectedEvent
                                 ? toggleSelectedEventSchedule
                                 : undefined
                         }
+                        onToggleIgnore={
+                            canScheduleSelectedEvent
+                                ? toggleSelectedEventIgnored
+                                : undefined
+                        }
                         scheduleActionDisabled={
-                            rsvpEvent.isPending || unrsvpEvent.isPending
+                            rsvpEvent.isPending ||
+                            unrsvpEvent.isPending ||
+                            ignoreEvent.isPending
                         }
                         onEditEvent={
-                            isAdmin
-                                ? () => {
-                                      setEditMode(true);
-                                  }
-                                : undefined
+                            isAdmin ? () => setEditMode(true) : undefined
                         }
-                        onEventDeleted={
-                            isAdmin
-                                ? async () => {
-                                      await onEventRsvpChange?.();
-                                  }
-                                : undefined
-                        }
+                        onEventDeleted={isAdmin ? onEventRsvpChange : undefined}
                     />
                 )}
             </AnimatePresence>
@@ -213,71 +208,54 @@ export function DaySchedule({
                     >
                         <div className={style.timeColumn}>
                             <div className={style.header} />
-                            {[...Array(24).keys()].map((idx) => {
-                                const timeLabel = zero.format('h A'); //5 AM
-                                zero = zero.add(1, 'hour');
-                                return (
-                                    <div key={idx} className={style.timeLabel}>
-                                        {timeLabel}
-                                    </div>
-                                );
-                            })}
+                            {Array.from({ length: 24 }, (_, hour) => (
+                                <div key={hour} className={style.timeLabel}>
+                                    {dayjs().hour(hour).format('h A')}
+                                </div>
+                            ))}
                         </div>
 
-                        {Object.entries(processedEvents).map((item, index) => {
-                            const [epochTimeString, columnsOfDay] = item;
-                            const day = startDate.add(index, 'day');
-                            return (
-                                <div
-                                    key={`${epochTimeString}_${index}`}
-                                    className={clsx(
-                                        style.dayColumn,
-                                        day.isSame(dayjs(), 'day') &&
-                                            style.todayColumn
-                                    )}
-                                    style={
-                                        {
-                                            '--minColWidth': `${columnWidths[index]}px`,
-                                        } as CSSProperties
-                                    }
-                                >
-                                    <div className={style.header}>
-                                        <div className={style.headerContent}>
-                                            {day.format('ddd D')}
+                        {Object.entries(processedEvents).map(
+                            ([dayKey, dayItems], index) => {
+                                const day = startDate.add(index, 'day');
+                                return (
+                                    <div
+                                        key={`${dayKey}_${index}`}
+                                        className={clsx(
+                                            style.dayColumn,
+                                            day.isSame(dayjs(), 'day') &&
+                                                style.todayColumn
+                                        )}
+                                        style={
+                                            {
+                                                '--minColWidth': `${columnWidths[index]}px`,
+                                            } as CSSProperties
+                                        }
+                                    >
+                                        <div className={style.header}>
+                                            <div
+                                                className={style.headerContent}
+                                            >
+                                                {day.format('ddd D')}
+                                            </div>
+                                        </div>
+                                        <div className={style.dayColumnContent}>
+                                            {index === markerColumn && (
+                                                <TimelineMarker
+                                                    startDate={startDate}
+                                                />
+                                            )}
+                                            {dayItems.map((item) => (
+                                                <DayEventItem
+                                                    key={item.event.id}
+                                                    item={item}
+                                                />
+                                            ))}
                                         </div>
                                     </div>
-                                    <div className={style.dayColumnContent}>
-                                        {index == timeLabelColumn && (
-                                            <TimelineMarker
-                                                startDate={startDate}
-                                                parentHeight={rowHeight * 24}
-                                            ></TimelineMarker>
-                                        )}
-
-                                        {columnsOfDay.map((col, index) => (
-                                            <div
-                                                key={index}
-                                                className={style.dayEventColumn}
-                                            >
-                                                {col.map((event) => (
-                                                    <DayEventItem
-                                                        key={event.id}
-                                                        event={event}
-                                                        parentHeight={
-                                                            rowHeight * 24
-                                                        }
-                                                        dayColumns={
-                                                            columnsOfDay
-                                                        }
-                                                        columnIndex={index}
-                                                    ></DayEventItem>
-                                                ))}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            }
+                        )}
                     </div>
                 </div>
             </div>
@@ -319,230 +297,156 @@ export function DaySchedule({
     );
 }
 
-/**
- * * takes in events grouped by days, sorted by time.
- * * puts events in "columns" such that visually no events overlap
- * @param events
- */
-function ProcessEventsForSchedule(eventsMaps: {
+function processEventsForSchedule(eventsMaps: {
     [id: number]: InternalCalendarEventType[];
 }) {
-    const out: { [id: string]: InternalCalendarEventType[][] } = {};
+    const keys = Object.keys(eventsMaps);
+    const days = Object.values(eventsMaps).map((dayEvents) => [...dayEvents]);
+    const out: { [id: string]: ScheduleLayoutItem[] } = {};
 
-    const events = Object.values(eventsMaps);
-    const eventTimes = Object.keys(eventsMaps);
-    for (let i = 0; i < events.length; i++) {
-        const eventsOfDay = events[i];
-        if (eventsOfDay.length === 0) {
-            out[eventTimes[i]] = [];
-            continue;
-        }
+    days.forEach((dayEvents, i) => {
+        const cropped = dayEvents.map((e) => {
+            const minutesToMidnight = e.startTime
+                .endOf('day')
+                .diff(e.startTime, 'minute');
+            const minutesAfterMidnight = e.duration - minutesToMidnight;
 
-        const columns: InternalCalendarEventType[][] = [
-            [eventsOfDay.splice(0, 1)[0]],
-        ];
-
-        for (let e of eventsOfDay) {
-            // handle the case when event runs past midnight
-            const eventTime = e.startTime;
-            if (
-                !eventTime.add(e.duration, 'minute').isSame(eventTime, 'date')
-            ) {
-                // if end of the event is not the same day
-                const minutesToMidnight = eventTime
-                    .endOf('day')
-                    .diff(eventTime, 'minute');
-                const minutesAfterMidnight = e.duration - minutesToMidnight;
-
-                if (minutesAfterMidnight > 5) {
-                    // only handle it as overnight event the the day 2 component is long enough
-                    if (i < events.length - 1) {
-                        // if we are already looking at the last day, dont make it extend to day after
-                        const nextevent = { ...e };
-                        nextevent.startTime = eventTime
-                            .add(1, 'day')
-                            .startOf('day');
-                        nextevent.duration = minutesAfterMidnight;
-
-                        // hand off the later half of the event to the next day
-                        events[i + 1] = [nextevent, ...events[i + 1]];
-                    }
-
-                    // crop the current event so it doesn't cross midnight
-                    e.duration = minutesToMidnight;
-                }
+            if (minutesAfterMidnight <= 5) {
+                return e;
             }
 
-            let inserted = false;
-            for (const c of columns) {
-                const lastEvent = c.at(-1);
-                const lastEventTime = lastEvent?.startTime.add(
-                    lastEvent?.duration!,
-                    'minute'
-                );
-
-                if (!eventTime.isBefore(lastEventTime)) {
-                    //current event does not overlap last event of this column
-                    inserted = true;
-                    c.push(e);
-                    break;
-                }
-            }
-
-            if (!inserted) {
-                // none of the exisitng columns can fit this event
-                // make a new column then
-                columns.push([e]);
-            }
-        }
-
-        // Shortest-duration columns on the left, longest on the right so
-        // multi-hour events stay readable beside concurrent short events.
-        columns.sort((a, b) => {
-            const maxDuration = (col: InternalCalendarEventType[]) =>
-                Math.max(...col.map((event) => event.duration));
-            return maxDuration(a) - maxDuration(b);
+            days[i + 1]?.push({
+                ...e,
+                startTime: e.startTime.add(1, 'day').startOf('day'),
+                duration: minutesAfterMidnight,
+            });
+            return { ...e, duration: minutesToMidnight };
         });
 
-        out[eventTimes[i]] = columns;
-    }
-    // no empty returns
-    if (Object.keys(out).length === 0) {
-        return { 0: [[]] };
+        out[keys[i]] = layoutDay(cropped);
+    });
+
+    return keys.length === 0 ? { 0: [] } : out;
+}
+
+function layoutDay(dayEvents: InternalCalendarEventType[]) {
+    const sorted = [...dayEvents].sort(
+        (a, b) =>
+            a.startTime.valueOf() - b.startTime.valueOf() ||
+            b.duration - a.duration ||
+            a.id - b.id
+    );
+    const placed: ScheduleLayoutItem[] = [];
+
+    for (let i = 0; i < sorted.length; ) {
+        const groupStart = sorted[i].startTime;
+        let j = i;
+        while (
+            j < sorted.length &&
+            sorted[j].startTime.diff(groupStart, 'minute') <
+                splitThresholdMinutes
+        ) {
+            j++;
+        }
+        const group = sorted
+            .slice(i, j)
+            .sort((a, b) => b.duration - a.duration || a.id - b.id);
+        i = j;
+
+        const running = placed.filter(
+            ({ event }) =>
+                !event.isDeadline &&
+                event.startTime
+                    .add(event.duration, 'minute')
+                    .isAfter(groupStart)
+        );
+        const onlyDeadlines = group.every((e) => e.isDeadline);
+
+        if (!onlyDeadlines) {
+            for (const p of running) {
+                p.visibleMinutes = Math.min(
+                    p.visibleMinutes,
+                    groupStart.diff(p.event.startTime, 'minute')
+                );
+            }
+        }
+
+        const level =
+            onlyDeadlines || running.length === 0
+                ? 0
+                : Math.max(...running.map((p) => p.level)) + 1;
+        const overlapsBlock = running.length > 0 || !onlyDeadlines;
+
+        group.forEach((event, slot) => {
+            placed.push({
+                event,
+                level,
+                slot,
+                slots: group.length,
+                zIndex: placed.length + 1 + (event.isDeadline ? 500 : 0),
+                visibleMinutes: event.duration,
+                overlapsBlock,
+            });
+        });
     }
 
-    return out;
+    return placed;
 }
 
 function DayEventItem({
-    event,
-    parentHeight,
-    dayColumns,
-    columnIndex,
+    item: { event, level, slot, slots, zIndex, visibleMinutes, overlapsBlock },
 }: {
-    event: InternalCalendarEventType;
-    parentHeight: number;
-    dayColumns: InternalCalendarEventType[][];
-    columnIndex: number;
+    item: ScheduleLayoutItem;
 }) {
-    const minutesInDay = 1440;
-    const eventTime = event.startTime;
-    const eventEndTime = eventTime.add(event.duration, 'minute');
-    const eventStartMinute = eventTime.hour() * 60 + eventTime.minute();
-    const [top, height] = useMemo(() => {
-        return [
-            (eventStartMinute / minutesInDay) * parentHeight,
-            (event.duration / minutesInDay) * parentHeight,
-        ];
-    }, [event.duration, eventStartMinute, parentHeight]);
-
     const selectEvent = useSetAtom(selectEventAtom);
-
-    let overlapColumnCount = 0;
-    let overlapColumnIndex = 0;
-    let exactOverlapColumnCount = 0;
-    let exactOverlapColumnIndex = 0;
-
-    dayColumns.forEach((column, index) => {
-        let hasExactOverlap = false;
-        let hasOverlap = index === columnIndex;
-
-        for (const otherEvent of column) {
-            const otherEventEndTime = otherEvent.startTime.add(
-                otherEvent.duration,
-                'minute'
-            );
-
-            hasExactOverlap ||=
-                otherEvent.startTime.isSame(eventTime) &&
-                otherEventEndTime.isSame(eventEndTime);
-            hasOverlap ||=
-                otherEvent !== event &&
-                eventTime.isBefore(otherEventEndTime) &&
-                otherEvent.startTime.isBefore(eventEndTime);
-
-            if (hasExactOverlap && hasOverlap) {
-                break;
-            }
-        }
-
-        if (hasOverlap) {
-            if (index < columnIndex) {
-                overlapColumnIndex++;
-            }
-            overlapColumnCount++;
-        }
-
-        if (hasExactOverlap) {
-            if (index < columnIndex) {
-                exactOverlapColumnIndex++;
-            }
-            exactOverlapColumnCount++;
-        }
-    });
-
-    // Four identical-time events share a 2x2 grid; otherwise split width by
-    // every concurrent column (including partial overlaps like a long event).
-    const useExactOverlapGrid =
-        exactOverlapColumnCount === 4 && overlapColumnCount === 4;
-    const exactOverlapColumn = useExactOverlapGrid
-        ? exactOverlapColumnIndex % 2
-        : exactOverlapColumnIndex;
-    const exactOverlapRow = useExactOverlapGrid
-        ? Math.floor(exactOverlapColumnIndex / 2)
-        : 0;
-    const concurrentColumns = Math.max(overlapColumnCount, 1);
-    const overlapWidth = useExactOverlapGrid ? 50 : 100 / concurrentColumns;
-    const overlapLeft = useExactOverlapGrid
-        ? overlapWidth * exactOverlapColumn
-        : overlapWidth * overlapColumnIndex;
-    const overlapTop = top + Math.min(height * 0.75, 72) * exactOverlapRow;
-    const isCompact = height < 64;
-    const showMeta = height >= 40;
-    const showLocation =
-        event.location && overlapColumnCount <= 1 && !isCompact;
-    const isDeadline = event.isDeadline === true;
-    const isRsvpEvent = canAddEventToSchedule(event);
-    const isRsvped = event.rsvped === true;
-    const needsRsvp = !isDeadline && isRsvpEvent && !isRsvped;
-    const useTypeColors = !isDeadline && (!isRsvpEvent || isRsvped);
-    const { Icon, color, background } = getEventTypeDisplay(event.eventType);
-
     const containerRef = useRef<HTMLDivElement>(null);
+
+    const { startTime, duration, eventType } = event;
+    const endTime = startTime.add(duration, 'minute');
+    const height = minutesToPx(duration);
+    const isCompact = height < 64;
+    const showMeta = minutesToPx(visibleMinutes) >= 40;
+    const showLocation = event.location && slots === 1 && !isCompact;
+    const isDeadline = Boolean(event.isDeadline);
+    const isRsvpEvent = canAddEventToSchedule(event);
+    const needsRsvp = !isDeadline && isRsvpEvent && !event.rsvped;
+    const useTypeColors = !isDeadline && (!isRsvpEvent || event.rsvped);
+    const { Icon, color, background } = getEventTypeDisplay(eventType);
 
     return (
         <div
             ref={containerRef}
             className={clsx(
-                isDeadline ? style.deadlineEvent : style.dayEvent,
-                !isDeadline &&
-                    (isRsvpEvent
-                        ? style.dayEventRsvped
-                        : style.dayEventStandard),
+                isDeadline
+                    ? style.deadlineEvent
+                    : [
+                          style.dayEvent,
+                          isRsvpEvent
+                              ? style.dayEventRsvped
+                              : style.dayEventStandard,
+                          isCompact && style.dayEventCompact,
+                          level > 0 && style.dayEventStacked,
+                      ],
                 needsRsvp && style.dayEventNeedsRsvp,
                 needsRsvp &&
-                    (event.eventType === EventType.WORKSHOP ||
-                        event.eventType === EventType.ACTIVITY) &&
+                    (eventType === EventType.WORKSHOP ||
+                        eventType === EventType.ACTIVITY) &&
                     style.dayEventNeutralNeedsRsvp,
-                useTypeColors && style.dayEventTyped,
-                !isDeadline && isCompact && style.dayEventCompact
+                useTypeColors && style.dayEventTyped
             )}
             onClick={
                 isDeadline
                     ? undefined
-                    : () => {
-                          selectEvent(event, containerRef.current);
-                      }
+                    : () => selectEvent(event, containerRef.current)
             }
             style={
                 {
-                    '--top': `${Math.round(overlapTop)}px`,
+                    '--top': `${Math.round(minutesToPx(minuteOfDay(startTime)))}px`,
                     '--height': `${Math.round(isDeadline ? 52 : height)}px`,
-                    '--left': `${isDeadline ? 0 : overlapLeft}%`,
-                    '--width': `${isDeadline ? 100 : overlapWidth}%`,
-                    '--marginX': concurrentColumns > 1 ? '0px' : undefined,
-                    '--dayEventZIndex':
-                        1 + overlapColumnIndex + exactOverlapRow * 4,
+                    '--indent': `${level * cascadeIndent}px`,
+                    '--slot': slot,
+                    '--slots': slots,
+                    '--dayEventZIndex': zIndex,
                     ...(useTypeColors && {
                         '--dayEventBackground': background,
                         '--dayEventHoverBackground': color,
@@ -555,9 +459,13 @@ function DayEventItem({
                     <span className={style.deadlineEventTitle}>
                         {event.title}
                     </span>
-                    <span className={style.deadlineEventTime}>
-                        {getDeadlineTimeLabel(eventTime)}
-                    </span>
+                    {!overlapsBlock && (
+                        <span className={style.deadlineEventTime}>
+                            {startTime.format(
+                                startTime.minute() === 0 ? 'hA' : 'h:mmA'
+                            )}
+                        </span>
+                    )}
                 </div>
             ) : (
                 <div className={style.dayEventContent}>
@@ -578,7 +486,7 @@ function DayEventItem({
                         >
                             <Icon className={style.dayEventIcon} />
                             <span className={style.dayEventMetaText}>
-                                {`${eventTime.format('h:mm A')} - ${eventEndTime.format('h:mm A')}`}
+                                {`${startTime.format('h:mm A')} - ${endTime.format('h:mm A')}`}
                                 {showLocation && ` · ${event.location}`}
                             </span>
                         </span>
@@ -589,27 +497,9 @@ function DayEventItem({
     );
 }
 
-function getDeadlineTimeLabel(time: Dayjs) {
-    return time.format(time.minute() === 0 ? 'hA' : 'h:mmA');
-}
-
-function TimelineMarker({
-    parentHeight,
-    startDate,
-}: {
-    parentHeight: number;
-    startDate: Dayjs;
-}) {
+function TimelineMarker({ startDate }: { startDate: Dayjs }) {
     const [currentTime, setCurrentTime] = useAtom(currentTimeAtom);
-
-    const minutesInDay = 1440;
-    const top = useMemo(() => {
-        return (
-            ((currentTime.hour() * 60 + currentTime.minute()) / minutesInDay) *
-            parentHeight
-        );
-    }, [currentTime]);
-
+    const top = minutesToPx(minuteOfDay(currentTime));
     const markerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -617,38 +507,33 @@ function TimelineMarker({
             setCurrentTime(dayjs());
 
             if (currentTime.isBefore(startDate)) {
-                getScrollParent(markerRef.current!)?.scrollTo({
+                getScrollParent(markerRef.current)?.scrollTo({
                     top: top - 300,
                     behavior: 'smooth',
                 });
             } else {
-                markerRef.current!.scrollIntoView({
-                    block: 'center', // vertical
-                    inline: 'center', // horizontal
+                markerRef.current?.scrollIntoView({
+                    block: 'center',
+                    inline: 'center',
                     behavior: 'smooth',
                 });
             }
         }
-        const interval = setInterval(updateTime, 60000);
-        setCurrentTime(dayjs());
 
-        setTimeout(() => {
-            updateTime();
-        }, 100);
+        setCurrentTime(dayjs());
+        const interval = setInterval(updateTime, 60000);
+        const timeout = setTimeout(updateTime, 100);
 
         return () => {
             clearInterval(interval);
+            clearTimeout(timeout);
         };
     }, []);
 
     return (
         <div
             ref={markerRef}
-            style={
-                {
-                    '--top': `${Math.round(top)}px`,
-                } as CSSProperties
-            }
+            style={{ '--top': `${Math.round(top)}px` } as CSSProperties}
             className={style.timeMarker}
         >
             <div className={style.timeText}>{currentTime.format('hh:mm')}</div>
@@ -656,16 +541,13 @@ function TimelineMarker({
     );
 }
 
-function getScrollParent(node: HTMLElement | null) {
-    if (node == null) {
+function getScrollParent(node: HTMLElement | null): HTMLElement | null {
+    const parent = node?.parentElement;
+    if (!parent) {
         return null;
     }
 
-    const parent = node.parentNode as HTMLElement;
-
-    if (parent.scrollHeight > parent.clientHeight) {
-        return parent;
-    } else {
-        return getScrollParent(parent as HTMLElement);
-    }
+    return parent.scrollHeight > parent.clientHeight
+        ? parent
+        : getScrollParent(parent);
 }
