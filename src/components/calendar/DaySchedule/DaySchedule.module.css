@@ -1,130 +1,107 @@
+/* --rowHeight, --headerHeight, --timeColumnWidth and --minColWidth are set inline from DaySchedule.tsx */
 .scheduleRootWrapper {
     --border: 1px solid var(--border-neutral-tertiary);
-    --rowHeight: 60px;
-    --minColWidth: 150px;
-    --headerHeight: 24px;
 
+    flex: 1 1 0;
+    width: 100%;
+    min-height: 0;
+    overflow: hidden;
     border: 1px solid var(--border-neutral-secondary);
     border-radius: 10px;
-    overflow: hidden;
-
-    width: 100%;
-    flex: 1 1 0;
-    min-height: 0;
-    /* max-height: 100%; */
 }
 
 .scheduleControls {
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    flex: 0 0 auto;
-    padding: 0.5rem 0 0;
+    padding-top: 0.5rem;
 }
 
 .scheduleRoot {
-    height: 100%;
-    width: 100%;
     position: relative;
-    overflow-x: hidden;
-    overflow-y: auto;
+    width: 100%;
+    height: 100%;
+    overflow: hidden auto;
     scrollbar-width: thin;
 }
 
-.scheduleRoot.hiddenScrollbar {
+.hiddenScrollbar {
     scrollbar-width: none;
 }
 
-.scheduleRoot.hiddenScrollbar::-webkit-scrollbar {
+.hiddenScrollbar::-webkit-scrollbar {
     display: none;
 }
 
 .scheduleContainer {
-    height: fit-content;
-    width: auto;
     display: flex;
-    flex-direction: row;
 }
 
-.scheduleContainer.fixedVisibleColumns {
+.fixedVisibleColumns {
     width: var(--scheduleContentWidth);
 }
 
-.scheduleContainer.fixedVisibleColumns .dayColumn {
+.fixedVisibleColumns .dayColumn {
     flex: 1 0 0;
     min-width: 0;
 }
 
+/* sticky surfaces */
+.timeColumn,
+.header {
+    position: sticky;
+    background-color: var(--neutral-900);
+}
+
 .timeColumn {
+    left: 0;
+    z-index: 3;
     display: flex;
     flex-direction: column;
-
-    border-right: var(--border);
-    box-sizing: border-box;
-
     min-width: var(--timeColumnWidth);
     height: fit-content;
-
-    position: sticky;
-    left: 0;
-    background-color: var(--neutral-900);
-    z-index: 3;
+    border-right: var(--border);
 }
 
 .timeLabel {
-    min-height: var(--rowHeight);
-    box-sizing: border-box;
-
     display: flex;
     justify-content: center;
-    align-items: start;
+    min-height: var(--rowHeight);
     padding: 0.1rem 0.75rem;
-    font-size: var(--text-xs);
     color: var(--text-secondary);
-
+    font-size: var(--text-xs);
     text-wrap: nowrap;
 }
 
-.timeLabel:last-child {
-    border: none;
-}
-
 .header {
-    height: var(--headerHeight);
-    border-bottom: var(--border);
-    box-sizing: border-box;
-
-    position: sticky;
     top: 0;
     z-index: 30;
-    background-color: var(--neutral-900);
     display: flex;
     align-items: center;
+    height: var(--headerHeight);
     padding-left: 1rem;
+    border-bottom: var(--border);
 }
 
 .headerContent {
     position: sticky;
-    left: 0;
     top: 0;
+    left: 0;
+    color: var(--text-primary, var(--text-regular));
     font-family: var(--font-sans-0);
     font-size: var(--text-sm);
-    color: var(--text-primary, var(--text-regular));
-    text-align: center;
 }
 
 .dayColumn {
     flex: 1;
     min-width: var(--minColWidth);
-    border-right: var(--border);
     background-color: var(--background-neutral-secondary);
-    height: auto;
 }
 
-.todayColumn,
-.todayColumn > .header {
-    background-color: color-mix(in srgb, var(--brand-700) 30%, transparent);
+.dayColumn:not(:last-child) {
+    border-right: var(--border);
 }
 
 .dayColumn > .header {
@@ -132,43 +109,33 @@
     padding: 8px 4px;
 }
 
+.todayColumn,
+.todayColumn > .header {
+    background-color: color-mix(in srgb, var(--brand-700) 30%, transparent);
+}
+
 .dayColumnContent {
-    /* background to draw lines */
-    background-size: 100% var(--rowHeight);
-    background-repeat: repeat;
+    position: relative;
+    height: calc(100% - var(--headerHeight));
+    min-height: calc(var(--rowHeight) * 24);
+    /* hour grid lines */
     background-image: linear-gradient(
         to top,
         var(--border-neutral-secondary) 1px,
         transparent 1px
     );
-
-    height: calc(100% - var(--headerHeight));
-    min-height: calc(var(--rowHeight) * 24);
-
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-
-    position: relative;
+    background-size: 100% var(--rowHeight);
 }
 
+/* anchor for the absolutely positioned events */
 .dayEventColumn {
-    /* to provide an anchor for all the position abs children */
     position: absolute;
     inset: 0;
     pointer-events: none;
 }
 
+/* --top, --height, --left, --width and --dayEventZIndex are set inline */
 .dayEvent {
-    border-radius: 5px;
-    overflow: hidden;
-    box-sizing: border-box;
-    border: 1px solid transparent;
-    color: white;
-    cursor: pointer;
-
-    position: absolute;
-
     --margin: 0.15rem;
     --marginX: var(--margin);
     --dayEventPaddingX: 0.5rem;
@@ -177,36 +144,55 @@
     --dayEventMetaGap: 3px;
     --dayEventMetaSize: 12px;
     --dayEventIconSize: 14px;
-    --left: 0%;
-    --width: 100%;
 
-    /* fake margin */
-    left: calc(var(--left) + var(--marginX));
-    /* top to be controlled by js */
+    position: absolute;
     top: calc(var(--top) + var(--margin));
-    height: calc(var(--height) - var(--margin) * 2);
-
-    width: calc(var(--width) - var(--marginX) * 2);
-
-    padding: 0.2rem var(--dayEventPaddingX);
-    background-color: var(--dayEventBackground);
-    pointer-events: auto;
+    left: calc(var(--left) + var(--marginX));
     z-index: var(--dayEventZIndex);
-
+    width: calc(var(--width) - var(--marginX) * 2);
+    height: calc(var(--height) - var(--margin) * 2);
+    overflow: hidden;
+    padding: 0.2rem var(--dayEventPaddingX);
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background-color: var(--dayEventBackground);
+    color: white;
+    cursor: pointer;
+    pointer-events: auto;
     transition: all 250ms ease-out;
+}
+
+.dayEvent:hover {
+    background-color: var(--dayEventHoverBackground);
+}
+
+.dayEvent:active {
+    z-index: 10;
+    filter: brightness(0.9);
+}
+
+.dayEvent:not(.dayEventCompact):is(:hover, :active) {
+    min-height: fit-content;
+}
+
+.dayEventCompact {
+    --dayEventPaddingX: 0.35rem;
+    --dayEventContentGap: 1px;
+    --dayEventTitleSize: 12px;
+    --dayEventMetaGap: 2px;
+    --dayEventMetaSize: 10px;
+    --dayEventIconSize: 11px;
 }
 
 .dayEventStandard {
     --dayEventBackground: var(--neutral-700);
     --dayEventHoverBackground: var(--neutral-600);
-
     border-color: var(--neutral-500);
 }
 
 .dayEventRsvped {
     --dayEventBackground: var(--color-brand-600);
     --dayEventHoverBackground: var(--brand-400);
-
     border-color: var(--brand-400);
 }
 
@@ -217,9 +203,7 @@
         var(--color-brand-300) 30%,
         transparent
     );
-
-    border-color: var(--brand-400);
-    border-style: dashed;
+    border: 1px dashed var(--brand-400);
 }
 
 /* layered on top of .dayEventNeedsRsvp */
@@ -234,7 +218,6 @@
         var(--neutral-600) 28%,
         transparent
     );
-
     border-color: var(--neutral-500);
     color: var(--text-regular);
 }
@@ -249,8 +232,8 @@
 
 /* colours come from getEventTypeDisplay via inline vars */
 .dayEventTyped {
-    border-color: transparent;
     padding-left: calc(var(--dayEventPaddingX) + 6px);
+    border-color: transparent;
 }
 
 .dayEventTyped::before {
@@ -262,48 +245,20 @@
     background-color: var(--dayEventHoverBackground);
 }
 
-.dayEventCompact {
-    --dayEventPaddingX: 0.35rem;
-    --dayEventContentGap: 1px;
-    --dayEventTitleSize: 12px;
-    --dayEventMetaGap: 2px;
-    --dayEventMetaSize: 10px;
-    --dayEventIconSize: 11px;
-}
-
-.dayEvent:active {
-    z-index: 10;
-}
-
-.dayEvent:hover,
-.dayEvent:active {
-    min-height: fit-content;
-}
-
-.dayEvent:hover {
-    background-color: var(--dayEventHoverBackground);
-}
-
-.dayEventCompact:hover,
-.dayEventCompact:active,
-.dayEventCompact.active {
-    min-height: 0;
-}
-
-.dayEvent:active {
-    filter: brightness(0.9);
-}
-
 .dayEventContent {
     display: flex;
     flex-direction: column;
     gap: var(--dayEventContentGap);
 }
 
-.dayEventLine {
+.dayEventLine,
+.dayEventMetaText,
+.deadlineEventTitle,
+.deadlineEventTime {
+    min-width: 0;
     max-width: 100%;
-    text-overflow: ellipsis;
     overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
@@ -323,26 +278,17 @@
 }
 
 .dayEventIcon {
+    flex: none;
     width: var(--dayEventIconSize);
     height: var(--dayEventIconSize);
-    flex: 0 0 auto;
 }
 
-.dayEventMetaText {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
+/* --top is the deadline time; the bar sits at the bottom of the box */
 .deadlineEvent {
-    --margin: 0.15rem;
-
     position: absolute;
-    inset: calc(var(--top) - var(--height)) var(--margin) auto var(--margin);
+    inset: calc(var(--top) - var(--height)) 0.15rem auto;
     z-index: calc(var(--dayEventZIndex) + 5);
     height: var(--height);
-    overflow: visible;
     color: #fef9c3;
     cursor: default;
     pointer-events: auto;
@@ -371,54 +317,38 @@
     line-height: 1.2;
 }
 
-.deadlineEventTitle,
-.deadlineEventTime {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
 .deadlineEventTime {
     flex: none;
 }
 
-.dayColumn:last-child {
-    border: none;
-}
-
 .timeMarker {
     position: absolute;
-    left: 0;
     top: var(--top);
+    left: 0;
     z-index: 2;
-
     width: 100%;
     border-bottom: 2px solid #ff4d4d99;
-    box-sizing: border-box;
 }
 
+/* dashed line extending across the columns to the left */
 .timeMarker::before {
     content: '';
-
     position: absolute;
-    right: 100%;
     top: 0;
+    right: 100%;
     z-index: -1;
-
     width: 5000%;
-    border-bottom: 2px #ff4d4d99 dashed;
+    border-bottom: 2px dashed #ff4d4d99;
 }
 
 .timeText {
-    border-radius: 4px;
-    font-size: 12px;
-    color: white;
-    background-color: #ff4d4d;
-    padding: 0.1rem 0.2rem;
-
     position: absolute;
-    right: 0;
     top: 50%;
+    right: 0;
+    padding: 0.1rem 0.2rem;
+    border-radius: 4px;
+    background-color: #ff4d4d;
+    color: white;
+    font-size: 12px;
     transform: translateY(-50%);
 }

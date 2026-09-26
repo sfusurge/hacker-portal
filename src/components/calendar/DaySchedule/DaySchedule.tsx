@@ -212,14 +212,7 @@ export function DaySchedule({
                         )}
                     >
                         <div className={style.timeColumn}>
-                            <div
-                                className={style.header}
-                                style={
-                                    {
-                                        '--headerHeight': `${headerHeight}px`,
-                                    } as CSSProperties
-                                }
-                            />
+                            <div className={style.header} />
                             {[...Array(24).keys()].map((idx) => {
                                 const timeLabel = zero.format('h A'); //5 AM
                                 zero = zero.add(1, 'hour');
@@ -248,14 +241,7 @@ export function DaySchedule({
                                         } as CSSProperties
                                     }
                                 >
-                                    <div
-                                        className={style.header}
-                                        style={
-                                            {
-                                                '--headerHeight': `${headerHeight}px`,
-                                            } as CSSProperties
-                                        }
-                                    >
+                                    <div className={style.header}>
                                         <div className={style.headerContent}>
                                             {day.format('ddd D')}
                                         </div>
@@ -388,8 +374,7 @@ function ProcessEventsForSchedule(eventsMaps: {
             }
 
             let inserted = false;
-            for (const element of columns) {
-                const c = element;
+            for (const c of columns) {
                 const lastEvent = c.at(-1);
                 const lastEventTime = lastEvent?.startTime.add(
                     lastEvent?.duration!,
@@ -451,7 +436,6 @@ function DayEventItem({
         ];
     }, [event.duration, eventStartMinute, parentHeight]);
 
-    const selectedEvent = useAtomValue(selectedEventAtom);
     const selectEvent = useSetAtom(selectEventAtom);
 
     let overlapColumnCount = 0;
@@ -523,22 +507,13 @@ function DayEventItem({
     const needsRsvp = !isDeadline && isRsvpEvent && !isRsvped;
     const useTypeColors = !isDeadline && (!isRsvpEvent || isRsvped);
     const { Icon, color, background } = getEventTypeDisplay(event.eventType);
-    const dayEventTitleClassName = clsx(
-        style.dayEventLine,
-        style.dayEventTitle
-    );
-    const dayEventMetaClassName = clsx(style.dayEventLine, style.dayEventMeta);
 
     const containerRef = useRef<HTMLDivElement>(null);
-
-    const isActive = useMemo(() => {
-        return selectedEvent?.event.id === event.id;
-    }, [event.id, selectedEvent]);
 
     return (
         <div
             ref={containerRef}
-            className={clsx([
+            className={clsx(
                 isDeadline ? style.deadlineEvent : style.dayEvent,
                 !isDeadline &&
                     (isRsvpEvent
@@ -550,11 +525,8 @@ function DayEventItem({
                         event.eventType === EventType.ACTIVITY) &&
                     style.dayEventNeutralNeedsRsvp,
                 useTypeColors && style.dayEventTyped,
-                !isDeadline && isCompact && style.dayEventCompact,
-                {
-                    [style.active]: isActive,
-                },
-            ])}
+                !isDeadline && isCompact && style.dayEventCompact
+            )}
             onClick={
                 isDeadline
                     ? undefined
@@ -589,11 +561,21 @@ function DayEventItem({
                 </div>
             ) : (
                 <div className={style.dayEventContent}>
-                    <span className={dayEventTitleClassName}>
+                    <span
+                        className={clsx(
+                            style.dayEventLine,
+                            style.dayEventTitle
+                        )}
+                    >
                         {event.title}
                     </span>
                     {showMeta && (
-                        <span className={dayEventMetaClassName}>
+                        <span
+                            className={clsx(
+                                style.dayEventLine,
+                                style.dayEventMeta
+                            )}
+                        >
                             <Icon className={style.dayEventIcon} />
                             <span className={style.dayEventMetaText}>
                                 {`${eventTime.format('h:mm A')} - ${eventEndTime.format('h:mm A')}`}
