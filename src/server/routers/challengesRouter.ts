@@ -15,7 +15,7 @@ import { user as usersTable } from '@/db/schema/users/users';
 import { ResourceNotFoundError } from '../exceptions';
 import { TRPCError } from '@trpc/server';
 import { adminProcedure, protectedProcedure, router } from '../trpc';
-import { and, asc, count, eq, getTableColumns, sql } from 'drizzle-orm';
+import { and, asc, count, eq, getTableColumns } from 'drizzle-orm';
 import { applications } from '@/db/schema/applications';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
 import { assignHouseIfNeeded } from '@/server/houses/assignHouse';
@@ -200,52 +200,6 @@ export const challengesRouter = router({
                 });
             }
 
-            const maxCompletions = Math.max(1, challenge.maxCompletions ?? 1);
-            const unitPoints = challenge.highestPoints;
-            let pointsAwarded: number;
-
-            if (challenge.variablePoints) {
-                if (input.pointsAwarded == null) {
-                    throw new TRPCError({
-                        code: 'BAD_REQUEST',
-                        message:
-                            'pointsAwarded is required for variable-point challenges',
-                    });
-                }
-                if (
-                    input.pointsAwarded < challenge.lowestPoints ||
-                    input.pointsAwarded > challenge.highestPoints
-                ) {
-                    throw new TRPCError({
-                        code: 'BAD_REQUEST',
-                        message: `pointsAwarded must be between ${challenge.lowestPoints} and ${challenge.highestPoints}`,
-                    });
-                }
-                pointsAwarded = input.pointsAwarded;
-            } else if (maxCompletions > 1) {
-                if (input.pointsAwarded == null) {
-                    throw new TRPCError({
-                        code: 'BAD_REQUEST',
-                        message:
-                            'pointsAwarded is required for multi-completion challenges',
-                    });
-                }
-                const maxTotal = unitPoints * maxCompletions;
-                if (
-                    input.pointsAwarded < unitPoints ||
-                    input.pointsAwarded > maxTotal ||
-                    input.pointsAwarded % unitPoints !== 0
-                ) {
-                    throw new TRPCError({
-                        code: 'BAD_REQUEST',
-                        message: `pointsAwarded must be ${unitPoints} × (1–${maxCompletions}), up to ${maxTotal}`,
-                    });
-                }
-                pointsAwarded = input.pointsAwarded;
-            } else {
-                pointsAwarded = unitPoints;
-            }
-
             const [[targetUser], [application]] = await Promise.all([
                 databaseClient
                     .select({ id: usersTable.id })
@@ -278,23 +232,53 @@ export const challengesRouter = router({
                 });
             }
 
-            await databaseClient
-                .insert(challengeCompletions)
-                .values({
-                    challengeId: input.challengeId,
-                    userId: input.userId,
-                    pointsAwarded,
-                })
-                .onConflictDoUpdate({
-                    target: [
-                        challengeCompletions.challengeId,
-                        challengeCompletions.userId,
-                    ],
-                    set: {
-                        pointsAwarded: sql`GREATEST(${challengeCompletions.pointsAwarded}, ${pointsAwarded})`,
-                        completedAt: sql`now()`,
-                    },
+            let pointsAwarded = challenge.lowestPoints;
+            if (challenge.variablePoints) {
+                if (input.pointsAwarded == null) {
+                    throw new TRPCError({
+                        code: 'BAD_REQUEST',
+                        message:
+                            'pointsAwarded is required for variable-point challenges',
+                    });
+                }
+                pointsAwarded = Math.trunc(input.pointsAwarded);
+                if (
+                    pointsAwarded < challenge.lowestPoints ||
+                    pointsAwarded > challenge.highestPoints
+                ) {
+                    throw new TRPCError({
+                        code: 'BAD_REQUEST',
+                        message: `pointsAwarded must be between ${challenge.lowestPoints} and ${challenge.highestPoints}`,
+                    });
+                }
+            }
+
+            const maxCompletions = Math.max(1, challenge.maxCompletions ?? 1);
+            const [completionCountRow] = await databaseClient
+                .select({ n: count() })
+                .from(challengeCompletions)
+                .where(
+                    and(
+                        eq(challengeCompletions.challengeId, input.challengeId),
+                        eq(challengeCompletions.userId, input.userId)
+                    )
+                );
+            const completionCount = Number(completionCountRow?.n ?? 0);
+
+            if (completionCount >= maxCompletions) {
+                throw new TRPCError({
+                    code: 'CONFLICT',
+                    message: `Already completed: this challenge has reached the maximum number of completions (${maxCompletions})`,
                 });
+            }
+
+            const now = new Date();
+            await databaseClient.insert(challengeCompletions).values({
+                challengeId: input.challengeId,
+                userId: input.userId,
+                pointsAwarded,
+                completedAt: now,
+            });
 
             try {
                 await assignHouseIfNeeded(challenge.hackathonId, input.userId);
@@ -305,20 +289,29 @@ export const challengesRouter = router({
                 );
             }
 
-            return true;
+            return {
+                success: true,
+                pointsAwarded,
+                completedAt: now,
+                completionCount: completionCount + 1,
+                maxCompletions,
+            };
         }),
 
     isChallengeComplete: adminProcedure
         .input(isChallengeCompleteSchema)
         .query(async ({ input }) => {
-            const progress = await getChallengeProgress(
-                input.challengeId,
-                input.userId
-            );
-            const isComplete =
-                progress.total > 0 && progress.completed >= progress.total;
+            const [challenge] = await databaseClient
+                .select({
+                    maxCompletions: challenges.maxCompletions,
+                })
+                .from(challenges)
+                .where(eq(challenges.id, input.challengeId))
+                .limit(1);
 
-            const [row] = await databaseClient
+            const maxCompletions = Math.max(1, challenge?.maxCompletions ?? 1);
+
+            const rows = await databaseClient
                 .select({
                     completedAt: challengeCompletions.completedAt,
                     pointsAwarded: challengeCompletions.pointsAwarded,
@@ -330,14 +323,25 @@ export const challengesRouter = router({
                         eq(challengeCompletions.userId, input.userId)
                     )
                 )
-                .limit(1);
+                .orderBy(asc(challengeCompletions.completedAt));
+
+            const completionCount = rows.length;
+            const last = rows[rows.length - 1];
+            const progress = await getChallengeProgress(
+                input.challengeId,
+                input.userId
+            );
+            const isComplete =
+                progress.total > 0 && progress.completed >= progress.total;
 
             return {
                 isComplete,
-                completedAt: isComplete ? (row?.completedAt ?? null) : null,
-                pointsAwarded: row?.pointsAwarded ?? null,
+                completedAt: last?.completedAt ?? null,
+                pointsAwarded: last?.pointsAwarded ?? null,
                 completed: progress.completed,
                 total: progress.total,
+                completionCount,
+                maxCompletions,
             };
         }),
 });

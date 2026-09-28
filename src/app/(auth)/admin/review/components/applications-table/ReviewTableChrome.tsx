@@ -275,7 +275,7 @@ export function ReviewTableToolbar({
                                 icon={
                                     <ShieldCheckIcon className="text-danger-400 size-4 shrink-0" />
                                 }
-                                label="Highschooler"
+                                label="Under 19"
                                 count={highschoolerCount}
                                 onSelect={() =>
                                     selectFlaggedFilter('highschooler')
@@ -462,7 +462,7 @@ export function SelectionActionBar({
                             onSelect={() => onFlag('highschooler')}
                         >
                             <ShieldCheckIcon className="text-danger-400 size-4 shrink-0" />
-                            Highschooler
+                            Under 19
                         </DropdownMenuItem>
                         <DropdownMenuItem
                             className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm text-white focus:bg-neutral-800 focus:text-white"

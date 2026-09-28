@@ -9,6 +9,12 @@ import { FlagIcon } from '@heroicons/react/24/solid';
 import type { ApplicationWithTeamInfo } from '@/server/routers/applicationsRouter';
 import type { StatusEnum } from '@/db/schema/applications';
 import { getAcceptPendingStatusForEventLocation } from '@/lib/applicationAcceptStatus';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { resolveCurrentStatusFilterValues } from '../ReviewTableFilters';
 import { CurrentStatusCell, PendingStatusSelect } from './statusCells';
 import { IndeterminateCheckbox } from './tablePrimitives';
@@ -87,43 +93,85 @@ export function useReviewTableColumns({
                 header: () => null,
                 cell: ({ row }) => {
                     const { flagged, hsFlagged } = row.original;
-
-                    const cycleFlag = () => {
-                        // none → flag → high schooler → none
-                        if (!flagged && !hsFlagged) {
-                            return { flagged: true, hsFlagged: false };
-                        }
-                        if (flagged && !hsFlagged) {
-                            return { flagged: false, hsFlagged: true };
-                        }
-                        return { flagged: false, hsFlagged: false };
-                    };
-
-                    const next = cycleFlag();
                     const ariaLabel = hsFlagged
-                        ? 'Clear flag'
+                        ? 'Under 19 flag'
                         : flagged
-                          ? 'Flag as highschooler'
-                          : 'Flag';
+                          ? 'Flagged'
+                          : 'Set flag';
 
                     return (
-                        <button
-                            type="button"
-                            className="flex h-11 w-full min-w-[2.75rem] items-center justify-center"
-                            aria-label={ariaLabel}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                void updateApplicantById(row.original.id, next);
-                            }}
-                        >
-                            {hsFlagged ? (
-                                <ShieldCheckIcon className="text-danger-400 size-5" />
-                            ) : flagged ? (
-                                <FlagIcon className="text-caution-500 size-5" />
-                            ) : (
-                                <FlagOutlineIcon className="size-5 text-white/40 opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-100" />
-                            )}
-                        </button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button
+                                    type="button"
+                                    className="flex h-11 w-full min-w-[2.75rem] items-center justify-center"
+                                    aria-label={ariaLabel}
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    {hsFlagged ? (
+                                        <ShieldCheckIcon className="text-danger-400 size-5" />
+                                    ) : flagged ? (
+                                        <FlagIcon className="text-caution-500 size-5" />
+                                    ) : (
+                                        <FlagOutlineIcon className="size-5 text-white/40 opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-100 data-[state=open]:opacity-100" />
+                                    )}
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                align="start"
+                                sideOffset={4}
+                                className="z-[100] w-[160px] rounded-lg border-neutral-600/30 bg-neutral-900 p-1 text-white shadow-[0px_2px_2px_-1px_rgba(0,0,0,0.04),0px_4px_6px_-2px_rgba(0,0,0,0.12),0px_12px_16px_-4px_rgba(0,0,0,0.08)]"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <DropdownMenuItem
+                                    className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm text-white focus:bg-neutral-800 focus:text-white"
+                                    onSelect={() => {
+                                        void updateApplicantById(
+                                            row.original.id,
+                                            {
+                                                flagged: true,
+                                                hsFlagged: false,
+                                            }
+                                        );
+                                    }}
+                                >
+                                    <FlagIcon className="text-caution-500 size-4 shrink-0" />
+                                    Flagged
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm text-white focus:bg-neutral-800 focus:text-white"
+                                    onSelect={() => {
+                                        void updateApplicantById(
+                                            row.original.id,
+                                            {
+                                                flagged: false,
+                                                hsFlagged: true,
+                                            }
+                                        );
+                                    }}
+                                >
+                                    <ShieldCheckIcon className="text-danger-400 size-4 shrink-0" />
+                                    Under 19
+                                </DropdownMenuItem>
+                                {(flagged || hsFlagged) && (
+                                    <DropdownMenuItem
+                                        className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm text-white focus:bg-neutral-800 focus:text-white"
+                                        onSelect={() => {
+                                            void updateApplicantById(
+                                                row.original.id,
+                                                {
+                                                    flagged: false,
+                                                    hsFlagged: false,
+                                                }
+                                            );
+                                        }}
+                                    >
+                                        <FlagOutlineIcon className="size-4 shrink-0 text-white/50" />
+                                        Remove flag
+                                    </DropdownMenuItem>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     );
                 },
                 size: 56,

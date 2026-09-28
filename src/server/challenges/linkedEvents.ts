@@ -2,12 +2,12 @@ import { databaseClient } from '@/db/client';
 import { checkIns } from '@/db/schema/checkIn';
 import { challengeCompletions, challenges } from '@/db/schema/challenges';
 import { events } from '@/db/schema/events';
-import { and, count, eq, sql } from 'drizzle-orm';
+import { and, count, eq } from 'drizzle-orm';
 
 /**
  * Progress for a challenge:
  * - With eventType: tallies check-ins to events of that type in the hackathon
- * - Without: uses the completion row only (manual award)
+ * - Without: counts completion rows (one row per award, matching HackerNFC)
  */
 export async function getChallengeProgress(
     challengeId: number,
@@ -16,9 +16,8 @@ export async function getChallengeProgress(
     const [challenge] = await databaseClient
         .select({
             hackathonId: challenges.hackathonId,
-            highestPoints: challenges.highestPoints,
+            lowestPoints: challenges.lowestPoints,
             maxCompletions: challenges.maxCompletions,
-            variablePoints: challenges.variablePoints,
             eventType: challenges.eventType,
         })
         .from(challenges)
@@ -29,40 +28,22 @@ export async function getChallengeProgress(
         return { completed: 0, total: 0, points: 0 };
     }
 
-    const unitPoints = challenge.highestPoints;
+    const unitPoints = challenge.lowestPoints;
     const maxCompletions = Math.max(1, challenge.maxCompletions ?? 1);
 
     if (challenge.eventType == null) {
         const [row] = await databaseClient
-            .select({
-                pointsAwarded: challengeCompletions.pointsAwarded,
-            })
+            .select({ n: count() })
             .from(challengeCompletions)
             .where(
                 and(
                     eq(challengeCompletions.challengeId, challengeId),
                     eq(challengeCompletions.userId, userId)
                 )
-            )
-            .limit(1);
+            );
 
-        if (!row) {
-            return {
-                completed: 0,
-                total: maxCompletions,
-                points: unitPoints,
-            };
-        }
-
-        const completed =
-            challenge.variablePoints || unitPoints < 1
-                ? 1
-                : Math.min(
-                      maxCompletions,
-                      Math.max(1, Math.floor(row.pointsAwarded / unitPoints))
-                  );
         return {
-            completed,
+            completed: Math.min(maxCompletions, Number(row?.n ?? 0)),
             total: maxCompletions,
             points: unitPoints,
         };
@@ -100,7 +81,7 @@ export async function getChallengeProgress(
 }
 
 /**
- * After a check-in, refresh completions for challenges that tally this event's type.
+ * After a check-in, insert one completion row per progress step still missing.
  */
 export async function syncChallengesForEventCheckIn(
     eventId: number,
@@ -120,7 +101,7 @@ export async function syncChallengesForEventCheckIn(
     const matching = await databaseClient
         .select({
             challengeId: challenges.id,
-            highestPoints: challenges.highestPoints,
+            lowestPoints: challenges.lowestPoints,
             variablePoints: challenges.variablePoints,
         })
         .from(challenges)
@@ -140,23 +121,26 @@ export async function syncChallengesForEventCheckIn(
         );
         if (progress.completed < 1) continue;
 
-        const pointsAwarded = challenge.highestPoints * progress.completed;
+        const [existingRow] = await databaseClient
+            .select({ n: count() })
+            .from(challengeCompletions)
+            .where(
+                and(
+                    eq(challengeCompletions.challengeId, challenge.challengeId),
+                    eq(challengeCompletions.userId, userId)
+                )
+            );
+        const existingCount = Number(existingRow?.n ?? 0);
+        const toAdd = progress.completed - existingCount;
+        if (toAdd <= 0) continue;
 
-        await databaseClient
-            .insert(challengeCompletions)
-            .values({
+        const pointsAwarded = challenge.lowestPoints;
+        await databaseClient.insert(challengeCompletions).values(
+            Array.from({ length: toAdd }, () => ({
                 challengeId: challenge.challengeId,
                 userId,
                 pointsAwarded,
-            })
-            .onConflictDoUpdate({
-                target: [
-                    challengeCompletions.challengeId,
-                    challengeCompletions.userId,
-                ],
-                set: {
-                    pointsAwarded: sql`GREATEST(${challengeCompletions.pointsAwarded}, ${pointsAwarded})`,
-                },
-            });
+            }))
+        );
     }
 }

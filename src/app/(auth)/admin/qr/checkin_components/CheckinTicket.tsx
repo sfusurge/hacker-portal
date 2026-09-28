@@ -209,6 +209,7 @@ export default function CheckinTicket({
         if (!acceptedForCheckIn) return;
 
         let awarded: number | undefined;
+        let timesToAward = 1;
         if (variablePoints) {
             if (
                 !Number.isInteger(pointsAwarded) ||
@@ -234,21 +235,29 @@ export default function CheckinTicket({
                 });
                 return;
             }
-            awarded = completions * pointsPerCompletion;
+            timesToAward = completions;
         }
 
         if (isChallenge) {
-            await submitChallenge.mutateAsync({
-                userId: currentHacker.id,
-                challengeId: challengeId!,
-                ...(awarded != null ? { pointsAwarded: awarded } : {}),
-            });
+            for (let i = 0; i < timesToAward; i++) {
+                await submitChallenge.mutateAsync({
+                    userId: currentHacker.id,
+                    challengeId: challengeId!,
+                    ...(awarded != null ? { pointsAwarded: awarded } : {}),
+                });
+            }
             challengeStatus.refetch();
         } else {
             await submitCheckIn.mutateAsync({
                 userId: currentHacker.id,
                 eventId: eventId,
-                ...(awarded != null ? { pointsAwarded: awarded } : {}),
+                ...(awarded != null
+                    ? { pointsAwarded: awarded }
+                    : isMultiCompletion
+                      ? {
+                            pointsAwarded: timesToAward * pointsPerCompletion,
+                        }
+                      : {}),
             });
             checked.refetch();
         }

@@ -3,7 +3,6 @@ import {
     index,
     integer,
     pgTable,
-    primaryKey,
     text,
     timestamp,
     varchar,
@@ -37,6 +36,7 @@ export const challenges = pgTable(
 export const challengeCompletions = pgTable(
     'challenge_completions',
     {
+        id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
         challengeId: integer('challenge_id')
             .notNull()
             .references(() => challenges.id, { onDelete: 'cascade' }),
@@ -47,10 +47,11 @@ export const challengeCompletions = pgTable(
         completedAt: timestamp('completed_at').notNull().defaultNow(),
     },
     (table) => [
-        primaryKey({
-            columns: [table.challengeId, table.userId],
-        }),
-        index().on(table.userId),
+        index('challenge_completions_challenge_user_idx').on(
+            table.challengeId,
+            table.userId
+        ),
+        index('challenge_completions_user_id_index').on(table.userId),
     ]
 );
 
