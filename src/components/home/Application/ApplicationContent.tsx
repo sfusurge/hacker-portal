@@ -192,10 +192,13 @@ export function AcceptedContent({
 }) {
     const hackathon = useAtomValue(hackathonAtom);
     const [localTicketOpen, setLocalTicketOpen] = useState(false);
+    const [isWithdrawPromptOpen, setIsWithdrawPromptOpen] = useState(false);
 
     const setTicketOpen = setIsTicketOpen || setLocalTicketOpen;
 
     const handleCloseTicket = () => setTicketOpen(false);
+    const handleOpenWithdrawPrompt = () => setIsWithdrawPromptOpen(true);
+    const handleCloseWithdrawPrompt = () => setIsWithdrawPromptOpen(false);
 
     const ticketOpen =
         isTicketOpen !== undefined ? isTicketOpen : localTicketOpen;
@@ -216,6 +219,16 @@ export function AcceptedContent({
                     meals throughout the event. Don&apos;t forget to read the
                     Hacker Package ahead of the event 🫶
                     {!hackerPackageHref ? ", It'll be arriving soon" : null}
+                </CardDescription>
+                <CardDescription className="inline text-white/30">
+                    {'No longer able to make it?'}
+                    <button
+                        className="ml-1 inline text-white/60 underline hover:text-white/70"
+                        onClick={handleOpenWithdrawPrompt}
+                    >
+                        withdraw your application
+                    </button>
+                    .
                 </CardDescription>
             </ApplicationStatusPanel>
 
@@ -252,6 +265,14 @@ export function AcceptedContent({
                     lastName={userData?.lastName ?? ''}
                     image={image}
                     closeTicket={handleCloseTicket}
+                />
+            )}
+
+            {userData?.id && (
+                <WithdrawPrompt
+                    isOpen={isWithdrawPromptOpen}
+                    userId={userData.id}
+                    closePrompt={handleCloseWithdrawPrompt}
                 />
             )}
         </>
