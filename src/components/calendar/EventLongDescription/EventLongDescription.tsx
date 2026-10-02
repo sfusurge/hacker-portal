@@ -1,7 +1,7 @@
 'use client';
 
 import type { ComponentType, ReactNode, SVGProps } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRemarkSync } from 'react-remark';
 import { motion } from 'motion/react';
 import {
@@ -31,6 +31,7 @@ import {
     getEventTimeLabel,
     InternalCalendarEventType,
 } from '../MonthCalendarShared';
+import { DeleteEventDialog } from '../DeleteEventDialog/DeleteEventDialog';
 
 type LongDescriptionModalProps = {
     event: InternalCalendarEventType;
@@ -69,11 +70,7 @@ export function LongDescriptionModal({
         { eventId: event.id },
         { enabled: isAdmin }
     );
-    const checkIns = trpc.events.getEventCheckInCount.useQuery(
-        { eventId: event.id },
-        { enabled: Boolean(isAdmin && onEventDeleted) }
-    );
-    const deleteEvent = trpc.events.deleteEvent.useMutation();
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
     const hackathon = useAtomValue(hackathonAtom);
     const application = trpc.applications.getCurrentApplication.useQuery(
@@ -84,8 +81,7 @@ export function LongDescriptionModal({
         application.data?.currentStatus,
         hackathon?.eventPagePayload
     );
-    const hasCheckIns = (checkIns.data?.checkInCount ?? 0) > 0;
-    const canDelete = Boolean(isAdmin && onEventDeleted && !hasCheckIns);
+    const canDelete = Boolean(isAdmin && onEventDeleted);
     const showFooter = Boolean(onToggleSchedule || isAdmin);
     const discordRow = discordHref
         ? {
@@ -139,16 +135,6 @@ export function LongDescriptionModal({
             document.removeEventListener('keydown', handleKeyDown);
         };
     }, [onClose]);
-
-    async function handleDeleteEvent() {
-        if (!canDelete || deleteEvent.isPending) {
-            return;
-        }
-
-        await deleteEvent.mutateAsync({ eventId: event.id });
-        await onEventDeleted?.();
-        onClose();
-    }
 
     return (
         <>
@@ -245,13 +231,11 @@ export function LongDescriptionModal({
                                             'ml-auto',
                                             style.footerButton
                                         )}
-                                        disabled={
-                                            !canDelete ||
-                                            checkIns.isLoading ||
-                                            deleteEvent.isPending
-                                        }
+                                        disabled={!canDelete}
                                         hierarchy="primary"
-                                        onClick={handleDeleteEvent}
+                                        onClick={() =>
+                                            setConfirmDeleteOpen(true)
+                                        }
                                         size="compact"
                                         type="button"
                                         variant="danger"
@@ -304,6 +288,17 @@ export function LongDescriptionModal({
                     )}
                 </Card>
             </motion.div>
+            {canDelete && (
+                <DeleteEventDialog
+                    open={confirmDeleteOpen}
+                    onOpenChange={setConfirmDeleteOpen}
+                    eventId={event.id}
+                    onDeleted={async () => {
+                        await onEventDeleted?.();
+                        onClose();
+                    }}
+                />
+            )}
         </>
     );
 }
@@ -356,7 +351,11 @@ function EventDetailsContent({ event }: { event: InternalCalendarEventType }) {
     );
 }
 
-function EventDetailRow({ icon: Icon, label, value }: EventDetailRowData) {
+export function EventDetailRow({
+    icon: Icon,
+    label,
+    value,
+}: EventDetailRowData) {
     return (
         <div className={style.detailRow}>
             <span className={style.detailLabel}>
@@ -368,7 +367,7 @@ function EventDetailRow({ icon: Icon, label, value }: EventDetailRowData) {
     );
 }
 
-function getEventDetailsTimeLabel(event: InternalCalendarEventType) {
+export function getEventDetailsTimeLabel(event: InternalCalendarEventType) {
     const startDate = event.startTime.format('MMM. D');
     const endDate = event.endTime.format('MMM. D');
     const dateLabel = event.startTime.isSame(event.endTime, 'day')

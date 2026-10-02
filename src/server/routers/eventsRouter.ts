@@ -331,20 +331,14 @@ export const eventsRouter = router({
     deleteEvent: adminProcedure
         .input(deleteEventSchema)
         .mutation(async ({ input }) => {
-            const [result] = await databaseClient
-                .select({ checkInCount: count(checkIns.userId) })
-                .from(checkIns)
-                .where(eq(checkIns.eventId, input.eventId));
+            return await databaseClient.transaction(async (tx) => {
+                await tx
+                    .delete(checkIns)
+                    .where(eq(checkIns.eventId, input.eventId));
 
-            if ((result?.checkInCount ?? 0) > 0) {
-                throw new TRPCError({
-                    code: 'BAD_REQUEST',
-                    message: 'Cannot delete an event with existing check-ins.',
-                });
-            }
-
-            return await databaseClient
-                .delete(eventsTable)
-                .where(eq(eventsTable.id, input.eventId));
+                return await tx
+                    .delete(eventsTable)
+                    .where(eq(eventsTable.id, input.eventId));
+            });
         }),
 });
