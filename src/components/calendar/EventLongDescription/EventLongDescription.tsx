@@ -358,7 +358,11 @@ function EventDetailsContent({ event }: { event: InternalCalendarEventType }) {
     );
 }
 
-function EventDetailRow({ icon: Icon, label, value }: EventDetailRowData) {
+export function EventDetailRow({
+    icon: Icon,
+    label,
+    value,
+}: EventDetailRowData) {
     return (
         <div className={style.detailRow}>
             <span className={style.detailLabel}>
@@ -370,7 +374,7 @@ function EventDetailRow({ icon: Icon, label, value }: EventDetailRowData) {
     );
 }
 
-function getEventDetailsTimeLabel(event: InternalCalendarEventType) {
+export function getEventDetailsTimeLabel(event: InternalCalendarEventType) {
     const startDate = event.startTime.format('MMM. D');
     const endDate = event.endTime.format('MMM. D');
     const dateLabel = event.startTime.isSame(event.endTime, 'day')

@@ -232,31 +232,13 @@ export function ClientCalendarPage({
                 style={{ height: '100%', opacity: loaded ? 1 : 0 }}
             >
                 {isMobile ? (
-                    <>
-                        <ScheduleHeader
-                            eyebrow={`${hackathon.name} Schedule`}
-                            monthLabel={monthObj.format('MMMM YYYY')}
+                    <div className="min-h-0 flex-1">
+                        <MobileCalendar
+                            events={scheduleEvents}
                             isAdmin={Boolean(isAdmin)}
-                            onAddEvent={handleAddEvent}
-                            showActions={false}
-                            className="px-3 pt-3 pb-2"
+                            onEventRsvpChange={updateEvents}
                         />
-                        {isAdmin && (
-                            <ScheduleActions
-                                isAdmin={Boolean(isAdmin)}
-                                onAddEvent={handleAddEvent}
-                                className="justify-end px-3 pb-2"
-                            />
-                        )}
-
-                        <div className="min-h-0 flex-1">
-                            <MobileCalendar
-                                events={scheduleEvents}
-                                isAdmin={Boolean(isAdmin)}
-                                onEventRsvpChange={updateEvents}
-                            />
-                        </div>
-                    </>
+                    </div>
                 ) : (
                     <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_18rem] gap-4">
                         <div className="flex min-h-0 flex-col">

@@ -1,32 +1,10 @@
-import {
-    currentYearMonthAtom,
-    editModeAtom,
-    getEventsOfMonth,
-    getMonthInfo,
-    groupEventsByDay,
-    InternalCalendarEventType,
-    range,
-    selectedDayAtom,
-} from '@/components/calendar/MonthCalendarShared';
-import { atom, useAtom, useAtomValue } from 'jotai';
-import { useEffect, useMemo, useState } from 'react';
-import style from './MobileCalendar.module.css';
-import { LinearTimeline } from '@/components/calendar/LinearTimeLine/LinearTimeline';
-import { Drawer, DrawerContent } from '@/components/ui/drawer';
-import { DialogTitle } from '@radix-ui/react-dialog';
-import { DaySchedule } from '@/components/calendar/DaySchedule/DaySchedule';
+import { useMemo, useState } from 'react';
 import dayjs from 'dayjs';
-import dayOfYear from 'dayjs/plugin/dayOfYear';
-import clsx from 'clsx';
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
-import { Card } from '@/components/ui/card';
-import { DateControls } from '@/components/calendar/DateControls/DateControls';
-dayjs.extend(dayOfYear);
-
-const firstdayAtom = atom((get) => {
-    const { year, month } = get(currentYearMonthAtom);
-    return dayjs(new Date(year, month, 1));
-});
+import { DaySchedule } from '@/components/calendar/DaySchedule/DaySchedule';
+import type { InternalCalendarEventType } from '@/components/calendar/MonthCalendarShared';
+import { Button } from '@/components/ui/button';
+import { MobileWeekStrip } from './MobileWeekStrip';
+import { MobileEventsDrawer } from './MobileEventsDrawer';
 
 export function MobileCalendar({
     events,
@@ -37,197 +15,74 @@ export function MobileCalendar({
     isAdmin?: boolean;
     onEventRsvpChange?: () => void | Promise<void>;
 }) {
-    const { year, month } = useAtomValue(currentYearMonthAtom);
-    const firstDay = useAtomValue(firstdayAtom);
-    const [selectedDay, setSelectedDay] = useAtom(selectedDayAtom);
-    const editMode = useAtomValue(editModeAtom);
+    const [selectedDay, setSelectedDay] = useState(() =>
+        dayjs().startOf('day')
+    );
+    const [eventsOpen, setEventsOpen] = useState(false);
 
-    useEffect(() => {
-        if (editMode) {
-            setSelectedDay(undefined);
-        }
-    }, [editMode, setSelectedDay]);
-
-    const filteredEvents = useMemo(
-        () => getEventsOfMonth(events, month, year, false),
-        [year, month, events]
+    const daysWithEvents = useMemo(
+        () => new Set(events.map((e) => e.startTime.format('YYYY-MM-DD'))),
+        [events]
     );
 
-    // filters to get a set of days that has an event.
-    const daysWithEvents = useMemo(() => {
-        const out = new Set<number>();
-        for (const e of filteredEvents) {
-            const dayid = e.startTime.dayOfYear() - firstDay.dayOfYear() + 1;
-            if (!out.has(dayid)) {
-                out.add(dayid);
-            }
-        }
-        return out;
-    }, [filteredEvents, firstDay]);
-
-    const eventGroupedByDay = useMemo(() => {
-        return groupEventsByDay(
-            filteredEvents,
-            dayjs(new Date(year, month, 1))
-        );
-    }, [filteredEvents, year, month]);
-
-    const dayEvents = useMemo(() => {
-        if (!selectedDay || !eventGroupedByDay) {
-            return [];
-        }
-        return eventGroupedByDay[selectedDay.date()];
-    }, [eventGroupedByDay, selectedDay]);
-
-    return (
-        <>
-            <Drawer
-                open={selectedDay !== undefined}
-                onClose={() => {
-                    setSelectedDay(undefined);
-                }}
-            >
-                <DrawerContent hideCloseButton>
-                    <DialogTitle style={{ display: 'none' }}>
-                        Events of {selectedDay?.format('MMM DD')}
-                    </DialogTitle>
-
-                    <DateControls
-                        className="w-full justify-between"
-                        onPrevious={() => {
-                            setSelectedDay(selectedDay!.subtract(1, 'day'));
-                        }}
-                        onToday={() => {
-                            setSelectedDay(dayjs());
-                        }}
-                        onNext={() => {
-                            setSelectedDay(selectedDay!.add(1, 'day'));
-                        }}
-                    />
-
-                    <div
-                        style={{
-                            width: '100%',
-                            maxHeight: '70dvh',
-                            height: '1000px',
-                            marginTop: '2rem',
-                        }}
-                    >
-                        <DaySchedule
-                            days={1}
-                            events={dayEvents ?? []}
-                            showControls={false}
-                            startDate={selectedDay ?? dayjs()}
-                            onEventRsvpChange={onEventRsvpChange}
-                            isAdmin={isAdmin}
-                        />
-                    </div>
-                </DrawerContent>
-            </Drawer>
-
-            <div className={style.Page}>
-                <CalenderDays daysWithEvent={daysWithEvents} />
-
-                <LinearTimeline eventsGroupedByDay={eventGroupedByDay} />
-            </div>
-        </>
+    const dayEvents = useMemo(
+        () => events.filter((e) => e.startTime.isSame(selectedDay, 'day')),
+        [events, selectedDay]
     );
-}
 
-interface MobileCalendarProps {
-    daysWithEvent: Set<number>;
-}
-function CalenderDays({ daysWithEvent }: MobileCalendarProps) {
-    const [selectedDay, setSelectedDay] = useAtom(selectedDayAtom);
-    const [{ year, month }, updateYearMonth] = useAtom(currentYearMonthAtom);
-
-    const monthInfo = useMemo(() => {
-        return getMonthInfo(year, month);
-    }, [year, month]);
-
-    const lastMonth = useMemo(() => {
-        return monthInfo.firstDay.subtract(1, 'month');
-    }, [monthInfo]);
-
-    const firstDay = useAtomValue(firstdayAtom);
+    const drawerEvents = useMemo(
+        () => dayEvents.filter((e) => !e.isDeadline),
+        [dayEvents]
+    );
 
     return (
-        <Card className={style.Container}>
-            <div className={style.ContainerContent}>
-                <div className={style.monthIndicator}>
-                    <button
-                        className={style.arrowButtons}
-                        onClick={() => {
-                            updateYearMonth('-1 month');
-                        }}
-                    >
-                        <ChevronLeftIcon style={{ width: '1.5rem' }} />
-                    </button>
-                    <span>{monthInfo.firstDay.format('MMMM YYYY')}</span>
-                    <button
-                        className={style.arrowButtons}
-                        onClick={() => {
-                            updateYearMonth('+1 month');
-                        }}
-                    >
-                        <ChevronRightIcon style={{ width: '1.5rem' }} />
-                    </button>
-                </div>
-                <div className={style.DayRow}>
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(
-                        (item, idx) => (
-                            <span key={idx} className={style.DayRowItem}>
-                                {item}
-                            </span>
-                        )
-                    )}
-                </div>
-                {range(monthInfo.weeksInMonth).map((weekidx) => (
-                    <div key={weekidx} className={style.DateRow}>
-                        {range(7).map((dayidx) => {
-                            let d =
-                                weekidx * 7 +
-                                dayidx +
-                                1 -
-                                monthInfo.firstDayOffset;
-                            let dayId = d;
-                            const OOB = d < 1 || d > monthInfo.daysInMonth;
-                            if (d < 1) {
-                                d += lastMonth.daysInMonth();
-                            } else if (d > monthInfo.daysInMonth) {
-                                d -= monthInfo.daysInMonth;
-                            }
+        <div className="flex h-full min-h-0 flex-col">
+            <MobileWeekStrip
+                selectedDay={selectedDay}
+                onSelectDay={(day) => setSelectedDay(day.startOf('day'))}
+                daysWithEvents={daysWithEvents}
+            />
 
-                            return (
-                                <button
-                                    key={d}
-                                    className={clsx(
-                                        style.DateButton,
-                                        OOB && style.OOB,
-                                        dayId ===
-                                            (selectedDay?.dayOfYear() ?? 0) -
-                                                firstDay.dayOfYear() +
-                                                1 && style.selected,
-
-                                        daysWithEvent.has(dayId) &&
-                                            style.hasEvent
-                                    )}
-                                    onClick={() => {
-                                        setSelectedDay(
-                                            dayjs(new Date(year, month, 1)).add(
-                                                dayId - 1,
-                                                'day'
-                                            )
-                                        );
-                                    }}
-                                >
-                                    {d}
-                                </button>
-                            );
-                        })}
-                    </div>
-                ))}
+            <div className="min-h-0 flex-1 px-3">
+                <DaySchedule
+                    days={1}
+                    startDate={selectedDay}
+                    events={dayEvents}
+                    showControls={false}
+                    isAdmin={isAdmin}
+                    onEventRsvpChange={onEventRsvpChange}
+                />
             </div>
-        </Card>
+
+            <div className="flex items-center justify-between px-3 py-3">
+                <Button
+                    type="button"
+                    size="compact"
+                    variant="default"
+                    hierarchy="secondary"
+                    onClick={() => setSelectedDay(dayjs().startOf('day'))}
+                >
+                    Jump to Today
+                </Button>
+                <Button
+                    type="button"
+                    size="compact"
+                    variant="default"
+                    hierarchy="secondary"
+                    onClick={() => setEventsOpen(true)}
+                >
+                    Events
+                </Button>
+            </div>
+
+            <MobileEventsDrawer
+                open={eventsOpen}
+                onOpenChange={setEventsOpen}
+                day={selectedDay}
+                events={drawerEvents}
+                isAdmin={isAdmin}
+                onEventsChanged={onEventRsvpChange}
+            />
+        </div>
     );
 }

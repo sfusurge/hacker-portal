@@ -103,7 +103,7 @@ export function ScheduleEventsCard({
     );
 }
 
-function AdminScheduleEventCard({
+export function AdminScheduleEventCard({
     event,
     onClick,
 }: {
