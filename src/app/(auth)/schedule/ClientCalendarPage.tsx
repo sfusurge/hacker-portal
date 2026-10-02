@@ -12,7 +12,7 @@ import {
     selectEventAtom,
 } from '@/components/calendar/MonthCalendarShared';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { ScheduleMiniCalendar } from '@/components/calendar/ScheduleMiniCalendar/ScheduleMiniCalendar';
 import { Card } from '@/components/ui/card';
 import { CalendarEvent } from '@/server/routers/eventsRouter';
 import dayjs, { Dayjs } from 'dayjs';
@@ -283,13 +283,13 @@ export function ClientCalendarPage({
 
                         <aside className="flex min-h-0 flex-col gap-4">
                             <Card className="flex-none overflow-hidden bg-neutral-900">
-                                <Calendar
-                                    mode="single"
+                                <ScheduleMiniCalendar
                                     month={monthObj.toDate()}
                                     selected={calendarSelectedDate.toDate()}
+                                    hackathonStart={hackathonRange.startDate}
+                                    hackathonEnd={hackathonRange.endDate}
                                     onSelect={handleDesktopDateSelect}
                                     onMonthChange={handleDesktopMonthChange}
-                                    className="w-full p-4"
                                 />
                             </Card>
                             <ScheduleEventsCard
