@@ -5,7 +5,11 @@ import { NavLink } from './NavLink';
 import { HomeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
-import { InboxStackIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import {
+    InboxStackIcon,
+    ChartBarIcon,
+    SparklesIcon,
+} from '@heroicons/react/24/outline';
 
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
@@ -20,6 +24,8 @@ import { hasAdminAccess } from '@/lib/auth/roles';
 import { useAtomValue } from 'jotai';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { canAccessProjectGallery } from '@/lib/submissionWindow';
+import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
+import { trpc } from '@/trpc/client';
 
 interface MobileBottomNavProps {
     className?: string;
@@ -27,6 +33,8 @@ interface MobileBottomNavProps {
 }
 
 const excludedUrls = ['/application', '/admin/qr'];
+
+const POINTS_URL = 'https://points.sfusurge.com';
 
 const judgeNavLinks = [
     {
@@ -107,6 +115,15 @@ const projectGalleryLink = {
     disabled: false,
 };
 
+const pointsNavLink = {
+    href: POINTS_URL,
+    label: 'Points',
+    icon: <SparklesIcon />,
+    iconAlt: 'Points logo',
+    active: false,
+    disabled: false,
+};
+
 const adminLinks = [
     {
         href: '',
@@ -158,20 +175,53 @@ export default function MobileBottomNav({
             hackathon.submissionOpen?.toDate() ?? null
         );
 
+    const { data: currentApplication } =
+        trpc.applications.getCurrentApplication.useQuery(
+            { hackathonId: hackathon?.id ?? -1 },
+            {
+                enabled:
+                    Boolean(hackathon?.id) &&
+                    Boolean(initialData) &&
+                    initialData?.userRole !== 'judge' &&
+                    initialData?.userRole !== 'sponsor',
+            }
+        );
+
+    const showPointsLink = isEligibleForHackathonTicketQr(
+        currentApplication?.currentStatus
+    );
+
     const navLinks = useMemo(() => {
-        if (!galleryAccessible) return baseNavLinks;
-        const scheduleIndex = baseNavLinks.findIndex(
+        let links = baseNavLinks;
+
+        if (showPointsLink) {
+            const scheduleIndex = links.findIndex(
+                (link) => link.href === '/schedule'
+            );
+            links =
+                scheduleIndex === -1
+                    ? [...links, pointsNavLink]
+                    : [
+                          ...links.slice(0, scheduleIndex + 1),
+                          pointsNavLink,
+                          ...links.slice(scheduleIndex + 1),
+                      ];
+        }
+
+        if (!galleryAccessible) return links;
+
+        const scheduleIndex = links.findIndex(
             (link) => link.href === '/schedule'
         );
         if (scheduleIndex === -1) {
-            return [...baseNavLinks, projectGalleryLink];
+            return [...links, projectGalleryLink];
         }
         return [
-            ...baseNavLinks.slice(0, scheduleIndex + 1),
+            ...links.slice(0, scheduleIndex + 1),
             projectGalleryLink,
-            ...baseNavLinks.slice(scheduleIndex + 1),
+            ...links.slice(scheduleIndex + 1),
         ];
-    }, [galleryAccessible]);
+    }, [galleryAccessible, showPointsLink]);
 
     return (
         <>
@@ -213,18 +263,33 @@ export default function MobileBottomNav({
                         </>
                     ) : (
                         <>
-                            {navLinks.map((link) => (
-                                <NavLink
-                                    key={link.href}
-                                    href={link.href}
-                                    label={link.label}
-                                    icon={link.icon}
-                                    iconAlt={link.iconAlt}
-                                    platform="mobile"
-                                    active={url.startsWith(link.href)}
-                                    disabled={link.disabled}
-                                />
-                            ))}
+                            {navLinks.map((link) => {
+                                const isExternal = link.href.startsWith('http');
+                                return (
+                                    <NavLink
+                                        key={link.href}
+                                        href={link.href}
+                                        label={link.label}
+                                        icon={link.icon}
+                                        iconAlt={link.iconAlt}
+                                        platform="mobile"
+                                        active={
+                                            isExternal
+                                                ? false
+                                                : url.startsWith(link.href)
+                                        }
+                                        disabled={link.disabled}
+                                        target={
+                                            isExternal ? '_blank' : undefined
+                                        }
+                                        rel={
+                                            isExternal
+                                                ? 'noopener noreferrer'
+                                                : undefined
+                                        }
+                                    />
+                                );
+                            })}
 
                             {hasAdminAccess(initialData?.userRole) &&
                                 adminLinks.map((link) => (

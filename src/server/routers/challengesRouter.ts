@@ -15,7 +15,7 @@ import { user as usersTable } from '@/db/schema/users/users';
 import { ResourceNotFoundError } from '../exceptions';
 import { TRPCError } from '@trpc/server';
 import { adminProcedure, protectedProcedure, router } from '../trpc';
-import { and, asc, count, eq, getTableColumns } from 'drizzle-orm';
+import { and, asc, count, eq, getTableColumns, sql } from 'drizzle-orm';
 import { applications } from '@/db/schema/applications';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
 import { assignHouseIfNeeded } from '@/server/houses/assignHouse';
@@ -342,6 +342,51 @@ export const challengesRouter = router({
                 total: progress.total,
                 completionCount,
                 maxCompletions,
+            };
+        }),
+
+    getChallengeCompletionCounts: adminProcedure
+        .input(getChallengesSchema)
+        .query(async ({ input }) => {
+            const rows = await databaseClient
+                .select({
+                    challengeId: challenges.id,
+                    title: challenges.title,
+                    eventType: challenges.eventType,
+                    maxCompletions: challenges.maxCompletions,
+                    completionCount: count(challengeCompletions.id),
+                })
+                .from(challenges)
+                .leftJoin(
+                    challengeCompletions,
+                    eq(challengeCompletions.challengeId, challenges.id)
+                )
+                .where(eq(challenges.hackathonId, input.hackathonId))
+                .groupBy(
+                    challenges.id,
+                    challenges.title,
+                    challenges.eventType,
+                    challenges.maxCompletions
+                )
+                .orderBy(asc(challenges.title));
+
+            const [uniqueRow] = await databaseClient
+                .select({
+                    uniqueHackers: sql<number>`count(distinct ${challengeCompletions.userId})`,
+                })
+                .from(challengeCompletions)
+                .innerJoin(
+                    challenges,
+                    eq(challenges.id, challengeCompletions.challengeId)
+                )
+                .where(eq(challenges.hackathonId, input.hackathonId));
+
+            return {
+                challenges: rows.map((row) => ({
+                    ...row,
+                    completionCount: Number(row.completionCount ?? 0),
+                })),
+                uniqueHackers: Number(uniqueRow?.uniqueHackers ?? 0),
             };
         }),
 });
