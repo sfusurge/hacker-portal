@@ -18,7 +18,7 @@ import {
 
 import { HomeIcon } from '@heroicons/react/24/outline';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
-import { QrCodeIcon } from '@heroicons/react/24/solid';
+import { SparklesIcon } from '@heroicons/react/24/outline';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
 import { signOutAndRedirect } from '@/auth/auth-client';
 import { usePathname } from 'next/navigation';
@@ -44,6 +44,10 @@ import {
     isSparkjamProjectsArea,
     SPARKJAM_PROJECTS_PATH,
 } from '@/lib/projects/projectsPaths';
+import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
+
+/** Hacker points / games app (NFC badges land here). */
+const POINTS_URL = 'https://points.sfusurge.com';
 
 /** mobile (under 768px) user can expand/collapse. */
 const SIDEBAR_MOBILE_MAX_PX = 768;
@@ -98,6 +102,13 @@ const projectGalleryLink = {
     iconAlt: 'Project gallery logo',
 };
 
+const pointsNavLink = {
+    href: POINTS_URL,
+    label: 'Points',
+    icon: <SparklesIcon className="h-6 w-6" />,
+    iconAlt: 'Points logo',
+};
+
 // Owner-only (hackathon configuration).
 const ownerLinks = [
     {
@@ -110,30 +121,6 @@ const ownerLinks = [
 
 const adminLinks = [
     {
-        href: '/admin/qr',
-        label: 'Hacker Checkin',
-        icon: <QrCodeIcon className="h-6 w-6" />,
-        iconAlt: 'QR logo',
-    },
-    {
-        href: '/admin/houses',
-        label: 'Houses',
-        icon: <HomeModernIcon className="h-6 w-6" />,
-        iconAlt: 'Houses logo',
-    },
-    {
-        href: '/admin/challenges',
-        label: 'Challenges',
-        icon: <TrophyIcon className="h-6 w-6" />,
-        iconAlt: 'Challenges logo',
-    },
-    {
-        href: '/admin/shop',
-        label: 'Shop',
-        icon: <GiftIcon className="h-6 w-6" />,
-        iconAlt: 'Shop logo',
-    },
-    {
         href: '/admin/review',
         label: 'Review Applications',
         icon: <UserGroupIcon className="h-6 w-6" />,
@@ -144,6 +131,38 @@ const adminLinks = [
         label: 'Emails',
         icon: <EnvelopeIcon className="h-6 w-6" />,
         iconAlt: 'Emails logo',
+    },
+    {
+        href: '/admin/checkins',
+        label: 'Check-ins',
+        icon: <ChartBarIcon className="h-6 w-6" />,
+        iconAlt: 'Check-ins logo',
+    },
+    {
+        href: '/admin/challenges',
+        label: 'Points',
+        icon: <TrophyIcon className="h-6 w-6" />,
+        iconAlt: 'Points logo',
+        dropdownItems: [
+            {
+                label: 'Challenges',
+                href: '/admin/challenges',
+                icon: <TrophyIcon className="h-6 w-6 text-white/60" />,
+                iconAlt: 'Challenges',
+            },
+            {
+                label: 'Houses',
+                href: '/admin/houses',
+                icon: <HomeModernIcon className="h-6 w-6 text-white/60" />,
+                iconAlt: 'Houses',
+            },
+            {
+                label: 'Shop',
+                href: '/admin/shop',
+                icon: <GiftIcon className="h-6 w-6 text-white/60" />,
+                iconAlt: 'Shop',
+            },
+        ],
     },
 ];
 
@@ -238,22 +257,54 @@ export default function SideBar({ className, initialData }: NavProps) {
             hackathon.submissionOpen?.toDate() ?? null
         );
 
-    const mainNavLinks = useMemo(() => {
-        if (!galleryAccessible) return navLinks;
+    const { data: currentApplication } =
+        trpc.applications.getCurrentApplication.useQuery(
+            { hackathonId: hackathon?.id ?? -1 },
+            {
+                enabled:
+                    Boolean(hackathon?.id) &&
+                    Boolean(initialData) &&
+                    initialData?.userRole !== 'judge' &&
+                    initialData?.userRole !== 'sponsor',
+            }
+        );
 
-        const announcementsIndex = navLinks.findIndex(
+    const showPointsLink = isEligibleForHackathonTicketQr(
+        currentApplication?.currentStatus
+    );
+
+    const mainNavLinks = useMemo(() => {
+        let links = navLinks;
+
+        if (showPointsLink) {
+            const scheduleIndex = links.findIndex(
+                (link) => link.href === '/schedule'
+            );
+            links =
+                scheduleIndex === -1
+                    ? [...links, pointsNavLink]
+                    : [
+                          ...links.slice(0, scheduleIndex + 1),
+                          pointsNavLink,
+                          ...links.slice(scheduleIndex + 1),
+                      ];
+        }
+
+        if (!galleryAccessible) return links;
+
+        const announcementsIndex = links.findIndex(
             (link) => link.href === '/announcements'
         );
         if (announcementsIndex === -1) {
-            return [...navLinks, projectGalleryLink];
+            return [...links, projectGalleryLink];
         }
 
         return [
-            ...navLinks.slice(0, announcementsIndex + 1),
+            ...links.slice(0, announcementsIndex + 1),
             projectGalleryLink,
-            ...navLinks.slice(announcementsIndex + 1),
+            ...links.slice(announcementsIndex + 1),
         ];
-    }, [galleryAccessible]);
+    }, [galleryAccessible, showPointsLink]);
 
     useEffect(() => {
         const checkScreenSize = () => {
@@ -343,18 +394,38 @@ export default function SideBar({ className, initialData }: NavProps) {
                                 ))
                             ) : (
                                 <>
-                                    {mainNavLinks.map((link) => (
-                                        <NavLink
-                                            key={link.href}
-                                            href={link.href}
-                                            label={link.label}
-                                            icon={link.icon}
-                                            iconAlt={link.iconAlt}
-                                            platform="desktop"
-                                            active={url.startsWith(link.href)}
-                                            collapsed={collapsed}
-                                        />
-                                    ))}
+                                    {mainNavLinks.map((link) => {
+                                        const isExternal =
+                                            link.href.startsWith('http');
+                                        return (
+                                            <NavLink
+                                                key={link.href}
+                                                href={link.href}
+                                                label={link.label}
+                                                icon={link.icon}
+                                                iconAlt={link.iconAlt}
+                                                platform="desktop"
+                                                active={
+                                                    isExternal
+                                                        ? false
+                                                        : url.startsWith(
+                                                              link.href
+                                                          )
+                                                }
+                                                collapsed={collapsed}
+                                                target={
+                                                    isExternal
+                                                        ? '_blank'
+                                                        : undefined
+                                                }
+                                                rel={
+                                                    isExternal
+                                                        ? 'noopener noreferrer'
+                                                        : undefined
+                                                }
+                                            />
+                                        );
+                                    })}
                                 </>
                             )}
                             {isPublicSparkjamRoute && (
@@ -583,20 +654,33 @@ export default function SideBar({ className, initialData }: NavProps) {
                                                     collapsed={collapsed}
                                                 />
                                             ))}
-                                        {adminLinks.map((link) => (
-                                            <NavLink
-                                                key={link.href}
-                                                href={link.href}
-                                                label={link.label}
-                                                icon={link.icon}
-                                                iconAlt={link.iconAlt}
-                                                platform="desktop"
-                                                active={url.startsWith(
-                                                    link.href
-                                                )}
-                                                collapsed={collapsed}
-                                            />
-                                        ))}
+                                        {adminLinks.map((link) => {
+                                            const dropdownHrefs =
+                                                link.dropdownItems?.map(
+                                                    (item) => item.href
+                                                ) ?? [];
+                                            const isActive =
+                                                url.startsWith(link.href) ||
+                                                dropdownHrefs.some((href) =>
+                                                    url.startsWith(href)
+                                                );
+
+                                            return (
+                                                <NavLink
+                                                    key={link.label}
+                                                    href={link.href}
+                                                    label={link.label}
+                                                    icon={link.icon}
+                                                    iconAlt={link.iconAlt}
+                                                    platform="desktop"
+                                                    active={isActive}
+                                                    collapsed={collapsed}
+                                                    dropdownItems={
+                                                        link.dropdownItems
+                                                    }
+                                                />
+                                            );
+                                        })}
                                     </motion.div>
                                 </>
                             )}

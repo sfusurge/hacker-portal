@@ -1,21 +1,24 @@
 'use client';
 
 import Link from 'next/link';
-import { ComponentProps, ReactNode } from 'react';
+import { ComponentProps, ReactNode, useState } from 'react';
 import { cva, VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import { motion } from 'motion/react';
+import { ChevronRightIcon } from '@heroicons/react/24/outline';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import * as PopoverPrimitive from '@radix-ui/react-popover';
 
 interface DropdownItem {
     label: string;
     href: string;
+    icon?: ReactNode;
+    iconAlt?: string;
 }
 
 interface NavLinkProps {
@@ -70,29 +73,45 @@ export function NavLink({
 }: ComponentProps<'a'> & NavLinkProps & VariantProps<typeof navLinkVariants>) {
     const pathname = usePathname();
     const isCollapsed = collapsed || className?.includes('justify-center');
+    const [submenuOpen, setSubmenuOpen] = useState(false);
+
+    const dropdownActive =
+        dropdownItems?.some(
+            (item) =>
+                pathname === item.href || pathname.startsWith(item.href + '/')
+        ) ?? false;
+
+    const active =
+        Boolean(isActive) ||
+        pathname === href ||
+        pathname.startsWith(href + '/') ||
+        dropdownActive;
+
+    const iconNode =
+        icon && iconAlt ? (
+            <div className="relative flex h-6 w-6 items-center justify-center">
+                {typeof icon === 'string' ? (
+                    <img
+                        src={icon}
+                        alt={iconAlt}
+                        className="h-6 w-6 rounded-lg object-contain"
+                    />
+                ) : (
+                    <div className="h-6 w-6 [&>svg]:h-full [&>svg]:w-full">
+                        {icon}
+                    </div>
+                )}
+                {badge && (
+                    <span className="bg-danger-500 absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-0.5 text-[10px] leading-none font-bold text-white">
+                        {badge}
+                    </span>
+                )}
+            </div>
+        ) : null;
 
     const linkContent = (
         <>
-            {icon && iconAlt && (
-                <div className="relative flex h-6 w-6 items-center justify-center">
-                    {typeof icon === 'string' ? (
-                        <img
-                            src={icon}
-                            alt={iconAlt}
-                            className="h-6 w-6 rounded-lg object-contain"
-                        />
-                    ) : (
-                        <div className="h-6 w-6 [&>svg]:h-full [&>svg]:w-full">
-                            {icon}
-                        </div>
-                    )}
-                    {badge && (
-                        <span className="bg-danger-500 absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-0.5 text-[10px] leading-none font-bold text-white">
-                            {badge}
-                        </span>
-                    )}
-                </div>
-            )}
+            {iconNode}
             {!isCollapsed ? (
                 <motion.span
                     className="leading-none whitespace-nowrap"
@@ -107,6 +126,18 @@ export function NavLink({
         </>
     );
 
+    const triggerClassName = cn(
+        navLinkVariants({
+            variant,
+            platform,
+            active,
+            disabled,
+        }),
+        isCollapsed ? 'justify-start' : 'w-full justify-start',
+        'cursor-pointer',
+        className
+    );
+
     return (
         <motion.div
             initial={false}
@@ -116,60 +147,59 @@ export function NavLink({
             transition={{ ease: 'easeInOut' }}
         >
             {dropdownItems && dropdownItems.length > 0 ? (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Link
-                            href={href}
-                            {...props}
-                            className={cn(
-                                navLinkVariants({
-                                    variant,
-                                    platform,
-                                    active:
-                                        isActive ||
-                                        pathname === href ||
-                                        pathname.startsWith(href + '/'),
-                                    disabled,
-                                }),
-                                isCollapsed
-                                    ? 'justify-start'
-                                    : 'w-full justify-start',
-                                className
-                            )}
-                        >
-                            {linkContent}
-                        </Link>
-                    </DropdownMenuTrigger>
-
-                    <DropdownMenuContent
-                        side="right"
-                        align="start"
-                        className="w-48"
-                    >
-                        {dropdownItems.map((item, idx) => {
-                            const isChildActive =
-                                pathname === item.href ||
-                                pathname.startsWith(item.href + '/') ||
-                                (pathname === href && idx === 0);
-
-                            return (
-                                <DropdownMenuItem asChild key={item.href}>
-                                    <Link
-                                        href={item.href}
-                                        className={cn(
-                                            'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm',
-                                            isChildActive
-                                                ? 'bg-brand-950 text-white'
-                                                : 'text-white/80 hover:bg-neutral-800'
-                                        )}
+                <Popover open={submenuOpen} onOpenChange={setSubmenuOpen}>
+                    <PopoverTrigger asChild>
+                        <div className={triggerClassName}>
+                            {isCollapsed ? (
+                                <PopoverPrimitive.Anchor asChild>
+                                    <div>{iconNode}</div>
+                                </PopoverPrimitive.Anchor>
+                            ) : (
+                                <>
+                                    {iconNode}
+                                    <motion.div
+                                        className="flex w-full items-center justify-between"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.2 }}
                                     >
-                                        {item.label}
-                                    </Link>
-                                </DropdownMenuItem>
-                            );
-                        })}
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                                        <span className="leading-none whitespace-nowrap">
+                                            {label}
+                                        </span>
+                                        <PopoverPrimitive.Anchor asChild>
+                                            <span className="inline-flex size-6 shrink-0 items-center justify-center">
+                                                <ChevronRightIcon className="h-4 w-4" />
+                                            </span>
+                                        </PopoverPrimitive.Anchor>
+                                    </motion.div>
+                                </>
+                            )}
+                        </div>
+                    </PopoverTrigger>
+                    <PopoverContent
+                        side="right"
+                        align="center"
+                        sideOffset={24}
+                        className="z-[2000] w-48 border border-neutral-600/30"
+                    >
+                        {dropdownItems.map((item) => (
+                            <NavLink
+                                key={item.href}
+                                href={item.href}
+                                label={item.label}
+                                icon={item.icon}
+                                iconAlt={item.iconAlt}
+                                platform="desktop"
+                                active={
+                                    pathname === item.href ||
+                                    pathname.startsWith(item.href + '/')
+                                }
+                                onClick={() => setSubmenuOpen(false)}
+                            />
+                        ))}
+                    </PopoverContent>
+                </Popover>
             ) : (
                 <Link
                     href={href}

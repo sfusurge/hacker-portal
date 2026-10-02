@@ -42,6 +42,7 @@ const PAGE_TITLE_MAP: { prefix: string; label: string }[] = [
     { prefix: '/schedule', label: 'Schedule' },
     { prefix: '/shop', label: 'Shop' },
     { prefix: '/admin/shop', label: 'Shop' },
+    { prefix: '/admin/checkins', label: 'Check-ins' },
     { prefix: '/sparkjam/projects', label: 'Projects' },
     { prefix: '/projects', label: 'Project Gallery' },
     { prefix: '/home', label: 'Home' },

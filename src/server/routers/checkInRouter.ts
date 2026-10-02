@@ -9,7 +9,7 @@ import { user as usersTable } from '@/db/schema/users/users';
 import { ResourceNotFoundError } from '../exceptions';
 import { TRPCError } from '@trpc/server';
 import { adminProcedure, router } from '../trpc';
-import { and, desc, eq, count } from 'drizzle-orm';
+import { and, asc, eq, count } from 'drizzle-orm';
 import { events } from '@/db/schema/events';
 import { applications } from '@/db/schema/applications';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
@@ -125,6 +125,8 @@ export const checkInRouter = router({
                 .select({
                     eventId: events.id,
                     eventTitle: events.title,
+                    eventType: events.eventType,
+                    startDate: events.startDate,
                     checkInCount: count(checkIns.userId),
                 })
                 .from(events)
@@ -135,8 +137,13 @@ export const checkInRouter = router({
                         eq(events.hasCheckIn, true)
                     )
                 )
-                .groupBy(events.id, events.title)
-                .orderBy(desc(events.startDate));
+                .groupBy(
+                    events.id,
+                    events.title,
+                    events.eventType,
+                    events.startDate
+                )
+                .orderBy(asc(events.startDate));
 
             return checkInCounts;
         }),
