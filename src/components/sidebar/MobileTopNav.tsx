@@ -3,14 +3,24 @@
 import clsx from 'clsx';
 import { cn } from '@/lib/utils';
 import { Bars3Icon, UserIcon } from '@heroicons/react/24/outline';
-import { MegaphoneIcon } from '@heroicons/react/24/solid';
+import { MegaphoneIcon, PlusIcon } from '@heroicons/react/24/solid';
 import { NavLink } from './NavLink';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { UserData } from '@/server/routers/usersRouter';
 import { motion, AnimatePresence } from 'motion/react';
-import { useAtomValue } from 'jotai';
-import { hackathonAtom, unreadLabelAtom } from '@/app/(auth)/ClientContext';
+import { useAtomValue, useSetAtom } from 'jotai';
+import {
+    hackathonAtom,
+    unreadLabelAtom,
+    userInfoAtom,
+} from '@/app/(auth)/ClientContext';
+import { Button } from '@/components/ui/button';
+import { hasAdminAccess } from '@/lib/auth/roles';
+import {
+    editModeAtom,
+    selectEventAtom,
+} from '@/components/calendar/MonthCalendarShared';
 
 interface MobileTopNavProps {
     className?: string;
@@ -68,6 +78,11 @@ export default function MobileTopNav({
     } | null>(null);
     const unreadCount = useAtomValue(unreadLabelAtom);
     const hackathon = useAtomValue(hackathonAtom);
+    const userInfo = useAtomValue(userInfoAtom);
+    const isAdmin = Boolean(userInfo && hasAdminAccess(userInfo.userRole));
+    const selectEvent = useSetAtom(selectEventAtom);
+    const setEditMode = useSetAtom(editModeAtom);
+    const showAddEvent = isAdmin && url.startsWith('/schedule');
 
     /** tap outside drawer closes, drag/scroll does not */
     useEffect(() => {
@@ -172,7 +187,23 @@ export default function MobileTopNav({
                             </span>
                         </div>
 
-                        <div className="flex items-center justify-end">
+                        <div className="flex items-center justify-end gap-2">
+                            {showAddEvent && (
+                                <Button
+                                    type="button"
+                                    size="compact"
+                                    variant="brand"
+                                    hierarchy="primary"
+                                    aria-label="Add event"
+                                    className="w-9 justify-center px-0"
+                                    onClick={() => {
+                                        selectEvent();
+                                        setEditMode(true);
+                                    }}
+                                >
+                                    <PlusIcon className="size-5" />
+                                </Button>
+                            )}
                             <NavLink
                                 key={announcement.href}
                                 href={announcement.href}

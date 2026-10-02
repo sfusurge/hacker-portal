@@ -12,7 +12,7 @@ import {
     selectEventAtom,
 } from '@/components/calendar/MonthCalendarShared';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { ScheduleMiniCalendar } from '@/components/calendar/ScheduleMiniCalendar/ScheduleMiniCalendar';
 import { Card } from '@/components/ui/card';
 import { CalendarEvent } from '@/server/routers/eventsRouter';
 import dayjs, { Dayjs } from 'dayjs';
@@ -223,38 +223,22 @@ export function ClientCalendarPage({
 
     return (
         <>
-            {isAdmin && <EventAdmin eventsAtom={eventsAtom} />}
+            {isAdmin && (
+                <EventAdmin eventsAtom={eventsAtom} fullScreen={isMobile} />
+            )}
 
             <div
                 className="flex h-full min-h-0 flex-col"
                 style={{ height: '100%', opacity: loaded ? 1 : 0 }}
             >
                 {isMobile ? (
-                    <>
-                        <ScheduleHeader
-                            eyebrow={`${hackathon.name} Schedule`}
-                            monthLabel={monthObj.format('MMMM YYYY')}
+                    <div className="min-h-0 flex-1">
+                        <MobileCalendar
+                            events={scheduleEvents}
                             isAdmin={Boolean(isAdmin)}
-                            onAddEvent={handleAddEvent}
-                            showActions={false}
-                            className="px-3 pt-3 pb-2"
+                            onEventRsvpChange={updateEvents}
                         />
-                        {isAdmin && (
-                            <ScheduleActions
-                                isAdmin={Boolean(isAdmin)}
-                                onAddEvent={handleAddEvent}
-                                className="justify-end px-3 pb-2"
-                            />
-                        )}
-
-                        <div className="min-h-0 flex-1">
-                            <MobileCalendar
-                                events={scheduleEvents}
-                                isAdmin={Boolean(isAdmin)}
-                                onEventRsvpChange={updateEvents}
-                            />
-                        </div>
-                    </>
+                    </div>
                 ) : (
                     <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_18rem] gap-4">
                         <div className="flex min-h-0 flex-col">
@@ -299,13 +283,13 @@ export function ClientCalendarPage({
 
                         <aside className="flex min-h-0 flex-col gap-4">
                             <Card className="flex-none overflow-hidden bg-neutral-900">
-                                <Calendar
-                                    mode="single"
+                                <ScheduleMiniCalendar
                                     month={monthObj.toDate()}
                                     selected={calendarSelectedDate.toDate()}
+                                    hackathonStart={hackathonRange.startDate}
+                                    hackathonEnd={hackathonRange.endDate}
                                     onSelect={handleDesktopDateSelect}
                                     onMonthChange={handleDesktopMonthChange}
-                                    className="w-full p-4"
                                 />
                             </Card>
                             <ScheduleEventsCard

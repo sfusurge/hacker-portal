@@ -19,6 +19,7 @@ import { TRPCError } from '@trpc/server';
 import { databaseClient } from '@/db/client';
 import { and, asc, count, eq, getTableColumns } from 'drizzle-orm';
 import { checkIns } from '@/db/schema/checkIn';
+import { challengeCompletions, challenges } from '@/db/schema/challenges';
 import {
     getEventRsvpCountSchema,
     ignoredEvents,
@@ -331,16 +332,51 @@ export const eventsRouter = router({
     deleteEvent: adminProcedure
         .input(deleteEventSchema)
         .mutation(async ({ input }) => {
-            const [result] = await databaseClient
+            const [checkInResult] = await databaseClient
                 .select({ checkInCount: count(checkIns.userId) })
                 .from(checkIns)
                 .where(eq(checkIns.eventId, input.eventId));
 
-            if ((result?.checkInCount ?? 0) > 0) {
+            if ((checkInResult?.checkInCount ?? 0) > 0) {
                 throw new TRPCError({
                     code: 'BAD_REQUEST',
                     message: 'Cannot delete an event with existing check-ins.',
                 });
+            }
+
+            const [eventRow] = await databaseClient
+                .select({
+                    hackathonId: eventsTable.hackathonId,
+                    eventType: eventsTable.eventType,
+                })
+                .from(eventsTable)
+                .where(eq(eventsTable.id, input.eventId))
+                .limit(1);
+
+            if (eventRow?.eventType != null) {
+                const [completionResult] = await databaseClient
+                    .select({
+                        completionCount: count(challengeCompletions.id),
+                    })
+                    .from(challengeCompletions)
+                    .innerJoin(
+                        challenges,
+                        eq(challenges.id, challengeCompletions.challengeId)
+                    )
+                    .where(
+                        and(
+                            eq(challenges.hackathonId, eventRow.hackathonId),
+                            eq(challenges.eventType, eventRow.eventType)
+                        )
+                    );
+
+                if ((completionResult?.completionCount ?? 0) > 0) {
+                    throw new TRPCError({
+                        code: 'BAD_REQUEST',
+                        message:
+                            'Cannot delete an event with existing challenge completions.',
+                    });
+                }
             }
 
             return await databaseClient

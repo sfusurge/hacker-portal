@@ -57,7 +57,7 @@ export function ScheduleEventsCard({
     }, [events]);
 
     return (
-        <Card className="min-h-0 overflow-hidden bg-neutral-900">
+        <Card className="min-h-0 flex-1 overflow-hidden bg-neutral-900">
             <CardHeader className="flex-none p-4">
                 <CardHeaderTitle className="text-lg">Events</CardHeaderTitle>
             </CardHeader>
@@ -103,7 +103,7 @@ export function ScheduleEventsCard({
     );
 }
 
-function AdminScheduleEventCard({
+export function AdminScheduleEventCard({
     event,
     onClick,
 }: {
