@@ -223,7 +223,9 @@ export function ClientCalendarPage({
 
     return (
         <>
-            {isAdmin && <EventAdmin eventsAtom={eventsAtom} />}
+            {isAdmin && (
+                <EventAdmin eventsAtom={eventsAtom} fullScreen={isMobile} />
+            )}
 
             <div
                 className="flex h-full min-h-0 flex-col"

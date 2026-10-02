@@ -31,9 +31,11 @@ import { cn } from '@/lib/utils';
 import { submitFile } from '@/lib/blobs';
 import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
 import { getEventTypeDisplay } from '@/utils/eventTypeDisplay';
+import { toast } from '@/hooks/use-toast';
 
 export interface EventAdminProps {
     eventsAtom: PrimitiveAtom<InternalCalendarEventType[]>;
+    fullScreen?: boolean;
 }
 
 const eventFormLabelClassName = 'font-normal text-[var(--text-secondary)]';
@@ -66,7 +68,10 @@ type EventImageUploadProps = {
     onFileChange: (file?: File) => void;
 };
 
-export function EventAdmin({ eventsAtom }: EventAdminProps) {
+export function EventAdmin({
+    eventsAtom,
+    fullScreen = false,
+}: EventAdminProps) {
     const _selectedEvent = useAtomValue(selectedEventAtom);
     const clearSelectedEvent = useSetAtom(selectEventAtom);
     const [, setEvents] = useAtom(eventsAtom);
@@ -233,6 +238,15 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
         setLongDescription(submittedLongDescription);
         await refreshEvents();
         setEditMode(false);
+
+        if (fullScreen) {
+            toast({
+                title: _selectedEvent
+                    ? 'Your changes have been saved'
+                    : 'Event created',
+                variant: 'success',
+            });
+        }
     }
 
     async function deleteEvent() {
@@ -255,260 +269,267 @@ export function EventAdmin({ eventsAtom }: EventAdminProps) {
         return false;
     }
 
-    return (
+    const formBody = (
         <>
-            <SideDrawer visibleAtom={editModeAtom}>
-                <h1 className="mb-4 font-sans text-lg leading-tight font-semibold tracking-tighter text-white">
-                    {_selectedEvent ? 'Edit event' : 'Create new event'}
-                </h1>
-                <form onSubmit={saveEvent} className="flex flex-col gap-5">
+            <h1 className="mb-4 font-sans text-lg leading-tight font-semibold tracking-tighter text-white">
+                {_selectedEvent ? 'Edit event' : 'Create new event'}
+            </h1>
+            <form onSubmit={saveEvent} className="flex flex-col gap-5">
+                <div className="flex flex-col gap-2">
+                    <Label className={eventFormLabelClassName}>
+                        Event name
+                    </Label>
+                    <FormTextInput
+                        name="title"
+                        placeholder="Event Title"
+                        type="text"
+                        defaultValue={event?.title ?? ''}
+                        required
+                        lazy
+                        onLazyChange={(txt) => {
+                            updateEvent('title', txt);
+                        }}
+                    />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                    <Label className={eventFormLabelClassName}>
+                        Major Event
+                    </Label>
+                    <Select
+                        value={String(event?.hackathonId ?? hackathon.id)}
+                        disabled={Boolean(_selectedEvent)}
+                        onValueChange={(hackathonId) => {
+                            updateEvent('hackathonId', Number(hackathonId));
+                        }}
+                    >
+                        <SelectTrigger className="h-11 w-full disabled:opacity-100">
+                            <span className="flex items-center gap-2">
+                                <span className="bg-brand-500 size-1.5 rounded-full" />
+                                {selectedHackathonName}
+                            </span>
+                        </SelectTrigger>
+                        <SelectContent className="z-[9999] bg-neutral-800 text-white">
+                            <SelectGroup>
+                                <SelectLabel>Major Event</SelectLabel>
+                                {hackathonOptions.map((option) => {
+                                    return (
+                                        <SelectItem
+                                            key={option.id}
+                                            value={String(option.id)}
+                                        >
+                                            <span className="flex items-center gap-2">
+                                                <span className="bg-brand-500 size-1.5 rounded-full" />
+                                                {option.name}
+                                            </span>
+                                        </SelectItem>
+                                    );
+                                })}
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                    <Label className={eventFormLabelClassName}>
+                        Event Category
+                    </Label>
+                    <Select
+                        value={event?.eventType ?? EventType.EVENT}
+                        defaultValue="Event"
+                        onValueChange={(eventType) => {
+                            if (!event) {
+                                return;
+                            }
+
+                            updateEvent('eventType', eventType as EventType);
+                        }}
+                    >
+                        <SelectTrigger className="h-11 w-full">
+                            <EventTypeSelectLabel
+                                eventType={event?.eventType ?? EventType.EVENT}
+                            />
+                        </SelectTrigger>
+                        <SelectContent className="z-[9999] bg-neutral-800 text-white">
+                            <SelectGroup>
+                                <SelectLabel>Event category</SelectLabel>
+                                {EVENT_TYPES.map((eventType) => {
+                                    return (
+                                        <SelectItem
+                                            key={eventType}
+                                            value={eventType}
+                                        >
+                                            <EventTypeSelectLabel
+                                                eventType={eventType}
+                                            />
+                                        </SelectItem>
+                                    );
+                                })}
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="border-t border-[var(--border-neutral-tertiary)]" />
+
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                     <div className="flex flex-col gap-2">
-                        <Label className={eventFormLabelClassName}>
-                            Event name
+                        <Label required className={eventFormLabelClassName}>
+                            Start date
                         </Label>
-                        <FormTextInput
-                            name="title"
-                            placeholder="Event Title"
-                            type="text"
-                            defaultValue={event?.title ?? ''}
+                        <EventDateInput
+                            name="startDate"
+                            value={
+                                event?.startDate
+                                    ? dayjs(event.startDate).format(
+                                          'YYYY-MM-DDTHH:mm:ss'
+                                      )
+                                    : ''
+                            }
                             required
-                            lazy
-                            onLazyChange={(txt) => {
-                                updateEvent('title', txt);
-                            }}
-                        />
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                        <Label className={eventFormLabelClassName}>
-                            Major Event
-                        </Label>
-                        <Select
-                            value={String(event?.hackathonId ?? hackathon.id)}
-                            disabled={Boolean(_selectedEvent)}
-                            onValueChange={(hackathonId) => {
-                                updateEvent('hackathonId', Number(hackathonId));
-                            }}
-                        >
-                            <SelectTrigger className="h-11 w-full disabled:opacity-100">
-                                <span className="flex items-center gap-2">
-                                    <span className="bg-brand-500 size-1.5 rounded-full" />
-                                    {selectedHackathonName}
-                                </span>
-                            </SelectTrigger>
-                            <SelectContent className="z-[9999] bg-neutral-800 text-white">
-                                <SelectGroup>
-                                    <SelectLabel>Major Event</SelectLabel>
-                                    {hackathonOptions.map((option) => {
-                                        return (
-                                            <SelectItem
-                                                key={option.id}
-                                                value={String(option.id)}
-                                            >
-                                                <span className="flex items-center gap-2">
-                                                    <span className="bg-brand-500 size-1.5 rounded-full" />
-                                                    {option.name}
-                                                </span>
-                                            </SelectItem>
-                                        );
-                                    })}
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                        <Label className={eventFormLabelClassName}>
-                            Event Category
-                        </Label>
-                        <Select
-                            value={event?.eventType ?? EventType.EVENT}
-                            defaultValue="Event"
-                            onValueChange={(eventType) => {
-                                if (!event) {
-                                    return;
-                                }
-
+                            onChange={(t) => {
                                 updateEvent(
-                                    'eventType',
-                                    eventType as EventType
+                                    'startDate',
+                                    dayjs(new Date(t)).toDate()
                                 );
                             }}
-                        >
-                            <SelectTrigger className="h-11 w-full">
-                                <EventTypeSelectLabel
-                                    eventType={
-                                        event?.eventType ?? EventType.EVENT
-                                    }
-                                />
-                            </SelectTrigger>
-                            <SelectContent className="z-[9999] bg-neutral-800 text-white">
-                                <SelectGroup>
-                                    <SelectLabel>Event category</SelectLabel>
-                                    {EVENT_TYPES.map((eventType) => {
-                                        return (
-                                            <SelectItem
-                                                key={eventType}
-                                                value={eventType}
-                                            >
-                                                <EventTypeSelectLabel
-                                                    eventType={eventType}
-                                                />
-                                            </SelectItem>
-                                        );
-                                    })}
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="border-t border-[var(--border-neutral-tertiary)]" />
-
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                        <div className="flex flex-col gap-2">
-                            <Label required className={eventFormLabelClassName}>
-                                Start date
-                            </Label>
-                            <EventDateInput
-                                name="startDate"
-                                value={
-                                    event?.startDate
-                                        ? dayjs(event.startDate).format(
-                                              'YYYY-MM-DDTHH:mm:ss'
-                                          )
-                                        : ''
-                                }
-                                required
-                                onChange={(t) => {
-                                    updateEvent(
-                                        'startDate',
-                                        dayjs(new Date(t)).toDate()
-                                    );
-                                }}
-                            />
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <Label required className={eventFormLabelClassName}>
-                                End date
-                            </Label>
-                            <EventDateInput
-                                name="endDate"
-                                value={
-                                    event?.endDate
-                                        ? dayjs(event.endDate).format(
-                                              'YYYY-MM-DDTHH:mm:ss'
-                                          )
-                                        : ''
-                                }
-                                required
-                                onChange={(t) => {
-                                    updateEvent(
-                                        'endDate',
-                                        dayjs(new Date(t)).toDate()
-                                    );
-                                }}
-                            />
-                        </div>
+                        />
                     </div>
 
                     <div className="flex flex-col gap-2">
                         <Label required className={eventFormLabelClassName}>
-                            Location
+                            End date
                         </Label>
-                        <FormTextInput
-                            name="location"
-                            placeholder="Location"
-                            type="text"
-                            defaultValue={event?.location ?? ''}
+                        <EventDateInput
+                            name="endDate"
+                            value={
+                                event?.endDate
+                                    ? dayjs(event.endDate).format(
+                                          'YYYY-MM-DDTHH:mm:ss'
+                                      )
+                                    : ''
+                            }
                             required
-                            lazy
-                            onLazyChange={(txt) => {
-                                updateEvent('location', txt);
+                            onChange={(t) => {
+                                updateEvent(
+                                    'endDate',
+                                    dayjs(new Date(t)).toDate()
+                                );
                             }}
                         />
                     </div>
+                </div>
 
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                        <div className="flex flex-col gap-2">
-                            <Label className={eventFormLabelClassName}>
-                                Has check-in?
-                            </Label>
-                            <CheckBoxWithLabel
-                                id="eventHasCheckIn"
-                                name="Check-in enabled"
-                                checked={event?.hasCheckIn ?? false}
-                                disabled={checkIns.isLoading || hasCheckIns}
-                                onChange={(e) => {
-                                    updateEvent('hasCheckIn', e.target.checked);
-                                }}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="border-t border-[var(--border-neutral-tertiary)]" />
-
-                    <EventImageUpload
-                        previewUrl={imagePreviewUrl ?? event?.imageUrl}
-                        onFileChange={setImageFile}
+                <div className="flex flex-col gap-2">
+                    <Label required className={eventFormLabelClassName}>
+                        Location
+                    </Label>
+                    <FormTextInput
+                        name="location"
+                        placeholder="Location"
+                        type="text"
+                        defaultValue={event?.location ?? ''}
+                        required
+                        lazy
+                        onLazyChange={(txt) => {
+                            updateEvent('location', txt);
+                        }}
                     />
+                </div>
 
-                    <div className="flex flex-col gap-3">
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    <div className="flex flex-col gap-2">
                         <Label className={eventFormLabelClassName}>
-                            Event description (Optional)
+                            Has check-in?
                         </Label>
-                        <FormTextArea
-                            name="longDescription"
-                            placeholder=" "
-                            defaultValue={longDescription}
-                            lazy
-                            onLazyChange={(t) => {
-                                setLongDescription(t);
+                        <CheckBoxWithLabel
+                            id="eventHasCheckIn"
+                            name="Check-in enabled"
+                            checked={event?.hasCheckIn ?? false}
+                            disabled={checkIns.isLoading || hasCheckIns}
+                            onChange={(e) => {
+                                updateEvent('hasCheckIn', e.target.checked);
                             }}
                         />
                     </div>
+                </div>
 
-                    <div className="flex items-center justify-between gap-3 pt-2">
-                        {_selectedEvent && (
-                            <Button
-                                type="button"
-                                onClick={deleteEvent}
-                                disabled={
-                                    checkIns.isLoading ||
-                                    hasCheckIns ||
-                                    deleteApi.isPending
-                                }
-                                size={'compact'}
-                                hierarchy={'primary'}
-                                variant={'caution'}
-                            >
-                                Delete
-                            </Button>
-                        )}
-                        <div className="ml-auto flex items-center gap-3">
-                            <Button
-                                type="button"
-                                size="compact"
-                                hierarchy="secondary"
-                                variant="default"
-                                onClick={() => {
-                                    setEditMode(false);
-                                }}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                size="compact"
-                                hierarchy="primary"
-                                variant="brand"
-                            >
-                                {_selectedEvent ? 'Save edit' : 'Create event'}
-                            </Button>
-                        </div>
+                <div className="border-t border-[var(--border-neutral-tertiary)]" />
+
+                <EventImageUpload
+                    previewUrl={imagePreviewUrl ?? event?.imageUrl}
+                    onFileChange={setImageFile}
+                />
+
+                <div className="flex flex-col gap-3">
+                    <Label className={eventFormLabelClassName}>
+                        Event description (Optional)
+                    </Label>
+                    <FormTextArea
+                        name="longDescription"
+                        placeholder=" "
+                        defaultValue={longDescription}
+                        lazy
+                        onLazyChange={(t) => {
+                            setLongDescription(t);
+                        }}
+                    />
+                </div>
+
+                <div className="flex items-center justify-between gap-3 pt-2">
+                    {_selectedEvent && (
+                        <Button
+                            type="button"
+                            onClick={deleteEvent}
+                            disabled={
+                                checkIns.isLoading ||
+                                hasCheckIns ||
+                                deleteApi.isPending
+                            }
+                            size={'compact'}
+                            hierarchy={'primary'}
+                            variant={'caution'}
+                        >
+                            Delete
+                        </Button>
+                    )}
+                    <div className="ml-auto flex items-center gap-3">
+                        <Button
+                            type="button"
+                            size="compact"
+                            hierarchy="secondary"
+                            variant="default"
+                            onClick={() => {
+                                setEditMode(false);
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            size="compact"
+                            hierarchy="primary"
+                            variant="brand"
+                        >
+                            {_selectedEvent ? 'Save edit' : 'Create event'}
+                        </Button>
                     </div>
-                </form>
-            </SideDrawer>
+                </div>
+            </form>
+        </>
+    );
+
+    if (fullScreen) {
+        return editMode ? (
+            <div className="fixed inset-0 z-[600] overflow-y-auto bg-neutral-950 px-4 pt-6 pb-24">
+                {formBody}
+            </div>
+        ) : null;
+    }
+
+    return (
+        <>
+            <SideDrawer visibleAtom={editModeAtom}>{formBody}</SideDrawer>
         </>
     );
 }

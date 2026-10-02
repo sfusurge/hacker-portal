@@ -1,5 +1,6 @@
 import {
     currentYearMonthAtom,
+    editModeAtom,
     getEventsOfMonth,
     getMonthInfo,
     groupEventsByDay,
@@ -8,7 +9,7 @@ import {
     selectedDayAtom,
 } from '@/components/calendar/MonthCalendarShared';
 import { atom, useAtom, useAtomValue } from 'jotai';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import style from './MobileCalendar.module.css';
 import { LinearTimeline } from '@/components/calendar/LinearTimeLine/LinearTimeline';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
@@ -39,6 +40,13 @@ export function MobileCalendar({
     const { year, month } = useAtomValue(currentYearMonthAtom);
     const firstDay = useAtomValue(firstdayAtom);
     const [selectedDay, setSelectedDay] = useAtom(selectedDayAtom);
+    const editMode = useAtomValue(editModeAtom);
+
+    useEffect(() => {
+        if (editMode) {
+            setSelectedDay(undefined);
+        }
+    }, [editMode, setSelectedDay]);
 
     const filteredEvents = useMemo(
         () => getEventsOfMonth(events, month, year, false),
