@@ -70,10 +70,6 @@ export function LongDescriptionModal({
         { eventId: event.id },
         { enabled: isAdmin }
     );
-    const checkIns = trpc.events.getEventCheckInCount.useQuery(
-        { eventId: event.id },
-        { enabled: Boolean(isAdmin && onEventDeleted) }
-    );
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
     const hackathon = useAtomValue(hackathonAtom);
@@ -85,8 +81,7 @@ export function LongDescriptionModal({
         application.data?.currentStatus,
         hackathon?.eventPagePayload
     );
-    const hasCheckIns = (checkIns.data?.checkInCount ?? 0) > 0;
-    const canDelete = Boolean(isAdmin && onEventDeleted && !hasCheckIns);
+    const canDelete = Boolean(isAdmin && onEventDeleted);
     const showFooter = Boolean(onToggleSchedule || isAdmin);
     const discordRow = discordHref
         ? {
@@ -236,9 +231,7 @@ export function LongDescriptionModal({
                                             'ml-auto',
                                             style.footerButton
                                         )}
-                                        disabled={
-                                            !canDelete || checkIns.isLoading
-                                        }
+                                        disabled={!canDelete}
                                         hierarchy="primary"
                                         onClick={() =>
                                             setConfirmDeleteOpen(true)

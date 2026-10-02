@@ -250,7 +250,7 @@ export function EventAdmin({
     }
 
     async function deleteEvent() {
-        if (!event || hasCheckIns) {
+        if (!event) {
             return;
         }
 
@@ -481,11 +481,7 @@ export function EventAdmin({
                         <Button
                             type="button"
                             onClick={deleteEvent}
-                            disabled={
-                                checkIns.isLoading ||
-                                hasCheckIns ||
-                                deleteApi.isPending
-                            }
+                            disabled={deleteApi.isPending}
                             size={'compact'}
                             hierarchy={'primary'}
                             variant={'caution'}

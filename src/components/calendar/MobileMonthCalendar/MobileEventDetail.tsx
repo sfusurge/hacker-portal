@@ -35,10 +35,6 @@ export function MobileEventDetail({
     const rsvpCount = trpc.events.getEventRsvpCount.useQuery({
         eventId: event.id,
     });
-    const checkIns = trpc.events.getEventCheckInCount.useQuery({
-        eventId: event.id,
-    });
-    const hasCheckIns = (checkIns.data?.checkInCount ?? 0) > 0;
 
     return (
         <div className="flex flex-col gap-4">
@@ -95,17 +91,11 @@ export function MobileEventDetail({
                     size="compact"
                     variant="danger"
                     hierarchy="primary"
-                    disabled={checkIns.isLoading || hasCheckIns}
                     onClick={() => setConfirmOpen(true)}
                 >
                     Delete event
                 </Button>
             </div>
-            {hasCheckIns && (
-                <p className="text-xs text-white/60">
-                    This event has check-ins, so it can&apos;t be deleted.
-                </p>
-            )}
 
             <DeleteEventDialog
                 open={confirmOpen}
