@@ -2,6 +2,7 @@ import { databaseClient } from '@/db/client';
 import {
     checkIns,
     getEventCheckInCountSchema,
+    getUniqueHackersInRangeSchema,
     insertCheckInSchema,
     isCheckInSchema,
 } from '@/db/schema/checkIn';
@@ -9,7 +10,16 @@ import { user as usersTable } from '@/db/schema/users/users';
 import { ResourceNotFoundError } from '../exceptions';
 import { TRPCError } from '@trpc/server';
 import { adminProcedure, router } from '../trpc';
-import { and, asc, count, eq, notInArray } from 'drizzle-orm';
+import {
+    and,
+    asc,
+    count,
+    countDistinct,
+    eq,
+    gte,
+    lte,
+    notInArray,
+} from 'drizzle-orm';
 import { events } from '@/db/schema/events';
 import { applications } from '@/db/schema/applications';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
@@ -157,5 +167,43 @@ export const checkInRouter = router({
                 .orderBy(asc(events.startDate));
 
             return checkInCounts;
+        }),
+
+    /** Distinct hackers with any check-in in the time range (excluding admin accounts). */
+    getUniqueHackersInRange: adminProcedure
+        .input(getUniqueHackersInRangeSchema)
+        .query(async ({ input }) => {
+            const filters = [
+                eq(events.hackathonId, input.hackathonId),
+                eq(events.hasCheckIn, true),
+                notInArray(
+                    usersTable.userRole,
+                    ADMIN_ROLES_EXCLUDED_FROM_STATS
+                ),
+            ];
+
+            if (input.from) {
+                filters.push(gte(checkIns.checkInTime, input.from));
+            }
+            if (input.to) {
+                filters.push(lte(checkIns.checkInTime, input.to));
+            }
+
+            const [row] = await databaseClient
+                .select({
+                    uniqueHackers: countDistinct(checkIns.userId),
+                    checkIns: count(checkIns.userId),
+                })
+                .from(checkIns)
+                .innerJoin(events, eq(events.id, checkIns.eventId))
+                .innerJoin(usersTable, eq(usersTable.id, checkIns.userId))
+                .where(and(...filters));
+
+            return {
+                uniqueHackers: Number(row?.uniqueHackers ?? 0),
+                checkIns: Number(row?.checkIns ?? 0),
+                from: input.from ?? null,
+                to: input.to ?? null,
+            };
         }),
 });

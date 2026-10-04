@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import dayjs from 'dayjs';
 import { hackathonAtom } from '@/app/(auth)/ClientContext';
@@ -15,11 +15,39 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Chip } from '@/components/ui/chip';
+import { Label } from '@/components/ui/label/label';
+import { DateField } from '@/app/(auth)/admin/(owner)/hackathons/fields';
+import {
+    formatPacificDate,
+    PACIFIC_TIMEZONE,
+    pacificInputToUtc,
+    utcToPacificInput,
+} from '@/lib/datetime/pacific';
 import type { EventType } from '@/db/schema/events';
+import type { Dayjs } from 'dayjs';
 
 function eventTypeLabel(eventType: EventType | null | undefined) {
     if (eventType == null) return '—';
     return eventType === 'Event' ? 'Event (check-in)' : eventType;
+}
+
+/** Door check-in usually starts before hacking — default From to midnight PT that day. */
+function defaultRangeFrom(
+    hackingStart: Dayjs | null | undefined,
+    startDate: Dayjs | null | undefined
+): string {
+    const days: string[] = [];
+
+    if (hackingStart?.isValid?.()) {
+        days.push(hackingStart.tz(PACIFIC_TIMEZONE).format('YYYY-MM-DD'));
+    }
+    if (startDate?.isValid?.()) {
+        days.push(startDate.format('YYYY-MM-DD'));
+    }
+
+    if (days.length === 0) return '';
+    days.sort();
+    return `${days[0]}T00:00`;
 }
 
 function SummaryStat({
@@ -54,10 +82,34 @@ export default function CheckInsPage() {
     const hackathonId = hackathon?.id ?? -1;
     const enabled = hackathonId > 0;
 
+    const [rangeFrom, setRangeFrom] = useState(() =>
+        defaultRangeFrom(hackathon?.hackingStart, hackathon?.startDate)
+    );
+    const [rangeTo, setRangeTo] = useState(() =>
+        utcToPacificInput(hackathon?.endDate?.toDate() ?? null)
+    );
+
+    const rangeFromUtc = useMemo(
+        () => pacificInputToUtc(rangeFrom),
+        [rangeFrom]
+    );
+    const rangeToUtc = useMemo(() => pacificInputToUtc(rangeTo), [rangeTo]);
+    const rangeReady = Boolean(rangeFromUtc || rangeToUtc);
+
     const { data: checkInCounts, isLoading: eventsLoading } =
         trpc.checkIn.getEventCheckInCounts.useQuery(
             { hackathonId },
             { enabled }
+        );
+
+    const { data: rangeStats, isLoading: rangeLoading } =
+        trpc.checkIn.getUniqueHackersInRange.useQuery(
+            {
+                hackathonId,
+                from: rangeFromUtc ?? undefined,
+                to: rangeToUtc ?? undefined,
+            },
+            { enabled: enabled && rangeReady }
         );
 
     const { data: challengeData, isLoading: challengesLoading } =
@@ -139,6 +191,62 @@ export default function CheckInsPage() {
                             label="Total check-ins"
                             value={eventStats.checkIns}
                         />
+                    </div>
+
+                    <div className="rounded-lg border border-neutral-800 bg-neutral-900/40 p-4">
+                        <div className="mb-3">
+                            <h2 className="text-base font-semibold text-white">
+                                Unique hackers in range
+                            </h2>
+                        </div>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <Label htmlFor="checkin-range-from">From</Label>
+                                <div className="mt-1">
+                                    <DateField
+                                        id="checkin-range-from"
+                                        withTime
+                                        value={rangeFrom}
+                                        onChange={setRangeFrom}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <Label htmlFor="checkin-range-to">To</Label>
+                                <div className="mt-1">
+                                    <DateField
+                                        id="checkin-range-to"
+                                        withTime
+                                        value={rangeTo}
+                                        onChange={setRangeTo}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                            <SummaryStat
+                                label="Unique hackers"
+                                value={
+                                    !rangeReady
+                                        ? '—'
+                                        : rangeLoading
+                                          ? '…'
+                                          : (rangeStats?.uniqueHackers ?? 0)
+                                }
+                            />
+                        </div>
+                        {rangeReady && (rangeFromUtc || rangeToUtc) ? (
+                            <p className="mt-3 text-xs text-white/40">
+                                Counting check-ins
+                                {rangeFromUtc
+                                    ? ` from ${formatPacificDate(rangeFromUtc, true)}`
+                                    : ''}
+                                {rangeToUtc
+                                    ? ` through ${formatPacificDate(rangeToUtc, true)}`
+                                    : ''}
+                                , excluding admin accounts.
+                            </p>
+                        ) : null}
                     </div>
 
                     <div className="rounded-md border border-neutral-800">

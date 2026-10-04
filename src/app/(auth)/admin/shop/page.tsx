@@ -12,7 +12,15 @@ import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { trpc } from '@/trpc/client';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { JsonImportButton } from '@/app/(auth)/admin/components/JsonImportButton';
 import {
     ShopSideCard,
@@ -20,12 +28,24 @@ import {
     type ShopItemFormState,
 } from './components/ShopSideCard';
 
-type Tab = 'items' | 'orders';
+function SummaryStat({
+    label,
+    value,
+}: {
+    label: string;
+    value: number | string;
+}) {
+    return (
+        <div className="rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3">
+            <p className="text-sm text-white/50">{label}</p>
+            <p className="mt-1 text-2xl font-semibold text-white">{value}</p>
+        </div>
+    );
+}
 
 export default function AdminShopPage() {
     const hackathon = useAtomValue(hackathonAtom);
     const utils = trpc.useUtils();
-    const [tab, setTab] = useState<Tab>('items');
     const [search, setSearch] = useState('');
     const [form, setForm] = useState<ShopItemFormState>(emptyShopItemForm);
     const [sideOpen, setSideOpen] = useState(false);
@@ -36,7 +56,7 @@ export default function AdminShopPage() {
     );
     const purchasesQuery = trpc.shop.listPurchases.useQuery(
         { hackathonId: hackathon.id },
-        { enabled: hackathon.id > 0 && tab === 'orders' }
+        { enabled: hackathon.id > 0 }
     );
 
     const createMutation = trpc.shop.createItem.useMutation({
@@ -83,6 +103,8 @@ export default function AdminShopPage() {
     });
 
     const items = itemsQuery.data ?? [];
+    const purchases = purchasesQuery.data ?? [];
+
     const filteredItems = useMemo(() => {
         const q = search.trim().toLowerCase();
         if (!q) return items;
@@ -92,6 +114,15 @@ export default function AdminShopPage() {
                 i.description.toLowerCase().includes(q)
         );
     }, [items, search]);
+
+    const orderStats = useMemo(() => {
+        const uniqueHackers = new Set(purchases.map((p) => p.userId));
+        return {
+            orders: purchases.length,
+            uniqueHackers: uniqueHackers.size,
+            pointsSpent: purchases.reduce((sum, p) => sum + p.pointsSpent, 0),
+        };
+    }, [purchases]);
 
     function closeSide() {
         setSideOpen(false);
@@ -140,36 +171,46 @@ export default function AdminShopPage() {
     }
 
     return (
-        <div className="relative flex min-h-0 w-full flex-1 flex-col py-10">
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-3 px-4">
-                <div className="flex flex-wrap items-center gap-4">
-                    <h1 className="text-2xl font-bold">Points Shop</h1>
-                    <div className="flex gap-1 rounded-lg border border-neutral-600/40 p-1">
-                        {(
-                            [
-                                ['items', 'Items'],
-                                ['orders', 'Orders'],
-                            ] as const
-                        ).map(([id, label]) => (
-                            <button
-                                key={id}
-                                type="button"
-                                onClick={() => setTab(id)}
-                                className={cn(
-                                    'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                                    tab === id
-                                        ? 'bg-white/10 text-white'
-                                        : 'text-white/50 hover:text-white/80'
-                                )}
-                            >
-                                {label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+        <div className="relative container mx-auto py-10">
+            <div className="mb-8">
+                <h1 className="text-2xl font-bold text-white">Points Shop</h1>
+                <p className="mt-1 text-sm text-white/50">
+                    Catalog items and redemption stats
+                    {hackathon?.hackathonName
+                        ? ` for ${hackathon.hackathonName}`
+                        : ''}
+                    .
+                </p>
+            </div>
 
-                {tab === 'items' && (
-                    <div className="flex flex-wrap items-center gap-3">
+            <Tabs defaultValue="items" className="gap-6">
+                <TabsList>
+                    <TabsTrigger value="items">Items</TabsTrigger>
+                    <TabsTrigger value="orders">Orders</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="items" className="flex flex-col gap-6">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        <SummaryStat label="Items" value={items.length} />
+                        <SummaryStat
+                            label="Orders"
+                            value={
+                                purchasesQuery.isLoading
+                                    ? '…'
+                                    : orderStats.orders
+                            }
+                        />
+                        <SummaryStat
+                            label="Points spent"
+                            value={
+                                purchasesQuery.isLoading
+                                    ? '…'
+                                    : orderStats.pointsSpent
+                            }
+                        />
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="relative">
                             <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-white/40" />
                             <input
@@ -177,136 +218,141 @@ export default function AdminShopPage() {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search items…"
-                                className="min-h-9 w-56 rounded-lg border border-neutral-600/60 bg-neutral-800/60 py-2 pr-3 pl-9 text-sm font-medium text-white placeholder:text-white/40"
+                                className="min-h-9 w-56 rounded-lg border border-neutral-800 bg-neutral-900 py-2 pr-3 pl-9 text-sm font-medium text-white placeholder:text-white/40"
                             />
                         </div>
-                        <JsonImportButton
-                            disabled={importMutation.isPending}
-                            arrayKeys={['items', 'shop', 'shopItems']}
-                            onError={(message) =>
-                                toast({ title: message, variant: 'error' })
-                            }
-                            onParsed={async (rows) => {
-                                let parsedItems: {
-                                    name: string;
-                                    description: string;
-                                    cost: number;
-                                }[];
-                                try {
-                                    parsedItems = rows.map((row, i) => {
-                                        if (
-                                            !row ||
-                                            typeof row !== 'object' ||
-                                            Array.isArray(row)
-                                        ) {
-                                            throw new Error(
-                                                `Item ${i + 1} must be an object`
-                                            );
-                                        }
-                                        const r = row as Record<
-                                            string,
-                                            unknown
-                                        >;
-                                        if (
-                                            typeof r.name !== 'string' ||
-                                            !r.name.trim()
-                                        ) {
-                                            throw new Error(
-                                                `Item ${i + 1}: name is required`
-                                            );
-                                        }
-                                        if (
-                                            typeof r.cost !== 'number' ||
-                                            !Number.isInteger(r.cost) ||
-                                            r.cost < 1
-                                        ) {
-                                            throw new Error(
-                                                `Item ${i + 1}: cost must be an integer ≥ 1`
-                                            );
-                                        }
-                                        return {
-                                            name: r.name.trim(),
-                                            description:
-                                                typeof r.description ===
-                                                'string'
-                                                    ? r.description
-                                                    : '',
-                                            cost: r.cost,
-                                        };
-                                    });
-                                } catch (err) {
-                                    toast({
-                                        title:
-                                            err instanceof Error
-                                                ? err.message
-                                                : 'Invalid JSON',
-                                        variant: 'error',
-                                    });
-                                    return;
+                        <div className="flex flex-wrap items-center gap-3">
+                            <JsonImportButton
+                                disabled={importMutation.isPending}
+                                arrayKeys={['items', 'shop', 'shopItems']}
+                                onError={(message) =>
+                                    toast({ title: message, variant: 'error' })
                                 }
-                                await importMutation.mutateAsync({
-                                    hackathonId: hackathon.id,
-                                    items: parsedItems,
-                                });
-                            }}
-                        />
-                        <Button
-                            type="button"
-                            variant="brand"
-                            hierarchy="primary"
-                            size="cozy"
-                            onClick={openCreate}
-                            leadingIconChild={<PlusIcon className="size-4" />}
-                        >
-                            New item
-                        </Button>
+                                onParsed={async (rows) => {
+                                    let parsedItems: {
+                                        name: string;
+                                        description: string;
+                                        cost: number;
+                                    }[];
+                                    try {
+                                        parsedItems = rows.map((row, i) => {
+                                            if (
+                                                !row ||
+                                                typeof row !== 'object' ||
+                                                Array.isArray(row)
+                                            ) {
+                                                throw new Error(
+                                                    `Item ${i + 1} must be an object`
+                                                );
+                                            }
+                                            const r = row as Record<
+                                                string,
+                                                unknown
+                                            >;
+                                            if (
+                                                typeof r.name !== 'string' ||
+                                                !r.name.trim()
+                                            ) {
+                                                throw new Error(
+                                                    `Item ${i + 1}: name is required`
+                                                );
+                                            }
+                                            if (
+                                                typeof r.cost !== 'number' ||
+                                                !Number.isInteger(r.cost) ||
+                                                r.cost < 1
+                                            ) {
+                                                throw new Error(
+                                                    `Item ${i + 1}: cost must be an integer ≥ 1`
+                                                );
+                                            }
+                                            return {
+                                                name: r.name.trim(),
+                                                description:
+                                                    typeof r.description ===
+                                                    'string'
+                                                        ? r.description
+                                                        : '',
+                                                cost: r.cost,
+                                            };
+                                        });
+                                    } catch (err) {
+                                        toast({
+                                            title:
+                                                err instanceof Error
+                                                    ? err.message
+                                                    : 'Invalid JSON',
+                                            variant: 'error',
+                                        });
+                                        return;
+                                    }
+                                    await importMutation.mutateAsync({
+                                        hackathonId: hackathon.id,
+                                        items: parsedItems,
+                                    });
+                                }}
+                            />
+                            <Button
+                                type="button"
+                                variant="brand"
+                                hierarchy="primary"
+                                size="cozy"
+                                onClick={openCreate}
+                                leadingIconChild={
+                                    <PlusIcon className="size-4" />
+                                }
+                            >
+                                New item
+                            </Button>
+                        </div>
                     </div>
-                )}
-            </div>
 
-            {tab === 'items' && (
-                <div className="min-h-0 flex-1 overflow-auto px-4">
-                    {itemsQuery.isLoading ? (
-                        <p className="text-white/60">Loading...</p>
-                    ) : filteredItems.length === 0 ? (
-                        <p className="text-white/60">
-                            {search.trim()
-                                ? 'No items match your search.'
-                                : 'No shop items yet. Create one to get started.'}
-                        </p>
-                    ) : (
-                        <div className="overflow-x-auto rounded-lg border border-neutral-600/30">
-                            <table className="w-full text-left text-sm">
-                                <thead className="bg-neutral-900 text-white/60">
-                                    <tr>
-                                        <th className="px-4 py-3 font-medium">
-                                            Name
-                                        </th>
-                                        <th className="px-4 py-3 font-medium">
-                                            Cost
-                                        </th>
-                                        <th className="px-4 py-3 font-medium">
-                                            Description
-                                        </th>
-                                        <th className="px-4 py-3"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredItems.map((item) => (
-                                        <tr
-                                            key={item.id}
-                                            className="border-t border-neutral-600/30"
+                    <div className="rounded-md border border-neutral-800">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Cost</TableHead>
+                                    <TableHead>Description</TableHead>
+                                    <TableHead className="text-right">
+                                        Actions
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {itemsQuery.isLoading ? (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={4}
+                                            className="text-white/50"
                                         >
-                                            <td className="px-4 py-3 font-medium text-white">
+                                            Loading items…
+                                        </TableCell>
+                                    </TableRow>
+                                ) : filteredItems.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={4}
+                                            className="text-white/50"
+                                        >
+                                            {search.trim()
+                                                ? 'No items match your search.'
+                                                : 'No shop items yet. Create one to get started.'}
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    filteredItems.map((item) => (
+                                        <TableRow key={item.id}>
+                                            <TableCell className="font-medium text-white">
                                                 {item.name}
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-white/60">
+                                            </TableCell>
+                                            <TableCell className="font-mono whitespace-nowrap text-white/70">
                                                 {item.cost} pts
-                                            </td>
-                                            <td className="max-w-xl truncate px-4 py-3 text-white/60">
+                                            </TableCell>
+                                            <TableCell className="max-w-xl truncate text-white/60">
                                                 {item.description || '—'}
-                                            </td>
-                                            <td className="px-4 py-3 text-right">
+                                            </TableCell>
+                                            <TableCell className="text-right">
                                                 <div className="inline-flex items-center gap-2">
                                                     <Button
                                                         type="button"
@@ -344,77 +390,107 @@ export default function AdminShopPage() {
                                                         Delete
                                                     </Button>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-            )}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </TabsContent>
 
-            {tab === 'orders' && (
-                <div className="min-h-0 flex-1 overflow-auto px-4">
-                    {purchasesQuery.isLoading ? (
-                        <p className="text-white/60">Loading...</p>
-                    ) : (purchasesQuery.data ?? []).length === 0 ? (
-                        <p className="text-white/60">No redemptions yet.</p>
-                    ) : (
-                        <div className="overflow-x-auto rounded-lg border border-neutral-600/30">
-                            <table className="w-full text-left text-sm">
-                                <thead className="bg-neutral-900 text-white/60">
-                                    <tr>
-                                        <th className="px-4 py-3 font-medium">
-                                            Hacker
-                                        </th>
-                                        <th className="px-4 py-3 font-medium">
-                                            Item
-                                        </th>
-                                        <th className="px-4 py-3 font-medium">
-                                            Points
-                                        </th>
-                                        <th className="px-4 py-3 font-medium">
-                                            When
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {(purchasesQuery.data ?? []).map((p) => (
-                                        <tr
-                                            key={p.id}
-                                            className="border-t border-neutral-600/30"
+                <TabsContent value="orders" className="flex flex-col gap-6">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        <SummaryStat
+                            label="Orders"
+                            value={
+                                purchasesQuery.isLoading
+                                    ? '…'
+                                    : orderStats.orders
+                            }
+                        />
+                        <SummaryStat
+                            label="Unique hackers"
+                            value={
+                                purchasesQuery.isLoading
+                                    ? '…'
+                                    : orderStats.uniqueHackers
+                            }
+                        />
+                        <SummaryStat
+                            label="Points spent"
+                            value={
+                                purchasesQuery.isLoading
+                                    ? '…'
+                                    : orderStats.pointsSpent
+                            }
+                        />
+                    </div>
+
+                    <div className="rounded-md border border-neutral-800">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Hacker</TableHead>
+                                    <TableHead>Item</TableHead>
+                                    <TableHead className="text-right">
+                                        Points
+                                    </TableHead>
+                                    <TableHead>When</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {purchasesQuery.isLoading ? (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={4}
+                                            className="text-white/50"
                                         >
-                                            <td className="px-4 py-3 text-white">
-                                                <div className="font-medium">
+                                            Loading orders…
+                                        </TableCell>
+                                    </TableRow>
+                                ) : purchases.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={4}
+                                            className="text-white/50"
+                                        >
+                                            No redemptions yet.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    purchases.map((p) => (
+                                        <TableRow key={p.id}>
+                                            <TableCell>
+                                                <div className="font-medium text-white">
                                                     {p.firstName} {p.lastName}
                                                 </div>
                                                 <div className="text-xs text-white/50">
                                                     {p.displayId} · {p.email}
                                                 </div>
-                                            </td>
-                                            <td className="px-4 py-3 text-white/80">
+                                            </TableCell>
+                                            <TableCell className="text-white/80">
                                                 {p.itemName}
                                                 {p.quantity > 1
                                                     ? ` ×${p.quantity}`
                                                     : ''}
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-white/60">
+                                            </TableCell>
+                                            <TableCell className="text-right font-mono text-white">
                                                 {p.pointsSpent}
-                                            </td>
-                                            <td className="px-4 py-3 text-white/50">
+                                            </TableCell>
+                                            <TableCell className="text-white/50">
                                                 {new Date(
                                                     p.createdAt
                                                 ).toLocaleString()}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-            )}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </TabsContent>
+            </Tabs>
 
             <ShopSideCard
                 visible={sideOpen}

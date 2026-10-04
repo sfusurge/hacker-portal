@@ -9,6 +9,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { utcToPacificInput } from '@/lib/datetime/pacific';
 import { cn } from '@/lib/utils';
 
 const FIELD_BASE =
@@ -278,6 +279,11 @@ export function DateField({
         setOpen(false);
     };
 
+    const setRightNow = () => {
+        onChange(utcToPacificInput(new Date()));
+        setOpen(false);
+    };
+
     return (
         <Popover
             open={open}
@@ -323,7 +329,18 @@ export function DateField({
                         />
                     </div>
                 )}
-                <div className="flex justify-end border-t border-neutral-700/50 p-2">
+                <div className="flex items-center justify-between gap-2 border-t border-neutral-700/50 p-2">
+                    {withTime ? (
+                        <button
+                            type="button"
+                            onClick={setRightNow}
+                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-white/50 transition-colors hover:bg-neutral-700 hover:text-white"
+                        >
+                            <Clock className="h-3 w-3" /> Right now
+                        </button>
+                    ) : (
+                        <span />
+                    )}
                     <button
                         type="button"
                         onClick={clear}
