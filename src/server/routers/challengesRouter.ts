@@ -15,9 +15,18 @@ import { user as usersTable } from '@/db/schema/users/users';
 import { ResourceNotFoundError } from '../exceptions';
 import { TRPCError } from '@trpc/server';
 import { adminProcedure, protectedProcedure, router } from '../trpc';
-import { and, asc, count, eq, getTableColumns, sql } from 'drizzle-orm';
+import {
+    and,
+    asc,
+    count,
+    eq,
+    getTableColumns,
+    notInArray,
+    sql,
+} from 'drizzle-orm';
 import { applications } from '@/db/schema/applications';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
+import { ADMIN_ROLES_EXCLUDED_FROM_STATS } from '@/lib/auth/roles';
 import { assignHouseIfNeeded } from '@/server/houses/assignHouse';
 import { getChallengeProgress } from '@/server/challenges/linkedEvents';
 
@@ -354,12 +363,22 @@ export const challengesRouter = router({
                     title: challenges.title,
                     eventType: challenges.eventType,
                     maxCompletions: challenges.maxCompletions,
-                    completionCount: count(challengeCompletions.id),
+                    completionCount: count(usersTable.id),
                 })
                 .from(challenges)
                 .leftJoin(
                     challengeCompletions,
                     eq(challengeCompletions.challengeId, challenges.id)
+                )
+                .leftJoin(
+                    usersTable,
+                    and(
+                        eq(usersTable.id, challengeCompletions.userId),
+                        notInArray(
+                            usersTable.userRole,
+                            ADMIN_ROLES_EXCLUDED_FROM_STATS
+                        )
+                    )
                 )
                 .where(eq(challenges.hackathonId, input.hackathonId))
                 .groupBy(
@@ -379,7 +398,19 @@ export const challengesRouter = router({
                     challenges,
                     eq(challenges.id, challengeCompletions.challengeId)
                 )
-                .where(eq(challenges.hackathonId, input.hackathonId));
+                .innerJoin(
+                    usersTable,
+                    eq(usersTable.id, challengeCompletions.userId)
+                )
+                .where(
+                    and(
+                        eq(challenges.hackathonId, input.hackathonId),
+                        notInArray(
+                            usersTable.userRole,
+                            ADMIN_ROLES_EXCLUDED_FROM_STATS
+                        )
+                    )
+                );
 
             return {
                 challenges: rows.map((row) => ({

@@ -5,6 +5,8 @@
  * hackathons.
  */
 
+export const ADMIN_ROLES_EXCLUDED_FROM_STATS: string[] = ['admin', 'owner'];
+
 export function hasAdminAccess(role: string | null | undefined): boolean {
     return role === 'admin' || role === 'owner';
 }
