@@ -9,10 +9,11 @@ import { user as usersTable } from '@/db/schema/users/users';
 import { ResourceNotFoundError } from '../exceptions';
 import { TRPCError } from '@trpc/server';
 import { adminProcedure, router } from '../trpc';
-import { and, asc, eq, count } from 'drizzle-orm';
+import { and, asc, count, eq, notInArray } from 'drizzle-orm';
 import { events } from '@/db/schema/events';
 import { applications } from '@/db/schema/applications';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
+import { ADMIN_ROLES_EXCLUDED_FROM_STATS } from '@/lib/auth/roles';
 import { assignHouseIfNeeded } from '@/server/houses/assignHouse';
 import { syncChallengesForEventCheckIn } from '@/server/challenges/linkedEvents';
 
@@ -127,10 +128,20 @@ export const checkInRouter = router({
                     eventTitle: events.title,
                     eventType: events.eventType,
                     startDate: events.startDate,
-                    checkInCount: count(checkIns.userId),
+                    checkInCount: count(usersTable.id),
                 })
                 .from(events)
                 .leftJoin(checkIns, eq(events.id, checkIns.eventId))
+                .leftJoin(
+                    usersTable,
+                    and(
+                        eq(usersTable.id, checkIns.userId),
+                        notInArray(
+                            usersTable.userRole,
+                            ADMIN_ROLES_EXCLUDED_FROM_STATS
+                        )
+                    )
+                )
                 .where(
                     and(
                         eq(events.hackathonId, input.hackathonId),

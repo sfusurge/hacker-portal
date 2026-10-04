@@ -17,7 +17,15 @@ import {
 } from '@/db/schema/houses';
 import { user as usersTable } from '@/db/schema/users/users';
 import { TRPCError } from '@trpc/server';
-import { and, asc, countDistinct, desc, eq, sql } from 'drizzle-orm';
+import {
+    and,
+    asc,
+    countDistinct,
+    desc,
+    eq,
+    notInArray,
+    sql,
+} from 'drizzle-orm';
 import {
     assignUnassignedHouses,
     setUserHouse,
@@ -28,7 +36,10 @@ import {
     publicProcedure,
     router,
 } from '../trpc';
-import { hasAdminAccess } from '@/lib/auth/roles';
+import {
+    ADMIN_ROLES_EXCLUDED_FROM_STATS,
+    hasAdminAccess,
+} from '@/lib/auth/roles';
 
 const housePointsSql = sql<number>`
     coalesce((
@@ -38,9 +49,10 @@ const housePointsSql = sql<number>`
             and ${challenges.hackathonId} = ${houses.hackathonId}
         inner join ${houseMemberships} on ${houseMemberships.userId} = ${challengeCompletions.userId}
             and ${houseMemberships.houseId} = ${houses.id}
+        inner join ${usersTable} on ${usersTable.id} = ${challengeCompletions.userId}
+        where ${notInArray(usersTable.userRole, ADMIN_ROLES_EXCLUDED_FROM_STATS)}
     ), 0)
 `;
-
 const memberPointsSql = sql<number>`
     coalesce((
         select sum(${challengeCompletions.pointsAwarded})
@@ -252,7 +264,15 @@ export const housesRouter = router({
                     usersTable,
                     eq(houseMemberships.userId, usersTable.id)
                 )
-                .where(eq(houseMemberships.hackathonId, input.hackathonId))
+                .where(
+                    and(
+                        eq(houseMemberships.hackathonId, input.hackathonId),
+                        notInArray(
+                            usersTable.userRole,
+                            ADMIN_ROLES_EXCLUDED_FROM_STATS
+                        )
+                    )
+                )
                 .groupBy(
                     houseMemberships.houseId,
                     usersTable.id,
