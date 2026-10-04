@@ -1,5 +1,4 @@
 import { databaseClient } from '@/db/client';
-import { challengeCompletions, challenges } from '@/db/schema/challenges';
 import {
     MAX_HOUSES_PER_HACKATHON,
     assignHousesSchema,
@@ -17,19 +16,12 @@ import {
 } from '@/db/schema/houses';
 import { user as usersTable } from '@/db/schema/users/users';
 import { TRPCError } from '@trpc/server';
-import {
-    and,
-    asc,
-    countDistinct,
-    desc,
-    eq,
-    notInArray,
-    sql,
-} from 'drizzle-orm';
+import { and, asc, eq, notInArray } from 'drizzle-orm';
 import {
     assignUnassignedHouses,
     setUserHouse,
 } from '@/server/houses/assignHouse';
+import { getEarnedPointsByUser } from '@/server/points/balance';
 import {
     adminProcedure,
     protectedProcedure,
@@ -40,28 +32,6 @@ import {
     ADMIN_ROLES_EXCLUDED_FROM_STATS,
     hasAdminAccess,
 } from '@/lib/auth/roles';
-
-const housePointsSql = sql<number>`
-    coalesce((
-        select sum(${challengeCompletions.pointsAwarded})
-        from ${challengeCompletions}
-        inner join ${challenges} on ${challenges.id} = ${challengeCompletions.challengeId}
-            and ${challenges.hackathonId} = ${houses.hackathonId}
-        inner join ${houseMemberships} on ${houseMemberships.userId} = ${challengeCompletions.userId}
-            and ${houseMemberships.houseId} = ${houses.id}
-        inner join ${usersTable} on ${usersTable.id} = ${challengeCompletions.userId}
-        where ${notInArray(usersTable.userRole, ADMIN_ROLES_EXCLUDED_FROM_STATS)}
-    ), 0)
-`;
-const memberPointsSql = sql<number>`
-    coalesce((
-        select sum(${challengeCompletions.pointsAwarded})
-        from ${challengeCompletions}
-        inner join ${challenges} on ${challenges.id} = ${challengeCompletions.challengeId}
-            and ${challenges.hackathonId} = ${houses.hackathonId}
-        where ${challengeCompletions.userId} = ${usersTable.id}
-    ), 0)
-`;
 
 export const housesRouter = router({
     createHouses: adminProcedure
@@ -209,28 +179,70 @@ export const housesRouter = router({
     getHouseStandings: adminProcedure
         .input(getHouseStandingsSchema)
         .query(async ({ input }) => {
-            const rows = await databaseClient
+            const houseRows = await databaseClient
                 .select({
                     houseId: houses.id,
                     name: houses.name,
-                    memberCount: countDistinct(houseMemberships.userId),
-                    points: housePointsSql,
                 })
                 .from(houses)
-                .leftJoin(
-                    houseMemberships,
-                    eq(houses.id, houseMemberships.houseId)
-                )
                 .where(eq(houses.hackathonId, input.hackathonId))
-                .groupBy(houses.id, houses.name)
-                .orderBy(desc(housePointsSql), asc(houses.name));
+                .orderBy(asc(houses.name));
 
-            return rows.map((row) => ({
-                houseId: row.houseId,
-                name: row.name,
-                memberCount: Number(row.memberCount),
-                points: Number(row.points),
-            }));
+            const members = await databaseClient
+                .select({
+                    houseId: houseMemberships.houseId,
+                    userId: houseMemberships.userId,
+                    userRole: usersTable.userRole,
+                })
+                .from(houseMemberships)
+                .innerJoin(
+                    usersTable,
+                    eq(houseMemberships.userId, usersTable.id)
+                )
+                .where(eq(houseMemberships.hackathonId, input.hackathonId));
+
+            const scoringUserIds = members
+                .filter(
+                    (member) =>
+                        !ADMIN_ROLES_EXCLUDED_FROM_STATS.includes(
+                            member.userRole
+                        )
+                )
+                .map((member) => member.userId);
+
+            const pointsByUser = await getEarnedPointsByUser(
+                input.hackathonId,
+                scoringUserIds
+            );
+
+            const pointsByHouse = new Map<number, number>();
+            const memberCountByHouse = new Map<number, number>();
+            for (const member of members) {
+                memberCountByHouse.set(
+                    member.houseId,
+                    (memberCountByHouse.get(member.houseId) ?? 0) + 1
+                );
+                if (ADMIN_ROLES_EXCLUDED_FROM_STATS.includes(member.userRole)) {
+                    continue;
+                }
+                pointsByHouse.set(
+                    member.houseId,
+                    (pointsByHouse.get(member.houseId) ?? 0) +
+                        (pointsByUser.get(member.userId) ?? 0)
+                );
+            }
+
+            return houseRows
+                .map((house) => ({
+                    houseId: house.houseId,
+                    name: house.name,
+                    memberCount: memberCountByHouse.get(house.houseId) ?? 0,
+                    points: pointsByHouse.get(house.houseId) ?? 0,
+                }))
+                .sort(
+                    (a, b) =>
+                        b.points - a.points || a.name.localeCompare(b.name)
+                );
         }),
 
     getHouseTopScorers: adminProcedure
@@ -249,17 +261,15 @@ export const housesRouter = router({
                 return [];
             }
 
-            const memberScores = await databaseClient
+            const members = await databaseClient
                 .select({
                     houseId: houseMemberships.houseId,
                     userId: usersTable.id,
                     firstName: usersTable.firstName,
                     lastName: usersTable.lastName,
                     email: usersTable.email,
-                    points: memberPointsSql,
                 })
                 .from(houseMemberships)
-                .innerJoin(houses, eq(houseMemberships.houseId, houses.id))
                 .innerJoin(
                     usersTable,
                     eq(houseMemberships.userId, usersTable.id)
@@ -272,21 +282,12 @@ export const housesRouter = router({
                             ADMIN_ROLES_EXCLUDED_FROM_STATS
                         )
                     )
-                )
-                .groupBy(
-                    houseMemberships.houseId,
-                    usersTable.id,
-                    usersTable.firstName,
-                    usersTable.lastName,
-                    usersTable.email,
-                    houses.hackathonId
-                )
-                .orderBy(
-                    asc(houseMemberships.houseId),
-                    desc(memberPointsSql),
-                    asc(usersTable.lastName),
-                    asc(usersTable.firstName)
                 );
+
+            const pointsByUser = await getEarnedPointsByUser(
+                input.hackathonId,
+                members.map((member) => member.userId)
+            );
 
             const scorersByHouse = new Map<
                 number,
@@ -299,17 +300,27 @@ export const housesRouter = router({
                 }[]
             >();
 
-            for (const row of memberScores) {
-                const list = scorersByHouse.get(row.houseId) ?? [];
+            const sortedMembers = [...members].sort((a, b) => {
+                const pointsDiff =
+                    (pointsByUser.get(b.userId) ?? 0) -
+                    (pointsByUser.get(a.userId) ?? 0);
+                if (pointsDiff !== 0) return pointsDiff;
+                const last = (a.lastName ?? '').localeCompare(b.lastName ?? '');
+                if (last !== 0) return last;
+                return (a.firstName ?? '').localeCompare(b.firstName ?? '');
+            });
+
+            for (const member of sortedMembers) {
+                const list = scorersByHouse.get(member.houseId) ?? [];
                 if (input.limit == null || list.length < input.limit) {
                     list.push({
-                        userId: row.userId,
-                        firstName: row.firstName,
-                        lastName: row.lastName,
-                        email: row.email,
-                        points: Number(row.points),
+                        userId: member.userId,
+                        firstName: member.firstName,
+                        lastName: member.lastName,
+                        email: member.email,
+                        points: pointsByUser.get(member.userId) ?? 0,
                     });
-                    scorersByHouse.set(row.houseId, list);
+                    scorersByHouse.set(member.houseId, list);
                 }
             }
 
