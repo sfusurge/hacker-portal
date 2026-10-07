@@ -31,6 +31,7 @@ export type HackathonEventPagePayload = {
     websiteHref: string;
     recapHref: string | null;
     hackerPackageHref?: string | null;
+    projectsHref?: string | null;
     targetAudience?: string;
     acceptedDiscordInviteHref?: string | null;
 };
@@ -163,6 +164,7 @@ const eventPagePayloadSchema = z.object({
     websiteHref: z.string().max(2000).default(''),
     recapHref: z.string().max(2000).default(''),
     hackerPackageHref: z.string().max(2000).default(''),
+    projectsHref: z.string().max(2000).default(''),
     acceptedDiscordInviteHref: z.string().max(2000).default(''),
 });
 

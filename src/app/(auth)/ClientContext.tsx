@@ -95,6 +95,7 @@ interface DbHackathonType {
     audienceVotingEnabled?: boolean;
     audienceVotingOpen?: Date | null;
     audienceVotingCloses?: Date | null;
+    eventPageSlug?: string | null;
     eventPagePayload?: HackathonData['eventPagePayload'];
     applicationQuestions: InputFormPageData[];
     version: number;
@@ -115,6 +116,7 @@ function DeserializeHackathonData(
             hackathonName: '',
             id: 0,
             version: 0,
+            eventPageSlug: null,
             eventPagePayload: null,
             isPaid: false,
             isMultipleLocations: false,
@@ -138,6 +140,7 @@ function DeserializeHackathonData(
     }
     return {
         ...hackathon,
+        eventPageSlug: hackathon.eventPageSlug ?? null,
         eventPagePayload: hackathon.eventPagePayload ?? null,
         applicationQuestionPages: hackathon.applicationQuestions ?? [],
         submissionQuestionPages: hackathon.submissionQuestions ?? [],

@@ -86,7 +86,7 @@ export default function JudgingForm({
     const [isInitialized, setIsInitialized] = useState(false);
 
     const formRef = useRef<HTMLFormElement>(null);
-    const validationTimeoutRef = useRef<NodeJS.Timeout>();
+    const validationTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
     const { toast } = useToast();
     const router = useRouter();
     const { basePath } = useProjectsRoute();

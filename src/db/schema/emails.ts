@@ -133,11 +133,11 @@ export const emailTemplateSchema = z.object({
 });
 
 export const selectEmailTemplateSchema = createSelectSchema(emailTemplates);
-export const emailTemplateIdSchema = selectEmailTemplateSchema.pick({
-    id: true,
+export const emailTemplateIdSchema = z.object({
+    id: z.number().int(),
 });
 
-export type EmailTemplate = z.infer<typeof selectEmailTemplateSchema>;
+export type EmailTemplate = typeof emailTemplates.$inferSelect;
 export type NewEmailTemplate = z.infer<typeof emailTemplateSchema>;
 export type EmailTemplateStyling = typeof emailTemplateStyling.$inferSelect;
 export type NewEmailTemplateStyling = typeof emailTemplateStyling.$inferInsert;

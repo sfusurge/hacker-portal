@@ -25,10 +25,11 @@ import { InternalServerError } from '../exceptions';
 import { TRPCError } from '@trpc/server';
 import {
     adminProcedure,
-    adminOrSponsorProcedure,
     protectedProcedure,
+    publicProcedure,
     router,
 } from '../trpc';
+import { getSponsorSessionFromCookies } from '@/lib/sponsor/sponsorSession';
 import { transporter } from '@/server/nodemailerTransporter';
 import { teams } from '@/db/schema/teams';
 import { members } from '@/db/schema/members';
@@ -42,7 +43,6 @@ import {
 } from '@/app/(auth)/admin/email/templates/emailPreview';
 import { publishReviewTableEvent } from '@/lib/realtime/publishReviewTableEvent';
 import { hasAdminAccess } from '@/lib/auth/roles';
-import { company } from '@/db/schema/company';
 import { hackathons } from '@/db/schema/hackathons';
 import { toSponsorResumeBankResponse } from '@/lib/applications/sponsorResumeBank';
 import type { InputFormPageData } from '@/components/application_components/types';
@@ -256,27 +256,116 @@ export const applicationsRouter = router({
             }
         ),
 
-    getApplications: adminOrSponsorProcedure
-        .input(queryApplicationsSchema)
-        .query(async ({ input, ctx }) => {
-            const isAdmin = hasAdminAccess(ctx.user.userRole);
-            if (!isAdmin) {
-                const [sponsorAccess] = await databaseClient
-                    .select({ userId: company.userId })
-                    .from(company)
-                    .where(
-                        and(
-                            eq(company.userId, ctx.user.id),
-                            eq(company.hackathonId, input.hackathonId),
-                            eq(company.portalRole, 'sponsor')
-                        )
-                    )
-                    .limit(1);
-                if (!sponsorAccess) {
-                    throw new TRPCError({ code: 'FORBIDDEN' });
-                }
+    // Public resume bank (sponsor cookie required; accepted applicants only).
+    getPublicResumeBank: publicProcedure
+        .input(
+            z.object({
+                hackathonId: z.number().int().optional(),
+                maxResult: z
+                    .number()
+                    .int()
+                    .min(1)
+                    .max(500)
+                    .optional()
+                    .default(200),
+                cursor: z.string().optional(),
+            })
+        )
+        .query(async ({ input }) => {
+            const session = await getSponsorSessionFromCookies();
+            if (!session) {
+                throw new TRPCError({ code: 'UNAUTHORIZED' });
             }
 
+            let hackathonId = input.hackathonId;
+            if (hackathonId == null) {
+                const [active] = await databaseClient
+                    .select({ id: hackathons.id })
+                    .from(hackathons)
+                    .where(eq(hackathons.isActive, true))
+                    .orderBy(asc(hackathons.startDate))
+                    .limit(1);
+                if (!active) {
+                    throw new TRPCError({
+                        code: 'NOT_FOUND',
+                        message: 'No active hackathon',
+                    });
+                }
+                hackathonId = active.id;
+            }
+
+            const [hackathon] = await databaseClient
+                .select({
+                    id: hackathons.id,
+                    name: hackathons.name,
+                    applicationQuestions: hackathons.applicationQuestions,
+                })
+                .from(hackathons)
+                .where(eq(hackathons.id, hackathonId))
+                .limit(1);
+
+            if (!hackathon) {
+                throw new TRPCError({ code: 'NOT_FOUND' });
+            }
+
+            const applicationQuestions = (hackathon.applicationQuestions ??
+                []) as InputFormPageData[];
+            const offset = Number(input.cursor ?? 0);
+
+            const applicationInfos = await databaseClient
+                .select({
+                    userId: applications.userId,
+                    currentStatus: applications.currentStatus,
+                    response: applications.response,
+                })
+                .from(applications)
+                .where(
+                    and(
+                        eq(applications.hackathonId, hackathonId),
+                        inArray(applications.currentStatus, [
+                            'Accepted',
+                            'Accepted - RSVP to Confirm',
+                        ])
+                    )
+                )
+                .orderBy(asc(applications.createdDate))
+                .limit(input.maxResult + 1)
+                .offset(offset);
+
+            const hasMoreItem = applicationInfos.length > input.maxResult;
+            const page = hasMoreItem
+                ? applicationInfos.slice(0, -1)
+                : applicationInfos;
+            const nextToken = hasMoreItem ? `${offset + page.length}` : null;
+
+            return {
+                hackathonId: hackathon.id,
+                hackathonName: hackathon.name,
+                applicationQuestions,
+                applications: page
+                    .map((application) => {
+                        const sponsorResponse = toSponsorResumeBankResponse(
+                            (application.response ?? {}) as Record<
+                                string,
+                                unknown
+                            >,
+                            applicationQuestions
+                        );
+                        if (!sponsorResponse) return null;
+                        return {
+                            userId: application.userId,
+                            currentStatus: application.currentStatus,
+                            response: sponsorResponse,
+                        };
+                    })
+                    .filter((application) => application !== null),
+                nextToken,
+            };
+        }),
+
+    getApplications: adminProcedure
+        .input(queryApplicationsSchema)
+        .query(async ({ input }) => {
             const offset = Number(input.cursor ?? 0);
 
             const applicationInfos = await databaseClient
@@ -284,17 +373,7 @@ export const applicationsRouter = router({
                     ...getTableColumns(applications),
                 })
                 .from(applications)
-                .where(
-                    and(
-                        eq(applications.hackathonId, input.hackathonId),
-                        isAdmin
-                            ? undefined
-                            : inArray(applications.currentStatus, [
-                                  'Accepted',
-                                  'Accepted - RSVP to Confirm',
-                              ])
-                    )
-                )
+                .where(eq(applications.hackathonId, input.hackathonId))
                 .orderBy(asc(applications.createdDate))
                 // add 1 to see if there are still results
                 .limit(input.maxResult + 1)
@@ -426,39 +505,6 @@ export const applicationsRouter = router({
             const page = hasMoreItem
                 ? applicationsWithAllInfos.slice(0, -1)
                 : applicationsWithAllInfos;
-
-            if (!isAdmin) {
-                const [hackathon] = await databaseClient
-                    .select({
-                        applicationQuestions: hackathons.applicationQuestions,
-                    })
-                    .from(hackathons)
-                    .where(eq(hackathons.id, input.hackathonId))
-                    .limit(1);
-                const applicationQuestions = (hackathon?.applicationQuestions ??
-                    []) as InputFormPageData[];
-
-                return {
-                    applications: page
-                        .map((application) => {
-                            const sponsorResponse = toSponsorResumeBankResponse(
-                                (application.response ?? {}) as Record<
-                                    string,
-                                    unknown
-                                >,
-                                applicationQuestions
-                            );
-                            if (!sponsorResponse) return null;
-                            return {
-                                userId: application.userId,
-                                currentStatus: application.currentStatus,
-                                response: sponsorResponse,
-                            };
-                        })
-                        .filter((application) => application !== null),
-                    nextToken,
-                };
-            }
 
             return { applications: page, nextToken };
         }),

@@ -1,32 +1,26 @@
-import {
-    type AnnouncementWithAttachments,
-    selectAnnouncementAttachmentSchema,
-    selectAnnouncementSchema,
-} from '@/db/schema/announcements';
+import { type AnnouncementWithAttachments } from '@/db/schema/announcements';
 import { z } from 'zod';
 
-/** JSON from Ably: ISO strings instead of Date; reuse Drizzle select shapes + coercion. */
-const announcementRowWireSchema = selectAnnouncementSchema.extend({
-    sourceTimestamp: z.coerce.date(),
-    lastEditedAt: z.coerce.date().nullable(),
-    createdAt: z.coerce.date(),
-    updatedAt: z.coerce.date(),
-});
-
-const announcementAttachmentWireSchema =
-    selectAnnouncementAttachmentSchema.extend({
-        uploadedAt: z.coerce.date().nullable(),
+// Ably JSON wire format: ISO date strings coerced to Date.
+const announcementRealtimeWireSchema = z
+    .object({
+        sourceTimestamp: z.coerce.date(),
+        lastEditedAt: z.coerce.date().nullable(),
         createdAt: z.coerce.date(),
-    });
+        updatedAt: z.coerce.date(),
+        channelLabel: z.string().nullable(),
+        attachments: z.array(
+            z
+                .object({
+                    uploadedAt: z.coerce.date().nullable(),
+                    createdAt: z.coerce.date(),
+                })
+                .passthrough()
+        ),
+    })
+    .passthrough();
 
-const announcementRealtimeWireSchema = announcementRowWireSchema.extend({
-    channelLabel: z.string().nullable(),
-    attachments: z.array(announcementAttachmentWireSchema),
-});
-
-/**
- * Validates + revives Dates for announcements delivered over Ably (JSON body).
- */
+// Validate + revive Dates for announcements delivered over Ably.
 export function parseAnnouncementRealtimeWire(
     data: unknown
 ): AnnouncementWithAttachments | null {

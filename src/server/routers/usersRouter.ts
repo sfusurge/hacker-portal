@@ -117,7 +117,9 @@ export interface UserType {
     displayId: string;
 }
 
-export async function addUser(vals: z.infer<typeof insertUserSchema>) {
+export async function addUser(
+    vals: Omit<typeof user.$inferInsert, 'displayId' | 'id'>
+) {
     // create the user, and catch their id
     const res = await databaseClient.transaction(async (tx) => {
         const [row] = await tx.select({ nextId: max(user.id) }).from(user);

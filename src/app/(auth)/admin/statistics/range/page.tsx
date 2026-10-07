@@ -161,27 +161,42 @@ export default function StatisticsRangePage() {
     const toName = sortedHackathons.find((h) => h.id === toId)?.name ?? 'To';
 
     const header = (
-        <div className="flex flex-col gap-3 text-white sm:flex-row sm:items-end sm:justify-between">
-            <div>
-                <h1 className="mb-2 text-2xl font-bold text-white sm:text-3xl">
-                    Statistics Range
-                </h1>
-                <p className="text-sm text-white/60 sm:text-base">
-                    Combined demographics across a contiguous hackathon range
-                </p>
+        <div className="space-y-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-white">
+                        Statistics Range
+                    </h1>
+                    <p className="mt-1 text-sm text-white/60">
+                        Combined demographics across a contiguous hackathon
+                        range
+                    </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <Link href="/admin/resumes">
+                        <Button
+                            type="button"
+                            variant="brand"
+                            hierarchy="primary"
+                            size="compact"
+                        >
+                            Back to resumes
+                        </Button>
+                    </Link>
+                    <Link href="/admin/statistics">
+                        <Button
+                            type="button"
+                            variant="default"
+                            hierarchy="secondary"
+                            size="compact"
+                        >
+                            Single hackathon
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-                <Link href="/statistics">
-                    <Button
-                        type="button"
-                        variant="default"
-                        hierarchy="secondary"
-                        size="compact"
-                    >
-                        Single hackathon
-                    </Button>
-                </Link>
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-neutral-600/30 bg-neutral-900 p-3">
                 {sortedHackathons.length > 0 && (
                     <>
                         <Select
@@ -201,7 +216,7 @@ export default function StatisticsRangePage() {
                                 ))}
                             </SelectContent>
                         </Select>
-                        <span className="text-sm text-white/50">to</span>
+                        <span className="text-sm text-white/60">to</span>
                         <Select
                             value={toId != null ? String(toId) : undefined}
                             onValueChange={(value) => setToId(Number(value))}
@@ -224,10 +239,10 @@ export default function StatisticsRangePage() {
                 <button
                     type="button"
                     onClick={() => setCohort('all')}
-                    className={`rounded-md px-3 py-1.5 text-sm ${
+                    className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
                         cohort === 'all'
-                            ? 'bg-white text-black'
-                            : 'bg-white/10 text-white/80 hover:bg-white/20'
+                            ? 'bg-brand-600 text-white'
+                            : 'hover:bg-neutral-750 bg-neutral-800 text-white/60'
                     }`}
                 >
                     All applicants
@@ -235,10 +250,10 @@ export default function StatisticsRangePage() {
                 <button
                     type="button"
                     onClick={() => setCohort('accepted')}
-                    className={`rounded-md px-3 py-1.5 text-sm ${
+                    className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
                         cohort === 'accepted'
-                            ? 'bg-white text-black'
-                            : 'bg-white/10 text-white/80 hover:bg-white/20'
+                            ? 'bg-brand-600 text-white'
+                            : 'hover:bg-neutral-750 bg-neutral-800 text-white/60'
                     }`}
                 >
                     Accepted only
@@ -251,9 +266,7 @@ export default function StatisticsRangePage() {
         return (
             <div className="mx-auto flex h-full w-full flex-col gap-4 sm:gap-6">
                 {header}
-                <p className="text-sm text-white/60">
-                    No hackathons are assigned to your sponsor account yet.
-                </p>
+                <p className="text-sm text-white/60">No hackathons found.</p>
             </div>
         );
     }
@@ -263,7 +276,7 @@ export default function StatisticsRangePage() {
             {header}
 
             {(includedNames.length > 0 || missingNames.length > 0) && (
-                <div className="text-sm text-white/50">
+                <div className="text-sm text-white/60">
                     {includedNames.length > 0 && (
                         <p>
                             Including: {includedNames.join(', ')} (
@@ -271,7 +284,7 @@ export default function StatisticsRangePage() {
                         </p>
                     )}
                     {missingNames.length > 0 && (
-                        <p className="text-white/40">
+                        <p className="text-white/60">
                             Missing stats blob: {missingNames.join(', ')}
                         </p>
                     )}
@@ -281,7 +294,7 @@ export default function StatisticsRangePage() {
             {loading || fromId == null || toId == null ? (
                 <StatisticsChartsSkeleton />
             ) : error ? (
-                <p className="text-sm text-white/50">{error}</p>
+                <p className="text-sm text-white/60">{error}</p>
             ) : (
                 <StatisticsChartsGrid
                     charts={charts}

@@ -88,29 +88,43 @@ export default function StatisticsPage() {
         'Select hackathon';
 
     const header = (
-        <div className="flex flex-col gap-3 text-white sm:flex-row sm:items-end sm:justify-between">
-            <div>
-                <h1 className="mb-2 text-2xl font-bold text-white sm:text-3xl">
-                    Application Statistics
-                </h1>
-                <p className="text-sm text-white/60 sm:text-base">
-                    {error
-                        ? 'Error loading statistics data'
-                        : 'Data visualization of hackers'}
-                </p>
+        <div className="space-y-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-white">
+                        Application Statistics
+                    </h1>
+                    <p className="mt-1 text-sm text-white/60">
+                        {error
+                            ? 'Error loading statistics data'
+                            : `Demographics and representation of ${selectedHackathonName}`}
+                    </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <Link href="/admin/resumes">
+                        <Button
+                            type="button"
+                            variant="brand"
+                            hierarchy="primary"
+                            size="compact"
+                        >
+                            Back to resumes
+                        </Button>
+                    </Link>
+                    <Link href="/admin/statistics/range">
+                        <Button
+                            type="button"
+                            variant="default"
+                            hierarchy="secondary"
+                            size="compact"
+                        >
+                            Range view
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-                <Link href="/statistics/range">
-                    <Button
-                        type="button"
-                        variant="default"
-                        hierarchy="secondary"
-                        size="compact"
-                    >
-                        Range view
-                    </Button>
-                </Link>
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-neutral-600/30 bg-neutral-900 p-3">
                 {hackathons.length > 0 && (
                     <Select
                         value={
@@ -122,7 +136,7 @@ export default function StatisticsPage() {
                             setSelectedHackathonId(Number(value))
                         }
                     >
-                        <SelectTrigger className="w-[200px]">
+                        <SelectTrigger className="w-[220px]">
                             <SelectValue placeholder="Select hackathon">
                                 {selectedHackathonName}
                             </SelectValue>
@@ -139,10 +153,10 @@ export default function StatisticsPage() {
                 <button
                     type="button"
                     onClick={() => setCohort('all')}
-                    className={`rounded-md px-3 py-1.5 text-sm ${
+                    className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
                         cohort === 'all'
-                            ? 'bg-white text-black'
-                            : 'bg-white/10 text-white/80 hover:bg-white/20'
+                            ? 'bg-brand-600 text-white'
+                            : 'hover:bg-neutral-750 bg-neutral-800 text-white/60'
                     }`}
                 >
                     All applicants
@@ -150,10 +164,10 @@ export default function StatisticsPage() {
                 <button
                     type="button"
                     onClick={() => setCohort('accepted')}
-                    className={`rounded-md px-3 py-1.5 text-sm ${
+                    className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
                         cohort === 'accepted'
-                            ? 'bg-white text-black'
-                            : 'bg-white/10 text-white/80 hover:bg-white/20'
+                            ? 'bg-brand-600 text-white'
+                            : 'hover:bg-neutral-750 bg-neutral-800 text-white/60'
                     }`}
                 >
                     Accepted only
@@ -166,9 +180,7 @@ export default function StatisticsPage() {
         return (
             <div className="mx-auto flex h-full w-full flex-col gap-4 sm:gap-6">
                 {header}
-                <p className="text-sm text-white/60">
-                    No hackathons are assigned to your sponsor account yet.
-                </p>
+                <p className="text-sm text-white/60">No hackathons found.</p>
             </div>
         );
     }

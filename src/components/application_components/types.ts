@@ -34,6 +34,7 @@ type ChoiceOption = {
  * The server api can reject the request for any reason, so client modifying the question set is not a concern.
  */
 export interface HackathonData {
+    eventPageSlug: string | null | undefined;
     name: string;
     eventPagePayload: any;
     id: number;

@@ -47,3 +47,9 @@ export const isCheckInSchema = z.object({
 export const getEventCheckInCountSchema = z.object({
     hackathonId: z.number().int(),
 });
+
+export const getUniqueHackersInRangeSchema = z.object({
+    hackathonId: z.number().int(),
+    from: z.coerce.date().optional(),
+    to: z.coerce.date().optional(),
+});

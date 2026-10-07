@@ -3,6 +3,9 @@ export interface User {
     firstName: string;
     lastName: string;
     school: string;
+    // Filter bucket (Secondary / named school / Other).
+    schoolLabel: string;
+    education: string;
     github: string;
     linkedin: string;
     resumeUrl: string;
