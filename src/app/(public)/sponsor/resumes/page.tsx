@@ -1,9 +1,12 @@
 import { connection } from 'next/server';
 import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
-import { requireSponsorPublicToken } from '@/lib/sponsor/publicSponsorAccess';
+import { requireSponsorPublicAccessForPath } from '@/lib/sponsor/publicSponsorAccess';
 import ResumeTable from '@/components/sponsor/resume-bank/resumeBank';
 import type { InputFormPageData } from '@/components/application_components/types';
 import PublicSponsorShell from '@/components/sponsor/PublicSponsorShell';
+
+// Allow blocking render (token/cookie gated).
+export const instant = false;
 
 export default async function PublicSponsorResumesPage({
     searchParams,
@@ -12,7 +15,10 @@ export default async function PublicSponsorResumesPage({
 }) {
     await connection();
     const params = await searchParams;
-    const token = requireSponsorPublicToken(params);
+    const session = await requireSponsorPublicAccessForPath(
+        params,
+        '/sponsor/resumes'
+    );
 
     const activeHackathon = await getCachedActiveHackathon();
     if (!activeHackathon) {
@@ -27,10 +33,13 @@ export default async function PublicSponsorResumesPage({
         []) as InputFormPageData[];
 
     return (
-        <PublicSponsorShell token={token} hackathonData={activeHackathon}>
+        <PublicSponsorShell
+            sponsorName={session.name}
+            hackathonData={activeHackathon}
+        >
             <ResumeTable
                 hackathonId={activeHackathon.id}
-                accessToken={token}
+                publicAccess
                 hackathonName={activeHackathon.name}
                 initialApplicationQuestions={applicationQuestions}
             />

@@ -26,8 +26,8 @@ interface MobileTopNavProps {
     className?: string;
     initialData?: UserData;
     children?: ReactNode;
-    /** Hide auth-only chrome (announcements) for token-gated public sponsor portal */
-    publicAccessToken?: string;
+    // Hide auth-only chrome on public sponsor portal.
+    publicSponsorPortal?: boolean;
 }
 
 const excludedUrls = ['/application', '/admin/qr'];
@@ -75,7 +75,7 @@ const OUTSIDE_TAP_MAX_MOVE_PX = 14;
 export default function MobileTopNav({
     className,
     children,
-    publicAccessToken,
+    publicSponsorPortal = false,
 }: MobileTopNavProps) {
     const [hideTopNav, setHideTopNav] = useState(false);
     const [showMobileSidebar, setShowMobileSidebar] = useState(false);
@@ -92,7 +92,7 @@ export default function MobileTopNav({
     const selectEvent = useSetAtom(selectEventAtom);
     const setEditMode = useSetAtom(editModeAtom);
     const showAddEvent = isAdmin && url.startsWith('/schedule');
-    const isPublicSponsorPortal = Boolean(publicAccessToken);
+    const isPublicSponsorPortal = publicSponsorPortal;
 
     /** tap outside drawer closes, drag/scroll does not */
     useEffect(() => {

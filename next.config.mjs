@@ -19,6 +19,14 @@ const nextConfig = {
             },
         ],
     },
+    async headers() {
+        return [
+            {
+                source: '/sponsor/:path*',
+                headers: [{ key: 'Referrer-Policy', value: 'no-referrer' }],
+            },
+        ];
+    },
 };
 
 export default nextConfig;

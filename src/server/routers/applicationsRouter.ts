@@ -29,7 +29,7 @@ import {
     publicProcedure,
     router,
 } from '../trpc';
-import { isValidSponsorPublicAccessToken } from '@/lib/sponsor/publicAccessToken';
+import { getSponsorSessionFromCookies } from '@/lib/sponsor/sponsorSession';
 import { transporter } from '@/server/nodemailerTransporter';
 import { teams } from '@/db/schema/teams';
 import { members } from '@/db/schema/members';
@@ -256,15 +256,10 @@ export const applicationsRouter = router({
             }
         ),
 
-    /**
-     * Public resume-bank feed. Requires a valid shared-link token
-     * (SPONSOR_PUBLIC_TOKEN). Always returns sponsor-safe fields only for
-     * Accepted / Accepted-RSVP applicants.
-     */
+    // Public resume bank (sponsor cookie required; accepted applicants only).
     getPublicResumeBank: publicProcedure
         .input(
             z.object({
-                token: z.string().min(1),
                 hackathonId: z.number().int().optional(),
                 maxResult: z
                     .number()
@@ -277,7 +272,8 @@ export const applicationsRouter = router({
             })
         )
         .query(async ({ input }) => {
-            if (!isValidSponsorPublicAccessToken(input.token)) {
+            const session = await getSponsorSessionFromCookies();
+            if (!session) {
                 throw new TRPCError({ code: 'UNAUTHORIZED' });
             }
 

@@ -40,8 +40,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 interface ResumeTableProps {
     hackathonId: number;
-    /** When set, loads via public shared-link API instead of authenticated sponsor query. */
-    accessToken?: string;
+    publicAccess?: boolean;
     hackathonName?: string;
     initialApplicationQuestions?: InputFormPageData[];
 }
@@ -58,14 +57,15 @@ function convertToCSV(arr: Record<string, unknown>[]) {
         ...arr.map((row) =>
             header
                 .map((fieldName) => {
-                    let val = row[fieldName];
-                    if (typeof val === 'string') {
-                        val = val.replace(/"/g, '""');
-                        if (val.search(/("|,|\n)/g) >= 0) {
-                            val = `"${val}"`;
-                        }
+                    const raw = row[fieldName];
+                    if (typeof raw !== 'string') {
+                        return raw == null ? '' : String(raw);
                     }
-                    return val ?? '';
+                    let val = raw.replace(/"/g, '""');
+                    if (/[",\n]/.test(val)) {
+                        val = `"${val}"`;
+                    }
+                    return val;
                 })
                 .join(',')
         ),
@@ -129,12 +129,12 @@ function ResumeBankSkeleton() {
 
 export default function ResumeTable({
     hackathonId,
-    accessToken,
+    publicAccess = false,
     hackathonName,
     initialApplicationQuestions,
 }: ResumeTableProps) {
     const hackathon = useAtomValue(hackathonAtom);
-    const isPublicAccess = Boolean(accessToken);
+    const isPublicAccess = publicAccess;
 
     const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
     const [panelOpen, setPanelOpen] = useState(false);
@@ -158,7 +158,6 @@ export default function ResumeTable({
 
     const publicQuery = trpc.applications.getPublicResumeBank.useInfiniteQuery(
         {
-            token: accessToken ?? '',
             hackathonId,
             maxResult: 500,
         },

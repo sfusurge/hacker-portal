@@ -26,7 +26,7 @@ import {
     rsvps,
 } from '@/db/schema/rsvp';
 import { z } from 'zod';
-import { isValidSponsorPublicAccessToken } from '@/lib/sponsor/publicAccessToken';
+import { getSponsorSessionFromCookies } from '@/lib/sponsor/sponsorSession';
 
 export interface CalendarEvent {
     id: number;
@@ -165,19 +165,19 @@ export const eventsRouter = router({
             return events as CalendarEvent[];
         }),
 
-    /** Token-gated event list for the public sponsor portal (no user RSVP state). */
+    // Public sponsor events (cookie required; no RSVP state).
     getPublicSponsorEvents: publicProcedure
         .input(
             z.object({
                 hackathonId: z.number().int(),
-                token: z.string().min(1),
             })
         )
         .query(async ({ input }) => {
-            if (!isValidSponsorPublicAccessToken(input.token)) {
+            const session = await getSponsorSessionFromCookies();
+            if (!session) {
                 throw new TRPCError({
                     code: 'UNAUTHORIZED',
-                    message: 'Invalid sponsor access token',
+                    message: 'Invalid sponsor access session',
                 });
             }
 

@@ -6,46 +6,45 @@ import MobileTopNav from '@/components/sidebar/MobileTopNav';
 import SideBar from '@/components/sidebar/SideBar';
 import type { UserData } from '@/server/routers/usersRouter';
 
-/** Minimal sponsor-shaped user so SideBar uses the sponsor nav branch. */
-const PUBLIC_SPONSOR_USER = {
-    id: -1,
-    name: null,
-    firstName: 'Sponsor',
-    lastName: '',
-    phoneNumber: null,
-    email: 'sponsor@public.access',
-    emailVerified: false,
-    image: null,
-    userRole: 'user',
-    displayId: '000000',
-    lastSeenAnnouncementsAt: null,
-    createdAt: new Date(0),
-    updatedAt: new Date(0),
-} as NonNullable<UserData>;
-
 type PublicHackathonData = Parameters<
     typeof HackathonOnlyProvider
 >[0]['hackathonData'];
 
 export default function PublicSponsorShell({
-    token,
+    sponsorName,
     hackathonData,
     children,
 }: {
-    token: string;
+    sponsorName: string;
     hackathonData: PublicHackathonData;
     children: React.ReactNode;
 }) {
+    const publicSponsorUser = {
+        id: -1,
+        name: null,
+        firstName: sponsorName || 'Sponsor',
+        lastName: '',
+        phoneNumber: null,
+        email: 'sponsor@public.access',
+        emailVerified: false,
+        image: null,
+        userRole: 'user',
+        displayId: '000000',
+        lastSeenAnnouncementsAt: null,
+        createdAt: new Date(0),
+        updatedAt: new Date(0),
+    } as NonNullable<UserData>;
+
     return (
         <HackathonOnlyProvider hackathonData={hackathonData}>
             <ClientLayoutWrapper>
                 <MobileTopNav
-                    initialData={PUBLIC_SPONSOR_USER}
-                    publicAccessToken={token}
+                    initialData={publicSponsorUser}
+                    publicSponsorPortal
                 >
                     <SideBar
-                        initialData={PUBLIC_SPONSOR_USER}
-                        publicAccessToken={token}
+                        initialData={publicSponsorUser}
+                        publicSponsorPortal
                         className="h-full"
                     />
                 </MobileTopNav>

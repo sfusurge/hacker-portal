@@ -1,9 +1,12 @@
 import { connection } from 'next/server';
 import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
 import { createCaller } from '@/server/appRouter';
-import { requireSponsorPublicToken } from '@/lib/sponsor/publicSponsorAccess';
+import { requireSponsorPublicAccessForPath } from '@/lib/sponsor/publicSponsorAccess';
 import PublicSponsorShell from '@/components/sponsor/PublicSponsorShell';
 import PublicHomeClient from './PublicHomeClient';
+
+// Allow blocking render (token/cookie gated).
+export const instant = false;
 
 export default async function PublicSponsorHomePage({
     searchParams,
@@ -12,7 +15,7 @@ export default async function PublicSponsorHomePage({
 }) {
     await connection();
     const params = await searchParams;
-    const token = requireSponsorPublicToken(params);
+    const session = await requireSponsorPublicAccessForPath(params, '/sponsor');
 
     const activeHackathon = await getCachedActiveHackathon();
     if (!activeHackathon) {
@@ -26,13 +29,15 @@ export default async function PublicSponsorHomePage({
     const trpc = createCaller({});
     const events = await trpc.events.getPublicSponsorEvents({
         hackathonId: activeHackathon.id,
-        token,
     });
 
     return (
-        <PublicSponsorShell token={token} hackathonData={activeHackathon}>
+        <PublicSponsorShell
+            sponsorName={session.name}
+            hackathonData={activeHackathon}
+        >
             <PublicHomeClient
-                token={token}
+                sponsorName={session.name}
                 hackathon={activeHackathon}
                 events={events}
             />

@@ -1,8 +1,11 @@
 import { connection } from 'next/server';
 import { getCachedActiveHackathon } from '@/server/getCachedActiveHackathon';
-import { requireSponsorPublicToken } from '@/lib/sponsor/publicSponsorAccess';
+import { requireSponsorPublicAccessForPath } from '@/lib/sponsor/publicSponsorAccess';
 import PublicSponsorShell from '@/components/sponsor/PublicSponsorShell';
 import PublicStatisticsClient from '../PublicStatisticsClient';
+
+// Allow blocking render (token/cookie gated).
+export const instant = false;
 
 export default async function PublicSponsorStatisticsPage({
     searchParams,
@@ -11,7 +14,10 @@ export default async function PublicSponsorStatisticsPage({
 }) {
     await connection();
     const params = await searchParams;
-    const token = requireSponsorPublicToken(params);
+    const session = await requireSponsorPublicAccessForPath(
+        params,
+        '/sponsor/statistics'
+    );
 
     const activeHackathon = await getCachedActiveHackathon();
     if (!activeHackathon) {
@@ -23,11 +29,13 @@ export default async function PublicSponsorStatisticsPage({
     }
 
     return (
-        <PublicSponsorShell token={token} hackathonData={activeHackathon}>
+        <PublicSponsorShell
+            sponsorName={session.name}
+            hackathonData={activeHackathon}
+        >
             <PublicStatisticsClient
                 hackathonId={activeHackathon.id}
                 hackathonName={activeHackathon.name}
-                token={token}
             />
         </PublicSponsorShell>
     );

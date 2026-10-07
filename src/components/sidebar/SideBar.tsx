@@ -69,8 +69,7 @@ const LS_SIDEBAR_MOBILE = 'sidebar_collapsed_mobile';
 interface NavProps {
     className?: string;
     initialData?: UserData;
-    /** Token-gated public sponsor portal: remap nav to /sponsor/*?token=… */
-    publicAccessToken?: string;
+    publicSponsorPortal?: boolean;
 }
 
 const navLinks = [
@@ -224,16 +223,11 @@ type SponsorNavLink = {
 };
 
 function buildPublicSponsorNavLinks(
-    token: string,
     projectsHref?: string | null
 ): SponsorNavLink[] {
-    const withToken = (path: string) => {
-        const params = new URLSearchParams({ token });
-        return `${path}?${params.toString()}`;
-    };
     const links: SponsorNavLink[] = [
         {
-            href: withToken('/sponsor'),
+            href: '/sponsor',
             matchPath: '/sponsor',
             label: 'Home',
             icon: <HomeIcon className="h-6 w-6" />,
@@ -241,7 +235,7 @@ function buildPublicSponsorNavLinks(
             exact: true,
         },
         {
-            href: withToken('/sponsor/resumes'),
+            href: '/sponsor/resumes',
             matchPath: '/sponsor/resumes',
             label: 'Resume Bank',
             icon: <UserGroupIcon className="h-6 w-6" />,
@@ -249,7 +243,7 @@ function buildPublicSponsorNavLinks(
             exact: false,
         },
         {
-            href: withToken('/sponsor/statistics'),
+            href: '/sponsor/statistics',
             matchPath: '/sponsor/statistics',
             label: 'Statistics',
             icon: <ChartBarIcon className="h-6 w-6" />,
@@ -282,10 +276,10 @@ function isSponsorNavActive(
 export default function SideBar({
     className,
     initialData,
-    publicAccessToken,
+    publicSponsorPortal = false,
 }: NavProps) {
     const hackathon = useAtomValue(hackathonAtom);
-    const isPublicSponsorPortal = Boolean(publicAccessToken);
+    const isPublicSponsorPortal = publicSponsorPortal;
     const { data: visibleHackathons = [] } =
         trpc.hackathons.getVisibleHackathonsForNav.useQuery(undefined, {
             enabled: !isPublicSponsorPortal,
@@ -358,13 +352,10 @@ export default function SideBar({
 
     const resolvedSponsorNavLinks = useMemo(
         () =>
-            publicAccessToken
-                ? buildPublicSponsorNavLinks(
-                      publicAccessToken,
-                      sponsorProjectsHref
-                  )
+            isPublicSponsorPortal
+                ? buildPublicSponsorNavLinks(sponsorProjectsHref)
                 : [],
-        [publicAccessToken, sponsorProjectsHref]
+        [isPublicSponsorPortal, sponsorProjectsHref]
     );
 
     const showPointsLink = isEligibleForHackathonTicketQr(

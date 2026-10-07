@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import {
     StatisticsChartsGrid,
     StatisticsChartsSkeleton,
@@ -13,16 +11,13 @@ import {
     type Cohort,
     type StatsPayload,
 } from '@/lib/statistics/statsTypes';
-import { withSponsorPublicToken } from '@/lib/sponsor/publicSponsorAccess';
 
 export default function PublicStatisticsClient({
     hackathonId,
     hackathonName,
-    token,
 }: {
     hackathonId: number;
     hackathonName: string;
-    token: string;
 }) {
     const chartSize = useResponsiveChartSize();
     const [payload, setPayload] = useState<StatsPayload | null>(null);
