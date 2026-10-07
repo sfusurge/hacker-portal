@@ -5,7 +5,6 @@ export const ADMIN_ROLES_EXCLUDED_FROM_STATS: string[] = [
     'admin',
     'owner',
     'judge',
-    'sponsor',
 ];
 
 export function hasAdminAccess(role: string | null | undefined): boolean {

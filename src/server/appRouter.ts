@@ -14,7 +14,6 @@ import { filesRouter } from './routers/filesRouter';
 import { emailTemplatesRouter } from './routers/emailTemplateRouter';
 import { emailTemplateStylingRouter } from './routers/emailTemplateStylingRouter';
 import { submissionsRouter } from './routers/submissionsRouter';
-import { companyRouter } from './routers/companyRouter';
 import { announcementsRouter } from './routers/announcementsRouter';
 
 import { judgingRouter } from './routers/judgingRouter';
@@ -40,7 +39,6 @@ export const appRouter = router({
     checkIn: checkInRouter,
     houses: housesRouter,
     nfc: nfcRouter,
-    company: companyRouter,
 
     judging: judgingRouter,
     userVote: userVoteRouter,

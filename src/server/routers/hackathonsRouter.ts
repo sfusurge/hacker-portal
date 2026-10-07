@@ -1,6 +1,5 @@
 import { InputFormPageData } from '@/components/application_components/types';
 import {
-    adminOrSponsorProcedure,
     adminProcedure,
     ownerProcedure,
     publicProcedure,
@@ -27,7 +26,6 @@ import {
 } from '@/lib/applications/applicationQuestionsSchema';
 import { applications } from '@/db/schema/applications';
 import { BadRequestError, ResourceNotFoundError } from '../exceptions';
-import { company } from '@/db/schema/company';
 
 async function assertSlugAvailable(slug: string, exceptId?: number) {
     const [conflict] = await databaseClient
@@ -151,18 +149,7 @@ export const hackathonsRouter = router({
             .where(isNotNull(hackathons.eventPagePayload));
     }),
 
-    getSponsorHackathons: adminOrSponsorProcedure.query(async ({ ctx }) => {
-        if (ctx.user.userRole === 'admin' || ctx.user.userRole === 'owner') {
-            return databaseClient
-                .select({
-                    id: hackathons.id,
-                    name: hackathons.name,
-                    startDate: hackathons.startDate,
-                })
-                .from(hackathons)
-                .orderBy(asc(hackathons.startDate));
-        }
-
+    getSponsorHackathons: adminProcedure.query(async () => {
         return databaseClient
             .select({
                 id: hackathons.id,
@@ -170,14 +157,6 @@ export const hackathonsRouter = router({
                 startDate: hackathons.startDate,
             })
             .from(hackathons)
-            .innerJoin(
-                company,
-                and(
-                    eq(company.hackathonId, hackathons.id),
-                    eq(company.userId, ctx.user.id),
-                    eq(company.portalRole, 'sponsor')
-                )
-            )
             .orderBy(asc(hackathons.startDate));
     }),
 
