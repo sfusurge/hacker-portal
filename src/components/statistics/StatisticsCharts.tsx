@@ -242,7 +242,7 @@ function StatisticsCard({
             <CardContent className="flex flex-1 flex-col">
                 {data.length === 0 ? (
                     <div className="flex min-h-[300px] flex-1 items-center justify-center px-4">
-                        <p className="text-center text-sm text-white/50">
+                        <p className="text-center text-sm text-white/60">
                             {emptyMessage}
                         </p>
                     </div>
