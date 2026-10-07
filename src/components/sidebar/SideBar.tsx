@@ -22,7 +22,7 @@ import { SparklesIcon } from '@heroicons/react/24/outline';
 import { EnvelopeIcon } from '@heroicons/react/24/outline';
 import { signOutAndRedirect } from '@/auth/auth-client';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { motion } from 'motion/react';
 import {
     Popover,
@@ -32,7 +32,10 @@ import {
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { cn } from '@/lib/utils';
 import { navLinkVariants, NavLink } from './NavLink';
-import { buildEventPageNavLinksFromHackathons } from '@/components/home/eventPageConfig';
+import {
+    buildEventPageNavLinksFromHackathons,
+    resolveProjectsHref,
+} from '@/components/home/eventPageConfig';
 import { trpc } from '@/trpc/client';
 import { UserData } from '@/server/routers/usersRouter';
 import { DEFAULT_USER_AVATAR, resolveUserIconUrl } from '@/utils/blobHelper';
@@ -66,6 +69,8 @@ const LS_SIDEBAR_MOBILE = 'sidebar_collapsed_mobile';
 interface NavProps {
     className?: string;
     initialData?: UserData;
+    /** Token-gated public sponsor portal: remap nav to /sponsor/*?token=… */
+    publicAccessToken?: string;
 }
 
 const navLinks = [
@@ -127,6 +132,32 @@ const adminLinks = [
         iconAlt: 'Review Applications logo',
     },
     {
+        href: '/admin/resumes',
+        label: 'Resume Bank',
+        icon: <InboxStackIcon className="h-6 w-6" />,
+        iconAlt: 'Resume Bank',
+    },
+    {
+        href: '/admin/statistics',
+        label: 'Statistics',
+        icon: <ChartBarIcon className="h-6 w-6" />,
+        iconAlt: 'Statistics',
+        dropdownItems: [
+            {
+                label: 'Single hackathon',
+                href: '/admin/statistics',
+                icon: <ChartBarIcon className="h-6 w-6 text-white/60" />,
+                iconAlt: 'Single hackathon',
+            },
+            {
+                label: 'Range view',
+                href: '/admin/statistics/range',
+                icon: <ChartBarIcon className="h-6 w-6 text-white/60" />,
+                iconAlt: 'Range view',
+            },
+        ],
+    },
+    {
         href: '/admin/email/templates',
         label: 'Emails',
         icon: <EnvelopeIcon className="h-6 w-6" />,
@@ -182,43 +213,91 @@ const judgeNavLinks = [
     },
 ];
 
-// SPONSORS CAN ONLY SEE THESE LINKS
-const sponsorNavLinks = [
-    {
-        href: '/home',
-        label: 'Home',
-        icon: <HomeIcon className="h-6 w-6" />,
-        iconAlt: 'Home logo',
-    },
-    {
-        href: '/review',
-        label: 'Resume Bank',
-        icon: <UserGroupIcon className="h-6 w-6" />,
-        iconAlt: 'Resume Bank logo',
-    },
-    {
-        href: '/statistics',
-        label: 'Statistics',
-        icon: <ChartBarIcon className="h-6 w-6" />,
-        iconAlt: 'Stats logo',
-    },
-    {
-        href: '/schedule',
-        label: 'Schedule',
-        icon: <CalendarDaysIcon className="h-6 w-6" />,
-        iconAlt: 'Schedule logo',
-    },
-];
+type SponsorNavLink = {
+    href: string;
+    label: string;
+    icon: ReactNode;
+    iconAlt: string;
+    exact?: boolean;
+    matchPath?: string;
+    external?: boolean;
+};
 
-export default function SideBar({ className, initialData }: NavProps) {
+function buildPublicSponsorNavLinks(
+    token: string,
+    projectsHref?: string | null
+): SponsorNavLink[] {
+    const withToken = (path: string) => {
+        const params = new URLSearchParams({ token });
+        return `${path}?${params.toString()}`;
+    };
+    const links: SponsorNavLink[] = [
+        {
+            href: withToken('/sponsor'),
+            matchPath: '/sponsor',
+            label: 'Home',
+            icon: <HomeIcon className="h-6 w-6" />,
+            iconAlt: 'Sponsor home',
+            exact: true,
+        },
+        {
+            href: withToken('/sponsor/resumes'),
+            matchPath: '/sponsor/resumes',
+            label: 'Resume Bank',
+            icon: <UserGroupIcon className="h-6 w-6" />,
+            iconAlt: 'Resume Bank',
+            exact: false,
+        },
+        {
+            href: withToken('/sponsor/statistics'),
+            matchPath: '/sponsor/statistics',
+            label: 'Statistics',
+            icon: <ChartBarIcon className="h-6 w-6" />,
+            iconAlt: 'Statistics',
+            exact: false,
+        },
+    ];
+    if (projectsHref) {
+        links.push({
+            href: projectsHref,
+            label: 'Projects',
+            icon: <InboxStackIcon className="h-6 w-6" />,
+            iconAlt: 'Projects',
+            exact: true,
+            external: true,
+        });
+    }
+    return links;
+}
+
+function isSponsorNavActive(
+    url: string,
+    link: { href: string; matchPath?: string; exact?: boolean }
+) {
+    const path = link.matchPath ?? link.href.split('?')[0];
+    if (link.exact) return url === path;
+    return url === path || url.startsWith(`${path}/`);
+}
+
+export default function SideBar({
+    className,
+    initialData,
+    publicAccessToken,
+}: NavProps) {
     const hackathon = useAtomValue(hackathonAtom);
+    const isPublicSponsorPortal = Boolean(publicAccessToken);
     const { data: visibleHackathons = [] } =
-        trpc.hackathons.getVisibleHackathonsForNav.useQuery();
+        trpc.hackathons.getVisibleHackathonsForNav.useQuery(undefined, {
+            enabled: !isPublicSponsorPortal,
+        });
     const eventPageNavLinks = useMemo(
         () => buildEventPageNavLinksFromHackathons(visibleHackathons),
         [visibleHackathons]
     );
-    const [now] = useState(() => Date.now());
+    const [now, setNow] = useState(0);
+    useEffect(() => {
+        setNow(Date.now());
+    }, []);
     const [collapsed, setCollapsed] = useState(false);
     const [showCollapseToggle, setShowCollapseToggle] = useState(false);
     const [profilePopoverOpen, setProfilePopoverOpen] = useState(false);
@@ -262,12 +341,31 @@ export default function SideBar({ className, initialData }: NavProps) {
             { hackathonId: hackathon?.id ?? -1 },
             {
                 enabled:
+                    !isPublicSponsorPortal &&
                     Boolean(hackathon?.id) &&
                     Boolean(initialData) &&
-                    initialData?.userRole !== 'judge' &&
-                    initialData?.userRole !== 'sponsor',
+                    initialData?.userRole !== 'judge',
             }
         );
+
+    const sponsorProjectsHref = resolveProjectsHref(
+        hackathon?.eventPagePayload,
+        {
+            eventPageSlug: hackathon?.eventPageSlug,
+            hackathonName: hackathon?.name,
+        }
+    );
+
+    const resolvedSponsorNavLinks = useMemo(
+        () =>
+            publicAccessToken
+                ? buildPublicSponsorNavLinks(
+                      publicAccessToken,
+                      sponsorProjectsHref
+                  )
+                : [],
+        [publicAccessToken, sponsorProjectsHref]
+    );
 
     const showPointsLink = isEligibleForHackathonTicketQr(
         currentApplication?.currentStatus
@@ -379,8 +477,8 @@ export default function SideBar({ className, initialData }: NavProps) {
                                         collapsed={collapsed}
                                     />
                                 ))
-                            ) : initialData?.userRole === 'sponsor' ? (
-                                sponsorNavLinks.map((link) => (
+                            ) : isPublicSponsorPortal ? (
+                                resolvedSponsorNavLinks.map((link) => (
                                     <NavLink
                                         key={link.href}
                                         href={link.href}
@@ -388,8 +486,20 @@ export default function SideBar({ className, initialData }: NavProps) {
                                         icon={link.icon}
                                         iconAlt={link.iconAlt}
                                         platform="desktop"
-                                        active={url.startsWith(link.href)}
+                                        active={
+                                            link.external
+                                                ? false
+                                                : isSponsorNavActive(url, link)
+                                        }
                                         collapsed={collapsed}
+                                        target={
+                                            link.external ? '_blank' : undefined
+                                        }
+                                        rel={
+                                            link.external
+                                                ? 'noopener noreferrer'
+                                                : undefined
+                                        }
                                     />
                                 ))
                             ) : (
@@ -443,7 +553,8 @@ export default function SideBar({ className, initialData }: NavProps) {
                             )}
 
                             {!isPublicSparkjamRoute &&
-                                initialData?.userRole !== 'sponsor' && (
+                                !isPublicSponsorPortal &&
+                                initialData && (
                                     <Popover
                                         open={profilePopoverOpen}
                                         onOpenChange={setProfilePopoverOpen}

@@ -26,6 +26,7 @@ import {
     rsvps,
 } from '@/db/schema/rsvp';
 import { z } from 'zod';
+import { isValidSponsorPublicAccessToken } from '@/lib/sponsor/publicAccessToken';
 
 export interface CalendarEvent {
     id: number;
@@ -162,6 +163,50 @@ export const eventsRouter = router({
             );
 
             return events as CalendarEvent[];
+        }),
+
+    /** Token-gated event list for the public sponsor portal (no user RSVP state). */
+    getPublicSponsorEvents: publicProcedure
+        .input(
+            z.object({
+                hackathonId: z.number().int(),
+                token: z.string().min(1),
+            })
+        )
+        .query(async ({ input }) => {
+            if (!isValidSponsorPublicAccessToken(input.token)) {
+                throw new TRPCError({
+                    code: 'UNAUTHORIZED',
+                    message: 'Invalid sponsor access token',
+                });
+            }
+
+            const rows = await databaseClient
+                .select()
+                .from(eventsTable)
+                .where(eq(eventsTable.hackathonId, input.hackathonId))
+                .orderBy(
+                    asc(eventsTable.startDate),
+                    asc(eventsTable.endDate),
+                    asc(eventsTable.id)
+                );
+
+            return rows.map((event) => {
+                const { longDescription, ...rest } = event;
+                return {
+                    ...rest,
+                    imageUrl: rest.imageUrl ?? undefined,
+                    checkedIn: false,
+                    rsvped: false,
+                    ignored: false,
+                    description: rest.description ?? undefined,
+                    hasLongDescription:
+                        longDescription !== undefined &&
+                        longDescription !== null &&
+                        longDescription.length > 0,
+                    checkInTime: undefined,
+                };
+            }) as CalendarEvent[];
         }),
 
     rsvpEvent: protectedProcedure

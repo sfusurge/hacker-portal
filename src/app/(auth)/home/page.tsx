@@ -10,7 +10,6 @@ import { PageHeader } from '@/components/PageHeader';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
 import { hasAdminAccess } from '@/lib/auth/roles';
 import { Suspense } from 'react';
-
 export default function Home() {
     return (
         <Suspense fallback={null}>
