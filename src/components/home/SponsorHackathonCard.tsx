@@ -100,9 +100,14 @@ export default function SponsorHackathonCard({
                                                         size="cozy"
                                                         variant="brand"
                                                         hierarchy="primary"
-                                                        className="w-full"
+                                                        className="w-full whitespace-nowrap"
                                                     >
-                                                        View resume bank
+                                                        <span className="sm:hidden">
+                                                            Resume bank
+                                                        </span>
+                                                        <span className="hidden sm:inline">
+                                                            View resume bank
+                                                        </span>
                                                     </Button>
                                                 </Link>
                                             ) : null}
