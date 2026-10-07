@@ -28,19 +28,6 @@ const enforceAdmin = t.middleware(async ({ next }) => {
     });
 });
 
-const enforceAdminOrSponsor = t.middleware(async ({ next }) => {
-    const user = await getUserData();
-    if (
-        !user ||
-        (!hasAdminAccess(user.userRole) && user.userRole !== 'sponsor')
-    ) {
-        throw new TRPCError({ code: 'UNAUTHORIZED' });
-    }
-    return next({
-        ctx: { user },
-    });
-});
-
 const enforceOwner = t.middleware(async ({ next }) => {
     const user = await getUserData();
     if (!user || !isOwner(user.userRole)) {
@@ -54,8 +41,6 @@ const enforceOwner = t.middleware(async ({ next }) => {
 export const protectedProcedure = t.procedure.use(enforceUser);
 
 export const adminProcedure = t.procedure.use(enforceAdmin);
-
-export const adminOrSponsorProcedure = t.procedure.use(enforceAdminOrSponsor);
 
 export const ownerProcedure = t.procedure.use(enforceOwner);
 

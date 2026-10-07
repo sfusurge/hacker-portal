@@ -21,12 +21,44 @@ const SCHOOL_ALIASES: Record<string, string> = {
     uwat: 'University of Waterloo',
 };
 
-//check if drop down or free text
-const MAJOR_ALIASES: Record<string, string> = {
+/**
+ * StormHacks-style major dropdown `data` keys → human choice labels.
+ * Keep stats on the form's normal selection text (no LLM / free-text canon).
+ */
+const MAJOR_SELECTION_LABELS: Record<string, string> = {
+    computer_science:
+        'Computer science, computer engineering, or software engineering',
+    engineering:
+        'Another engineering discipline (such as civil, electrical, mechanical, etc.)',
+    information_systems:
+        'Information systems, information technology, or system administration',
+    natural_science:
+        'A natural science (such as biology, chemistry, physics, etc.)',
+    mathematics_statistics: 'Mathematics or statistics',
+    web_development_design: 'Web development or web design',
+    business_discipline:
+        'Business discipline (such as accounting, finance, marketing, etc.)',
+    humanities_discipline:
+        'Humanities discipline (such as literature, history, philosophy, etc.)',
+    social_science:
+        'Social science (such as anthropology, psychology, political science, etc.)',
+    fine_arts_performing_arts:
+        'Fine arts or performing arts (such as graphic design, music, studio art, etc.)',
+    health_science:
+        'Health science (such as nursing, pharmacy, radiology, etc.)',
+    other: 'Other (please specify)',
+    undecided: 'Undecided / No Declared Major',
+    no_majors_offered:
+        'My school does not offer majors / primary areas of study',
+    prefer_not_to_answer: 'Prefer not to answer',
+};
+
+export const MAJOR_ALIASES: Record<string, string> = {
     cs: 'Computer Science',
     'comp sci': 'Computer Science',
     'computer sci': 'Computer Science',
     ee: 'Electrical Engineering',
+    ...MAJOR_SELECTION_LABELS,
 };
 
 type CanonList = { byKey: Map<string, string>; loaded: boolean };
@@ -68,7 +100,7 @@ function ensureSchoolList(): Map<string, string> {
     return schoolList.byKey;
 }
 
-function ensureMajorList(): Map<string, string> {
+export function ensureMajorList(): Map<string, string> {
     if (!majorList.loaded) {
         majorList.byKey = loadCsvNames('majors');
         majorList.loaded = true;
@@ -80,6 +112,20 @@ function titleCaseFallback(raw: string): string {
     const cleaned = raw.trim().replace(/\s+/g, ' ');
     if (!cleaned) return 'Not specified';
     return cleaned;
+}
+
+export function titleCaseMajor(raw: string): string {
+    return titleCaseFallback(raw);
+}
+
+export function polishCanonicalMajor(display: string): string {
+    return display.trim().replace(/\s+/g, ' ');
+}
+
+export function tryStrongMajorMatch(raw: string): string | null {
+    const key = normalizeKey(raw);
+    if (MAJOR_ALIASES[key]) return MAJOR_ALIASES[key];
+    return ensureMajorList().get(key) ?? null;
 }
 
 /**
@@ -120,28 +166,55 @@ export function canonicalizeFreeText(
  * - major may be string[]
  * - empty → ["Not specified"]
  */
+function coerceAnswerList(value: unknown): unknown[] {
+    if (value == null || value === '') return [];
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (trimmed.startsWith('[')) {
+            try {
+                const parsed = JSON.parse(trimmed);
+                if (Array.isArray(parsed)) return parsed;
+            } catch {
+                // fall through — treat as a plain string answer
+            }
+        }
+        return [trimmed];
+    }
+    return [value];
+}
+
 export function answersToCountKeys(
     value: unknown,
-    role: DemographicStatRole
+    role: DemographicStatRole,
+    /** Optional form choice data → label map (preferred for dropdown majors). */
+    choiceLabels?: Map<string, string> | Record<string, string>
 ): string[] {
-    if (value == null || value === '') {
-        return ['Not specified'];
-    }
+    const labelMap =
+        choiceLabels instanceof Map
+            ? choiceLabels
+            : choiceLabels
+              ? new Map(Object.entries(choiceLabels))
+              : null;
 
-    if (Array.isArray(value)) {
-        const parts = value
-            .map((item) =>
-                typeof item === 'string'
-                    ? canonicalizeFreeText(item, role)
-                    : canonicalizeFreeText(String(item), role)
-            )
-            .filter((s) => s && s !== 'Not specified');
-        return parts.length > 0 ? parts : ['Not specified'];
-    }
+    const resolveOne = (raw: string): string => {
+        const trimmed = raw.trim();
+        if (!trimmed) return 'Not specified';
+        if (labelMap?.has(trimmed)) return labelMap.get(trimmed)!;
+        // also try normalized underscore keys against major selection labels
+        if (role === 'major' && MAJOR_SELECTION_LABELS[trimmed]) {
+            return MAJOR_SELECTION_LABELS[trimmed];
+        }
+        return canonicalizeFreeText(trimmed, role);
+    };
 
-    if (typeof value === 'string' || typeof value === 'number') {
-        return [canonicalizeFreeText(String(value), role)];
-    }
+    const items = coerceAnswerList(value);
+    if (items.length === 0) return ['Not specified'];
 
-    return [canonicalizeFreeText(String(value), role)];
+    const parts = items
+        .map((item) =>
+            resolveOne(typeof item === 'string' ? item : String(item))
+        )
+        .filter((s) => s && s !== 'Not specified');
+    return parts.length > 0 ? parts : ['Not specified'];
 }

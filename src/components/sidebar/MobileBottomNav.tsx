@@ -26,7 +26,6 @@ import { hackathonAtom } from '@/app/(auth)/ClientContext';
 import { canAccessProjectGallery } from '@/lib/submissionWindow';
 import { isEligibleForHackathonTicketQr } from '@/lib/applicationAcceptStatus';
 import { trpc } from '@/trpc/client';
-
 interface MobileBottomNavProps {
     className?: string;
     initialData?: UserData;
@@ -42,34 +41,6 @@ const judgeNavLinks = [
         label: 'Projects',
         icon: <InboxStackIcon />,
         iconAlt: 'Projects logo',
-    },
-    {
-        href: '/schedule',
-        label: 'Schedule',
-        icon: <CalendarDaysIcon />,
-        iconAlt: 'Schedule logo',
-    },
-];
-
-const sponsorNavLinks = [
-    {
-        href: '/home',
-        label: 'Home',
-        icon: <HomeIcon />,
-        iconAlt: 'Home logo',
-    },
-    {
-        href: '/review',
-        label: 'Review',
-        icon: <UserGroupIcon />,
-        iconAlt: 'Review Hackers logo',
-    },
-    {
-        href: '/statistics',
-        label: 'Statistics',
-        icon: <ChartBarIcon />,
-        iconAlt: 'Stats logo',
-        disabled: true,
     },
     {
         href: '/schedule',
@@ -142,9 +113,13 @@ export default function MobileBottomNav({
 }: MobileBottomNavProps) {
     const [hideBottomNav, setHideBottom] = useState(false);
     const hackathon = useAtomValue(hackathonAtom);
-    const [now] = useState(() => Date.now());
+    const [now, setNow] = useState(0);
 
     const url = usePathname();
+
+    useEffect(() => {
+        setNow(Date.now());
+    }, []);
 
     useEffect(() => {
         for (const excludeURL of excludedUrls) {
@@ -182,8 +157,7 @@ export default function MobileBottomNav({
                 enabled:
                     Boolean(hackathon?.id) &&
                     Boolean(initialData) &&
-                    initialData?.userRole !== 'judge' &&
-                    initialData?.userRole !== 'sponsor',
+                    initialData?.userRole !== 'judge',
             }
         );
 
@@ -236,20 +210,6 @@ export default function MobileBottomNav({
                     (isSparkjamProjectsArea(url) && !initialData) ? (
                         <>
                             {judgeNavLinks.map((link) => (
-                                <NavLink
-                                    key={link.href}
-                                    href={link.href}
-                                    label={link.label}
-                                    icon={link.icon}
-                                    iconAlt={link.iconAlt}
-                                    platform="mobile"
-                                    active={url.startsWith(link.href)}
-                                />
-                            ))}
-                        </>
-                    ) : initialData?.userRole === 'sponsor' ? (
-                        <>
-                            {sponsorNavLinks.map((link) => (
                                 <NavLink
                                     key={link.href}
                                     href={link.href}

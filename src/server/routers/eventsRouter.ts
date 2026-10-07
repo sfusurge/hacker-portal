@@ -26,6 +26,7 @@ import {
     rsvps,
 } from '@/db/schema/rsvp';
 import { z } from 'zod';
+import { getSponsorSessionFromCookies } from '@/lib/sponsor/sponsorSession';
 
 export interface CalendarEvent {
     id: number;
@@ -162,6 +163,50 @@ export const eventsRouter = router({
             );
 
             return events as CalendarEvent[];
+        }),
+
+    // Public sponsor events (cookie required; no RSVP state).
+    getPublicSponsorEvents: publicProcedure
+        .input(
+            z.object({
+                hackathonId: z.number().int(),
+            })
+        )
+        .query(async ({ input }) => {
+            const session = await getSponsorSessionFromCookies();
+            if (!session) {
+                throw new TRPCError({
+                    code: 'UNAUTHORIZED',
+                    message: 'Invalid sponsor access session',
+                });
+            }
+
+            const rows = await databaseClient
+                .select()
+                .from(eventsTable)
+                .where(eq(eventsTable.hackathonId, input.hackathonId))
+                .orderBy(
+                    asc(eventsTable.startDate),
+                    asc(eventsTable.endDate),
+                    asc(eventsTable.id)
+                );
+
+            return rows.map((event) => {
+                const { longDescription, ...rest } = event;
+                return {
+                    ...rest,
+                    imageUrl: rest.imageUrl ?? undefined,
+                    checkedIn: false,
+                    rsvped: false,
+                    ignored: false,
+                    description: rest.description ?? undefined,
+                    hasLongDescription:
+                        longDescription !== undefined &&
+                        longDescription !== null &&
+                        longDescription.length > 0,
+                    checkInTime: undefined,
+                };
+            }) as CalendarEvent[];
         }),
 
     rsvpEvent: protectedProcedure

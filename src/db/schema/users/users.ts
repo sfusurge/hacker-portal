@@ -19,7 +19,6 @@ export const UserRoleEnum = {
     user: 'user',
     admin: 'admin',
     judge: 'judge',
-    sponsor: 'sponsor',
     owner: 'owner',
 };
 
@@ -27,7 +26,6 @@ export const userRoleDbEnum = pgEnum('user_role', [
     UserRoleEnum.admin,
     UserRoleEnum.user,
     UserRoleEnum.judge,
-    UserRoleEnum.sponsor,
     UserRoleEnum.owner,
 ]);
 

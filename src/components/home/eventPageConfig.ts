@@ -62,6 +62,7 @@ export function defaultEventPagePayload(
         websiteHref: DEFAULT_BANNER_CONFIG.websiteHref,
         recapHref: null,
         hackerPackageHref: null,
+        projectsHref: null,
         acceptedDiscordInviteHref: null,
         eventPageLabel: `${hackathonName} event page`,
     };
@@ -77,6 +78,27 @@ export function resolveHackerPackageHref(
         return raw.trim();
     }
     return defaultEventPagePayload(hackathonName).hackerPackageHref ?? null;
+}
+
+const STORMHACKS_DEVPOST_HREF =
+    'https://stormhacks2026.devpost.com/project-gallery';
+
+/** External projects gallery (Devpost, etc.). Payload wins; StormHacks falls back to Devpost. */
+export function resolveProjectsHref(
+    payload: HackathonEventPagePayload | null | undefined,
+    options?: { eventPageSlug?: string | null; hackathonName?: string | null }
+): string | null {
+    const raw = payload?.projectsHref;
+    if (typeof raw === 'string' && raw.trim() !== '') {
+        return raw.trim();
+    }
+
+    const slug = (options?.eventPageSlug ?? '').toLowerCase();
+    const name = (options?.hackathonName ?? payload?.name ?? '').toLowerCase();
+    if (slug.includes('stormhacks') || name.includes('stormhacks')) {
+        return STORMHACKS_DEVPOST_HREF;
+    }
+    return null;
 }
 
 type HackathonNavSource = {

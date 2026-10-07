@@ -62,13 +62,15 @@ const Toast = React.forwardRef<
         VariantProps<typeof toastVariants> & { icon?: React.ReactNode }
 >(({ className, variant, hierarchy, icon, ...props }, ref) => {
     const MobileIcon = React.useMemo(() => {
-        if (icon)
-            return React.cloneElement(icon as React.ReactElement, {
+        if (icon) {
+            const element = icon as React.ReactElement<{ className?: string }>;
+            return React.cloneElement(element, {
                 className: cn(
                     'h-6 w-6 text-neutral-400 flex-shrink-0',
-                    (icon as React.ReactElement).props.className
+                    element.props.className
                 ),
             });
+        }
 
         switch (variant) {
             case 'success':
@@ -95,13 +97,15 @@ const Toast = React.forwardRef<
     }, [variant, icon]);
 
     const DesktopIcon = React.useMemo(() => {
-        if (icon)
-            return React.cloneElement(icon as React.ReactElement, {
+        if (icon) {
+            const element = icon as React.ReactElement<{ className?: string }>;
+            return React.cloneElement(element, {
                 className: cn(
                     'h-6 w-6 text-neutral-400 flex-shrink-0',
-                    (icon as React.ReactElement).props.className
+                    element.props.className
                 ),
             });
+        }
 
         switch (variant) {
             case 'success':

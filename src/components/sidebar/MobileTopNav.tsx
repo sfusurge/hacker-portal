@@ -26,6 +26,8 @@ interface MobileTopNavProps {
     className?: string;
     initialData?: UserData;
     children?: ReactNode;
+    // Hide auth-only chrome on public sponsor portal.
+    publicSponsorPortal?: boolean;
 }
 
 const excludedUrls = ['/application', '/admin/qr'];
@@ -39,6 +41,9 @@ const announcement = {
 
 const PAGE_TITLE_MAP: { prefix: string; label: string }[] = [
     { prefix: '/announcements', label: 'Announcements' },
+    { prefix: '/sponsor/resumes', label: 'Resume Bank' },
+    { prefix: '/sponsor/statistics', label: 'Statistics' },
+    { prefix: '/sponsor', label: 'Home' },
     { prefix: '/schedule', label: 'Schedule' },
     { prefix: '/shop', label: 'Shop' },
     { prefix: '/admin/shop', label: 'Shop' },
@@ -46,6 +51,8 @@ const PAGE_TITLE_MAP: { prefix: string; label: string }[] = [
     { prefix: '/sparkjam/projects', label: 'Projects' },
     { prefix: '/projects', label: 'Project Gallery' },
     { prefix: '/home', label: 'Home' },
+    { prefix: '/admin/resumes', label: 'Resume Bank' },
+    { prefix: '/admin/statistics', label: 'Statistics' },
     { prefix: '/team/submit', label: 'Submission' },
     { prefix: '/team', label: 'Team' },
     { prefix: '/profile', label: 'Profile' },
@@ -68,6 +75,7 @@ const OUTSIDE_TAP_MAX_MOVE_PX = 14;
 export default function MobileTopNav({
     className,
     children,
+    publicSponsorPortal = false,
 }: MobileTopNavProps) {
     const [hideTopNav, setHideTopNav] = useState(false);
     const [showMobileSidebar, setShowMobileSidebar] = useState(false);
@@ -84,6 +92,7 @@ export default function MobileTopNav({
     const selectEvent = useSetAtom(selectEventAtom);
     const setEditMode = useSetAtom(editModeAtom);
     const showAddEvent = isAdmin && url.startsWith('/schedule');
+    const isPublicSponsorPortal = publicSponsorPortal;
 
     /** tap outside drawer closes, drag/scroll does not */
     useEffect(() => {
@@ -150,7 +159,10 @@ export default function MobileTopNav({
 
     return (
         <>
-            <div className="hidden h-full md:block">{children}</div>
+            {/* Keep desktop sidenav above overlays (e.g. resume viewer) so nav stays usable */}
+            <div className="relative z-[400] hidden h-full md:block">
+                {children}
+            </div>
 
             {!hideTopNav && (
                 <div
@@ -205,23 +217,25 @@ export default function MobileTopNav({
                                     <PlusIcon className="size-5" />
                                 </Button>
                             )}
-                            <NavLink
-                                key={announcement.href}
-                                href={announcement.href}
-                                label={announcement.label}
-                                icon={announcement.icon}
-                                iconAlt={announcement.iconAlt}
-                                platform="desktop"
-                                active={url.startsWith(announcement.href)}
-                                collapsed={true}
-                                badge={unreadCount}
-                                className={cn(
-                                    'bg-transparent hover:bg-transparent',
-                                    url.startsWith(announcement.href)
-                                        ? 'text-white'
-                                        : 'text-white/60 hover:text-white'
-                                )}
-                            />
+                            {!isPublicSponsorPortal && (
+                                <NavLink
+                                    key={announcement.href}
+                                    href={announcement.href}
+                                    label={announcement.label}
+                                    icon={announcement.icon}
+                                    iconAlt={announcement.iconAlt}
+                                    platform="desktop"
+                                    active={url.startsWith(announcement.href)}
+                                    collapsed={true}
+                                    badge={unreadCount}
+                                    className={cn(
+                                        'bg-transparent hover:bg-transparent',
+                                        url.startsWith(announcement.href)
+                                            ? 'text-white'
+                                            : 'text-white/60 hover:text-white'
+                                    )}
+                                />
+                            )}
                         </div>
                     </div>
                 </div>

@@ -108,3 +108,4 @@ See notion page for login credentials are env variables
 ## Design
 
 - See design [figma workspace](https://www.figma.com/design/02aQ4FvurxQn9sPqaCTqZn/Ottertable-High-Fidelity-Wireframes?node-id=482-5020&p=f&m=dev)
+

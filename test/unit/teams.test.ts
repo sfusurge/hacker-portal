@@ -10,7 +10,7 @@ import {
     TEST_LAST_NAME,
 } from '../utils';
 import { BadRequestError, ResourceNotFoundError } from '@/server/exceptions';
-import { getUserData } from '@/db/schema/users/users';
+import { getUserData } from '@/server/auth/sessionUser';
 
 describe('teams routes tests', () => {
     const trpcClient = createCaller({});

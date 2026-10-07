@@ -54,17 +54,12 @@ export const insertJudgingAssignmentSchema = createInsertSchema(
     status: true,
 });
 
-export const updateJudgingAssignmentSchema = createInsertSchema(
-    judgingAssignments,
-    {
-        response: z.any().optional(),
-    }
-).pick({
-    hackathonId: true,
-    teamId: true,
-    userId: true,
-    status: true,
-    response: true,
+export const updateJudgingAssignmentSchema = z.object({
+    hackathonId: z.number().int(),
+    teamId: z.number().int(),
+    userId: z.number().int(),
+    status: z.enum(['unjudged', 'judged']).optional(),
+    response: z.any().optional(),
 });
 export const getJudgingAssignmentsSchema = z.object({
     hackathonId: z.number().int(),

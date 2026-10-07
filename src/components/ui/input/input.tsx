@@ -92,7 +92,9 @@ export const FormTextInput = forwardRef<
         const inputRef = useRef<HTMLInputElement | null>(null);
         useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
-        const timer = useRef<ReturnType<typeof setTimeout> | undefined>();
+        const timer = useRef<ReturnType<typeof setTimeout> | undefined>(
+            undefined
+        );
 
         function change() {
             if (!lazy || !inputRef.current) {

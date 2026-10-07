@@ -33,6 +33,7 @@ export const EMPTY_EVENT_PAGE: EventPagePayloadInput = {
     websiteHref: '',
     recapHref: '',
     hackerPackageHref: '',
+    projectsHref: '',
     acceptedDiscordInviteHref: '',
 };
 
@@ -58,6 +59,7 @@ export function toEventPageForm(
         websiteHref: g('websiteHref'),
         recapHref: g('recapHref'),
         hackerPackageHref: g('hackerPackageHref'),
+        projectsHref: g('projectsHref'),
         acceptedDiscordInviteHref: g('acceptedDiscordInviteHref'),
     };
 }
@@ -266,6 +268,12 @@ export function EventPageFields({
                             placeholder="https://notion.site/hacker-package"
                         />
                         <Text
+                            label="Projects / Devpost URL"
+                            value={values.projectsHref}
+                            onChange={(v) => set('projectsHref', v)}
+                            placeholder="https://stormhacks2026.devpost.com/project-gallery"
+                        />
+                        <Text
                             label="Discord invite URL"
                             value={values.acceptedDiscordInviteHref}
                             onChange={(v) =>
@@ -344,6 +352,9 @@ export function EventPageFields({
                                 )}
                                 {values.hackerPackageHref && (
                                     <PreviewChip label="Hacker package" />
+                                )}
+                                {values.projectsHref && (
+                                    <PreviewChip label="Projects" />
                                 )}
                                 {values.acceptedDiscordInviteHref && (
                                     <PreviewChip label="Discord" />

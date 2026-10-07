@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label/label';
 import Image from 'next/image';
 import PdfViewer from '@/components/ui/pdf-viewer';
 import { CheckBoxWithLabel } from '@/components/ui/checkbox/checkboxWithLabel';
-import { useState } from 'react';
+import { useState, type ReactElement } from 'react';
 import { IframeEmbed } from '@/components/application_components/IframeEmbed';
 import { RichText } from '@/components/ui/RichText/RichText';
 import { MarkdownDisplay } from '@/components/ui/Markdown/MarkdownDisplay';
@@ -167,7 +167,7 @@ export function partitionProjectPageSections(sections: ProjectPageSection[]): {
 export function RichTextSection({
     title,
     content,
-}: BaseSectionProps & { content: any }): JSX.Element {
+}: BaseSectionProps & { content: any }): ReactElement {
     return (
         <div className="flex w-full max-w-full min-w-0 flex-col gap-3">
             <Label className="mb-0">{title}</Label>
@@ -179,7 +179,7 @@ export function RichTextSection({
 export function MarkdownSection({
     title,
     content,
-}: BaseSectionProps & { content: string }): JSX.Element {
+}: BaseSectionProps & { content: string }): ReactElement {
     return (
         <div className="flex w-full max-w-full min-w-0 flex-col gap-4">
             <Label className="mb-0">{title}</Label>

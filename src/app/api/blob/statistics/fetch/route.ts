@@ -14,12 +14,27 @@ import {
 export async function GET(request: NextRequest) {
     await connection();
 
-    const viewer = await getUserData();
-    if (!viewer) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    if (!hasAdminAccess(viewer.userRole)) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    const cronSecret = process.env.CRON_SECRET;
+    const authHeader = request.headers.get('authorization');
+    const bearer = authHeader?.startsWith('Bearer ')
+        ? authHeader.slice(7)
+        : null;
+    const cronAuthorized =
+        Boolean(cronSecret) &&
+        (bearer === cronSecret ||
+            request.nextUrl.searchParams.get('secret') === cronSecret);
+
+    if (!cronAuthorized) {
+        const viewer = await getUserData();
+        if (!viewer) {
+            return NextResponse.json(
+                { error: 'Unauthorized' },
+                { status: 401 }
+            );
+        }
+        if (!hasAdminAccess(viewer.userRole)) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
     }
 
     const hackathonId = parseInt(
