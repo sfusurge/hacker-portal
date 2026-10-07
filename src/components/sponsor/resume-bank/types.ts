@@ -3,7 +3,7 @@ export interface User {
     firstName: string;
     lastName: string;
     school: string;
-    /** Sponsor-facing school bucket (Secondary / named school / Other). */
+    // Filter bucket (Secondary / named school / Other).
     schoolLabel: string;
     education: string;
     github: string;

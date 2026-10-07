@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
+import { displaySponsorSchool } from '@/lib/applications/sponsorResumeBank';
 import { User } from './types';
 
 function isHttpUrl(value: string) {
@@ -59,6 +60,11 @@ export const getColumns = (
                         : ' ↑'
                     : ''}
             </button>
+        ),
+        cell: ({ row }) => (
+            <span className="truncate">
+                {displaySponsorSchool(row.original)}
+            </span>
         ),
         size: 200,
         minSize: 160,

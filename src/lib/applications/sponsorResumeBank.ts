@@ -24,7 +24,6 @@ export const SPONSOR_RESUME_BANK_ROLES = [
     'linkedin',
 ] as const satisfies readonly DisplayRole[];
 
-/** Collapsed label for secondary / high-school applicants in sponsor UI. */
 export const SECONDARY_SCHOOL_LABEL = 'Secondary / High School';
 export const OTHER_SCHOOL_LABEL = 'Other';
 export const MIN_SCHOOL_COUNT_FOR_LABEL = 7;
@@ -38,7 +37,7 @@ export function isSecondaryEducationLevel(value: string | undefined): boolean {
     if (!value) return false;
     const normalized = value.trim().toLowerCase();
     if (SECONDARY_EDUCATION_VALUES.has(normalized)) return true;
-    // human-readable exports sometimes include the choice name
+    // Also match readable labels like "High School".
     return (
         normalized.includes('secondary') ||
         normalized.includes('high school') ||
@@ -54,7 +53,7 @@ function questionTitle(q: InputFormQuestion): string {
         .toLowerCase();
 }
 
-/** Fall back when displayRole is missing / "hidden" — match on question title. */
+// Fallback: match question title when displayRole is missing/hidden.
 function resolveQuestionIdByTitleHints(
     pages: InputFormPageData[] | undefined,
     hints: string[]
@@ -76,7 +75,7 @@ export function resolveSponsorResumeBankQuestionIds(
         if (questionId) out[role] = questionId;
     }
 
-    // Title fallbacks (e.g. StormHacks LinkedIn = Q23 with displayRole "hidden")
+    // Title fallback when displayRole is hidden (e.g. LinkedIn).
     if (!out.linkedin) {
         const byTitle = resolveQuestionIdByTitleHints(pages, ['linkedin']);
         if (byTitle) out.linkedin = byTitle;
@@ -102,7 +101,7 @@ function hasResumeValue(value: unknown): boolean {
     return true;
 }
 
-/** Keep only sponsor-safe response keys; drop applicants with no resume. */
+// Keep sponsor-safe fields only; skip applicants with no resume.
 export function toSponsorResumeBankResponse(
     response: Record<string, unknown>,
     pages: InputFormPageData[] | undefined
@@ -131,11 +130,7 @@ export type SponsorResumeBankRow = {
     resumeUrl: string | null;
 };
 
-/**
- * Sponsor-facing school labels:
- * - secondary / high school → one bucket
- * - schools with fewer than MIN_SCHOOL_COUNT_FOR_LABEL people → Other
- */
+// Bucket schools: secondary together; rare schools → Other.
 export function assignSponsorSchoolLabels<
     T extends { school: string; education?: string },
 >(rows: T[]): (T & { schoolLabel: string })[] {
@@ -163,6 +158,18 @@ export function assignSponsorSchoolLabels<
         }
         return row;
     });
+}
+
+// Show real school name when bucket is Other (filter still uses Other).
+export function displaySponsorSchool(row: {
+    school: string;
+    schoolLabel: string;
+}): string {
+    if (row.schoolLabel === OTHER_SCHOOL_LABEL) {
+        const school = row.school.trim();
+        if (school && school !== 'N/A') return school;
+    }
+    return row.schoolLabel;
 }
 
 function responseString(

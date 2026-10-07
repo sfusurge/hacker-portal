@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import PdfViewer from '@/components/ui/pdf-viewer';
+import { displaySponsorSchool } from '@/lib/applications/sponsorResumeBank';
 import { User } from './types';
 import {
     ArrowLeftIcon,
@@ -107,7 +108,7 @@ export default function CandidatePanel({
                             {selectedUser.firstName} {selectedUser.lastName}
                         </h2>
                         <p className="truncate text-sm text-white/60">
-                            {selectedUser.schoolLabel}
+                            {displaySponsorSchool(selectedUser)}
                         </p>
                     </div>
                     <Button

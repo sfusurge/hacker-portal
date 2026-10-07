@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { displaySponsorSchool } from '@/lib/applications/sponsorResumeBank';
 import PdfPreview from './PdfPreview';
 import { User } from './types';
 
@@ -107,7 +108,7 @@ export default function GridItem({
                         </div>
                     </div>
                     <p className="truncate text-xs text-white/60">
-                        {user.schoolLabel}
+                        {displaySponsorSchool(user)}
                     </p>
                 </div>
 

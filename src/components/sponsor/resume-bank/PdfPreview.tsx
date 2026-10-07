@@ -6,7 +6,7 @@ import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 interface PdfPreviewProps {
     url: string;
     name: string;
-    /** Quiet thumbnail: no interaction, chrome cropped, open-link on hover. */
+    // Thumbnail: cropped chrome, open-link on hover.
     thumbnail?: boolean;
 }
 
