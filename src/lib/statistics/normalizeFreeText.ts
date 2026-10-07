@@ -53,7 +53,7 @@ const MAJOR_SELECTION_LABELS: Record<string, string> = {
     prefer_not_to_answer: 'Prefer not to answer',
 };
 
-const MAJOR_ALIASES: Record<string, string> = {
+export const MAJOR_ALIASES: Record<string, string> = {
     cs: 'Computer Science',
     'comp sci': 'Computer Science',
     'computer sci': 'Computer Science',
@@ -100,7 +100,7 @@ function ensureSchoolList(): Map<string, string> {
     return schoolList.byKey;
 }
 
-function ensureMajorList(): Map<string, string> {
+export function ensureMajorList(): Map<string, string> {
     if (!majorList.loaded) {
         majorList.byKey = loadCsvNames('majors');
         majorList.loaded = true;
@@ -112,6 +112,20 @@ function titleCaseFallback(raw: string): string {
     const cleaned = raw.trim().replace(/\s+/g, ' ');
     if (!cleaned) return 'Not specified';
     return cleaned;
+}
+
+export function titleCaseMajor(raw: string): string {
+    return titleCaseFallback(raw);
+}
+
+export function polishCanonicalMajor(display: string): string {
+    return display.trim().replace(/\s+/g, ' ');
+}
+
+export function tryStrongMajorMatch(raw: string): string | null {
+    const key = normalizeKey(raw);
+    if (MAJOR_ALIASES[key]) return MAJOR_ALIASES[key];
+    return ensureMajorList().get(key) ?? null;
 }
 
 /**

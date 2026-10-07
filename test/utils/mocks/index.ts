@@ -1,7 +1,7 @@
 import { createCaller } from '@/server/appRouter';
 import { vi } from 'vitest';
 import { TEST_EMAIL, TEST_FIRST_NAME, TEST_LAST_NAME } from '..';
-import { getUserData } from '@/db/schema/users/users';
+import { getUserData } from '@/server/auth/sessionUser';
 
 export async function mockCaller(
     trpcClient: ReturnType<typeof createCaller>,
@@ -24,13 +24,18 @@ export async function mockCaller(
 
     vi.mocked(getUserData).mockResolvedValue({
         id: user!.id,
+        name: null,
         displayId: user!.displayId,
         email,
-        firstName,
-        lastName,
+        emailVerified: false,
+        firstName: firstName ?? null,
+        lastName: lastName ?? null,
         userRole,
-        phoneNumber,
-        image,
+        phoneNumber: phoneNumber ?? null,
+        image: image ?? null,
+        lastSeenAnnouncementsAt: null,
+        createdAt: new Date(0),
+        updatedAt: new Date(0),
     });
 
     return user;

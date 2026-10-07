@@ -27,7 +27,7 @@ export function RichText({
     required,
 }: RichTextProps) {
     const editorContainerRef = useRef<HTMLDivElement>(null);
-    const richeditorRef = useRef<Quill>();
+    const richeditorRef = useRef<Quill | undefined>(undefined);
     const [lengthText, setLengthText] = useState('');
     const [errorMsg, setError] = useState('');
     const validRef = useRef<HTMLInputElement>(null);

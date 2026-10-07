@@ -6,14 +6,11 @@ import { XCircleIcon } from '@heroicons/react/24/solid';
 
 import { cn } from '@/lib/utils';
 
-const Dialog = React.forwardRef<
-    React.ElementRef<typeof DialogPrimitive.Root>,
-    React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root> & {
-        overlayZIndex?: number;
-    }
->(({ overlayZIndex = 50, ...props }, ref) => (
-    <DialogPrimitive.Root {...props} />
-));
+function Dialog({
+    ...props
+}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>) {
+    return <DialogPrimitive.Root {...props} />;
+}
 Dialog.displayName = DialogPrimitive.Root.displayName;
 
 const DialogTrigger = DialogPrimitive.Trigger;
@@ -41,6 +38,7 @@ const DialogContent = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Content>,
     React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
         hideCloseIcon?: boolean;
+        showCloseButton?: boolean;
         overlayZIndex?: number;
         borderSeparator?: boolean;
     }
@@ -50,6 +48,7 @@ const DialogContent = React.forwardRef<
             className,
             children,
             hideCloseIcon = false,
+            showCloseButton = true,
             overlayZIndex = 50,
             borderSeparator = false,
             ...props
@@ -74,7 +73,7 @@ const DialogContent = React.forwardRef<
                 {...props}
             >
                 {children}
-                {!hideCloseIcon && (
+                {!hideCloseIcon && showCloseButton && (
                     <DialogPrimitive.Close
                         tabIndex={-1}
                         className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-2 right-2 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-white/30 opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none"

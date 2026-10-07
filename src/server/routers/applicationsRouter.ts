@@ -506,39 +506,6 @@ export const applicationsRouter = router({
                 ? applicationsWithAllInfos.slice(0, -1)
                 : applicationsWithAllInfos;
 
-            if (!isAdmin) {
-                const [hackathon] = await databaseClient
-                    .select({
-                        applicationQuestions: hackathons.applicationQuestions,
-                    })
-                    .from(hackathons)
-                    .where(eq(hackathons.id, input.hackathonId))
-                    .limit(1);
-                const applicationQuestions = (hackathon?.applicationQuestions ??
-                    []) as InputFormPageData[];
-
-                return {
-                    applications: page
-                        .map((application) => {
-                            const sponsorResponse = toSponsorResumeBankResponse(
-                                (application.response ?? {}) as Record<
-                                    string,
-                                    unknown
-                                >,
-                                applicationQuestions
-                            );
-                            if (!sponsorResponse) return null;
-                            return {
-                                userId: application.userId,
-                                currentStatus: application.currentStatus,
-                                response: sponsorResponse,
-                            };
-                        })
-                        .filter((application) => application !== null),
-                    nextToken,
-                };
-            }
-
             return { applications: page, nextToken };
         }),
 
