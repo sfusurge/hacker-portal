@@ -63,7 +63,7 @@ async function getViewerAnnouncementLocationKeyWithPrivateCache(
 ): Promise<string | null> {
     'use cache: private';
     cacheTag(`announcement-location-${hackathonId}-${userId ?? 'guest'}`);
-    cacheLife({ stale: 30 });
+    cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
 
     if (userId == null) return null;
     return getViewerAnnouncementLocationKeyUncached(hackathonId, userId);

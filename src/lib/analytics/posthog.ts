@@ -7,7 +7,7 @@ export function isPostHogConfigured(): boolean {
     return Boolean(POSTHOG_KEY);
 }
 
-export const POSTHOG_API_HOST = '/_sf';
+export const POSTHOG_API_HOST = 'https://us.i.posthog.com';
 const POSTHOG_UI_HOST = 'https://us.posthog.com';
 
 export const POSTHOG_APP = 'hacker-portal' as const;
@@ -37,21 +37,7 @@ export function initPostHog(): void {
         capture_pageview: false,
         capture_pageleave: true,
         rageclick: true,
-        session_recording: {
-            maskAllInputs: true,
-            maskInputOptions: {
-                password: true,
-                email: true,
-                tel: true,
-                text: true,
-                textarea: true,
-                number: true,
-                search: true,
-                url: true,
-            },
-            maskTextClass: 'ph-mask',
-            blockClass: 'ph-no-capture',
-        },
+        disable_session_recording: true,
         loaded: (client) => {
             registerPostHogSuperProperties();
             if (process.env.NODE_ENV === 'development') {

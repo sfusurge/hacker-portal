@@ -215,9 +215,32 @@ export function ClientCalendarPage({
     }, [selectEvent, setEditMode]);
 
     useEffect(() => {
-        const interval = setInterval(updateEvents, 30000); // 5 mins
+        const pollMs = 3 * 60 * 1000;
+        let intervalId: number | undefined;
+
+        const start = () => {
+            if (intervalId != null) return;
+            intervalId = window.setInterval(() => {
+                void updateEvents();
+            }, pollMs);
+        };
+
+        const stop = () => {
+            if (intervalId == null) return;
+            window.clearInterval(intervalId);
+            intervalId = undefined;
+        };
+
+        const onVisibility = () => {
+            if (document.visibilityState === 'visible') start();
+            else stop();
+        };
+
+        onVisibility();
+        document.addEventListener('visibilitychange', onVisibility);
         return () => {
-            clearInterval(interval);
+            stop();
+            document.removeEventListener('visibilitychange', onVisibility);
         };
     }, [updateEvents]);
 

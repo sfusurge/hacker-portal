@@ -6,7 +6,7 @@ import { fetchUserRecordById } from '@/server/auth/sessionUser';
 async function getUserDataWithPrivateCache() {
     'use cache: private';
     cacheTag('user-data');
-    cacheLife({ stale: 30 });
+    cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
 
     const session = (await getSession()) as SessionType;
 
@@ -25,7 +25,7 @@ async function getUserDataWithPrivateCache() {
 async function getBasicUserInfoWithPrivateCache() {
     'use cache: private';
     cacheTag('user-basic-info');
-    cacheLife({ stale: 30 });
+    cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
 
     const session = (await getSession()) as SessionType;
 

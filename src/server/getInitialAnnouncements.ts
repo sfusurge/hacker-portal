@@ -9,7 +9,7 @@ async function getInitialAnnouncementsWithPrivateCache(
 ) {
     'use cache: private';
     cacheTag(`announcements-${hackathonId}-${userId}`);
-    cacheLife({ stale: 30 });
+    cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
 
     const result = await fetchAnnouncementsForViewer({
         hackathonId,

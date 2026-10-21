@@ -1,42 +1,43 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { head } from '@vercel/blob';
+import { NextResponse } from 'next/server';
+import { getHackathonStatistics } from '@/server/statistics/getHackathonStatistics';
 
 export async function GET(
-    request: NextRequest,
+    _request: Request,
     { params }: { params: Promise<{ hackathonId: string }> }
 ) {
+    const { hackathonId: rawId } = await params;
+    const hackathonId = parseInt(rawId, 10);
+
+    if (!Number.isFinite(hackathonId)) {
+        return NextResponse.json(
+            { success: false, error: 'Invalid hackathonId', data: null },
+            { status: 400 }
+        );
+    }
+
     try {
-        const { hackathonId } = await params;
+        const data = await getHackathonStatistics(hackathonId);
 
-        try {
-            const blobPath = `statistics/${hackathonId}/stats.json`;
-            const blobInfo = await head(blobPath);
-
-            if (!blobInfo) {
-                throw new Error('Statistics data not found');
-            }
-
-            const response = await fetch(blobInfo.url);
-            const data = await response.json();
-
-            return NextResponse.json({
-                success: true,
-                data: data,
-            });
-        } catch (fetchError) {
+        if (!data) {
             return NextResponse.json(
                 {
                     success: false,
-                    error: 'Statistics data not found. Please run the cron job first.',
+                    error: `Hackathon ${hackathonId} not found`,
                     data: null,
                 },
                 { status: 404 }
             );
         }
+
+        return NextResponse.json({ success: true, data });
     } catch (error) {
         console.error('Error reading statistics data:', error);
         return NextResponse.json(
-            { error: 'Failed to read statistics data' },
+            {
+                success: false,
+                error: 'Failed to read statistics data',
+                data: null,
+            },
             { status: 500 }
         );
     }

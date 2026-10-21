@@ -130,7 +130,7 @@ export default function StatisticsRangePage() {
 
                 if (found.length === 0) {
                     setError(
-                        'No statistics found for hackathons in this range. Generate stats for each hackathon first.'
+                        'No statistics found for hackathons in this range.'
                     );
                 }
             } catch {
@@ -173,14 +173,14 @@ export default function StatisticsRangePage() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <Link href="/admin/resumes">
+                    <Link href="/admin/review">
                         <Button
                             type="button"
                             variant="brand"
                             hierarchy="primary"
                             size="compact"
                         >
-                            Back to resumes
+                            Back to review
                         </Button>
                     </Link>
                     <Link href="/admin/statistics">
