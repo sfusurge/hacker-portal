@@ -21,10 +21,10 @@ export default function Maintenance() {
                             We’ve got something cooking
                         </h1>
                         <h3 className="tracking-tightest pr-3 pl-3 text-sm leading-5 font-light text-balance text-white/60">
-                            Thank you for being a part of JourneyHacks! Our
-                            team’s back in the kitchen, cooking up something
-                            exciting for our next hackathon. Follow us on social
-                            media to be the first to hear about upcoming events!
+                            Thank you for being a part of StormHacks! Our team’s
+                            back in the kitchen, cooking up something exciting
+                            for our next hackathon. Follow us on social media to
+                            be the first to hear about upcoming events!
                         </h3>
                     </div>
 

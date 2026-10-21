@@ -1,0 +1,3 @@
+# Whole-site maintenance. Set MAINTENANCE to "false" and redeploy to open the portal.
+[context.production.environment]
+  MAINTENANCE = "true"
