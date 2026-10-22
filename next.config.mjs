@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     cacheComponents: true,
+    // Bake the production flag into the server bundle. Netlify sets it at build time.
+    env: {
+        MAINTENANCE: process.env.MAINTENANCE ?? '',
+    },
     typescript: { ignoreBuildErrors: true },
     skipTrailingSlashRedirect: true,
     images: {

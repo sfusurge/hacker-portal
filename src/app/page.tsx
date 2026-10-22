@@ -1,7 +1,7 @@
 'use client';
 
-import Maintenance from '@/app/(public)/maintenance/page';
+import { redirect } from 'next/navigation';
 
 export default function LandingPage() {
-    return <Maintenance />;
+    redirect('/login');
 }
