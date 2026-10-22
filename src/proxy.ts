@@ -25,8 +25,12 @@ export async function proxy(req: NextRequest) {
     const path = req.nextUrl.pathname;
 
     const isMaintenance = process.env.MAINTENANCE === 'true';
+    const allowDuringMaintenance =
+        path === '/maintenance' ||
+        path.startsWith('/api/cron') ||
+        path.startsWith('/api/webhooks');
 
-    if (isMaintenance && req.nextUrl.pathname != '/maintenance') {
+    if (isMaintenance && !allowDuringMaintenance) {
         const target = new URL('/maintenance', req.url);
         return NextResponse.redirect(target, { status: 302 });
     }
