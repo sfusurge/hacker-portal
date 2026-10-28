@@ -6,6 +6,10 @@ export type Cohort = 'all' | 'accepted';
 export type ChartsByRole = Partial<Record<DemographicStatRole, PieSlice[]>>;
 
 export type StatsPayload = {
+    counts?: {
+        all?: number;
+        accepted?: number;
+    };
     datasets?: {
         all?: ChartsByRole;
         accepted?: ChartsByRole;
