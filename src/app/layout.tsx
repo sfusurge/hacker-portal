@@ -6,7 +6,6 @@ import { GoogleAnalytics } from '@next/third-parties/google';
 import { Toaster } from '@/components/ui/toaster';
 import { Provider as JotaiProivder } from 'jotai';
 import { PostHogProvider } from '@/components/analytics/PostHogProvider';
-import Maintenance from '@/app/(public)/maintenance/page';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -31,8 +30,6 @@ export const metadata: Metadata = {
     },
 };
 
-const maintenanceMode = process.env.MAINTENANCE === 'true';
-
 export default function RootLayout({
     children,
 }: Readonly<{
@@ -42,18 +39,14 @@ export default function RootLayout({
         <html lang="en" className={dmMono.variable}>
             <link rel="icon" href="/favicon.png" sizes="any" />
             <body className={inter.className}>
-                {maintenanceMode ? (
-                    <Maintenance />
-                ) : (
-                    <PostHogProvider>
-                        <TRPCProvider>
-                            <JotaiProivder>
-                                {children}
-                                <Toaster />
-                            </JotaiProivder>
-                        </TRPCProvider>
-                    </PostHogProvider>
-                )}
+                <PostHogProvider>
+                    <TRPCProvider>
+                        <JotaiProivder>
+                            {children}
+                            <Toaster />
+                        </JotaiProivder>
+                    </TRPCProvider>
+                </PostHogProvider>
             </body>
             <GoogleAnalytics gaId="G-99DQSJDLRK" />
         </html>

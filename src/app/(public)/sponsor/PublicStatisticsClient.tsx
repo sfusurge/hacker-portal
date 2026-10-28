@@ -11,6 +11,7 @@ import {
     type Cohort,
     type StatsPayload,
 } from '@/lib/statistics/statsTypes';
+import StatisticsSummary from '@/components/statistics/StatisticsSummary';
 
 export default function PublicStatisticsClient({
     hackathonId,
@@ -51,6 +52,15 @@ export default function PublicStatisticsClient({
     }, [hackathonId]);
 
     const activeCharts = resolveChartsForCohort(payload, cohort);
+
+    const totalApplicants = payload?.counts?.all;
+    const acceptedApplicants = payload?.counts?.accepted;
+    // Older blobs have no counts, so only render the summary when present.
+    const totals =
+        typeof totalApplicants === 'number' &&
+        typeof acceptedApplicants === 'number'
+            ? { applications: totalApplicants, accepted: acceptedApplicants }
+            : null;
 
     return (
         <div className="mx-auto flex h-full w-full flex-col gap-4 sm:gap-6">
@@ -97,10 +107,13 @@ export default function PublicStatisticsClient({
             {loading ? (
                 <StatisticsChartsSkeleton />
             ) : error ? null : (
-                <StatisticsChartsGrid
-                    charts={activeCharts}
-                    chartSize={chartSize}
-                />
+                <>
+                    {totals && <StatisticsSummary totals={totals} />}
+                    <StatisticsChartsGrid
+                        charts={activeCharts}
+                        chartSize={chartSize}
+                    />
+                </>
             )}
         </div>
     );

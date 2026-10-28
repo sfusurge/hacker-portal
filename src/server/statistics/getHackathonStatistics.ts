@@ -12,6 +12,10 @@ import {
 export type HackathonStatistics = {
     hackathonId: number;
     generatedAt: string;
+    counts: {
+        all: number;
+        accepted: number;
+    };
     datasets: {
         all: DemographicPieCharts;
         accepted: DemographicPieCharts;
@@ -58,6 +62,10 @@ async function loadHackathonStatistics(
     return {
         hackathonId,
         generatedAt: new Date().toISOString(),
+        counts: {
+            all: allApps.length,
+            accepted: acceptedApps.length,
+        },
         datasets: {
             all: buildDemographicPieCharts(
                 hackathon.applicationQuestions,

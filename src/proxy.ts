@@ -5,6 +5,7 @@ import {
     expireLegacyPortalAuthCookies,
     migrateSessionCookieToSharedDomain,
 } from '@/auth/expireAuthCookies';
+import { isMaintenanceBypassPath, isMaintenanceMode } from '@/lib/maintenance';
 
 // Since nextjs don't support proxy route groups yet.
 
@@ -24,13 +25,7 @@ function getFirstSegment(str: string) {
 export async function proxy(req: NextRequest) {
     const path = req.nextUrl.pathname;
 
-    const isMaintenance = process.env.MAINTENANCE === 'true';
-    const allowDuringMaintenance =
-        path === '/maintenance' ||
-        path.startsWith('/api/cron') ||
-        path.startsWith('/api/webhooks');
-
-    if (isMaintenance && !allowDuringMaintenance) {
+    if (isMaintenanceMode() && !isMaintenanceBypassPath(path)) {
         const target = new URL('/maintenance', req.url);
         return NextResponse.redirect(target, { status: 302 });
     }
