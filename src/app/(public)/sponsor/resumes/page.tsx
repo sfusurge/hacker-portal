@@ -5,9 +5,6 @@ import ResumeTable from '@/components/sponsor/resume-bank/resumeBank';
 import type { InputFormPageData } from '@/components/application_components/types';
 import PublicSponsorShell from '@/components/sponsor/PublicSponsorShell';
 
-// Allow blocking render (token/cookie gated).
-export const instant = false;
-
 export default async function PublicSponsorResumesPage({
     searchParams,
 }: {

@@ -5,9 +5,6 @@ import { requireSponsorPublicAccessForPath } from '@/lib/sponsor/publicSponsorAc
 import PublicSponsorShell from '@/components/sponsor/PublicSponsorShell';
 import PublicHomeClient from './PublicHomeClient';
 
-// Allow blocking render (token/cookie gated).
-export const instant = false;
-
 export default async function PublicSponsorHomePage({
     searchParams,
 }: {

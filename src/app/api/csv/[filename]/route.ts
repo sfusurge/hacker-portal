@@ -1,12 +1,19 @@
 import { NextResponse } from 'next/server';
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
+import { COUNTRIES_CSV, MAJORS_CSV, SCHOOLS_CSV } from '@/lib/data/csvFiles';
 
 type CsvOption = { value: string; name: string };
 
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 const ALLOWED_FILES = ['majors', 'schools', 'countries'] as const;
 const FILES_WITH_HEADER = ['majors', 'schools'] as const;
+
+// Inlined at build time so this also works on runtimes without a filesystem
+// (Cloudflare Workers). See scripts/generate-csv-files.mjs.
+const CSV_FILES: Record<(typeof ALLOWED_FILES)[number], string> = {
+    majors: MAJORS_CSV,
+    schools: SCHOOLS_CSV,
+    countries: COUNTRIES_CSV,
+};
 
 const cache = new Map<string, { data: CsvOption[]; expires: number }>();
 
@@ -40,8 +47,7 @@ async function getCsvData(filename: string): Promise<CsvOption[]> {
         return cached.data;
     }
 
-    const filePath = path.join(process.cwd(), 'public', `${filename}.csv`);
-    const text = readFileSync(filePath, 'utf-8');
+    const text = CSV_FILES[filename as (typeof ALLOWED_FILES)[number]];
     const skipHeader = FILES_WITH_HEADER.includes(filename as any);
     const data = parseCSV(text, skipHeader);
 

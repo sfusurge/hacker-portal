@@ -1,5 +1,4 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
+import { MAJORS_CSV, SCHOOLS_CSV } from '@/lib/data/csvFiles';
 import type { DemographicStatRole } from './demographicRoles';
 
 /** Roles that benefit from free-text / CSV canonicalization */
@@ -75,8 +74,9 @@ export function normalizeKey(input: string): string {
 }
 
 function loadCsvNames(filename: 'schools' | 'majors'): Map<string, string> {
-    const filePath = path.join(process.cwd(), 'public', `${filename}.csv`);
-    const text = readFileSync(filePath, 'utf-8');
+    // Inlined at build time so this also works on runtimes without a
+    // filesystem (Cloudflare Workers). See scripts/generate-csv-files.mjs.
+    const text = filename === 'schools' ? SCHOOLS_CSV : MAJORS_CSV;
     // schools.csv and majors.csv start with a header / note line
     const lines = text.split('\n').slice(1);
     const byKey = new Map<string, string>();
