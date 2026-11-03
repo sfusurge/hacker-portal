@@ -18,7 +18,8 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { inferProcedureOutput } from '@trpc/server';
-import { IDetectedBarcode, Scanner } from '@yudiel/react-qr-scanner';
+import type { IDetectedBarcode } from '@yudiel/react-qr-scanner';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useMemo, useState } from 'react';
 import ManualCheckIn from './ManualCheckInPopUp';
@@ -28,6 +29,12 @@ import SelectMeal from './SelectMeal';
 import SelectWorkshop from './SelectWorkshop';
 import CheckinTicket from './CheckinTicket';
 import SelectEvent from './SelectEvents';
+
+// load in browser for cloudflare worker
+const Scanner = dynamic(
+    () => import('@yudiel/react-qr-scanner').then((mod) => mod.Scanner),
+    { ssr: false }
+);
 import Link from 'next/link';
 import { iconFromEventType } from '@/utils/iconFromEventType';
 import React from 'react';

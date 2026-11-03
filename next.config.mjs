@@ -1,6 +1,19 @@
+import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
+
+// Gives `next dev` access to the bindings in wrangler.jsonc (ASSETS, caches, ...).
+initOpenNextCloudflareForDev();
+
+// Set by scripts/cf-build.mjs. Only the Worker build needs the Ably workaround
+// below; Netlify keeps the official Node build.
+const isCloudflareBuild = process.env.CLOUDFLARE_BUILD === '1';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    cacheComponents: true,
+    // Cache Components is disabled because the OpenNext Cloudflare adapter
+    // cannot run its staged renders on Workers yet: every request 500s and the
+    // worker hangs (opennextjs/opennextjs-cloudflare#1450, #1318). Re-enable it
+    // (and the 'use cache' directives) once that fix ships.
+    cacheComponents: false,
     // Bake the production flag into the server bundle. Netlify sets it at build time.
     env: {
         MAINTENANCE: process.env.MAINTENANCE ?? '',
@@ -23,6 +36,19 @@ const nextConfig = {
             },
         ],
     },
+    // Ably's Node bundle embeds a Buffer helper that builds functions with
+    // `new Function`, which Workers forbid ("Code generation from strings
+    // disallowed"). Point `ably` at the prebuilt browser bundle instead; it
+    // drives the same REST/WebSocket endpoints without eval.
+    ...(isCloudflareBuild
+        ? {
+              turbopack: {
+                  resolveAlias: {
+                      ably: './node_modules/ably/build/ably.js',
+                  },
+              },
+          }
+        : {}),
     async headers() {
         return [
             {

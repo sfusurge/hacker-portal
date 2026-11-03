@@ -10,6 +10,10 @@ const connectionString =
 
 const isNeon = connectionString.includes('neon.tech');
 
+const isCloudflareWorker =
+    typeof navigator !== 'undefined' &&
+    navigator.userAgent === 'Cloudflare-Workers';
+
 type DatabaseClient = ReturnType<typeof drizzlePostgresJs>;
 
 const globalForDb = globalThis as unknown as {
@@ -19,7 +23,9 @@ const globalForDb = globalThis as unknown as {
 
 function createDatabaseClient(): DatabaseClient {
     if (isNeon) {
-        neonConfig.webSocketConstructor = ws;
+        neonConfig.webSocketConstructor = (isCloudflareWorker
+            ? globalThis.WebSocket
+            : ws) as unknown as typeof ws;
 
         if (!globalForDb.neonSql) {
             globalForDb.neonSql = neon(connectionString);

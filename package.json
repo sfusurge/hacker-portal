@@ -7,6 +7,10 @@
         "devsecure": "next dev --experimental-https",
         "build": "next build",
         "start": "next start",
+        "cf:build": "node scripts/cf-build.mjs",
+        "cf:preview": "pnpm cf:build && opennextjs-cloudflare preview",
+        "cf:deploy": "pnpm cf:build && opennextjs-cloudflare deploy",
+        "gen:csv": "node scripts/generate-csv-files.mjs",
         "lint": "next lint",
         "drizzle:push": "drizzle-kit push",
         "format:all": "prettier --write .",
@@ -67,7 +71,7 @@
         "marked": "^15.0.12",
         "mime-types": "^2.1.35",
         "motion": "^12.1.0",
-        "next": "16.3.6",
+        "next": "^16.4.4",
         "optics-ts": "^2.4.1",
         "pdf-lib": "^1.17.1",
         "perf_hooks": "^0.0.1",
@@ -90,6 +94,7 @@
     },
     "devDependencies": {
         "@electric-sql/pglite": "^0.2.17",
+        "@opennextjs/cloudflare": "^1.20.15",
         "@playwright/test": "^1.63.0",
         "@tailwindcss/postcss": "^4.1.3",
         "@types/linkify-it": "^5.0.0",
@@ -104,7 +109,7 @@
         "dotenv": "^16.4.7",
         "drizzle-kit": "^0.31.11",
         "eslint": "^8.57.1",
-        "eslint-config-next": "16.3.6",
+        "eslint-config-next": "^16.4.4",
         "export-to-csv": "^1.4.0",
         "handlebars": "^4.7.9",
         "husky": "^9.1.7",
@@ -116,7 +121,8 @@
         "tailwindcss": "^4.1.3",
         "typescript": "^5.8.2",
         "vite": "6.4.3",
-        "vitest": "^4.1.11"
+        "vitest": "^4.1.11",
+        "wrangler": "^4.156.2"
     },
     "packageManager": "pnpm@9.4.0+sha1.9217c800d4ab947a7aee520242a7b70d64fc7638"
 }

@@ -1,4 +1,3 @@
-import { cacheLife, cacheTag } from 'next/cache';
 import { cache } from 'react';
 import { databaseClient } from '@/db/client';
 import {
@@ -57,21 +56,18 @@ async function getViewerAnnouncementLocationKeyUncached(
     );
 }
 
-async function getViewerAnnouncementLocationKeyWithPrivateCache(
+// TODO: replace cache() with 'use cache: private' (opennextjs/opennextjs-cloudflare#1450)
+async function getViewerAnnouncementLocationKeyForViewer(
     hackathonId: number,
     userId: number | null
 ): Promise<string | null> {
-    'use cache: private';
-    cacheTag(`announcement-location-${hackathonId}-${userId ?? 'guest'}`);
-    cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
-
     if (userId == null) return null;
     return getViewerAnnouncementLocationKeyUncached(hackathonId, userId);
 }
 
 // deduped within a single RSC request
 export const getViewerAnnouncementLocationKey = cache(
-    getViewerAnnouncementLocationKeyWithPrivateCache
+    getViewerAnnouncementLocationKeyForViewer
 );
 
 function announcementVisibilityCondition(viewerLocationKey: string | null) {

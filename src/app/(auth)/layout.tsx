@@ -15,6 +15,8 @@ import { databaseClient } from '@/db/client';
 import { hackathons } from '@/db/schema/hackathons';
 import { eq } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 export default function Layout({ children }: { children: ReactNode }) {
     return (
         <Suspense fallback={<AuthLayoutFallback />}>

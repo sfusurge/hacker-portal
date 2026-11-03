@@ -1,16 +1,12 @@
-import { cacheLife, cacheTag } from 'next/cache';
 import { cache } from 'react';
 import { fetchAnnouncementsForViewer } from '@/server/announcements/fetchAnnouncementsForViewer';
 
-async function getInitialAnnouncementsWithPrivateCache(
+// TODO: replace cache() with 'use cache: private' (opennextjs/opennextjs-cloudflare#1450)
+async function getInitialAnnouncementsForViewer(
     hackathonId: number,
     userId: number,
     viewAll = false
 ) {
-    'use cache: private';
-    cacheTag(`announcements-${hackathonId}-${userId}`);
-    cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
-
     const result = await fetchAnnouncementsForViewer({
         hackathonId,
         userId,
@@ -20,6 +16,4 @@ async function getInitialAnnouncementsWithPrivateCache(
     return { items: result.items, hasMore: result.nextCursor !== null };
 }
 
-export const getInitialAnnouncements = cache(
-    getInitialAnnouncementsWithPrivateCache
-);
+export const getInitialAnnouncements = cache(getInitialAnnouncementsForViewer);

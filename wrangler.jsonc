@@ -1,0 +1,25 @@
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "hacker-portal",
+    "main": ".open-next/worker.js",
+    "compatibility_date": "2026-10-01",
+    "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+    "assets": {
+        "directory": ".open-next/assets",
+        "binding": "ASSETS",
+    },
+    "services": [
+        {
+            // TODO: required by OpenNext for cache revalidation
+            "binding": "WORKER_SELF_REFERENCE",
+            "service": "hacker-portal",
+        },
+    ],
+    "observability": {
+        "enabled": true,
+    },
+    "triggers": {
+        // TODO: mirrors email-queue cron in vercel.json
+        "crons": ["*/30 * * * *"],
+    },
+}

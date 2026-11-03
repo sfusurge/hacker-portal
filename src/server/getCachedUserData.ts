@@ -1,13 +1,9 @@
-import { cacheLife, cacheTag } from 'next/cache';
 import { cache } from 'react';
 import { getSession, SessionType } from '@/auth/auth';
 import { fetchUserRecordById } from '@/server/auth/sessionUser';
 
-async function getUserDataWithPrivateCache() {
-    'use cache: private';
-    cacheTag('user-data');
-    cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
-
+// TODO: replace cache() with 'use cache: private' (opennextjs/opennextjs-cloudflare#1450)
+async function getUserData() {
     const session = (await getSession()) as SessionType;
 
     if (!session || !session.userId) {
@@ -22,11 +18,7 @@ async function getUserDataWithPrivateCache() {
     return fetchUserRecordById(userId);
 }
 
-async function getBasicUserInfoWithPrivateCache() {
-    'use cache: private';
-    cacheTag('user-basic-info');
-    cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
-
+async function getBasicUserInfo() {
     const session = (await getSession()) as SessionType;
 
     return {
@@ -36,8 +28,8 @@ async function getBasicUserInfoWithPrivateCache() {
     };
 }
 
-/** Request-scoped user data for Server Components (Cache Components safe). */
-export const getCachedUserData = cache(getUserDataWithPrivateCache);
+/** Request-scoped user data for Server Components. */
+export const getCachedUserData = cache(getUserData);
 
-/** JWT-only user info for Server Components (Cache Components safe). */
-export const getCachedBasicUserInfo = cache(getBasicUserInfoWithPrivateCache);
+/** JWT-only user info for Server Components. */
+export const getCachedBasicUserInfo = cache(getBasicUserInfo);

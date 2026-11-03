@@ -1,4 +1,4 @@
-import { cacheLife, cacheTag } from 'next/cache';
+import { unstable_cache } from 'next/cache';
 import { eq } from 'drizzle-orm';
 import { databaseClient } from '@/db/client';
 import { applications } from '@/db/schema/applications';
@@ -79,9 +79,14 @@ async function loadHackathonStatistics(
     };
 }
 
+// TODO: replace unstable_cache with 'use cache' (opennextjs/opennextjs-cloudflare#1450)
 export async function getHackathonStatistics(hackathonId: number) {
-    'use cache';
-    cacheTag(hackathonStatisticsTag(hackathonId));
-    cacheLife({ stale: 900, revalidate: 900, expire: 3600 });
-    return loadHackathonStatistics(hackathonId);
+    return unstable_cache(
+        () => loadHackathonStatistics(hackathonId),
+        ['hackathon-statistics', String(hackathonId)],
+        {
+            tags: [hackathonStatisticsTag(hackathonId)],
+            revalidate: 900,
+        }
+    )();
 }

@@ -99,6 +99,32 @@ npm run build
 npm run start
 ```
 
+## Cloudflare Workers
+
+The portal can also be deployed to Cloudflare Workers with the
+[OpenNext adapter](https://opennext.js.org/cloudflare). Config lives in
+[`wrangler.jsonc`](wrangler.jsonc) and [`open-next.config.ts`](open-next.config.ts).
+
+```bash
+pnpm cf:build     # next build + adapt it into .open-next/
+pnpm cf:preview   # build, then serve the Worker locally on http://localhost:8787
+pnpm cf:deploy    # build and deploy to your Cloudflare account
+```
+
+`wrangler dev` reads `.env` for local previews. A deployed Worker needs the same
+names as encrypted secrets:
+
+```bash
+pnpm wrangler secret put DBURL
+pnpm wrangler secret put BETTER_AUTH_SECRET
+# ...one per variable in .env.example that the portal uses
+```
+
+Point `BETTER_AUTH_URL` (and `BETTER_AUTH_COOKIE_DOMAIN` if you share the cookie
+with other subdomains) at the Worker hostname before signing in. The email-queue
+cron is configured in `wrangler.jsonc` (`*/30 * * * *`) and authenticates with
+`CRON_SECRET`, same as `vercel.json`.
+
 ## Neon Postgres
 
 See notion page for login credentials are env variables
@@ -108,4 +134,3 @@ See notion page for login credentials are env variables
 ## Design
 
 - See design [figma workspace](https://www.figma.com/design/02aQ4FvurxQn9sPqaCTqZn/Ottertable-High-Fidelity-Wireframes?node-id=482-5020&p=f&m=dev)
-

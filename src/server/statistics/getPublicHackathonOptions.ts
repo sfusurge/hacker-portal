@@ -1,4 +1,4 @@
-import { cacheLife, cacheTag } from 'next/cache';
+import { unstable_cache } from 'next/cache';
 import { asc } from 'drizzle-orm';
 import { databaseClient } from '@/db/client';
 import { hackathons } from '@/db/schema/hackathons';
@@ -10,10 +10,6 @@ export type PublicHackathonOption = {
 };
 
 async function loadPublicHackathonOptions(): Promise<PublicHackathonOption[]> {
-    'use cache';
-    cacheTag('active-hackathon');
-    cacheLife('minutes');
-
     return databaseClient
         .select({
             id: hackathons.id,
@@ -24,7 +20,14 @@ async function loadPublicHackathonOptions(): Promise<PublicHackathonOption[]> {
         .orderBy(asc(hackathons.startDate));
 }
 
+// TODO: replace unstable_cache with 'use cache' (opennextjs/opennextjs-cloudflare#1450)
+const loadPublicHackathonOptionsCached = unstable_cache(
+    loadPublicHackathonOptions,
+    ['public-hackathon-options'],
+    { tags: ['active-hackathon'], revalidate: 60 }
+);
+
 /** Public, unauthenticated hackathon list used by /statistics/range. */
 export async function getPublicHackathonOptions() {
-    return loadPublicHackathonOptions();
+    return loadPublicHackathonOptionsCached();
 }
