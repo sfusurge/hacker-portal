@@ -131,12 +131,6 @@ const adminLinks = [
         iconAlt: 'Review Applications logo',
     },
     {
-        href: '/admin/resumes',
-        label: 'Resume Bank',
-        icon: <InboxStackIcon className="h-6 w-6" />,
-        iconAlt: 'Resume Bank',
-    },
-    {
         href: '/admin/statistics',
         label: 'Statistics',
         icon: <ChartBarIcon className="h-6 w-6" />,

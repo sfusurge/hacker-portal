@@ -1,4 +1,5 @@
 import {
+    doublePrecision,
     integer,
     json,
     pgTable,
@@ -33,6 +34,8 @@ export const judgingAssignments = pgTable(
             .notNull(),
         status: judgingStatusEnum('status').default('unjudged').notNull(),
         response: json('response').$type<Record<string, any>>(),
+        rawScore: doublePrecision('raw_score'),
+        normalizedScore: doublePrecision('normalized_score'),
         createdDate: timestamp('created_date').defaultNow().notNull(),
         updatedDate: timestamp('updated_date').defaultNow().notNull(),
     },

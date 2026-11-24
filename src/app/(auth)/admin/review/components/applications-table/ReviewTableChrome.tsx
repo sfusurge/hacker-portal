@@ -2,6 +2,7 @@
 
 import type { CSSProperties, ReactNode } from 'react';
 import { useRef, useState } from 'react';
+import Link from 'next/link';
 import {
     AdjustmentsHorizontalIcon,
     CheckIcon,
@@ -10,6 +11,7 @@ import {
     ChevronDownIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
+    ChartBarIcon,
     DocumentArrowDownIcon,
     EnvelopeIcon,
     MagnifyingGlassIcon,
@@ -333,6 +335,16 @@ export function ReviewTableToolbar({
                                 </>
                             }
                         />
+                        <Link
+                            href="/admin/statistics"
+                            className={clsx(
+                                toolbarButtonClass,
+                                'min-h-10 sm:min-h-9'
+                            )}
+                        >
+                            <ChartBarIcon className="size-4" />
+                            Statistics
+                        </Link>
                         <button
                             type="button"
                             onClick={onExport}
