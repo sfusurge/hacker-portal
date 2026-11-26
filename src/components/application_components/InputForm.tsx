@@ -73,7 +73,7 @@ import { HomeIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { SkewmorphicButton } from '@/components/ui/SkewmorphicButton/SkewmorphicButton';
 import { cn } from '@/lib/utils';
-import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
+import useMediaQuery from '@/hooks/useMediaQuery';
 import { FileUploadInput } from '@/components/application_components/InputFormComponents/FileUploadInput';
 import { RichTextInput } from '@/components/application_components/InputFormComponents/RichTextInput';
 import { MarkdownInput } from '@/components/application_components/InputFormComponents/MarkdownInput';

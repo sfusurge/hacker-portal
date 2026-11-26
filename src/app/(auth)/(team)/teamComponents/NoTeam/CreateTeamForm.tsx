@@ -18,7 +18,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { UserGroupIcon } from '@heroicons/react/24/solid';
 import { Conditional } from '@/lib/Conditional';
-import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
+import useMediaQuery from '@/hooks/useMediaQuery';
 import { uploadFileToBlob } from '@/utils/blobHelper';
 
 export default function CreateTeamForm({

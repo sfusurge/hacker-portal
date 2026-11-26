@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
+import useMediaQuery from '@/hooks/useMediaQuery';
 
 import {
     Dialog,

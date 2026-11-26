@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Chip } from '@/components/ui/chip';
 import { user } from '@/db/schema/users/users';
 import { InferSelectModel } from 'drizzle-orm';
-import useMediaQuery from 'beautiful-react-hooks/useMediaQuery';
+import useMediaQuery from '@/hooks/useMediaQuery';
 import {
     getStatusVariant,
     ApplicationStatus,
